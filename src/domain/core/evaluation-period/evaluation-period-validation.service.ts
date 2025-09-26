@@ -1,0 +1,444 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
+import { IEvaluationPeriodService } from './interfaces/evaluation-period.service.interface';
+import {
+  EvaluationPeriodStatus,
+  EvaluationPeriodPhase,
+  CreateEvaluationPeriodDto,
+  UpdateEvaluationPeriodDto,
+} from './evaluation-period.types';
+import {
+  EvaluationPeriodRequiredDataMissingException,
+  InvalidEvaluationPeriodDataFormatException,
+  InvalidEvaluationPeriodDateRangeException,
+  EvaluationPeriodBusinessRuleViolationException,
+  InvalidSelfEvaluationRateException,
+} from './evaluation-period.exceptions';
+
+/**
+ * 평가 기간 유효성 검증 서비스
+ * 평가 기간 관련 비즈니스 규칙과 데이터 유효성을 검증합니다.
+ */
+@Injectable()
+export class EvaluationPeriodValidationService {
+  private readonly logger = new Logger(EvaluationPeriodValidationService.name);
+
+  constructor(
+    private readonly evaluationPeriodService: IEvaluationPeriodService,
+  ) {}
+
+  /**
+   * 평가 기간 생성 데이터를 검증한다
+   */
+  async 생성데이터검증한다(
+    createDto: CreateEvaluationPeriodDto,
+    manager?: EntityManager,
+  ): Promise<void> {
+    // 필수 데이터 검증
+    this.필수데이터검증한다(createDto);
+
+    // 데이터 형식 검증
+    this.데이터형식검증한다(createDto);
+
+    // 날짜 범위 검증
+    this.날짜범위검증한다(createDto.startDate, createDto.endDate);
+
+    // 세부 일정 검증
+    this.세부일정검증한다(createDto);
+
+    // 자기평가 달성률 검증
+    if (createDto.maxSelfEvaluationRate !== undefined) {
+      this.자기평가달성률검증한다(createDto.maxSelfEvaluationRate);
+    }
+
+    // 비즈니스 규칙 검증
+    await this.생성비즈니스규칙검증한다(createDto, manager);
+  }
+
+  /**
+   * 평가 기간 업데이트 데이터를 검증한다
+   */
+  async 업데이트데이터검증한다(
+    id: string,
+    updateDto: UpdateEvaluationPeriodDto,
+    manager?: EntityManager,
+  ): Promise<void> {
+    // 기존 평가 기간 조회
+    const existingPeriod = await this.evaluationPeriodService.ID로조회한다(
+      id,
+      manager,
+    );
+    if (!existingPeriod) {
+      throw new EvaluationPeriodRequiredDataMissingException(
+        '존재하지 않는 평가 기간입니다.',
+      );
+    }
+
+    // 데이터 형식 검증
+    if (updateDto.name !== undefined) {
+      this.이름형식검증한다(updateDto.name);
+    }
+
+    // 날짜 범위 검증
+    if (updateDto.startDate || updateDto.endDate) {
+      const newStartDate = updateDto.startDate || existingPeriod.startDate;
+      const newEndDate = updateDto.endDate || existingPeriod.endDate;
+      this.날짜범위검증한다(newStartDate, newEndDate);
+    }
+
+    // 세부 일정 검증
+    this.세부일정업데이트검증한다(updateDto, existingPeriod);
+
+    // 자기평가 달성률 검증
+    if (updateDto.maxSelfEvaluationRate !== undefined) {
+      this.자기평가달성률검증한다(updateDto.maxSelfEvaluationRate);
+    }
+
+    // 비즈니스 규칙 검증
+    await this.업데이트비즈니스규칙검증한다(
+      id,
+      updateDto,
+      existingPeriod,
+      manager,
+    );
+  }
+
+  /**
+   * 상태 전이를 검증한다
+   */
+  상태전이검증한다(
+    currentStatus: EvaluationPeriodStatus,
+    targetStatus: EvaluationPeriodStatus,
+  ): void {
+    const validTransitions: Record<
+      EvaluationPeriodStatus,
+      EvaluationPeriodStatus[]
+    > = {
+      [EvaluationPeriodStatus.INACTIVE]: [
+        EvaluationPeriodStatus.ACTIVE,
+        EvaluationPeriodStatus.CRITERIA_SETTING,
+      ],
+      [EvaluationPeriodStatus.CRITERIA_SETTING]: [
+        EvaluationPeriodStatus.ACTIVE,
+        EvaluationPeriodStatus.PERFORMANCE_INPUT,
+      ],
+      [EvaluationPeriodStatus.ACTIVE]: [
+        EvaluationPeriodStatus.PERFORMANCE_INPUT,
+        EvaluationPeriodStatus.CRITERIA_SETTING,
+      ],
+      [EvaluationPeriodStatus.PERFORMANCE_INPUT]: [
+        EvaluationPeriodStatus.FINAL_EVALUATION,
+        EvaluationPeriodStatus.ACTIVE,
+      ],
+      [EvaluationPeriodStatus.FINAL_EVALUATION]: [
+        EvaluationPeriodStatus.COMPLETED,
+      ],
+      [EvaluationPeriodStatus.COMPLETED]: [],
+    };
+
+    const allowedTransitions = validTransitions[currentStatus] || [];
+    if (!allowedTransitions.includes(targetStatus)) {
+      throw new EvaluationPeriodBusinessRuleViolationException(
+        `${currentStatus}에서 ${targetStatus}로 상태 전이가 불가능합니다.`,
+      );
+    }
+  }
+
+  /**
+   * 단계 전이를 검증한다
+   */
+  단계전이검증한다(
+    currentPhase: EvaluationPeriodPhase | undefined,
+    targetPhase: EvaluationPeriodPhase,
+  ): void {
+    if (!currentPhase) {
+      if (targetPhase !== EvaluationPeriodPhase.CRITERIA_SETTING) {
+        throw new EvaluationPeriodBusinessRuleViolationException(
+          '첫 번째 단계는 평가 기준 설정이어야 합니다.',
+        );
+      }
+      return;
+    }
+
+    const validPhaseTransitions: Record<
+      EvaluationPeriodPhase,
+      EvaluationPeriodPhase[]
+    > = {
+      [EvaluationPeriodPhase.CRITERIA_SETTING]: [
+        EvaluationPeriodPhase.ACTIVE,
+        EvaluationPeriodPhase.PERFORMANCE_INPUT,
+      ],
+      [EvaluationPeriodPhase.ACTIVE]: [
+        EvaluationPeriodPhase.CRITERIA_SETTING,
+        EvaluationPeriodPhase.PERFORMANCE_INPUT,
+      ],
+      [EvaluationPeriodPhase.PERFORMANCE_INPUT]: [
+        EvaluationPeriodPhase.FINAL_EVALUATION,
+        EvaluationPeriodPhase.ACTIVE,
+      ],
+      [EvaluationPeriodPhase.FINAL_EVALUATION]: [],
+    };
+
+    const allowedTransitions = validPhaseTransitions[currentPhase] || [];
+    if (!allowedTransitions.includes(targetPhase)) {
+      throw new EvaluationPeriodBusinessRuleViolationException(
+        `${currentPhase}에서 ${targetPhase}로 단계 전이가 불가능합니다.`,
+      );
+    }
+  }
+
+  /**
+   * 필수 데이터를 검증한다
+   */
+  private 필수데이터검증한다(createDto: CreateEvaluationPeriodDto): void {
+    if (!createDto.name?.trim()) {
+      throw new EvaluationPeriodRequiredDataMissingException(
+        '평가 기간명은 필수입니다.',
+      );
+    }
+
+    if (!createDto.startDate) {
+      throw new EvaluationPeriodRequiredDataMissingException(
+        '시작일은 필수입니다.',
+      );
+    }
+
+    if (!createDto.endDate) {
+      throw new EvaluationPeriodRequiredDataMissingException(
+        '종료일은 필수입니다.',
+      );
+    }
+  }
+
+  /**
+   * 데이터 형식을 검증한다
+   */
+  private 데이터형식검증한다(
+    data: CreateEvaluationPeriodDto | UpdateEvaluationPeriodDto,
+  ): void {
+    if (data.name !== undefined) {
+      this.이름형식검증한다(data.name);
+    }
+
+    if (data.description !== undefined && data.description.length > 1000) {
+      throw new InvalidEvaluationPeriodDataFormatException(
+        '설명은 1000자를 초과할 수 없습니다.',
+      );
+    }
+  }
+
+  /**
+   * 이름 형식을 검증한다
+   */
+  private 이름형식검증한다(name: string): void {
+    if (!name?.trim()) {
+      throw new InvalidEvaluationPeriodDataFormatException(
+        '평가 기간명은 공백일 수 없습니다.',
+      );
+    }
+
+    if (name.length > 255) {
+      throw new InvalidEvaluationPeriodDataFormatException(
+        '평가 기간명은 255자를 초과할 수 없습니다.',
+      );
+    }
+
+    // 특수문자 제한 (기본적인 문자, 숫자, 공백, 하이픈, 언더스코어만 허용)
+    const validNamePattern = /^[가-힣a-zA-Z0-9\s\-_()]+$/;
+    if (!validNamePattern.test(name)) {
+      throw new InvalidEvaluationPeriodDataFormatException(
+        '평가 기간명에는 한글, 영문, 숫자, 공백, 하이픈, 언더스코어, 괄호만 사용할 수 있습니다.',
+      );
+    }
+  }
+
+  /**
+   * 날짜 범위를 검증한다
+   */
+  private 날짜범위검증한다(startDate: Date, endDate: Date): void {
+    if (startDate >= endDate) {
+      throw new InvalidEvaluationPeriodDateRangeException(
+        '시작일은 종료일보다 이전이어야 합니다.',
+      );
+    }
+
+    // 평가 기간이 너무 짧은지 확인 (최소 7일)
+    const diffInDays = Math.ceil(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    if (diffInDays < 7) {
+      throw new InvalidEvaluationPeriodDateRangeException(
+        '평가 기간은 최소 7일 이상이어야 합니다.',
+      );
+    }
+
+    // 평가 기간이 너무 긴지 확인 (최대 1년)
+    if (diffInDays > 365) {
+      throw new InvalidEvaluationPeriodDateRangeException(
+        '평가 기간은 최대 1년을 초과할 수 없습니다.',
+      );
+    }
+  }
+
+  /**
+   * 세부 일정을 검증한다
+   */
+  private 세부일정검증한다(createDto: CreateEvaluationPeriodDto): void {
+    // 평가 기준 설정 기간 검증
+    if (createDto.criteriaStartDate && createDto.criteriaEndDate) {
+      if (createDto.criteriaStartDate >= createDto.criteriaEndDate) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '평가 기준 설정 시작일은 종료일보다 이전이어야 합니다.',
+        );
+      }
+    }
+
+    // 성과 입력 기간 검증
+    if (createDto.performanceStartDate && createDto.performanceEndDate) {
+      if (createDto.performanceStartDate >= createDto.performanceEndDate) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '성과 입력 시작일은 종료일보다 이전이어야 합니다.',
+        );
+      }
+    }
+
+    // 최종 평가 기간 검증
+    if (
+      createDto.finalEvaluationStartDate &&
+      createDto.finalEvaluationEndDate
+    ) {
+      if (
+        createDto.finalEvaluationStartDate >= createDto.finalEvaluationEndDate
+      ) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '최종 평가 시작일은 종료일보다 이전이어야 합니다.',
+        );
+      }
+    }
+  }
+
+  /**
+   * 세부 일정 업데이트를 검증한다
+   */
+  private 세부일정업데이트검증한다(
+    updateDto: UpdateEvaluationPeriodDto,
+    existingPeriod: any,
+  ): void {
+    // 평가 기준 설정 기간 검증
+    if (updateDto.criteriaStartDate || updateDto.criteriaEndDate) {
+      const newCriteriaStartDate =
+        updateDto.criteriaStartDate || existingPeriod.criteriaStartDate;
+      const newCriteriaEndDate =
+        updateDto.criteriaEndDate || existingPeriod.criteriaEndDate;
+
+      if (
+        newCriteriaStartDate &&
+        newCriteriaEndDate &&
+        newCriteriaStartDate >= newCriteriaEndDate
+      ) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '평가 기준 설정 시작일은 종료일보다 이전이어야 합니다.',
+        );
+      }
+    }
+
+    // 성과 입력 기간 검증
+    if (updateDto.performanceStartDate || updateDto.performanceEndDate) {
+      const newPerformanceStartDate =
+        updateDto.performanceStartDate || existingPeriod.performanceStartDate;
+      const newPerformanceEndDate =
+        updateDto.performanceEndDate || existingPeriod.performanceEndDate;
+
+      if (
+        newPerformanceStartDate &&
+        newPerformanceEndDate &&
+        newPerformanceStartDate >= newPerformanceEndDate
+      ) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '성과 입력 시작일은 종료일보다 이전이어야 합니다.',
+        );
+      }
+    }
+
+    // 최종 평가 기간 검증
+    if (
+      updateDto.finalEvaluationStartDate ||
+      updateDto.finalEvaluationEndDate
+    ) {
+      const newFinalEvaluationStartDate =
+        updateDto.finalEvaluationStartDate ||
+        existingPeriod.finalEvaluationStartDate;
+      const newFinalEvaluationEndDate =
+        updateDto.finalEvaluationEndDate ||
+        existingPeriod.finalEvaluationEndDate;
+
+      if (
+        newFinalEvaluationStartDate &&
+        newFinalEvaluationEndDate &&
+        newFinalEvaluationStartDate >= newFinalEvaluationEndDate
+      ) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '최종 평가 시작일은 종료일보다 이전이어야 합니다.',
+        );
+      }
+    }
+  }
+
+  /**
+   * 자기평가 달성률을 검증한다
+   */
+  private 자기평가달성률검증한다(rate: number): void {
+    if (!Number.isInteger(rate)) {
+      throw new InvalidSelfEvaluationRateException(rate, 0, 200);
+    }
+
+    if (rate < 0 || rate > 200) {
+      throw new InvalidSelfEvaluationRateException(rate, 0, 200);
+    }
+  }
+
+  /**
+   * 생성 시 비즈니스 규칙을 검증한다
+   */
+  private async 생성비즈니스규칙검증한다(
+    createDto: CreateEvaluationPeriodDto,
+    manager?: EntityManager,
+  ): Promise<void> {
+    // 이름 중복 확인은 서비스에서 처리
+    // 기간 겹침 확인은 서비스에서 처리
+  }
+
+  /**
+   * 업데이트 시 비즈니스 규칙을 검증한다
+   */
+  private async 업데이트비즈니스규칙검증한다(
+    id: string,
+    updateDto: UpdateEvaluationPeriodDto,
+    existingPeriod: any,
+    manager?: EntityManager,
+  ): Promise<void> {
+    // 완료된 평가 기간의 주요 정보는 수정할 수 없음
+    if (existingPeriod.status === EvaluationPeriodStatus.COMPLETED) {
+      if (updateDto.startDate || updateDto.endDate || updateDto.name) {
+        throw new EvaluationPeriodBusinessRuleViolationException(
+          '완료된 평가 기간의 기본 정보는 수정할 수 없습니다.',
+        );
+      }
+    }
+
+    // 활성 상태인 평가 기간의 날짜는 제한적으로만 수정 가능
+    if (
+      existingPeriod.활성화됨() &&
+      (updateDto.startDate || updateDto.endDate)
+    ) {
+      const now = new Date();
+
+      // 시작일이 이미 지난 경우 시작일 수정 불가
+      if (updateDto.startDate && existingPeriod.startDate <= now) {
+        throw new EvaluationPeriodBusinessRuleViolationException(
+          '이미 시작된 평가 기간의 시작일은 수정할 수 없습니다.',
+        );
+      }
+    }
+  }
+}
