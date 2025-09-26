@@ -1,0 +1,352 @@
+import {
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  Column,
+  VersionColumn,
+} from 'typeorm';
+
+/**
+ * 기본 엔티티 인터페이스
+ *
+ * 모든 엔티티가 공통으로 가져야 하는 속성과 메서드를 정의합니다.
+ */
+export interface IBaseEntity<T = any> {
+  /** 고유 식별자 */
+  id: string;
+  /** 생성 일시 */
+  createdAt: Date;
+  /** 수정 일시 */
+  updatedAt: Date;
+  /** 삭제 일시 (소프트 삭제) */
+  deletedAt?: Date;
+  /** 생성자 ID */
+  createdBy?: string;
+  /** 수정자 ID */
+  updatedBy?: string;
+  /** 버전 (낙관적 잠금용) */
+  version: number;
+
+  /** 엔티티가 삭제되었는지 확인한다 */
+  삭제됨(): boolean;
+  /** 엔티티가 새로 생성된 것인지 확인한다 */
+  새로생성됨(): boolean;
+  /** 생성자를 설정한다 */
+  생성자설정한다(userId: string): void;
+  /** 수정자를 설정한다 */
+  수정자설정한다(userId: string): void;
+  /** 엔티티 메타데이터를 업데이트한다 */
+  메타데이터업데이트한다(userId?: string): void;
+  /** 엔티티를 DTO로 변환한다 */
+  DTO변환한다(): T;
+}
+
+/**
+ * 숫자 ID를 사용하는 기본 엔티티 인터페이스
+ */
+export interface IBaseEntityWithNumericId<T = any> {
+  /** 고유 식별자 (숫자) */
+  id: number;
+  /** 생성 일시 */
+  createdAt: Date;
+  /** 수정 일시 */
+  updatedAt: Date;
+  /** 삭제 일시 (소프트 삭제) */
+  deletedAt?: Date;
+  /** 생성자 ID */
+  createdBy?: string;
+  /** 수정자 ID */
+  updatedBy?: string;
+  /** 버전 (낙관적 잠금용) */
+  version: number;
+
+  /** 엔티티가 삭제되었는지 확인한다 */
+  삭제됨(): boolean;
+  /** 엔티티가 새로 생성된 것인지 확인한다 */
+  새로생성됨(): boolean;
+  /** 생성자를 설정한다 */
+  생성자설정한다(userId: string): void;
+  /** 수정자를 설정한다 */
+  수정자설정한다(userId: string): void;
+  /** 엔티티 메타데이터를 업데이트한다 */
+  메타데이터업데이트한다(userId?: string): void;
+  /** 엔티티를 DTO로 변환한다 */
+  DTO변환한다(): T;
+}
+
+/**
+ * 기본 엔티티 클래스
+ *
+ * 모든 엔티티가 공통으로 가져야 하는 필드들을 정의합니다.
+ * 감사 추적, 소프트 삭제, 낙관적 잠금 등의 기능을 제공합니다.
+ */
+export abstract class BaseEntity<T> implements IBaseEntity<T> {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @CreateDateColumn({
+    type: 'timestamp with time zone',
+    comment: '생성 일시',
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp with time zone',
+    comment: '수정 일시',
+  })
+  updatedAt: Date;
+
+  @DeleteDateColumn({
+    type: 'timestamp with time zone',
+    nullable: true,
+    comment: '삭제 일시 (소프트 삭제)',
+  })
+  deletedAt?: Date;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    comment: '생성자 ID',
+  })
+  createdBy?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    comment: '수정자 ID',
+  })
+  updatedBy?: string;
+
+  @VersionColumn({
+    comment: '버전 (낙관적 잠금용)',
+  })
+  version: number;
+
+  /**
+   * UUID 형식을 검증한다
+   */
+  protected validateUuidFormat(value: string, fieldName: string): void {
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (!uuidPattern.test(value)) {
+      throw new Error(
+        `${fieldName}은(는) 유효한 UUID 형식이어야 합니다: ${value}`,
+      );
+    }
+  }
+
+  /**
+   * 여러 UUID 필드를 한번에 검증한다
+   */
+  protected validateUuidFields(
+    fields: { value: string; name: string }[],
+  ): void {
+    fields.forEach((field) => {
+      if (field.value) {
+        this.validateUuidFormat(field.value, field.name);
+      }
+    });
+  }
+
+  /**
+   * 엔티티가 삭제되었는지 확인한다
+   */
+  삭제됨(): boolean {
+    return this.deletedAt !== null && this.deletedAt !== undefined;
+  }
+
+  /**
+   * 엔티티가 새로 생성된 것인지 확인한다
+   */
+  새로생성됨(): boolean {
+    return !this.id || this.version === 1;
+  }
+
+  /**
+   * 생성자를 설정한다
+   */
+  생성자설정한다(userId: string): void {
+    this.createdBy = userId;
+  }
+
+  /**
+   * 수정자를 설정한다
+   */
+  수정자설정한다(userId: string): void {
+    this.updatedBy = userId;
+  }
+
+  /**
+   * 엔티티 메타데이터를 업데이트한다
+   */
+  메타데이터업데이트한다(userId?: string): void {
+    const now = new Date();
+
+    if (this.새로생성됨()) {
+      this.createdAt = now;
+      if (userId) {
+        this.createdBy = userId;
+      }
+    }
+
+    this.updatedAt = now;
+    if (userId) {
+      this.updatedBy = userId;
+    }
+  }
+
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  abstract DTO변환한다(): T;
+
+  // 기존 메서드들도 유지 (하위 호환성)
+  get isDeleted(): boolean {
+    return this.삭제됨();
+  }
+
+  get isNew(): boolean {
+    return this.새로생성됨();
+  }
+
+  setCreatedBy(userId: string): void {
+    this.생성자설정한다(userId);
+  }
+
+  setUpdatedBy(userId: string): void {
+    this.수정자설정한다(userId);
+  }
+
+  updateMetadata(userId?: string): void {
+    this.메타데이터업데이트한다(userId);
+  }
+}
+
+/**
+ * 숫자 ID를 사용하는 기본 엔티티 클래스
+ */
+export abstract class BaseEntityWithNumericId<T>
+  implements IBaseEntityWithNumericId<T>
+{
+  @PrimaryGeneratedColumn({
+    comment: '기본키 (자동 증가)',
+  })
+  id: number;
+
+  @CreateDateColumn({
+    type: 'timestamp with time zone',
+    comment: '생성 일시',
+  })
+  createdAt: Date;
+
+  @UpdateDateColumn({
+    type: 'timestamp with time zone',
+    comment: '수정 일시',
+  })
+  updatedAt: Date;
+
+  @DeleteDateColumn({
+    type: 'timestamp with time zone',
+    nullable: true,
+    comment: '삭제 일시 (소프트 삭제)',
+  })
+  deletedAt?: Date;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    comment: '생성자 ID',
+  })
+  createdBy?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    comment: '수정자 ID',
+  })
+  updatedBy?: string;
+
+  @VersionColumn({
+    comment: '버전 (낙관적 잠금용)',
+  })
+  version: number;
+
+  /**
+   * 엔티티가 삭제되었는지 확인한다
+   */
+  삭제됨(): boolean {
+    return this.deletedAt !== null && this.deletedAt !== undefined;
+  }
+
+  /**
+   * 엔티티가 새로 생성된 것인지 확인한다
+   */
+  새로생성됨(): boolean {
+    return !this.id || this.version === 1;
+  }
+
+  /**
+   * 생성자를 설정한다
+   */
+  생성자설정한다(userId: string): void {
+    this.createdBy = userId;
+  }
+
+  /**
+   * 수정자를 설정한다
+   */
+  수정자설정한다(userId: string): void {
+    this.updatedBy = userId;
+  }
+
+  /**
+   * 엔티티 메타데이터를 업데이트한다
+   */
+  메타데이터업데이트한다(userId?: string): void {
+    const now = new Date();
+
+    if (this.새로생성됨()) {
+      this.createdAt = now;
+      if (userId) {
+        this.createdBy = userId;
+      }
+    }
+
+    this.updatedAt = now;
+    if (userId) {
+      this.updatedBy = userId;
+    }
+  }
+
+  /**
+   * 엔티티를 DTO로 변환한다
+   */
+  abstract DTO변환한다(): T;
+
+  // 기존 메서드들도 유지 (하위 호환성)
+  get isDeleted(): boolean {
+    return this.삭제됨();
+  }
+
+  get isNew(): boolean {
+    return this.새로생성됨();
+  }
+
+  setCreatedBy(userId: string): void {
+    this.생성자설정한다(userId);
+  }
+
+  setUpdatedBy(userId: string): void {
+    this.수정자설정한다(userId);
+  }
+
+  updateMetadata(userId?: string): void {
+    this.메타데이터업데이트한다(userId);
+  }
+}
