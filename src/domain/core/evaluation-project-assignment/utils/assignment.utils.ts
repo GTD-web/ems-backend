@@ -115,14 +115,17 @@ export class AssignmentUtils {
   static 평가기간별그룹화한다<T extends { periodId: string }>(
     assignments: T[],
   ): Record<string, T[]> {
-    return assignments.reduce((groups, assignment) => {
-      const { periodId } = assignment;
-      if (!groups[periodId]) {
-        groups[periodId] = [];
-      }
-      groups[periodId].push(assignment);
-      return groups;
-    }, {} as Record<string, T[]>);
+    return assignments.reduce(
+      (groups, assignment) => {
+        const { periodId } = assignment;
+        if (!groups[periodId]) {
+          groups[periodId] = [];
+        }
+        groups[periodId].push(assignment);
+        return groups;
+      },
+      {} as Record<string, T[]>,
+    );
   }
 
   /**
@@ -133,14 +136,17 @@ export class AssignmentUtils {
   static 직원별그룹화한다<T extends { employeeId: string }>(
     assignments: T[],
   ): Record<string, T[]> {
-    return assignments.reduce((groups, assignment) => {
-      const { employeeId } = assignment;
-      if (!groups[employeeId]) {
-        groups[employeeId] = [];
-      }
-      groups[employeeId].push(assignment);
-      return groups;
-    }, {} as Record<string, T[]>);
+    return assignments.reduce(
+      (groups, assignment) => {
+        const { employeeId } = assignment;
+        if (!groups[employeeId]) {
+          groups[employeeId] = [];
+        }
+        groups[employeeId].push(assignment);
+        return groups;
+      },
+      {} as Record<string, T[]>,
+    );
   }
 
   /**
@@ -151,14 +157,17 @@ export class AssignmentUtils {
   static 프로젝트별그룹화한다<T extends { projectId: string }>(
     assignments: T[],
   ): Record<string, T[]> {
-    return assignments.reduce((groups, assignment) => {
-      const { projectId } = assignment;
-      if (!groups[projectId]) {
-        groups[projectId] = [];
-      }
-      groups[projectId].push(assignment);
-      return groups;
-    }, {} as Record<string, T[]>);
+    return assignments.reduce(
+      (groups, assignment) => {
+        const { projectId } = assignment;
+        if (!groups[projectId]) {
+          groups[projectId] = [];
+        }
+        groups[projectId].push(assignment);
+        return groups;
+      },
+      {} as Record<string, T[]>,
+    );
   }
 
   /**
@@ -201,12 +210,16 @@ export class AssignmentUtils {
    * @param assignments 할당 목록
    * @returns 할당 통계
    */
-  static 할당통계계산한다<T extends { 
-    periodId: string; 
-    employeeId: string; 
-    projectId: string; 
-    assignedDate: Date;
-  }>(assignments: T[]): {
+  static 할당통계계산한다<
+    T extends {
+      periodId: string;
+      employeeId: string;
+      projectId: string;
+      assignedDate: Date;
+    },
+  >(
+    assignments: T[],
+  ): {
     totalCount: number;
     periodCount: number;
     employeeCount: number;
@@ -214,12 +227,16 @@ export class AssignmentUtils {
     recentCount: number;
     oldCount: number;
   } {
-    const uniquePeriods = new Set(assignments.map(a => a.periodId));
-    const uniqueEmployees = new Set(assignments.map(a => a.employeeId));
-    const uniqueProjects = new Set(assignments.map(a => a.projectId));
+    const uniquePeriods = new Set(assignments.map((a) => a.periodId));
+    const uniqueEmployees = new Set(assignments.map((a) => a.employeeId));
+    const uniqueProjects = new Set(assignments.map((a) => a.projectId));
 
-    const recentCount = assignments.filter(a => this.최근할당인가(a.assignedDate)).length;
-    const oldCount = assignments.filter(a => this.오래된할당인가(a.assignedDate)).length;
+    const recentCount = assignments.filter((a) =>
+      this.최근할당인가(a.assignedDate),
+    ).length;
+    const oldCount = assignments.filter((a) =>
+      this.오래된할당인가(a.assignedDate),
+    ).length;
 
     return {
       totalCount: assignments.length,
@@ -239,7 +256,7 @@ export class AssignmentUtils {
   static 할당ID목록생성한다<T extends { id: string }>(
     assignments: T[],
   ): string[] {
-    return assignments.map(assignment => assignment.id);
+    return assignments.map((assignment) => assignment.id);
   }
 
   /**
@@ -247,27 +264,34 @@ export class AssignmentUtils {
    * @param assignments 할당 목록
    * @returns 중복 할당 그룹
    */
-  static 중복할당찾기<T extends { 
-    periodId: string; 
-    employeeId: string; 
-    projectId: string;
-  }>(assignments: T[]): Record<string, T[]> {
-    const groups = assignments.reduce((acc, assignment) => {
-      const key = this.할당고유키생성한다(
-        assignment.periodId,
-        assignment.employeeId,
-        assignment.projectId,
-      );
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(assignment);
-      return acc;
-    }, {} as Record<string, T[]>);
+  static 중복할당찾기<
+    T extends {
+      periodId: string;
+      employeeId: string;
+      projectId: string;
+    },
+  >(assignments: T[]): Record<string, T[]> {
+    const groups = assignments.reduce(
+      (acc, assignment) => {
+        const key = this.할당고유키생성한다(
+          assignment.periodId,
+          assignment.employeeId,
+          assignment.projectId,
+        );
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        acc[key].push(assignment);
+        return acc;
+      },
+      {} as Record<string, T[]>,
+    );
 
     // 중복된 것만 반환
     return Object.fromEntries(
-      Object.entries(groups).filter(([_, assignments]) => assignments.length > 1)
+      Object.entries(groups).filter(
+        ([_, assignments]) => assignments.length > 1,
+      ),
     );
   }
 }

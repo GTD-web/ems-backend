@@ -13,8 +13,8 @@ import { PeerEvaluationMappingModule } from './peer-evaluation-mapping/peer-eval
 import { WbsEvaluationCriteriaModule } from './wbs-evaluation-criteria/wbs-evaluation-criteria.module';
 import { WbsEvaluationModule } from './wbs-self-evaluation/wbs-self-evaluation.module';
 import { WbsSelfEvaluationMappingModule } from './wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.module';
-import { EvaluationProjectAssignmentModule } from './evaluation-project-assignment';
 import { EvaluationWbsAssignmentModule } from './evaluation-wbs-assignment';
+import { EvaluationProjectAssignmentModule } from './evaluation-project-assignment/evaluation-project-assignment.module';
 
 /**
  * 코어 도메인 모듈

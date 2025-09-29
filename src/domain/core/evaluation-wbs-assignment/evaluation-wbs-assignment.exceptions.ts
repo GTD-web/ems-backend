@@ -32,9 +32,14 @@ export class EvaluationWbsAssignmentNotFoundException extends EvaluationWbsAssig
  * 중복된 평가 WBS 할당 예외
  */
 export class DuplicateEvaluationWbsAssignmentException extends EvaluationWbsAssignmentDomainException {
-  constructor(periodId: string, employeeId: string, wbsItemId: string) {
+  constructor(
+    periodId: string,
+    employeeId: string,
+    projectId: string,
+    wbsItemId: string,
+  ) {
     super(
-      `이미 해당 평가기간에 직원에게 WBS 항목이 할당되어 있습니다. 평가기간: ${periodId}, 직원: ${employeeId}, WBS: ${wbsItemId}`,
+      `이미 해당 평가기간에 직원에게 WBS 항목이 할당되어 있습니다. 평가기간: ${periodId}, 직원: ${employeeId}, 프로젝트: ${projectId}, WBS: ${wbsItemId}`,
       'DUPLICATE_EVALUATION_WBS_ASSIGNMENT',
     );
     this.name = 'DuplicateEvaluationWbsAssignmentException';
@@ -107,5 +112,53 @@ export class EvaluationPeriodExpiredException extends EvaluationWbsAssignmentDom
       'EVALUATION_PERIOD_EXPIRED',
     );
     this.name = 'EvaluationPeriodExpiredException';
+  }
+}
+
+/**
+ * 평가 WBS 할당 비즈니스 규칙 위반 예외
+ */
+export class EvaluationWbsAssignmentBusinessRuleViolationException extends EvaluationWbsAssignmentDomainException {
+  constructor(message: string) {
+    super(message, 'EVALUATION_WBS_ASSIGNMENT_BUSINESS_RULE_VIOLATION');
+    this.name = 'EvaluationWbsAssignmentBusinessRuleViolationException';
+  }
+}
+
+/**
+ * 평가 WBS 할당 중복 예외 (별칭)
+ */
+export class EvaluationWbsAssignmentDuplicateException extends DuplicateEvaluationWbsAssignmentException {
+  constructor(
+    periodId: string,
+    employeeId: string,
+    projectId: string,
+    wbsItemId: string,
+  ) {
+    super(periodId, employeeId, projectId, wbsItemId);
+    this.name = 'EvaluationWbsAssignmentDuplicateException';
+  }
+}
+
+/**
+ * 평가 WBS 할당 필수 데이터 누락 예외
+ */
+export class EvaluationWbsAssignmentRequiredDataMissingException extends EvaluationWbsAssignmentDomainException {
+  constructor(message: string) {
+    super(message, 'EVALUATION_WBS_ASSIGNMENT_REQUIRED_DATA_MISSING');
+    this.name = 'EvaluationWbsAssignmentRequiredDataMissingException';
+  }
+}
+
+/**
+ * 평가 WBS 할당 데이터 형식 오류 예외
+ */
+export class InvalidEvaluationWbsAssignmentDataFormatException extends EvaluationWbsAssignmentDomainException {
+  constructor(fieldName: string, expectedFormat: string, actualValue: any) {
+    super(
+      `${fieldName} 필드의 형식이 올바르지 않습니다. 예상 형식: ${expectedFormat}, 실제 값: ${actualValue}`,
+      'INVALID_EVALUATION_WBS_ASSIGNMENT_DATA_FORMAT',
+    );
+    this.name = 'InvalidEvaluationWbsAssignmentDataFormatException';
   }
 }
