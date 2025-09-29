@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: lumir-evaluation-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: lumir_evaluation_management
+      POSTGRES_USER: lumir_admin
+      POSTGRES_PASSWORD: lumir_password_2024
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - lumir-evaluation-network
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U lumir_admin -d lumir_evaluation_management',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  lumir-evaluation-network:
+    driver: bridge
+

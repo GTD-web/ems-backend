@@ -1,23 +1,31 @@
 /**
- * 평가 기간 상태
+ * 평가 기간 상태 (3단계)
  */
 export enum EvaluationPeriodStatus {
-  INACTIVE = 'inactive',
-  CRITERIA_SETTING = 'criteria-setting',
-  ACTIVE = 'active',
-  PERFORMANCE_INPUT = 'performance-input',
-  FINAL_EVALUATION = 'final-evaluation',
+  /** 대기 - 평가 기간이 시작되지 않은 상태 */
+  WAITING = 'waiting',
+  /** 진행 - 평가 기간이 진행 중인 상태 */
+  IN_PROGRESS = 'in-progress',
+  /** 완료 - 평가 기간이 완료된 상태 */
   COMPLETED = 'completed',
 }
 
 /**
- * 평가 기간 현재 단계
+ * 평가 기간 현재 단계 (6단계)
  */
 export enum EvaluationPeriodPhase {
-  CRITERIA_SETTING = 'criteria-setting',
-  ACTIVE = 'active',
-  PERFORMANCE_INPUT = 'performance-input',
-  FINAL_EVALUATION = 'final-evaluation',
+  /** 대기 - 평가 기간 시작 전 */
+  WAITING = 'waiting',
+  /** 평가설정 - 평가 기준 및 설정 단계 */
+  EVALUATION_SETUP = 'evaluation-setup',
+  /** 업무 수행 - 실제 업무 수행 단계 */
+  PERFORMANCE = 'performance',
+  /** 자기 평가 - 자기 평가 단계 */
+  SELF_EVALUATION = 'self-evaluation',
+  /** 하향/동료 평가 - 상급자 및 동료 평가 단계 */
+  PEER_EVALUATION = 'peer-evaluation',
+  /** 종결 - 평가 완료 및 결과 확정 단계 */
+  CLOSURE = 'closure',
 }
 
 /**
@@ -32,20 +40,18 @@ export interface CreateEvaluationPeriodDto {
   endDate: Date;
   /** 평가 기간 설명 */
   description?: string;
-  /** 평가 기준 설정 시작일 */
-  criteriaStartDate?: Date;
-  /** 평가 기준 설정 종료일 */
-  criteriaEndDate?: Date;
-  /** 성과 입력 시작일 */
-  performanceStartDate?: Date;
-  /** 성과 입력 종료일 */
-  performanceEndDate?: Date;
-  /** 최종 평가 시작일 */
-  finalEvaluationStartDate?: Date;
-  /** 최종 평가 종료일 */
-  finalEvaluationEndDate?: Date;
+  /** 평가설정 단계 마감일 */
+  evaluationSetupDeadline?: Date;
+  /** 업무 수행 단계 마감일 */
+  performanceDeadline?: Date;
+  /** 자기 평가 단계 마감일 */
+  selfEvaluationDeadline?: Date;
+  /** 하향/동료평가 단계 마감일 */
+  peerEvaluationDeadline?: Date;
   /** 자기평가 달성률 최대값 (%) */
   maxSelfEvaluationRate?: number;
+  /** 등급 구간 설정 */
+  gradeRanges?: CreateGradeRangeDto[];
 }
 
 /**
@@ -60,20 +66,18 @@ export interface UpdateEvaluationPeriodDto {
   endDate?: Date;
   /** 평가 기간 설명 */
   description?: string;
-  /** 평가 기준 설정 시작일 */
-  criteriaStartDate?: Date;
-  /** 평가 기준 설정 종료일 */
-  criteriaEndDate?: Date;
-  /** 성과 입력 시작일 */
-  performanceStartDate?: Date;
-  /** 성과 입력 종료일 */
-  performanceEndDate?: Date;
-  /** 최종 평가 시작일 */
-  finalEvaluationStartDate?: Date;
-  /** 최종 평가 종료일 */
-  finalEvaluationEndDate?: Date;
+  /** 평가설정 단계 마감일 */
+  evaluationSetupDeadline?: Date;
+  /** 업무 수행 단계 마감일 */
+  performanceDeadline?: Date;
+  /** 자기 평가 단계 마감일 */
+  selfEvaluationDeadline?: Date;
+  /** 하향/동료평가 단계 마감일 */
+  peerEvaluationDeadline?: Date;
   /** 자기평가 달성률 최대값 (%) */
   maxSelfEvaluationRate?: number;
+  /** 등급 구간 설정 */
+  gradeRanges?: CreateGradeRangeDto[];
 }
 
 /**
@@ -94,18 +98,16 @@ export interface EvaluationPeriodDto {
   status: EvaluationPeriodStatus;
   /** 현재 진행 단계 */
   currentPhase?: EvaluationPeriodPhase;
-  /** 평가 기준 설정 시작일 */
-  criteriaStartDate?: Date;
-  /** 평가 기준 설정 종료일 */
-  criteriaEndDate?: Date;
-  /** 성과 입력 시작일 */
-  performanceStartDate?: Date;
-  /** 성과 입력 종료일 */
-  performanceEndDate?: Date;
-  /** 최종 평가 시작일 */
-  finalEvaluationStartDate?: Date;
-  /** 최종 평가 종료일 */
-  finalEvaluationEndDate?: Date;
+
+  // ==================== 단계별 마감일 ====================
+  /** 평가설정 단계 마감일 */
+  evaluationSetupDeadline?: Date;
+  /** 업무 수행 단계 마감일 */
+  performanceDeadline?: Date;
+  /** 자기 평가 단계 마감일 */
+  selfEvaluationDeadline?: Date;
+  /** 하향/동료평가 단계 마감일 */
+  peerEvaluationDeadline?: Date;
   /** 평가 완료일 */
   completedDate?: Date;
   /** 평가 기준 설정 수동 허용 여부 */
@@ -116,6 +118,8 @@ export interface EvaluationPeriodDto {
   finalEvaluationSettingEnabled: boolean;
   /** 자기평가 달성률 최대값 (%) */
   maxSelfEvaluationRate: number;
+  /** 등급 구간 설정 */
+  gradeRanges: GradeRange[];
   /** 생성일시 */
   createdAt: Date;
   /** 수정일시 */
@@ -143,23 +147,126 @@ export interface EvaluationPeriodFilter {
 }
 
 /**
- * 평가 기간 통계
+ * 단계별 마감일 설정 DTO
  */
-export interface EvaluationPeriodStatistics {
-  /** 전체 평가 기간 수 */
-  totalPeriods: number;
-  /** 상태별 통계 */
-  statusCounts: Record<EvaluationPeriodStatus, number>;
-  /** 현재 활성 기간 수 */
-  activePeriods: number;
-  /** 완료된 기간 수 */
-  completedPeriods: number;
-  /** 진행중인 기간 수 */
-  inProgressPeriods: number;
-  /** 자기평가 달성률 최대값 평균 */
-  averageMaxSelfEvaluationRate: number;
-  /** 자기평가 달성률 최대값 최고 */
-  highestMaxSelfEvaluationRate: number;
-  /** 자기평가 달성률 최대값 최저 */
-  lowestMaxSelfEvaluationRate: number;
+export interface PhaseDeadlineDto {
+  /** 대상 단계 */
+  phase: EvaluationPeriodPhase;
+  /** 마감일 */
+  deadline: Date;
+}
+
+/**
+ * 단계별 마감일 현황 DTO
+ */
+export interface PhaseDeadlineStatusDto {
+  /** 평가설정 단계 마감일 */
+  evaluationSetupDeadline?: Date;
+  /** 업무 수행 단계 마감일 */
+  performanceDeadline?: Date;
+  /** 자기 평가 단계 마감일 */
+  selfEvaluationDeadline?: Date;
+  /** 하향/동료평가 단계 마감일 */
+  peerEvaluationDeadline?: Date;
+  /** 각 단계별 마감 여부 */
+  deadlineStatus: {
+    evaluationSetupExpired: boolean;
+    performanceExpired: boolean;
+    selfEvaluationExpired: boolean;
+    peerEvaluationExpired: boolean;
+  };
+}
+
+/**
+ * 단계별 마감일 업데이트 DTO
+ */
+export interface UpdatePhaseDeadlinesDto {
+  /** 평가설정 단계 마감일 */
+  evaluationSetupDeadline?: Date;
+  /** 업무 수행 단계 마감일 */
+  performanceDeadline?: Date;
+  /** 자기 평가 단계 마감일 */
+  selfEvaluationDeadline?: Date;
+  /** 하향/동료평가 단계 마감일 */
+  peerEvaluationDeadline?: Date;
+}
+
+// ==================== 등급 구간 Value Object ====================
+
+/**
+ * 등급 타입
+ */
+export enum GradeType {
+  S = 'S',
+  A = 'A',
+  B = 'B',
+  C = 'C',
+  F = 'F',
+}
+
+/**
+ * 세부 등급 타입
+ */
+export enum SubGradeType {
+  PLUS = 'plus',
+  NONE = 'none',
+  MINUS = 'minus',
+}
+
+/**
+ * 세부 등급 정보
+ */
+export interface SubGradeInfo {
+  /** 세부 등급 타입 */
+  type: SubGradeType;
+  /** 최소 범위 */
+  minRange: number;
+  /** 최대 범위 */
+  maxRange: number;
+}
+
+/**
+ * 등급 구간 Value Object
+ */
+export interface GradeRange {
+  /** 등급 */
+  grade: GradeType;
+  /** 기준 점수 */
+  score: number;
+  /** 최소 범위 */
+  minRange: number;
+  /** 최대 범위 */
+  maxRange: number;
+  /** 세부 등급 정보 */
+  subGrades?: SubGradeInfo[];
+}
+
+/**
+ * 등급 구간 생성 DTO
+ */
+export interface CreateGradeRangeDto {
+  /** 등급 */
+  grade: GradeType;
+  /** 기준 점수 */
+  score: number;
+  /** 최소 범위 */
+  minRange: number;
+  /** 최대 범위 */
+  maxRange: number;
+  /** 세부 등급 정보 */
+  subGrades?: SubGradeInfo[];
+}
+
+/**
+ * 점수 등급 매핑 결과
+ */
+export interface ScoreGradeMapping {
+  /** 점수 */
+  score: number;
+  /** 등급 */
+  grade: GradeType;
+  /** 세부 등급 */
+  subGrade?: SubGradeType;
+  /** 최종 등급 문자열 (예: S+, A-, B) */
+  finalGrade: string;
 }

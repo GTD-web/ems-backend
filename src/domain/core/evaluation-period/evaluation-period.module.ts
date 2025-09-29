@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EvaluationPeriod } from './evaluation-period.entity';
 import { EvaluationPeriodService } from './evaluation-period.service';
 import { EvaluationPeriodValidationService } from './evaluation-period-validation.service';
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
  * 평가 기간 도메인 모듈
@@ -13,6 +14,7 @@ import { EvaluationPeriodValidationService } from './evaluation-period-validatio
   providers: [
     EvaluationPeriodService,
     EvaluationPeriodValidationService,
+    TransactionManagerService,
     {
       provide: 'IEvaluationPeriodService',
       useClass: EvaluationPeriodService,

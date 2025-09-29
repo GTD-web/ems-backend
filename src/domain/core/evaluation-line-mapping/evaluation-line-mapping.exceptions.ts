@@ -1,14 +1,16 @@
-import { DomainException } from '@libs/exceptions/domain.exception';
+/**
+ * 평가 라인 맵핑 도메인 예외 클래스들
+ */
 
-// 평가 라인 맵핑 도메인 예외 기본 클래스
-export class EvaluationLineMappingDomainException extends DomainException {
+// 기본 도메인 예외
+export class EvaluationLineMappingDomainException extends Error {
   constructor(
     message: string,
-    code?: string,
-    statusCode?: number,
-    metadata?: any,
+    public readonly code?: string,
+    public readonly statusCode: number = 400,
+    public readonly context?: Record<string, any>,
   ) {
-    super(message, code, statusCode, metadata);
+    super(message);
     this.name = 'EvaluationLineMappingDomainException';
   }
 }

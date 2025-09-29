@@ -1,19 +1,28 @@
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { EntityManager } from 'typeorm';
-import { IEvaluationPeriodService } from './interfaces/evaluation-period.service.interface';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
-  EvaluationPeriodStatus,
-  EvaluationPeriodPhase,
-  CreateEvaluationPeriodDto,
-  UpdateEvaluationPeriodDto,
-} from './evaluation-period.types';
+  EntityManager,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
+import { EvaluationPeriod } from './evaluation-period.entity';
 import {
+  EvaluationPeriodBusinessRuleViolationException,
+  EvaluationPeriodNameDuplicateException,
+  EvaluationPeriodOverlapException,
   EvaluationPeriodRequiredDataMissingException,
   InvalidEvaluationPeriodDataFormatException,
   InvalidEvaluationPeriodDateRangeException,
-  EvaluationPeriodBusinessRuleViolationException,
   InvalidSelfEvaluationRateException,
 } from './evaluation-period.exceptions';
+import {
+  CreateEvaluationPeriodDto,
+  EvaluationPeriodPhase,
+  EvaluationPeriodStatus,
+  UpdateEvaluationPeriodDto,
+} from './evaluation-period.types';
 
 /**
  * 평가 기간 유효성 검증 서비스
@@ -24,7 +33,9 @@ export class EvaluationPeriodValidationService {
   private readonly logger = new Logger(EvaluationPeriodValidationService.name);
 
   constructor(
-    private readonly evaluationPeriodService: IEvaluationPeriodService,
+    @InjectRepository(EvaluationPeriod)
+    private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
+    private readonly transactionManager: TransactionManagerService,
   ) {}
 
   /**
@@ -64,10 +75,12 @@ export class EvaluationPeriodValidationService {
     manager?: EntityManager,
   ): Promise<void> {
     // 기존 평가 기간 조회
-    const existingPeriod = await this.evaluationPeriodService.ID로조회한다(
-      id,
+    const repository = this.transactionManager.getRepository(
+      EvaluationPeriod,
+      this.evaluationPeriodRepository,
       manager,
     );
+    const existingPeriod = await repository.findOne({ where: { id } });
     if (!existingPeriod) {
       throw new EvaluationPeriodRequiredDataMissingException(
         '존재하지 않는 평가 기간입니다.',
@@ -222,7 +235,9 @@ export class EvaluationPeriodValidationService {
 
     if (data.description !== undefined && data.description.length > 1000) {
       throw new InvalidEvaluationPeriodDataFormatException(
-        '설명은 1000자를 초과할 수 없습니다.',
+        'description',
+        '1000자 이하',
+        data.description,
       );
     }
   }
@@ -233,13 +248,17 @@ export class EvaluationPeriodValidationService {
   private 이름형식검증한다(name: string): void {
     if (!name?.trim()) {
       throw new InvalidEvaluationPeriodDataFormatException(
-        '평가 기간명은 공백일 수 없습니다.',
+        'name',
+        '공백이 아닌 문자열',
+        name,
       );
     }
 
     if (name.length > 255) {
       throw new InvalidEvaluationPeriodDataFormatException(
-        '평가 기간명은 255자를 초과할 수 없습니다.',
+        'name',
+        '255자 이하',
+        name,
       );
     }
 
@@ -247,7 +266,9 @@ export class EvaluationPeriodValidationService {
     const validNamePattern = /^[가-힣a-zA-Z0-9\s\-_()]+$/;
     if (!validNamePattern.test(name)) {
       throw new InvalidEvaluationPeriodDataFormatException(
-        '평가 기간명에는 한글, 영문, 숫자, 공백, 하이픈, 언더스코어, 괄호만 사용할 수 있습니다.',
+        'name',
+        '한글, 영문, 숫자, 공백, 하이픈, 언더스코어, 괄호만 허용',
+        name,
       );
     }
   }
@@ -404,8 +425,14 @@ export class EvaluationPeriodValidationService {
     createDto: CreateEvaluationPeriodDto,
     manager?: EntityManager,
   ): Promise<void> {
-    // 이름 중복 확인은 서비스에서 처리
-    // 기간 겹침 확인은 서비스에서 처리
+    // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
+    await this.이름중복검증한다(createDto.name, undefined, manager);
+    await this.기간겹침검증한다(
+      createDto.startDate,
+      createDto.endDate,
+      undefined,
+      manager,
+    );
   }
 
   /**
@@ -440,5 +467,195 @@ export class EvaluationPeriodValidationService {
         );
       }
     }
+  }
+
+  /**
+   * 평가 기간 생성 비즈니스 규칙을 검증한다
+   */
+  async 평가기간생성비즈니스규칙검증한다(
+    createDto: CreateEvaluationPeriodDto,
+    manager?: EntityManager,
+  ): Promise<void> {
+    // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
+    await this.이름중복검증한다(createDto.name, undefined, manager);
+    await this.기간겹침검증한다(
+      createDto.startDate,
+      createDto.endDate,
+      undefined,
+      manager,
+    );
+  }
+
+  /**
+   * 평가 기간 업데이트 비즈니스 규칙을 검증한다
+   */
+  async 평가기간업데이트비즈니스규칙검증한다(
+    id: string,
+    updateDto: UpdateEvaluationPeriodDto,
+    manager?: EntityManager,
+  ): Promise<void> {
+    // 기존 평가 기간 조회
+    const repository = this.transactionManager.getRepository(
+      EvaluationPeriod,
+      this.evaluationPeriodRepository,
+      manager,
+    );
+    const existingPeriod = await repository.findOne({ where: { id } });
+    if (!existingPeriod) {
+      throw new EvaluationPeriodRequiredDataMissingException(
+        '존재하지 않는 평가 기간입니다.',
+      );
+    }
+
+    // 이름 중복 확인 (변경하는 경우)
+    if (updateDto.name && updateDto.name !== existingPeriod.name) {
+      await this.이름중복검증한다(updateDto.name, id, manager);
+    }
+
+    // 기간 겹침 확인 (날짜를 변경하는 경우)
+    if (updateDto.startDate || updateDto.endDate) {
+      const newStartDate = updateDto.startDate || existingPeriod.startDate;
+      const newEndDate = updateDto.endDate || existingPeriod.endDate;
+
+      await this.기간겹침검증한다(newStartDate, newEndDate, id, manager);
+    }
+
+    // 기존 업데이트 비즈니스 규칙 검증
+    await this.업데이트비즈니스규칙검증한다(
+      id,
+      updateDto,
+      existingPeriod,
+      manager,
+    );
+  }
+
+  /**
+   * 평가 기간 시작 비즈니스 규칙을 검증한다
+   */
+  async 평가기간시작비즈니스규칙검증한다(
+    id: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    // 이미 활성 평가 기간이 있는지 확인
+    const activePeriod = await this.현재진행중평가기간조회한다(manager);
+    if (activePeriod && activePeriod.id !== id) {
+      throw new EvaluationPeriodBusinessRuleViolationException(
+        `이미 활성화된 평가 기간이 있습니다: ${activePeriod.name}`,
+      );
+    }
+  }
+
+  /**
+   * 평가 기간 삭제 비즈니스 규칙을 검증한다
+   */
+  async 평가기간삭제비즈니스규칙검증한다(evaluationPeriod: any): Promise<void> {
+    // 활성 상태인 평가 기간은 삭제할 수 없음
+    if (evaluationPeriod.활성화됨()) {
+      throw new EvaluationPeriodBusinessRuleViolationException(
+        '활성 상태인 평가 기간은 삭제할 수 없습니다.',
+      );
+    }
+  }
+
+  /**
+   * 이름 중복을 검증한다
+   */
+  private async 이름중복검증한다(
+    name: string,
+    excludeId?: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repository = this.transactionManager.getRepository(
+      EvaluationPeriod,
+      this.evaluationPeriodRepository,
+      manager,
+    );
+
+    const queryBuilder = repository
+      .createQueryBuilder('period')
+      .where('period.name = :name', { name });
+
+    if (excludeId) {
+      queryBuilder.andWhere('period.id != :excludeId', { excludeId });
+    }
+
+    const count = await queryBuilder.getCount();
+    if (count > 0) {
+      throw new EvaluationPeriodNameDuplicateException(name);
+    }
+  }
+
+  /**
+   * 기간 겹침을 검증한다
+   */
+  private async 기간겹침검증한다(
+    startDate: Date,
+    endDate: Date,
+    excludeId?: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    const repository = this.transactionManager.getRepository(
+      EvaluationPeriod,
+      this.evaluationPeriodRepository,
+      manager,
+    );
+
+    const queryBuilder = repository
+      .createQueryBuilder('period')
+      .where(
+        '(period.startDate <= :endDate AND period.endDate >= :startDate)',
+        { startDate, endDate },
+      );
+
+    if (excludeId) {
+      queryBuilder.andWhere('period.id != :excludeId', { excludeId });
+    }
+
+    const count = await queryBuilder.getCount();
+    if (count > 0) {
+      throw new EvaluationPeriodOverlapException(startDate, endDate, '');
+    }
+  }
+
+  /**
+   * 현재 진행중인 평가 기간을 조회한다
+   */
+  private async 현재진행중평가기간조회한다(
+    manager?: EntityManager,
+  ): Promise<any | null> {
+    const repository = this.transactionManager.getRepository(
+      EvaluationPeriod,
+      this.evaluationPeriodRepository,
+      manager,
+    );
+
+    const now = new Date();
+    const evaluationPeriod = await repository.findOne({
+      where: [
+        {
+          status: EvaluationPeriodStatus.ACTIVE,
+          startDate: LessThanOrEqual(now),
+          endDate: MoreThanOrEqual(now),
+        },
+        {
+          status: EvaluationPeriodStatus.CRITERIA_SETTING,
+          startDate: LessThanOrEqual(now),
+          endDate: MoreThanOrEqual(now),
+        },
+        {
+          status: EvaluationPeriodStatus.PERFORMANCE_INPUT,
+          startDate: LessThanOrEqual(now),
+          endDate: MoreThanOrEqual(now),
+        },
+        {
+          status: EvaluationPeriodStatus.FINAL_EVALUATION,
+          startDate: LessThanOrEqual(now),
+          endDate: MoreThanOrEqual(now),
+        },
+      ],
+      order: { startDate: 'DESC' },
+    });
+
+    return evaluationPeriod || null;
   }
 }

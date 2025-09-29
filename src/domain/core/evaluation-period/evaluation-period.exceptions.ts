@@ -26,9 +26,15 @@ export class EvaluationPeriodDomainException extends Error {
 
 // 상태 전이 예외 (422 Unprocessable Entity - 요청은 이해했지만 비즈니스 규칙상 처리 불가)
 export class InvalidEvaluationPeriodStatusTransitionException extends EvaluationPeriodDomainException {
-  constructor(currentStatus: string, targetStatus: string, periodId?: string) {
+  constructor(
+    currentStatus: string,
+    targetStatus: string,
+    message?: string,
+    periodId?: string,
+  ) {
     super(
-      `평가 기간 상태 전이가 불가능합니다: ${currentStatus} → ${targetStatus}`,
+      message ||
+        `평가 기간 상태 전이가 불가능합니다: ${currentStatus} → ${targetStatus}`,
       'INVALID_EVALUATION_PERIOD_STATUS_TRANSITION',
       422,
       { currentStatus, targetStatus, periodId },
@@ -91,13 +97,17 @@ export class InvalidEvaluationPeriodDataFormatException extends EvaluationPeriod
 
 // 날짜 유효성 예외 (400 Bad Request - 잘못된 날짜)
 export class InvalidEvaluationPeriodDateRangeException extends EvaluationPeriodDomainException {
-  constructor(startDate: Date, endDate: Date, periodId?: string) {
-    super(
-      `평가 기간 시작일은 종료일보다 이전이어야 합니다: ${startDate} - ${endDate}`,
-      'INVALID_EVALUATION_PERIOD_DATE_RANGE',
-      400,
-      { startDate, endDate, periodId },
-    );
+  constructor(
+    message: string,
+    startDate?: Date,
+    endDate?: Date,
+    periodId?: string,
+  ) {
+    super(message, 'INVALID_EVALUATION_PERIOD_DATE_RANGE', 400, {
+      startDate,
+      endDate,
+      periodId,
+    });
     this.name = 'InvalidEvaluationPeriodDateRangeException';
   }
 }
@@ -327,5 +337,43 @@ export class SelfEvaluationRateSettingNotAllowedException extends EvaluationPeri
       { periodId, currentStatus, reason },
     );
     this.name = 'SelfEvaluationRateSettingNotAllowedException';
+  }
+}
+
+// 평가 기간 이름 중복 예외 (409 Conflict - 리소스 충돌)
+export class DuplicateEvaluationPeriodNameException extends EvaluationPeriodRepositoryException {
+  constructor(name: string, originalError?: Error) {
+    super(
+      `이미 존재하는 평가 기간 이름입니다: ${name}`,
+      409,
+      originalError,
+      'NAME_DUPLICATE_CHECK',
+    );
+    this.name = 'DuplicateEvaluationPeriodNameException';
+  }
+}
+
+// 평가 기간 날짜 겹침 예외 (409 Conflict - 기간 충돌)
+export class EvaluationPeriodDateOverlapException extends EvaluationPeriodRepositoryException {
+  constructor(startDate: Date, endDate: Date, originalError?: Error) {
+    super(
+      `평가 기간이 기존 기간과 겹칩니다: ${startDate} - ${endDate}`,
+      409,
+      originalError,
+      'PERIOD_OVERLAP_CHECK',
+    );
+    this.name = 'EvaluationPeriodDateOverlapException';
+  }
+}
+
+// 활성 평가 기간 이미 존재 예외 (422 Unprocessable Entity - 비즈니스 규칙 위반)
+export class ActiveEvaluationPeriodAlreadyExistsException extends EvaluationPeriodServiceException {
+  constructor(activePeriodName: string) {
+    super(
+      `이미 활성화된 평가 기간이 있습니다: ${activePeriodName}`,
+      'ACTIVE_EVALUATION_PERIOD_ALREADY_EXISTS',
+      422,
+    );
+    this.name = 'ActiveEvaluationPeriodAlreadyExistsException';
   }
 }

@@ -1,14 +1,16 @@
-import { DomainException } from '@libs/exceptions/domain.exception';
+/**
+ * 동료평가 맵핑 도메인 예외 클래스들
+ */
 
-// 동료평가 맵핑 도메인 예외 기본 클래스
-export class PeerEvaluationMappingDomainException extends DomainException {
+// 기본 도메인 예외
+export class PeerEvaluationMappingDomainException extends Error {
   constructor(
     message: string,
-    code?: string,
-    statusCode?: number,
-    metadata?: any,
+    public readonly code?: string,
+    public readonly statusCode: number = 400,
+    public readonly context?: Record<string, any>,
   ) {
-    super(message, code, statusCode, metadata);
+    super(message);
     this.name = 'PeerEvaluationMappingDomainException';
   }
 }

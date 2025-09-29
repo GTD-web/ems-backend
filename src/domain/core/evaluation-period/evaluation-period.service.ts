@@ -1,30 +1,32 @@
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import {
-  Repository,
+  DataSource,
   EntityManager,
-  Between,
-  MoreThanOrEqual,
   LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
 } from 'typeorm';
+import { EvaluationPeriodValidationService } from './evaluation-period-validation.service';
 import { EvaluationPeriod } from './evaluation-period.entity';
-import { IEvaluationPeriodService } from './interfaces/evaluation-period.service.interface';
-import { IEvaluationPeriod } from './interfaces/evaluation-period.interface';
 import {
-  EvaluationPeriodStatus,
-  EvaluationPeriodPhase,
-  EvaluationPeriodFilter,
-  EvaluationPeriodStatistics,
-  CreateEvaluationPeriodDto,
-  UpdateEvaluationPeriodDto,
-} from './evaluation-period.types';
-import {
-  EvaluationPeriodNotFoundException,
-  DuplicateEvaluationPeriodNameException,
-  EvaluationPeriodDateOverlapException,
-  ActiveEvaluationPeriodAlreadyExistsException,
   EvaluationPeriodBusinessRuleViolationException,
+  EvaluationPeriodNotFoundException,
 } from './evaluation-period.exceptions';
+import {
+  CreateEvaluationPeriodDto,
+  EvaluationPeriodFilter,
+  EvaluationPeriodPhase,
+  EvaluationPeriodStatus,
+  UpdateEvaluationPeriodDto,
+  GradeRange,
+  GradeType,
+  ScoreGradeMapping,
+  CreateGradeRangeDto,
+} from './evaluation-period.types';
+import { IEvaluationPeriod } from './interfaces/evaluation-period.interface';
+import { IEvaluationPeriodService } from './interfaces/evaluation-period.service.interface';
 
 /**
  * 평가 기간 서비스
@@ -37,214 +39,200 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
   constructor(
     @InjectRepository(EvaluationPeriod)
     private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
+    private readonly transactionManager: TransactionManagerService,
+    private readonly validationService: EvaluationPeriodValidationService,
   ) {}
+
+  /**
+   * 안전한 도메인 작업을 실행한다
+   */
+  private async executeSafeDomainOperation<T>(
+    operation: () => Promise<T>,
+    context: string,
+  ): Promise<T> {
+    return this.transactionManager.executeSafeOperation(operation, context);
+  }
 
   /**
    * ID로 평가 기간을 조회한다
    */
-  async ID로조회한다(
+  async ID로_조회한다(
     id: string,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod | null> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       const evaluationPeriod = await repository.findOne({ where: { id } });
       return evaluationPeriod || null;
-    } catch (error) {
-      this.logger.error(`평가 기간 조회 실패 - ID: ${id}`, error);
-      throw error;
-    }
+    }, 'ID로_조회한다');
   }
 
   /**
    * 이름으로 평가 기간을 조회한다
    */
-  async 이름으로조회한다(
+  async 이름으로_조회한다(
     name: string,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod | null> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       const evaluationPeriod = await repository.findOne({ where: { name } });
       return evaluationPeriod || null;
-    } catch (error) {
-      this.logger.error(`평가 기간 조회 실패 - 이름: ${name}`, error);
-      throw error;
-    }
+    }, '이름으로_조회한다');
   }
 
   /**
    * 모든 평가 기간을 조회한다
    */
-  async 전체조회한다(manager?: EntityManager): Promise<IEvaluationPeriod[]> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+  async 전체_조회한다(manager?: EntityManager): Promise<IEvaluationPeriod[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       return await repository.find({
         order: { startDate: 'DESC' },
       });
-    } catch (error) {
-      this.logger.error('전체 평가 기간 조회 실패', error);
-      throw error;
-    }
+    }, '전체_조회한다');
   }
 
   /**
    * 상태별 평가 기간을 조회한다
    */
-  async 상태별조회한다(
+  async 상태별_조회한다(
     status: EvaluationPeriodStatus,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod[]> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       return await repository.find({
         where: { status },
         order: { startDate: 'DESC' },
       });
-    } catch (error) {
-      this.logger.error(`상태별 평가 기간 조회 실패 - 상태: ${status}`, error);
-      throw error;
-    }
+    }, '상태별_조회한다');
   }
 
   /**
    * 단계별 평가 기간을 조회한다
    */
-  async 단계별조회한다(
+  async 단계별_조회한다(
     phase: EvaluationPeriodPhase,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod[]> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       return await repository.find({
         where: { currentPhase: phase },
         order: { startDate: 'DESC' },
       });
-    } catch (error) {
-      this.logger.error(`단계별 평가 기간 조회 실패 - 단계: ${phase}`, error);
-      throw error;
-    }
+    }, '단계별_조회한다');
   }
 
   /**
-   * 활성 평가 기간을 조회한다
+   * 활성화된 평가 기간을 조회한다
    */
-  async 활성평가기간조회한다(
+  async 활성화된_평가기간_조회한다(
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod[]> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       return await repository.find({
-        where: [
-          { status: EvaluationPeriodStatus.ACTIVE },
-          { status: EvaluationPeriodStatus.CRITERIA_SETTING },
-          { status: EvaluationPeriodStatus.PERFORMANCE_INPUT },
-          { status: EvaluationPeriodStatus.FINAL_EVALUATION },
-        ],
+        where: { status: EvaluationPeriodStatus.IN_PROGRESS },
         order: { startDate: 'DESC' },
       });
-    } catch (error) {
-      this.logger.error('활성 평가 기간 조회 실패', error);
-      throw error;
-    }
+    }, '활성화된_평가기간_조회한다');
   }
 
   /**
    * 완료된 평가 기간을 조회한다
    */
-  async 완료평가기간조회한다(
+  async 완료된_평가기간_조회한다(
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod[]> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       return await repository.find({
         where: { status: EvaluationPeriodStatus.COMPLETED },
         order: { completedDate: 'DESC' },
       });
-    } catch (error) {
-      this.logger.error('완료된 평가 기간 조회 실패', error);
-      throw error;
-    }
+    }, '완료된_평가기간_조회한다');
   }
 
   /**
    * 현재 진행중인 평가 기간을 조회한다
    */
-  async 현재진행중평가기간조회한다(
+  async 현재_진행중_평가기간_조회한다(
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod | null> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       const now = new Date();
       const evaluationPeriod = await repository.findOne({
-        where: [
-          {
-            status: EvaluationPeriodStatus.ACTIVE,
-            startDate: LessThanOrEqual(now),
-            endDate: MoreThanOrEqual(now),
-          },
-          {
-            status: EvaluationPeriodStatus.CRITERIA_SETTING,
-            startDate: LessThanOrEqual(now),
-            endDate: MoreThanOrEqual(now),
-          },
-          {
-            status: EvaluationPeriodStatus.PERFORMANCE_INPUT,
-            startDate: LessThanOrEqual(now),
-            endDate: MoreThanOrEqual(now),
-          },
-          {
-            status: EvaluationPeriodStatus.FINAL_EVALUATION,
-            startDate: LessThanOrEqual(now),
-            endDate: MoreThanOrEqual(now),
-          },
-        ],
+        where: {
+          status: EvaluationPeriodStatus.IN_PROGRESS,
+          startDate: LessThanOrEqual(now),
+          endDate: MoreThanOrEqual(now),
+        },
         order: { startDate: 'DESC' },
       });
 
       return evaluationPeriod || null;
-    } catch (error) {
-      this.logger.error('현재 진행중인 평가 기간 조회 실패', error);
-      throw error;
-    }
+    }, '현재_진행중_평가기간_조회한다');
   }
 
   /**
    * 필터 조건으로 평가 기간을 조회한다
    */
-  async 필터조회한다(
+  async 필터_조회한다(
     filter: EvaluationPeriodFilter,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod[]> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       const queryBuilder = repository.createQueryBuilder('period');
 
       if (filter.status) {
@@ -272,13 +260,8 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
       }
 
       if (filter.activeOnly) {
-        queryBuilder.andWhere('period.status IN (:...activeStatuses)', {
-          activeStatuses: [
-            EvaluationPeriodStatus.ACTIVE,
-            EvaluationPeriodStatus.CRITERIA_SETTING,
-            EvaluationPeriodStatus.PERFORMANCE_INPUT,
-            EvaluationPeriodStatus.FINAL_EVALUATION,
-          ],
+        queryBuilder.andWhere('period.status = :activeStatus', {
+          activeStatus: EvaluationPeriodStatus.IN_PROGRESS,
         });
       }
 
@@ -301,10 +284,7 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
       }
 
       return await queryBuilder.orderBy('period.startDate', 'DESC').getMany();
-    } catch (error) {
-      this.logger.error('필터 조건 평가 기간 조회 실패', error);
-      throw error;
-    }
+    }, '필터_조회한다');
   }
 
   /**
@@ -315,47 +295,38 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
     createdBy: string,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const entityManager = manager || this.dataSource.manager;
 
-    try {
-      // 이름 중복 확인
-      const existingPeriod = await this.이름중복확인한다(
-        createDto.name,
-        undefined,
-        manager,
+      // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
+      await this.validationService.평가기간생성비즈니스규칙검증한다(
+        createDto,
+        entityManager,
       );
-      if (existingPeriod) {
-        throw new DuplicateEvaluationPeriodNameException(createDto.name);
-      }
 
-      // 기간 겹침 확인
-      const hasOverlap = await this.기간겹침확인한다(
-        createDto.startDate,
-        createDto.endDate,
-        undefined,
-        manager,
-      );
-      if (hasOverlap) {
-        throw new EvaluationPeriodDateOverlapException(
-          createDto.startDate,
-          createDto.endDate,
-        );
-      }
-
-      const evaluationPeriod = repository.create({
+      // 엔티티 생성 (불변성 검증 자동 실행)
+      const evaluationPeriod = new EvaluationPeriod();
+      Object.assign(evaluationPeriod, {
         ...createDto,
         maxSelfEvaluationRate: createDto.maxSelfEvaluationRate ?? 120,
+        gradeRanges: [], // 초기에는 빈 배열로 설정
         createdBy,
         updatedBy: createdBy,
       });
 
+      // 등급 구간이 제공된 경우 설정
+      if (createDto.gradeRanges && createDto.gradeRanges.length > 0) {
+        evaluationPeriod.등급구간_설정한다(createDto.gradeRanges, createdBy);
+      }
+
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        entityManager,
+      );
+
       return await repository.save(evaluationPeriod);
-    } catch (error) {
-      this.logger.error('평가 기간 생성 실패', error);
-      throw error;
-    }
+    }, '생성한다');
   }
 
   /**
@@ -367,53 +338,30 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
     updatedBy: string,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const entityManager = manager || this.dataSource.manager;
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        entityManager,
+      );
 
-    try {
       const evaluationPeriod = await repository.findOne({ where: { id } });
       if (!evaluationPeriod) {
         throw new EvaluationPeriodNotFoundException(id);
       }
 
-      // 이름 중복 확인 (변경하는 경우)
-      if (updateDto.name && updateDto.name !== evaluationPeriod.name) {
-        const existingPeriod = await this.이름중복확인한다(
-          updateDto.name,
-          id,
-          manager,
-        );
-        if (existingPeriod) {
-          throw new DuplicateEvaluationPeriodNameException(updateDto.name);
-        }
-      }
+      // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
+      await this.validationService.평가기간업데이트비즈니스규칙검증한다(
+        id,
+        updateDto,
+        entityManager,
+      );
 
-      // 기간 겹침 확인 (날짜를 변경하는 경우)
-      if (updateDto.startDate || updateDto.endDate) {
-        const newStartDate = updateDto.startDate || evaluationPeriod.startDate;
-        const newEndDate = updateDto.endDate || evaluationPeriod.endDate;
-
-        const hasOverlap = await this.기간겹침확인한다(
-          newStartDate,
-          newEndDate,
-          id,
-          manager,
-        );
-        if (hasOverlap) {
-          throw new EvaluationPeriodDateOverlapException(
-            newStartDate,
-            newEndDate,
-          );
-        }
-      }
-
+      // 엔티티 업데이트 (불변성 검증 자동 실행)
       Object.assign(evaluationPeriod, updateDto, { updatedBy });
       return await repository.save(evaluationPeriod);
-    } catch (error) {
-      this.logger.error(`평가 기간 업데이트 실패 - ID: ${id}`, error);
-      throw error;
-    }
+    }, '업데이트한다');
   }
 
   /**
@@ -424,29 +372,26 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
     deletedBy: string,
     manager?: EntityManager,
   ): Promise<void> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       const evaluationPeriod = await repository.findOne({ where: { id } });
       if (!evaluationPeriod) {
         throw new EvaluationPeriodNotFoundException(id);
       }
 
-      // 활성 상태인 평가 기간은 삭제할 수 없음
-      if (evaluationPeriod.활성화됨()) {
-        throw new EvaluationPeriodBusinessRuleViolationException(
-          '활성 상태인 평가 기간은 삭제할 수 없습니다.',
-        );
-      }
+      // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
+      await this.validationService.평가기간삭제비즈니스규칙검증한다(
+        evaluationPeriod,
+      );
 
       await repository.delete(id);
       this.logger.log(`평가 기간 삭제 완료 - ID: ${id}, 삭제자: ${deletedBy}`);
-    } catch (error) {
-      this.logger.error(`평가 기간 삭제 실패 - ID: ${id}`, error);
-      throw error;
-    }
+    }, '삭제한다');
   }
 
   /**
@@ -457,30 +402,29 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
     startedBy: string,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const entityManager = manager || this.dataSource.manager;
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        entityManager,
+      );
 
-    try {
       const evaluationPeriod = await repository.findOne({ where: { id } });
       if (!evaluationPeriod) {
         throw new EvaluationPeriodNotFoundException(id);
       }
 
-      // 이미 활성 평가 기간이 있는지 확인
-      const activePeriod = await this.현재진행중평가기간조회한다(manager);
-      if (activePeriod && activePeriod.id !== id) {
-        throw new ActiveEvaluationPeriodAlreadyExistsException(
-          activePeriod.name,
-        );
-      }
+      // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
+      await this.validationService.평가기간시작비즈니스규칙검증한다(
+        id,
+        entityManager,
+      );
 
-      evaluationPeriod.평가기간시작한다(startedBy);
+      // 엔티티 도메인 로직 실행 (Entity 레벨)
+      evaluationPeriod.평가기간_시작한다(startedBy);
       return await repository.save(evaluationPeriod);
-    } catch (error) {
-      this.logger.error(`평가 기간 시작 실패 - ID: ${id}`, error);
-      throw error;
-    }
+    }, '시작한다');
   }
 
   /**
@@ -491,229 +435,268 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
     completedBy: string,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       const evaluationPeriod = await repository.findOne({ where: { id } });
       if (!evaluationPeriod) {
         throw new EvaluationPeriodNotFoundException(id);
       }
 
-      evaluationPeriod.평가기간완료한다(completedBy);
+      // 엔티티 도메인 로직 실행 (Entity 레벨)
+      evaluationPeriod.평가기간_완료한다(completedBy);
       return await repository.save(evaluationPeriod);
-    } catch (error) {
-      this.logger.error(`평가 기간 완료 실패 - ID: ${id}`, error);
-      throw error;
-    }
+    }, '완료한다');
   }
 
   /**
-   * 평가 기간 통계를 조회한다
+   * 평가 기간 단계를 변경한다
    */
-  async 통계조회한다(
-    filter?: EvaluationPeriodFilter,
+  async 단계_변경한다(
+    id: string,
+    targetPhase: EvaluationPeriodPhase,
+    changedBy: string,
     manager?: EntityManager,
-  ): Promise<EvaluationPeriodStatistics> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
-
-    try {
-      let queryBuilder = repository.createQueryBuilder('period');
-
-      // 필터 적용
-      if (filter?.status) {
-        queryBuilder.andWhere('period.status = :status', {
-          status: filter.status,
-        });
-      }
-      if (filter?.startDateFrom) {
-        queryBuilder.andWhere('period.startDate >= :startDateFrom', {
-          startDateFrom: filter.startDateFrom,
-        });
-      }
-      if (filter?.endDateTo) {
-        queryBuilder.andWhere('period.endDate <= :endDateTo', {
-          endDateTo: filter.endDateTo,
-        });
-      }
-
-      const periods = await queryBuilder.getMany();
-
-      // 상태별 카운트
-      const statusCounts = periods.reduce(
-        (acc, period) => {
-          acc[period.status] = (acc[period.status] || 0) + 1;
-          return acc;
-        },
-        {} as Record<EvaluationPeriodStatus, number>,
+  ): Promise<IEvaluationPeriod> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
       );
 
-      // 자기평가 달성률 통계
-      const rates = periods
-        .map((p) => p.maxSelfEvaluationRate)
-        .filter((rate) => rate > 0);
-      const averageMaxSelfEvaluationRate =
-        rates.length > 0
-          ? rates.reduce((sum, rate) => sum + rate, 0) / rates.length
-          : 0;
-      const highestMaxSelfEvaluationRate =
-        rates.length > 0 ? Math.max(...rates) : 0;
-      const lowestMaxSelfEvaluationRate =
-        rates.length > 0 ? Math.min(...rates) : 0;
+      const evaluationPeriod = await repository.findOne({ where: { id } });
+      if (!evaluationPeriod) {
+        throw new EvaluationPeriodNotFoundException(id);
+      }
 
-      return {
-        totalPeriods: periods.length,
-        statusCounts,
-        activePeriods: periods.filter((p) => p.활성화됨()).length,
-        completedPeriods: periods.filter((p) => p.완료됨()).length,
-        inProgressPeriods: periods.filter((p) => p.활성화됨() && !p.완료됨())
-          .length,
-        averageMaxSelfEvaluationRate,
-        highestMaxSelfEvaluationRate,
-        lowestMaxSelfEvaluationRate,
-      };
-    } catch (error) {
-      this.logger.error('평가 기간 통계 조회 실패', error);
-      throw error;
-    }
+      // 엔티티 도메인 로직 실행 (Entity 레벨)
+      switch (targetPhase) {
+        case EvaluationPeriodPhase.EVALUATION_SETUP:
+          evaluationPeriod.평가설정_단계로_이동한다(changedBy);
+          break;
+        case EvaluationPeriodPhase.PERFORMANCE:
+          evaluationPeriod.업무수행_단계로_이동한다(changedBy);
+          break;
+        case EvaluationPeriodPhase.SELF_EVALUATION:
+          evaluationPeriod.자기평가_단계로_이동한다(changedBy);
+          break;
+        case EvaluationPeriodPhase.PEER_EVALUATION:
+          evaluationPeriod.하향동료평가_단계로_이동한다(changedBy);
+          break;
+        case EvaluationPeriodPhase.CLOSURE:
+          evaluationPeriod.종결_단계로_이동한다(changedBy);
+          break;
+        default:
+          throw new EvaluationPeriodBusinessRuleViolationException(
+            `지원하지 않는 단계입니다: ${targetPhase}`,
+          );
+      }
+
+      return await repository.save(evaluationPeriod);
+    }, '단계_변경한다');
   }
 
   /**
-   * 평가 기간 이름 중복을 확인한다
+   * 수동 허용 설정을 변경한다
    */
-  async 이름중복확인한다(
-    name: string,
-    excludeId?: string,
+  async 수동허용설정_변경한다(
+    id: string,
+    criteriaSettingEnabled?: boolean,
+    selfEvaluationSettingEnabled?: boolean,
+    finalEvaluationSettingEnabled?: boolean,
+    changedBy?: string,
     manager?: EntityManager,
-  ): Promise<boolean> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+  ): Promise<IEvaluationPeriod> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
-      const queryBuilder = repository
-        .createQueryBuilder('period')
-        .where('period.name = :name', { name });
-
-      if (excludeId) {
-        queryBuilder.andWhere('period.id != :excludeId', { excludeId });
+      const evaluationPeriod = await repository.findOne({ where: { id } });
+      if (!evaluationPeriod) {
+        throw new EvaluationPeriodNotFoundException(id);
       }
 
-      const count = await queryBuilder.getCount();
-      return count > 0;
-    } catch (error) {
-      this.logger.error(`평가 기간 이름 중복 확인 실패 - 이름: ${name}`, error);
-      throw error;
-    }
-  }
-
-  /**
-   * 기간 겹침을 확인한다
-   */
-  async 기간겹침확인한다(
-    startDate: Date,
-    endDate: Date,
-    excludeId?: string,
-    manager?: EntityManager,
-  ): Promise<boolean> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
-
-    try {
-      const queryBuilder = repository
-        .createQueryBuilder('period')
-        .where(
-          '(period.startDate <= :endDate AND period.endDate >= :startDate)',
-          { startDate, endDate },
-        );
-
-      if (excludeId) {
-        queryBuilder.andWhere('period.id != :excludeId', { excludeId });
+      // 엔티티 도메인 로직 실행 (Entity 레벨)
+      if (criteriaSettingEnabled !== undefined) {
+        if (criteriaSettingEnabled) {
+          evaluationPeriod.평가기준설정_수동허용_활성화한다(
+            changedBy || 'system',
+          );
+        } else {
+          evaluationPeriod.criteriaSettingEnabled = false;
+        }
       }
 
-      const count = await queryBuilder.getCount();
-      return count > 0;
-    } catch (error) {
-      this.logger.error('평가 기간 겹침 확인 실패', error);
-      throw error;
-    }
+      if (selfEvaluationSettingEnabled !== undefined) {
+        if (selfEvaluationSettingEnabled) {
+          evaluationPeriod.자기평가설정_수동허용_활성화한다(
+            changedBy || 'system',
+          );
+        } else {
+          evaluationPeriod.selfEvaluationSettingEnabled = false;
+        }
+      }
+
+      if (finalEvaluationSettingEnabled !== undefined) {
+        if (finalEvaluationSettingEnabled) {
+          evaluationPeriod.최종평가설정_수동허용_활성화한다(
+            changedBy || 'system',
+          );
+        } else {
+          evaluationPeriod.finalEvaluationSettingEnabled = false;
+        }
+      }
+
+      if (changedBy) {
+        evaluationPeriod.updatedBy = changedBy;
+        evaluationPeriod.updatedAt = new Date();
+      }
+
+      return await repository.save(evaluationPeriod);
+    }, '수동허용설정_변경한다');
   }
 
   /**
    * 현재 날짜 기준 활성 평가 기간이 있는지 확인한다
    */
-  async 활성평가기간존재확인한다(manager?: EntityManager): Promise<boolean> {
-    try {
-      const activePeriod = await this.현재진행중평가기간조회한다(manager);
+  async 활성_평가기간_존재_확인한다(manager?: EntityManager): Promise<boolean> {
+    return this.executeSafeDomainOperation(async () => {
+      const activePeriod = await this.현재_진행중_평가기간_조회한다(manager);
       return activePeriod !== null;
-    } catch (error) {
-      this.logger.error('활성 평가 기간 존재 확인 실패', error);
-      throw error;
-    }
+    }, '활성_평가기간_존재_확인한다');
   }
 
   /**
    * 자기평가 달성률 최대값을 설정한다
    */
-  async 자기평가달성률최대값설정한다(
+  async 자기평가_달성률최대값_설정한다(
     id: string,
     maxRate: number,
     setBy: string,
     manager?: EntityManager,
   ): Promise<IEvaluationPeriod> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
       const evaluationPeriod = await repository.findOne({ where: { id } });
       if (!evaluationPeriod) {
         throw new EvaluationPeriodNotFoundException(id);
       }
 
-      evaluationPeriod.자기평가달성률최대값설정한다(maxRate, setBy);
+      // 엔티티 도메인 로직 실행 (Entity 레벨)
+      evaluationPeriod.자기평가_달성률최대값_설정한다(maxRate, setBy);
       return await repository.save(evaluationPeriod);
-    } catch (error) {
-      this.logger.error(`자기평가 달성률 최대값 설정 실패 - ID: ${id}`, error);
-      throw error;
-    }
+    }, '자기평가_달성률최대값_설정한다');
+  }
+
+  // ==================== 등급 구간 관리 ====================
+
+  /**
+   * 평가 기간의 등급 구간을 설정한다
+   */
+  async 등급구간_설정한다(
+    id: string,
+    gradeRanges: CreateGradeRangeDto[],
+    setBy: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationPeriod> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
+
+      const evaluationPeriod = await repository.findOne({ where: { id } });
+      if (!evaluationPeriod) {
+        throw new EvaluationPeriodNotFoundException(id);
+      }
+
+      evaluationPeriod.등급구간_설정한다(gradeRanges, setBy);
+      return await repository.save(evaluationPeriod);
+    }, '등급구간_설정한다');
   }
 
   /**
-   * 자기평가 달성률 최대값으로 평가 기간을 조회한다
+   * 점수에 해당하는 등급을 조회한다
    */
-  async 자기평가달성률최대값별조회한다(
-    minRate?: number,
-    maxRate?: number,
+  async 점수로_등급_조회한다(
+    id: string,
+    score: number,
     manager?: EntityManager,
-  ): Promise<IEvaluationPeriod[]> {
-    const repository =
-      manager?.getRepository(EvaluationPeriod) ??
-      this.evaluationPeriodRepository;
+  ): Promise<ScoreGradeMapping | null> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
 
-    try {
-      const queryBuilder = repository.createQueryBuilder('period');
-
-      if (minRate !== undefined) {
-        queryBuilder.andWhere('period.maxSelfEvaluationRate >= :minRate', {
-          minRate,
-        });
+      const evaluationPeriod = await repository.findOne({ where: { id } });
+      if (!evaluationPeriod) {
+        throw new EvaluationPeriodNotFoundException(id);
       }
 
-      if (maxRate !== undefined) {
-        queryBuilder.andWhere('period.maxSelfEvaluationRate <= :maxRate', {
-          maxRate,
-        });
+      return evaluationPeriod.점수로_등급_조회한다(score);
+    }, '점수로_등급_조회한다');
+  }
+
+  /**
+   * 평가 기간의 등급 구간 목록을 조회한다
+   */
+  async 등급구간_목록_조회한다(
+    id: string,
+    manager?: EntityManager,
+  ): Promise<GradeRange[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
+
+      const evaluationPeriod = await repository.findOne({ where: { id } });
+      if (!evaluationPeriod) {
+        throw new EvaluationPeriodNotFoundException(id);
       }
 
-      return await queryBuilder.orderBy('period.startDate', 'DESC').getMany();
-    } catch (error) {
-      this.logger.error('자기평가 달성률 최대값별 평가 기간 조회 실패', error);
-      throw error;
-    }
+      return evaluationPeriod.gradeRanges || [];
+    }, '등급구간_목록_조회한다');
+  }
+
+  /**
+   * 특정 등급의 구간 정보를 조회한다
+   */
+  async 등급구간_조회한다(
+    id: string,
+    grade: GradeType,
+    manager?: EntityManager,
+  ): Promise<GradeRange | null> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationPeriod,
+        this.evaluationPeriodRepository,
+        manager,
+      );
+
+      const evaluationPeriod = await repository.findOne({ where: { id } });
+      if (!evaluationPeriod) {
+        throw new EvaluationPeriodNotFoundException(id);
+      }
+
+      return evaluationPeriod.등급구간_조회한다(grade);
+    }, '등급구간_조회한다');
   }
 }

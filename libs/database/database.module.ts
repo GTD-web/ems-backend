@@ -14,16 +14,32 @@ import { TransactionManagerService } from './transaction-manager.service';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+
+        if (!databaseUrl) {
+          throw new Error('DATABASE_URL environment variable is required');
+        }
+
         return {
           type: 'postgres',
-          url: configService.get<string>('DATABASE_URL'),
+          url: databaseUrl,
           autoLoadEntities: true,
-          synchronize: configService.get<boolean>('DB_SYNCHRONIZE', false),
-          logging: configService.get<boolean>('DB_LOGGING', false),
-          ssl:
-            configService.get<string>('NODE_ENV') === 'production'
-              ? { rejectUnauthorized: false }
-              : false,
+          synchronize: configService.get<boolean>(
+            'DB_SYNCHRONIZE',
+            nodeEnv === 'development',
+          ),
+          logging: configService.get<boolean>(
+            'DB_LOGGING',
+            nodeEnv === 'development',
+          ),
+          ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+          // 연결 풀 설정 (개발 환경에서 안정성 향상)
+          extra: {
+            connectionLimit: 10,
+            acquireTimeout: 60000,
+            timeout: 60000,
+          },
         };
       },
       inject: [ConfigService],

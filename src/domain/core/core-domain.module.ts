@@ -9,7 +9,6 @@ import { EvaluationCriteriaModule } from './evaluation-criteria/evaluation-crite
 import { EvaluationLineModule } from './evaluation-line/evaluation-line.module';
 import { EvaluationLineMappingModule } from './evaluation-line-mapping/evaluation-line-mapping.module';
 import { EvaluationPeriodModule } from './evaluation-period/evaluation-period.module';
-import { GradeRangeModule } from './grade-range/grade-range.module';
 import { PeerEvaluationModule } from './peer-evaluation/peer-evaluation.module';
 import { PeerEvaluationMappingModule } from './peer-evaluation-mapping/peer-evaluation-mapping.module';
 import { WbsEvaluationCriteriaModule } from './wbs-evaluation-criteria/wbs-evaluation-criteria.module';
@@ -25,7 +24,6 @@ import { WbsSelfEvaluationMappingModule } from './wbs-self-evaluation-mapping/wb
   imports: [
     // 평가 기간 및 설정 관리
     EvaluationPeriodModule,
-    GradeRangeModule,
 
     // 평가 기준 관리
     EvaluationCriteriaModule,
@@ -54,7 +52,6 @@ import { WbsSelfEvaluationMappingModule } from './wbs-self-evaluation-mapping/wb
   exports: [
     // 평가 기간 및 설정 관리
     EvaluationPeriodModule,
-    GradeRangeModule,
 
     // 평가 기준 관리
     EvaluationCriteriaModule,

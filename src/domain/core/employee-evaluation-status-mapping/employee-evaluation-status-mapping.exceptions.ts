@@ -1,15 +1,18 @@
-import { DomainException } from '@libs/exceptions/domain.exception';
+/**
+ * 직원 평가 상태 맵핑 도메인 예외 클래스들
+ */
+
 import { EvaluationElementType } from './interfaces/employee-evaluation-status-mapping.interface';
 
-// 직원 평가 상태 맵핑 도메인 예외 기본 클래스
-export class EmployeeEvaluationStatusMappingDomainException extends DomainException {
+// 기본 도메인 예외
+export class EmployeeEvaluationStatusMappingDomainException extends Error {
   constructor(
     message: string,
-    code?: string,
-    statusCode?: number,
-    metadata?: any,
+    public readonly code?: string,
+    public readonly statusCode: number = 400,
+    public readonly context?: Record<string, any>,
   ) {
-    super(message, code, statusCode, metadata);
+    super(message);
     this.name = 'EmployeeEvaluationStatusMappingDomainException';
   }
 }
