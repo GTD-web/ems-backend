@@ -38,10 +38,6 @@ export interface IEmployeeEvaluationStatus extends IBaseEntity {
   peerEvaluation: EvaluationStatus;
   /** 동료 평가 점수 */
   peerEvaluationScore?: number;
-  /** 추가 평가 상태 */
-  additionalEvaluation: EvaluationStatus;
-  /** 추가 평가 점수 */
-  additionalEvaluationScore?: number;
   /** 최종 승인 여부 */
   finalApproval: boolean;
   /** 최종 등급 */
