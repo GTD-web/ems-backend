@@ -3,38 +3,38 @@ export { EvaluationPeriodManagementContextModule } from './evaluation-period-man
 export { EvaluationPeriodManagementService } from './evaluation-period-management.service';
 
 // ==================== 인터페이스 ====================
-export type { IEvaluationPeriodManagementContext } from './interfaces/evaluation-period-management-context.interface';
 export type {
   IEvaluationPeriodCommandService,
   IEvaluationPeriodQueryService,
 } from './interfaces/evaluation-period-cqrs.interface';
+export type { IEvaluationPeriodManagementContext } from './interfaces/evaluation-period-management-context.interface';
 
 // ==================== DTO 및 데이터 타입 ====================
 export type {
   CreateEvaluationPeriodMinimalDto,
   EvaluationCriteriaItem,
+  UpdateCriteriaSettingPermissionDto,
   UpdateEvaluationPeriodBasicDto,
   UpdateEvaluationPeriodScheduleDto,
-  UpdateGradeRangesDto,
-  UpdateCriteriaSettingPermissionDto,
-  UpdateSelfEvaluationSettingPermissionDto,
   UpdateFinalEvaluationSettingPermissionDto,
+  UpdateGradeRangesDto,
   UpdateManualSettingPermissionsDto,
+  UpdateSelfEvaluationSettingPermissionDto,
 } from './interfaces/evaluation-period-creation.interface';
 
 // ==================== CQRS 커맨드 ====================
 export {
-  CreateEvaluationPeriodCommand,
-  StartEvaluationPeriodCommand,
   CompleteEvaluationPeriodCommand,
+  CreateEvaluationPeriodCommand,
   DeleteEvaluationPeriodCommand,
-  UpdateEvaluationPeriodBasicInfoCommand,
-  UpdateEvaluationPeriodScheduleCommand,
-  UpdateEvaluationPeriodGradeRangesCommand,
+  StartEvaluationPeriodCommand,
   UpdateCriteriaSettingPermissionCommand,
-  UpdateSelfEvaluationSettingPermissionCommand,
+  UpdateEvaluationPeriodBasicInfoCommand,
+  UpdateEvaluationPeriodGradeRangesCommand,
+  UpdateEvaluationPeriodScheduleCommand,
   UpdateFinalEvaluationSettingPermissionCommand,
   UpdateManualSettingPermissionsCommand,
+  UpdateSelfEvaluationSettingPermissionCommand,
 } from './commands';
 
 // ==================== CQRS 쿼리 ====================

@@ -1,13 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../../app.module';
+import { EvaluationPeriodService } from '../../domain/core/evaluation-period/evaluation-period.service';
 import {
   EvaluationPeriodDto,
   EvaluationPeriodPhase,
   EvaluationPeriodStatus,
-  GradeType,
 } from '../../domain/core/evaluation-period/evaluation-period.types';
-import { EvaluationPeriodService } from '../../domain/core/evaluation-period/evaluation-period.service';
 import { EvaluationPeriodManagementService } from './evaluation-period-management.service';
 import {
   CreateEvaluationPeriodMinimalDto,

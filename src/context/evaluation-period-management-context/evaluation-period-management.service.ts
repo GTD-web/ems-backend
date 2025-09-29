@@ -1,38 +1,34 @@
 import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { EvaluationPeriodDto } from '../../domain/core/evaluation-period/evaluation-period.types';
 import {
-  EvaluationPeriodDto,
-  GradeRange,
-} from '../../domain/core/evaluation-period/evaluation-period.types';
-import {
-  CreateEvaluationPeriodMinimalDto,
-  UpdateEvaluationPeriodBasicDto,
-  UpdateEvaluationPeriodScheduleDto,
-  UpdateGradeRangesDto,
-  UpdateCriteriaSettingPermissionDto,
-  UpdateSelfEvaluationSettingPermissionDto,
-  UpdateFinalEvaluationSettingPermissionDto,
-  UpdateManualSettingPermissionsDto,
-} from './interfaces/evaluation-period-creation.interface';
-import { IEvaluationPeriodManagementContext } from './interfaces/evaluation-period-management-context.interface';
-import {
-  CreateEvaluationPeriodCommand,
-  StartEvaluationPeriodCommand,
   CompleteEvaluationPeriodCommand,
+  CreateEvaluationPeriodCommand,
   DeleteEvaluationPeriodCommand,
-  UpdateEvaluationPeriodBasicInfoCommand,
-  UpdateEvaluationPeriodScheduleCommand,
-  UpdateEvaluationPeriodGradeRangesCommand,
+  StartEvaluationPeriodCommand,
   UpdateCriteriaSettingPermissionCommand,
-  UpdateSelfEvaluationSettingPermissionCommand,
+  UpdateEvaluationPeriodBasicInfoCommand,
+  UpdateEvaluationPeriodGradeRangesCommand,
+  UpdateEvaluationPeriodScheduleCommand,
   UpdateFinalEvaluationSettingPermissionCommand,
   UpdateManualSettingPermissionsCommand,
+  UpdateSelfEvaluationSettingPermissionCommand,
 } from './commands';
+import {
+  CreateEvaluationPeriodMinimalDto,
+  UpdateCriteriaSettingPermissionDto,
+  UpdateEvaluationPeriodBasicDto,
+  UpdateEvaluationPeriodScheduleDto,
+  UpdateFinalEvaluationSettingPermissionDto,
+  UpdateGradeRangesDto,
+  UpdateManualSettingPermissionsDto,
+  UpdateSelfEvaluationSettingPermissionDto,
+} from './interfaces/evaluation-period-creation.interface';
+import { IEvaluationPeriodManagementContext } from './interfaces/evaluation-period-management-context.interface';
 import {
   GetActiveEvaluationPeriodsQuery,
   GetEvaluationPeriodDetailQuery,
   GetEvaluationPeriodListQuery,
-  EvaluationPeriodListResult,
 } from './queries';
 
 /**
