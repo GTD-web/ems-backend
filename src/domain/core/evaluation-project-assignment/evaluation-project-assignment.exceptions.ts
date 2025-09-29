@@ -79,3 +79,46 @@ export class EvaluationPeriodExpiredException extends EvaluationProjectAssignmen
     this.name = 'EvaluationPeriodExpiredException';
   }
 }
+
+/**
+ * 평가 프로젝트 할당 비즈니스 규칙 위반 예외
+ */
+export class EvaluationProjectAssignmentBusinessRuleViolationException extends EvaluationProjectAssignmentDomainException {
+  constructor(message: string) {
+    super(message, 'EVALUATION_PROJECT_ASSIGNMENT_BUSINESS_RULE_VIOLATION');
+    this.name = 'EvaluationProjectAssignmentBusinessRuleViolationException';
+  }
+}
+
+/**
+ * 평가 프로젝트 할당 중복 예외 (별칭)
+ */
+export class EvaluationProjectAssignmentDuplicateException extends DuplicateEvaluationProjectAssignmentException {
+  constructor(periodId: string, employeeId: string, projectId: string) {
+    super(periodId, employeeId, projectId);
+    this.name = 'EvaluationProjectAssignmentDuplicateException';
+  }
+}
+
+/**
+ * 평가 프로젝트 할당 필수 데이터 누락 예외
+ */
+export class EvaluationProjectAssignmentRequiredDataMissingException extends EvaluationProjectAssignmentDomainException {
+  constructor(message: string) {
+    super(message, 'EVALUATION_PROJECT_ASSIGNMENT_REQUIRED_DATA_MISSING');
+    this.name = 'EvaluationProjectAssignmentRequiredDataMissingException';
+  }
+}
+
+/**
+ * 평가 프로젝트 할당 데이터 형식 오류 예외
+ */
+export class InvalidEvaluationProjectAssignmentDataFormatException extends EvaluationProjectAssignmentDomainException {
+  constructor(fieldName: string, expectedFormat: string, actualValue: any) {
+    super(
+      `${fieldName} 필드의 형식이 올바르지 않습니다. 예상 형식: ${expectedFormat}, 실제 값: ${actualValue}`,
+      'INVALID_EVALUATION_PROJECT_ASSIGNMENT_DATA_FORMAT',
+    );
+    this.name = 'InvalidEvaluationProjectAssignmentDataFormatException';
+  }
+}
