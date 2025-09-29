@@ -5,7 +5,6 @@ import { DownwardEvaluationModule } from './downward-evaluation/downward-evaluat
 import { DownwardEvaluationMappingModule } from './downward-evaluation-mapping/downward-evaluation-mapping.module';
 import { EmployeeEvaluationStatusModule } from './employee-evaluation-status/employee-evaluation-status.module';
 import { EmployeeEvaluationStatusMappingModule } from './employee-evaluation-status-mapping/employee-evaluation-status-mapping.module';
-import { EvaluationCriteriaModule } from './evaluation-criteria/evaluation-criteria.module';
 import { EvaluationLineModule } from './evaluation-line/evaluation-line.module';
 import { EvaluationLineMappingModule } from './evaluation-line-mapping/evaluation-line-mapping.module';
 import { EvaluationPeriodModule } from './evaluation-period/evaluation-period.module';
@@ -26,7 +25,6 @@ import { WbsSelfEvaluationMappingModule } from './wbs-self-evaluation-mapping/wb
     EvaluationPeriodModule,
 
     // 평가 기준 관리
-    EvaluationCriteriaModule,
     WbsEvaluationCriteriaModule,
 
     // 평가자 및 상태 관리
@@ -54,7 +52,6 @@ import { WbsSelfEvaluationMappingModule } from './wbs-self-evaluation-mapping/wb
     EvaluationPeriodModule,
 
     // 평가 기준 관리
-    EvaluationCriteriaModule,
     WbsEvaluationCriteriaModule,
 
     // 평가자 및 상태 관리
