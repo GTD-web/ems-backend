@@ -4,6 +4,7 @@ import { CommonDomainModule } from './domain/common/common-domain.module';
 import { CoreDomainModule } from './domain/core/core-domain.module';
 import { SubDomainModule } from './domain/sub/sub-domain.module';
 import { DomainContextModule } from './context/domain-context.module';
+import { InterfaceModule } from './interface/interface.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { DomainContextModule } from './context/domain-context.module';
     CoreDomainModule,
     SubDomainModule,
     DomainContextModule,
+    InterfaceModule, // API 인터페이스 모듈 추가
   ],
   controllers: [],
   providers: [],
