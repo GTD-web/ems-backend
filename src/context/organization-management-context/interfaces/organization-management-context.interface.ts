@@ -1,0 +1,105 @@
+import { DepartmentDto } from '../../../domain/common/department/department.types';
+import { EmployeeDto } from '../../../domain/common/employee/employee.types';
+
+/**
+ * 조직 관리 컨텍스트 인터페이스
+ *
+ * 부서와 직원 정보를 조회하는 비즈니스 로직을 정의합니다.
+ * 조직 구조 조회, 직원 관계 조회 등의 기능을 제공합니다.
+ */
+export interface IOrganizationManagementContext {
+  /**
+   * 모든 부서 목록을 조회합니다
+   * @returns 전체 부서 목록
+   */
+  전체부서목록조회(): Promise<DepartmentDto[]>;
+
+  /**
+   * 부서 정보를 조회합니다
+   * @param departmentId 부서 ID
+   * @returns 부서 정보
+   */
+  부서정보조회(departmentId: string): Promise<DepartmentDto | null>;
+
+  /**
+   * 부서별 직원 목록을 조회합니다
+   * @param departmentId 부서 ID
+   * @returns 해당 부서의 직원 목록
+   */
+  부서별직원목록조회(departmentId: string): Promise<EmployeeDto[]>;
+
+  /**
+   * 조직도를 조회합니다
+   * @returns 전체 조직 구조
+   */
+  조직도조회(): Promise<OrganizationChartDto>;
+
+  /**
+   * 직원 정보를 조회합니다
+   * @param employeeId 직원 ID
+   * @returns 직원 정보
+   */
+  직원정보조회(employeeId: string): Promise<EmployeeDto | null>;
+
+  /**
+   * 모든 직원 목록을 조회합니다
+   * @returns 전체 직원 목록
+   */
+  전체직원목록조회(): Promise<EmployeeDto[]>;
+
+  /**
+   * 직원의 상급자를 조회합니다
+   * @param employeeId 직원 ID
+   * @returns 상급자 정보
+   */
+  상급자조회(employeeId: string): Promise<EmployeeDto | null>;
+
+  /**
+   * 직원의 하급자 목록을 조회합니다
+   * @param employeeId 직원 ID
+   * @returns 하급자 목록
+   */
+  하급자목록조회(employeeId: string): Promise<EmployeeDto[]>;
+
+  /**
+   * 부서의 하위 부서 목록을 조회합니다
+   * @param departmentId 부서 ID
+   * @returns 하위 부서 목록
+   */
+  하위부서목록조회(departmentId: string): Promise<DepartmentDto[]>;
+
+  /**
+   * 부서의 상위 부서를 조회합니다
+   * @param departmentId 부서 ID
+   * @returns 상위 부서 정보
+   */
+  상위부서조회(departmentId: string): Promise<DepartmentDto | null>;
+
+  /**
+   * 활성 직원 목록을 조회합니다
+   * @returns 활성 상태의 직원 목록
+   */
+  활성직원목록조회(): Promise<EmployeeDto[]>;
+}
+
+/**
+ * 조직도 DTO
+ */
+export interface OrganizationChartDto {
+  /** 부서 목록 */
+  departments: DepartmentWithEmployeesDto[];
+  /** 전체 직원 수 */
+  totalEmployeeCount: number;
+  /** 마지막 업데이트 시간 */
+  lastUpdatedAt: Date;
+}
+
+/**
+ * 직원 정보를 포함한 부서 DTO
+ */
+export interface DepartmentWithEmployeesDto extends DepartmentDto {
+  /** 부서 소속 직원 목록 */
+  employees: EmployeeDto[];
+  /** 하위 부서 목록 */
+  subDepartments: DepartmentWithEmployeesDto[];
+}
