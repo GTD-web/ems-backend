@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
+import { EvaluationPeriodManagementContextModule } from './evaluation-period-management-context';
 
 @Module({
-  imports: [],
+  imports: [EvaluationPeriodManagementContextModule],
   providers: [],
-  exports: [],
+  exports: [EvaluationPeriodManagementContextModule],
 })
 export class DomainContextModule {}

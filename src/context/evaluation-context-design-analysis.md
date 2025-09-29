@@ -46,8 +46,7 @@ context/
 
 ```
 domain/core/
-├── evaluation-period/                   # 평가 기간 관리
-├── grade-range/                         # 등급 구간 관리
+├── evaluation-period/                   # 평가 기간 관리 (등급 구간 포함)
 ├── evaluation-criteria/                 # 평가 기준 관리
 ├── evaluation-line/                     # 평가 라인 관리
 ├── evaluation-line-mapping/             # 평가 라인 매핑
@@ -61,8 +60,7 @@ domain/core/
 ├── wbs-self-evaluation-mapping/         # WBS 자기 평가 매핑
 ├── wbs-evaluation-criteria/             # WBS 평가 기준
 ├── employee-evaluation-status/          # 직원 평가 상태
-├── employee-evaluation-status-mapping/  # 직원 평가 상태 매핑
-└── additional-evaluation/               # 추가 평가
+└── employee-evaluation-status-mapping/  # 직원 평가 상태 매핑
 ```
 
 ### 2.2 Sub 도메인 엔티티 분석
@@ -90,9 +88,9 @@ domain/common/
 
 #### **평가 기간 관리 그룹**
 
-- **엔티티**: `evaluation-period`, `grade-range`
+- **엔티티**: `evaluation-period` (등급 구간 포함)
 - **응집도**: 매우 높음
-- **이유**: 평가 기간과 등급 구간은 밀접한 관계 (평가 기간별 등급 설정)
+- **이유**: 평가 기간과 등급 구간은 밀접한 관계로 하나의 도메인에서 관리
 
 #### **평가 실행 그룹**
 
@@ -134,89 +132,76 @@ domain/common/
 
 ## 4. 권장 컨텍스트 구조
 
-### 4.1 최종 권장 컨텍스트 명
+### 4.1 최종 통합된 권장 컨텍스트 구조
 
 ```
 context/
-├── evaluation-period-management-context/        # 평가 기간 관리 컨텍스트
-│   ├── evaluation-period.context/              # 평가 기간 핵심 관리
-│   └── grade-range.context/                    # 등급 구간 관리
+├── evaluation-management-context/              # 평가 관리 컨텍스트 (통합)
+│   └── [세부 컨텍스트는 추후 정리]
 ├── evaluation-criteria-management-context/     # 평가 기준 관리 컨텍스트
-│   ├── evaluation-criteria.context/           # 평가 기준 관리
-│   ├── evaluation-line.context/               # 평가 라인 관리
-│   └── wbs-evaluation-criteria.context/       # WBS 평가 기준 관리
-├── evaluation-execution-context/               # 평가 실행 컨텍스트
-│   ├── downward-evaluation.context/           # 하향 평가 실행
-│   ├── peer-evaluation.context/               # 동료 평가 실행
-│   ├── wbs-self-evaluation.context/           # WBS 자기 평가 실행
-│   └── deliverable-evaluation.context/        # 산출물 평가 실행
+│   └── [세부 컨텍스트는 추후 정리]
 ├── evaluation-question-management-context/     # 평가 질문 관리 컨텍스트
-│   ├── evaluation-question.context/           # 평가 질문 관리
-│   ├── question-group.context/                # 질문 그룹 관리
-│   └── evaluation-response.context/           # 평가 응답 관리
-├── evaluation-status-management-context/       # 평가 상태 관리 컨텍스트
-│   ├── employee-evaluation-status.context/    # 직원 평가 상태 관리
-│   └── additional-evaluation.context/         # 추가 평가 관리
-├── evaluation-mapping-context/                 # 평가 매핑 컨텍스트
-│   ├── evaluation-line-mapping.context/       # 평가 라인 매핑
-│   ├── deliverable-mapping.context/           # 산출물 매핑
-│   ├── downward-evaluation-mapping.context/   # 하향 평가 매핑
-│   ├── peer-evaluation-mapping.context/       # 동료 평가 매핑
-│   ├── wbs-self-evaluation-mapping.context/   # WBS 자기 평가 매핑
-│   └── employee-evaluation-status-mapping.context/ # 직원 평가 상태 매핑
+│   └── [세부 컨텍스트는 추후 정리]
 ├── evaluation-analytics-context/               # 평가 분석 컨텍스트
 └── evaluation-approval-context/                # 평가 승인 컨텍스트
 ```
 
-### 4.2 컨텍스트별 책임 요약
+### 4.2 컨텍스트별 포함 도메인 모듈
 
-#### **평가 기간 관리 컨텍스트 (EvaluationPeriodManagementContext)**
+#### **평가 관리 컨텍스트 (EvaluationManagementContext)** - 대통합
 
-- **포함 도메인**: `evaluation-period`, `grade-range`
-- **주요 책임**:
-  - 평가 기간 생성/수정/삭제/상태 관리
-  - 등급 구간 설정 및 점수 매핑
-  - 평가 기간별 등급 체계 관리
+**포함 도메인 모듈**:
+
+- `evaluation-period` (평가 기간 관리)
+- `employee-evaluation-status` (직원 평가 상태 관리)
+- `employee-evaluation-status-mapping` (직원 평가 상태 매핑)
+- `downward-evaluation` (하향 평가)
+- `downward-evaluation-mapping` (하향 평가 매핑)
+- `peer-evaluation` (동료 평가)
+- `peer-evaluation-mapping` (동료 평가 매핑)
+- `wbs-self-evaluation` (WBS 자기 평가)
+- `wbs-self-evaluation-mapping` (WBS 자기 평가 매핑)
+- `deliverable` (산출물 평가)
+- `deliverable-mapping` (산출물 매핑)
+
+**주요 책임**:
+
+- 평가 기간 생성/수정/삭제/상태 관리, 등급 구간 설정
+- 모든 유형의 평가 실행 및 관리
+- 직원별 평가 진행 상태 실시간 추적 및 업데이트
+- 평가자-피평가자-프로젝트 간 관계 설정 및 관리
+- 평가 기간별 직원 상태 현황, 진행률 계산
+- 평가 실행 시 직원 평가 상태 자동 업데이트
 
 #### **평가 기준 관리 컨텍스트 (EvaluationCriteriaManagementContext)**
 
-- **포함 도메인**: `evaluation-criteria`, `evaluation-line`, `wbs-evaluation-criteria`
-- **주요 책임**:
-  - 평가 기준 정의 및 관리
-  - 평가 라인 설정 및 구조 관리
-  - WBS별 평가 기준 설정
+**포함 도메인 모듈**:
 
-#### **평가 실행 컨텍스트 (EvaluationExecutionContext)**
+- `evaluation-criteria` (평가 기준)
+- `evaluation-line` (평가 라인)
+- `evaluation-line-mapping` (평가 라인 매핑)
+- `wbs-evaluation-criteria` (WBS 평가 기준)
 
-- **포함 도메인**: `downward-evaluation`, `peer-evaluation`, `wbs-self-evaluation`, `deliverable`
-- **주요 책임**:
-  - 모든 유형의 평가 실행 및 관리
-  - 평가 진행 상태 추적
-  - 평가 결과 수집 및 처리
+**주요 책임**:
+
+- 평가 기준 정의 및 관리
+- 평가 라인 설정 및 구조 관리
+- 평가자-피평가자 관계 매핑
+- WBS별 평가 기준 설정
 
 #### **평가 질문 관리 컨텍스트 (EvaluationQuestionManagementContext)**
 
-- **포함 도메인**: `evaluation-question`, `question-group`, `evaluation-response`
-- **주요 책임**:
-  - 평가 질문 생성 및 관리
-  - 질문 그룹화 및 카테고리 관리
-  - 평가 응답 수집 및 관리
+**포함 도메인 모듈**:
 
-#### **평가 상태 관리 컨텍스트 (EvaluationStatusManagementContext)**
+- `evaluation-question` (평가 질문)
+- `question-group` (질문 그룹)
+- `evaluation-response` (평가 응답)
 
-- **포함 도메인**: `employee-evaluation-status`, `additional-evaluation`
-- **주요 책임**:
-  - 직원별 평가 상태 추적
-  - 추가 평가 관리
-  - 평가 완료도 모니터링
+**주요 책임**:
 
-#### **평가 매핑 컨텍스트 (EvaluationMappingContext)**
-
-- **포함 도메인**: 모든 `*-mapping` 도메인
-- **주요 책임**:
-  - 도메인 간 관계 매핑 관리
-  - 평가 대상과 평가자 간의 관계 설정
-  - 매핑 데이터 일관성 보장
+- 평가 질문 생성 및 관리
+- 질문 그룹화 및 카테고리 관리
+- 평가 응답 수집 및 관리
 
 #### **평가 분석 컨텍스트 (EvaluationAnalyticsContext)**
 
@@ -294,20 +279,17 @@ interface IEvaluationStatusQueryService {
 
 ### Phase 1: 핵심 컨텍스트 (필수)
 
-1. **EvaluationPeriodManagementContext** - 평가 기간 및 등급 관리
-2. **EvaluationCriteriaManagementContext** - 평가 기준 설정
-3. **EvaluationQuestionManagementContext** - 평가 질문 관리
+1. **EvaluationManagementContext** - 평가 기간, 상태, 실행, 매핑 대통합 관리
+2. **EvaluationCriteriaManagementContext** - 평가 기준, 라인, 라인매핑 통합 관리
 
-### Phase 2: 실행 컨텍스트 (중요)
+### Phase 2: 지원 컨텍스트 (중요)
 
-1. **EvaluationExecutionContext** - 평가 실행 및 관리
-2. **EvaluationStatusManagementContext** - 평가 상태 추적
+1. **EvaluationQuestionManagementContext** - 평가 질문 관리
 
 ### Phase 3: 확장 컨텍스트 (부가가치)
 
-1. **EvaluationMappingContext** - 매핑 관계 관리
-2. **EvaluationAnalyticsContext** - 분석 및 리포트
-3. **EvaluationApprovalContext** - 승인 프로세스
+1. **EvaluationAnalyticsContext** - 분석 및 리포트
+2. **EvaluationApprovalContext** - 승인 프로세스
 
 ## 7. 컨텍스트 설계 원칙
 
@@ -329,28 +311,43 @@ interface IEvaluationStatusQueryService {
 - 이벤트 기반 통신 활용
 - 조회 서비스 인터페이스를 통한 데이터 접근
 
-## 8. 기존 프로젝트와의 차이점 분석
+## 8. 업데이트된 컨텍스트 분석 요약
 
-### 8.1 도메인 복잡도
+### 8.1 주요 변경사항
 
-**프로젝트 관리 시스템**:
+1. **grade-range 도메인 제거**: `evaluation-period` 도메인 내 Value Object로 통합
+2. **additional-evaluation 도메인 제거**: `employee-evaluation-status` 도메인 내 속성으로 포함
+3. **평가 실행과 관리 대통합**: 평가 실행 시 상태 업데이트가 필수적이므로 하나의 컨텍스트로 통합
+4. **매핑 도메인 통합**: 모든 평가 관련 매핑을 평가 관리 컨텍스트로 집중
+5. **실시간 동기화**: 평가 실행과 상태 관리를 동일한 트랜잭션에서 처리
 
-- 계층적 구조 (프로젝트 → WBS → 태스크)
-- 리소스 중심의 관리
+### 8.2 최종 도메인 구조
 
-**평가 관리 시스템**:
+**Core 도메인 (14개)**:
 
-- 시간 기반 구조 (평가 기간 → 평가 실행 → 결과)
-- 프로세스 중심의 관리
+- `evaluation-period` (등급 구간 포함)
+- `evaluation-criteria`, `evaluation-line`, `wbs-evaluation-criteria`
+- `downward-evaluation`, `peer-evaluation`, `wbs-self-evaluation`
+- `deliverable`
+- `employee-evaluation-status` (추가 평가 포함)
+- 6개 매핑 도메인
 
-### 8.2 컨텍스트 분리 전략
+**Sub 도메인 (3개)**:
 
-**프로젝트 관리**: 엔티티 타입별 분리 (프로젝트, WBS, 마일스톤)
+- `evaluation-question`, `evaluation-response`, `question-group`
+
+**Common 도메인 (4개)**:
+
+- `department`, `employee`, `project`, `wbs-item`
+
+### 8.3 컨텍스트 분리 전략
+
+**기존 프로젝트 관리**: 엔티티 타입별 분리 (프로젝트, WBS, 마일스톤)
 **평가 관리**: 비즈니스 프로세스별 분리 (기간 관리, 실행, 분석)
 
-### 8.3 매핑 엔티티 처리
+### 8.4 매핑 엔티티 처리
 
-**프로젝트 관리**: 각 컨텍스트에 분산
+**기존 프로젝트 관리**: 각 컨텍스트에 분산
 **평가 관리**: 전용 매핑 컨텍스트로 집중 관리
 
 ## 9. 구현 시 고려사항
@@ -373,5 +370,27 @@ interface IEvaluationStatusQueryService {
 - 평가 기준 변경 시 하위 호환성 보장
 - 다국어 지원을 위한 질문 관리 구조
 
-이 설계를 바탕으로 각 컨텍스트를 단계적으로 구현하면, 평가 관리 도메인의 복잡성을 효과적으로 관리할 수 있는 컨텍스트 레이어를 구축할 수 있습니다.
+## 10. 결론
 
+### 10.1 최종 통합된 권장 컨텍스트 구조 (3개)
+
+1. **EvaluationManagementContext** - 평가 관리 (기간, 상태, 실행, 모든 매핑 대통합)
+2. **EvaluationCriteriaManagementContext** - 평가 기준 관리 (기준, 라인, 라인매핑 통합)
+3. **EvaluationQuestionManagementContext** - 평가 질문 관리
+
+### 10.2 대통합의 핵심 이점
+
+- **실시간 상태 동기화**: 평가 실행 시 직원 평가 상태가 즉시 업데이트
+- **트랜잭션 일관성**: 평가 실행과 상태 변경이 하나의 트랜잭션에서 처리
+- **조회 효율성**: 평가 현황 조회 시 모든 필요한 정보를 같은 컨텍스트에서 제공
+- **개발 생산성**: 평가 관련 모든 기능을 한 곳에서 개발하여 복잡성 대폭 감소
+- **데이터 일관성**: 평가 실행과 상태 관리 간의 불일치 문제 원천 차단
+
+### 10.3 설계 원칙 준수
+
+- **응집도 최적화**: 비즈니스 프로세스 기준으로 관련 도메인 그룹화
+- **결합도 최소화**: 컨텍스트 간 이벤트 기반 통신 유지
+- **단일 책임**: 각 컨텍스트는 명확한 비즈니스 목적 보유
+- **확장성**: 새로운 평가 유형 추가 시 기존 구조 유지
+
+이 재구성된 설계를 바탕으로 각 컨텍스트를 단계적으로 구현하면, 평가 관리 도메인의 복잡성을 효과적으로 관리하면서도 실용적인 컨텍스트 레이어를 구축할 수 있습니다.

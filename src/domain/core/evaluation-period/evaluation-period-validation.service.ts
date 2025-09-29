@@ -127,24 +127,10 @@ export class EvaluationPeriodValidationService {
       EvaluationPeriodStatus,
       EvaluationPeriodStatus[]
     > = {
-      [EvaluationPeriodStatus.INACTIVE]: [
-        EvaluationPeriodStatus.ACTIVE,
-        EvaluationPeriodStatus.CRITERIA_SETTING,
-      ],
-      [EvaluationPeriodStatus.CRITERIA_SETTING]: [
-        EvaluationPeriodStatus.ACTIVE,
-        EvaluationPeriodStatus.PERFORMANCE_INPUT,
-      ],
-      [EvaluationPeriodStatus.ACTIVE]: [
-        EvaluationPeriodStatus.PERFORMANCE_INPUT,
-        EvaluationPeriodStatus.CRITERIA_SETTING,
-      ],
-      [EvaluationPeriodStatus.PERFORMANCE_INPUT]: [
-        EvaluationPeriodStatus.FINAL_EVALUATION,
-        EvaluationPeriodStatus.ACTIVE,
-      ],
-      [EvaluationPeriodStatus.FINAL_EVALUATION]: [
+      [EvaluationPeriodStatus.WAITING]: [EvaluationPeriodStatus.IN_PROGRESS],
+      [EvaluationPeriodStatus.IN_PROGRESS]: [
         EvaluationPeriodStatus.COMPLETED,
+        EvaluationPeriodStatus.WAITING,
       ],
       [EvaluationPeriodStatus.COMPLETED]: [],
     };
@@ -165,9 +151,9 @@ export class EvaluationPeriodValidationService {
     targetPhase: EvaluationPeriodPhase,
   ): void {
     if (!currentPhase) {
-      if (targetPhase !== EvaluationPeriodPhase.CRITERIA_SETTING) {
+      if (targetPhase !== EvaluationPeriodPhase.EVALUATION_SETUP) {
         throw new EvaluationPeriodBusinessRuleViolationException(
-          '첫 번째 단계는 평가 기준 설정이어야 합니다.',
+          '첫 번째 단계는 평가설정이어야 합니다.',
         );
       }
       return;
@@ -177,19 +163,18 @@ export class EvaluationPeriodValidationService {
       EvaluationPeriodPhase,
       EvaluationPeriodPhase[]
     > = {
-      [EvaluationPeriodPhase.CRITERIA_SETTING]: [
-        EvaluationPeriodPhase.ACTIVE,
-        EvaluationPeriodPhase.PERFORMANCE_INPUT,
+      [EvaluationPeriodPhase.WAITING]: [EvaluationPeriodPhase.EVALUATION_SETUP],
+      [EvaluationPeriodPhase.EVALUATION_SETUP]: [
+        EvaluationPeriodPhase.PERFORMANCE,
       ],
-      [EvaluationPeriodPhase.ACTIVE]: [
-        EvaluationPeriodPhase.CRITERIA_SETTING,
-        EvaluationPeriodPhase.PERFORMANCE_INPUT,
+      [EvaluationPeriodPhase.PERFORMANCE]: [
+        EvaluationPeriodPhase.SELF_EVALUATION,
       ],
-      [EvaluationPeriodPhase.PERFORMANCE_INPUT]: [
-        EvaluationPeriodPhase.FINAL_EVALUATION,
-        EvaluationPeriodPhase.ACTIVE,
+      [EvaluationPeriodPhase.SELF_EVALUATION]: [
+        EvaluationPeriodPhase.PEER_EVALUATION,
       ],
-      [EvaluationPeriodPhase.FINAL_EVALUATION]: [],
+      [EvaluationPeriodPhase.PEER_EVALUATION]: [EvaluationPeriodPhase.CLOSURE],
+      [EvaluationPeriodPhase.CLOSURE]: [],
     };
 
     const allowedTransitions = validPhaseTransitions[currentPhase] || [];
@@ -305,34 +290,38 @@ export class EvaluationPeriodValidationService {
    * 세부 일정을 검증한다
    */
   private 세부일정검증한다(createDto: CreateEvaluationPeriodDto): void {
-    // 평가 기준 설정 기간 검증
-    if (createDto.criteriaStartDate && createDto.criteriaEndDate) {
-      if (createDto.criteriaStartDate >= createDto.criteriaEndDate) {
+    // 평가설정 단계 마감일 검증
+    if (createDto.evaluationSetupDeadline) {
+      if (createDto.evaluationSetupDeadline <= createDto.startDate) {
         throw new InvalidEvaluationPeriodDateRangeException(
-          '평가 기준 설정 시작일은 종료일보다 이전이어야 합니다.',
+          '평가설정 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
         );
       }
     }
 
-    // 성과 입력 기간 검증
-    if (createDto.performanceStartDate && createDto.performanceEndDate) {
-      if (createDto.performanceStartDate >= createDto.performanceEndDate) {
+    // 업무 수행 단계 마감일 검증
+    if (createDto.performanceDeadline) {
+      if (createDto.performanceDeadline <= createDto.startDate) {
         throw new InvalidEvaluationPeriodDateRangeException(
-          '성과 입력 시작일은 종료일보다 이전이어야 합니다.',
+          '업무 수행 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
         );
       }
     }
 
-    // 최종 평가 기간 검증
-    if (
-      createDto.finalEvaluationStartDate &&
-      createDto.finalEvaluationEndDate
-    ) {
-      if (
-        createDto.finalEvaluationStartDate >= createDto.finalEvaluationEndDate
-      ) {
+    // 자기 평가 단계 마감일 검증
+    if (createDto.selfEvaluationDeadline) {
+      if (createDto.selfEvaluationDeadline <= createDto.startDate) {
         throw new InvalidEvaluationPeriodDateRangeException(
-          '최종 평가 시작일은 종료일보다 이전이어야 합니다.',
+          '자기 평가 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
+        );
+      }
+    }
+
+    // 하향/동료평가 단계 마감일 검증
+    if (createDto.peerEvaluationDeadline) {
+      if (createDto.peerEvaluationDeadline <= createDto.startDate) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '하향/동료평가 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
         );
       }
     }
@@ -345,61 +334,40 @@ export class EvaluationPeriodValidationService {
     updateDto: UpdateEvaluationPeriodDto,
     existingPeriod: any,
   ): void {
-    // 평가 기준 설정 기간 검증
-    if (updateDto.criteriaStartDate || updateDto.criteriaEndDate) {
-      const newCriteriaStartDate =
-        updateDto.criteriaStartDate || existingPeriod.criteriaStartDate;
-      const newCriteriaEndDate =
-        updateDto.criteriaEndDate || existingPeriod.criteriaEndDate;
+    const newStartDate = updateDto.startDate || existingPeriod.startDate;
 
-      if (
-        newCriteriaStartDate &&
-        newCriteriaEndDate &&
-        newCriteriaStartDate >= newCriteriaEndDate
-      ) {
+    // 평가설정 단계 마감일 검증
+    if (updateDto.evaluationSetupDeadline) {
+      if (updateDto.evaluationSetupDeadline <= newStartDate) {
         throw new InvalidEvaluationPeriodDateRangeException(
-          '평가 기준 설정 시작일은 종료일보다 이전이어야 합니다.',
+          '평가설정 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
         );
       }
     }
 
-    // 성과 입력 기간 검증
-    if (updateDto.performanceStartDate || updateDto.performanceEndDate) {
-      const newPerformanceStartDate =
-        updateDto.performanceStartDate || existingPeriod.performanceStartDate;
-      const newPerformanceEndDate =
-        updateDto.performanceEndDate || existingPeriod.performanceEndDate;
-
-      if (
-        newPerformanceStartDate &&
-        newPerformanceEndDate &&
-        newPerformanceStartDate >= newPerformanceEndDate
-      ) {
+    // 업무 수행 단계 마감일 검증
+    if (updateDto.performanceDeadline) {
+      if (updateDto.performanceDeadline <= newStartDate) {
         throw new InvalidEvaluationPeriodDateRangeException(
-          '성과 입력 시작일은 종료일보다 이전이어야 합니다.',
+          '업무 수행 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
         );
       }
     }
 
-    // 최종 평가 기간 검증
-    if (
-      updateDto.finalEvaluationStartDate ||
-      updateDto.finalEvaluationEndDate
-    ) {
-      const newFinalEvaluationStartDate =
-        updateDto.finalEvaluationStartDate ||
-        existingPeriod.finalEvaluationStartDate;
-      const newFinalEvaluationEndDate =
-        updateDto.finalEvaluationEndDate ||
-        existingPeriod.finalEvaluationEndDate;
-
-      if (
-        newFinalEvaluationStartDate &&
-        newFinalEvaluationEndDate &&
-        newFinalEvaluationStartDate >= newFinalEvaluationEndDate
-      ) {
+    // 자기 평가 단계 마감일 검증
+    if (updateDto.selfEvaluationDeadline) {
+      if (updateDto.selfEvaluationDeadline <= newStartDate) {
         throw new InvalidEvaluationPeriodDateRangeException(
-          '최종 평가 시작일은 종료일보다 이전이어야 합니다.',
+          '자기 평가 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
+        );
+      }
+    }
+
+    // 하향/동료평가 단계 마감일 검증
+    if (updateDto.peerEvaluationDeadline) {
+      if (updateDto.peerEvaluationDeadline <= newStartDate) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '하향/동료평가 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
         );
       }
     }
@@ -455,7 +423,7 @@ export class EvaluationPeriodValidationService {
 
     // 활성 상태인 평가 기간의 날짜는 제한적으로만 수정 가능
     if (
-      existingPeriod.활성화됨() &&
+      existingPeriod.활성화된_상태인가() &&
       (updateDto.startDate || updateDto.endDate)
     ) {
       const now = new Date();
@@ -550,7 +518,7 @@ export class EvaluationPeriodValidationService {
    */
   async 평가기간삭제비즈니스규칙검증한다(evaluationPeriod: any): Promise<void> {
     // 활성 상태인 평가 기간은 삭제할 수 없음
-    if (evaluationPeriod.활성화됨()) {
+    if (evaluationPeriod.활성화된_상태인가()) {
       throw new EvaluationPeriodBusinessRuleViolationException(
         '활성 상태인 평가 기간은 삭제할 수 없습니다.',
       );
@@ -631,28 +599,11 @@ export class EvaluationPeriodValidationService {
 
     const now = new Date();
     const evaluationPeriod = await repository.findOne({
-      where: [
-        {
-          status: EvaluationPeriodStatus.ACTIVE,
-          startDate: LessThanOrEqual(now),
-          endDate: MoreThanOrEqual(now),
-        },
-        {
-          status: EvaluationPeriodStatus.CRITERIA_SETTING,
-          startDate: LessThanOrEqual(now),
-          endDate: MoreThanOrEqual(now),
-        },
-        {
-          status: EvaluationPeriodStatus.PERFORMANCE_INPUT,
-          startDate: LessThanOrEqual(now),
-          endDate: MoreThanOrEqual(now),
-        },
-        {
-          status: EvaluationPeriodStatus.FINAL_EVALUATION,
-          startDate: LessThanOrEqual(now),
-          endDate: MoreThanOrEqual(now),
-        },
-      ],
+      where: {
+        status: EvaluationPeriodStatus.IN_PROGRESS,
+        startDate: LessThanOrEqual(now),
+        endDate: MoreThanOrEqual(now),
+      },
       order: { startDate: 'DESC' },
     });
 

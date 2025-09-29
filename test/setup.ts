@@ -31,3 +31,4 @@ afterAll(async () => {
     console.log('✅ PostgreSQL 테스트 컨테이너가 종료되었습니다.');
   }
 }, 30000);
+
