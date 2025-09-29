@@ -1,17 +1,50 @@
-// 평가 기간 관리 컨텍스트 모듈
+// ==================== 모듈 및 서비스 ====================
 export { EvaluationPeriodManagementContextModule } from './evaluation-period-management-context.module';
-
-// 평가 기간 관리 서비스
 export { EvaluationPeriodManagementService } from './evaluation-period-management.service';
 
-// 인터페이스
-export { IEvaluationPeriodManagementContext } from './interfaces/evaluation-period-management-context.interface';
+// ==================== 인터페이스 ====================
+export type { IEvaluationPeriodManagementContext } from './interfaces/evaluation-period-management-context.interface';
+export type {
+  IEvaluationPeriodCommandService,
+  IEvaluationPeriodQueryService,
+} from './interfaces/evaluation-period-cqrs.interface';
 
-export {
+// ==================== DTO 및 데이터 타입 ====================
+export type {
   CreateEvaluationPeriodMinimalDto,
-  UpdateEvaluationPeriodScheduleDto,
-  UpdateEvaluationPeriodBasicDto,
-  UpdateGradeRangesDto,
   EvaluationCriteriaItem,
-  GradeRangeItem,
+  UpdateEvaluationPeriodBasicDto,
+  UpdateEvaluationPeriodScheduleDto,
+  UpdateGradeRangesDto,
+  UpdateCriteriaSettingPermissionDto,
+  UpdateSelfEvaluationSettingPermissionDto,
+  UpdateFinalEvaluationSettingPermissionDto,
+  UpdateManualSettingPermissionsDto,
 } from './interfaces/evaluation-period-creation.interface';
+
+// ==================== CQRS 커맨드 ====================
+export {
+  CreateEvaluationPeriodCommand,
+  StartEvaluationPeriodCommand,
+  CompleteEvaluationPeriodCommand,
+  DeleteEvaluationPeriodCommand,
+  UpdateEvaluationPeriodBasicInfoCommand,
+  UpdateEvaluationPeriodScheduleCommand,
+  UpdateEvaluationPeriodGradeRangesCommand,
+  UpdateCriteriaSettingPermissionCommand,
+  UpdateSelfEvaluationSettingPermissionCommand,
+  UpdateFinalEvaluationSettingPermissionCommand,
+  UpdateManualSettingPermissionsCommand,
+} from './commands';
+
+// ==================== CQRS 쿼리 ====================
+export {
+  GetActiveEvaluationPeriodsQuery,
+  GetEvaluationPeriodDetailQuery,
+  GetEvaluationPeriodListQuery,
+  type EvaluationPeriodListResult,
+} from './queries';
+
+// ==================== CQRS 핸들러 (모듈 등록용) ====================
+export { COMMAND_HANDLERS } from './commands';
+export { QUERY_HANDLERS } from './queries';

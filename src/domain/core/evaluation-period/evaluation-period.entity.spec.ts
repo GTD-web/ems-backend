@@ -320,11 +320,11 @@ describe('EvaluationPeriod Entity', () => {
 
   describe('등급 구간 관리', () => {
     const testGradeRanges: GradeRange[] = [
-      { grade: GradeType.S, score: 97, minRange: 95, maxRange: 100 },
-      { grade: GradeType.A, score: 89, minRange: 85, maxRange: 94 },
-      { grade: GradeType.B, score: 79, minRange: 75, maxRange: 84 },
-      { grade: GradeType.C, score: 69, minRange: 65, maxRange: 74 },
-      { grade: GradeType.F, score: 45, minRange: 0, maxRange: 64 },
+      { grade: 'S', minRange: 95, maxRange: 100 },
+      { grade: 'A', minRange: 85, maxRange: 94 },
+      { grade: 'B', minRange: 75, maxRange: 84 },
+      { grade: 'C', minRange: 65, maxRange: 74 },
+      { grade: 'F', minRange: 0, maxRange: 64 },
     ];
 
     describe('등급구간_설정한다', () => {
@@ -334,7 +334,7 @@ describe('EvaluationPeriod Entity', () => {
 
         // Then
         expect(evaluationPeriod.gradeRanges).toHaveLength(5);
-        expect(evaluationPeriod.gradeRanges[0].grade).toBe(GradeType.S);
+        expect(evaluationPeriod.gradeRanges[0].grade).toBe('S');
         expect(evaluationPeriod.updatedBy).toBe(testUserId);
       });
 
@@ -348,8 +348,8 @@ describe('EvaluationPeriod Entity', () => {
       it('중복된 등급에 대해 예외를 발생시킨다', () => {
         // Given
         const duplicateGrades: GradeRange[] = [
-          { grade: GradeType.A, score: 90, minRange: 85, maxRange: 100 },
-          { grade: GradeType.A, score: 80, minRange: 70, maxRange: 84 },
+          { grade: 'A', minRange: 85, maxRange: 100 },
+          { grade: 'A', minRange: 70, maxRange: 84 },
         ];
 
         // When & Then
@@ -361,7 +361,7 @@ describe('EvaluationPeriod Entity', () => {
       it('잘못된 점수 범위에 대해 예외를 발생시킨다', () => {
         // Given
         const invalidRanges: GradeRange[] = [
-          { grade: GradeType.A, score: 90, minRange: 90, maxRange: 80 }, // min > max
+          { grade: 'A', minRange: 90, maxRange: 80 }, // min > max
         ];
 
         // When & Then
@@ -373,7 +373,7 @@ describe('EvaluationPeriod Entity', () => {
       it('범위를 벗어난 점수에 대해 예외를 발생시킨다', () => {
         // Given
         const outOfRangeGrades: GradeRange[] = [
-          { grade: GradeType.A, score: 90, minRange: -10, maxRange: 50 }, // min < 0
+          { grade: 'A', minRange: -10, maxRange: 50 }, // min < 0
         ];
 
         // When & Then
@@ -385,8 +385,8 @@ describe('EvaluationPeriod Entity', () => {
       it('겹치는 점수 범위에 대해 예외를 발생시킨다', () => {
         // Given
         const overlappingRanges: GradeRange[] = [
-          { grade: GradeType.A, score: 90, minRange: 80, maxRange: 90 },
-          { grade: GradeType.B, score: 75, minRange: 85, maxRange: 95 }, // 겹침
+          { grade: 'A', minRange: 80, maxRange: 90 },
+          { grade: 'B', minRange: 85, maxRange: 95 }, // 겹침
         ];
 
         // When & Then
@@ -407,7 +407,7 @@ describe('EvaluationPeriod Entity', () => {
 
         // Then
         expect(result).toBeDefined();
-        expect(result!.grade).toBe(GradeType.S);
+        expect(result!.grade).toBe('S');
         expect(result!.score).toBe(97);
         expect(result!.finalGrade).toBe('S');
       });
@@ -435,8 +435,7 @@ describe('EvaluationPeriod Entity', () => {
         // Given
         const gradeRangesWithSub: GradeRange[] = [
           {
-            grade: GradeType.A,
-            score: 89,
+            grade: 'A',
             minRange: 85,
             maxRange: 94,
             subGrades: [
@@ -485,11 +484,11 @@ describe('EvaluationPeriod Entity', () => {
 
       it('특정 등급의 구간 정보를 조회한다', () => {
         // When
-        const result = evaluationPeriod.등급구간_조회한다(GradeType.A);
+        const result = evaluationPeriod.등급구간_조회한다('A');
 
         // Then
         expect(result).toBeDefined();
-        expect(result!.grade).toBe(GradeType.A);
+        expect(result!.grade).toBe('A');
         expect(result!.minRange).toBe(85);
         expect(result!.maxRange).toBe(94);
       });
@@ -497,12 +496,12 @@ describe('EvaluationPeriod Entity', () => {
       it('존재하지 않는 등급에 대해 null을 반환한다', () => {
         // Given
         const limitedGrades: GradeRange[] = [
-          { grade: GradeType.A, score: 90, minRange: 85, maxRange: 100 },
+          { grade: 'A', minRange: 85, maxRange: 100 },
         ];
         evaluationPeriod.등급구간_설정한다(limitedGrades, testUserId);
 
         // When
-        const result = evaluationPeriod.등급구간_조회한다(GradeType.B);
+        const result = evaluationPeriod.등급구간_조회한다('B');
 
         // Then
         expect(result).toBeNull();
@@ -515,7 +514,7 @@ describe('EvaluationPeriod Entity', () => {
       it('엔티티를 DTO로 올바르게 변환한다', () => {
         // Given
         evaluationPeriod.등급구간_설정한다(
-          [{ grade: GradeType.A, score: 90, minRange: 85, maxRange: 100 }],
+          [{ grade: 'A', minRange: 85, maxRange: 100 }],
           testUserId,
         );
 
@@ -528,7 +527,7 @@ describe('EvaluationPeriod Entity', () => {
         expect(dto.status).toBe(evaluationPeriod.status);
         expect(dto.currentPhase).toBe(evaluationPeriod.currentPhase);
         expect(dto.gradeRanges).toHaveLength(1);
-        expect(dto.gradeRanges[0].grade).toBe(GradeType.A);
+        expect(dto.gradeRanges[0].grade).toBe('A');
       });
 
       it('등급 구간이 없는 경우 빈 배열을 반환한다', () => {
@@ -1302,7 +1301,7 @@ describe('EvaluationPeriod Entity', () => {
       it('DTO_변환한다와 동일한 결과를 반환한다', () => {
         // Given
         evaluationPeriod.등급구간_설정한다(
-          [{ grade: GradeType.A, score: 90, minRange: 85, maxRange: 100 }],
+          [{ grade: 'A', minRange: 85, maxRange: 100 }],
           testUserId,
         );
 

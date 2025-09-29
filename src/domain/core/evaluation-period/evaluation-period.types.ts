@@ -230,9 +230,7 @@ export interface SubGradeInfo {
  */
 export interface GradeRange {
   /** 등급 */
-  grade: GradeType;
-  /** 기준 점수 */
-  score: number;
+  grade: string;
   /** 최소 범위 */
   minRange: number;
   /** 최대 범위 */
@@ -246,9 +244,7 @@ export interface GradeRange {
  */
 export interface CreateGradeRangeDto {
   /** 등급 */
-  grade: GradeType;
-  /** 기준 점수 */
-  score: number;
+  grade: string;
   /** 최소 범위 */
   minRange: number;
   /** 최대 범위 */
@@ -264,7 +260,7 @@ export interface ScoreGradeMapping {
   /** 점수 */
   score: number;
   /** 등급 */
-  grade: GradeType;
+  grade: string;
   /** 세부 등급 */
   subGrade?: SubGradeType;
   /** 최종 등급 문자열 (예: S+, A-, B) */

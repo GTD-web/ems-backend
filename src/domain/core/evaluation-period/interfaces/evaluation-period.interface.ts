@@ -304,7 +304,7 @@ export interface IEvaluationPeriod extends IBaseEntity {
   /**
    * 특정 등급의 구간 정보를 조회한다
    */
-  등급구간_조회한다(grade: GradeType): GradeRange | null;
+  등급구간_조회한다(grade: string): GradeRange | null;
 
   /**
    * 평가 기간을 DTO로 변환한다

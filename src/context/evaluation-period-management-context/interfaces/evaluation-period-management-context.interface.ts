@@ -7,6 +7,10 @@ import {
   UpdateEvaluationPeriodScheduleDto,
   UpdateEvaluationPeriodBasicDto,
   UpdateGradeRangesDto,
+  UpdateCriteriaSettingPermissionDto,
+  UpdateSelfEvaluationSettingPermissionDto,
+  UpdateFinalEvaluationSettingPermissionDto,
+  UpdateManualSettingPermissionsDto,
 } from './evaluation-period-creation.interface';
 
 /**
@@ -127,4 +131,62 @@ export interface IEvaluationPeriodManagementContext {
     page: number;
     limit: number;
   }>;
+
+  // ==================== 수동 허용 설정 관리 ====================
+
+  /**
+   * 평가 기준 설정 수동 허용을 변경한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param permissionData 평가 기준 설정 수동 허용 데이터
+   * @param changedBy 변경자 ID
+   * @returns 변경된 평가 기간 정보
+   */
+  평가기준설정수동허용_변경한다(
+    periodId: string,
+    permissionData: UpdateCriteriaSettingPermissionDto,
+    changedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 자기 평가 설정 수동 허용을 변경한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param permissionData 자기 평가 설정 수동 허용 데이터
+   * @param changedBy 변경자 ID
+   * @returns 변경된 평가 기간 정보
+   */
+  자기평가설정수동허용_변경한다(
+    periodId: string,
+    permissionData: UpdateSelfEvaluationSettingPermissionDto,
+    changedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 최종 평가 설정 수동 허용을 변경한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param permissionData 최종 평가 설정 수동 허용 데이터
+   * @param changedBy 변경자 ID
+   * @returns 변경된 평가 기간 정보
+   */
+  최종평가설정수동허용_변경한다(
+    periodId: string,
+    permissionData: UpdateFinalEvaluationSettingPermissionDto,
+    changedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 전체 수동 허용 설정을 변경한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param permissionData 전체 수동 허용 설정 데이터
+   * @param changedBy 변경자 ID
+   * @returns 변경된 평가 기간 정보
+   */
+  전체수동허용설정_변경한다(
+    periodId: string,
+    permissionData: UpdateManualSettingPermissionsDto,
+    changedBy: string,
+  ): Promise<EvaluationPeriodDto>;
 }

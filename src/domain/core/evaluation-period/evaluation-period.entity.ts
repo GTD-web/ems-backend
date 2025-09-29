@@ -63,7 +63,7 @@ export class EvaluationPeriod
 
   @Column({
     type: 'enum',
-    enum: ['waiting', 'in-progress', 'completed'],
+    enum: [...Object.values(EvaluationPeriodStatus)],
     default: 'waiting',
     comment: '평가 기간 상태',
   })
@@ -71,14 +71,7 @@ export class EvaluationPeriod
 
   @Column({
     type: 'enum',
-    enum: [
-      'waiting',
-      'evaluation-setup',
-      'performance',
-      'self-evaluation',
-      'peer-evaluation',
-      'closure',
-    ],
+    enum: [...Object.values(EvaluationPeriodPhase)],
     default: 'waiting',
     nullable: true,
     comment: '현재 진행 단계',
@@ -805,7 +798,7 @@ export class EvaluationPeriod
   /**
    * 특정 등급의 구간 정보를 조회한다
    */
-  등급구간_조회한다(grade: GradeType): GradeRange | null {
+  등급구간_조회한다(grade: string): GradeRange | null {
     if (!this.gradeRanges) {
       return null;
     }

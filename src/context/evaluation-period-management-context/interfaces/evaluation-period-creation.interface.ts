@@ -1,4 +1,4 @@
-import { GradeType } from '../../../domain/core/evaluation-period/evaluation-period.types';
+import { GradeRange } from '../../../domain/core/evaluation-period/evaluation-period.types';
 
 /**
  * 평가 기간 생성을 위한 최소 필수 데이터
@@ -16,6 +16,8 @@ export interface CreateEvaluationPeriodMinimalDto {
   maxSelfEvaluationRate: number;
   /** 평가 기준 목록 */
   evaluationCriteria: EvaluationCriteriaItem[];
+  /** 등급 구간 설정 */
+  gradeRanges: GradeRange[];
 }
 
 /**
@@ -28,20 +30,6 @@ export interface EvaluationCriteriaItem {
   description?: string;
   /** 가중치 (%) */
   weight: number;
-  /** 등급별 점수 범위 */
-  gradeRanges: GradeRangeItem[];
-}
-
-/**
- * 등급 구간 항목
- */
-export interface GradeRangeItem {
-  /** 등급 */
-  grade: GradeType;
-  /** 최소 점수 */
-  minScore: number;
-  /** 최대 점수 */
-  maxScore: number;
 }
 
 /**
@@ -76,6 +64,42 @@ export interface UpdateEvaluationPeriodBasicDto {
  * 등급 구간 업데이트 DTO
  */
 export interface UpdateGradeRangesDto {
-  /** 평가 기준 목록 */
-  evaluationCriteria: EvaluationCriteriaItem[];
+  /** 등급 구간 목록 */
+  gradeRanges: GradeRange[];
+}
+
+/**
+ * 평가 기준 설정 수동 허용 DTO
+ */
+export interface UpdateCriteriaSettingPermissionDto {
+  /** 평가 기준 설정 수동 허용 여부 */
+  enabled: boolean;
+}
+
+/**
+ * 자기 평가 설정 수동 허용 DTO
+ */
+export interface UpdateSelfEvaluationSettingPermissionDto {
+  /** 자기 평가 설정 수동 허용 여부 */
+  enabled: boolean;
+}
+
+/**
+ * 최종 평가 설정 수동 허용 DTO
+ */
+export interface UpdateFinalEvaluationSettingPermissionDto {
+  /** 최종 평가 설정 수동 허용 여부 */
+  enabled: boolean;
+}
+
+/**
+ * 전체 수동 허용 설정 DTO
+ */
+export interface UpdateManualSettingPermissionsDto {
+  /** 평가 기준 설정 수동 허용 여부 (선택) */
+  criteriaSettingEnabled?: boolean;
+  /** 자기 평가 설정 수동 허용 여부 (선택) */
+  selfEvaluationSettingEnabled?: boolean;
+  /** 최종 평가 설정 수동 허용 여부 (선택) */
+  finalEvaluationSettingEnabled?: boolean;
 }

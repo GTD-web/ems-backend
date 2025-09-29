@@ -85,11 +85,11 @@ describe('EvaluationPeriodService Integration Tests', () => {
       it('등급 구간과 함께 평가 기간을 생성할 수 있다', async () => {
         // Given
         const gradeRanges: CreateGradeRangeDto[] = [
-          { grade: GradeType.S, score: 97, minRange: 95, maxRange: 100 },
-          { grade: GradeType.A, score: 89, minRange: 85, maxRange: 94 },
-          { grade: GradeType.B, score: 79, minRange: 75, maxRange: 84 },
-          { grade: GradeType.C, score: 69, minRange: 65, maxRange: 74 },
-          { grade: GradeType.F, score: 45, minRange: 0, maxRange: 64 },
+          { grade: 'S', minRange: 95, maxRange: 100 },
+          { grade: 'A', minRange: 85, maxRange: 94 },
+          { grade: 'B', minRange: 75, maxRange: 84 },
+          { grade: 'C', minRange: 65, maxRange: 74 },
+          { grade: 'F', minRange: 0, maxRange: 64 },
         ];
 
         const createDto: CreateEvaluationPeriodDto = {
@@ -378,8 +378,8 @@ describe('EvaluationPeriodService Integration Tests', () => {
       it('등급 구간을 업데이트할 수 있다', async () => {
         // Given
         const gradeRanges: CreateGradeRangeDto[] = [
-          { grade: GradeType.S, score: 97, minRange: 95, maxRange: 100 },
-          { grade: GradeType.A, score: 89, minRange: 85, maxRange: 94 },
+          { grade: 'S', minRange: 95, maxRange: 100 },
+          { grade: 'A', minRange: 85, maxRange: 94 },
         ];
         const updateDto: UpdateEvaluationPeriodDto = {
           gradeRanges,
@@ -803,11 +803,11 @@ describe('EvaluationPeriodService Integration Tests', () => {
     });
 
     const testGradeRanges: CreateGradeRangeDto[] = [
-      { grade: GradeType.S, score: 97, minRange: 95, maxRange: 100 },
-      { grade: GradeType.A, score: 89, minRange: 85, maxRange: 94 },
-      { grade: GradeType.B, score: 79, minRange: 75, maxRange: 84 },
-      { grade: GradeType.C, score: 69, minRange: 65, maxRange: 74 },
-      { grade: GradeType.F, score: 45, minRange: 0, maxRange: 64 },
+      { grade: 'S', minRange: 95, maxRange: 100 },
+      { grade: 'A', minRange: 85, maxRange: 94 },
+      { grade: 'B', minRange: 75, maxRange: 84 },
+      { grade: 'C', minRange: 65, maxRange: 74 },
+      { grade: 'F', minRange: 0, maxRange: 64 },
     ];
 
     describe('등급구간_설정한다', () => {
@@ -951,7 +951,7 @@ describe('EvaluationPeriodService Integration Tests', () => {
       it('존재하지 않는 등급에 대해 null을 반환한다', async () => {
         // Given
         const limitedGrades: CreateGradeRangeDto[] = [
-          { grade: GradeType.A, score: 90, minRange: 85, maxRange: 100 },
+          { grade: 'A', minRange: 85, maxRange: 100 },
         ];
         await service.등급구간_설정한다(
           createdPeriod.id,
