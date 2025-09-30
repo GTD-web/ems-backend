@@ -4,6 +4,8 @@ import { EvaluationProjectAssignmentModule } from '../../domain/core/evaluation-
 import { EvaluationWbsAssignmentModule } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
 import { EvaluationLineModule } from '../../domain/core/evaluation-line/evaluation-line.module';
 import { EvaluationLineMappingModule } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
+import { ProjectModule } from '../../domain/common/project/project.module';
+import { TransactionManagerService } from '../../../libs/database/transaction-manager.service';
 import { EvaluationCriteriaManagementService } from './evaluation-criteria-management.service';
 
 // Project Assignment Command Handlers
@@ -11,7 +13,6 @@ import { CreateProjectAssignmentHandler } from './handlers/project-assignment/co
 import { UpdateProjectAssignmentHandler } from './handlers/project-assignment/commands/update-project-assignment.handler';
 import { CancelProjectAssignmentHandler } from './handlers/project-assignment/commands/cancel-project-assignment.handler';
 import { BulkCreateProjectAssignmentHandler } from './handlers/project-assignment/commands/bulk-create-project-assignment.handler';
-import { ResetPeriodProjectAssignmentsHandler } from './handlers/project-assignment/commands/reset-period-project-assignments.handler';
 
 // Project Assignment Query Handlers
 import { GetProjectAssignmentListHandler } from './handlers/project-assignment/queries/get-project-assignment-list.handler';
@@ -63,15 +64,16 @@ import { GetEmployeeEvaluationSettingsHandler } from './handlers/evaluation-line
     EvaluationWbsAssignmentModule,
     EvaluationLineModule,
     EvaluationLineMappingModule,
+    ProjectModule,
   ],
   providers: [
     EvaluationCriteriaManagementService,
+    TransactionManagerService,
     // Project Assignment Command Handlers
     CreateProjectAssignmentHandler,
     UpdateProjectAssignmentHandler,
     CancelProjectAssignmentHandler,
     BulkCreateProjectAssignmentHandler,
-    ResetPeriodProjectAssignmentsHandler,
     // Project Assignment Query Handlers
     GetProjectAssignmentListHandler,
     GetEmployeeProjectAssignmentsHandler,

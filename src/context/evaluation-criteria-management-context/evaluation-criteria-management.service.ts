@@ -6,7 +6,6 @@ import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-cr
 import { BulkCreateProjectAssignmentCommand } from './handlers/project-assignment/commands/bulk-create-project-assignment.handler';
 import { CancelProjectAssignmentCommand } from './handlers/project-assignment/commands/cancel-project-assignment.handler';
 import { CreateProjectAssignmentCommand } from './handlers/project-assignment/commands/create-project-assignment.handler';
-import { ResetPeriodProjectAssignmentsCommand } from './handlers/project-assignment/commands/reset-period-project-assignments.handler';
 import { UpdateProjectAssignmentCommand } from './handlers/project-assignment/commands/update-project-assignment.handler';
 import { GetEmployeeProjectAssignmentsQuery } from './handlers/project-assignment/queries/get-employee-project-assignments.handler';
 import { GetProjectAssignedEmployeesQuery } from './handlers/project-assignment/queries/get-project-assigned-employees.handler';
@@ -153,14 +152,6 @@ export class EvaluationCriteriaManagementService
       assignedBy,
     );
     return await this.commandBus.execute(command);
-  }
-
-  async 평가기간의_프로젝트_할당을_초기화한다(
-    periodId: string,
-    resetBy: string,
-  ): Promise<void> {
-    const command = new ResetPeriodProjectAssignmentsCommand(periodId, resetBy);
-    await this.commandBus.execute(command);
   }
 
   // ============================================================================

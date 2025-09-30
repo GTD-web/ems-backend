@@ -105,14 +105,6 @@ export interface IEvaluationCriteriaManagementService {
     assignedBy: string,
   ): Promise<EvaluationProjectAssignmentDto[]>;
 
-  /**
-   * 평가기간의 모든 프로젝트 할당을 초기화한다
-   */
-  평가기간의_프로젝트_할당을_초기화한다(
-    periodId: string,
-    resetBy: string,
-  ): Promise<void>;
-
   // ============================================================================
   // WBS 할당 관리
   // ============================================================================

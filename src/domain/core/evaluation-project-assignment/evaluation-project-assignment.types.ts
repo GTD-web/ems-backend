@@ -60,6 +60,8 @@ export interface CreateEvaluationProjectAssignmentData {
  * 평가 프로젝트 할당 수정 데이터
  */
 export interface UpdateEvaluationProjectAssignmentData {
+  /** 프로젝트 ID (선택적) */
+  projectId?: string;
   /** 할당자 ID */
   assignedBy?: string;
 }

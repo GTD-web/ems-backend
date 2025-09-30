@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EvaluationProjectAssignmentService } from '../../../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.service';
+import { ProjectService } from '../../../../../domain/common/project/project.service';
+import { TransactionManagerService } from '../../../../../../libs/database/transaction-manager.service';
 import {
   EvaluationProjectAssignmentDto,
   CreateEvaluationProjectAssignmentData,
@@ -26,13 +28,29 @@ export class CreateProjectAssignmentHandler
 {
   constructor(
     private readonly projectAssignmentService: EvaluationProjectAssignmentService,
+    private readonly projectService: ProjectService,
+    private readonly transactionManager: TransactionManagerService,
   ) {}
 
   async execute(
     command: CreateProjectAssignmentCommand,
   ): Promise<EvaluationProjectAssignmentDto> {
     const { data, assignedBy } = command;
-    const assignment = await this.projectAssignmentService.생성한다(data);
-    return assignment.DTO로_변환한다();
+
+    return await this.transactionManager.executeTransaction(async (manager) => {
+      // 프로젝트 존재 여부 검증
+      const project = await this.projectService.ID로_조회한다(data.projectId);
+      if (!project) {
+        throw new BadRequestException(
+          `프로젝트 ID ${data.projectId}에 해당하는 프로젝트를 찾을 수 없습니다.`,
+        );
+      }
+
+      const assignment = await this.projectAssignmentService.생성한다(
+        data,
+        manager,
+      );
+      return assignment.DTO로_변환한다();
+    });
   }
 }
