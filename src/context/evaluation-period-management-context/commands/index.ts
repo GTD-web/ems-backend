@@ -16,6 +16,12 @@ import {
   UpdateSelfEvaluationSettingPermissionCommandHandler,
   UpdateFinalEvaluationSettingPermissionCommandHandler,
   UpdateManualSettingPermissionsCommandHandler,
+  UpdateEvaluationPeriodEndDateCommandHandler,
+  UpdateEvaluationSetupDeadlineCommandHandler,
+  UpdatePerformanceDeadlineCommandHandler,
+  UpdateSelfEvaluationDeadlineCommandHandler,
+  UpdatePeerEvaluationDeadlineCommandHandler,
+  UpdateEvaluationPeriodStartDateCommandHandler,
 } from './evaluation-period.command-handlers';
 
 // 실제 핸들러 클래스들의 배열
@@ -31,4 +37,10 @@ export const COMMAND_HANDLERS = [
   UpdateSelfEvaluationSettingPermissionCommandHandler,
   UpdateFinalEvaluationSettingPermissionCommandHandler,
   UpdateManualSettingPermissionsCommandHandler,
+  UpdateEvaluationPeriodEndDateCommandHandler,
+  UpdateEvaluationSetupDeadlineCommandHandler,
+  UpdatePerformanceDeadlineCommandHandler,
+  UpdateSelfEvaluationDeadlineCommandHandler,
+  UpdatePeerEvaluationDeadlineCommandHandler,
+  UpdateEvaluationPeriodStartDateCommandHandler,
 ];

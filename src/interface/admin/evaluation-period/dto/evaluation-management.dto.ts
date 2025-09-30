@@ -16,7 +16,7 @@ import {
 import {
   DateToUTC,
   OptionalDateToUTC,
-} from '../../decorators/date-transform.decorator';
+} from '../../../decorators/date-transform.decorator';
 
 /**
  * 페이징 쿼리 DTO
@@ -229,6 +229,14 @@ export class UpdateEvaluationPeriodBasicApiDto {
  */
 export class UpdateEvaluationPeriodScheduleApiDto {
   @ApiPropertyOptional({
+    description: '평가 기간 시작일 (UTC 기준)',
+    example: '2024-01-01',
+  })
+  @IsOptional()
+  @OptionalDateToUTC()
+  startDate?: string;
+
+  @ApiPropertyOptional({
     description: '평가 기간 종료일 (UTC 기준)',
     example: '2024-07-31',
   })
@@ -302,6 +310,84 @@ export class UpdateEvaluationPeriodScheduleApiDto {
   // )
   @OptionalDateToUTC()
   peerEvaluationDeadline?: string;
+}
+
+/**
+ * 평가 기간 시작일 수정 API DTO
+ */
+export class UpdateEvaluationPeriodStartDateApiDto {
+  @ApiProperty({
+    description: '평가 기간 시작일 (UTC 기준)',
+    example: '2024-01-01',
+  })
+  @IsNotEmpty({ message: '평가 기간 시작일은 필수 입력 항목입니다.' })
+  @DateToUTC()
+  startDate: string;
+}
+
+/**
+ * 평가 기간 종료일 수정 API DTO
+ */
+export class UpdateEvaluationPeriodEndDateApiDto {
+  @ApiProperty({
+    description: '평가 기간 종료일 (UTC 기준)',
+    example: '2024-12-31',
+  })
+  @IsNotEmpty({ message: '평가 기간 종료일은 필수 입력 항목입니다.' })
+  @DateToUTC()
+  endDate: string;
+}
+
+/**
+ * 평가설정 단계 마감일 수정 API DTO
+ */
+export class UpdateEvaluationSetupDeadlineApiDto {
+  @ApiProperty({
+    description: '평가설정 단계 마감일 (UTC 기준)',
+    example: '2024-01-15',
+  })
+  @IsNotEmpty({ message: '평가설정 단계 마감일은 필수 입력 항목입니다.' })
+  @DateToUTC()
+  evaluationSetupDeadline: string;
+}
+
+/**
+ * 업무 수행 단계 마감일 수정 API DTO
+ */
+export class UpdatePerformanceDeadlineApiDto {
+  @ApiProperty({
+    description: '업무 수행 단계 마감일 (UTC 기준)',
+    example: '2024-05-31',
+  })
+  @IsNotEmpty({ message: '업무 수행 단계 마감일은 필수 입력 항목입니다.' })
+  @DateToUTC()
+  performanceDeadline: string;
+}
+
+/**
+ * 자기 평가 단계 마감일 수정 API DTO
+ */
+export class UpdateSelfEvaluationDeadlineApiDto {
+  @ApiProperty({
+    description: '자기 평가 단계 마감일 (UTC 기준)',
+    example: '2024-06-15',
+  })
+  @IsNotEmpty({ message: '자기 평가 단계 마감일은 필수 입력 항목입니다.' })
+  @DateToUTC()
+  selfEvaluationDeadline: string;
+}
+
+/**
+ * 하향/동료평가 단계 마감일 수정 API DTO
+ */
+export class UpdatePeerEvaluationDeadlineApiDto {
+  @ApiProperty({
+    description: '하향/동료평가 단계 마감일 (UTC 기준)',
+    example: '2024-06-30',
+  })
+  @IsNotEmpty({ message: '하향/동료평가 단계 마감일은 필수 입력 항목입니다.' })
+  @DateToUTC()
+  peerEvaluationDeadline: string;
 }
 
 /**

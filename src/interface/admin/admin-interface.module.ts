@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { DomainContextModule } from '../../context/domain-context.module';
 import { EvaluationPeriodManagementContextModule } from '../../context/evaluation-period-management-context/evaluation-period-management-context.module';
-import { EvaluationPeriodManagementController } from './evaluation-period-management.controller';
+import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
 
 /**
  * 관리자 인터페이스 모듈

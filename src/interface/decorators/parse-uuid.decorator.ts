@@ -6,17 +6,11 @@ import {
 import { validate as isValidUUID } from 'uuid';
 
 /**
- * UUID 파라미터를 파싱하고 검증하는 커스텀 데코레이터
+ * UUID 파라미터를 파싱하고 유효성을 검사하는 커스텀 데코레이터
+ * 잘못된 UUID 형식일 경우 한국어 에러 메시지를 반환합니다.
  *
- * 기본 ParseUUIDPipe와 달리 한국어 에러 메시지를 제공합니다.
- *
- * @example
- * ```typescript
- * @Get(':id')
- * async getDetail(@ParseUUID('id') id: string) {
- *   return await this.service.getDetail(id);
- * }
- * ```
+ * @param paramName - URL 파라미터의 이름 (기본값: 'id')
+ * @returns 유효한 UUID 문자열
  */
 export const ParseUUID = createParamDecorator(
   (paramName: string, ctx: ExecutionContext): string => {
@@ -40,17 +34,10 @@ export const ParseUUID = createParamDecorator(
 );
 
 /**
- * ID 파라미터 전용 UUID 파싱 데코레이터
+ * 'id'라는 이름의 UUID 파라미터를 파싱하고 유효성을 검사하는 커스텀 데코레이터
+ * 가장 일반적인 'id' 파라미터에 사용됩니다.
  *
- * @ParseUUID('id')의 단축형입니다.
- *
- * @example
- * ```typescript
- * @Get(':id')
- * async getDetail(@ParseId() id: string) {
- *   return await this.service.getDetail(id);
- * }
- * ```
+ * @returns 유효한 UUID 문자열
  */
 export const ParseId = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): string => {

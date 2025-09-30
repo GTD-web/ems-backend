@@ -325,6 +325,16 @@ export class EvaluationPeriodValidationService {
         );
       }
     }
+
+    // 단계별 날짜 순서 검증
+    this.단계별날짜순서검증한다(
+      createDto.startDate,
+      createDto.endDate,
+      createDto.evaluationSetupDeadline,
+      createDto.performanceDeadline,
+      createDto.selfEvaluationDeadline,
+      createDto.peerEvaluationDeadline,
+    );
   }
 
   /**
@@ -335,6 +345,7 @@ export class EvaluationPeriodValidationService {
     existingPeriod: any,
   ): void {
     const newStartDate = updateDto.startDate || existingPeriod.startDate;
+    const newEndDate = updateDto.endDate || existingPeriod.endDate;
 
     // 평가설정 단계 마감일 검증
     if (updateDto.evaluationSetupDeadline) {
@@ -368,6 +379,143 @@ export class EvaluationPeriodValidationService {
       if (updateDto.peerEvaluationDeadline <= newStartDate) {
         throw new InvalidEvaluationPeriodDateRangeException(
           '하향/동료평가 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
+        );
+      }
+    }
+
+    // 단계별 날짜 순서 검증 (업데이트된 값과 기존 값을 조합)
+    const newEvaluationSetupDeadline = updateDto.evaluationSetupDeadline || existingPeriod.evaluationSetupDeadline;
+    const newPerformanceDeadline = updateDto.performanceDeadline || existingPeriod.performanceDeadline;
+    const newSelfEvaluationDeadline = updateDto.selfEvaluationDeadline || existingPeriod.selfEvaluationDeadline;
+    const newPeerEvaluationDeadline = updateDto.peerEvaluationDeadline || existingPeriod.peerEvaluationDeadline;
+
+    this.단계별날짜순서검증한다(
+      newStartDate,
+      newEndDate,
+      newEvaluationSetupDeadline,
+      newPerformanceDeadline,
+      newSelfEvaluationDeadline,
+      newPeerEvaluationDeadline,
+    );
+  }
+
+  /**
+   * 단계별 날짜 순서를 검증한다
+   * 순서: startDate < evaluationSetupDeadline < performanceDeadline < selfEvaluationDeadline < peerEvaluationDeadline < endDate
+   */
+  private 단계별날짜순서검증한다(
+    startDate: Date,
+    endDate: Date,
+    evaluationSetupDeadline?: Date,
+    performanceDeadline?: Date,
+    selfEvaluationDeadline?: Date,
+    peerEvaluationDeadline?: Date,
+  ): void {
+    // 설정된 날짜들을 순서대로 배열에 저장
+    const dateSteps: { date: Date; name: string }[] = [];
+    
+    // 시작일은 항상 포함
+    dateSteps.push({ date: startDate, name: '평가 기간 시작일' });
+
+    // 설정된 마감일들을 순서대로 추가
+    if (evaluationSetupDeadline) {
+      dateSteps.push({ date: evaluationSetupDeadline, name: '평가설정 단계 마감일' });
+    }
+    if (performanceDeadline) {
+      dateSteps.push({ date: performanceDeadline, name: '업무 수행 단계 마감일' });
+    }
+    if (selfEvaluationDeadline) {
+      dateSteps.push({ date: selfEvaluationDeadline, name: '자기 평가 단계 마감일' });
+    }
+    if (peerEvaluationDeadline) {
+      dateSteps.push({ date: peerEvaluationDeadline, name: '하향/동료평가 단계 마감일' });
+    }
+
+    // 종료일은 항상 포함
+    dateSteps.push({ date: endDate, name: '평가 기간 종료일' });
+
+    // 순서 검증: 각 단계가 이전 단계보다 늦어야 함
+    for (let i = 1; i < dateSteps.length; i++) {
+      const prevStep = dateSteps[i - 1];
+      const currentStep = dateSteps[i];
+
+      if (currentStep.date <= prevStep.date) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          `${currentStep.name}은 ${prevStep.name}보다 늦어야 합니다.`,
+        );
+      }
+    }
+
+    // 특별 검증: 설정된 마감일들 간의 논리적 순서 확인
+    this.마감일논리적순서검증한다(
+      evaluationSetupDeadline,
+      performanceDeadline,
+      selfEvaluationDeadline,
+      peerEvaluationDeadline,
+    );
+  }
+
+  /**
+   * 마감일들의 논리적 순서를 검증한다
+   * 평가 프로세스의 흐름에 따라 각 단계는 순서대로 진행되어야 함
+   */
+  private 마감일논리적순서검증한다(
+    evaluationSetupDeadline?: Date,
+    performanceDeadline?: Date,
+    selfEvaluationDeadline?: Date,
+    peerEvaluationDeadline?: Date,
+  ): void {
+    // 평가설정 → 업무수행 순서 검증
+    if (evaluationSetupDeadline && performanceDeadline) {
+      if (performanceDeadline <= evaluationSetupDeadline) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '업무 수행 단계 마감일은 평가설정 단계 마감일보다 늦어야 합니다.',
+        );
+      }
+    }
+
+    // 업무수행 → 자기평가 순서 검증
+    if (performanceDeadline && selfEvaluationDeadline) {
+      if (selfEvaluationDeadline <= performanceDeadline) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '자기 평가 단계 마감일은 업무 수행 단계 마감일보다 늦어야 합니다.',
+        );
+      }
+    }
+
+    // 자기평가 → 하향/동료평가 순서 검증
+    if (selfEvaluationDeadline && peerEvaluationDeadline) {
+      if (peerEvaluationDeadline <= selfEvaluationDeadline) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '하향/동료평가 단계 마감일은 자기 평가 단계 마감일보다 늦어야 합니다.',
+        );
+      }
+    }
+
+    // 건너뛰는 단계가 있는 경우의 검증
+    // 예: 평가설정 → 자기평가 (업무수행 생략)
+    if (evaluationSetupDeadline && selfEvaluationDeadline && !performanceDeadline) {
+      if (selfEvaluationDeadline <= evaluationSetupDeadline) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '자기 평가 단계 마감일은 평가설정 단계 마감일보다 늦어야 합니다.',
+        );
+      }
+    }
+
+    // 예: 평가설정 → 하향/동료평가 (중간 단계 생략)
+    if (evaluationSetupDeadline && peerEvaluationDeadline && !performanceDeadline && !selfEvaluationDeadline) {
+      if (peerEvaluationDeadline <= evaluationSetupDeadline) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '하향/동료평가 단계 마감일은 평가설정 단계 마감일보다 늦어야 합니다.',
+        );
+      }
+    }
+
+    // 예: 업무수행 → 하향/동료평가 (자기평가 생략)
+    if (performanceDeadline && peerEvaluationDeadline && !selfEvaluationDeadline) {
+      if (peerEvaluationDeadline <= performanceDeadline) {
+        throw new InvalidEvaluationPeriodDateRangeException(
+          '하향/동료평가 단계 마감일은 업무 수행 단계 마감일보다 늦어야 합니다.',
         );
       }
     }
@@ -484,6 +632,11 @@ export class EvaluationPeriodValidationService {
     if (updateDto.startDate || updateDto.endDate) {
       const newStartDate = updateDto.startDate || existingPeriod.startDate;
       const newEndDate = updateDto.endDate || existingPeriod.endDate;
+
+      // 날짜 범위 검증 (시작일 < 종료일)
+      const startDateObj = newStartDate instanceof Date ? newStartDate : new Date(newStartDate);
+      const endDateObj = newEndDate instanceof Date ? newEndDate : new Date(newEndDate);
+      this.날짜범위검증한다(startDateObj, endDateObj);
 
       await this.기간겹침검증한다(newStartDate, newEndDate, id, manager);
     }

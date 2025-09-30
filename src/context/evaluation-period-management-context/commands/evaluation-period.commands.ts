@@ -7,6 +7,12 @@ import {
   UpdateSelfEvaluationSettingPermissionDto,
   UpdateFinalEvaluationSettingPermissionDto,
   UpdateManualSettingPermissionsDto,
+  UpdateEvaluationPeriodEndDateDto,
+  UpdateEvaluationSetupDeadlineDto,
+  UpdatePerformanceDeadlineDto,
+  UpdateSelfEvaluationDeadlineDto,
+  UpdatePeerEvaluationDeadlineDto,
+  UpdateEvaluationPeriodStartDateDto,
 } from '../interfaces/evaluation-period-creation.interface';
 
 // ==================== 평가 기간 생명주기 커맨드 ====================
@@ -71,6 +77,72 @@ export class UpdateEvaluationPeriodScheduleCommand {
   constructor(
     public readonly periodId: string,
     public readonly scheduleData: UpdateEvaluationPeriodScheduleDto,
+    public readonly updatedBy: string,
+  ) {}
+}
+
+/**
+ * 평가 기간 종료일 수정 커맨드
+ */
+export class UpdateEvaluationPeriodEndDateCommand {
+  constructor(
+    public readonly periodId: string,
+    public readonly endDateData: UpdateEvaluationPeriodEndDateDto,
+    public readonly updatedBy: string,
+  ) {}
+}
+
+/**
+ * 평가설정 단계 마감일 수정 커맨드
+ */
+export class UpdateEvaluationSetupDeadlineCommand {
+  constructor(
+    public readonly periodId: string,
+    public readonly deadlineData: UpdateEvaluationSetupDeadlineDto,
+    public readonly updatedBy: string,
+  ) {}
+}
+
+/**
+ * 업무 수행 단계 마감일 수정 커맨드
+ */
+export class UpdatePerformanceDeadlineCommand {
+  constructor(
+    public readonly periodId: string,
+    public readonly deadlineData: UpdatePerformanceDeadlineDto,
+    public readonly updatedBy: string,
+  ) {}
+}
+
+/**
+ * 자기 평가 단계 마감일 수정 커맨드
+ */
+export class UpdateSelfEvaluationDeadlineCommand {
+  constructor(
+    public readonly periodId: string,
+    public readonly deadlineData: UpdateSelfEvaluationDeadlineDto,
+    public readonly updatedBy: string,
+  ) {}
+}
+
+/**
+ * 하향/동료평가 단계 마감일 수정 커맨드
+ */
+export class UpdatePeerEvaluationDeadlineCommand {
+  constructor(
+    public readonly periodId: string,
+    public readonly deadlineData: UpdatePeerEvaluationDeadlineDto,
+    public readonly updatedBy: string,
+  ) {}
+}
+
+/**
+ * 평가 기간 시작일 수정 커맨드
+ */
+export class UpdateEvaluationPeriodStartDateCommand {
+  constructor(
+    public readonly periodId: string,
+    public readonly startDateData: UpdateEvaluationPeriodStartDateDto,
     public readonly updatedBy: string,
   ) {}
 }

@@ -17,6 +17,12 @@ import {
   UpdateFinalEvaluationSettingPermissionCommand,
   UpdateManualSettingPermissionsCommand,
   UpdateSelfEvaluationSettingPermissionCommand,
+  UpdateEvaluationPeriodEndDateCommand,
+  UpdateEvaluationSetupDeadlineCommand,
+  UpdatePerformanceDeadlineCommand,
+  UpdateSelfEvaluationDeadlineCommand,
+  UpdatePeerEvaluationDeadlineCommand,
+  UpdateEvaluationPeriodStartDateCommand,
 } from './evaluation-period.commands';
 
 // ==================== 평가 기간 생명주기 커맨드 핸들러 ====================
@@ -187,11 +193,216 @@ export class UpdateEvaluationPeriodScheduleCommandHandler
 
     // UpdateEvaluationPeriodDto 형태로 변환
     const updateDto: UpdateEvaluationPeriodDto = {
+      startDate: scheduleData.startDate,
       endDate: scheduleData.endDate,
       evaluationSetupDeadline: scheduleData.evaluationSetupDeadline,
       performanceDeadline: scheduleData.performanceDeadline,
       selfEvaluationDeadline: scheduleData.selfEvaluationDeadline,
       peerEvaluationDeadline: scheduleData.peerEvaluationDeadline,
+    };
+
+    // 도메인 서비스를 통해 평가 기간 업데이트
+    const updatedPeriod = await this.evaluationPeriodService.업데이트한다(
+      periodId,
+      updateDto,
+      updatedBy,
+    );
+
+    return updatedPeriod as EvaluationPeriodDto;
+  }
+}
+
+/**
+ * 평가 기간 종료일 수정 커맨드 핸들러
+ */
+@Injectable()
+@CommandHandler(UpdateEvaluationPeriodEndDateCommand)
+export class UpdateEvaluationPeriodEndDateCommandHandler
+  implements
+    ICommandHandler<UpdateEvaluationPeriodEndDateCommand, EvaluationPeriodDto>
+{
+  constructor(
+    private readonly evaluationPeriodService: EvaluationPeriodService,
+  ) {}
+
+  async execute(
+    command: UpdateEvaluationPeriodEndDateCommand,
+  ): Promise<EvaluationPeriodDto> {
+    const { periodId, endDateData, updatedBy } = command;
+
+    // UpdateEvaluationPeriodDto 형태로 변환
+    const updateDto: UpdateEvaluationPeriodDto = {
+      endDate: endDateData.endDate,
+    };
+
+    // 도메인 서비스를 통해 평가 기간 업데이트
+    const updatedPeriod = await this.evaluationPeriodService.업데이트한다(
+      periodId,
+      updateDto,
+      updatedBy,
+    );
+
+    return updatedPeriod as EvaluationPeriodDto;
+  }
+}
+
+/**
+ * 평가설정 단계 마감일 수정 커맨드 핸들러
+ */
+@Injectable()
+@CommandHandler(UpdateEvaluationSetupDeadlineCommand)
+export class UpdateEvaluationSetupDeadlineCommandHandler
+  implements
+    ICommandHandler<UpdateEvaluationSetupDeadlineCommand, EvaluationPeriodDto>
+{
+  constructor(
+    private readonly evaluationPeriodService: EvaluationPeriodService,
+  ) {}
+
+  async execute(
+    command: UpdateEvaluationSetupDeadlineCommand,
+  ): Promise<EvaluationPeriodDto> {
+    const { periodId, deadlineData, updatedBy } = command;
+
+    // UpdateEvaluationPeriodDto 형태로 변환
+    const updateDto: UpdateEvaluationPeriodDto = {
+      evaluationSetupDeadline: deadlineData.evaluationSetupDeadline,
+    };
+
+    // 도메인 서비스를 통해 평가 기간 업데이트
+    const updatedPeriod = await this.evaluationPeriodService.업데이트한다(
+      periodId,
+      updateDto,
+      updatedBy,
+    );
+
+    return updatedPeriod as EvaluationPeriodDto;
+  }
+}
+
+/**
+ * 업무 수행 단계 마감일 수정 커맨드 핸들러
+ */
+@Injectable()
+@CommandHandler(UpdatePerformanceDeadlineCommand)
+export class UpdatePerformanceDeadlineCommandHandler
+  implements
+    ICommandHandler<UpdatePerformanceDeadlineCommand, EvaluationPeriodDto>
+{
+  constructor(
+    private readonly evaluationPeriodService: EvaluationPeriodService,
+  ) {}
+
+  async execute(
+    command: UpdatePerformanceDeadlineCommand,
+  ): Promise<EvaluationPeriodDto> {
+    const { periodId, deadlineData, updatedBy } = command;
+
+    // UpdateEvaluationPeriodDto 형태로 변환
+    const updateDto: UpdateEvaluationPeriodDto = {
+      performanceDeadline: deadlineData.performanceDeadline,
+    };
+
+    // 도메인 서비스를 통해 평가 기간 업데이트
+    const updatedPeriod = await this.evaluationPeriodService.업데이트한다(
+      periodId,
+      updateDto,
+      updatedBy,
+    );
+
+    return updatedPeriod as EvaluationPeriodDto;
+  }
+}
+
+/**
+ * 자기 평가 단계 마감일 수정 커맨드 핸들러
+ */
+@Injectable()
+@CommandHandler(UpdateSelfEvaluationDeadlineCommand)
+export class UpdateSelfEvaluationDeadlineCommandHandler
+  implements
+    ICommandHandler<UpdateSelfEvaluationDeadlineCommand, EvaluationPeriodDto>
+{
+  constructor(
+    private readonly evaluationPeriodService: EvaluationPeriodService,
+  ) {}
+
+  async execute(
+    command: UpdateSelfEvaluationDeadlineCommand,
+  ): Promise<EvaluationPeriodDto> {
+    const { periodId, deadlineData, updatedBy } = command;
+
+    // UpdateEvaluationPeriodDto 형태로 변환
+    const updateDto: UpdateEvaluationPeriodDto = {
+      selfEvaluationDeadline: deadlineData.selfEvaluationDeadline,
+    };
+
+    // 도메인 서비스를 통해 평가 기간 업데이트
+    const updatedPeriod = await this.evaluationPeriodService.업데이트한다(
+      periodId,
+      updateDto,
+      updatedBy,
+    );
+
+    return updatedPeriod as EvaluationPeriodDto;
+  }
+}
+
+/**
+ * 하향/동료평가 단계 마감일 수정 커맨드 핸들러
+ */
+@Injectable()
+@CommandHandler(UpdatePeerEvaluationDeadlineCommand)
+export class UpdatePeerEvaluationDeadlineCommandHandler
+  implements
+    ICommandHandler<UpdatePeerEvaluationDeadlineCommand, EvaluationPeriodDto>
+{
+  constructor(
+    private readonly evaluationPeriodService: EvaluationPeriodService,
+  ) {}
+
+  async execute(
+    command: UpdatePeerEvaluationDeadlineCommand,
+  ): Promise<EvaluationPeriodDto> {
+    const { periodId, deadlineData, updatedBy } = command;
+
+    // UpdateEvaluationPeriodDto 형태로 변환
+    const updateDto: UpdateEvaluationPeriodDto = {
+      peerEvaluationDeadline: deadlineData.peerEvaluationDeadline,
+    };
+
+    // 도메인 서비스를 통해 평가 기간 업데이트
+    const updatedPeriod = await this.evaluationPeriodService.업데이트한다(
+      periodId,
+      updateDto,
+      updatedBy,
+    );
+
+    return updatedPeriod as EvaluationPeriodDto;
+  }
+}
+
+/**
+ * 평가 기간 시작일 수정 커맨드 핸들러
+ */
+@Injectable()
+@CommandHandler(UpdateEvaluationPeriodStartDateCommand)
+export class UpdateEvaluationPeriodStartDateCommandHandler
+  implements
+    ICommandHandler<UpdateEvaluationPeriodStartDateCommand, EvaluationPeriodDto>
+{
+  constructor(
+    private readonly evaluationPeriodService: EvaluationPeriodService,
+  ) {}
+
+  async execute(
+    command: UpdateEvaluationPeriodStartDateCommand,
+  ): Promise<EvaluationPeriodDto> {
+    const { periodId, startDateData, updatedBy } = command;
+
+    // UpdateEvaluationPeriodDto 형태로 변환
+    const updateDto: UpdateEvaluationPeriodDto = {
+      startDate: startDateData.startDate,
     };
 
     // 도메인 서비스를 통해 평가 기간 업데이트

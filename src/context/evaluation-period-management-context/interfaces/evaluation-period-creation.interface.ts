@@ -22,6 +22,8 @@ export interface CreateEvaluationPeriodMinimalDto {
  * 평가 기간 일정 부분 업데이트 DTO
  */
 export interface UpdateEvaluationPeriodScheduleDto {
+  /** 평가 기간 시작일 */
+  startDate?: Date;
   /** 평가 기간 종료일 */
   endDate?: Date;
   /** 평가설정 단계 마감일 */
@@ -32,6 +34,54 @@ export interface UpdateEvaluationPeriodScheduleDto {
   selfEvaluationDeadline?: Date;
   /** 하향/동료평가 단계 마감일 */
   peerEvaluationDeadline?: Date;
+}
+
+/**
+ * 평가 기간 종료일 업데이트 DTO
+ */
+export interface UpdateEvaluationPeriodEndDateDto {
+  /** 평가 기간 종료일 */
+  endDate: Date;
+}
+
+/**
+ * 평가설정 단계 마감일 업데이트 DTO
+ */
+export interface UpdateEvaluationSetupDeadlineDto {
+  /** 평가설정 단계 마감일 */
+  evaluationSetupDeadline: Date;
+}
+
+/**
+ * 업무 수행 단계 마감일 업데이트 DTO
+ */
+export interface UpdatePerformanceDeadlineDto {
+  /** 업무 수행 단계 마감일 */
+  performanceDeadline: Date;
+}
+
+/**
+ * 자기 평가 단계 마감일 업데이트 DTO
+ */
+export interface UpdateSelfEvaluationDeadlineDto {
+  /** 자기 평가 단계 마감일 */
+  selfEvaluationDeadline: Date;
+}
+
+/**
+ * 하향/동료평가 단계 마감일 업데이트 DTO
+ */
+export interface UpdatePeerEvaluationDeadlineDto {
+  /** 하향/동료평가 단계 마감일 */
+  peerEvaluationDeadline: Date;
+}
+
+/**
+ * 평가 기간 시작일 업데이트 DTO
+ */
+export interface UpdateEvaluationPeriodStartDateDto {
+  /** 평가 기간 시작일 */
+  startDate: Date;
 }
 
 /**

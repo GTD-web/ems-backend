@@ -13,6 +13,12 @@ import {
   UpdateFinalEvaluationSettingPermissionCommand,
   UpdateManualSettingPermissionsCommand,
   UpdateSelfEvaluationSettingPermissionCommand,
+  UpdateEvaluationPeriodEndDateCommand,
+  UpdateEvaluationSetupDeadlineCommand,
+  UpdatePerformanceDeadlineCommand,
+  UpdateSelfEvaluationDeadlineCommand,
+  UpdatePeerEvaluationDeadlineCommand,
+  UpdateEvaluationPeriodStartDateCommand,
 } from './commands';
 import {
   CreateEvaluationPeriodMinimalDto,
@@ -23,6 +29,12 @@ import {
   UpdateGradeRangesDto,
   UpdateManualSettingPermissionsDto,
   UpdateSelfEvaluationSettingPermissionDto,
+  UpdateEvaluationPeriodEndDateDto,
+  UpdateEvaluationSetupDeadlineDto,
+  UpdatePerformanceDeadlineDto,
+  UpdateSelfEvaluationDeadlineDto,
+  UpdatePeerEvaluationDeadlineDto,
+  UpdateEvaluationPeriodStartDateDto,
 } from './interfaces/evaluation-period-creation.interface';
 import { IEvaluationPeriodManagementContext } from './interfaces/evaluation-period-management-context.interface';
 import {
@@ -104,6 +116,102 @@ export class EvaluationPeriodManagementContextService
     const command = new UpdateEvaluationPeriodScheduleCommand(
       periodId,
       scheduleData,
+      updatedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가 기간 종료일을 수정한다
+   */
+  async 평가기간종료일_수정한다(
+    periodId: string,
+    endDateData: UpdateEvaluationPeriodEndDateDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto> {
+    const command = new UpdateEvaluationPeriodEndDateCommand(
+      periodId,
+      endDateData,
+      updatedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가설정 단계 마감일을 수정한다
+   */
+  async 평가설정단계마감일_수정한다(
+    periodId: string,
+    deadlineData: UpdateEvaluationSetupDeadlineDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto> {
+    const command = new UpdateEvaluationSetupDeadlineCommand(
+      periodId,
+      deadlineData,
+      updatedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 업무 수행 단계 마감일을 수정한다
+   */
+  async 업무수행단계마감일_수정한다(
+    periodId: string,
+    deadlineData: UpdatePerformanceDeadlineDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto> {
+    const command = new UpdatePerformanceDeadlineCommand(
+      periodId,
+      deadlineData,
+      updatedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 자기 평가 단계 마감일을 수정한다
+   */
+  async 자기평가단계마감일_수정한다(
+    periodId: string,
+    deadlineData: UpdateSelfEvaluationDeadlineDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto> {
+    const command = new UpdateSelfEvaluationDeadlineCommand(
+      periodId,
+      deadlineData,
+      updatedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 하향/동료평가 단계 마감일을 수정한다
+   */
+  async 하향동료평가단계마감일_수정한다(
+    periodId: string,
+    deadlineData: UpdatePeerEvaluationDeadlineDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto> {
+    const command = new UpdatePeerEvaluationDeadlineCommand(
+      periodId,
+      deadlineData,
+      updatedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가 기간 시작일을 수정한다
+   */
+  async 평가기간시작일_수정한다(
+    periodId: string,
+    startDateData: UpdateEvaluationPeriodStartDateDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto> {
+    const command = new UpdateEvaluationPeriodStartDateCommand(
+      periodId,
+      startDateData,
       updatedBy,
     );
     return await this.commandBus.execute(command);

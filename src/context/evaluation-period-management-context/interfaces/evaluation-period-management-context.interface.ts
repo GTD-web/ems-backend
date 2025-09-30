@@ -11,6 +11,12 @@ import {
   UpdateSelfEvaluationSettingPermissionDto,
   UpdateFinalEvaluationSettingPermissionDto,
   UpdateManualSettingPermissionsDto,
+  UpdateEvaluationPeriodEndDateDto,
+  UpdateEvaluationSetupDeadlineDto,
+  UpdatePerformanceDeadlineDto,
+  UpdateSelfEvaluationDeadlineDto,
+  UpdatePeerEvaluationDeadlineDto,
+  UpdateEvaluationPeriodStartDateDto,
 } from './evaluation-period-creation.interface';
 
 /**
@@ -74,6 +80,90 @@ export interface IEvaluationPeriodManagementContext {
   평가기간일정_수정한다(
     periodId: string,
     scheduleData: UpdateEvaluationPeriodScheduleDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 평가 기간 종료일을 수정한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param endDateData 종료일 수정 데이터
+   * @param updatedBy 수정자 ID
+   * @returns 수정된 평가 기간 정보
+   */
+  평가기간종료일_수정한다(
+    periodId: string,
+    endDateData: UpdateEvaluationPeriodEndDateDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 평가설정 단계 마감일을 수정한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param deadlineData 마감일 수정 데이터
+   * @param updatedBy 수정자 ID
+   * @returns 수정된 평가 기간 정보
+   */
+  평가설정단계마감일_수정한다(
+    periodId: string,
+    deadlineData: UpdateEvaluationSetupDeadlineDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 업무 수행 단계 마감일을 수정한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param deadlineData 마감일 수정 데이터
+   * @param updatedBy 수정자 ID
+   * @returns 수정된 평가 기간 정보
+   */
+  업무수행단계마감일_수정한다(
+    periodId: string,
+    deadlineData: UpdatePerformanceDeadlineDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 자기 평가 단계 마감일을 수정한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param deadlineData 마감일 수정 데이터
+   * @param updatedBy 수정자 ID
+   * @returns 수정된 평가 기간 정보
+   */
+  자기평가단계마감일_수정한다(
+    periodId: string,
+    deadlineData: UpdateSelfEvaluationDeadlineDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 하향/동료평가 단계 마감일을 수정한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param deadlineData 마감일 수정 데이터
+   * @param updatedBy 수정자 ID
+   * @returns 수정된 평가 기간 정보
+   */
+  하향동료평가단계마감일_수정한다(
+    periodId: string,
+    deadlineData: UpdatePeerEvaluationDeadlineDto,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodDto>;
+
+  /**
+   * 평가 기간 시작일을 수정한다
+   *
+   * @param periodId 평가 기간 ID
+   * @param startDateData 시작일 수정 데이터
+   * @param updatedBy 수정자 ID
+   * @returns 수정된 평가 기간 정보
+   */
+  평가기간시작일_수정한다(
+    periodId: string,
+    startDateData: UpdateEvaluationPeriodStartDateDto,
     updatedBy: string,
   ): Promise<EvaluationPeriodDto>;
 
