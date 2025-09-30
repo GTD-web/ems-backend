@@ -64,10 +64,10 @@ describe('EvaluationPeriod Entity', () => {
     });
 
     describe('평가기간_완료한다', () => {
-      it('종결 단계에서 완료 상태로 변경된다', () => {
+      it('진행 중 상태에서 완료 상태로 변경된다', () => {
         // Given
         evaluationPeriod.status = EvaluationPeriodStatus.IN_PROGRESS;
-        evaluationPeriod.currentPhase = EvaluationPeriodPhase.CLOSURE;
+        evaluationPeriod.currentPhase = EvaluationPeriodPhase.PERFORMANCE; // 어떤 단계든 상관없음
 
         // When
         evaluationPeriod.평가기간_완료한다(testUserId);
@@ -81,10 +81,10 @@ describe('EvaluationPeriod Entity', () => {
         expect(evaluationPeriod.updatedBy).toBe(testUserId);
       });
 
-      it('종결 단계가 아닌 경우 예외를 발생시킨다', () => {
+      it('진행 중 상태가 아닌 경우 예외를 발생시킨다', () => {
         // Given
-        evaluationPeriod.status = EvaluationPeriodStatus.IN_PROGRESS;
-        evaluationPeriod.currentPhase = EvaluationPeriodPhase.PERFORMANCE;
+        evaluationPeriod.status = EvaluationPeriodStatus.WAITING;
+        evaluationPeriod.currentPhase = EvaluationPeriodPhase.WAITING;
 
         // When & Then
         expect(() => evaluationPeriod.평가기간_완료한다(testUserId)).toThrow(
@@ -228,19 +228,19 @@ describe('EvaluationPeriod Entity', () => {
     });
 
     describe('완료_가능한가', () => {
-      it('진행 중이고 종결 단계일 때 true를 반환한다', () => {
+      it('진행 중 상태일 때 true를 반환한다', () => {
         // Given
         evaluationPeriod.status = EvaluationPeriodStatus.IN_PROGRESS;
-        evaluationPeriod.currentPhase = EvaluationPeriodPhase.CLOSURE;
+        evaluationPeriod.currentPhase = EvaluationPeriodPhase.PERFORMANCE; // 어떤 단계든 상관없음
 
         // When & Then
         expect(evaluationPeriod.완료_가능한가()).toBe(true);
       });
 
-      it('종결 단계가 아닐 때 false를 반환한다', () => {
+      it('진행 중 상태가 아닐 때 false를 반환한다', () => {
         // Given
-        evaluationPeriod.status = EvaluationPeriodStatus.IN_PROGRESS;
-        evaluationPeriod.currentPhase = EvaluationPeriodPhase.PERFORMANCE;
+        evaluationPeriod.status = EvaluationPeriodStatus.WAITING;
+        evaluationPeriod.currentPhase = EvaluationPeriodPhase.WAITING;
 
         // When & Then
         expect(evaluationPeriod.완료_가능한가()).toBe(false);

@@ -58,7 +58,7 @@ export interface IEvaluationPeriod extends IBaseEntity {
   /**
    * 평가 기간을 완료한다
    * @param completedBy 완료한 사용자 ID
-   * @throws Error 최종 평가 상태가 아닌 경우
+   * @throws Error 진행 중 상태가 아닌 경우
    */
   평가기간_완료한다(completedBy: string): void;
 

@@ -171,14 +171,14 @@ export class EvaluationPeriod
   /**
    * 평가 기간을 완료한다
    * @param completedBy 완료한 사용자 ID
-   * @throws InvalidEvaluationPeriodStatusTransitionException 종결 단계가 아닌 경우
+   * @throws InvalidEvaluationPeriodStatusTransitionException 진행 중 상태가 아닌 경우
    */
   평가기간_완료한다(completedBy: string): void {
     if (!this.완료_가능한가()) {
       throw new InvalidEvaluationPeriodStatusTransitionException(
         this.status,
         EvaluationPeriodStatus.COMPLETED,
-        '평가 기간은 종결 단계에서만 완료할 수 있습니다.',
+        '평가 기간은 진행 중 상태에서만 완료할 수 있습니다.',
       );
     }
 
@@ -370,10 +370,7 @@ export class EvaluationPeriod
    * @returns 완료 가능 여부
    */
   완료_가능한가(): boolean {
-    return (
-      this.status === EvaluationPeriodStatus.IN_PROGRESS &&
-      this.currentPhase === EvaluationPeriodPhase.CLOSURE
-    );
+    return this.status === EvaluationPeriodStatus.IN_PROGRESS;
   }
 
   /**

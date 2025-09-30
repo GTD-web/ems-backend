@@ -72,10 +72,17 @@ export class StartEvaluationPeriodCommandHandler
   ) {}
 
   async execute(command: StartEvaluationPeriodCommand): Promise<boolean> {
-    await this.evaluationPeriodService.시작한다(
+    const result = await this.evaluationPeriodService.시작한다(
       command.periodId,
       command.startedBy,
     );
+
+    // 결과가 없으면 false 반환
+    if (!result) {
+      return false;
+    }
+
+    // 결과가 있으면 true 반환
     return true;
   }
 }

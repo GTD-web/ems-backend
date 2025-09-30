@@ -1,19 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
-  IsString,
+  ArrayNotEmpty,
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
-  IsArray,
-  ValidateNested,
-  IsDateString,
-  IsNotEmpty,
-  IsBoolean,
-  Min,
+  IsString,
+  IsUUID,
   Max,
-  ArrayNotEmpty,
-  ArrayMinSize,
+  Min,
+  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import {
   DateToUTC,
   OptionalDateToUTC,
@@ -133,13 +132,13 @@ export class CreateEvaluationPeriodApiDto {
     description: '평가 기간 시작일 (UTC 기준)',
     example: '2024-01-01',
   })
-  @IsDateString(
-    {},
-    {
-      message:
-        '평가 기간 시작일은 올바른 날짜 형식이어야 합니다. (예: 2024-01-01 또는 2024-01-01T00:00:00Z)',
-    },
-  )
+  // @IsDateString(
+  //   {},
+  //   {
+  //     message:
+  //       '평가 기간 시작일은 올바른 날짜 형식이어야 합니다. (예: 2024-01-01 또는 2024-01-01T00:00:00Z)',
+  //   },
+  // )
   @IsNotEmpty({ message: '평가 기간 시작일은 필수 입력 항목입니다.' })
   @DateToUTC()
   startDate: string;
@@ -148,13 +147,13 @@ export class CreateEvaluationPeriodApiDto {
     description: '하향/동료평가 마감일 (UTC 기준)',
     example: '2024-06-30',
   })
-  @IsDateString(
-    {},
-    {
-      message:
-        '하향/동료평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-30 또는 2024-06-30T23:59:59Z)',
-    },
-  )
+  // @IsDateString(
+  //   {},
+  //   {
+  //     message:
+  //       '하향/동료평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-30 또는 2024-06-30T23:59:59Z)',
+  //   },
+  // )
   @IsNotEmpty({ message: '하향/동료평가 마감일은 필수 입력 항목입니다.' })
   @DateToUTC()
   peerEvaluationDeadline: string;
@@ -234,13 +233,13 @@ export class UpdateEvaluationPeriodScheduleApiDto {
     example: '2024-07-31',
   })
   @IsOptional()
-  @IsDateString(
-    {},
-    {
-      message:
-        '평가 기간 종료일은 올바른 날짜 형식이어야 합니다. (예: 2024-07-31 또는 2024-07-31T23:59:59Z)',
-    },
-  )
+  // @IsDateString(
+  //   {},
+  //   {
+  //     message:
+  //       '평가 기간 종료일은 올바른 날짜 형식이어야 합니다. (예: 2024-07-31 또는 2024-07-31T23:59:59Z)',
+  //   },
+  // )
   @OptionalDateToUTC()
   endDate?: string;
 
@@ -249,13 +248,13 @@ export class UpdateEvaluationPeriodScheduleApiDto {
     example: '2024-01-15',
   })
   @IsOptional()
-  @IsDateString(
-    {},
-    {
-      message:
-        '평가 설정 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-01-15 또는 2024-01-15T23:59:59Z)',
-    },
-  )
+  // @IsDateString(
+  //   {},
+  //   {
+  //     message:
+  //       '평가 설정 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-01-15 또는 2024-01-15T23:59:59Z)',
+  //   },
+  // )
   @OptionalDateToUTC()
   evaluationSetupDeadline?: string;
 
@@ -264,13 +263,13 @@ export class UpdateEvaluationPeriodScheduleApiDto {
     example: '2024-05-31',
   })
   @IsOptional()
-  @IsDateString(
-    {},
-    {
-      message:
-        '성과 입력 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-05-31 또는 2024-05-31T23:59:59Z)',
-    },
-  )
+  // @IsDateString(
+  //   {},
+  //   {
+  //     message:
+  //       '성과 입력 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-05-31 또는 2024-05-31T23:59:59Z)',
+  //   },
+  // )
   @OptionalDateToUTC()
   performanceDeadline?: string;
 
@@ -279,13 +278,13 @@ export class UpdateEvaluationPeriodScheduleApiDto {
     example: '2024-06-15',
   })
   @IsOptional()
-  @IsDateString(
-    {},
-    {
-      message:
-        '자기평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-15 또는 2024-06-15T23:59:59Z)',
-    },
-  )
+  // @IsDateString(
+  //   {},
+  //   {
+  //     message:
+  //       '자기평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-15 또는 2024-06-15T23:59:59Z)',
+  //   },
+  // )
   @OptionalDateToUTC()
   selfEvaluationDeadline?: string;
 
@@ -294,13 +293,13 @@ export class UpdateEvaluationPeriodScheduleApiDto {
     example: '2024-06-30',
   })
   @IsOptional()
-  @IsDateString(
-    {},
-    {
-      message:
-        '하향/동료평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-30 또는 2024-06-30T23:59:59Z)',
-    },
-  )
+  // @IsDateString(
+  //   {},
+  //   {
+  //     message:
+  //       '하향/동료평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-30 또는 2024-06-30T23:59:59Z)',
+  //   },
+  // )
   @OptionalDateToUTC()
   peerEvaluationDeadline?: string;
 }

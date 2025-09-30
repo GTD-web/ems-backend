@@ -1,0 +1,19 @@
+{
+  "jestrunner.codeLensSelector": "**/*.{test,spec}.{js,jsx,ts,tsx},**/*.e2e-spec.{js,jsx,ts,tsx}",
+  "jestrunner.jestCommand": "npm run test:e2e",
+  "jestrunner.configPath": "test/jest-e2e.json",
+  "jestrunner.projectPath": "${workspaceRoot}",
+  "jestrunner.jestPath": "${workspaceRoot}/node_modules/.bin/jest",
+  "jestrunner.debugOptions": {
+    "runtimeExecutable": "node",
+    "args": [
+      "--inspect-brk",
+      "${workspaceRoot}/node_modules/.bin/jest",
+      "--config",
+      "${workspaceRoot}/test/jest-e2e.json",
+      "--runInBand",
+      "--no-coverage",
+      "--no-cache"
+    ]
+  }
+}

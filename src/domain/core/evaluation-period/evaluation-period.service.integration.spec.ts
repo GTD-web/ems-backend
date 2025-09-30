@@ -492,31 +492,11 @@ describe('EvaluationPeriodService Integration Tests', () => {
     });
 
     describe('완료한다', () => {
-      it('종결 단계에서 평가 기간을 완료할 수 있다', async () => {
+      it('진행 중 상태에서 평가 기간을 완료할 수 있다', async () => {
         // Given
         await service.시작한다(createdPeriod.id, testUserId); // 자동으로 EVALUATION_SETUP으로 이동
-        await service.단계_변경한다(
-          createdPeriod.id,
-          EvaluationPeriodPhase.PERFORMANCE,
-          testUserId,
-        );
-        await service.단계_변경한다(
-          createdPeriod.id,
-          EvaluationPeriodPhase.SELF_EVALUATION,
-          testUserId,
-        );
-        await service.단계_변경한다(
-          createdPeriod.id,
-          EvaluationPeriodPhase.PEER_EVALUATION,
-          testUserId,
-        );
-        await service.단계_변경한다(
-          createdPeriod.id,
-          EvaluationPeriodPhase.CLOSURE,
-          testUserId,
-        );
 
-        // When
+        // When - 어떤 단계든 상관없이 완료 가능
         const result = await service.완료한다(createdPeriod.id, testUserId);
 
         // Then
@@ -526,9 +506,8 @@ describe('EvaluationPeriodService Integration Tests', () => {
         expect(result.updatedBy).toBe(testUserId);
       });
 
-      it('종결 단계가 아닌 상태에서 완료하려 하면 예외를 발생시킨다', async () => {
-        // Given
-        await service.시작한다(createdPeriod.id, testUserId);
+      it('진행 중 상태가 아닌 경우 완료하려 하면 예외를 발생시킨다', async () => {
+        // Given - 시작하지 않은 상태 (WAITING)
 
         // When & Then
         await expect(
