@@ -8,43 +8,45 @@ import { ProjectModule } from '../../domain/common/project/project.module';
 import { TransactionManagerService } from '../../../libs/database/transaction-manager.service';
 import { EvaluationCriteriaManagementService } from './evaluation-criteria-management.service';
 
-// Project Assignment Command Handlers
-import { CreateProjectAssignmentHandler } from './handlers/project-assignment/commands/create-project-assignment.handler';
-import { UpdateProjectAssignmentHandler } from './handlers/project-assignment/commands/update-project-assignment.handler';
-import { CancelProjectAssignmentHandler } from './handlers/project-assignment/commands/cancel-project-assignment.handler';
-import { BulkCreateProjectAssignmentHandler } from './handlers/project-assignment/commands/bulk-create-project-assignment.handler';
+// Project Assignment Handlers
+import {
+  CreateProjectAssignmentHandler,
+  UpdateProjectAssignmentHandler,
+  CancelProjectAssignmentHandler,
+  BulkCreateProjectAssignmentHandler,
+  GetProjectAssignmentListHandler,
+  GetEmployeeProjectAssignmentsHandler,
+  GetProjectAssignedEmployeesHandler,
+  GetProjectAssignmentDetailHandler,
+  GetUnassignedEmployeesHandler,
+} from './handlers/project-assignment';
 
-// Project Assignment Query Handlers
-import { GetProjectAssignmentListHandler } from './handlers/project-assignment/queries/get-project-assignment-list.handler';
-import { GetEmployeeProjectAssignmentsHandler } from './handlers/project-assignment/queries/get-employee-project-assignments.handler';
-import { GetProjectAssignedEmployeesHandler } from './handlers/project-assignment/queries/get-project-assigned-employees.handler';
-import { GetProjectAssignmentDetailHandler } from './handlers/project-assignment/queries/get-project-assignment-detail.handler';
-import { GetUnassignedEmployeesHandler } from './handlers/project-assignment/queries/get-unassigned-employees.handler';
-
-// WBS Assignment Command Handlers
-import { CreateWbsAssignmentHandler } from './handlers/wbs-assignment/commands/create-wbs-assignment.handler';
-import { UpdateWbsAssignmentHandler } from './handlers/wbs-assignment/commands/update-wbs-assignment.handler';
-import { CancelWbsAssignmentHandler } from './handlers/wbs-assignment/commands/cancel-wbs-assignment.handler';
-import { BulkCreateWbsAssignmentHandler } from './handlers/wbs-assignment/commands/bulk-create-wbs-assignment.handler';
-import { ResetPeriodWbsAssignmentsHandler } from './handlers/wbs-assignment/commands/reset-period-wbs-assignments.handler';
-import { ResetProjectWbsAssignmentsHandler } from './handlers/wbs-assignment/commands/reset-project-wbs-assignments.handler';
-import { ResetEmployeeWbsAssignmentsHandler } from './handlers/wbs-assignment/commands/reset-employee-wbs-assignments.handler';
-
-// WBS Assignment Query Handlers
-import { GetWbsAssignmentListHandler } from './handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
-import { GetEmployeeWbsAssignmentsHandler } from './handlers/wbs-assignment/queries/get-employee-wbs-assignments.handler';
-import { GetProjectWbsAssignmentsHandler } from './handlers/wbs-assignment/queries/get-project-wbs-assignments.handler';
-import { GetWbsItemAssignmentsHandler } from './handlers/wbs-assignment/queries/get-wbs-item-assignments.handler';
-import { GetWbsAssignmentDetailHandler } from './handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
-import { GetUnassignedWbsItemsHandler } from './handlers/wbs-assignment/queries/get-unassigned-wbs-items.handler';
+// WBS Assignment Handlers
+import {
+  CreateWbsAssignmentHandler,
+  UpdateWbsAssignmentHandler,
+  CancelWbsAssignmentHandler,
+  BulkCreateWbsAssignmentHandler,
+  ResetPeriodWbsAssignmentsHandler,
+  ResetProjectWbsAssignmentsHandler,
+  ResetEmployeeWbsAssignmentsHandler,
+  GetWbsAssignmentListHandler,
+  GetEmployeeWbsAssignmentsHandler,
+  GetProjectWbsAssignmentsHandler,
+  GetWbsItemAssignmentsHandler,
+  GetWbsAssignmentDetailHandler,
+  GetUnassignedWbsItemsHandler,
+} from './handlers/wbs-assignment';
 
 // Evaluation Line Handlers
-import { ConfigureEmployeeWbsEvaluationLineHandler } from './handlers/evaluation-line/commands/configure-employee-wbs-evaluation-line.handler';
-import { GetEvaluationLineListHandler } from './handlers/evaluation-line/queries/get-evaluation-line-list.handler';
-import { GetEmployeeEvaluationLineMappingsHandler } from './handlers/evaluation-line/queries/get-employee-evaluation-line-mappings.handler';
-import { GetEvaluatorEmployeesHandler } from './handlers/evaluation-line/queries/get-evaluator-employees.handler';
-import { GetUpdaterEvaluationLineMappingsHandler } from './handlers/evaluation-line/queries/get-updater-evaluation-line-mappings.handler';
-import { GetEmployeeEvaluationSettingsHandler } from './handlers/evaluation-line/queries/get-employee-evaluation-settings.handler';
+import {
+  ConfigureEmployeeWbsEvaluationLineHandler,
+  GetEvaluationLineListHandler,
+  GetEmployeeEvaluationLineMappingsHandler,
+  GetEvaluatorEmployeesHandler,
+  GetUpdaterEvaluationLineMappingsHandler,
+  GetEmployeeEvaluationSettingsHandler,
+} from './handlers/evaluation-line';
 
 /**
  * 평가기준관리 컨텍스트 모듈 (MVP 버전)

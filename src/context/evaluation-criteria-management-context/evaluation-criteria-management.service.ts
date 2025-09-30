@@ -3,44 +3,46 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-criteria-management.interface';
 
 // Project Assignment Commands & Queries
-import { BulkCreateProjectAssignmentCommand } from './handlers/project-assignment/commands/bulk-create-project-assignment.handler';
-import { CancelProjectAssignmentCommand } from './handlers/project-assignment/commands/cancel-project-assignment.handler';
-import { CreateProjectAssignmentCommand } from './handlers/project-assignment/commands/create-project-assignment.handler';
-import { UpdateProjectAssignmentCommand } from './handlers/project-assignment/commands/update-project-assignment.handler';
-import { GetEmployeeProjectAssignmentsQuery } from './handlers/project-assignment/queries/get-employee-project-assignments.handler';
-import { GetProjectAssignedEmployeesQuery } from './handlers/project-assignment/queries/get-project-assigned-employees.handler';
-import { GetProjectAssignmentDetailQuery } from './handlers/project-assignment/queries/get-project-assignment-detail.handler';
 import {
+  BulkCreateProjectAssignmentCommand,
+  CancelProjectAssignmentCommand,
+  CreateProjectAssignmentCommand,
+  UpdateProjectAssignmentCommand,
+  GetEmployeeProjectAssignmentsQuery,
+  GetProjectAssignedEmployeesQuery,
+  GetProjectAssignmentDetailQuery,
   GetProjectAssignmentListQuery,
-  ProjectAssignmentListResult,
-} from './handlers/project-assignment/queries/get-project-assignment-list.handler';
-import { GetUnassignedEmployeesQuery } from './handlers/project-assignment/queries/get-unassigned-employees.handler';
+  GetUnassignedEmployeesQuery,
+  type ProjectAssignmentListResult,
+} from './handlers/project-assignment';
 
 // WBS Assignment Commands & Queries
-import { BulkCreateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/bulk-create-wbs-assignment.handler';
-import { CancelWbsAssignmentCommand } from './handlers/wbs-assignment/commands/cancel-wbs-assignment.handler';
-import { CreateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/create-wbs-assignment.handler';
-import { ResetEmployeeWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-employee-wbs-assignments.handler';
-import { ResetPeriodWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-period-wbs-assignments.handler';
-import { ResetProjectWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-project-wbs-assignments.handler';
-import { UpdateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/update-wbs-assignment.handler';
-import { GetEmployeeWbsAssignmentsQuery } from './handlers/wbs-assignment/queries/get-employee-wbs-assignments.handler';
-import { GetProjectWbsAssignmentsQuery } from './handlers/wbs-assignment/queries/get-project-wbs-assignments.handler';
-import { GetUnassignedWbsItemsQuery } from './handlers/wbs-assignment/queries/get-unassigned-wbs-items.handler';
-import { GetWbsAssignmentDetailQuery } from './handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
 import {
+  BulkCreateWbsAssignmentCommand,
+  CancelWbsAssignmentCommand,
+  CreateWbsAssignmentCommand,
+  ResetEmployeeWbsAssignmentsCommand,
+  ResetPeriodWbsAssignmentsCommand,
+  ResetProjectWbsAssignmentsCommand,
+  UpdateWbsAssignmentCommand,
+  GetEmployeeWbsAssignmentsQuery,
+  GetProjectWbsAssignmentsQuery,
+  GetUnassignedWbsItemsQuery,
+  GetWbsAssignmentDetailQuery,
   GetWbsAssignmentListQuery,
-  WbsAssignmentListResult,
-} from './handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
-import { GetWbsItemAssignmentsQuery } from './handlers/wbs-assignment/queries/get-wbs-item-assignments.handler';
+  GetWbsItemAssignmentsQuery,
+  type WbsAssignmentListResult,
+} from './handlers/wbs-assignment';
 
 // Evaluation Line Commands & Queries
-import { ConfigureEmployeeWbsEvaluationLineCommand } from './handlers/evaluation-line/commands/configure-employee-wbs-evaluation-line.handler';
-import { GetEvaluatorEmployeesQuery } from './handlers/evaluation-line/queries/get-evaluator-employees.handler';
-import { GetEmployeeEvaluationLineMappingsQuery } from './handlers/evaluation-line/queries/get-employee-evaluation-line-mappings.handler';
-import { GetEmployeeEvaluationSettingsQuery } from './handlers/evaluation-line/queries/get-employee-evaluation-settings.handler';
-import { GetEvaluationLineListQuery } from './handlers/evaluation-line/queries/get-evaluation-line-list.handler';
-import { GetUpdaterEvaluationLineMappingsQuery } from './handlers/evaluation-line/queries/get-updater-evaluation-line-mappings.handler';
+import {
+  ConfigureEmployeeWbsEvaluationLineCommand,
+  GetEvaluatorEmployeesQuery,
+  GetEmployeeEvaluationLineMappingsQuery,
+  GetEmployeeEvaluationSettingsQuery,
+  GetEvaluationLineListQuery,
+  GetUpdaterEvaluationLineMappingsQuery,
+} from './handlers/evaluation-line';
 
 import type { EvaluationLineMappingDto } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type {

@@ -1,0 +1,67 @@
+// Commands
+export {
+  CreateWbsAssignmentCommand,
+  CreateWbsAssignmentHandler,
+} from './commands/create-wbs-assignment.handler';
+
+export {
+  UpdateWbsAssignmentCommand,
+  UpdateWbsAssignmentHandler,
+} from './commands/update-wbs-assignment.handler';
+
+export {
+  CancelWbsAssignmentCommand,
+  CancelWbsAssignmentHandler,
+} from './commands/cancel-wbs-assignment.handler';
+
+export {
+  BulkCreateWbsAssignmentCommand,
+  BulkCreateWbsAssignmentHandler,
+} from './commands/bulk-create-wbs-assignment.handler';
+
+export {
+  ResetPeriodWbsAssignmentsCommand,
+  ResetPeriodWbsAssignmentsHandler,
+} from './commands/reset-period-wbs-assignments.handler';
+
+export {
+  ResetProjectWbsAssignmentsCommand,
+  ResetProjectWbsAssignmentsHandler,
+} from './commands/reset-project-wbs-assignments.handler';
+
+export {
+  ResetEmployeeWbsAssignmentsCommand,
+  ResetEmployeeWbsAssignmentsHandler,
+} from './commands/reset-employee-wbs-assignments.handler';
+
+// Queries
+export {
+  GetWbsAssignmentListQuery,
+  GetWbsAssignmentListHandler,
+  type WbsAssignmentListResult,
+} from './queries/get-wbs-assignment-list.handler';
+
+export {
+  GetEmployeeWbsAssignmentsQuery,
+  GetEmployeeWbsAssignmentsHandler,
+} from './queries/get-employee-wbs-assignments.handler';
+
+export {
+  GetProjectWbsAssignmentsQuery,
+  GetProjectWbsAssignmentsHandler,
+} from './queries/get-project-wbs-assignments.handler';
+
+export {
+  GetWbsItemAssignmentsQuery,
+  GetWbsItemAssignmentsHandler,
+} from './queries/get-wbs-item-assignments.handler';
+
+export {
+  GetWbsAssignmentDetailQuery,
+  GetWbsAssignmentDetailHandler,
+} from './queries/get-wbs-assignment-detail.handler';
+
+export {
+  GetUnassignedWbsItemsQuery,
+  GetUnassignedWbsItemsHandler,
+} from './queries/get-unassigned-wbs-items.handler';
