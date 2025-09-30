@@ -833,7 +833,7 @@ export class EvaluationPeriod
    * BaseEntity의 추상 메서드 구현 (하위 호환성)
    * @returns 평가 기간 DTO 객체
    */
-  DTO변환한다(): EvaluationPeriodDto {
+  DTO로_변환한다(): EvaluationPeriodDto {
     return this.DTO_변환한다();
   }
 }

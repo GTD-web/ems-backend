@@ -1306,7 +1306,7 @@ describe('EvaluationPeriod Entity', () => {
         );
 
         // When
-        const dto1 = evaluationPeriod.DTO변환한다();
+        const dto1 = evaluationPeriod.DTO로_변환한다();
         const dto2 = evaluationPeriod.DTO_변환한다();
 
         // Then

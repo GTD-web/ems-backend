@@ -29,17 +29,17 @@ export interface IBaseEntity<T = any> {
   version: number;
 
   /** 엔티티가 삭제되었는지 확인한다 */
-  삭제됨(): boolean;
+  삭제되었는가(): boolean;
   /** 엔티티가 새로 생성된 것인지 확인한다 */
-  새로생성됨(): boolean;
+  새로_생성되었는가(): boolean;
   /** 생성자를 설정한다 */
-  생성자설정한다(userId: string): void;
+  생성자를_설정한다(userId: string): void;
   /** 수정자를 설정한다 */
-  수정자설정한다(userId: string): void;
+  수정자를_설정한다(userId: string): void;
   /** 엔티티 메타데이터를 업데이트한다 */
-  메타데이터업데이트한다(userId?: string): void;
+  메타데이터를_업데이트한다(userId?: string): void;
   /** 엔티티를 DTO로 변환한다 */
-  DTO변환한다(): T;
+  DTO로_변환한다(): T;
 }
 
 /**
@@ -62,17 +62,17 @@ export interface IBaseEntityWithNumericId<T = any> {
   version: number;
 
   /** 엔티티가 삭제되었는지 확인한다 */
-  삭제됨(): boolean;
+  삭제되었는가(): boolean;
   /** 엔티티가 새로 생성된 것인지 확인한다 */
-  새로생성됨(): boolean;
+  새로_생성되었는가(): boolean;
   /** 생성자를 설정한다 */
-  생성자설정한다(userId: string): void;
+  생성자를_설정한다(userId: string): void;
   /** 수정자를 설정한다 */
-  수정자설정한다(userId: string): void;
+  수정자를_설정한다(userId: string): void;
   /** 엔티티 메타데이터를 업데이트한다 */
-  메타데이터업데이트한다(userId?: string): void;
+  메타데이터를_업데이트한다(userId?: string): void;
   /** 엔티티를 DTO로 변환한다 */
-  DTO변환한다(): T;
+  DTO로_변환한다(): T;
 }
 
 /**
@@ -155,38 +155,38 @@ export abstract class BaseEntity<T> implements IBaseEntity<T> {
   /**
    * 엔티티가 삭제되었는지 확인한다
    */
-  삭제됨(): boolean {
+  삭제되었는가(): boolean {
     return this.deletedAt !== null && this.deletedAt !== undefined;
   }
 
   /**
    * 엔티티가 새로 생성된 것인지 확인한다
    */
-  새로생성됨(): boolean {
+  새로_생성되었는가(): boolean {
     return !this.id || this.version === 1;
   }
 
   /**
    * 생성자를 설정한다
    */
-  생성자설정한다(userId: string): void {
+  생성자를_설정한다(userId: string): void {
     this.createdBy = userId;
   }
 
   /**
    * 수정자를 설정한다
    */
-  수정자설정한다(userId: string): void {
+  수정자를_설정한다(userId: string): void {
     this.updatedBy = userId;
   }
 
   /**
    * 엔티티 메타데이터를 업데이트한다
    */
-  메타데이터업데이트한다(userId?: string): void {
+  메타데이터를_업데이트한다(userId?: string): void {
     const now = new Date();
 
-    if (this.새로생성됨()) {
+    if (this.새로_생성되었는가()) {
       this.createdAt = now;
       if (userId) {
         this.createdBy = userId;
@@ -202,27 +202,27 @@ export abstract class BaseEntity<T> implements IBaseEntity<T> {
   /**
    * 엔티티를 DTO로 변환한다
    */
-  abstract DTO변환한다(): T;
+  abstract DTO로_변환한다(): T;
 
   // 기존 메서드들도 유지 (하위 호환성)
   get isDeleted(): boolean {
-    return this.삭제됨();
+    return this.삭제되었는가();
   }
 
   get isNew(): boolean {
-    return this.새로생성됨();
+    return this.새로_생성되었는가();
   }
 
   setCreatedBy(userId: string): void {
-    this.생성자설정한다(userId);
+    this.생성자를_설정한다(userId);
   }
 
   setUpdatedBy(userId: string): void {
-    this.수정자설정한다(userId);
+    this.수정자를_설정한다(userId);
   }
 
   updateMetadata(userId?: string): void {
-    this.메타데이터업데이트한다(userId);
+    this.메타데이터를_업데이트한다(userId);
   }
 }
 
@@ -280,38 +280,38 @@ export abstract class BaseEntityWithNumericId<T>
   /**
    * 엔티티가 삭제되었는지 확인한다
    */
-  삭제됨(): boolean {
+  삭제되었는가(): boolean {
     return this.deletedAt !== null && this.deletedAt !== undefined;
   }
 
   /**
    * 엔티티가 새로 생성된 것인지 확인한다
    */
-  새로생성됨(): boolean {
+  새로_생성되었는가(): boolean {
     return !this.id || this.version === 1;
   }
 
   /**
    * 생성자를 설정한다
    */
-  생성자설정한다(userId: string): void {
+  생성자를_설정한다(userId: string): void {
     this.createdBy = userId;
   }
 
   /**
    * 수정자를 설정한다
    */
-  수정자설정한다(userId: string): void {
+  수정자를_설정한다(userId: string): void {
     this.updatedBy = userId;
   }
 
   /**
    * 엔티티 메타데이터를 업데이트한다
    */
-  메타데이터업데이트한다(userId?: string): void {
+  메타데이터를_업데이트한다(userId?: string): void {
     const now = new Date();
 
-    if (this.새로생성됨()) {
+    if (this.새로_생성되었는가()) {
       this.createdAt = now;
       if (userId) {
         this.createdBy = userId;
@@ -327,26 +327,26 @@ export abstract class BaseEntityWithNumericId<T>
   /**
    * 엔티티를 DTO로 변환한다
    */
-  abstract DTO변환한다(): T;
+  abstract DTO로_변환한다(): T;
 
   // 기존 메서드들도 유지 (하위 호환성)
   get isDeleted(): boolean {
-    return this.삭제됨();
+    return this.삭제되었는가();
   }
 
   get isNew(): boolean {
-    return this.새로생성됨();
+    return this.새로_생성되었는가();
   }
 
   setCreatedBy(userId: string): void {
-    this.생성자설정한다(userId);
+    this.생성자를_설정한다(userId);
   }
 
   setUpdatedBy(userId: string): void {
-    this.수정자설정한다(userId);
+    this.수정자를_설정한다(userId);
   }
 
   updateMetadata(userId?: string): void {
-    this.메타데이터업데이트한다(userId);
+    this.메타데이터를_업데이트한다(userId);
   }
 }

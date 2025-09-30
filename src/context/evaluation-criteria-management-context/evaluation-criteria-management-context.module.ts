@@ -7,6 +7,45 @@ import { EvaluationLineModule } from '../../domain/core/evaluation-line/evaluati
 import { EvaluationLineMappingModule } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
 import { EvaluationCriteriaManagementService } from './evaluation-criteria-management.service';
 
+// Project Assignment Command Handlers
+import {
+  CreateProjectAssignmentHandler,
+  UpdateProjectAssignmentHandler,
+  CancelProjectAssignmentHandler,
+  BulkCreateProjectAssignmentHandler,
+  ResetPeriodProjectAssignmentsHandler,
+} from './commands';
+
+// Project Assignment Query Handlers
+import {
+  GetProjectAssignmentListHandler,
+  GetEmployeeProjectAssignmentsHandler,
+  GetProjectAssignedEmployeesHandler,
+  GetProjectAssignmentDetailHandler,
+  GetUnassignedEmployeesHandler,
+} from './queries';
+
+// WBS Assignment Command Handlers
+import {
+  CreateWbsAssignmentHandler,
+  UpdateWbsAssignmentHandler,
+  CancelWbsAssignmentHandler,
+  BulkCreateWbsAssignmentHandler,
+  ResetPeriodWbsAssignmentsHandler,
+  ResetProjectWbsAssignmentsHandler,
+  ResetEmployeeWbsAssignmentsHandler,
+} from './commands/wbs-assignment.command-handlers';
+
+// WBS Assignment Query Handlers
+import {
+  GetWbsAssignmentListHandler,
+  GetEmployeeWbsAssignmentsHandler,
+  GetProjectWbsAssignmentsHandler,
+  GetWbsItemAssignmentsHandler,
+  GetWbsAssignmentDetailHandler,
+  GetUnassignedWbsItemsHandler,
+} from './queries/wbs-assignment.query-handlers';
+
 /**
  * 평가기준관리 컨텍스트 모듈
  *
@@ -30,8 +69,33 @@ import { EvaluationCriteriaManagementService } from './evaluation-criteria-manag
   ],
   providers: [
     EvaluationCriteriaManagementService,
-    // TODO: Command Handlers 추가
-    // TODO: Query Handlers 추가
+    // Project Assignment Command Handlers
+    CreateProjectAssignmentHandler,
+    UpdateProjectAssignmentHandler,
+    CancelProjectAssignmentHandler,
+    BulkCreateProjectAssignmentHandler,
+    ResetPeriodProjectAssignmentsHandler,
+    // Project Assignment Query Handlers
+    GetProjectAssignmentListHandler,
+    GetEmployeeProjectAssignmentsHandler,
+    GetProjectAssignedEmployeesHandler,
+    GetProjectAssignmentDetailHandler,
+    GetUnassignedEmployeesHandler,
+    // WBS Assignment Command Handlers
+    CreateWbsAssignmentHandler,
+    UpdateWbsAssignmentHandler,
+    CancelWbsAssignmentHandler,
+    BulkCreateWbsAssignmentHandler,
+    ResetPeriodWbsAssignmentsHandler,
+    ResetProjectWbsAssignmentsHandler,
+    ResetEmployeeWbsAssignmentsHandler,
+    // WBS Assignment Query Handlers
+    GetWbsAssignmentListHandler,
+    GetEmployeeWbsAssignmentsHandler,
+    GetProjectWbsAssignmentsHandler,
+    GetWbsItemAssignmentsHandler,
+    GetWbsAssignmentDetailHandler,
+    GetUnassignedWbsItemsHandler,
   ],
   exports: [EvaluationCriteriaManagementService],
 })

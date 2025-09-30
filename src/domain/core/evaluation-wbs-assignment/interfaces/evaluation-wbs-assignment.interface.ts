@@ -24,32 +24,32 @@ export interface IEvaluationWbsAssignment extends IBaseEntity {
    * @param periodId 확인할 평가기간 ID
    * @returns 평가기간 일치 여부
    */
-  평가기간일치하는가(periodId: string): boolean;
+  평가기간과_일치하는가(periodId: string): boolean;
 
   /**
    * 특정 직원의 할당인지 확인한다
    * @param employeeId 확인할 직원 ID
    * @returns 직원 일치 여부
    */
-  해당직원의할당인가(employeeId: string): boolean;
+  해당_직원의_할당인가(employeeId: string): boolean;
 
   /**
    * 특정 프로젝트의 WBS 할당인지 확인한다
    * @param projectId 확인할 프로젝트 ID
    * @returns 프로젝트 일치 여부
    */
-  해당프로젝트의WBS할당인가(projectId: string): boolean;
+  해당_프로젝트의_WBS_할당인가(projectId: string): boolean;
 
   /**
    * 특정 WBS 항목 할당인지 확인한다
    * @param wbsItemId 확인할 WBS 항목 ID
    * @returns WBS 항목 일치 여부
    */
-  해당WBS항목할당인가(wbsItemId: string): boolean;
+  해당_WBS_항목의_할당인가(wbsItemId: string): boolean;
 
   /**
    * DTO로 변환한다
    * @returns 평가 WBS 할당 DTO
    */
-  DTO변환한다(): EvaluationWbsAssignmentDto;
+  DTO로_변환한다(): EvaluationWbsAssignmentDto;
 }

@@ -67,28 +67,28 @@ export class EvaluationProjectAssignment
   /**
    * 특정 평가기간에 속하는지 확인한다
    */
-  평가기간일치하는가(periodId: string): boolean {
+  평가기간과_일치하는가(periodId: string): boolean {
     return this.periodId === periodId;
   }
 
   /**
    * 특정 직원의 할당인지 확인한다
    */
-  해당직원의할당인가(employeeId: string): boolean {
+  해당_직원의_할당인가(employeeId: string): boolean {
     return this.employeeId === employeeId;
   }
 
   /**
    * 특정 프로젝트 할당인지 확인한다
    */
-  해당프로젝트할당인가(projectId: string): boolean {
+  해당_프로젝트_할당인가(projectId: string): boolean {
     return this.projectId === projectId;
   }
 
   /**
    * DTO로 변환한다
    */
-  DTO변환한다(): EvaluationProjectAssignmentDto {
+  DTO로_변환한다(): EvaluationProjectAssignmentDto {
     return {
       id: this.id,
       periodId: this.periodId,
