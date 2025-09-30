@@ -1,6 +1,23 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsArray, ValidateNested, IsDateString, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsDateString,
+  IsNotEmpty,
+  IsBoolean,
+  Min,
+  Max,
+  ArrayNotEmpty,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
+import {
+  DateToUTC,
+  OptionalDateToUTC,
+} from '../decorators/date-transform.decorator';
 
 /**
  * 페이징 쿼리 DTO
@@ -13,8 +30,8 @@ export class PaginationQueryDto {
     default: 1,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(1)
+  @IsNumber({}, { message: '페이지 번호는 숫자여야 합니다.' })
+  @Min(1, { message: '페이지 번호는 1 이상이어야 합니다.' })
   @Type(() => Number)
   page?: number = 1;
 
@@ -26,9 +43,9 @@ export class PaginationQueryDto {
     default: 10,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(1)
-  @Max(100)
+  @IsNumber({}, { message: '페이지 크기는 숫자여야 합니다.' })
+  @Min(1, { message: '페이지 크기는 1 이상이어야 합니다.' })
+  @Max(100, { message: '페이지 크기는 100 이하여야 합니다.' })
   @Type(() => Number)
   limit?: number = 10;
 }
@@ -77,57 +94,27 @@ export class CreateGradeRangeApiDto {
     description: '등급',
     example: 'S',
   })
-  @IsString()
+  @IsString({ message: '등급은 문자열이어야 합니다.' })
+  @IsNotEmpty({ message: '등급은 필수 입력 항목입니다.' })
   grade: string;
 
   @ApiProperty({
     description: '최소 범위',
     example: 90,
   })
-  @IsNumber()
-  @Min(0)
-  @Max(100)
+  @IsNumber({}, { message: '최소 범위는 숫자여야 합니다.' })
+  @Min(0, { message: '최소 범위는 0 이상이어야 합니다.' })
+  @Max(100, { message: '최소 범위는 100 이하여야 합니다.' })
   minRange: number;
 
   @ApiProperty({
     description: '최대 범위',
     example: 100,
   })
-  @IsNumber()
-  @Min(0)
-  @Max(100)
+  @IsNumber({}, { message: '최대 범위는 숫자여야 합니다.' })
+  @Min(0, { message: '최대 범위는 0 이상이어야 합니다.' })
+  @Max(100, { message: '최대 범위는 100 이하여야 합니다.' })
   maxRange: number;
-}
-
-/**
- * 평가 기준 생성 DTO (API용)
- */
-export class CreateEvaluationCriteriaApiDto {
-  @ApiProperty({
-    description: '평가 기준명',
-    example: '업무 성과',
-  })
-  @IsString()
-  name: string;
-
-  @ApiProperty({
-    description: '평가 기준 설명',
-    example: '담당 업무의 목표 달성도와 품질을 평가합니다.',
-  })
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @ApiProperty({
-    description: '가중치 (%)',
-    example: 40,
-    minimum: 0,
-    maximum: 100,
-  })
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  weight: number;
 }
 
 /**
@@ -138,21 +125,26 @@ export class CreateEvaluationPeriodApiDto {
     description: '평가 기간명',
     example: '2024년 상반기 평가',
   })
-  @IsString()
+  @IsString({ message: '평가 기간명은 문자열이어야 합니다.' })
+  @IsNotEmpty({ message: '평가 기간명은 필수 입력 항목입니다.' })
   name: string;
 
   @ApiProperty({
-    description: '평가 기간 시작일',
+    description: '평가 기간 시작일 (UTC 기준)',
     example: '2024-01-01',
   })
-  @IsDateString()
+  @IsDateString({}, { message: '평가 기간 시작일은 올바른 날짜 형식이어야 합니다. (예: 2024-01-01 또는 2024-01-01T00:00:00Z)' })
+  @IsNotEmpty({ message: '평가 기간 시작일은 필수 입력 항목입니다.' })
+  @DateToUTC()
   startDate: string;
 
   @ApiProperty({
-    description: '하향/동료평가 마감일',
+    description: '하향/동료평가 마감일 (UTC 기준)',
     example: '2024-06-30',
   })
-  @IsDateString()
+  @IsDateString({}, { message: '하향/동료평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-30 또는 2024-06-30T23:59:59Z)' })
+  @IsNotEmpty({ message: '하향/동료평가 마감일은 필수 입력 항목입니다.' })
+  @DateToUTC()
   peerEvaluationDeadline: string;
 
   @ApiPropertyOptional({
@@ -171,9 +163,9 @@ export class CreateEvaluationPeriodApiDto {
     default: 120,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(100)
-  @Max(200)
+  @IsNumber({}, { message: '자기평가 달성률 최대값은 숫자여야 합니다.' })
+  @Min(100, { message: '자기평가 달성률 최대값은 100% 이상이어야 합니다.' })
+  @Max(200, { message: '자기평가 달성률 최대값은 200% 이하여야 합니다.' })
   maxSelfEvaluationRate?: number;
 
   @ApiPropertyOptional({
@@ -181,20 +173,10 @@ export class CreateEvaluationPeriodApiDto {
     type: [CreateGradeRangeApiDto],
   })
   @IsOptional()
-  @IsArray()
+  @IsArray({ message: '등급 구간 설정은 배열이어야 합니다.' })
   @ValidateNested({ each: true })
   @Type(() => CreateGradeRangeApiDto)
   gradeRanges?: CreateGradeRangeApiDto[];
-
-  @ApiPropertyOptional({
-    description: '평가 기준 설정',
-    type: [CreateEvaluationCriteriaApiDto],
-  })
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateEvaluationCriteriaApiDto)
-  evaluationCriteria?: CreateEvaluationCriteriaApiDto[];
 }
 
 /**
@@ -206,7 +188,8 @@ export class UpdateEvaluationPeriodBasicApiDto {
     example: '2024년 상반기 평가 (수정)',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: '평가 기간명은 문자열이어야 합니다.' })
+  @IsNotEmpty({ message: '평가 기간명이 제공된 경우 빈 값일 수 없습니다.' })
   name?: string;
 
   @ApiPropertyOptional({
@@ -214,7 +197,7 @@ export class UpdateEvaluationPeriodBasicApiDto {
     example: '수정된 평가 기간 설명',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: '평가 기간 설명은 문자열이어야 합니다.' })
   description?: string;
 
   @ApiPropertyOptional({
@@ -224,9 +207,9 @@ export class UpdateEvaluationPeriodBasicApiDto {
     maximum: 200,
   })
   @IsOptional()
-  @IsNumber()
-  @Min(100)
-  @Max(200)
+  @IsNumber({}, { message: '자기평가 달성률 최대값은 숫자여야 합니다.' })
+  @Min(100, { message: '자기평가 달성률 최대값은 100% 이상이어야 합니다.' })
+  @Max(200, { message: '자기평가 달성률 최대값은 200% 이하여야 합니다.' })
   maxSelfEvaluationRate?: number;
 }
 
@@ -235,43 +218,48 @@ export class UpdateEvaluationPeriodBasicApiDto {
  */
 export class UpdateEvaluationPeriodScheduleApiDto {
   @ApiPropertyOptional({
-    description: '평가 기간 종료일',
+    description: '평가 기간 종료일 (UTC 기준)',
     example: '2024-07-31',
   })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: '평가 기간 종료일은 올바른 날짜 형식이어야 합니다. (예: 2024-07-31 또는 2024-07-31T23:59:59Z)' })
+  @OptionalDateToUTC()
   endDate?: string;
 
   @ApiPropertyOptional({
-    description: '평가 설정 마감일',
+    description: '평가 설정 마감일 (UTC 기준)',
     example: '2024-01-15',
   })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: '평가 설정 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-01-15 또는 2024-01-15T23:59:59Z)' })
+  @OptionalDateToUTC()
   evaluationSetupDeadline?: string;
 
   @ApiPropertyOptional({
-    description: '성과 입력 마감일',
+    description: '성과 입력 마감일 (UTC 기준)',
     example: '2024-05-31',
   })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: '성과 입력 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-05-31 또는 2024-05-31T23:59:59Z)' })
+  @OptionalDateToUTC()
   performanceDeadline?: string;
 
   @ApiPropertyOptional({
-    description: '자기평가 마감일',
+    description: '자기평가 마감일 (UTC 기준)',
     example: '2024-06-15',
   })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: '자기평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-15 또는 2024-06-15T23:59:59Z)' })
+  @OptionalDateToUTC()
   selfEvaluationDeadline?: string;
 
   @ApiPropertyOptional({
-    description: '하향/동료평가 마감일',
+    description: '하향/동료평가 마감일 (UTC 기준)',
     example: '2024-06-30',
   })
   @IsOptional()
-  @IsDateString()
+  @IsDateString({}, { message: '하향/동료평가 마감일은 올바른 날짜 형식이어야 합니다. (예: 2024-06-30 또는 2024-06-30T23:59:59Z)' })
+  @OptionalDateToUTC()
   peerEvaluationDeadline?: string;
 }
 
@@ -283,7 +271,8 @@ export class UpdateGradeRangesApiDto {
     description: '등급 구간 목록',
     type: [CreateGradeRangeApiDto],
   })
-  @IsArray()
+  @IsArray({ message: '등급 구간 목록은 배열이어야 합니다.' })
+  @ArrayNotEmpty({ message: '등급 구간 목록은 최소 1개 이상이어야 합니다.' })
   @ValidateNested({ each: true })
   @Type(() => CreateGradeRangeApiDto)
   gradeRanges: CreateGradeRangeApiDto[];
@@ -297,6 +286,8 @@ export class ManualPermissionSettingDto {
     description: '수동 허용 여부',
     example: true,
   })
+  @IsBoolean({ message: '수동 허용 여부는 불린 값(true/false)이어야 합니다.' })
+  @IsNotEmpty({ message: '수동 허용 여부는 필수 입력 항목입니다.' })
   allowManualSetting: boolean;
 }
 
@@ -309,6 +300,7 @@ export class UpdateManualSettingPermissionsApiDto {
     example: true,
   })
   @IsOptional()
+  @IsBoolean({ message: '평가 기준 설정 수동 허용은 불린 값(true/false)이어야 합니다.' })
   allowCriteriaManualSetting?: boolean;
 
   @ApiPropertyOptional({
@@ -316,6 +308,7 @@ export class UpdateManualSettingPermissionsApiDto {
     example: true,
   })
   @IsOptional()
+  @IsBoolean({ message: '자기평가 설정 수동 허용은 불린 값(true/false)이어야 합니다.' })
   allowSelfEvaluationManualSetting?: boolean;
 
   @ApiPropertyOptional({
@@ -323,6 +316,7 @@ export class UpdateManualSettingPermissionsApiDto {
     example: false,
   })
   @IsOptional()
+  @IsBoolean({ message: '최종평가 설정 수동 허용은 불린 값(true/false)이어야 합니다.' })
   allowFinalEvaluationManualSetting?: boolean;
 }
 

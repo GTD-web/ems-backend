@@ -14,22 +14,8 @@ export interface CreateEvaluationPeriodMinimalDto {
   description?: string;
   /** 자기평가 달성률 최대값 (%) */
   maxSelfEvaluationRate: number;
-  /** 평가 기준 목록 */
-  evaluationCriteria: EvaluationCriteriaItem[];
   /** 등급 구간 설정 */
   gradeRanges: GradeRange[];
-}
-
-/**
- * 평가 기준 항목
- */
-export interface EvaluationCriteriaItem {
-  /** 평가 기준명 */
-  name: string;
-  /** 평가 기준 설명 */
-  description?: string;
-  /** 가중치 (%) */
-  weight: number;
 }
 
 /**
