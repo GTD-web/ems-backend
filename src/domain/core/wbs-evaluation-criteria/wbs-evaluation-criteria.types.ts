@@ -1,7 +1,7 @@
 /**
- * WBS 평가 기준 생성 DTO
+ * WBS 평가 기준 생성 데이터
  */
-export interface CreateWbsEvaluationCriteriaDto {
+export interface CreateWbsEvaluationCriteriaData {
   /** WBS 항목 ID */
   wbsItemId: string;
   /** 평가 기준 내용 */
@@ -9,9 +9,9 @@ export interface CreateWbsEvaluationCriteriaDto {
 }
 
 /**
- * WBS 평가 기준 업데이트 DTO
+ * WBS 평가 기준 업데이트 데이터
  */
-export interface UpdateWbsEvaluationCriteriaDto {
+export interface UpdateWbsEvaluationCriteriaData {
   /** 평가 기준 내용 */
   criteria?: string;
 }
@@ -38,6 +38,8 @@ export interface WbsEvaluationCriteriaDto {
 export interface WbsEvaluationCriteriaFilter {
   /** WBS 항목 ID */
   wbsItemId?: string;
-  /** 기준 내용 검색 */
+  /** 기준 내용 검색 (부분 일치) */
   criteriaSearch?: string;
+  /** 기준 내용 완전 일치 */
+  criteriaExact?: string;
 }

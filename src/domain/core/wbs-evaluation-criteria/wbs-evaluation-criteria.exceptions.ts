@@ -29,15 +29,39 @@ export class WbsEvaluationCriteriaNotFoundException extends WbsEvaluationCriteri
 }
 
 // 중복 WBS 평가 기준 예외
-export class DuplicateWbsEvaluationCriteriaException extends WbsEvaluationCriteriaDomainException {
-  constructor(wbsItemId: string, name: string) {
+export class WbsEvaluationCriteriaDuplicateException extends WbsEvaluationCriteriaDomainException {
+  constructor(wbsItemId: string, criteria: string) {
     super(
-      `이미 존재하는 WBS 평가 기준입니다: WBS ${wbsItemId}, 기준 ${name}`,
+      `이미 존재하는 WBS 평가 기준입니다: WBS ${wbsItemId}, 기준 "${criteria}"`,
       'DUPLICATE_WBS_EVALUATION_CRITERIA',
       409,
-      { wbsItemId, name },
+      { wbsItemId, criteria },
     );
-    this.name = 'DuplicateWbsEvaluationCriteriaException';
+    this.name = 'WbsEvaluationCriteriaDuplicateException';
+  }
+}
+
+// 필수 데이터 누락 예외
+export class WbsEvaluationCriteriaRequiredDataMissingException extends WbsEvaluationCriteriaDomainException {
+  constructor(message: string) {
+    super(message, 'WBS_EVALUATION_CRITERIA_REQUIRED_DATA_MISSING', 400);
+    this.name = 'WbsEvaluationCriteriaRequiredDataMissingException';
+  }
+}
+
+// 잘못된 데이터 형식 예외
+export class InvalidWbsEvaluationCriteriaDataFormatException extends WbsEvaluationCriteriaDomainException {
+  constructor(message: string) {
+    super(message, 'INVALID_WBS_EVALUATION_CRITERIA_DATA_FORMAT', 400);
+    this.name = 'InvalidWbsEvaluationCriteriaDataFormatException';
+  }
+}
+
+// 비즈니스 규칙 위반 예외
+export class WbsEvaluationCriteriaBusinessRuleViolationException extends WbsEvaluationCriteriaDomainException {
+  constructor(message: string) {
+    super(message, 'WBS_EVALUATION_CRITERIA_BUSINESS_RULE_VIOLATION', 400);
+    this.name = 'WbsEvaluationCriteriaBusinessRuleViolationException';
   }
 }
 
