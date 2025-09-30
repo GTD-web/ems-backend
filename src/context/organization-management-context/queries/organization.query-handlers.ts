@@ -37,7 +37,7 @@ export class GetAllDepartmentsQueryHandler
 
   async execute(query: GetAllDepartmentsQuery): Promise<DepartmentDto[]> {
     const departments = await this.departmentRepository.findAll();
-    return departments.map((dept) => dept.DTO변환한다());
+    return departments.map((dept) => dept.DTO로_변환한다());
   }
 }
 
@@ -54,7 +54,7 @@ export class GetDepartmentQueryHandler
   async execute(query: GetDepartmentQuery): Promise<DepartmentDto | null> {
     const { departmentId } = query;
     const department = await this.departmentRepository.findById(departmentId);
-    return department ? department.DTO변환한다() : null;
+    return department ? department.DTO로_변환한다() : null;
   }
 }
 
@@ -72,7 +72,7 @@ export class GetEmployeesByDepartmentQueryHandler
     const { departmentId } = query;
     const employees =
       await this.employeeRepository.findByDepartmentId(departmentId);
-    return employees.map((emp) => emp.DTO변환한다());
+    return employees.map((emp) => emp.DTO로_변환한다());
   }
 }
 
@@ -100,7 +100,7 @@ export class GetOrganizationChartQueryHandler
       (acc, emp) => {
         const deptId = emp.departmentId || 'unassigned';
         if (!acc[deptId]) acc[deptId] = [];
-        acc[deptId].push(emp.DTO변환한다());
+        acc[deptId].push(emp.DTO로_변환한다());
         return acc;
       },
       {} as Record<string, EmployeeDto[]>,
@@ -112,7 +112,7 @@ export class GetOrganizationChartQueryHandler
 
     // 모든 부서를 맵에 추가
     allDepartments.forEach((dept) => {
-      const deptDto = dept.DTO변환한다();
+      const deptDto = dept.DTO로_변환한다();
       const deptWithEmployees: DepartmentWithEmployeesDto = {
         ...deptDto,
         employees: employeesByDept[dept.id] || [],
@@ -157,7 +157,7 @@ export class GetEmployeeQueryHandler
   async execute(query: GetEmployeeQuery): Promise<EmployeeDto | null> {
     const { employeeId } = query;
     const employee = await this.employeeRepository.findById(employeeId);
-    return employee ? employee.DTO변환한다() : null;
+    return employee ? employee.DTO로_변환한다() : null;
   }
 }
 
@@ -173,7 +173,7 @@ export class GetAllEmployeesQueryHandler
 
   async execute(query: GetAllEmployeesQuery): Promise<EmployeeDto[]> {
     const employees = await this.employeeRepository.findAll();
-    return employees.map((emp) => emp.DTO변환한다());
+    return employees.map((emp) => emp.DTO로_변환한다());
   }
 }
 
@@ -194,7 +194,7 @@ export class GetManagerQueryHandler implements IQueryHandler<GetManagerQuery> {
     }
 
     const manager = await this.employeeRepository.findById(employee.managerId);
-    return manager ? manager.DTO변환한다() : null;
+    return manager ? manager.DTO로_변환한다() : null;
   }
 }
 
@@ -214,7 +214,7 @@ export class GetSubordinatesQueryHandler
     const subordinates = await this.employeeRepository.findByFilter({
       managerId: employeeId,
     });
-    return subordinates.map((emp) => emp.DTO변환한다());
+    return subordinates.map((emp) => emp.DTO로_변환한다());
   }
 }
 
@@ -232,7 +232,7 @@ export class GetSubDepartmentsQueryHandler
     const { departmentId } = query;
     const subDepartments =
       await this.departmentRepository.findByParentDepartmentId(departmentId);
-    return subDepartments.map((dept) => dept.DTO변환한다());
+    return subDepartments.map((dept) => dept.DTO로_변환한다());
   }
 }
 
@@ -259,7 +259,7 @@ export class GetParentDepartmentQueryHandler
     const parentDepartment = await this.departmentRepository.findById(
       department.parentDepartmentId,
     );
-    return parentDepartment ? parentDepartment.DTO변환한다() : null;
+    return parentDepartment ? parentDepartment.DTO로_변환한다() : null;
   }
 }
 
@@ -275,6 +275,6 @@ export class GetActiveEmployeesQueryHandler
 
   async execute(query: GetActiveEmployeesQuery): Promise<EmployeeDto[]> {
     const employees = await this.employeeRepository.findByStatus('재직중');
-    return employees.map((emp) => emp.DTO변환한다());
+    return employees.map((emp) => emp.DTO로_변환한다());
   }
 }

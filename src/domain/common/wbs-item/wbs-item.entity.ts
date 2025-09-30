@@ -124,7 +124,7 @@ export class WbsItem extends BaseEntity<WbsItemDto> implements IWbsItem {
   /**
    * WbsItem 엔티티를 DTO로 변환한다 (평가 시스템 전용)
    */
-  DTO변환한다(): WbsItemDto {
+  DTO로_변환한다(): WbsItemDto {
     return {
       // BaseEntity 필드들
       id: this.id,

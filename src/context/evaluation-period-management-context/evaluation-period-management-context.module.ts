@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
-import { EvaluationPeriodManagementService } from './evaluation-period-management.service';
+import { EvaluationPeriodManagementContextService } from './evaluation-period-management.service';
 import { COMMAND_HANDLERS } from './commands';
 import { QUERY_HANDLERS } from './queries';
 
@@ -13,10 +13,10 @@ import { QUERY_HANDLERS } from './queries';
 @Module({
   imports: [CqrsModule, EvaluationPeriodModule],
   providers: [
-    EvaluationPeriodManagementService,
+    EvaluationPeriodManagementContextService,
     ...COMMAND_HANDLERS,
     ...QUERY_HANDLERS,
   ],
-  exports: [EvaluationPeriodManagementService],
+  exports: [EvaluationPeriodManagementContextService],
 })
 export class EvaluationPeriodManagementContextModule {}

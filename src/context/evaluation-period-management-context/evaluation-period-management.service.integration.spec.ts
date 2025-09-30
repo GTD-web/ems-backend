@@ -7,7 +7,7 @@ import {
   EvaluationPeriodPhase,
   EvaluationPeriodStatus,
 } from '../../domain/core/evaluation-period/evaluation-period.types';
-import { EvaluationPeriodManagementService } from './evaluation-period-management.service';
+import { EvaluationPeriodManagementContextService } from './evaluation-period-management.service';
 import {
   CreateEvaluationPeriodMinimalDto,
   UpdateCriteriaSettingPermissionDto,
@@ -20,7 +20,7 @@ import {
 } from './interfaces/evaluation-period-creation.interface';
 
 describe('EvaluationPeriodManagementService Integration Tests', () => {
-  let service: EvaluationPeriodManagementService;
+  let service: EvaluationPeriodManagementContextService;
   let dataSource: DataSource;
   let module: TestingModule;
 
@@ -32,8 +32,8 @@ describe('EvaluationPeriodManagementService Integration Tests', () => {
       imports: [AppModule],
     }).compile();
 
-    service = module.get<EvaluationPeriodManagementService>(
-      EvaluationPeriodManagementService,
+    service = module.get<EvaluationPeriodManagementContextService>(
+      EvaluationPeriodManagementContextService,
     );
     dataSource = module.get<DataSource>(DataSource);
     await module.init();

@@ -82,7 +82,7 @@ export class Project extends BaseEntity<ProjectDto> implements IProject {
   /**
    * Project 엔티티를 DTO로 변환한다 (평가 시스템 전용)
    */
-  DTO변환한다(): ProjectDto {
+  DTO로_변환한다(): ProjectDto {
     return {
       // BaseEntity 필드들
       id: this.id,

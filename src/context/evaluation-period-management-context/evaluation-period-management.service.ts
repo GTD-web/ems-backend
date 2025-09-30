@@ -37,7 +37,7 @@ import {
  * CQRS 패턴을 사용하여 평가 기간의 생명주기 관리를 위한 비즈니스 로직을 구현합니다.
  */
 @Injectable()
-export class EvaluationPeriodManagementService
+export class EvaluationPeriodManagementContextService
   implements IEvaluationPeriodManagementContext
 {
   constructor(

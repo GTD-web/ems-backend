@@ -11,8 +11,14 @@ import {
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
-import { EvaluationPeriodManagementService } from '../../context/evaluation-period-management-context/evaluation-period-management.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { EvaluationPeriodManagementContextService } from '../../context/evaluation-period-management-context/evaluation-period-management.service';
 import type {
   CreateEvaluationPeriodMinimalDto,
   UpdateEvaluationPeriodBasicDto,
@@ -27,8 +33,8 @@ import type { EvaluationPeriodDto } from '../../domain/core/evaluation-period/ev
 
 /**
  * 관리자용 평가 관리 컨트롤러
- * 
- * 평가 기간의 생성, 수정, 삭제, 상태 관리 등 관리자 권한이 필요한 
+ *
+ * 평가 기간의 생성, 수정, 삭제, 상태 관리 등 관리자 권한이 필요한
  * 평가 관리 기능을 제공합니다.
  */
 @ApiTags('Admin - Evaluation Management')
@@ -36,7 +42,7 @@ import type { EvaluationPeriodDto } from '../../domain/core/evaluation-period/ev
 // @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EvaluationManagementController {
   constructor(
-    private readonly evaluationPeriodManagementService: EvaluationPeriodManagementService,
+    private readonly evaluationPeriodManagementService: EvaluationPeriodManagementContextService,
   ) {}
 
   // ==================== 평가 기간 생성 ====================
@@ -46,14 +52,14 @@ export class EvaluationManagementController {
    */
   @Post('periods')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 생성',
-    description: '새로운 평가 기간을 생성합니다. 관리자 권한이 필요합니다.'
+    description: '새로운 평가 기간을 생성합니다. 관리자 권한이 필요합니다.',
   })
-  @ApiResponse({ 
-    status: 201, 
+  @ApiResponse({
+    status: 201,
     description: '평가 기간이 성공적으로 생성되었습니다.',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   @ApiResponse({ status: 400, description: '잘못된 요청 데이터입니다.' })
   @ApiResponse({ status: 409, description: '중복된 평가 기간명입니다.' })
@@ -74,14 +80,17 @@ export class EvaluationManagementController {
    * 활성화된 평가 기간 목록을 조회합니다.
    */
   @Get('periods/active')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '활성 평가 기간 조회',
-    description: '현재 진행 중인 평가 기간 목록을 조회합니다.'
+    description: '현재 진행 중인 평가 기간 목록을 조회합니다.',
   })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '활성 평가 기간 목록',
-    schema: { type: 'array', items: { $ref: '#/components/schemas/EvaluationPeriodDto' } }
+    schema: {
+      type: 'array',
+      items: { $ref: '#/components/schemas/EvaluationPeriodDto' },
+    },
   })
   async getActiveEvaluationPeriods(): Promise<EvaluationPeriodDto[]> {
     return await this.evaluationPeriodManagementService.활성평가기간_조회한다();
@@ -91,51 +100,67 @@ export class EvaluationManagementController {
    * 평가 기간 목록을 페이징으로 조회합니다.
    */
   @Get('periods')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 목록 조회',
-    description: '평가 기간 목록을 페이징으로 조회합니다.'
+    description: '평가 기간 목록을 페이징으로 조회합니다.',
   })
-  @ApiQuery({ name: 'page', required: false, description: '페이지 번호 (기본값: 1)' })
-  @ApiQuery({ name: 'limit', required: false, description: '페이지 크기 (기본값: 10)' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '페이지 번호 (기본값: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: '페이지 크기 (기본값: 10)',
+  })
+  @ApiResponse({
+    status: 200,
     description: '평가 기간 목록',
     schema: {
       type: 'object',
       properties: {
-        items: { type: 'array', items: { $ref: '#/components/schemas/EvaluationPeriodDto' } },
+        items: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/EvaluationPeriodDto' },
+        },
         total: { type: 'number' },
         page: { type: 'number' },
         limit: { type: 'number' },
-      }
-    }
+      },
+    },
   })
   async getEvaluationPeriods(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
   ) {
-    return await this.evaluationPeriodManagementService.평가기간목록_조회한다(page, limit);
+    return await this.evaluationPeriodManagementService.평가기간목록_조회한다(
+      page,
+      limit,
+    );
   }
 
   /**
    * 평가 기간 상세 정보를 조회합니다.
    */
   @Get('periods/:id')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 상세 조회',
-    description: '특정 평가 기간의 상세 정보를 조회합니다.'
+    description: '특정 평가 기간의 상세 정보를 조회합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '평가 기간 상세 정보',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   @ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' })
   async getEvaluationPeriodDetail(
     @Param('id') periodId: string,
   ): Promise<EvaluationPeriodDto | null> {
-    return await this.evaluationPeriodManagementService.평가기간상세_조회한다(periodId);
+    return await this.evaluationPeriodManagementService.평가기간상세_조회한다(
+      periodId,
+    );
   }
 
   // ==================== 평가 기간 수정 ====================
@@ -144,15 +169,16 @@ export class EvaluationManagementController {
    * 평가 기간 기본 정보를 수정합니다.
    */
   @Put('periods/:id/basic-info')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 기본 정보 수정',
-    description: '평가 기간의 이름, 설명, 자기평가 달성률 등 기본 정보를 수정합니다.'
+    description:
+      '평가 기간의 이름, 설명, 자기평가 달성률 등 기본 정보를 수정합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '평가 기간 기본 정보가 성공적으로 수정되었습니다.',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   @ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' })
   async updateEvaluationPeriodBasicInfo(
@@ -172,15 +198,15 @@ export class EvaluationManagementController {
    * 평가 기간 일정을 수정합니다.
    */
   @Put('periods/:id/schedule')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 일정 수정',
-    description: '평가 기간의 각 단계별 마감일을 수정합니다.'
+    description: '평가 기간의 각 단계별 마감일을 수정합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '평가 기간 일정이 성공적으로 수정되었습니다.',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   async updateEvaluationPeriodSchedule(
     @Param('id') periodId: string,
@@ -199,15 +225,15 @@ export class EvaluationManagementController {
    * 평가 기간 등급 구간을 수정합니다.
    */
   @Put('periods/:id/grade-ranges')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 등급 구간 수정',
-    description: '평가 기간의 등급 구간 설정을 수정합니다.'
+    description: '평가 기간의 등급 구간 설정을 수정합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '평가 기간 등급 구간이 성공적으로 수정되었습니다.',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   async updateEvaluationPeriodGradeRanges(
     @Param('id') periodId: string,
@@ -228,17 +254,20 @@ export class EvaluationManagementController {
    * 평가 기간을 시작합니다.
    */
   @Post('periods/:id/start')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 시작',
-    description: '대기 중인 평가 기간을 시작합니다.'
+    description: '대기 중인 평가 기간을 시작합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '평가 기간이 성공적으로 시작되었습니다.',
-    schema: { type: 'boolean' }
+    schema: { type: 'boolean' },
   })
-  @ApiResponse({ status: 400, description: '평가 기간을 시작할 수 없는 상태입니다.' })
+  @ApiResponse({
+    status: 400,
+    description: '평가 기간을 시작할 수 없는 상태입니다.',
+  })
   async startEvaluationPeriod(
     @Param('id') periodId: string,
     // @CurrentUser() user: User,
@@ -254,17 +283,20 @@ export class EvaluationManagementController {
    * 평가 기간을 완료합니다.
    */
   @Post('periods/:id/complete')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 완료',
-    description: '종결 단계에 있는 평가 기간을 완료합니다.'
+    description: '종결 단계에 있는 평가 기간을 완료합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '평가 기간이 성공적으로 완료되었습니다.',
-    schema: { type: 'boolean' }
+    schema: { type: 'boolean' },
   })
-  @ApiResponse({ status: 400, description: '평가 기간을 완료할 수 없는 상태입니다.' })
+  @ApiResponse({
+    status: 400,
+    description: '평가 기간을 완료할 수 없는 상태입니다.',
+  })
   async completeEvaluationPeriod(
     @Param('id') periodId: string,
     // @CurrentUser() user: User,
@@ -280,15 +312,15 @@ export class EvaluationManagementController {
    * 평가 기간을 삭제합니다.
    */
   @Delete('periods/:id')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기간 삭제',
-    description: '평가 기간을 삭제합니다. 주의: 이 작업은 되돌릴 수 없습니다.'
+    description: '평가 기간을 삭제합니다. 주의: 이 작업은 되돌릴 수 없습니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '평가 기간이 성공적으로 삭제되었습니다.',
-    schema: { type: 'boolean' }
+    schema: { type: 'boolean' },
   })
   @ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' })
   async deleteEvaluationPeriod(
@@ -308,15 +340,15 @@ export class EvaluationManagementController {
    * 평가 기준 설정 수동 허용을 변경합니다.
    */
   @Put('periods/:id/settings/criteria-permission')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '평가 기준 설정 수동 허용 변경',
-    description: '평가 기준 설정의 수동 허용 여부를 변경합니다.'
+    description: '평가 기준 설정의 수동 허용 여부를 변경합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '평가 기준 설정 수동 허용이 성공적으로 변경되었습니다.',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   async updateCriteriaSettingPermission(
     @Param('id') periodId: string,
@@ -335,15 +367,15 @@ export class EvaluationManagementController {
    * 자기 평가 설정 수동 허용을 변경합니다.
    */
   @Put('periods/:id/settings/self-evaluation-permission')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '자기 평가 설정 수동 허용 변경',
-    description: '자기 평가 설정의 수동 허용 여부를 변경합니다.'
+    description: '자기 평가 설정의 수동 허용 여부를 변경합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '자기 평가 설정 수동 허용이 성공적으로 변경되었습니다.',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   async updateSelfEvaluationSettingPermission(
     @Param('id') periodId: string,
@@ -362,15 +394,15 @@ export class EvaluationManagementController {
    * 최종 평가 설정 수동 허용을 변경합니다.
    */
   @Put('periods/:id/settings/final-evaluation-permission')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '최종 평가 설정 수동 허용 변경',
-    description: '최종 평가 설정의 수동 허용 여부를 변경합니다.'
+    description: '최종 평가 설정의 수동 허용 여부를 변경합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '최종 평가 설정 수동 허용이 성공적으로 변경되었습니다.',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   async updateFinalEvaluationSettingPermission(
     @Param('id') periodId: string,
@@ -389,15 +421,15 @@ export class EvaluationManagementController {
    * 전체 수동 허용 설정을 변경합니다.
    */
   @Put('periods/:id/settings/manual-permissions')
-  @ApiOperation({ 
+  @ApiOperation({
     summary: '전체 수동 허용 설정 변경',
-    description: '모든 수동 허용 설정을 한 번에 변경합니다.'
+    description: '모든 수동 허용 설정을 한 번에 변경합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({ 
-    status: 200, 
+  @ApiResponse({
+    status: 200,
     description: '전체 수동 허용 설정이 성공적으로 변경되었습니다.',
-    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' }
+    schema: { $ref: '#/components/schemas/EvaluationPeriodDto' },
   })
   async updateManualSettingPermissions(
     @Param('id') periodId: string,
