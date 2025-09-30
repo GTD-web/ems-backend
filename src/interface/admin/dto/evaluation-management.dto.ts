@@ -16,7 +16,7 @@ import {
 import {
   DateToUTC,
   OptionalDateToUTC,
-} from '../decorators/date-transform.decorator';
+} from '../../decorators/date-transform.decorator';
 
 /**
  * 페이징 쿼리 DTO

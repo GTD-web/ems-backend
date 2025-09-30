@@ -42,7 +42,7 @@ import {
   EvaluationPeriodListResponseDto,
   EvaluationPeriodResponseDto,
 } from './dto/evaluation-period-response.dto';
-import { ParseId } from './decorators/parse-uuid.decorator';
+import { ParseId } from '../decorators/parse-uuid.decorator';
 
 /**
  * 관리자용 평가 관리 컨트롤러
