@@ -99,7 +99,7 @@ export class Department extends BaseEntity<DepartmentDto> {
   /**
    * Department 엔티티를 DTO로 변환한다
    */
-  DTO변환한다(): DepartmentDto {
+  DTO로_변환한다(): DepartmentDto {
     return {
       // BaseEntity 필드들
       id: this.id,

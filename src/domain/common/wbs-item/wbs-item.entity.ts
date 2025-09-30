@@ -1,6 +1,11 @@
 import { Entity, Column, Index } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
-import { WbsItemStatus, WbsItemDto } from './wbs-item.types';
+import {
+  WbsItemStatus,
+  WbsItemDto,
+  CreateWbsItemDto,
+  UpdateWbsItemDto,
+} from './wbs-item.types';
 import { IWbsItem } from './wbs-item.interface';
 
 /**
@@ -166,5 +171,37 @@ export class WbsItem extends BaseEntity<WbsItemDto> implements IWbsItem {
         return new Date() > this.endDate;
       },
     };
+  }
+
+  /**
+   * 새로운 WBS 항목을 생성한다
+   * @param data WBS 항목 생성 데이터
+   * @param createdBy 생성자 ID
+   * @returns 생성된 WBS 항목 엔티티
+   */
+  static 생성한다(data: CreateWbsItemDto, createdBy: string): WbsItem {
+    const wbsItem = new WbsItem();
+    Object.assign(wbsItem, data);
+    wbsItem.생성자를_설정한다(createdBy);
+    return wbsItem;
+  }
+
+  /**
+   * WBS 항목 정보를 업데이트한다
+   * @param data 업데이트할 데이터
+   * @param updatedBy 수정자 ID
+   */
+  업데이트한다(data: UpdateWbsItemDto, updatedBy: string): void {
+    Object.assign(this, data);
+    this.수정자를_설정한다(updatedBy);
+  }
+
+  /**
+   * WBS 항목을 삭제한다 (소프트 삭제)
+   * @param deletedBy 삭제자 ID
+   */
+  삭제한다(deletedBy: string): void {
+    this.deletedAt = new Date();
+    this.수정자를_설정한다(deletedBy);
   }
 }

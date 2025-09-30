@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { Department } from './department.entity';
 import { DepartmentRepository } from './department.repository';
 import { DepartmentSyncService } from './department-sync.service';
+import { DepartmentService } from './department.service';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { DepartmentSyncService } from './department-sync.service';
     ConfigModule,
     ScheduleModule.forRoot(),
   ],
-  providers: [DepartmentRepository, DepartmentSyncService],
-  exports: [DepartmentRepository, DepartmentSyncService],
+  providers: [DepartmentRepository, DepartmentSyncService, DepartmentService],
+  exports: [DepartmentRepository, DepartmentSyncService, DepartmentService],
 })
 export class DepartmentModule {}

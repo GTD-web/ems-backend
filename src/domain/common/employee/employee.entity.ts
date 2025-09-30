@@ -175,7 +175,7 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
   /**
    * Employee 엔티티를 DTO로 변환한다
    */
-  DTO변환한다(): EmployeeDto {
+  DTO로_변환한다(): EmployeeDto {
     return {
       // BaseEntity 필드들
       id: this.id,

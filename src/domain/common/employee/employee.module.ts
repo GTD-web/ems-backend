@@ -5,6 +5,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { Employee } from './employee.entity';
 import { EmployeeRepository } from './employee.repository';
 import { EmployeeSyncService } from './employee-sync.service';
+import { EmployeeService } from './employee.service';
 
 @Module({
   imports: [
@@ -12,7 +13,7 @@ import { EmployeeSyncService } from './employee-sync.service';
     ConfigModule,
     ScheduleModule.forRoot(),
   ],
-  providers: [EmployeeRepository, EmployeeSyncService],
-  exports: [EmployeeRepository, EmployeeSyncService],
+  providers: [EmployeeRepository, EmployeeSyncService, EmployeeService],
+  exports: [EmployeeRepository, EmployeeSyncService, EmployeeService],
 })
 export class EmployeeModule {}
