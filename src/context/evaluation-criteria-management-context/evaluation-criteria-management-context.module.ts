@@ -1,12 +1,14 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
-import { EvaluationProjectAssignmentModule } from '../../domain/core/evaluation-project-assignment/evaluation-project-assignment.module';
-import { EvaluationWbsAssignmentModule } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
-import { EvaluationLineModule } from '../../domain/core/evaluation-line/evaluation-line.module';
-import { EvaluationLineMappingModule } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
-import { ProjectModule } from '../../domain/common/project/project.module';
-import { TransactionManagerService } from '../../../libs/database/transaction-manager.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { EvaluationProjectAssignmentModule } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.module';
+import { EvaluationWbsAssignmentModule } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
+import { EvaluationLineModule } from '@domain/core/evaluation-line/evaluation-line.module';
+import { EvaluationLineMappingModule } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
+import { ProjectModule } from '@domain/common/project/project.module';
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { EvaluationCriteriaManagementService } from './evaluation-criteria-management.service';
+import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 
 // Project Assignment Handlers
 import {
@@ -62,6 +64,7 @@ import {
 @Module({
   imports: [
     CqrsModule,
+    TypeOrmModule.forFeature([EvaluationProjectAssignment]),
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,
     EvaluationLineModule,

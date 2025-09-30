@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EvaluationProjectAssignmentService } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.service';
-import { ProjectService } from '@/domain/common/project/project.service';
+import { ProjectService } from '@domain/common/project/project.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import {
   EvaluationProjectAssignmentDto,

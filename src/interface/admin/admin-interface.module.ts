@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { DomainContextModule } from '../../context/domain-context.module';
 import { EvaluationPeriodManagementContextModule } from '../../context/evaluation-period-management-context/evaluation-period-management-context.module';
+import { EvaluationCriteriaManagementContextModule } from '../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
+import { ProjectAssignmentManagementController } from './evaluation-criteria/project-assignment-management.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -13,9 +15,11 @@ import { EvaluationPeriodManagementController } from './evaluation-period/evalua
   imports: [
     DomainContextModule, // 도메인 컨텍스트 모듈 주입
     EvaluationPeriodManagementContextModule, // 평가 기간 관리 컨텍스트 모듈 주입
+    EvaluationCriteriaManagementContextModule, // 평가기준 관리 컨텍스트 모듈 주입
   ],
   controllers: [
     EvaluationPeriodManagementController, // 평가 기간 관리 컨트롤러
+    ProjectAssignmentManagementController, // 프로젝트 할당 관리 컨트롤러
   ],
   providers: [],
   exports: [],

@@ -67,9 +67,9 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<ProjectAssignmentListResult>;
 
   /**
-   * 직원의 프로젝트 할당을 조회한다
+   * 특정 평가기간에 직원에게 할당된 프로젝트를 조회한다
    */
-  직원의_프로젝트_할당을_조회한다(
+  특정_평가기간에_직원에게_할당된_프로젝트를_조회한다(
     employeeId: string,
     periodId: string,
   ): Promise<EvaluationProjectAssignmentDto[]>;
@@ -82,17 +82,17 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<EvaluationProjectAssignmentDto | null>;
 
   /**
-   * 프로젝트에 할당된 직원을 조회한다
+   * 특정 평가기간에 프로젝트에 할당된 직원을 조회한다
    */
-  프로젝트에_할당된_직원을_조회한다(
+  특정_평가기간에_프로젝트에_할당된_직원을_조회한다(
     projectId: string,
     periodId: string,
   ): Promise<EvaluationProjectAssignmentDto[]>;
 
   /**
-   * 할당되지 않은 직원 목록을 조회한다
+   * 특정 평가기간에 프로젝트가 할당되지 않은 직원 목록을 조회한다
    */
-  할당되지_않은_직원_목록을_조회한다(
+  특정_평가기간에_프로젝트가_할당되지_않은_직원_목록을_조회한다(
     periodId: string,
     projectId?: string,
   ): Promise<string[]>;
@@ -139,17 +139,17 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<WbsAssignmentListResult>;
 
   /**
-   * 직원의 WBS 할당을 조회한다
+   * 특정 평가기간에 직원에게 할당된 WBS를 조회한다
    */
-  직원의_WBS_할당을_조회한다(
+  특정_평가기간에_직원에게_할당된_WBS를_조회한다(
     employeeId: string,
     periodId: string,
   ): Promise<EvaluationWbsAssignmentDto[]>;
 
   /**
-   * 프로젝트의 WBS 할당을 조회한다
+   * 특정 평가기간에 프로젝트의 WBS 할당을 조회한다
    */
-  프로젝트의_WBS_할당을_조회한다(
+  특정_평가기간에_프로젝트의_WBS_할당을_조회한다(
     projectId: string,
     periodId: string,
   ): Promise<EvaluationWbsAssignmentDto[]>;
@@ -162,17 +162,17 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<EvaluationWbsAssignmentDto | null>;
 
   /**
-   * WBS 항목의 할당을 조회한다
+   * 특정 평가기간에 WBS 항목에 할당된 직원을 조회한다
    */
-  WBS_항목의_할당을_조회한다(
+  특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(
     wbsItemId: string,
     periodId: string,
   ): Promise<EvaluationWbsAssignmentDto[]>;
 
   /**
-   * 할당되지 않은 WBS 항목 목록을 조회한다
+   * 특정 평가기간에 프로젝트에서 할당되지 않은 WBS 항목 목록을 조회한다
    */
-  할당되지_않은_WBS_항목_목록을_조회한다(
+  특정_평가기간에_프로젝트에서_할당되지_않은_WBS_항목_목록을_조회한다(
     projectId: string,
     periodId: string,
     employeeId?: string,
@@ -224,16 +224,18 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<EvaluationLineDto[]>;
 
   /**
-   * 직원의 평가라인 매핑을 조회한다
+   * 특정 직원의 평가라인 매핑을 조회한다
    */
-  직원의_평가라인_매핑을_조회한다(
+  특정_직원의_평가라인_매핑을_조회한다(
     employeeId: string,
   ): Promise<EvaluationLineMappingDto[]>;
 
   /**
-   * 평가자별 피평가자 목록을 조회한다
+   * 특정 평가자가 평가해야 하는 피평가자 목록을 조회한다
    */
-  평가자별_피평가자_목록을_조회한다(evaluatorId: string): Promise<{
+  특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
+    evaluatorId: string,
+  ): Promise<{
     evaluatorId: string;
     employees: {
       employeeId: string;
@@ -247,9 +249,9 @@ export interface IEvaluationCriteriaManagementService {
   }>;
 
   /**
-   * 수정자별 평가라인 매핑을 조회한다
+   * 특정 사용자가 수정한 평가라인 매핑을 조회한다
    */
-  수정자별_평가라인_매핑을_조회한다(
+  특정_사용자가_수정한_평가라인_매핑을_조회한다(
     updatedBy: string,
   ): Promise<EvaluationLineMappingDto[]>;
 
@@ -276,9 +278,9 @@ export interface IEvaluationCriteriaManagementService {
   // ============================================================================
 
   /**
-   * 직원의 평가설정을 조회한다 (MVP 버전)
+   * 특정 평가기간에 직원의 평가설정을 통합 조회한다 (MVP 버전)
    */
-  직원의_평가설정을_조회한다(
+  특정_평가기간에_직원의_평가설정을_통합_조회한다(
     employeeId: string,
     periodId: string,
   ): Promise<{

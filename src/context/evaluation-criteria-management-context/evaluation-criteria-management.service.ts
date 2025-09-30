@@ -44,23 +44,23 @@ import {
   GetUpdaterEvaluationLineMappingsQuery,
 } from './handlers/evaluation-line';
 
-import type { EvaluationLineMappingDto } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
+import type { EvaluationLineMappingDto } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type {
   EvaluationLineDto,
   EvaluationLineFilter,
-} from '../../domain/core/evaluation-line/evaluation-line.types';
+} from '@domain/core/evaluation-line/evaluation-line.types';
 import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
   EvaluationProjectAssignmentFilter,
   UpdateEvaluationProjectAssignmentData,
-} from '../../domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
+} from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 import type {
   CreateEvaluationWbsAssignmentData,
   EvaluationWbsAssignmentDto,
   EvaluationWbsAssignmentFilter,
   UpdateEvaluationWbsAssignmentData,
-} from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+} from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 
 /**
  * 평가기준관리 서비스 (MVP 버전)
@@ -114,7 +114,7 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async 직원의_프로젝트_할당을_조회한다(
+  async 특정_평가기간에_직원에게_할당된_프로젝트를_조회한다(
     employeeId: string,
     periodId: string,
   ): Promise<EvaluationProjectAssignmentDto[]> {
@@ -129,7 +129,7 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async 프로젝트에_할당된_직원을_조회한다(
+  async 특정_평가기간에_프로젝트에_할당된_직원을_조회한다(
     projectId: string,
     periodId: string,
   ): Promise<EvaluationProjectAssignmentDto[]> {
@@ -137,7 +137,7 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async 할당되지_않은_직원_목록을_조회한다(
+  async 특정_평가기간에_프로젝트가_할당되지_않은_직원_목록을_조회한다(
     periodId: string,
     projectId?: string,
   ): Promise<string[]> {
@@ -189,7 +189,7 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async 직원의_WBS_할당을_조회한다(
+  async 특정_평가기간에_직원에게_할당된_WBS를_조회한다(
     employeeId: string,
     periodId: string,
   ): Promise<EvaluationWbsAssignmentDto[]> {
@@ -197,7 +197,7 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async 프로젝트의_WBS_할당을_조회한다(
+  async 특정_평가기간에_프로젝트의_WBS_할당을_조회한다(
     projectId: string,
     periodId: string,
   ): Promise<EvaluationWbsAssignmentDto[]> {
@@ -212,7 +212,7 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async WBS_항목의_할당을_조회한다(
+  async 특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(
     wbsItemId: string,
     periodId: string,
   ): Promise<EvaluationWbsAssignmentDto[]> {
@@ -220,7 +220,7 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async 할당되지_않은_WBS_항목_목록을_조회한다(
+  async 특정_평가기간에_프로젝트에서_할당되지_않은_WBS_항목_목록을_조회한다(
     projectId: string,
     periodId: string,
     employeeId?: string,
@@ -286,14 +286,16 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async 직원의_평가라인_매핑을_조회한다(
+  async 특정_직원의_평가라인_매핑을_조회한다(
     employeeId: string,
   ): Promise<EvaluationLineMappingDto[]> {
     const query = new GetEmployeeEvaluationLineMappingsQuery(employeeId);
     return await this.queryBus.execute(query);
   }
 
-  async 평가자별_피평가자_목록을_조회한다(evaluatorId: string): Promise<{
+  async 특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
+    evaluatorId: string,
+  ): Promise<{
     evaluatorId: string;
     employees: {
       employeeId: string;
@@ -309,7 +311,7 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async 수정자별_평가라인_매핑을_조회한다(
+  async 특정_사용자가_수정한_평가라인_매핑을_조회한다(
     updatedBy: string,
   ): Promise<EvaluationLineMappingDto[]> {
     const query = new GetUpdaterEvaluationLineMappingsQuery(updatedBy);
@@ -347,7 +349,7 @@ export class EvaluationCriteriaManagementService
   // 통합 관리 기능 (MVP)
   // ============================================================================
 
-  async 직원의_평가설정을_조회한다(
+  async 특정_평가기간에_직원의_평가설정을_통합_조회한다(
     employeeId: string,
     periodId: string,
   ): Promise<{

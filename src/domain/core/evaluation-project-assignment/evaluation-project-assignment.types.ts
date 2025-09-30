@@ -82,4 +82,12 @@ export interface EvaluationProjectAssignmentFilter {
   assignedDateFrom?: Date;
   /** 할당일 종료 */
   assignedDateTo?: Date;
+  /** 페이지 번호 (1부터 시작) */
+  page?: number;
+  /** 페이지 크기 */
+  limit?: number;
+  /** 정렬 기준 */
+  orderBy?: string;
+  /** 정렬 방향 */
+  orderDirection?: 'ASC' | 'DESC';
 }
