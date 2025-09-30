@@ -133,7 +133,11 @@ export class Project extends BaseEntity<ProjectDto> implements IProject {
    * @param updatedBy 수정자 ID
    */
   업데이트한다(data: UpdateProjectDto, updatedBy: string): void {
-    Object.assign(this, data);
+    // undefined 값 제외하고 실제 변경된 값만 할당
+    const filteredData = Object.fromEntries(
+      Object.entries(data).filter(([_, value]) => value !== undefined),
+    );
+    Object.assign(this, filteredData);
     this.수정자를_설정한다(updatedBy);
   }
 

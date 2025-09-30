@@ -339,8 +339,11 @@ export class EvaluationWbsAssignmentService
         entityManager,
       );
 
-      // 엔티티 업데이트 (불변성 검증 자동 실행)
-      Object.assign(assignment, updateData, {
+      // 엔티티 업데이트 (undefined 값 제외하고 실제 변경된 값만 할당)
+      const filteredUpdateData = Object.fromEntries(
+        Object.entries(updateData).filter(([_, value]) => value !== undefined),
+      );
+      Object.assign(assignment, filteredUpdateData, {
         updatedBy,
         updatedAt: new Date(),
       });

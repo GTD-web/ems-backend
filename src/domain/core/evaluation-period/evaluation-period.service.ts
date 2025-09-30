@@ -358,8 +358,11 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
         entityManager,
       );
 
-      // 엔티티 업데이트 (불변성 검증 자동 실행)
-      Object.assign(evaluationPeriod, updateDto, { updatedBy });
+      // 엔티티 업데이트 (undefined 값 제외하고 실제 변경된 값만 할당)
+      const filteredUpdateDto = Object.fromEntries(
+        Object.entries(updateDto).filter(([_, value]) => value !== undefined),
+      );
+      Object.assign(evaluationPeriod, filteredUpdateDto, { updatedBy });
       return await repository.save(evaluationPeriod);
     }, '업데이트한다');
   }

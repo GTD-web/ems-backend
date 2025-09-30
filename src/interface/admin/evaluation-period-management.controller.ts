@@ -287,32 +287,54 @@ export class EvaluationPeriodManagementController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: '평가 기간 완료',
-    description: '진행 중인 평가 기간을 완료합니다.',
+    description: `**핵심 테스트 케이스:**
+- 기본 완료: 진행 중인 평가 기간을 성공적으로 완료하여 'completed' 상태로 변경
+- 활성 목록 제거: 완료된 평가 기간이 활성 목록에서 즉시 제거됨
+- 복잡한 등급 구간: 다양한 등급 구간을 가진 평가 기간도 정상 완료
+- 최소 데이터: 필수 필드만으로 생성된 평가 기간도 완료 가능
+- 존재하지 않는 ID: 404 에러 반환
+- 잘못된 UUID 형식: 400 에러 반환
+- 대기 상태 완료: 시작되지 않은 평가 기간 완료 시 422 에러
+- 중복 완료: 이미 완료된 평가 기간 재완료 시 422 에러
+- 동시성 처리: 동일한 평가 기간을 동시에 완료할 때 하나만 성공
+- 데이터 무결성: 완료 후에도 기본 정보는 변경되지 않고 상태만 변경
+- 전체 시퀀스: 생성 → 시작 → 완료 전체 라이프사이클 정상 작동`,
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
   @ApiResponse({
     status: 200,
     description: '평가 기간이 성공적으로 완료되었습니다.',
-    schema: { type: 'boolean' },
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean' },
+      },
+    },
   })
   @ApiResponse({
     status: 400,
-    description: '잘못된 요청 데이터입니다.',
+    description: '잘못된 요청 (잘못된 UUID 형식 등)',
   })
   @ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' })
   @ApiResponse({
     status: 422,
-    description: '평가 기간을 완료할 수 없는 상태입니다. (이미 완료됨)',
+    description:
+      '평가 기간을 완료할 수 없는 상태입니다. (대기 중이거나 이미 완료됨)',
   })
+  @ApiResponse({ status: 500, description: '서버 내부 오류' })
   async completeEvaluationPeriod(
     @ParseId() periodId: string,
     // @CurrentUser() user: User,
-  ): Promise<boolean> {
+  ): Promise<{ success: boolean }> {
     const completedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationPeriodManagementService.평가기간_완료한다(
-      periodId,
-      completedBy,
-    );
+    const result =
+      await this.evaluationPeriodManagementService.평가기간_완료한다(
+        periodId,
+        completedBy,
+      );
+
+    // NestJS boolean 직렬화 문제 해결을 위해 객체로 래핑
+    return { success: Boolean(result) };
   }
 
   // ==================== PATCH: 부분 수정 ====================
