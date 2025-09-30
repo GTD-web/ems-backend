@@ -35,6 +35,12 @@ import { GetWbsItemAssignmentsQuery } from './handlers/wbs-assignment/queries/ge
 import { GetWbsAssignmentDetailQuery } from './handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
 import { GetUnassignedWbsItemsQuery } from './handlers/wbs-assignment/queries/get-unassigned-wbs-items.handler';
 
+// Evaluation Line Commands & Queries
+import { ConfigureEmployeeWbsEvaluationLineCommand } from './handlers/evaluation-line/commands/configure-employee-wbs-evaluation-line.handler';
+import { GetEvaluationLineListQuery } from './handlers/evaluation-line/queries/get-evaluation-line-list.handler';
+import { GetEmployeeEvaluationLineMappingsQuery } from './handlers/evaluation-line/queries/get-employee-evaluation-line-mappings.handler';
+import { GetEmployeeEvaluationSettingsQuery } from './handlers/evaluation-line/queries/get-employee-evaluation-settings.handler';
+
 import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
@@ -47,6 +53,19 @@ import type {
   EvaluationWbsAssignmentFilter,
   UpdateEvaluationWbsAssignmentData,
 } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+import type {
+  CreateEvaluationLineDto,
+  EvaluationLineDto,
+  EvaluationLineFilter,
+  UpdateEvaluationLineDto,
+} from '../../domain/core/evaluation-line/evaluation-line.types';
+import { EvaluatorType } from '../../domain/core/evaluation-line/evaluation-line.types';
+import type {
+  CreateEvaluationLineMappingData,
+  EvaluationLineMappingDto,
+  EvaluationLineMappingFilter,
+  UpdateEvaluationLineMappingData,
+} from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 
 /**
  * 평가기준관리 서비스 (MVP 버전)
@@ -270,6 +289,51 @@ export class EvaluationCriteriaManagementService
   }
 
   // ============================================================================
+  // 평가라인 관리 (CQRS 패턴)
+  // ============================================================================
+
+  async 평가라인_목록을_조회한다(
+    filter: EvaluationLineFilter,
+  ): Promise<EvaluationLineDto[]> {
+    const query = new GetEvaluationLineListQuery(filter);
+    return await this.queryBus.execute(query);
+  }
+
+  async 직원의_평가라인_매핑을_조회한다(
+    employeeId: string,
+  ): Promise<EvaluationLineMappingDto[]> {
+    const query = new GetEmployeeEvaluationLineMappingsQuery(employeeId);
+    return await this.queryBus.execute(query);
+  }
+
+  // ============================================================================
+  // 평가라인 구성 관리 (핵심 기능)
+  // ============================================================================
+
+  /**
+   * 직원-WBS별 평가라인을 구성한다
+   * 각 직원의 각 WBS 항목마다 개별적으로 평가라인을 구성한다
+   */
+  async 직원_WBS별_평가라인을_구성한다(
+    employeeId: string,
+    wbsItemId: string,
+    periodId: string,
+    createdBy: string,
+  ): Promise<{
+    message: string;
+    createdLines: number;
+    createdMappings: number;
+  }> {
+    const command = new ConfigureEmployeeWbsEvaluationLineCommand(
+      employeeId,
+      wbsItemId,
+      periodId,
+      createdBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  // ============================================================================
   // 통합 관리 기능 (MVP)
   // ============================================================================
 
@@ -279,15 +343,9 @@ export class EvaluationCriteriaManagementService
   ): Promise<{
     projectAssignments: EvaluationProjectAssignmentDto[];
     wbsAssignments: EvaluationWbsAssignmentDto[];
+    evaluationLineMappings: EvaluationLineMappingDto[];
   }> {
-    const [projectAssignments, wbsAssignments] = await Promise.all([
-      this.직원의_프로젝트_할당을_조회한다(employeeId, periodId),
-      this.직원의_WBS_할당을_조회한다(employeeId, periodId),
-    ]);
-
-    return {
-      projectAssignments,
-      wbsAssignments,
-    };
+    const query = new GetEmployeeEvaluationSettingsQuery(employeeId, periodId);
+    return await this.queryBus.execute(query);
   }
 }

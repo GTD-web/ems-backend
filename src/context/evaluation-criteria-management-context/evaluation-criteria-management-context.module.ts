@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { EvaluationProjectAssignmentModule } from '../../domain/core/evaluation-project-assignment/evaluation-project-assignment.module';
 import { EvaluationWbsAssignmentModule } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
+import { EvaluationLineModule } from '../../domain/core/evaluation-line/evaluation-line.module';
+import { EvaluationLineMappingModule } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
 import { EvaluationCriteriaManagementService } from './evaluation-criteria-management.service';
 
 // Project Assignment Command Handlers
@@ -35,12 +37,19 @@ import { GetWbsItemAssignmentsHandler } from './handlers/wbs-assignment/queries/
 import { GetWbsAssignmentDetailHandler } from './handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
 import { GetUnassignedWbsItemsHandler } from './handlers/wbs-assignment/queries/get-unassigned-wbs-items.handler';
 
+// Evaluation Line Handlers
+import { ConfigureEmployeeWbsEvaluationLineHandler } from './handlers/evaluation-line/commands/configure-employee-wbs-evaluation-line.handler';
+import { GetEvaluationLineListHandler } from './handlers/evaluation-line/queries/get-evaluation-line-list.handler';
+import { GetEmployeeEvaluationLineMappingsHandler } from './handlers/evaluation-line/queries/get-employee-evaluation-line-mappings.handler';
+import { GetEmployeeEvaluationSettingsHandler } from './handlers/evaluation-line/queries/get-employee-evaluation-settings.handler';
+
 /**
  * 평가기준관리 컨텍스트 모듈 (MVP 버전)
  *
  * MVP에서는 핵심 기능만 제공합니다:
  * - 프로젝트 할당 관리
  * - WBS 할당 관리
+ * - 평가라인 구성 관리
  *
  * CQRS 패턴을 사용하여 명령과 조회를 분리하여 처리합니다.
  * 각 핸들러는 기능별로 개별 파일로 분리되어 관리됩니다.
@@ -50,6 +59,8 @@ import { GetUnassignedWbsItemsHandler } from './handlers/wbs-assignment/queries/
     CqrsModule,
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,
+    EvaluationLineModule,
+    EvaluationLineMappingModule,
   ],
   providers: [
     EvaluationCriteriaManagementService,
@@ -80,6 +91,11 @@ import { GetUnassignedWbsItemsHandler } from './handlers/wbs-assignment/queries/
     GetWbsItemAssignmentsHandler,
     GetWbsAssignmentDetailHandler,
     GetUnassignedWbsItemsHandler,
+    // Evaluation Line Handlers
+    ConfigureEmployeeWbsEvaluationLineHandler,
+    GetEvaluationLineListHandler,
+    GetEmployeeEvaluationLineMappingsHandler,
+    GetEmployeeEvaluationSettingsHandler,
   ],
   exports: [EvaluationCriteriaManagementService],
 })

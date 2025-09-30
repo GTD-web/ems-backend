@@ -10,6 +10,18 @@ import type {
   EvaluationWbsAssignmentFilter,
   UpdateEvaluationWbsAssignmentData,
 } from '../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+import type {
+  CreateEvaluationLineDto,
+  EvaluationLineDto,
+  EvaluationLineFilter,
+  UpdateEvaluationLineDto,
+} from '../../../domain/core/evaluation-line/evaluation-line.types';
+import type {
+  CreateEvaluationLineMappingData,
+  EvaluationLineMappingDto,
+  EvaluationLineMappingFilter,
+  UpdateEvaluationLineMappingData,
+} from '../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type { ProjectAssignmentListResult } from '../handlers/project-assignment/queries/get-project-assignment-list.handler';
 import type { WbsAssignmentListResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 
@@ -209,6 +221,42 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<void>;
 
   // ============================================================================
+  // 평가라인 조회
+  // ============================================================================
+
+  /**
+   * 평가라인 목록을 조회한다
+   */
+  평가라인_목록을_조회한다(
+    filter: EvaluationLineFilter,
+  ): Promise<EvaluationLineDto[]>;
+
+  /**
+   * 직원의 평가라인 매핑을 조회한다
+   */
+  직원의_평가라인_매핑을_조회한다(
+    employeeId: string,
+  ): Promise<EvaluationLineMappingDto[]>;
+
+  // ============================================================================
+  // 평가라인 구성 관리 (핵심 기능)
+  // ============================================================================
+
+  /**
+   * 직원-WBS별 평가라인을 구성한다
+   */
+  직원_WBS별_평가라인을_구성한다(
+    employeeId: string,
+    wbsItemId: string,
+    periodId: string,
+    createdBy: string,
+  ): Promise<{
+    message: string;
+    createdLines: number;
+    createdMappings: number;
+  }>;
+
+  // ============================================================================
   // 통합 관리 기능 (MVP)
   // ============================================================================
 
@@ -221,5 +269,6 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<{
     projectAssignments: EvaluationProjectAssignmentDto[];
     wbsAssignments: EvaluationWbsAssignmentDto[];
+    evaluationLineMappings: EvaluationLineMappingDto[];
   }>;
 }
