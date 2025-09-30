@@ -18,29 +18,36 @@ import {
 import { GetUnassignedEmployeesQuery } from './handlers/project-assignment/queries/get-unassigned-employees.handler';
 
 // WBS Assignment Commands & Queries
-import { CreateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/create-wbs-assignment.handler';
-import { UpdateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/update-wbs-assignment.handler';
-import { CancelWbsAssignmentCommand } from './handlers/wbs-assignment/commands/cancel-wbs-assignment.handler';
 import { BulkCreateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/bulk-create-wbs-assignment.handler';
+import { CancelWbsAssignmentCommand } from './handlers/wbs-assignment/commands/cancel-wbs-assignment.handler';
+import { CreateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/create-wbs-assignment.handler';
+import { ResetEmployeeWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-employee-wbs-assignments.handler';
 import { ResetPeriodWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-period-wbs-assignments.handler';
 import { ResetProjectWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-project-wbs-assignments.handler';
-import { ResetEmployeeWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-employee-wbs-assignments.handler';
+import { UpdateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/update-wbs-assignment.handler';
+import { GetEmployeeWbsAssignmentsQuery } from './handlers/wbs-assignment/queries/get-employee-wbs-assignments.handler';
+import { GetProjectWbsAssignmentsQuery } from './handlers/wbs-assignment/queries/get-project-wbs-assignments.handler';
+import { GetUnassignedWbsItemsQuery } from './handlers/wbs-assignment/queries/get-unassigned-wbs-items.handler';
+import { GetWbsAssignmentDetailQuery } from './handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
 import {
   GetWbsAssignmentListQuery,
   WbsAssignmentListResult,
 } from './handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
-import { GetEmployeeWbsAssignmentsQuery } from './handlers/wbs-assignment/queries/get-employee-wbs-assignments.handler';
-import { GetProjectWbsAssignmentsQuery } from './handlers/wbs-assignment/queries/get-project-wbs-assignments.handler';
 import { GetWbsItemAssignmentsQuery } from './handlers/wbs-assignment/queries/get-wbs-item-assignments.handler';
-import { GetWbsAssignmentDetailQuery } from './handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
-import { GetUnassignedWbsItemsQuery } from './handlers/wbs-assignment/queries/get-unassigned-wbs-items.handler';
 
 // Evaluation Line Commands & Queries
 import { ConfigureEmployeeWbsEvaluationLineCommand } from './handlers/evaluation-line/commands/configure-employee-wbs-evaluation-line.handler';
-import { GetEvaluationLineListQuery } from './handlers/evaluation-line/queries/get-evaluation-line-list.handler';
+import { GetEvaluatorEmployeesQuery } from './handlers/evaluation-line/queries/get-evaluator-employees.handler';
 import { GetEmployeeEvaluationLineMappingsQuery } from './handlers/evaluation-line/queries/get-employee-evaluation-line-mappings.handler';
 import { GetEmployeeEvaluationSettingsQuery } from './handlers/evaluation-line/queries/get-employee-evaluation-settings.handler';
+import { GetEvaluationLineListQuery } from './handlers/evaluation-line/queries/get-evaluation-line-list.handler';
+import { GetUpdaterEvaluationLineMappingsQuery } from './handlers/evaluation-line/queries/get-updater-evaluation-line-mappings.handler';
 
+import type { EvaluationLineMappingDto } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
+import type {
+  EvaluationLineDto,
+  EvaluationLineFilter,
+} from '../../domain/core/evaluation-line/evaluation-line.types';
 import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
@@ -53,19 +60,6 @@ import type {
   EvaluationWbsAssignmentFilter,
   UpdateEvaluationWbsAssignmentData,
 } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
-import type {
-  CreateEvaluationLineDto,
-  EvaluationLineDto,
-  EvaluationLineFilter,
-  UpdateEvaluationLineDto,
-} from '../../domain/core/evaluation-line/evaluation-line.types';
-import { EvaluatorType } from '../../domain/core/evaluation-line/evaluation-line.types';
-import type {
-  CreateEvaluationLineMappingData,
-  EvaluationLineMappingDto,
-  EvaluationLineMappingFilter,
-  UpdateEvaluationLineMappingData,
-} from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 
 /**
  * 평가기준관리 서비스 (MVP 버전)
@@ -303,6 +297,29 @@ export class EvaluationCriteriaManagementService
     employeeId: string,
   ): Promise<EvaluationLineMappingDto[]> {
     const query = new GetEmployeeEvaluationLineMappingsQuery(employeeId);
+    return await this.queryBus.execute(query);
+  }
+
+  async 평가자별_피평가자_목록을_조회한다(evaluatorId: string): Promise<{
+    evaluatorId: string;
+    employees: {
+      employeeId: string;
+      wbsItemId?: string;
+      evaluationLineId: string;
+      createdBy?: string;
+      updatedBy?: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }[];
+  }> {
+    const query = new GetEvaluatorEmployeesQuery(evaluatorId);
+    return await this.queryBus.execute(query);
+  }
+
+  async 수정자별_평가라인_매핑을_조회한다(
+    updatedBy: string,
+  ): Promise<EvaluationLineMappingDto[]> {
+    const query = new GetUpdaterEvaluationLineMappingsQuery(updatedBy);
     return await this.queryBus.execute(query);
   }
 

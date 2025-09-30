@@ -238,6 +238,29 @@ export interface IEvaluationCriteriaManagementService {
     employeeId: string,
   ): Promise<EvaluationLineMappingDto[]>;
 
+  /**
+   * 평가자별 피평가자 목록을 조회한다
+   */
+  평가자별_피평가자_목록을_조회한다(evaluatorId: string): Promise<{
+    evaluatorId: string;
+    employees: {
+      employeeId: string;
+      wbsItemId?: string;
+      evaluationLineId: string;
+      createdBy?: string;
+      updatedBy?: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }[];
+  }>;
+
+  /**
+   * 수정자별 평가라인 매핑을 조회한다
+   */
+  수정자별_평가라인_매핑을_조회한다(
+    updatedBy: string,
+  ): Promise<EvaluationLineMappingDto[]>;
+
   // ============================================================================
   // 평가라인 구성 관리 (핵심 기능)
   // ============================================================================

@@ -41,6 +41,8 @@ import { GetUnassignedWbsItemsHandler } from './handlers/wbs-assignment/queries/
 import { ConfigureEmployeeWbsEvaluationLineHandler } from './handlers/evaluation-line/commands/configure-employee-wbs-evaluation-line.handler';
 import { GetEvaluationLineListHandler } from './handlers/evaluation-line/queries/get-evaluation-line-list.handler';
 import { GetEmployeeEvaluationLineMappingsHandler } from './handlers/evaluation-line/queries/get-employee-evaluation-line-mappings.handler';
+import { GetEvaluatorEmployeesHandler } from './handlers/evaluation-line/queries/get-evaluator-employees.handler';
+import { GetUpdaterEvaluationLineMappingsHandler } from './handlers/evaluation-line/queries/get-updater-evaluation-line-mappings.handler';
 import { GetEmployeeEvaluationSettingsHandler } from './handlers/evaluation-line/queries/get-employee-evaluation-settings.handler';
 
 /**
@@ -95,6 +97,8 @@ import { GetEmployeeEvaluationSettingsHandler } from './handlers/evaluation-line
     ConfigureEmployeeWbsEvaluationLineHandler,
     GetEvaluationLineListHandler,
     GetEmployeeEvaluationLineMappingsHandler,
+    GetEvaluatorEmployeesHandler,
+    GetUpdaterEvaluationLineMappingsHandler,
     GetEmployeeEvaluationSettingsHandler,
   ],
   exports: [EvaluationCriteriaManagementService],

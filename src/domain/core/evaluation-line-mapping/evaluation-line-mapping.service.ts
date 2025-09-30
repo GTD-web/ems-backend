@@ -166,6 +166,58 @@ export class EvaluationLineMappingService
   }
 
   /**
+   * 생성자별 평가 라인 맵핑을 조회한다
+   */
+  async 생성자별_조회한다(
+    createdBy: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find({
+        where: { createdBy },
+        order: { createdAt: 'DESC' },
+      });
+
+      this.logger.debug(
+        `생성자별 평가 라인 맵핑 조회 완료 - 생성자 ID: ${createdBy}, 개수: ${mappings.length}`,
+      );
+      return mappings;
+    }, '생성자별_조회한다');
+  }
+
+  /**
+   * 수정자별 평가 라인 맵핑을 조회한다
+   */
+  async 수정자별_조회한다(
+    updatedBy: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find({
+        where: { updatedBy },
+        order: { updatedAt: 'DESC' },
+      });
+
+      this.logger.debug(
+        `수정자별 평가 라인 맵핑 조회 완료 - 수정자 ID: ${updatedBy}, 개수: ${mappings.length}`,
+      );
+      return mappings;
+    }, '수정자별_조회한다');
+  }
+
+  /**
    * 필터 조건으로 평가 라인 맵핑을 조회한다
    */
   async 필터_조회한다(
@@ -203,6 +255,18 @@ export class EvaluationLineMappingService
       if (filter.evaluationLineId) {
         queryBuilder.andWhere('mapping.evaluationLineId = :evaluationLineId', {
           evaluationLineId: filter.evaluationLineId,
+        });
+      }
+
+      if (filter.createdBy) {
+        queryBuilder.andWhere('mapping.createdBy = :createdBy', {
+          createdBy: filter.createdBy,
+        });
+      }
+
+      if (filter.updatedBy) {
+        queryBuilder.andWhere('mapping.updatedBy = :updatedBy', {
+          updatedBy: filter.updatedBy,
         });
       }
 
@@ -247,6 +311,7 @@ export class EvaluationLineMappingService
         evaluatorId: createData.evaluatorId,
         wbsItemId: createData.wbsItemId,
         evaluationLineId: createData.evaluationLineId,
+        createdBy: createData.createdBy,
       });
 
       const savedMapping = await repository.save(mapping);
@@ -294,6 +359,11 @@ export class EvaluationLineMappingService
 
       if (updateData.wbsItemId !== undefined) {
         mapping.WBS항목을_변경한다(updateData.wbsItemId);
+      }
+
+      // 수정자 설정
+      if (updateData.updatedBy) {
+        mapping.수정자를_설정한다(updateData.updatedBy);
       }
 
       const updatedMapping = await repository.save(mapping);

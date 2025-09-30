@@ -106,6 +106,7 @@ export class ConfigureEmployeeWbsEvaluationLineHandler
               evaluatorId: assignmentDto.employeeId,
               wbsItemId,
               evaluationLineId: peerEvaluationLine.DTO로_변환한다().id,
+              createdBy,
             });
             createdMappings++;
           }

@@ -63,6 +63,8 @@ export class EvaluationLineMapping
       evaluatorId: this.evaluatorId,
       wbsItemId: this.wbsItemId,
       evaluationLineId: this.evaluationLineId,
+      createdBy: this.createdBy,
+      updatedBy: this.updatedBy,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };

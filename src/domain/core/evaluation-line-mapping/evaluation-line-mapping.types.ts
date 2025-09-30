@@ -16,6 +16,10 @@ export interface EvaluationLineMappingDto {
   wbsItemId?: string;
   /** 평가 라인 ID - 실제 평가 라인 엔티티 식별자 */
   evaluationLineId: string;
+  /** 생성자 ID - 맵핑을 생성한 직원 식별자 (선택적) */
+  createdBy?: string;
+  /** 수정자 ID - 맵핑을 마지막으로 수정한 직원 식별자 (선택적) */
+  updatedBy?: string;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */
@@ -30,6 +34,7 @@ export interface CreateEvaluationLineMappingData {
   evaluatorId: string;
   wbsItemId?: string;
   evaluationLineId: string;
+  createdBy: string;
 }
 
 /**
@@ -38,6 +43,7 @@ export interface CreateEvaluationLineMappingData {
 export interface UpdateEvaluationLineMappingData {
   evaluationLineId?: string;
   wbsItemId?: string;
+  updatedBy?: string;
 }
 
 /**
@@ -48,6 +54,8 @@ export interface EvaluationLineMappingFilter {
   evaluatorId?: string;
   wbsItemId?: string;
   evaluationLineId?: string;
+  createdBy?: string;
+  updatedBy?: string;
   /** WBS 항목이 연결된 맵핑만 조회 */
   withWbsItem?: boolean;
 }
