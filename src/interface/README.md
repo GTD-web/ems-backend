@@ -24,6 +24,14 @@ src/interface/
 - 에러 처리: NestJS 글로벌 필터 또는 서비스 레이어에서 처리
 - 비즈니스 로직: Context 서비스에서 처리
 
+### 3. **REST API 메서드 선택**
+
+- **POST**: 새 리소스 생성
+- **GET**: 리소스 조회 (단일/목록)
+- **PATCH**: 리소스 부분 수정 ✅ (권장)
+- **PUT**: 리소스 전체 교체 (특별한 경우만)
+- **DELETE**: 리소스 삭제
+
 ## 📝 작성 패턴
 
 ### 기본 구조
@@ -35,16 +43,16 @@ export class FeatureController {
   constructor(private readonly featureService: FeatureContextService) {}
 
   @Post()
-  @ApiOperation({ summary: '기능 설명' })
-  @ApiResponse({ status: 201, description: '성공 메시지' })
+  @ApiOperation({ summary: '기능 생성' })
+  @ApiResponse({ status: 201, description: '성공적으로 생성되었습니다.' })
   async createFeature(
     @Body() createData: CreateFeatureApiDto,
   ): Promise<FeatureDto> {
     // 1. API DTO → Context DTO 직접 변환
     const contextDto: CreateFeatureContextDto = {
       name: createData.name,
-      // 날짜 변환 예시
-      startDate: new Date(createData.startDate),
+      // 날짜 변환 예시 (UTC 데코레이터 사용)
+      startDate: createData.startDate as unknown as Date,
       // 배열 매핑 예시
       items:
         createData.items?.map((item) => ({
@@ -56,6 +64,26 @@ export class FeatureController {
     // 2. 서비스 호출 및 결과 직접 반환
     return await this.featureService.기능_생성한다(contextDto, 'admin');
   }
+
+  @Patch(':id/basic-info')
+  @ApiOperation({ summary: '기능 기본 정보 부분 수정' })
+  @ApiResponse({ status: 200, description: '성공적으로 수정되었습니다.' })
+  async updateFeatureBasicInfo(
+    @Param('id') id: string,
+    @Body() updateData: UpdateFeatureBasicApiDto,
+  ): Promise<FeatureDto> {
+    const contextDto: UpdateFeatureBasicContextDto = {
+      name: updateData.name,
+      description: updateData.description,
+      // 선택적 필드들만 포함
+    };
+
+    return await this.featureService.기능기본정보_수정한다(
+      id,
+      contextDto,
+      'admin',
+    );
+  }
 }
 ```
 
@@ -64,9 +92,12 @@ export class FeatureController {
 #### 날짜 변환
 
 ```typescript
-// ✅ 올바른 방법
-startDate: new Date(apiDto.startDate),
-endDate: apiDto.endDate ? new Date(apiDto.endDate) : undefined,
+// ✅ 올바른 방법 (UTC 데코레이터 사용 시)
+startDate: apiDto.startDate as unknown as Date,
+endDate: apiDto.endDate as unknown as Date,
+
+// DTO에서 @DateToUTC() 또는 @OptionalDateToUTC() 데코레이터 사용
+// class-transformer가 자동으로 UTC Date 객체로 변환
 ```
 
 #### 배열 매핑
@@ -152,8 +183,10 @@ Promise<FeatureDto>;
 - [ ] 서비스 결과를 그대로 반환하는가?
 - [ ] API DTO를 Context DTO로 직접 변환하는가?
 - [ ] 내부 변환 함수를 사용하지 않았는가?
+- [ ] 적절한 HTTP 메서드를 선택했는가? (부분 수정 시 PATCH 사용)
 - [ ] Swagger 문서화가 완료되었는가?
 - [ ] 타입 안전성이 보장되는가?
+- [ ] UTC 날짜 변환 데코레이터를 올바르게 사용했는가?
 
 ### 모듈 구성 시 확인사항
 

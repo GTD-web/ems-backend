@@ -6,8 +6,8 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
-  Put,
   Query,
 } from '@nestjs/common';
 import {
@@ -49,7 +49,7 @@ import {
  * 평가 기간의 생성, 수정, 삭제, 상태 관리 등 관리자 권한이 필요한
  * 평가 관리 기능을 제공합니다.
  */
-@ApiTags('Admin - Evaluation Management')
+@ApiTags('관리자 - 평가기간관리')
 @Controller('admin/evaluation-period-management')
 // @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EvaluationPeriodManagementController {
@@ -57,48 +57,7 @@ export class EvaluationPeriodManagementController {
     private readonly evaluationPeriodManagementService: EvaluationPeriodManagementContextService,
   ) {}
 
-  /**
-   * 새로운 평가 기간을 생성합니다.
-   */
-  @Post('evaluation-periods')
-  @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({
-    summary: '평가 기간 생성',
-    description: '새로운 평가 기간을 생성합니다. 관리자 권한이 필요합니다.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '평가 기간이 성공적으로 생성되었습니다.',
-    type: EvaluationPeriodResponseDto,
-  })
-  @ApiResponse({ status: 400, description: '잘못된 요청 데이터입니다.' })
-  @ApiResponse({ status: 409, description: '중복된 평가 기간명입니다.' })
-  async createEvaluationPeriod(
-    @Body() createData: CreateEvaluationPeriodApiDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
-  ): Promise<EvaluationPeriodDto> {
-    const createdBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    const contextDto: CreateEvaluationPeriodMinimalDto = {
-      name: createData.name,
-      startDate: createData.startDate as unknown as Date,
-      peerEvaluationDeadline:
-        createData.peerEvaluationDeadline as unknown as Date,
-      description: createData.description,
-      maxSelfEvaluationRate: createData.maxSelfEvaluationRate || 120,
-      gradeRanges:
-        createData.gradeRanges?.map((range) => ({
-          grade: range.grade,
-          minRange: range.minRange,
-          maxRange: range.maxRange,
-        })) || [],
-    };
-    return await this.evaluationPeriodManagementService.평가기간_생성한다(
-      contextDto,
-      createdBy,
-    );
-  }
-
-  // ==================== 평가 기간 조회 ====================
+  // ==================== GET: 조회 ====================
 
   /**
    * 활성화된 평가 기간 목록을 조회합니다.
@@ -171,114 +130,48 @@ export class EvaluationPeriodManagementController {
     );
   }
 
-  // ==================== 평가 기간 수정 ====================
+  // ==================== POST: 생성 및 상태 변경 ====================
 
   /**
-   * 평가 기간 기본 정보를 수정합니다.
+   * 새로운 평가 기간을 생성합니다.
    */
-  @Put('evaluation-periods/:id/basic-info')
+  @Post('evaluation-periods')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: '평가 기간 기본 정보 수정',
-    description:
-      '평가 기간의 이름, 설명, 자기평가 달성률 등 기본 정보를 수정합니다.',
+    summary: '평가 기간 생성',
+    description: '새로운 평가 기간을 생성합니다. 관리자 권한이 필요합니다.',
   })
-  @ApiParam({ name: 'id', description: '평가 기간 ID' })
   @ApiResponse({
-    status: 200,
-    description: '평가 기간 기본 정보가 성공적으로 수정되었습니다.',
+    status: 201,
+    description: '평가 기간이 성공적으로 생성되었습니다.',
     type: EvaluationPeriodResponseDto,
   })
-  @ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' })
-  async updateEvaluationPeriodBasicInfo(
-    @Param('id') periodId: string,
-    @Body() updateData: UpdateEvaluationPeriodBasicApiDto,
-    // @CurrentUser() user: User,
+  @ApiResponse({ status: 400, description: '잘못된 요청 데이터입니다.' })
+  @ApiResponse({ status: 409, description: '중복된 평가 기간명입니다.' })
+  async createEvaluationPeriod(
+    @Body() createData: CreateEvaluationPeriodApiDto,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    const contextDto: UpdateEvaluationPeriodBasicDto = {
-      name: updateData.name,
-      description: updateData.description,
-      maxSelfEvaluationRate: updateData.maxSelfEvaluationRate,
-    };
-    return await this.evaluationPeriodManagementService.평가기간기본정보_수정한다(
-      periodId,
-      contextDto,
-      updatedBy,
-    );
-  }
-
-  /**
-   * 평가 기간 일정을 수정합니다.
-   */
-  @Put('evaluation-periods/:id/schedule')
-  @ApiOperation({
-    summary: '평가 기간 일정 수정',
-    description: '평가 기간의 각 단계별 마감일을 수정합니다.',
-  })
-  @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({
-    status: 200,
-    description: '평가 기간 일정이 성공적으로 수정되었습니다.',
-    type: EvaluationPeriodResponseDto,
-  })
-  async updateEvaluationPeriodSchedule(
-    @Param('id') periodId: string,
-    @Body() scheduleData: UpdateEvaluationPeriodScheduleApiDto,
-    // @CurrentUser() user: User,
-  ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    const contextDto: UpdateEvaluationPeriodScheduleDto = {
-      endDate: scheduleData.endDate as unknown as Date,
-      evaluationSetupDeadline:
-        scheduleData.evaluationSetupDeadline as unknown as Date,
-      performanceDeadline: scheduleData.performanceDeadline as unknown as Date,
-      selfEvaluationDeadline:
-        scheduleData.selfEvaluationDeadline as unknown as Date,
+    const createdBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const contextDto: CreateEvaluationPeriodMinimalDto = {
+      name: createData.name,
+      startDate: createData.startDate as unknown as Date,
       peerEvaluationDeadline:
-        scheduleData.peerEvaluationDeadline as unknown as Date,
+        createData.peerEvaluationDeadline as unknown as Date,
+      description: createData.description,
+      maxSelfEvaluationRate: createData.maxSelfEvaluationRate || 120,
+      gradeRanges:
+        createData.gradeRanges?.map((range) => ({
+          grade: range.grade,
+          minRange: range.minRange,
+          maxRange: range.maxRange,
+        })) || [],
     };
-    return await this.evaluationPeriodManagementService.평가기간일정_수정한다(
-      periodId,
+    return await this.evaluationPeriodManagementService.평가기간_생성한다(
       contextDto,
-      updatedBy,
+      createdBy,
     );
   }
-
-  /**
-   * 평가 기간 등급 구간을 수정합니다.
-   */
-  @Put('evaluation-periods/:id/grade-ranges')
-  @ApiOperation({
-    summary: '평가 기간 등급 구간 수정',
-    description: '평가 기간의 등급 구간 설정을 수정합니다.',
-  })
-  @ApiParam({ name: 'id', description: '평가 기간 ID' })
-  @ApiResponse({
-    status: 200,
-    description: '평가 기간 등급 구간이 성공적으로 수정되었습니다.',
-    type: EvaluationPeriodResponseDto,
-  })
-  async updateEvaluationPeriodGradeRanges(
-    @Param('id') periodId: string,
-    @Body() gradeData: UpdateGradeRangesApiDto,
-    // @CurrentUser() user: User,
-  ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    const contextDto: UpdateGradeRangesDto = {
-      gradeRanges: gradeData.gradeRanges.map((range) => ({
-        grade: range.grade,
-        minRange: range.minRange,
-        maxRange: range.maxRange,
-      })),
-    };
-    return await this.evaluationPeriodManagementService.평가기간등급구간_수정한다(
-      periodId,
-      contextDto,
-      updatedBy,
-    );
-  }
-
-  // ==================== 평가 기간 생명주기 관리 ====================
 
   /**
    * 평가 기간을 시작합니다.
@@ -338,41 +231,120 @@ export class EvaluationPeriodManagementController {
     );
   }
 
+  // ==================== PATCH: 부분 수정 ====================
+
   /**
-   * 평가 기간을 삭제합니다.
+   * 평가 기간 기본 정보를 수정합니다.
    */
-  @Delete('evaluation-periods/:id')
+  @Patch('evaluation-periods/:id/basic-info')
   @ApiOperation({
-    summary: '평가 기간 삭제',
-    description: '평가 기간을 삭제합니다. 주의: 이 작업은 되돌릴 수 없습니다.',
+    summary: '평가 기간 기본 정보 부분 수정',
+    description:
+      '평가 기간의 이름, 설명, 자기평가 달성률 등 기본 정보를 부분 수정합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
   @ApiResponse({
     status: 200,
-    description: '평가 기간이 성공적으로 삭제되었습니다.',
-    schema: { type: 'boolean' },
+    description: '평가 기간 기본 정보가 성공적으로 수정되었습니다.',
+    type: EvaluationPeriodResponseDto,
   })
   @ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' })
-  async deleteEvaluationPeriod(
+  async updateEvaluationPeriodBasicInfo(
     @Param('id') periodId: string,
+    @Body() updateData: UpdateEvaluationPeriodBasicApiDto,
     // @CurrentUser() user: User,
-  ): Promise<boolean> {
-    const deletedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationPeriodManagementService.평가기간_삭제한다(
+  ): Promise<EvaluationPeriodDto> {
+    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const contextDto: UpdateEvaluationPeriodBasicDto = {
+      name: updateData.name,
+      description: updateData.description,
+      maxSelfEvaluationRate: updateData.maxSelfEvaluationRate,
+    };
+    return await this.evaluationPeriodManagementService.평가기간기본정보_수정한다(
       periodId,
-      deletedBy,
+      contextDto,
+      updatedBy,
     );
   }
 
-  // ==================== 수동 허용 설정 관리 ====================
+  /**
+   * 평가 기간 일정을 수정합니다.
+   */
+  @Patch('evaluation-periods/:id/schedule')
+  @ApiOperation({
+    summary: '평가 기간 일정 부분 수정',
+    description: '평가 기간의 각 단계별 마감일을 부분 수정합니다.',
+  })
+  @ApiParam({ name: 'id', description: '평가 기간 ID' })
+  @ApiResponse({
+    status: 200,
+    description: '평가 기간 일정이 성공적으로 수정되었습니다.',
+    type: EvaluationPeriodResponseDto,
+  })
+  async updateEvaluationPeriodSchedule(
+    @Param('id') periodId: string,
+    @Body() scheduleData: UpdateEvaluationPeriodScheduleApiDto,
+    // @CurrentUser() user: User,
+  ): Promise<EvaluationPeriodDto> {
+    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const contextDto: UpdateEvaluationPeriodScheduleDto = {
+      endDate: scheduleData.endDate as unknown as Date,
+      evaluationSetupDeadline:
+        scheduleData.evaluationSetupDeadline as unknown as Date,
+      performanceDeadline: scheduleData.performanceDeadline as unknown as Date,
+      selfEvaluationDeadline:
+        scheduleData.selfEvaluationDeadline as unknown as Date,
+      peerEvaluationDeadline:
+        scheduleData.peerEvaluationDeadline as unknown as Date,
+    };
+    return await this.evaluationPeriodManagementService.평가기간일정_수정한다(
+      periodId,
+      contextDto,
+      updatedBy,
+    );
+  }
+
+  /**
+   * 평가 기간 등급 구간을 수정합니다.
+   */
+  @Patch('evaluation-periods/:id/grade-ranges')
+  @ApiOperation({
+    summary: '평가 기간 등급 구간 수정',
+    description: '평가 기간의 등급 구간 설정을 전체 교체합니다.',
+  })
+  @ApiParam({ name: 'id', description: '평가 기간 ID' })
+  @ApiResponse({
+    status: 200,
+    description: '평가 기간 등급 구간이 성공적으로 수정되었습니다.',
+    type: EvaluationPeriodResponseDto,
+  })
+  async updateEvaluationPeriodGradeRanges(
+    @Param('id') periodId: string,
+    @Body() gradeData: UpdateGradeRangesApiDto,
+    // @CurrentUser() user: User,
+  ): Promise<EvaluationPeriodDto> {
+    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const contextDto: UpdateGradeRangesDto = {
+      gradeRanges: gradeData.gradeRanges.map((range) => ({
+        grade: range.grade,
+        minRange: range.minRange,
+        maxRange: range.maxRange,
+      })),
+    };
+    return await this.evaluationPeriodManagementService.평가기간등급구간_수정한다(
+      periodId,
+      contextDto,
+      updatedBy,
+    );
+  }
 
   /**
    * 평가 기준 설정 수동 허용을 변경합니다.
    */
-  @Put('evaluation-periods/:id/settings/criteria-permission')
+  @Patch('evaluation-periods/:id/settings/criteria-permission')
   @ApiOperation({
-    summary: '평가 기준 설정 수동 허용 변경',
-    description: '평가 기준 설정의 수동 허용 여부를 변경합니다.',
+    summary: '평가 기준 설정 수동 허용 부분 수정',
+    description: '평가 기준 설정의 수동 허용 여부를 부분 수정합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
   @ApiResponse({
@@ -399,10 +371,10 @@ export class EvaluationPeriodManagementController {
   /**
    * 자기 평가 설정 수동 허용을 변경합니다.
    */
-  @Put('evaluation-periods/:id/settings/self-evaluation-permission')
+  @Patch('evaluation-periods/:id/settings/self-evaluation-permission')
   @ApiOperation({
-    summary: '자기 평가 설정 수동 허용 변경',
-    description: '자기 평가 설정의 수동 허용 여부를 변경합니다.',
+    summary: '자기 평가 설정 수동 허용 부분 수정',
+    description: '자기 평가 설정의 수동 허용 여부를 부분 수정합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
   @ApiResponse({
@@ -429,10 +401,10 @@ export class EvaluationPeriodManagementController {
   /**
    * 최종 평가 설정 수동 허용을 변경합니다.
    */
-  @Put('evaluation-periods/:id/settings/final-evaluation-permission')
+  @Patch('evaluation-periods/:id/settings/final-evaluation-permission')
   @ApiOperation({
-    summary: '최종 평가 설정 수동 허용 변경',
-    description: '최종 평가 설정의 수동 허용 여부를 변경합니다.',
+    summary: '최종 평가 설정 수동 허용 부분 수정',
+    description: '최종 평가 설정의 수동 허용 여부를 부분 수정합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
   @ApiResponse({
@@ -459,10 +431,10 @@ export class EvaluationPeriodManagementController {
   /**
    * 전체 수동 허용 설정을 변경합니다.
    */
-  @Put('evaluation-periods/:id/settings/manual-permissions')
+  @Patch('evaluation-periods/:id/settings/manual-permissions')
   @ApiOperation({
-    summary: '전체 수동 허용 설정 변경',
-    description: '모든 수동 허용 설정을 한 번에 변경합니다.',
+    summary: '전체 수동 허용 설정 부분 수정',
+    description: '모든 수동 허용 설정을 부분적으로 수정합니다.',
   })
   @ApiParam({ name: 'id', description: '평가 기간 ID' })
   @ApiResponse({
@@ -487,6 +459,34 @@ export class EvaluationPeriodManagementController {
       periodId,
       contextDto,
       changedBy,
+    );
+  }
+
+  // ==================== DELETE: 삭제 ====================
+
+  /**
+   * 평가 기간을 삭제합니다.
+   */
+  @Delete('evaluation-periods/:id')
+  @ApiOperation({
+    summary: '평가 기간 삭제',
+    description: '평가 기간을 삭제합니다. 주의: 이 작업은 되돌릴 수 없습니다.',
+  })
+  @ApiParam({ name: 'id', description: '평가 기간 ID' })
+  @ApiResponse({
+    status: 200,
+    description: '평가 기간이 성공적으로 삭제되었습니다.',
+    schema: { type: 'boolean' },
+  })
+  @ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' })
+  async deleteEvaluationPeriod(
+    @Param('id') periodId: string,
+    // @CurrentUser() user: User,
+  ): Promise<boolean> {
+    const deletedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.evaluationPeriodManagementService.평가기간_삭제한다(
+      periodId,
+      deletedBy,
     );
   }
 }

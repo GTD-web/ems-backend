@@ -20,14 +20,12 @@ async function bootstrap() {
     .setTitle('Lumir Evaluation Management System API')
     .setDescription('루미르 평가 관리 시스템의 API 문서입니다.')
     .setVersion('1.0')
-    .addTag('Admin - Evaluation Management', '관리자 - 평가 관리 API')
     .addBearerAuth(
       {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
         name: 'JWT',
-        description: 'JWT 토큰을 입력하세요',
         in: 'header',
       },
       'Bearer', // 이 이름으로 컨트롤러에서 참조할 수 있습니다
@@ -39,7 +37,20 @@ async function bootstrap() {
     swaggerOptions: {
       persistAuthorization: true, // 인증 정보를 브라우저 세션에 저장
       tagsSorter: 'alpha',
-      operationsSorter: 'alpha',
+      operationsSorter: (a, b) => {
+        // HTTP 메서드 우선순위 정의
+        const methodOrder = { get: 1, post: 2, patch: 3, put: 4, delete: 5 };
+        const methodA = a.get('method').toLowerCase();
+        const methodB = b.get('method').toLowerCase();
+
+        // 메서드가 다르면 메서드 순서로 정렬
+        if (methodA !== methodB) {
+          return (methodOrder[methodA] || 999) - (methodOrder[methodB] || 999);
+        }
+
+        // 같은 메서드면 경로 순서로 정렬 (원본 순서 유지)
+        return 0;
+      },
       defaultModelsExpandDepth: 1,
       defaultModelExpandDepth: 1,
       docExpansion: 'none',
