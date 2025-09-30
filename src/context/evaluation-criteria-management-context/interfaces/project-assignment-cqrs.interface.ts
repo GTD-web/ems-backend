@@ -4,11 +4,6 @@ import {
   UpdateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentFilter,
 } from '../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
-import {
-  ProjectAssignmentListResult,
-  ProjectAssignmentStatusResult,
-  ProjectAssignmentStatisticsResult,
-} from '../queries/project-assignment.queries';
 
 /**
  * 프로젝트 할당 커맨드 서비스 인터페이스
@@ -38,10 +33,7 @@ export interface IProjectAssignmentCommandService {
   /**
    * 프로젝트 할당을 취소한다
    */
-  프로젝트_할당을_취소한다(
-    id: string,
-    cancelledBy: string,
-  ): Promise<void>;
+  프로젝트_할당을_취소한다(id: string, cancelledBy: string): Promise<void>;
 
   // ==================== 대량 처리 커맨드 ====================
 
@@ -75,7 +67,7 @@ export interface IProjectAssignmentQueryService {
    */
   프로젝트_할당_목록을_조회한다(
     filter: EvaluationProjectAssignmentFilter,
-  ): Promise<ProjectAssignmentListResult>;
+  ): Promise<EvaluationProjectAssignmentDto[]>;
 
   /**
    * 프로젝트 할당 상세를 조회한다
@@ -111,23 +103,6 @@ export interface IProjectAssignmentQueryService {
     projectId: string,
     periodId: string,
   ): Promise<EvaluationProjectAssignmentDto[]>;
-
-  // ==================== 현황 및 통계 조회 ====================
-
-  /**
-   * 평가기간별 프로젝트 할당 현황을 조회한다
-   */
-  평가기간별_프로젝트_할당_현황을_조회한다(
-    periodId: string,
-  ): Promise<ProjectAssignmentStatusResult>;
-
-  /**
-   * 프로젝트 할당 통계를 조회한다
-   */
-  프로젝트_할당_통계를_조회한다(
-    periodId: string,
-    departmentId?: string,
-  ): Promise<ProjectAssignmentStatisticsResult>;
 }
 
 /**

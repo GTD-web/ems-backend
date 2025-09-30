@@ -2,55 +2,39 @@ import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-criteria-management.interface';
 
-// Commands
+// Project Assignment Commands & Queries
+import { BulkCreateProjectAssignmentCommand } from './handlers/project-assignment/commands/bulk-create-project-assignment.handler';
+import { CancelProjectAssignmentCommand } from './handlers/project-assignment/commands/cancel-project-assignment.handler';
+import { CreateProjectAssignmentCommand } from './handlers/project-assignment/commands/create-project-assignment.handler';
+import { ResetPeriodProjectAssignmentsCommand } from './handlers/project-assignment/commands/reset-period-project-assignments.handler';
+import { UpdateProjectAssignmentCommand } from './handlers/project-assignment/commands/update-project-assignment.handler';
+import { GetEmployeeProjectAssignmentsQuery } from './handlers/project-assignment/queries/get-employee-project-assignments.handler';
+import { GetProjectAssignedEmployeesQuery } from './handlers/project-assignment/queries/get-project-assigned-employees.handler';
+import { GetProjectAssignmentDetailQuery } from './handlers/project-assignment/queries/get-project-assignment-detail.handler';
 import {
-  BulkCreateProjectAssignmentCommand,
-  CancelProjectAssignmentCommand,
-  CreateProjectAssignmentCommand,
-  ResetPeriodProjectAssignmentsCommand,
-  UpdateProjectAssignmentCommand,
-} from './commands';
-
-// Queries
-import {
-  GetEmployeeProjectAssignmentsQuery,
-  GetProjectAssignedEmployeesQuery,
-  GetProjectAssignmentDetailQuery,
   GetProjectAssignmentListQuery,
-  GetUnassignedEmployeesQuery,
-} from './queries';
+  ProjectAssignmentListResult,
+} from './handlers/project-assignment/queries/get-project-assignment-list.handler';
+import { GetUnassignedEmployeesQuery } from './handlers/project-assignment/queries/get-unassigned-employees.handler';
 
-// WBS Commands
-import {
-  CreateWbsAssignmentCommand,
-  UpdateWbsAssignmentCommand,
-  CancelWbsAssignmentCommand,
-  BulkCreateWbsAssignmentCommand,
-  ResetPeriodWbsAssignmentsCommand,
-  ResetProjectWbsAssignmentsCommand,
-  ResetEmployeeWbsAssignmentsCommand,
-} from './commands/wbs-assignment.commands';
-
-// WBS Queries
+// WBS Assignment Commands & Queries
+import { CreateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/create-wbs-assignment.handler';
+import { UpdateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/update-wbs-assignment.handler';
+import { CancelWbsAssignmentCommand } from './handlers/wbs-assignment/commands/cancel-wbs-assignment.handler';
+import { BulkCreateWbsAssignmentCommand } from './handlers/wbs-assignment/commands/bulk-create-wbs-assignment.handler';
+import { ResetPeriodWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-period-wbs-assignments.handler';
+import { ResetProjectWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-project-wbs-assignments.handler';
+import { ResetEmployeeWbsAssignmentsCommand } from './handlers/wbs-assignment/commands/reset-employee-wbs-assignments.handler';
 import {
   GetWbsAssignmentListQuery,
-  GetEmployeeWbsAssignmentsQuery,
-  GetProjectWbsAssignmentsQuery,
-  GetWbsItemAssignmentsQuery,
-  GetWbsAssignmentDetailQuery,
-  GetUnassignedWbsItemsQuery,
-} from './queries/wbs-assignment.queries';
+  WbsAssignmentListResult,
+} from './handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
+import { GetEmployeeWbsAssignmentsQuery } from './handlers/wbs-assignment/queries/get-employee-wbs-assignments.handler';
+import { GetProjectWbsAssignmentsQuery } from './handlers/wbs-assignment/queries/get-project-wbs-assignments.handler';
+import { GetWbsItemAssignmentsQuery } from './handlers/wbs-assignment/queries/get-wbs-item-assignments.handler';
+import { GetWbsAssignmentDetailQuery } from './handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
+import { GetUnassignedWbsItemsQuery } from './handlers/wbs-assignment/queries/get-unassigned-wbs-items.handler';
 
-import type {
-  CreateEvaluationLineMappingData,
-  EvaluationLineMappingDto,
-} from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
-import type {
-  CreateEvaluationLineDto,
-  EvaluationLineDto,
-  EvaluationLineFilter,
-  UpdateEvaluationLineDto,
-} from '../../domain/core/evaluation-line/evaluation-line.types';
 import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
@@ -63,18 +47,13 @@ import type {
   EvaluationWbsAssignmentFilter,
   UpdateEvaluationWbsAssignmentData,
 } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
-import type {
-  CreateWbsEvaluationCriteriaDto,
-  UpdateWbsEvaluationCriteriaDto,
-  WbsEvaluationCriteriaDto,
-} from '../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
-import type { ProjectAssignmentListResult } from './queries/project-assignment.queries';
-import type { WbsAssignmentListResult } from './queries/wbs-assignment.queries';
 
 /**
- * 평가기준관리 서비스
+ * 평가기준관리 서비스 (MVP 버전)
  *
- * 평가 기준 설정과 관련된 모든 기능을 통합 관리하는 서비스 구현체입니다.
+ * MVP에서는 핵심 기능인 프로젝트 할당과 WBS 할당 관리만 제공합니다.
+ * - 프로젝트 할당 관리
+ * - WBS 할당 관리
  */
 @Injectable()
 export class EvaluationCriteriaManagementService
@@ -83,7 +62,6 @@ export class EvaluationCriteriaManagementService
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
-    // TODO: 다른 도메인 서비스들 주입 (WbsEvaluationCriteriaService, EvaluationLineService, EvaluationLineMappingService)
   ) {}
 
   // ============================================================================
@@ -128,6 +106,48 @@ export class EvaluationCriteriaManagementService
   ): Promise<EvaluationProjectAssignmentDto[]> {
     const query = new GetEmployeeProjectAssignmentsQuery(employeeId, periodId);
     return await this.queryBus.execute(query);
+  }
+
+  async 프로젝트_할당_상세를_조회한다(
+    assignmentId: string,
+  ): Promise<EvaluationProjectAssignmentDto | null> {
+    const query = new GetProjectAssignmentDetailQuery(assignmentId);
+    return await this.queryBus.execute(query);
+  }
+
+  async 프로젝트에_할당된_직원을_조회한다(
+    projectId: string,
+    periodId: string,
+  ): Promise<EvaluationProjectAssignmentDto[]> {
+    const query = new GetProjectAssignedEmployeesQuery(projectId, periodId);
+    return await this.queryBus.execute(query);
+  }
+
+  async 할당되지_않은_직원_목록을_조회한다(
+    periodId: string,
+    projectId?: string,
+  ): Promise<string[]> {
+    const query = new GetUnassignedEmployeesQuery(periodId, projectId);
+    return await this.queryBus.execute(query);
+  }
+
+  async 프로젝트를_대량으로_할당한다(
+    assignments: CreateEvaluationProjectAssignmentData[],
+    assignedBy: string,
+  ): Promise<EvaluationProjectAssignmentDto[]> {
+    const command = new BulkCreateProjectAssignmentCommand(
+      assignments,
+      assignedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  async 평가기간의_프로젝트_할당을_초기화한다(
+    periodId: string,
+    resetBy: string,
+  ): Promise<void> {
+    const command = new ResetPeriodProjectAssignmentsCommand(periodId, resetBy);
+    await this.commandBus.execute(command);
   }
 
   // ============================================================================
@@ -179,189 +199,6 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  // ============================================================================
-  // WBS 평가 기준 관리
-  // ============================================================================
-
-  async WBS_평가기준을_설정한다(
-    data: CreateWbsEvaluationCriteriaDto,
-    createdBy: string,
-  ): Promise<WbsEvaluationCriteriaDto> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async WBS_평가기준을_수정한다(
-    id: string,
-    data: UpdateWbsEvaluationCriteriaDto,
-    updatedBy: string,
-  ): Promise<WbsEvaluationCriteriaDto> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async WBS_평가기준을_삭제한다(id: string, deletedBy: string): Promise<void> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async WBS_평가기준을_조회한다(
-    wbsItemId: string,
-  ): Promise<WbsEvaluationCriteriaDto[]> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  // ============================================================================
-  // 평가 라인 관리
-  // ============================================================================
-
-  async 평가라인을_생성한다(
-    data: CreateEvaluationLineDto,
-    createdBy: string,
-  ): Promise<EvaluationLineDto> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async 평가라인을_수정한다(
-    id: string,
-    data: UpdateEvaluationLineDto,
-    updatedBy: string,
-  ): Promise<EvaluationLineDto> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async 평가라인을_삭제한다(id: string, deletedBy: string): Promise<void> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async 평가라인_목록을_조회한다(
-    filter: EvaluationLineFilter,
-  ): Promise<EvaluationLineDto[]> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  // ============================================================================
-  // 평가 라인 매핑 관리
-  // ============================================================================
-
-  async 평가라인_매핑을_생성한다(
-    data: CreateEvaluationLineMappingData,
-    createdBy: string,
-  ): Promise<EvaluationLineMappingDto> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async 평가라인_매핑을_삭제한다(id: string, deletedBy: string): Promise<void> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async 직원의_평가라인_매핑을_조회한다(
-    employeeId: string,
-    projectId?: string,
-  ): Promise<EvaluationLineMappingDto[]> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  async 평가자의_평가라인_매핑을_조회한다(
-    evaluatorId: string,
-    projectId?: string,
-  ): Promise<EvaluationLineMappingDto[]> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  // ============================================================================
-  // 통합 관리 기능
-  // ============================================================================
-
-  async 직원의_평가설정을_조회한다(
-    employeeId: string,
-    periodId: string,
-  ): Promise<{
-    projectAssignments: EvaluationProjectAssignmentDto[];
-    wbsAssignments: EvaluationWbsAssignmentDto[];
-    evaluationLines: EvaluationLineMappingDto[];
-  }> {
-    // TODO: 구현 필요
-    throw new Error('Method not implemented.');
-  }
-
-  // ============================================================================
-  // CQRS 패턴 추가 메서드들 (프로젝트 할당 관련)
-  // ============================================================================
-
-  /**
-   * 프로젝트 할당 상세를 조회한다
-   */
-  async 프로젝트_할당_상세를_조회한다(
-    assignmentId: string,
-  ): Promise<EvaluationProjectAssignmentDto | null> {
-    const query = new GetProjectAssignmentDetailQuery(assignmentId);
-    return await this.queryBus.execute(query);
-  }
-
-  /**
-   * 프로젝트에 할당된 직원을 조회한다
-   */
-  async 프로젝트에_할당된_직원을_조회한다(
-    projectId: string,
-    periodId: string,
-  ): Promise<EvaluationProjectAssignmentDto[]> {
-    const query = new GetProjectAssignedEmployeesQuery(projectId, periodId);
-    return await this.queryBus.execute(query);
-  }
-
-  /**
-   * 할당되지 않은 직원 목록을 조회한다
-   */
-  async 할당되지_않은_직원_목록을_조회한다(
-    periodId: string,
-    projectId?: string,
-  ): Promise<string[]> {
-    const query = new GetUnassignedEmployeesQuery(periodId, projectId);
-    return await this.queryBus.execute(query);
-  }
-
-  /**
-   * 여러 프로젝트를 대량으로 할당한다
-   */
-  async 프로젝트를_대량으로_할당한다(
-    assignments: CreateEvaluationProjectAssignmentData[],
-    assignedBy: string,
-  ): Promise<EvaluationProjectAssignmentDto[]> {
-    const command = new BulkCreateProjectAssignmentCommand(
-      assignments,
-      assignedBy,
-    );
-    return await this.commandBus.execute(command);
-  }
-
-  /**
-   * 평가기간의 모든 프로젝트 할당을 초기화한다
-   */
-  async 평가기간의_프로젝트_할당을_초기화한다(
-    periodId: string,
-    resetBy: string,
-  ): Promise<void> {
-    const command = new ResetPeriodProjectAssignmentsCommand(periodId, resetBy);
-    await this.commandBus.execute(command);
-  }
-
-  // ============================================================================
-  // CQRS 패턴 추가 메서드들 (WBS 할당 관련)
-  // ============================================================================
-
-  /**
-   * WBS 할당 상세를 조회한다
-   */
   async WBS_할당_상세를_조회한다(
     assignmentId: string,
   ): Promise<EvaluationWbsAssignmentDto | null> {
@@ -369,9 +206,6 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  /**
-   * WBS 항목의 할당을 조회한다
-   */
   async WBS_항목의_할당을_조회한다(
     wbsItemId: string,
     periodId: string,
@@ -380,9 +214,6 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  /**
-   * 할당되지 않은 WBS 항목 목록을 조회한다
-   */
   async 할당되지_않은_WBS_항목_목록을_조회한다(
     projectId: string,
     periodId: string,
@@ -396,9 +227,6 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  /**
-   * 여러 WBS를 대량으로 할당한다
-   */
   async WBS를_대량으로_할당한다(
     assignments: CreateEvaluationWbsAssignmentData[],
     assignedBy: string,
@@ -407,9 +235,6 @@ export class EvaluationCriteriaManagementService
     return await this.commandBus.execute(command);
   }
 
-  /**
-   * 평가기간의 모든 WBS 할당을 초기화한다
-   */
   async 평가기간의_WBS_할당을_초기화한다(
     periodId: string,
     resetBy: string,
@@ -418,9 +243,6 @@ export class EvaluationCriteriaManagementService
     await this.commandBus.execute(command);
   }
 
-  /**
-   * 프로젝트의 모든 WBS 할당을 초기화한다
-   */
   async 프로젝트의_WBS_할당을_초기화한다(
     projectId: string,
     periodId: string,
@@ -434,9 +256,6 @@ export class EvaluationCriteriaManagementService
     await this.commandBus.execute(command);
   }
 
-  /**
-   * 직원의 모든 WBS 할당을 초기화한다
-   */
   async 직원의_WBS_할당을_초기화한다(
     employeeId: string,
     periodId: string,
@@ -448,5 +267,27 @@ export class EvaluationCriteriaManagementService
       resetBy,
     );
     await this.commandBus.execute(command);
+  }
+
+  // ============================================================================
+  // 통합 관리 기능 (MVP)
+  // ============================================================================
+
+  async 직원의_평가설정을_조회한다(
+    employeeId: string,
+    periodId: string,
+  ): Promise<{
+    projectAssignments: EvaluationProjectAssignmentDto[];
+    wbsAssignments: EvaluationWbsAssignmentDto[];
+  }> {
+    const [projectAssignments, wbsAssignments] = await Promise.all([
+      this.직원의_프로젝트_할당을_조회한다(employeeId, periodId),
+      this.직원의_WBS_할당을_조회한다(employeeId, periodId),
+    ]);
+
+    return {
+      projectAssignments,
+      wbsAssignments,
+    };
   }
 }
