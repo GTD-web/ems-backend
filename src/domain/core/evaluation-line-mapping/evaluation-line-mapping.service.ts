@@ -140,10 +140,10 @@ export class EvaluationLineMappingService
   }
 
   /**
-   * 프로젝트별 평가 라인 맵핑을 조회한다
+   * WBS 항목별 평가 라인 맵핑을 조회한다
    */
-  async 프로젝트별_조회한다(
-    projectId: string,
+  async WBS항목별_조회한다(
+    wbsItemId: string,
     manager?: EntityManager,
   ): Promise<IEvaluationLineMapping[]> {
     return this.executeSafeDomainOperation(async () => {
@@ -154,15 +154,15 @@ export class EvaluationLineMappingService
       );
 
       const mappings = await repository.find({
-        where: { projectId },
+        where: { wbsItemId },
         order: { createdAt: 'DESC' },
       });
 
       this.logger.debug(
-        `프로젝트별 평가 라인 맵핑 조회 완료 - 프로젝트 ID: ${projectId}, 개수: ${mappings.length}`,
+        `WBS 항목별 평가 라인 맵핑 조회 완료 - WBS 항목 ID: ${wbsItemId}, 개수: ${mappings.length}`,
       );
       return mappings;
-    }, '프로젝트별_조회한다');
+    }, 'WBS항목별_조회한다');
   }
 
   /**
@@ -194,9 +194,9 @@ export class EvaluationLineMappingService
         });
       }
 
-      if (filter.projectId) {
-        queryBuilder.andWhere('mapping.projectId = :projectId', {
-          projectId: filter.projectId,
+      if (filter.wbsItemId) {
+        queryBuilder.andWhere('mapping.wbsItemId = :wbsItemId', {
+          wbsItemId: filter.wbsItemId,
         });
       }
 
@@ -206,11 +206,11 @@ export class EvaluationLineMappingService
         });
       }
 
-      if (filter.withProject !== undefined) {
-        if (filter.withProject) {
-          queryBuilder.andWhere('mapping.projectId IS NOT NULL');
+      if (filter.withWbsItem !== undefined) {
+        if (filter.withWbsItem) {
+          queryBuilder.andWhere('mapping.wbsItemId IS NOT NULL');
         } else {
-          queryBuilder.andWhere('mapping.projectId IS NULL');
+          queryBuilder.andWhere('mapping.wbsItemId IS NULL');
         }
       }
 
@@ -245,7 +245,7 @@ export class EvaluationLineMappingService
       const mapping = repository.create({
         employeeId: createData.employeeId,
         evaluatorId: createData.evaluatorId,
-        projectId: createData.projectId,
+        wbsItemId: createData.wbsItemId,
         evaluationLineId: createData.evaluationLineId,
       });
 
@@ -292,8 +292,8 @@ export class EvaluationLineMappingService
         mapping.평가라인을_변경한다(updateData.evaluationLineId);
       }
 
-      if (updateData.projectId !== undefined) {
-        mapping.프로젝트를_변경한다(updateData.projectId);
+      if (updateData.wbsItemId !== undefined) {
+        mapping.WBS항목을_변경한다(updateData.wbsItemId);
       }
 
       const updatedMapping = await repository.save(mapping);
@@ -342,7 +342,7 @@ export class EvaluationLineMappingService
   async 평가관계_존재_확인한다(
     employeeId: string,
     evaluatorId: string,
-    projectId?: string,
+    wbsItemId?: string,
     manager?: EntityManager,
   ): Promise<boolean> {
     return this.executeSafeDomainOperation(async () => {
@@ -357,10 +357,10 @@ export class EvaluationLineMappingService
         .where('mapping.employeeId = :employeeId', { employeeId })
         .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId });
 
-      if (projectId) {
-        queryBuilder.andWhere('mapping.projectId = :projectId', { projectId });
+      if (wbsItemId) {
+        queryBuilder.andWhere('mapping.wbsItemId = :wbsItemId', { wbsItemId });
       } else {
-        queryBuilder.andWhere('mapping.projectId IS NULL');
+        queryBuilder.andWhere('mapping.wbsItemId IS NULL');
       }
 
       const count = await queryBuilder.getCount();
@@ -400,10 +400,10 @@ export class EvaluationLineMappingService
   }
 
   /**
-   * 프로젝트의 모든 맵핑을 삭제한다
+   * WBS 항목의 모든 맵핑을 삭제한다
    */
-  async 프로젝트_맵핑_전체삭제한다(
-    projectId: string,
+  async WBS항목_맵핑_전체삭제한다(
+    wbsItemId: string,
     deletedBy: string,
     manager?: EntityManager,
   ): Promise<void> {
@@ -415,7 +415,7 @@ export class EvaluationLineMappingService
       );
 
       const mappings = await repository.find({
-        where: { projectId },
+        where: { wbsItemId },
       });
 
       for (const mapping of mappings) {
@@ -425,8 +425,8 @@ export class EvaluationLineMappingService
       }
 
       this.logger.log(
-        `프로젝트 맵핑 전체 삭제 완료 - 프로젝트 ID: ${projectId}, 삭제자: ${deletedBy}, 삭제된 맵핑 수: ${mappings.length}`,
+        `WBS 항목 맵핑 전체 삭제 완료 - WBS 항목 ID: ${wbsItemId}, 삭제자: ${deletedBy}, 삭제된 맵핑 수: ${mappings.length}`,
       );
-    }, '프로젝트_맵핑_전체삭제한다');
+    }, 'WBS항목_맵핑_전체삭제한다');
   }
 }

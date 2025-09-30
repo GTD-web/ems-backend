@@ -11,8 +11,8 @@ export interface IEvaluationLineMapping extends IBaseEntity {
   employeeId: string;
   /** 평가자 ID - 평가를 수행하는 직원 식별자 */
   evaluatorId: string;
-  /** 프로젝트 ID - 평가가 수행되는 프로젝트 식별자 (선택적) */
-  projectId?: string;
+  /** WBS 항목 ID - 평가가 수행되는 WBS 항목 식별자 (선택적) */
+  wbsItemId?: string;
   /** 평가 라인 ID - 실제 평가 라인 엔티티 식별자 */
   evaluationLineId: string;
 
@@ -27,9 +27,9 @@ export interface IEvaluationLineMapping extends IBaseEntity {
   평가라인을_변경한다(evaluationLineId: string): void;
 
   /**
-   * 프로젝트를 변경한다
+   * WBS 항목을 변경한다
    */
-  프로젝트를_변경한다(projectId?: string): void;
+  WBS항목을_변경한다(wbsItemId?: string): void;
 
   /**
    * 맵핑이 유효한지 검증한다
@@ -37,9 +37,9 @@ export interface IEvaluationLineMapping extends IBaseEntity {
   유효성을_검증한다(): boolean;
 
   /**
-   * 프로젝트 기반 평가인지 확인한다
+   * WBS 기반 평가인지 확인한다
    */
-  프로젝트_기반_평가인가(): boolean;
+  WBS_기반_평가인가(): boolean;
 
   /**
    * 동일한 평가 관계인지 확인한다
@@ -47,6 +47,6 @@ export interface IEvaluationLineMapping extends IBaseEntity {
   동일한_평가관계인가(
     employeeId: string,
     evaluatorId: string,
-    projectId?: string,
+    wbsItemId?: string,
   ): boolean;
 }

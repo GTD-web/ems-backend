@@ -40,10 +40,10 @@ export interface IEvaluationLineMappingService {
   ): Promise<IEvaluationLineMapping[]>;
 
   /**
-   * 프로젝트별 평가 라인 맵핑을 조회한다
+   * WBS 항목별 평가 라인 맵핑을 조회한다
    */
-  프로젝트별_조회한다(
-    projectId: string,
+  WBS항목별_조회한다(
+    wbsItemId: string,
     manager?: EntityManager,
   ): Promise<IEvaluationLineMapping[]>;
 
@@ -88,7 +88,7 @@ export interface IEvaluationLineMappingService {
   평가관계_존재_확인한다(
     employeeId: string,
     evaluatorId: string,
-    projectId?: string,
+    wbsItemId?: string,
     manager?: EntityManager,
   ): Promise<boolean>;
 
@@ -102,10 +102,10 @@ export interface IEvaluationLineMappingService {
   ): Promise<void>;
 
   /**
-   * 프로젝트의 모든 맵핑을 삭제한다
+   * WBS 항목의 모든 맵핑을 삭제한다
    */
-  프로젝트_맵핑_전체삭제한다(
-    projectId: string,
+  WBS항목_맵핑_전체삭제한다(
+    wbsItemId: string,
     deletedBy: string,
     manager?: EntityManager,
   ): Promise<void>;

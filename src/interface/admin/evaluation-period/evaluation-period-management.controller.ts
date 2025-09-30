@@ -442,11 +442,13 @@ export class EvaluationPeriodManagementController {
   async deleteEvaluationPeriod(
     @ParseId() periodId: string,
     // @CurrentUser() user: User,
-  ): Promise<boolean> {
+  ): Promise<{ success: boolean }> {
     const deletedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationPeriodManagementService.평가기간_삭제한다(
-      periodId,
-      deletedBy,
-    );
+    const result =
+      await this.evaluationPeriodManagementService.평가기간_삭제한다(
+        periodId,
+        deletedBy,
+      );
+    return { success: result };
   }
 }

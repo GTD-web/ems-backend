@@ -12,8 +12,8 @@ export interface EvaluationLineMappingDto {
   employeeId: string;
   /** 평가자 ID - 평가를 수행하는 직원 식별자 */
   evaluatorId: string;
-  /** 프로젝트 ID - 평가가 수행되는 프로젝트 식별자 (선택적) */
-  projectId?: string;
+  /** WBS 항목 ID - 평가가 수행되는 WBS 항목 식별자 (선택적) */
+  wbsItemId?: string;
   /** 평가 라인 ID - 실제 평가 라인 엔티티 식별자 */
   evaluationLineId: string;
   /** 생성 일시 */
@@ -28,7 +28,7 @@ export interface EvaluationLineMappingDto {
 export interface CreateEvaluationLineMappingData {
   employeeId: string;
   evaluatorId: string;
-  projectId?: string;
+  wbsItemId?: string;
   evaluationLineId: string;
 }
 
@@ -37,7 +37,7 @@ export interface CreateEvaluationLineMappingData {
  */
 export interface UpdateEvaluationLineMappingData {
   evaluationLineId?: string;
-  projectId?: string;
+  wbsItemId?: string;
 }
 
 /**
@@ -46,8 +46,8 @@ export interface UpdateEvaluationLineMappingData {
 export interface EvaluationLineMappingFilter {
   employeeId?: string;
   evaluatorId?: string;
-  projectId?: string;
+  wbsItemId?: string;
   evaluationLineId?: string;
-  /** 프로젝트가 연결된 맵핑만 조회 */
-  withProject?: boolean;
+  /** WBS 항목이 연결된 맵핑만 조회 */
+  withWbsItem?: boolean;
 }

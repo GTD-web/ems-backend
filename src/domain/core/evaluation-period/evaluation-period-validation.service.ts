@@ -376,7 +376,7 @@ export class EvaluationPeriodValidationService {
 
     // 하향/동료평가 단계 마감일 검증
     if (updateDto.peerEvaluationDeadline) {
-      if (updateDto.peerEvaluationDeadline <= newStartDate) {
+      if (updateDto.peerEvaluationDeadline < newStartDate) {
         throw new InvalidEvaluationPeriodDateRangeException(
           '하향/동료평가 단계 마감일은 평가 기간 시작일 이후여야 합니다.',
         );
@@ -394,9 +394,8 @@ export class EvaluationPeriodValidationService {
     const newPeerEvaluationDeadline =
       updateDto.peerEvaluationDeadline || existingPeriod.peerEvaluationDeadline;
 
-    this.단계별날짜순서검증한다(
-      newStartDate,
-      existingEndDate,
+    // 개별 마감일 수정 시에는 마감일들 간의 논리적 순서만 검증
+    this.마감일논리적순서검증한다(
       newEvaluationSetupDeadline,
       newPerformanceDeadline,
       newSelfEvaluationDeadline,
@@ -448,18 +447,27 @@ export class EvaluationPeriodValidationService {
       });
     }
 
-    // 종료일은 항상 포함
+    // 종료일은 항상 포함 (하지만 하향/동료평가 마감일과 같을 수 있음)
     dateSteps.push({ date: endDate, name: '평가 기간 종료일' });
 
-    // 순서 검증: 각 단계가 이전 단계보다 늦어야 함
+    // 순서 검증: 각 단계가 이전 단계보다 늦어야 함 (종료일은 같을 수 있음)
     for (let i = 1; i < dateSteps.length; i++) {
       const prevStep = dateSteps[i - 1];
       const currentStep = dateSteps[i];
 
-      if (currentStep.date <= prevStep.date) {
-        throw new InvalidEvaluationPeriodDateRangeException(
-          `${currentStep.name}은 ${prevStep.name}보다 늦어야 합니다.`,
-        );
+      // 종료일의 경우 하향/동료평가 마감일과 같을 수 있음
+      if (currentStep.name === '평가 기간 종료일') {
+        if (currentStep.date < prevStep.date) {
+          throw new InvalidEvaluationPeriodDateRangeException(
+            `${currentStep.name}은 ${prevStep.name}보다 늦거나 같아야 합니다.`,
+          );
+        }
+      } else {
+        if (currentStep.date <= prevStep.date) {
+          throw new InvalidEvaluationPeriodDateRangeException(
+            `${currentStep.name}은 ${prevStep.name}보다 늦어야 합니다.`,
+          );
+        }
       }
     }
 
@@ -653,6 +661,13 @@ export class EvaluationPeriodValidationService {
       );
     }
 
+    // 완료된 평가 기간 수정 제한 검증
+    if (existingPeriod.status === EvaluationPeriodStatus.COMPLETED) {
+      throw new EvaluationPeriodBusinessRuleViolationException(
+        '완료된 평가 기간은 수정할 수 없습니다.',
+      );
+    }
+
     // 이름 중복 확인 (변경하는 경우)
     if (updateDto.name && updateDto.name !== existingPeriod.name) {
       await this.이름중복검증한다(updateDto.name, id, manager);
@@ -674,6 +689,9 @@ export class EvaluationPeriodValidationService {
 
       await this.기간겹침검증한다(newStartDate, existingEndDate, id, manager);
     }
+
+    // 세부 일정 검증 (마감일 관련)
+    this.세부일정업데이트검증한다(updateDto, existingPeriod);
 
     // 기존 업데이트 비즈니스 규칙 검증
     await this.업데이트비즈니스규칙검증한다(

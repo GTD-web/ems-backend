@@ -33,15 +33,15 @@ export class EvaluationLineMapping
   evaluatorId: string;
 
   /**
-   * 프로젝트 ID (선택적)
-   * 특정 프로젝트 컨텍스트에서의 평가인 경우 사용됩니다.
+   * WBS 항목 ID (선택적)
+   * 특정 WBS 항목 컨텍스트에서의 평가인 경우 사용됩니다.
    */
   @Column({
     type: 'uuid',
     nullable: true,
-    comment: '프로젝트 ID - 평가가 수행되는 프로젝트 식별자 (선택적)',
+    comment: 'WBS 항목 ID - 평가가 수행되는 WBS 항목 식별자 (선택적)',
   })
-  projectId?: string;
+  wbsItemId?: string;
 
   /**
    * 평가 라인 ID
@@ -61,7 +61,7 @@ export class EvaluationLineMapping
       id: this.id,
       employeeId: this.employeeId,
       evaluatorId: this.evaluatorId,
-      projectId: this.projectId,
+      wbsItemId: this.wbsItemId,
       evaluationLineId: this.evaluationLineId,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
@@ -77,10 +77,10 @@ export class EvaluationLineMapping
   }
 
   /**
-   * 프로젝트를 변경한다
+   * WBS 항목을 변경한다
    */
-  프로젝트를_변경한다(projectId?: string): void {
-    this.projectId = projectId;
+  WBS항목을_변경한다(wbsItemId?: string): void {
+    this.wbsItemId = wbsItemId;
     this.메타데이터를_업데이트한다();
   }
 
@@ -97,10 +97,10 @@ export class EvaluationLineMapping
   }
 
   /**
-   * 프로젝트 기반 평가인지 확인한다
+   * WBS 기반 평가인지 확인한다
    */
-  프로젝트_기반_평가인가(): boolean {
-    return this.projectId !== undefined && this.projectId !== null;
+  WBS_기반_평가인가(): boolean {
+    return this.wbsItemId !== undefined && this.wbsItemId !== null;
   }
 
   /**
@@ -109,12 +109,12 @@ export class EvaluationLineMapping
   동일한_평가관계인가(
     employeeId: string,
     evaluatorId: string,
-    projectId?: string,
+    wbsItemId?: string,
   ): boolean {
     return (
       this.employeeId === employeeId &&
       this.evaluatorId === evaluatorId &&
-      this.projectId === projectId
+      this.wbsItemId === wbsItemId
     );
   }
 }

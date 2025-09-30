@@ -139,9 +139,9 @@ export class EvaluationLineMappingValidationService {
       );
     }
 
-    if (createData.projectId && !uuidRegex.test(createData.projectId)) {
+    if (createData.wbsItemId && !uuidRegex.test(createData.wbsItemId)) {
       throw new InvalidEvaluationLineMappingDataFormatException(
-        '프로젝트 ID는 유효한 UUID 형식이어야 합니다.',
+        'WBS 항목 ID는 유효한 UUID 형식이어야 합니다.',
       );
     }
   }
@@ -165,12 +165,12 @@ export class EvaluationLineMappingValidationService {
     }
 
     if (
-      updateData.projectId !== undefined &&
-      updateData.projectId !== null &&
-      !uuidRegex.test(updateData.projectId)
+      updateData.wbsItemId !== undefined &&
+      updateData.wbsItemId !== null &&
+      !uuidRegex.test(updateData.wbsItemId)
     ) {
       throw new InvalidEvaluationLineMappingDataFormatException(
-        '프로젝트 ID는 유효한 UUID 형식이어야 합니다.',
+        'WBS 항목 ID는 유효한 UUID 형식이어야 합니다.',
       );
     }
   }
@@ -217,12 +217,12 @@ export class EvaluationLineMappingValidationService {
         evaluationLineId: createData.evaluationLineId,
       });
 
-    if (createData.projectId) {
-      queryBuilder.andWhere('mapping.projectId = :projectId', {
-        projectId: createData.projectId,
+    if (createData.wbsItemId) {
+      queryBuilder.andWhere('mapping.wbsItemId = :wbsItemId', {
+        wbsItemId: createData.wbsItemId,
       });
     } else {
-      queryBuilder.andWhere('mapping.projectId IS NULL');
+      queryBuilder.andWhere('mapping.wbsItemId IS NULL');
     }
 
     const existingMapping = await queryBuilder.getOne();
@@ -268,7 +268,7 @@ export class EvaluationLineMappingValidationService {
   async 평가관계존재확인한다(
     employeeId: string,
     evaluatorId: string,
-    projectId?: string,
+    wbsItemId?: string,
     manager?: EntityManager,
   ): Promise<boolean> {
     const repository = this.transactionManager.getRepository(
@@ -282,10 +282,10 @@ export class EvaluationLineMappingValidationService {
       .where('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId });
 
-    if (projectId) {
-      queryBuilder.andWhere('mapping.projectId = :projectId', { projectId });
+    if (wbsItemId) {
+      queryBuilder.andWhere('mapping.wbsItemId = :wbsItemId', { wbsItemId });
     } else {
-      queryBuilder.andWhere('mapping.projectId IS NULL');
+      queryBuilder.andWhere('mapping.wbsItemId IS NULL');
     }
 
     const count = await queryBuilder.getCount();
