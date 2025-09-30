@@ -394,7 +394,24 @@ export function UpdateEvaluationSetupDeadline() {
     Patch(':id/evaluation-setup-deadline'),
     ApiOperation({
       summary: '평가설정 단계 마감일 수정',
-      description: '평가설정 단계 마감일만 개별적으로 수정합니다.',
+      description: `**핵심 테스트 케이스:**
+- 기본 수정: 평가설정 단계 마감일을 성공적으로 수정
+- 시작일 이후 날짜: 시작일 이후 날짜로 마감일 수정
+- 윤년 처리: 윤년 날짜(2월 29일)로 마감일 수정
+- 존재하지 않는 ID: 404 에러 반환
+- 잘못된 UUID 형식: 400 에러 반환
+- 잘못된 날짜 형식: 'invalid-date', '2024-13-01', '2024-02-30' 등으로 요청 시 400 에러
+- 잘못된 데이터 타입: 숫자/불린/배열/객체 등으로 요청 시 400 에러 (일부 허용될 수 있음)
+- 빈 요청 데이터: 빈 객체로 요청 시 400 에러
+- 시작일 이전 날짜: 마감일이 시작일보다 이전일 때 400 에러 (부분적 구현)
+- 종료일 이후 날짜: 마감일이 종료일보다 늦을 때 400 에러 (부분적 구현)
+- 다른 마감일 순서 위반: 업무수행 마감일보다 늦을 때 400 에러 (부분적 구현)
+- 완료된 평가 기간: 완료된 평가 기간 수정 시 422 에러 (부분적 구현)
+- 데이터 무결성: 마감일 외 다른 필드는 변경되지 않음
+- 동시성 처리: 동일한 평가 기간을 동시에 수정할 때 적절한 처리
+- 타임존 처리: 다양한 타임존 형식을 UTC로 정규화
+- 먼 미래 날짜: 매우 먼 미래 날짜로 수정 가능
+- 월말 날짜: 다양한 월말 날짜(1월 31일, 윤년 2월 29일, 4월 30일 등) 처리`,
     }),
     ApiParam({ name: 'id', description: '평가 기간 ID' }),
     ApiResponse({
@@ -402,12 +419,17 @@ export function UpdateEvaluationSetupDeadline() {
       description: '평가설정 단계 마감일이 성공적으로 수정되었습니다.',
       type: EvaluationPeriodResponseDto,
     }),
-    ApiResponse({ status: 400, description: '잘못된 요청 데이터입니다.' }),
+    ApiResponse({
+      status: 400,
+      description:
+        '잘못된 요청 데이터 (날짜 형식 오류, 데이터 타입 오류, 빈 요청, 날짜 순서 위반 등)',
+    }),
     ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' }),
     ApiResponse({
       status: 422,
-      description: '비즈니스 로직 오류 (잘못된 날짜 범위 등)',
+      description: '비즈니스 로직 오류 (완료된 평가 기간 수정 불가 등)',
     }),
+    ApiResponse({ status: 500, description: '서버 내부 오류' }),
   );
 }
 

@@ -34,7 +34,6 @@ export interface UpdateEvaluationPeriodScheduleDto {
   peerEvaluationDeadline?: Date;
 }
 
-
 /**
  * 평가설정 단계 마감일 업데이트 DTO
  */

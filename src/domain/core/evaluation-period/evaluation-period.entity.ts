@@ -1,4 +1,5 @@
 import { BaseEntity } from '@libs/database/base/base.entity';
+import { Transform } from 'class-transformer';
 import { Column, Entity, Index } from 'typeorm';
 import {
   EvaluationPeriodRequiredDataMissingException,
@@ -12,7 +13,6 @@ import {
   EvaluationPeriodPhase,
   EvaluationPeriodStatus,
   GradeRange,
-  GradeType,
   ScoreGradeMapping,
   SubGradeType,
 } from './evaluation-period.types';
@@ -43,15 +43,21 @@ export class EvaluationPeriod
   name: string;
 
   @Column({
-    type: 'date',
+    type: 'timestamp',
     comment: '평가 기간 시작일',
   })
+  @Transform(({ value }) =>
+    value instanceof Date ? value.toISOString() : value,
+  )
   startDate: Date;
 
   @Column({
-    type: 'date',
+    type: 'timestamp',
     comment: '평가 기간 종료일',
   })
+  @Transform(({ value }) =>
+    value instanceof Date ? value.toISOString() : value,
+  )
   endDate: Date;
 
   @Column({
@@ -79,31 +85,43 @@ export class EvaluationPeriod
   currentPhase?: EvaluationPeriodPhase;
 
   @Column({
-    type: 'date',
+    type: 'timestamp',
     nullable: true,
     comment: '평가설정 단계 마감일',
   })
+  @Transform(({ value }) =>
+    value instanceof Date ? value.toISOString() : value,
+  )
   evaluationSetupDeadline?: Date;
 
   @Column({
-    type: 'date',
+    type: 'timestamp',
     nullable: true,
     comment: '업무 수행 단계 마감일',
   })
+  @Transform(({ value }) =>
+    value instanceof Date ? value.toISOString() : value,
+  )
   performanceDeadline?: Date;
 
   @Column({
-    type: 'date',
+    type: 'timestamp',
     nullable: true,
     comment: '자기 평가 단계 마감일',
   })
+  @Transform(({ value }) =>
+    value instanceof Date ? value.toISOString() : value,
+  )
   selfEvaluationDeadline?: Date;
 
   @Column({
-    type: 'date',
+    type: 'timestamp',
     nullable: true,
     comment: '하향/동료평가 단계 마감일',
   })
+  @Transform(({ value }) =>
+    value instanceof Date ? value.toISOString() : value,
+  )
   peerEvaluationDeadline?: Date;
 
   @Column({

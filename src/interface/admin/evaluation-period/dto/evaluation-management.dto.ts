@@ -310,7 +310,6 @@ export class UpdateEvaluationPeriodStartDateApiDto {
   startDate: string;
 }
 
-
 /**
  * 평가설정 단계 마감일 수정 API DTO
  */
