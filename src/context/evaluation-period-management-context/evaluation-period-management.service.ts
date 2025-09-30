@@ -10,31 +10,29 @@ import {
   UpdateEvaluationPeriodBasicInfoCommand,
   UpdateEvaluationPeriodGradeRangesCommand,
   UpdateEvaluationPeriodScheduleCommand,
+  UpdateEvaluationPeriodStartDateCommand,
+  UpdateEvaluationSetupDeadlineCommand,
   UpdateFinalEvaluationSettingPermissionCommand,
   UpdateManualSettingPermissionsCommand,
-  UpdateSelfEvaluationSettingPermissionCommand,
-  UpdateEvaluationPeriodEndDateCommand,
-  UpdateEvaluationSetupDeadlineCommand,
+  UpdatePeerEvaluationDeadlineCommand,
   UpdatePerformanceDeadlineCommand,
   UpdateSelfEvaluationDeadlineCommand,
-  UpdatePeerEvaluationDeadlineCommand,
-  UpdateEvaluationPeriodStartDateCommand,
+  UpdateSelfEvaluationSettingPermissionCommand,
 } from './commands';
 import {
   CreateEvaluationPeriodMinimalDto,
   UpdateCriteriaSettingPermissionDto,
   UpdateEvaluationPeriodBasicDto,
   UpdateEvaluationPeriodScheduleDto,
+  UpdateEvaluationPeriodStartDateDto,
+  UpdateEvaluationSetupDeadlineDto,
   UpdateFinalEvaluationSettingPermissionDto,
   UpdateGradeRangesDto,
   UpdateManualSettingPermissionsDto,
-  UpdateSelfEvaluationSettingPermissionDto,
-  UpdateEvaluationPeriodEndDateDto,
-  UpdateEvaluationSetupDeadlineDto,
+  UpdatePeerEvaluationDeadlineDto,
   UpdatePerformanceDeadlineDto,
   UpdateSelfEvaluationDeadlineDto,
-  UpdatePeerEvaluationDeadlineDto,
-  UpdateEvaluationPeriodStartDateDto,
+  UpdateSelfEvaluationSettingPermissionDto,
 } from './interfaces/evaluation-period-creation.interface';
 import { IEvaluationPeriodManagementContext } from './interfaces/evaluation-period-management-context.interface';
 import {
@@ -116,22 +114,6 @@ export class EvaluationPeriodManagementContextService
     const command = new UpdateEvaluationPeriodScheduleCommand(
       periodId,
       scheduleData,
-      updatedBy,
-    );
-    return await this.commandBus.execute(command);
-  }
-
-  /**
-   * 평가 기간 종료일을 수정한다
-   */
-  async 평가기간종료일_수정한다(
-    periodId: string,
-    endDateData: UpdateEvaluationPeriodEndDateDto,
-    updatedBy: string,
-  ): Promise<EvaluationPeriodDto> {
-    const command = new UpdateEvaluationPeriodEndDateCommand(
-      periodId,
-      endDateData,
       updatedBy,
     );
     return await this.commandBus.execute(command);

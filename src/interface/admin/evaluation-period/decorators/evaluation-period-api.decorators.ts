@@ -305,7 +305,21 @@ export function UpdateEvaluationPeriodSchedule() {
     Patch(':id/schedule'),
     ApiOperation({
       summary: '평가 기간 일정 부분 수정',
-      description: '평가 기간의 각 단계별 마감일을 부분 수정합니다.',
+      description: `**핵심 테스트 케이스:**
+- 개별 날짜 수정: 시작일, 종료일, 각 단계별 마감일을 개별적으로 수정
+- 전체 일정 수정: 모든 날짜 필드를 한 번에 수정
+- 부분 수정: 일부 날짜만 제공 시 나머지는 기존 값 유지
+- 빈 객체: 빈 객체 요청 시 모든 기존 값 유지
+- 올바른 순서: 시작일 → 평가설정 → 업무수행 → 자기평가 → 하향동료평가 순서 검증
+- 존재하지 않는 ID: 404 에러 반환
+- 잘못된 UUID 형식: 400 에러 반환
+- 잘못된 날짜 형식: 400 에러 반환
+- 잘못된 데이터 타입: 숫자/배열 등으로 요청 시 400 에러
+- 날짜 순서 위반: 논리적 순서를 위반하는 날짜 설정 시 400 에러
+- 완료된 평가 기간: 완료된 평가 기간 수정 시 422 에러
+- 데이터 무결성: 일정 수정 후 다른 필드(이름, 등급 구간 등)는 변경되지 않음
+- 동시성 처리: 동일한 평가 기간을 동시에 수정할 때 적절한 처리
+- 특수 날짜: 윤년, 타임존, 먼 미래 날짜 등 특수한 경우 처리`,
     }),
     ApiParam({ name: 'id', description: '평가 기간 ID' }),
     ApiResponse({
@@ -313,12 +327,17 @@ export function UpdateEvaluationPeriodSchedule() {
       description: '평가 기간 일정이 성공적으로 수정되었습니다.',
       type: EvaluationPeriodResponseDto,
     }),
-    ApiResponse({ status: 400, description: '잘못된 요청 데이터입니다.' }),
+    ApiResponse({
+      status: 400,
+      description:
+        '잘못된 요청 데이터 (날짜 형식 오류, 데이터 타입 오류, 날짜 순서 위반 등)',
+    }),
     ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' }),
     ApiResponse({
       status: 422,
-      description: '비즈니스 로직 오류 (잘못된 날짜 범위 등)',
+      description: '비즈니스 로직 오류 (완료된 평가 기간 수정 불가 등)',
     }),
+    ApiResponse({ status: 500, description: '서버 내부 오류' }),
   );
 }
 
@@ -330,7 +349,22 @@ export function UpdateEvaluationPeriodStartDate() {
     Patch(':id/start-date'),
     ApiOperation({
       summary: '평가 기간 시작일 수정',
-      description: '평가 기간의 시작일만 개별적으로 수정합니다.',
+      description: `**핵심 테스트 케이스:**
+- 기본 수정: 평가 기간의 시작일을 성공적으로 수정
+- 적절한 날짜: 기존 종료일보다 이전 날짜로 수정
+- 윤년 처리: 윤년 날짜(2월 29일)로 수정
+- 존재하지 않는 ID: 404 에러 반환
+- 잘못된 UUID 형식: 400 에러 반환
+- 잘못된 날짜 형식: 'invalid-date', '2024-13-01', '2024-02-30' 등으로 요청 시 400 에러
+- 잘못된 데이터 타입: 숫자/불린/배열/객체 등으로 요청 시 400 에러
+- 빈 요청 데이터: 빈 객체로 요청 시 400 에러
+- 날짜 순서 위반: 시작일이 기존 종료일보다 늦을 때 400 에러
+- 마감일 순서 위반: 시작일이 기존 마감일들보다 늦을 때 400 에러
+- 완료된 평가 기간: 완료된 평가 기간 수정 시 422 에러
+- 데이터 무결성: 시작일 외 다른 필드는 변경되지 않음
+- 동시성 처리: 동일한 평가 기간을 동시에 수정할 때 적절한 처리
+- 타임존 처리: 다양한 타임존 형식을 UTC로 정규화
+- 먼 미래 날짜: 매우 먼 미래 날짜로 수정 가능`,
     }),
     ApiParam({ name: 'id', description: '평가 기간 ID' }),
     ApiResponse({
@@ -338,37 +372,17 @@ export function UpdateEvaluationPeriodStartDate() {
       description: '평가 기간 시작일이 성공적으로 수정되었습니다.',
       type: EvaluationPeriodResponseDto,
     }),
-    ApiResponse({ status: 400, description: '잘못된 요청 데이터입니다.' }),
+    ApiResponse({
+      status: 400,
+      description:
+        '잘못된 요청 데이터 (날짜 형식 오류, 데이터 타입 오류, 빈 요청, 날짜 순서 위반 등)',
+    }),
     ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' }),
     ApiResponse({
       status: 422,
-      description: '비즈니스 로직 오류 (잘못된 날짜 범위 등)',
+      description: '비즈니스 로직 오류 (완료된 평가 기간 수정 불가 등)',
     }),
-  );
-}
-
-/**
- * 평가 기간 종료일 수정 엔드포인트 데코레이터
- */
-export function UpdateEvaluationPeriodEndDate() {
-  return applyDecorators(
-    Patch(':id/end-date'),
-    ApiOperation({
-      summary: '평가 기간 종료일 수정',
-      description: '평가 기간의 종료일만 개별적으로 수정합니다.',
-    }),
-    ApiParam({ name: 'id', description: '평가 기간 ID' }),
-    ApiResponse({
-      status: 200,
-      description: '평가 기간 종료일이 성공적으로 수정되었습니다.',
-      type: EvaluationPeriodResponseDto,
-    }),
-    ApiResponse({ status: 400, description: '잘못된 요청 데이터입니다.' }),
-    ApiResponse({ status: 404, description: '평가 기간을 찾을 수 없습니다.' }),
-    ApiResponse({
-      status: 422,
-      description: '비즈니스 로직 오류 (잘못된 날짜 범위 등)',
-    }),
+    ApiResponse({ status: 500, description: '서버 내부 오류' }),
   );
 }
 

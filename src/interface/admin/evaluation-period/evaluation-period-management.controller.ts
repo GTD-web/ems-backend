@@ -6,60 +6,53 @@ import type {
   UpdateCriteriaSettingPermissionDto,
   UpdateEvaluationPeriodBasicDto,
   UpdateEvaluationPeriodScheduleDto,
+  UpdateEvaluationPeriodStartDateDto,
+  UpdateEvaluationSetupDeadlineDto,
   UpdateFinalEvaluationSettingPermissionDto,
   UpdateGradeRangesDto,
   UpdateManualSettingPermissionsDto,
-  UpdateSelfEvaluationSettingPermissionDto,
-  UpdateEvaluationPeriodStartDateDto,
-  UpdateEvaluationPeriodEndDateDto,
-  UpdateEvaluationSetupDeadlineDto,
+  UpdatePeerEvaluationDeadlineDto,
   UpdatePerformanceDeadlineDto,
   UpdateSelfEvaluationDeadlineDto,
-  UpdatePeerEvaluationDeadlineDto,
+  UpdateSelfEvaluationSettingPermissionDto,
 } from '../../../context/evaluation-period-management-context/interfaces/evaluation-period-creation.interface';
 import type { EvaluationPeriodDto } from '../../../domain/core/evaluation-period/evaluation-period.types';
+import { ParseId } from '../../decorators/parse-uuid.decorator';
+import {
+  CompleteEvaluationPeriod,
+  CreateEvaluationPeriod,
+  DeleteEvaluationPeriod,
+  GetActiveEvaluationPeriods,
+  GetEvaluationPeriodDetail,
+  GetEvaluationPeriods,
+  StartEvaluationPeriod,
+  UpdateCriteriaSettingPermission,
+  UpdateEvaluationPeriodBasicInfo,
+  UpdateEvaluationPeriodGradeRanges,
+  UpdateEvaluationPeriodSchedule,
+  UpdateEvaluationPeriodStartDate,
+  UpdateEvaluationSetupDeadline,
+  UpdateFinalEvaluationSettingPermission,
+  UpdateManualSettingPermissions,
+  UpdatePeerEvaluationDeadline,
+  UpdatePerformanceDeadline,
+  UpdateSelfEvaluationDeadline,
+  UpdateSelfEvaluationSettingPermission,
+} from './decorators/evaluation-period-api.decorators';
 import {
   CreateEvaluationPeriodApiDto,
   ManualPermissionSettingDto,
   PaginationQueryDto,
   UpdateEvaluationPeriodBasicApiDto,
   UpdateEvaluationPeriodScheduleApiDto,
+  UpdateEvaluationPeriodStartDateApiDto,
+  UpdateEvaluationSetupDeadlineApiDto,
   UpdateGradeRangesApiDto,
   UpdateManualSettingPermissionsApiDto,
-  UpdateEvaluationPeriodStartDateApiDto,
-  UpdateEvaluationPeriodEndDateApiDto,
-  UpdateEvaluationSetupDeadlineApiDto,
+  UpdatePeerEvaluationDeadlineApiDto,
   UpdatePerformanceDeadlineApiDto,
   UpdateSelfEvaluationDeadlineApiDto,
-  UpdatePeerEvaluationDeadlineApiDto,
 } from './dto/evaluation-management.dto';
-import {
-  EvaluationPeriodListResponseDto,
-  EvaluationPeriodResponseDto,
-} from './dto/evaluation-period-response.dto';
-import { ParseId } from '../../decorators/parse-uuid.decorator';
-import {
-  GetActiveEvaluationPeriods,
-  GetEvaluationPeriods,
-  GetEvaluationPeriodDetail,
-  CreateEvaluationPeriod,
-  StartEvaluationPeriod,
-  CompleteEvaluationPeriod,
-  UpdateEvaluationPeriodBasicInfo,
-  UpdateEvaluationPeriodSchedule,
-  UpdateEvaluationPeriodStartDate,
-  UpdateEvaluationPeriodEndDate,
-  UpdateEvaluationSetupDeadline,
-  UpdatePerformanceDeadline,
-  UpdateSelfEvaluationDeadline,
-  UpdatePeerEvaluationDeadline,
-  UpdateEvaluationPeriodGradeRanges,
-  UpdateCriteriaSettingPermission,
-  UpdateSelfEvaluationSettingPermission,
-  UpdateFinalEvaluationSettingPermission,
-  UpdateManualSettingPermissions,
-  DeleteEvaluationPeriod,
-} from './decorators/evaluation-period-api.decorators';
 
 /**
  * 관리자용 평가 관리 컨트롤러
@@ -214,7 +207,6 @@ export class EvaluationPeriodManagementController {
     const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
     const contextDto: UpdateEvaluationPeriodScheduleDto = {
       startDate: scheduleData.startDate as unknown as Date,
-      endDate: scheduleData.endDate as unknown as Date,
       evaluationSetupDeadline:
         scheduleData.evaluationSetupDeadline as unknown as Date,
       performanceDeadline: scheduleData.performanceDeadline as unknown as Date,
@@ -244,26 +236,6 @@ export class EvaluationPeriodManagementController {
       startDate: startDateData.startDate as unknown as Date,
     };
     return await this.evaluationPeriodManagementService.평가기간시작일_수정한다(
-      periodId,
-      contextDto,
-      updatedBy,
-    );
-  }
-
-  /**
-   * 평가 기간 종료일을 수정합니다.
-   */
-  @UpdateEvaluationPeriodEndDate()
-  async updateEvaluationPeriodEndDate(
-    @ParseId() periodId: string,
-    @Body() endDateData: UpdateEvaluationPeriodEndDateApiDto,
-    // @CurrentUser() user: User,
-  ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    const contextDto: UpdateEvaluationPeriodEndDateDto = {
-      endDate: endDateData.endDate as unknown as Date,
-    };
-    return await this.evaluationPeriodManagementService.평가기간종료일_수정한다(
       periodId,
       contextDto,
       updatedBy,

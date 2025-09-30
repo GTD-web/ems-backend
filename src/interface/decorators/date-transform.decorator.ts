@@ -21,8 +21,31 @@ function convertToUTCDate(value: any): Date | undefined {
   }
 
   // 문자열인 경우 UTC로 변환
-  // YYYY-MM-DD 형식 → UTC 자정으로 설정
+  // YYYY-MM-DD 형식 → UTC 자정으로 설정 (엄격한 검증 포함)
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split('-').map(Number);
+
+    // 월과 일의 범위 검증
+    if (month < 1 || month > 12) {
+      throw new BadRequestException(
+        `올바르지 않은 월입니다: ${month}. 1-12 범위여야 합니다.`,
+      );
+    }
+
+    if (day < 1 || day > 31) {
+      throw new BadRequestException(
+        `올바르지 않은 일입니다: ${day}. 1-31 범위여야 합니다.`,
+      );
+    }
+
+    // 해당 월의 실제 일수 검증
+    const daysInMonth = new Date(year, month, 0).getDate();
+    if (day > daysInMonth) {
+      throw new BadRequestException(
+        `${year}년 ${month}월에는 ${day}일이 존재하지 않습니다. 최대 ${daysInMonth}일까지 가능합니다.`,
+      );
+    }
+
     return new Date(`${value}T00:00:00.000Z`);
   }
 

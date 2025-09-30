@@ -1,22 +1,18 @@
-import {
-  CreateEvaluationPeriodDto,
-  EvaluationPeriodDto,
-} from '../../../domain/core/evaluation-period/evaluation-period.types';
+import { EvaluationPeriodDto } from '../../../domain/core/evaluation-period/evaluation-period.types';
 import {
   CreateEvaluationPeriodMinimalDto,
-  UpdateEvaluationPeriodScheduleDto,
-  UpdateEvaluationPeriodBasicDto,
-  UpdateGradeRangesDto,
   UpdateCriteriaSettingPermissionDto,
-  UpdateSelfEvaluationSettingPermissionDto,
-  UpdateFinalEvaluationSettingPermissionDto,
-  UpdateManualSettingPermissionsDto,
-  UpdateEvaluationPeriodEndDateDto,
+  UpdateEvaluationPeriodBasicDto,
+  UpdateEvaluationPeriodScheduleDto,
+  UpdateEvaluationPeriodStartDateDto,
   UpdateEvaluationSetupDeadlineDto,
+  UpdateFinalEvaluationSettingPermissionDto,
+  UpdateGradeRangesDto,
+  UpdateManualSettingPermissionsDto,
+  UpdatePeerEvaluationDeadlineDto,
   UpdatePerformanceDeadlineDto,
   UpdateSelfEvaluationDeadlineDto,
-  UpdatePeerEvaluationDeadlineDto,
-  UpdateEvaluationPeriodStartDateDto,
+  UpdateSelfEvaluationSettingPermissionDto,
 } from './evaluation-period-creation.interface';
 
 /**
@@ -80,20 +76,6 @@ export interface IEvaluationPeriodManagementContext {
   평가기간일정_수정한다(
     periodId: string,
     scheduleData: UpdateEvaluationPeriodScheduleDto,
-    updatedBy: string,
-  ): Promise<EvaluationPeriodDto>;
-
-  /**
-   * 평가 기간 종료일을 수정한다
-   *
-   * @param periodId 평가 기간 ID
-   * @param endDateData 종료일 수정 데이터
-   * @param updatedBy 수정자 ID
-   * @returns 수정된 평가 기간 정보
-   */
-  평가기간종료일_수정한다(
-    periodId: string,
-    endDateData: UpdateEvaluationPeriodEndDateDto,
     updatedBy: string,
   ): Promise<EvaluationPeriodDto>;
 

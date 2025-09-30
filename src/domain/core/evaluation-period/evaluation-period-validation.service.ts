@@ -345,7 +345,7 @@ export class EvaluationPeriodValidationService {
     existingPeriod: any,
   ): void {
     const newStartDate = updateDto.startDate || existingPeriod.startDate;
-    const newEndDate = updateDto.endDate || existingPeriod.endDate;
+    const existingEndDate = existingPeriod.endDate;
 
     // 평가설정 단계 마감일 검증
     if (updateDto.evaluationSetupDeadline) {
@@ -384,14 +384,19 @@ export class EvaluationPeriodValidationService {
     }
 
     // 단계별 날짜 순서 검증 (업데이트된 값과 기존 값을 조합)
-    const newEvaluationSetupDeadline = updateDto.evaluationSetupDeadline || existingPeriod.evaluationSetupDeadline;
-    const newPerformanceDeadline = updateDto.performanceDeadline || existingPeriod.performanceDeadline;
-    const newSelfEvaluationDeadline = updateDto.selfEvaluationDeadline || existingPeriod.selfEvaluationDeadline;
-    const newPeerEvaluationDeadline = updateDto.peerEvaluationDeadline || existingPeriod.peerEvaluationDeadline;
+    const newEvaluationSetupDeadline =
+      updateDto.evaluationSetupDeadline ||
+      existingPeriod.evaluationSetupDeadline;
+    const newPerformanceDeadline =
+      updateDto.performanceDeadline || existingPeriod.performanceDeadline;
+    const newSelfEvaluationDeadline =
+      updateDto.selfEvaluationDeadline || existingPeriod.selfEvaluationDeadline;
+    const newPeerEvaluationDeadline =
+      updateDto.peerEvaluationDeadline || existingPeriod.peerEvaluationDeadline;
 
     this.단계별날짜순서검증한다(
       newStartDate,
-      newEndDate,
+      existingEndDate,
       newEvaluationSetupDeadline,
       newPerformanceDeadline,
       newSelfEvaluationDeadline,
@@ -413,22 +418,34 @@ export class EvaluationPeriodValidationService {
   ): void {
     // 설정된 날짜들을 순서대로 배열에 저장
     const dateSteps: { date: Date; name: string }[] = [];
-    
+
     // 시작일은 항상 포함
     dateSteps.push({ date: startDate, name: '평가 기간 시작일' });
 
     // 설정된 마감일들을 순서대로 추가
     if (evaluationSetupDeadline) {
-      dateSteps.push({ date: evaluationSetupDeadline, name: '평가설정 단계 마감일' });
+      dateSteps.push({
+        date: evaluationSetupDeadline,
+        name: '평가설정 단계 마감일',
+      });
     }
     if (performanceDeadline) {
-      dateSteps.push({ date: performanceDeadline, name: '업무 수행 단계 마감일' });
+      dateSteps.push({
+        date: performanceDeadline,
+        name: '업무 수행 단계 마감일',
+      });
     }
     if (selfEvaluationDeadline) {
-      dateSteps.push({ date: selfEvaluationDeadline, name: '자기 평가 단계 마감일' });
+      dateSteps.push({
+        date: selfEvaluationDeadline,
+        name: '자기 평가 단계 마감일',
+      });
     }
     if (peerEvaluationDeadline) {
-      dateSteps.push({ date: peerEvaluationDeadline, name: '하향/동료평가 단계 마감일' });
+      dateSteps.push({
+        date: peerEvaluationDeadline,
+        name: '하향/동료평가 단계 마감일',
+      });
     }
 
     // 종료일은 항상 포함
@@ -494,7 +511,11 @@ export class EvaluationPeriodValidationService {
 
     // 건너뛰는 단계가 있는 경우의 검증
     // 예: 평가설정 → 자기평가 (업무수행 생략)
-    if (evaluationSetupDeadline && selfEvaluationDeadline && !performanceDeadline) {
+    if (
+      evaluationSetupDeadline &&
+      selfEvaluationDeadline &&
+      !performanceDeadline
+    ) {
       if (selfEvaluationDeadline <= evaluationSetupDeadline) {
         throw new InvalidEvaluationPeriodDateRangeException(
           '자기 평가 단계 마감일은 평가설정 단계 마감일보다 늦어야 합니다.',
@@ -503,7 +524,12 @@ export class EvaluationPeriodValidationService {
     }
 
     // 예: 평가설정 → 하향/동료평가 (중간 단계 생략)
-    if (evaluationSetupDeadline && peerEvaluationDeadline && !performanceDeadline && !selfEvaluationDeadline) {
+    if (
+      evaluationSetupDeadline &&
+      peerEvaluationDeadline &&
+      !performanceDeadline &&
+      !selfEvaluationDeadline
+    ) {
       if (peerEvaluationDeadline <= evaluationSetupDeadline) {
         throw new InvalidEvaluationPeriodDateRangeException(
           '하향/동료평가 단계 마감일은 평가설정 단계 마감일보다 늦어야 합니다.',
@@ -512,7 +538,11 @@ export class EvaluationPeriodValidationService {
     }
 
     // 예: 업무수행 → 하향/동료평가 (자기평가 생략)
-    if (performanceDeadline && peerEvaluationDeadline && !selfEvaluationDeadline) {
+    if (
+      performanceDeadline &&
+      peerEvaluationDeadline &&
+      !selfEvaluationDeadline
+    ) {
       if (peerEvaluationDeadline <= performanceDeadline) {
         throw new InvalidEvaluationPeriodDateRangeException(
           '하향/동료평가 단계 마감일은 업무 수행 단계 마감일보다 늦어야 합니다.',
@@ -628,17 +658,21 @@ export class EvaluationPeriodValidationService {
       await this.이름중복검증한다(updateDto.name, id, manager);
     }
 
-    // 기간 겹침 확인 (날짜를 변경하는 경우)
-    if (updateDto.startDate || updateDto.endDate) {
-      const newStartDate = updateDto.startDate || existingPeriod.startDate;
-      const newEndDate = updateDto.endDate || existingPeriod.endDate;
+    // 기간 겹침 확인 (시작일을 변경하는 경우)
+    if (updateDto.startDate) {
+      const newStartDate = updateDto.startDate;
+      const existingEndDate = existingPeriod.endDate;
 
       // 날짜 범위 검증 (시작일 < 종료일)
-      const startDateObj = newStartDate instanceof Date ? newStartDate : new Date(newStartDate);
-      const endDateObj = newEndDate instanceof Date ? newEndDate : new Date(newEndDate);
+      const startDateObj =
+        newStartDate instanceof Date ? newStartDate : new Date(newStartDate);
+      const endDateObj =
+        existingEndDate instanceof Date
+          ? existingEndDate
+          : new Date(existingEndDate);
       this.날짜범위검증한다(startDateObj, endDateObj);
 
-      await this.기간겹침검증한다(newStartDate, newEndDate, id, manager);
+      await this.기간겹침검증한다(newStartDate, existingEndDate, id, manager);
     }
 
     // 기존 업데이트 비즈니스 규칙 검증

@@ -1,18 +1,17 @@
 import {
   CreateEvaluationPeriodMinimalDto,
+  UpdateCriteriaSettingPermissionDto,
   UpdateEvaluationPeriodBasicDto,
   UpdateEvaluationPeriodScheduleDto,
-  UpdateGradeRangesDto,
-  UpdateCriteriaSettingPermissionDto,
-  UpdateSelfEvaluationSettingPermissionDto,
-  UpdateFinalEvaluationSettingPermissionDto,
-  UpdateManualSettingPermissionsDto,
-  UpdateEvaluationPeriodEndDateDto,
+  UpdateEvaluationPeriodStartDateDto,
   UpdateEvaluationSetupDeadlineDto,
+  UpdateFinalEvaluationSettingPermissionDto,
+  UpdateGradeRangesDto,
+  UpdateManualSettingPermissionsDto,
+  UpdatePeerEvaluationDeadlineDto,
   UpdatePerformanceDeadlineDto,
   UpdateSelfEvaluationDeadlineDto,
-  UpdatePeerEvaluationDeadlineDto,
-  UpdateEvaluationPeriodStartDateDto,
+  UpdateSelfEvaluationSettingPermissionDto,
 } from '../interfaces/evaluation-period-creation.interface';
 
 // ==================== 평가 기간 생명주기 커맨드 ====================
@@ -77,17 +76,6 @@ export class UpdateEvaluationPeriodScheduleCommand {
   constructor(
     public readonly periodId: string,
     public readonly scheduleData: UpdateEvaluationPeriodScheduleDto,
-    public readonly updatedBy: string,
-  ) {}
-}
-
-/**
- * 평가 기간 종료일 수정 커맨드
- */
-export class UpdateEvaluationPeriodEndDateCommand {
-  constructor(
-    public readonly periodId: string,
-    public readonly endDateData: UpdateEvaluationPeriodEndDateDto,
     public readonly updatedBy: string,
   ) {}
 }

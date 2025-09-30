@@ -237,21 +237,6 @@ export class UpdateEvaluationPeriodScheduleApiDto {
   startDate?: string;
 
   @ApiPropertyOptional({
-    description: '평가 기간 종료일 (UTC 기준)',
-    example: '2024-07-31',
-  })
-  @IsOptional()
-  // @IsDateString(
-  //   {},
-  //   {
-  //     message:
-  //       '평가 기간 종료일은 올바른 날짜 형식이어야 합니다. (예: 2024-07-31 또는 2024-07-31T23:59:59Z)',
-  //   },
-  // )
-  @OptionalDateToUTC()
-  endDate?: string;
-
-  @ApiPropertyOptional({
     description: '평가 설정 마감일 (UTC 기준)',
     example: '2024-01-15',
   })
@@ -325,18 +310,6 @@ export class UpdateEvaluationPeriodStartDateApiDto {
   startDate: string;
 }
 
-/**
- * 평가 기간 종료일 수정 API DTO
- */
-export class UpdateEvaluationPeriodEndDateApiDto {
-  @ApiProperty({
-    description: '평가 기간 종료일 (UTC 기준)',
-    example: '2024-12-31',
-  })
-  @IsNotEmpty({ message: '평가 기간 종료일은 필수 입력 항목입니다.' })
-  @DateToUTC()
-  endDate: string;
-}
 
 /**
  * 평가설정 단계 마감일 수정 API DTO

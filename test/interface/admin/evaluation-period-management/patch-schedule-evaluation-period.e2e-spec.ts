@@ -382,10 +382,9 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When: 올바른 순서로 전체 일정 수정
+      // When: 올바른 순서로 전체 일정 수정 (endDate는 승인 시에만 설정되므로 제외)
       const updateData = {
         startDate: '2024-01-01',
-        endDate: '2024-12-31',
         evaluationSetupDeadline: '2024-02-28',
         performanceDeadline: '2024-06-30',
         selfEvaluationDeadline: '2024-09-30',
@@ -397,13 +396,21 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         .send(updateData)
         .expect(200);
 
-      // Then: 모든 날짜가 올바른 순서로 설정되어야 함
+      // Then: 모든 날짜가 올바른 순서로 설정되어야 함 (endDate는 기존 값 유지)
       expect(response.body.startDate).toBe('2024-01-01');
-      expect(response.body.endDate).toBe('2024-12-31T00:00:00.000Z');
-      expect(response.body.evaluationSetupDeadline).toBe('2024-02-28T00:00:00.000Z');
-      expect(response.body.performanceDeadline).toBe('2024-06-30T00:00:00.000Z');
-      expect(response.body.selfEvaluationDeadline).toBe('2024-09-30T00:00:00.000Z');
-      expect(response.body.peerEvaluationDeadline).toBe('2024-11-30T00:00:00.000Z');
+      expect(response.body.endDate).toBe('2024-12-31'); // 기존 값 유지
+      expect(response.body.evaluationSetupDeadline).toBe(
+        '2024-02-28T00:00:00.000Z',
+      );
+      expect(response.body.performanceDeadline).toBe(
+        '2024-06-30T00:00:00.000Z',
+      );
+      expect(response.body.selfEvaluationDeadline).toBe(
+        '2024-09-30T00:00:00.000Z',
+      );
+      expect(response.body.peerEvaluationDeadline).toBe(
+        '2024-11-30T00:00:00.000Z',
+      );
     });
   });
 
@@ -525,12 +532,12 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
   // ==================== 비즈니스 로직 검증 ====================
 
   describe('비즈니스 로직 검증', () => {
-    it('시작일이 종료일보다 늦을 때 422 에러가 발생해야 한다', async () => {
-      // Given: 평가 기간 생성
+    it('시작일이 기존 종료일보다 늦을 때 400 에러가 발생해야 한다', async () => {
+      // Given: 평가 기간 생성 (종료일: 2024-06-30)
       const createData = {
         name: '날짜 순서 검증 테스트',
-        startDate: '2024-01-01T00:00:00.000Z',
-        peerEvaluationDeadline: '2024-06-30T00:00:00.000Z',
+        startDate: '2024-01-01',
+        peerEvaluationDeadline: '2024-06-30',
         description: '날짜 순서 검증 테스트',
         maxSelfEvaluationRate: 120,
       };
@@ -542,10 +549,9 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When & Then: 시작일이 종료일보다 늦을 때 400 에러 발생
+      // When & Then: 시작일이 기존 종료일보다 늦을 때 400 에러 발생
       const updateData = {
-        startDate: '2024-12-31',
-        endDate: '2024-01-01',
+        startDate: '2024-12-31', // 기존 종료일(2024-06-30)보다 늦음
       };
 
       await request(app.getHttpServer())
@@ -588,10 +594,9 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
           evaluationSetupDeadline: '2024-12-31',
           performanceDeadline: '2024-06-30',
         },
-        // 전체 순서가 뒤바뀜
+        // 전체 순서가 뒤바뀜 (endDate는 승인 시에만 설정되므로 제외)
         {
           startDate: '2024-01-01',
-          endDate: '2024-12-31',
           evaluationSetupDeadline: '2024-10-01',
           performanceDeadline: '2024-08-01',
           selfEvaluationDeadline: '2024-06-01',

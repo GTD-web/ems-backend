@@ -14,15 +14,14 @@ import {
   UpdateEvaluationPeriodBasicInfoCommand,
   UpdateEvaluationPeriodGradeRangesCommand,
   UpdateEvaluationPeriodScheduleCommand,
+  UpdateEvaluationPeriodStartDateCommand,
+  UpdateEvaluationSetupDeadlineCommand,
   UpdateFinalEvaluationSettingPermissionCommand,
   UpdateManualSettingPermissionsCommand,
-  UpdateSelfEvaluationSettingPermissionCommand,
-  UpdateEvaluationPeriodEndDateCommand,
-  UpdateEvaluationSetupDeadlineCommand,
+  UpdatePeerEvaluationDeadlineCommand,
   UpdatePerformanceDeadlineCommand,
   UpdateSelfEvaluationDeadlineCommand,
-  UpdatePeerEvaluationDeadlineCommand,
-  UpdateEvaluationPeriodStartDateCommand,
+  UpdateSelfEvaluationSettingPermissionCommand,
 } from './evaluation-period.commands';
 
 // ==================== 평가 기간 생명주기 커맨드 핸들러 ====================
@@ -194,45 +193,10 @@ export class UpdateEvaluationPeriodScheduleCommandHandler
     // UpdateEvaluationPeriodDto 형태로 변환
     const updateDto: UpdateEvaluationPeriodDto = {
       startDate: scheduleData.startDate,
-      endDate: scheduleData.endDate,
       evaluationSetupDeadline: scheduleData.evaluationSetupDeadline,
       performanceDeadline: scheduleData.performanceDeadline,
       selfEvaluationDeadline: scheduleData.selfEvaluationDeadline,
       peerEvaluationDeadline: scheduleData.peerEvaluationDeadline,
-    };
-
-    // 도메인 서비스를 통해 평가 기간 업데이트
-    const updatedPeriod = await this.evaluationPeriodService.업데이트한다(
-      periodId,
-      updateDto,
-      updatedBy,
-    );
-
-    return updatedPeriod as EvaluationPeriodDto;
-  }
-}
-
-/**
- * 평가 기간 종료일 수정 커맨드 핸들러
- */
-@Injectable()
-@CommandHandler(UpdateEvaluationPeriodEndDateCommand)
-export class UpdateEvaluationPeriodEndDateCommandHandler
-  implements
-    ICommandHandler<UpdateEvaluationPeriodEndDateCommand, EvaluationPeriodDto>
-{
-  constructor(
-    private readonly evaluationPeriodService: EvaluationPeriodService,
-  ) {}
-
-  async execute(
-    command: UpdateEvaluationPeriodEndDateCommand,
-  ): Promise<EvaluationPeriodDto> {
-    const { periodId, endDateData, updatedBy } = command;
-
-    // UpdateEvaluationPeriodDto 형태로 변환
-    const updateDto: UpdateEvaluationPeriodDto = {
-      endDate: endDateData.endDate,
     };
 
     // 도메인 서비스를 통해 평가 기간 업데이트
