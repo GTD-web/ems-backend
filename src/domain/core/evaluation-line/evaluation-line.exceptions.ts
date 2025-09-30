@@ -92,3 +92,35 @@ export class EvaluationLineModificationNotAllowedException extends EvaluationLin
     this.name = 'EvaluationLineModificationNotAllowedException';
   }
 }
+
+// 평가 라인 비즈니스 규칙 위반 예외
+export class EvaluationLineBusinessRuleViolationException extends EvaluationLineDomainException {
+  constructor(message: string, context?: Record<string, any>) {
+    super(message, 'EVALUATION_LINE_BUSINESS_RULE_VIOLATION', 422, context);
+    this.name = 'EvaluationLineBusinessRuleViolationException';
+  }
+}
+
+// 평가 라인 중복 예외
+export class EvaluationLineDuplicateException extends EvaluationLineDomainException {
+  constructor(message: string, context?: Record<string, any>) {
+    super(message, 'EVALUATION_LINE_DUPLICATE', 409, context);
+    this.name = 'EvaluationLineDuplicateException';
+  }
+}
+
+// 평가 라인 필수 데이터 누락 예외
+export class EvaluationLineRequiredDataMissingException extends EvaluationLineDomainException {
+  constructor(message: string, context?: Record<string, any>) {
+    super(message, 'EVALUATION_LINE_REQUIRED_DATA_MISSING', 400, context);
+    this.name = 'EvaluationLineRequiredDataMissingException';
+  }
+}
+
+// 평가 라인 잘못된 데이터 형식 예외
+export class InvalidEvaluationLineDataFormatException extends EvaluationLineDomainException {
+  constructor(message: string, context?: Record<string, any>) {
+    super(message, 'INVALID_EVALUATION_LINE_DATA_FORMAT', 400, context);
+    this.name = 'InvalidEvaluationLineDataFormatException';
+  }
+}

@@ -81,17 +81,3 @@ export interface EvaluationProjectAssignmentFilter {
   /** 할당일 종료 */
   assignedDateTo?: Date;
 }
-
-/**
- * 평가 프로젝트 할당 통계
- */
-export interface EvaluationProjectAssignmentStatistics {
-  /** 전체 할당 수 */
-  totalAssignments: number;
-  /** 평가기간별 할당 수 */
-  assignmentsByPeriod: Record<string, number>;
-  /** 직원별 할당 수 */
-  assignmentsByEmployee: Record<string, number>;
-  /** 프로젝트별 할당 수 */
-  assignmentsByProject: Record<string, number>;
-}

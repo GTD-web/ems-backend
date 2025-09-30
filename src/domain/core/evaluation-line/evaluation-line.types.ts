@@ -73,19 +73,3 @@ export interface EvaluationLineFilter {
   /** 평가 순서 범위 - 최대 */
   orderTo?: number;
 }
-
-/**
- * 평가 라인 통계
- */
-export interface EvaluationLineStatistics {
-  /** 전체 평가 라인 수 */
-  totalLines: number;
-  /** 평가자 유형별 통계 */
-  evaluatorTypeCounts: Record<EvaluatorType, number>;
-  /** 필수 평가자 수 */
-  requiredEvaluators: number;
-  /** 자동 할당 평가자 수 */
-  autoAssignedEvaluators: number;
-  /** 수동 지정 평가자 수 */
-  manualAssignedEvaluators: number;
-}

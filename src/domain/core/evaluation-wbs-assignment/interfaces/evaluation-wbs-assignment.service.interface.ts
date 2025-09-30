@@ -3,9 +3,6 @@ import type {
   EvaluationWbsAssignmentFilter,
   CreateEvaluationWbsAssignmentData,
   UpdateEvaluationWbsAssignmentData,
-  EvaluationWbsAssignmentStatistics,
-  EmployeeWbsAssignmentSummary,
-  ProjectWbsAssignmentSummary,
 } from '../evaluation-wbs-assignment.types';
 import type { IEvaluationWbsAssignment } from './evaluation-wbs-assignment.interface';
 
@@ -157,28 +154,4 @@ export interface IEvaluationWbsAssignmentService {
     deletedBy: string,
     manager?: EntityManager,
   ): Promise<void>;
-
-  /**
-   * 할당 통계를 조회한다
-   */
-  통계_조회한다(
-    filter?: EvaluationWbsAssignmentFilter,
-    manager?: EntityManager,
-  ): Promise<EvaluationWbsAssignmentStatistics>;
-
-  /**
-   * 직원별 WBS 할당 요약을 조회한다
-   */
-  직원별_할당요약_조회한다(
-    periodId?: string,
-    manager?: EntityManager,
-  ): Promise<EmployeeWbsAssignmentSummary[]>;
-
-  /**
-   * 프로젝트별 WBS 할당 요약을 조회한다
-   */
-  프로젝트별_할당요약_조회한다(
-    periodId?: string,
-    manager?: EntityManager,
-  ): Promise<ProjectWbsAssignmentSummary[]>;
 }

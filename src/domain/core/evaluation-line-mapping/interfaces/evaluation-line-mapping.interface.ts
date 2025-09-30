@@ -1,8 +1,10 @@
 import { IBaseEntity } from '@libs/database/base/base.entity';
 
+import { EvaluationLineMappingDto } from '../evaluation-line-mapping.types';
+
 /**
- * 평가 라인 맵핑 인터페이스
- * 피평가자, 평가자, 프로젝트와 평가 라인 간의 관계를 정의합니다.
+ * 평가 라인 맵핑 인터페이스 (MVP 버전)
+ * 실제 평가 관계(피평가자-평가자)를 평가 라인과 연결하는 인터페이스입니다.
  */
 export interface IEvaluationLineMapping extends IBaseEntity {
   /** 피평가자 ID - 평가를 받는 직원 식별자 */
@@ -14,31 +16,37 @@ export interface IEvaluationLineMapping extends IBaseEntity {
   /** 평가 라인 ID - 실제 평가 라인 엔티티 식별자 */
   evaluationLineId: string;
 
-  // 매칭 확인 메서드
   /**
-   * 특정 피평가자의 평가 라인인지 확인한다
-   * @param employeeId 확인할 피평가자 ID
-   * @returns 피평가자 일치 여부
+   * DTO로 변환
    */
-  해당피평가자의평가라인인가(employeeId: string): boolean;
+  DTO로_변환한다(): EvaluationLineMappingDto;
 
   /**
-   * 특정 평가자의 평가 라인인지 확인한다
-   * @param evaluatorId 확인할 평가자 ID
-   * @returns 평가자 일치 여부
+   * 평가 라인을 변경한다
    */
-  해당평가자의평가라인인가(evaluatorId: string): boolean;
+  평가라인을_변경한다(evaluationLineId: string): void;
 
   /**
-   * 프로젝트에 속하는지 확인한다
-   * @param projectId 확인할 프로젝트 ID
-   * @returns 프로젝트 소속 여부
+   * 프로젝트를 변경한다
    */
-  프로젝트소속인가(projectId: string): boolean;
+  프로젝트를_변경한다(projectId?: string): void;
 
   /**
-   * 프로젝트가 연결되어 있는지 확인한다
-   * @returns 프로젝트 연결 여부
+   * 맵핑이 유효한지 검증한다
    */
-  프로젝트연결됨(): boolean;
+  유효성을_검증한다(): boolean;
+
+  /**
+   * 프로젝트 기반 평가인지 확인한다
+   */
+  프로젝트_기반_평가인가(): boolean;
+
+  /**
+   * 동일한 평가 관계인지 확인한다
+   */
+  동일한_평가관계인가(
+    employeeId: string,
+    evaluatorId: string,
+    projectId?: string,
+  ): boolean;
 }

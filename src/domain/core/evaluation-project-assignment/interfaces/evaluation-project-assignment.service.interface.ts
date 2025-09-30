@@ -3,7 +3,6 @@ import type {
   EvaluationProjectAssignmentFilter,
   CreateEvaluationProjectAssignmentData,
   UpdateEvaluationProjectAssignmentData,
-  EvaluationProjectAssignmentStatistics,
 } from '../evaluation-project-assignment.types';
 import type { IEvaluationProjectAssignment } from './evaluation-project-assignment.interface';
 
@@ -22,7 +21,9 @@ export interface IEvaluationProjectAssignmentService {
   /**
    * 모든 평가 프로젝트 할당을 조회한다
    */
-  전체_조회한다(manager?: EntityManager): Promise<IEvaluationProjectAssignment[]>;
+  전체_조회한다(
+    manager?: EntityManager,
+  ): Promise<IEvaluationProjectAssignment[]>;
 
   /**
    * 평가기간별 할당을 조회한다
@@ -128,12 +129,4 @@ export interface IEvaluationProjectAssignmentService {
     deletedBy: string,
     manager?: EntityManager,
   ): Promise<void>;
-
-  /**
-   * 할당 통계를 조회한다
-   */
-  통계_조회한다(
-    filter?: EvaluationProjectAssignmentFilter,
-    manager?: EntityManager,
-  ): Promise<EvaluationProjectAssignmentStatistics>;
 }

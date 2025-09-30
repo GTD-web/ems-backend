@@ -9,7 +9,6 @@ import {
   CreateEvaluationProjectAssignmentData,
   UpdateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentFilter,
-  EvaluationProjectAssignmentStatistics,
 } from './evaluation-project-assignment.types';
 import { IEvaluationProjectAssignment } from './interfaces/evaluation-project-assignment.interface';
 import { IEvaluationProjectAssignmentService } from './interfaces/evaluation-project-assignment.service.interface';
@@ -444,108 +443,5 @@ export class EvaluationProjectAssignmentService
         `프로젝트 할당 전체 삭제 완료 - 프로젝트 ID: ${projectId}, 삭제자: ${deletedBy}`,
       );
     }, '프로젝트_할당_전체삭제한다');
-  }
-
-  /**
-   * 할당 통계를 조회한다
-   */
-  async 통계_조회한다(
-    filter?: EvaluationProjectAssignmentFilter,
-    manager?: EntityManager,
-  ): Promise<EvaluationProjectAssignmentStatistics> {
-    return this.executeSafeDomainOperation(async () => {
-      const repository = this.transactionManager.getRepository(
-        EvaluationProjectAssignment,
-        this.evaluationProjectAssignmentRepository,
-        manager,
-      );
-
-      let queryBuilder = repository.createQueryBuilder('assignment');
-
-      // 필터 적용
-      if (filter) {
-        if (filter.periodId) {
-          queryBuilder.andWhere('assignment.periodId = :periodId', {
-            periodId: filter.periodId,
-          });
-        }
-
-        if (filter.employeeId) {
-          queryBuilder.andWhere('assignment.employeeId = :employeeId', {
-            employeeId: filter.employeeId,
-          });
-        }
-
-        if (filter.projectId) {
-          queryBuilder.andWhere('assignment.projectId = :projectId', {
-            projectId: filter.projectId,
-          });
-        }
-
-        if (filter.assignedDateFrom) {
-          queryBuilder.andWhere(
-            'assignment.assignedDate >= :assignedDateFrom',
-            {
-              assignedDateFrom: filter.assignedDateFrom,
-            },
-          );
-        }
-
-        if (filter.assignedDateTo) {
-          queryBuilder.andWhere('assignment.assignedDate <= :assignedDateTo', {
-            assignedDateTo: filter.assignedDateTo,
-          });
-        }
-      }
-
-      // 전체 할당 수
-      const totalAssignments = await queryBuilder.getCount();
-
-      // 평가기간별 할당 수
-      const periodStats = await repository
-        .createQueryBuilder('assignment')
-        .select('assignment.periodId', 'periodId')
-        .addSelect('COUNT(*)', 'count')
-        .groupBy('assignment.periodId')
-        .getRawMany();
-
-      const assignmentsByPeriod: Record<string, number> = {};
-      periodStats.forEach((stat) => {
-        assignmentsByPeriod[stat.periodId] = parseInt(stat.count, 10);
-      });
-
-      // 직원별 할당 수
-      const employeeStats = await repository
-        .createQueryBuilder('assignment')
-        .select('assignment.employeeId', 'employeeId')
-        .addSelect('COUNT(*)', 'count')
-        .groupBy('assignment.employeeId')
-        .getRawMany();
-
-      const assignmentsByEmployee: Record<string, number> = {};
-      employeeStats.forEach((stat) => {
-        assignmentsByEmployee[stat.employeeId] = parseInt(stat.count, 10);
-      });
-
-      // 프로젝트별 할당 수
-      const projectStats = await repository
-        .createQueryBuilder('assignment')
-        .select('assignment.projectId', 'projectId')
-        .addSelect('COUNT(*)', 'count')
-        .groupBy('assignment.projectId')
-        .getRawMany();
-
-      const assignmentsByProject: Record<string, number> = {};
-      projectStats.forEach((stat) => {
-        assignmentsByProject[stat.projectId] = parseInt(stat.count, 10);
-      });
-
-      return {
-        totalAssignments,
-        assignmentsByPeriod,
-        assignmentsByEmployee,
-        assignmentsByProject,
-      };
-    }, '통계_조회한다');
   }
 }

@@ -84,3 +84,45 @@ export class EvaluationLineMappingProjectMismatchException extends EvaluationLin
     this.name = 'EvaluationLineMappingProjectMismatchException';
   }
 }
+
+// 평가 라인 맵핑 비즈니스 규칙 위반 예외
+export class EvaluationLineMappingBusinessRuleViolationException extends EvaluationLineMappingDomainException {
+  constructor(message: string, context?: Record<string, any>) {
+    super(
+      message,
+      'EVALUATION_LINE_MAPPING_BUSINESS_RULE_VIOLATION',
+      422,
+      context,
+    );
+    this.name = 'EvaluationLineMappingBusinessRuleViolationException';
+  }
+}
+
+// 평가 라인 맵핑 중복 예외
+export class EvaluationLineMappingDuplicateException extends EvaluationLineMappingDomainException {
+  constructor(message: string, context?: Record<string, any>) {
+    super(message, 'EVALUATION_LINE_MAPPING_DUPLICATE', 409, context);
+    this.name = 'EvaluationLineMappingDuplicateException';
+  }
+}
+
+// 평가 라인 맵핑 필수 데이터 누락 예외
+export class EvaluationLineMappingRequiredDataMissingException extends EvaluationLineMappingDomainException {
+  constructor(message: string, context?: Record<string, any>) {
+    super(
+      message,
+      'EVALUATION_LINE_MAPPING_REQUIRED_DATA_MISSING',
+      400,
+      context,
+    );
+    this.name = 'EvaluationLineMappingRequiredDataMissingException';
+  }
+}
+
+// 평가 라인 맵핑 잘못된 데이터 형식 예외
+export class InvalidEvaluationLineMappingDataFormatException extends EvaluationLineMappingDomainException {
+  constructor(message: string, context?: Record<string, any>) {
+    super(message, 'INVALID_EVALUATION_LINE_MAPPING_DATA_FORMAT', 400, context);
+    this.name = 'InvalidEvaluationLineMappingDataFormatException';
+  }
+}

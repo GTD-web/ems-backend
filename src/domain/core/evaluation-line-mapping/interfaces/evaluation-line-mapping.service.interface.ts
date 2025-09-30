@@ -7,21 +7,26 @@ import type {
 } from '../evaluation-line-mapping.types';
 
 /**
- * 평가 라인 맵핑 서비스 인터페이스
+ * 평가 라인 맵핑 서비스 인터페이스 (MVP 버전)
  */
 export interface IEvaluationLineMappingService {
   /**
    * ID로 평가 라인 맵핑을 조회한다
    */
-  ID로조회한다(
+  ID로_조회한다(
     id: string,
     manager?: EntityManager,
   ): Promise<IEvaluationLineMapping | null>;
 
   /**
-   * 피평가자별 평가 라인 맵핑을 조회한다
+   * 모든 평가 라인 맵핑을 조회한다
    */
-  피평가자별조회한다(
+  전체_조회한다(manager?: EntityManager): Promise<IEvaluationLineMapping[]>;
+
+  /**
+   * 직원별 평가 라인 맵핑을 조회한다
+   */
+  직원별_조회한다(
     employeeId: string,
     manager?: EntityManager,
   ): Promise<IEvaluationLineMapping[]>;
@@ -29,7 +34,7 @@ export interface IEvaluationLineMappingService {
   /**
    * 평가자별 평가 라인 맵핑을 조회한다
    */
-  평가자별조회한다(
+  평가자별_조회한다(
     evaluatorId: string,
     manager?: EntityManager,
   ): Promise<IEvaluationLineMapping[]>;
@@ -37,7 +42,7 @@ export interface IEvaluationLineMappingService {
   /**
    * 프로젝트별 평가 라인 맵핑을 조회한다
    */
-  프로젝트별조회한다(
+  프로젝트별_조회한다(
     projectId: string,
     manager?: EntityManager,
   ): Promise<IEvaluationLineMapping[]>;
@@ -45,7 +50,7 @@ export interface IEvaluationLineMappingService {
   /**
    * 필터 조건으로 평가 라인 맵핑을 조회한다
    */
-  필터조회한다(
+  필터_조회한다(
     filter: EvaluationLineMappingFilter,
     manager?: EntityManager,
   ): Promise<IEvaluationLineMapping[]>;
@@ -55,7 +60,6 @@ export interface IEvaluationLineMappingService {
    */
   생성한다(
     createData: CreateEvaluationLineMappingData,
-    createdBy: string,
     manager?: EntityManager,
   ): Promise<IEvaluationLineMapping>;
 
@@ -79,41 +83,30 @@ export interface IEvaluationLineMappingService {
   ): Promise<void>;
 
   /**
-   * 중복 평가 라인 맵핑을 확인한다
+   * 특정 평가 관계가 존재하는지 확인한다
    */
-  중복맵핑확인한다(
+  평가관계_존재_확인한다(
     employeeId: string,
     evaluatorId: string,
     projectId?: string,
-    excludeId?: string,
     manager?: EntityManager,
   ): Promise<boolean>;
 
   /**
-   * 자기평가 맵핑을 확인한다
+   * 직원의 모든 맵핑을 삭제한다
    */
-  자기평가맵핑확인한다(
+  직원_맵핑_전체삭제한다(
     employeeId: string,
-    evaluatorId: string,
+    deletedBy: string,
     manager?: EntityManager,
-  ): Promise<boolean>;
+  ): Promise<void>;
 
   /**
-   * 프로젝트를 연결한다
+   * 프로젝트의 모든 맵핑을 삭제한다
    */
-  프로젝트연결한다(
-    id: string,
+  프로젝트_맵핑_전체삭제한다(
     projectId: string,
-    connectedBy: string,
+    deletedBy: string,
     manager?: EntityManager,
-  ): Promise<IEvaluationLineMapping>;
-
-  /**
-   * 프로젝트 연결을 해제한다
-   */
-  프로젝트연결해제한다(
-    id: string,
-    disconnectedBy: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationLineMapping>;
+  ): Promise<void>;
 }

@@ -1,0 +1,432 @@
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { EntityManager, Repository } from 'typeorm';
+import { EvaluationLineMappingValidationService } from './evaluation-line-mapping-validation.service';
+import { EvaluationLineMapping } from './evaluation-line-mapping.entity';
+import { EvaluationLineMappingNotFoundException } from './evaluation-line-mapping.exceptions';
+import {
+  CreateEvaluationLineMappingData,
+  EvaluationLineMappingFilter,
+  UpdateEvaluationLineMappingData,
+} from './evaluation-line-mapping.types';
+import { IEvaluationLineMapping } from './interfaces/evaluation-line-mapping.interface';
+import { IEvaluationLineMappingService } from './interfaces/evaluation-line-mapping.service.interface';
+
+/**
+ * 평가 라인 맵핑 서비스 (MVP 버전)
+ * 평가 라인 맵핑의 CRUD 및 비즈니스 로직을 처리합니다.
+ */
+@Injectable()
+export class EvaluationLineMappingService
+  implements IEvaluationLineMappingService
+{
+  private readonly logger = new Logger(EvaluationLineMappingService.name);
+
+  constructor(
+    @InjectRepository(EvaluationLineMapping)
+    private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
+    private readonly transactionManager: TransactionManagerService,
+    private readonly validationService: EvaluationLineMappingValidationService,
+  ) {}
+
+  /**
+   * 안전한 도메인 작업을 실행한다
+   */
+  private async executeSafeDomainOperation<T>(
+    operation: () => Promise<T>,
+    context: string,
+  ): Promise<T> {
+    return this.transactionManager.executeSafeOperation(operation, context);
+  }
+
+  /**
+   * ID로 평가 라인 맵핑을 조회한다
+   */
+  async ID로_조회한다(
+    id: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping | null> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mapping = await repository.findOne({
+        where: { id },
+      });
+
+      this.logger.debug(`평가 라인 맵핑 조회 완료 - ID: ${id}`);
+      return mapping;
+    }, 'ID로_조회한다');
+  }
+
+  /**
+   * 모든 평가 라인 맵핑을 조회한다
+   */
+  async 전체_조회한다(
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find({
+        order: { createdAt: 'DESC' },
+      });
+
+      this.logger.debug(
+        `전체 평가 라인 맵핑 조회 완료 - 개수: ${mappings.length}`,
+      );
+      return mappings;
+    }, '전체_조회한다');
+  }
+
+  /**
+   * 직원별 평가 라인 맵핑을 조회한다
+   */
+  async 직원별_조회한다(
+    employeeId: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find({
+        where: { employeeId },
+        order: { createdAt: 'DESC' },
+      });
+
+      this.logger.debug(
+        `직원별 평가 라인 맵핑 조회 완료 - 직원 ID: ${employeeId}, 개수: ${mappings.length}`,
+      );
+      return mappings;
+    }, '직원별_조회한다');
+  }
+
+  /**
+   * 평가자별 평가 라인 맵핑을 조회한다
+   */
+  async 평가자별_조회한다(
+    evaluatorId: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find({
+        where: { evaluatorId },
+        order: { createdAt: 'DESC' },
+      });
+
+      this.logger.debug(
+        `평가자별 평가 라인 맵핑 조회 완료 - 평가자 ID: ${evaluatorId}, 개수: ${mappings.length}`,
+      );
+      return mappings;
+    }, '평가자별_조회한다');
+  }
+
+  /**
+   * 프로젝트별 평가 라인 맵핑을 조회한다
+   */
+  async 프로젝트별_조회한다(
+    projectId: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find({
+        where: { projectId },
+        order: { createdAt: 'DESC' },
+      });
+
+      this.logger.debug(
+        `프로젝트별 평가 라인 맵핑 조회 완료 - 프로젝트 ID: ${projectId}, 개수: ${mappings.length}`,
+      );
+      return mappings;
+    }, '프로젝트별_조회한다');
+  }
+
+  /**
+   * 필터 조건으로 평가 라인 맵핑을 조회한다
+   */
+  async 필터_조회한다(
+    filter: EvaluationLineMappingFilter,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping[]> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      let queryBuilder = repository.createQueryBuilder('mapping');
+
+      // 필터 적용
+      if (filter.employeeId) {
+        queryBuilder.andWhere('mapping.employeeId = :employeeId', {
+          employeeId: filter.employeeId,
+        });
+      }
+
+      if (filter.evaluatorId) {
+        queryBuilder.andWhere('mapping.evaluatorId = :evaluatorId', {
+          evaluatorId: filter.evaluatorId,
+        });
+      }
+
+      if (filter.projectId) {
+        queryBuilder.andWhere('mapping.projectId = :projectId', {
+          projectId: filter.projectId,
+        });
+      }
+
+      if (filter.evaluationLineId) {
+        queryBuilder.andWhere('mapping.evaluationLineId = :evaluationLineId', {
+          evaluationLineId: filter.evaluationLineId,
+        });
+      }
+
+      if (filter.withProject !== undefined) {
+        if (filter.withProject) {
+          queryBuilder.andWhere('mapping.projectId IS NOT NULL');
+        } else {
+          queryBuilder.andWhere('mapping.projectId IS NULL');
+        }
+      }
+
+      queryBuilder.orderBy('mapping.createdAt', 'DESC');
+
+      const mappings = await queryBuilder.getMany();
+
+      this.logger.debug(
+        `필터 조건 평가 라인 맵핑 조회 완료 - 개수: ${mappings.length}`,
+      );
+      return mappings;
+    }, '필터_조회한다');
+  }
+
+  /**
+   * 평가 라인 맵핑을 생성한다
+   */
+  async 생성한다(
+    createData: CreateEvaluationLineMappingData,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping> {
+    return this.executeSafeDomainOperation(async () => {
+      // 유효성 검증
+      await this.validationService.생성데이터검증한다(createData, manager);
+
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mapping = repository.create({
+        employeeId: createData.employeeId,
+        evaluatorId: createData.evaluatorId,
+        projectId: createData.projectId,
+        evaluationLineId: createData.evaluationLineId,
+      });
+
+      const savedMapping = await repository.save(mapping);
+
+      this.logger.log(
+        `평가 라인 맵핑 생성 완료 - ID: ${savedMapping.id}, 피평가자: ${savedMapping.employeeId}, 평가자: ${savedMapping.evaluatorId}`,
+      );
+
+      return savedMapping;
+    }, '생성한다');
+  }
+
+  /**
+   * 평가 라인 맵핑을 업데이트한다
+   */
+  async 업데이트한다(
+    id: string,
+    updateData: UpdateEvaluationLineMappingData,
+    updatedBy: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationLineMapping> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mapping = await repository.findOne({ where: { id } });
+      if (!mapping) {
+        throw new EvaluationLineMappingNotFoundException(id);
+      }
+
+      // 유효성 검증
+      await this.validationService.업데이트데이터검증한다(
+        id,
+        updateData,
+        manager,
+      );
+
+      // 업데이트 적용
+      if (updateData.evaluationLineId !== undefined) {
+        mapping.평가라인을_변경한다(updateData.evaluationLineId);
+      }
+
+      if (updateData.projectId !== undefined) {
+        mapping.프로젝트를_변경한다(updateData.projectId);
+      }
+
+      const updatedMapping = await repository.save(mapping);
+
+      this.logger.log(
+        `평가 라인 맵핑 업데이트 완료 - ID: ${id}, 수정자: ${updatedBy}`,
+      );
+
+      return updatedMapping;
+    }, '업데이트한다');
+  }
+
+  /**
+   * 평가 라인 맵핑을 삭제한다
+   */
+  async 삭제한다(
+    id: string,
+    deletedBy: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mapping = await repository.findOne({ where: { id } });
+      if (!mapping) {
+        throw new EvaluationLineMappingNotFoundException(id);
+      }
+
+      mapping.deletedAt = new Date();
+      mapping.수정자를_설정한다(deletedBy);
+      await repository.save(mapping);
+
+      this.logger.log(
+        `평가 라인 맵핑 삭제 완료 - ID: ${id}, 삭제자: ${deletedBy}`,
+      );
+    }, '삭제한다');
+  }
+
+  /**
+   * 특정 평가 관계가 존재하는지 확인한다
+   */
+  async 평가관계_존재_확인한다(
+    employeeId: string,
+    evaluatorId: string,
+    projectId?: string,
+    manager?: EntityManager,
+  ): Promise<boolean> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      let queryBuilder = repository
+        .createQueryBuilder('mapping')
+        .where('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId });
+
+      if (projectId) {
+        queryBuilder.andWhere('mapping.projectId = :projectId', { projectId });
+      } else {
+        queryBuilder.andWhere('mapping.projectId IS NULL');
+      }
+
+      const count = await queryBuilder.getCount();
+      return count > 0;
+    }, '평가관계_존재_확인한다');
+  }
+
+  /**
+   * 직원의 모든 맵핑을 삭제한다
+   */
+  async 직원_맵핑_전체삭제한다(
+    employeeId: string,
+    deletedBy: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find({
+        where: [{ employeeId }, { evaluatorId: employeeId }],
+      });
+
+      for (const mapping of mappings) {
+        mapping.deletedAt = new Date();
+        mapping.수정자를_설정한다(deletedBy);
+        await repository.save(mapping);
+      }
+
+      this.logger.log(
+        `직원 맵핑 전체 삭제 완료 - 직원 ID: ${employeeId}, 삭제자: ${deletedBy}, 삭제된 맵핑 수: ${mappings.length}`,
+      );
+    }, '직원_맵핑_전체삭제한다');
+  }
+
+  /**
+   * 프로젝트의 모든 맵핑을 삭제한다
+   */
+  async 프로젝트_맵핑_전체삭제한다(
+    projectId: string,
+    deletedBy: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find({
+        where: { projectId },
+      });
+
+      for (const mapping of mappings) {
+        mapping.deletedAt = new Date();
+        mapping.수정자를_설정한다(deletedBy);
+        await repository.save(mapping);
+      }
+
+      this.logger.log(
+        `프로젝트 맵핑 전체 삭제 완료 - 프로젝트 ID: ${projectId}, 삭제자: ${deletedBy}, 삭제된 맵핑 수: ${mappings.length}`,
+      );
+    }, '프로젝트_맵핑_전체삭제한다');
+  }
+}
