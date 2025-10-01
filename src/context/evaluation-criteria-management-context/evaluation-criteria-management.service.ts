@@ -43,7 +43,10 @@ import {
   GetUpdaterEvaluationLineMappingsQuery,
 } from './handlers/evaluation-line';
 
-import { ProjectInfoDto } from '@/interface/admin/evaluation-criteria/dto/project-assignment.dto';
+import {
+  ProjectInfoDto,
+  EmployeeInfoDto,
+} from '@/interface/admin/evaluation-criteria/dto/project-assignment.dto';
 import type { EvaluationLineMappingDto } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type {
   EvaluationLineDto,
@@ -122,7 +125,7 @@ export class EvaluationCriteriaManagementService
   async 특정_평가기간에_프로젝트에_할당된_직원을_조회한다(
     projectId: string,
     periodId: string,
-  ): Promise<EvaluationProjectAssignmentDto[]> {
+  ): Promise<{ employees: EmployeeInfoDto[] }> {
     const query = new GetProjectAssignedEmployeesQuery(projectId, periodId);
     return await this.queryBus.execute(query);
   }

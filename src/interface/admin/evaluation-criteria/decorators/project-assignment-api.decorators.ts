@@ -13,6 +13,7 @@ import {
   ProjectAssignmentDetailResponseDto,
   ProjectAssignmentListResponseDto,
   EmployeeProjectsResponseDto,
+  ProjectEmployeesResponseDto,
 } from '../dto/project-assignment.dto';
 
 // ==================== GET 엔드포인트 데코레이터 ====================
@@ -142,7 +143,7 @@ export function GetProjectAssignedEmployees() {
     ApiResponse({
       status: 200,
       description: '프로젝트에 할당된 직원 목록이 성공적으로 조회되었습니다.',
-      type: [ProjectAssignmentResponseDto],
+      type: ProjectEmployeesResponseDto,
     }),
   );
 }

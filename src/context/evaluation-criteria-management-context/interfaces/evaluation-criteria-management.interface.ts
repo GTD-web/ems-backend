@@ -1,4 +1,3 @@
-import { ProjectInfoDto } from '@/interface/admin/evaluation-criteria/dto/project-assignment.dto';
 import type { EvaluationLineMappingDto } from '../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type {
   EvaluationLineDto,
@@ -9,6 +8,10 @@ import type {
   EvaluationProjectAssignmentDto,
   EvaluationProjectAssignmentFilter,
 } from '../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
+import type {
+  ProjectInfoDto,
+  EmployeeInfoDto,
+} from '../../../interface/admin/evaluation-criteria/dto/project-assignment.dto';
 import type {
   CreateEvaluationWbsAssignmentData,
   EvaluationWbsAssignmentDto,
@@ -71,7 +74,7 @@ export interface IEvaluationCriteriaManagementService {
   특정_평가기간에_프로젝트에_할당된_직원을_조회한다(
     projectId: string,
     periodId: string,
-  ): Promise<EvaluationProjectAssignmentDto[]>;
+  ): Promise<{ employees: EmployeeInfoDto[] }>;
 
   /**
    * 특정 평가기간에 프로젝트가 할당되지 않은 직원 목록을 조회한다

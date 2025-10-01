@@ -445,6 +445,17 @@ export class EmployeeProjectsResponseDto {
 }
 
 /**
+ * 프로젝트 직원 목록 응답 DTO (직원 정보만 포함)
+ */
+export class ProjectEmployeesResponseDto {
+  @ApiProperty({
+    description: '할당된 직원 목록',
+    type: [EmployeeInfoDto],
+  })
+  employees: EmployeeInfoDto[];
+}
+
+/**
  * 프로젝트 할당 목록 응답 DTO
  */
 export class ProjectAssignmentListResponseDto {

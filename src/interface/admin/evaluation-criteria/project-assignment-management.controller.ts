@@ -16,7 +16,8 @@ import {
   BulkCreateProjectAssignmentDto,
   CreateProjectAssignmentDto,
   EmployeeProjectsResponseDto,
-  ProjectAssignmentFilterDto
+  ProjectAssignmentFilterDto,
+  ProjectEmployeesResponseDto,
 } from './dto/project-assignment.dto';
 
 /**
@@ -117,7 +118,7 @@ export class ProjectAssignmentManagementController {
   async getProjectAssignedEmployees(
     @Param('projectId') projectId: string,
     @Param('periodId') periodId: string,
-  ): Promise<any[]> {
+  ): Promise<ProjectEmployeesResponseDto> {
     return await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트에_할당된_직원을_조회한다(
       projectId,
       periodId,
