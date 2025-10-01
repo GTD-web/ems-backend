@@ -18,6 +18,12 @@ import type {
   EvaluationWbsAssignmentFilter,
   UpdateEvaluationWbsAssignmentData,
 } from '../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+import type {
+  CreateWbsEvaluationCriteriaData,
+  UpdateWbsEvaluationCriteriaData,
+  WbsEvaluationCriteriaDto,
+  WbsEvaluationCriteriaFilter,
+} from '../../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
 import type { ProjectAssignmentListResult } from '../handlers/project-assignment/queries/get-project-assignment-list.handler';
 import type { WbsAssignmentListResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 
@@ -254,6 +260,61 @@ export interface IEvaluationCriteriaManagementService {
     createdLines: number;
     createdMappings: number;
   }>;
+
+  // ============================================================================
+  // WBS 평가기준 관리
+  // ============================================================================
+
+  /**
+   * WBS 평가기준을 생성한다
+   */
+  WBS_평가기준을_생성한다(
+    data: CreateWbsEvaluationCriteriaData,
+    createdBy: string,
+  ): Promise<WbsEvaluationCriteriaDto>;
+
+  /**
+   * WBS 평가기준을 수정한다
+   */
+  WBS_평가기준을_수정한다(
+    id: string,
+    data: UpdateWbsEvaluationCriteriaData,
+    updatedBy: string,
+  ): Promise<WbsEvaluationCriteriaDto>;
+
+  /**
+   * WBS 평가기준을 삭제한다
+   */
+  WBS_평가기준을_삭제한다(id: string, deletedBy: string): Promise<void>;
+
+  /**
+   * WBS 항목의 모든 평가기준을 삭제한다
+   */
+  WBS_항목의_평가기준을_전체삭제한다(
+    wbsItemId: string,
+    deletedBy: string,
+  ): Promise<void>;
+
+  /**
+   * WBS 평가기준 목록을 조회한다
+   */
+  WBS_평가기준_목록을_조회한다(
+    filter: WbsEvaluationCriteriaFilter,
+  ): Promise<WbsEvaluationCriteriaDto[]>;
+
+  /**
+   * WBS 평가기준 상세를 조회한다
+   */
+  WBS_평가기준_상세를_조회한다(
+    id: string,
+  ): Promise<WbsEvaluationCriteriaDto | null>;
+
+  /**
+   * 특정 WBS 항목의 평가기준을 조회한다
+   */
+  특정_WBS항목의_평가기준을_조회한다(
+    wbsItemId: string,
+  ): Promise<WbsEvaluationCriteriaDto[]>;
 
   // ============================================================================
   // 통합 관리 기능 (MVP)

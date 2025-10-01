@@ -1,5 +1,7 @@
 import { IQuery, IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { EvaluationLineMappingService } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { EvaluationLineMapping } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import type { EvaluationLineMappingDto } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 
 /**
@@ -39,15 +41,17 @@ export class GetEvaluatorEmployeesHandler
   implements IQueryHandler<GetEvaluatorEmployeesQuery, EvaluatorEmployeesResult>
 {
   constructor(
-    private readonly evaluationLineMappingService: EvaluationLineMappingService,
+    @InjectRepository(EvaluationLineMapping)
+    private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
   ) {}
 
   async execute(
     query: GetEvaluatorEmployeesQuery,
   ): Promise<EvaluatorEmployeesResult> {
-    const mappings = await this.evaluationLineMappingService.평가자별_조회한다(
-      query.evaluatorId,
-    );
+    const mappings = await this.evaluationLineMappingRepository.find({
+      where: { evaluatorId: query.evaluatorId },
+      order: { createdAt: 'DESC' },
+    });
 
     // 피평가자별로 그룹화
     const employeeMap = new Map<string, any>();

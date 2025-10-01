@@ -1,8 +1,10 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { EvaluationProjectAssignmentService } from '../../../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.service';
-import { EvaluationWbsAssignmentService } from '../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
-import { EvaluationLineMappingService } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { EvaluationProjectAssignment } from '../../../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
+import { EvaluationWbsAssignment } from '../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationLineMapping } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import type { EvaluationProjectAssignmentDto } from '../../../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 import type { EvaluationWbsAssignmentDto } from '../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 import type { EvaluationLineMappingDto } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
@@ -42,9 +44,12 @@ export class GetEmployeeEvaluationSettingsHandler
   );
 
   constructor(
-    private readonly evaluationProjectAssignmentService: EvaluationProjectAssignmentService,
-    private readonly evaluationWbsAssignmentService: EvaluationWbsAssignmentService,
-    private readonly evaluationLineMappingService: EvaluationLineMappingService,
+    @InjectRepository(EvaluationProjectAssignment)
+    private readonly evaluationProjectAssignmentRepository: Repository<EvaluationProjectAssignment>,
+    @InjectRepository(EvaluationWbsAssignment)
+    private readonly evaluationWbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+    @InjectRepository(EvaluationLineMapping)
+    private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
   ) {}
 
   async execute(
@@ -59,15 +64,18 @@ export class GetEmployeeEvaluationSettingsHandler
     try {
       const [projectAssignments, wbsAssignments, evaluationLineMappings] =
         await Promise.all([
-          this.evaluationProjectAssignmentService.필터_조회한다({
-            employeeId,
-            periodId,
+          this.evaluationProjectAssignmentRepository.find({
+            where: { employeeId, periodId },
+            order: { createdAt: 'DESC' },
           }),
-          this.evaluationWbsAssignmentService.필터_조회한다({
-            employeeId,
-            periodId,
+          this.evaluationWbsAssignmentRepository.find({
+            where: { employeeId, periodId },
+            order: { createdAt: 'DESC' },
           }),
-          this.evaluationLineMappingService.직원별_조회한다(employeeId),
+          this.evaluationLineMappingRepository.find({
+            where: { employeeId },
+            order: { createdAt: 'DESC' },
+          }),
         ]);
 
       const result = {

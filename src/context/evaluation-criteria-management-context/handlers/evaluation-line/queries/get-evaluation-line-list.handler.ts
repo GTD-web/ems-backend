@@ -1,6 +1,8 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { EvaluationLineService } from '../../../../../domain/core/evaluation-line/evaluation-line.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { EvaluationLine } from '../../../../../domain/core/evaluation-line/evaluation-line.entity';
 import type {
   EvaluationLineDto,
   EvaluationLineFilter,
@@ -22,7 +24,10 @@ export class GetEvaluationLineListHandler
 {
   private readonly logger = new Logger(GetEvaluationLineListHandler.name);
 
-  constructor(private readonly evaluationLineService: EvaluationLineService) {}
+  constructor(
+    @InjectRepository(EvaluationLine)
+    private readonly evaluationLineRepository: Repository<EvaluationLine>,
+  ) {}
 
   async execute(
     query: GetEvaluationLineListQuery,
@@ -34,8 +39,46 @@ export class GetEvaluationLineListHandler
     );
 
     try {
-      const evaluationLines =
-        await this.evaluationLineService.필터_조회한다(filter);
+      let queryBuilder =
+        this.evaluationLineRepository.createQueryBuilder('evaluationLine');
+
+      // 필터 적용
+      if (filter.evaluatorType) {
+        queryBuilder.andWhere('evaluationLine.evaluatorType = :evaluatorType', {
+          evaluatorType: filter.evaluatorType,
+        });
+      }
+
+      if (filter.requiredOnly) {
+        queryBuilder.andWhere('evaluationLine.isRequired = :isRequired', {
+          isRequired: true,
+        });
+      }
+
+      if (filter.autoAssignedOnly) {
+        queryBuilder.andWhere(
+          'evaluationLine.isAutoAssigned = :isAutoAssigned',
+          {
+            isAutoAssigned: true,
+          },
+        );
+      }
+
+      if (filter.orderFrom !== undefined) {
+        queryBuilder.andWhere('evaluationLine.order >= :orderFrom', {
+          orderFrom: filter.orderFrom,
+        });
+      }
+
+      if (filter.orderTo !== undefined) {
+        queryBuilder.andWhere('evaluationLine.order <= :orderTo', {
+          orderTo: filter.orderTo,
+        });
+      }
+
+      queryBuilder.orderBy('evaluationLine.order', 'ASC');
+
+      const evaluationLines = await queryBuilder.getMany();
       const result = evaluationLines.map((line) => line.DTO로_변환한다());
 
       this.logger.debug(

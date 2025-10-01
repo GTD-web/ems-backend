@@ -24,7 +24,7 @@ import {
  *
  * 평가라인 구성 및 조회 기능을 제공합니다.
  */
-@ApiTags('B-3. 관리자 - 평가 설정 - 평가라인')
+@ApiTags('B-4. 관리자 - 평가 설정 - 평가라인')
 @Controller('admin/evaluation-criteria/evaluation-lines')
 export class EvaluationLineManagementController {
   constructor(

@@ -1,6 +1,8 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { EvaluationLineMappingService } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { EvaluationLineMapping } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import type { EvaluationLineMappingDto } from '../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 
 /**
@@ -26,7 +28,8 @@ export class GetEmployeeEvaluationLineMappingsHandler
   );
 
   constructor(
-    private readonly evaluationLineMappingService: EvaluationLineMappingService,
+    @InjectRepository(EvaluationLineMapping)
+    private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
   ) {}
 
   async execute(
@@ -39,8 +42,10 @@ export class GetEmployeeEvaluationLineMappingsHandler
     );
 
     try {
-      const mappings =
-        await this.evaluationLineMappingService.직원별_조회한다(employeeId);
+      const mappings = await this.evaluationLineMappingRepository.find({
+        where: { employeeId },
+        order: { createdAt: 'DESC' },
+      });
       const result = mappings.map((mapping) => mapping.DTO로_변환한다());
 
       this.logger.debug(

@@ -3,11 +3,14 @@ import { Employee } from '@domain/common/employee/employee.entity';
 import { Project } from '@domain/common/project/project.entity';
 import { ProjectModule } from '@domain/common/project/project.module';
 import { EvaluationLineMappingModule } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { EvaluationLineModule } from '@domain/core/evaluation-line/evaluation-line.module';
+import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationProjectAssignmentModule } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.module';
 import { EvaluationWbsAssignmentModule } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
+import { WbsEvaluationCriteriaModule } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.module';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
@@ -45,6 +48,7 @@ import {
 // Evaluation Line Handlers
 import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import {
   ConfigureEmployeeWbsEvaluationLineHandler,
   GetEmployeeEvaluationLineMappingsHandler,
@@ -53,6 +57,18 @@ import {
   GetEvaluatorEmployeesHandler,
   GetUpdaterEvaluationLineMappingsHandler,
 } from './handlers/evaluation-line';
+
+// WBS Evaluation Criteria Handlers
+import {
+  CreateWbsEvaluationCriteriaHandler,
+  UpdateWbsEvaluationCriteriaHandler,
+  DeleteWbsEvaluationCriteriaHandler,
+  DeleteWbsItemEvaluationCriteriaHandler,
+  GetWbsEvaluationCriteriaListHandler,
+  GetWbsEvaluationCriteriaDetailHandler,
+  GetWbsItemEvaluationCriteriaHandler,
+} from './handlers/wbs-evaluation-criteria';
+
 import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
 
 /**
@@ -76,11 +92,15 @@ import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
       Project,
       EvaluationPeriod,
       EvaluationWbsAssignment,
+      WbsEvaluationCriteria,
+      EvaluationLine,
+      EvaluationLineMapping,
     ]),
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,
     EvaluationLineModule,
     EvaluationLineMappingModule,
+    WbsEvaluationCriteriaModule,
     ProjectModule,
     EvaluationPeriodModule,
     WbsItemModule,
@@ -119,6 +139,15 @@ import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
     GetEvaluatorEmployeesHandler,
     GetUpdaterEvaluationLineMappingsHandler,
     GetEmployeeEvaluationSettingsHandler,
+    // WBS Evaluation Criteria Command Handlers
+    CreateWbsEvaluationCriteriaHandler,
+    UpdateWbsEvaluationCriteriaHandler,
+    DeleteWbsEvaluationCriteriaHandler,
+    DeleteWbsItemEvaluationCriteriaHandler,
+    // WBS Evaluation Criteria Query Handlers
+    GetWbsEvaluationCriteriaListHandler,
+    GetWbsEvaluationCriteriaDetailHandler,
+    GetWbsItemEvaluationCriteriaHandler,
   ],
   exports: [EvaluationCriteriaManagementService],
 })

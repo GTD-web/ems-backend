@@ -31,10 +31,9 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
 
-    // 테스트 데이터 생성
-    const { departments, employees } =
-      await testContextService.부서와_직원을_생성한다();
-    const { projects } = await testContextService.프로젝트와_WBS를_생성한다(3);
+    // 완전한 테스트 환경 생성 (부서, 직원, 프로젝트 모두 포함)
+    const { departments, employees, projects } =
+      await testContextService.완전한_테스트환경을_생성한다();
 
     testData = {
       departments,
@@ -75,16 +74,19 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
         employeeId: testData.employees[0].id,
         projectId: testData.projects[0].id,
         periodId: evaluationPeriodId,
+        assignedBy: testData.employees[0].id,
       },
       {
         employeeId: testData.employees[1].id,
         projectId: testData.projects[1].id,
         periodId: evaluationPeriodId,
+        assignedBy: testData.employees[1].id,
       },
       {
         employeeId: testData.employees[0].id, // 동일한 직원, 다른 프로젝트
         projectId: testData.projects[2].id,
         periodId: evaluationPeriodId,
+        assignedBy: testData.employees[0].id,
       },
     ];
 
