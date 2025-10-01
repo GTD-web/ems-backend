@@ -7,34 +7,40 @@ export enum DownwardEvaluationType {
 }
 
 /**
- * 하향 평가 생성 DTO
- * 실제 하향평가 데이터만 포함합니다.
+ * 하향평가 생성 데이터
  */
-export interface CreateDownwardEvaluationDto {
+export interface CreateDownwardEvaluationData {
   /** 하향평가 내용 */
   downwardEvaluationContent?: string;
   /** 하향평가 점수 */
   downwardEvaluationScore?: number;
   /** 평가 유형 */
   evaluationType: DownwardEvaluationType;
+  /** 평가일 */
+  evaluationDate?: Date;
+  /** 평가 완료 여부 */
+  isCompleted?: boolean;
+  /** 생성자 ID */
+  createdBy: string;
 }
 
 /**
- * 하향 평가 업데이트 DTO
+ * 하향평가 수정 데이터
  */
-export interface UpdateDownwardEvaluationDto {
+export interface UpdateDownwardEvaluationData {
   /** 하향평가 내용 */
   downwardEvaluationContent?: string;
   /** 하향평가 점수 */
   downwardEvaluationScore?: number;
+  /** 평가 완료 여부 */
+  isCompleted?: boolean;
 }
 
 /**
- * 하향 평가 DTO
- * 실제 하향평가 데이터만 포함합니다.
+ * 하향평가 DTO
  */
 export interface DownwardEvaluationDto {
-  /** 하향 평가 고유 식별자 */
+  /** 하향평가 고유 식별자 */
   id: string;
   /** 하향평가 내용 */
   downwardEvaluationContent?: string;
@@ -44,21 +50,34 @@ export interface DownwardEvaluationDto {
   evaluationDate: Date;
   /** 평가 유형 */
   evaluationType: DownwardEvaluationType;
+  /** 평가 완료 여부 */
+  isCompleted: boolean;
+  /** 평가 완료일 */
+  completedAt?: Date;
   /** 생성일시 */
   createdAt: Date;
   /** 수정일시 */
   updatedAt: Date;
+  /** 삭제일시 */
+  deletedAt?: Date;
+  /** 생성자 ID */
+  createdBy?: string;
+  /** 수정자 ID */
+  updatedBy?: string;
+  /** 버전 */
+  version: number;
 }
 
 /**
- * 하향 평가 필터
- * 실제 하향평가 데이터 기준 필터입니다.
+ * 하향평가 필터
  */
 export interface DownwardEvaluationFilter {
   /** 평가 유형 */
   evaluationType?: DownwardEvaluationType;
   /** 완료된 평가만 조회 */
   completedOnly?: boolean;
+  /** 미완료 평가만 조회 */
+  uncompletedOnly?: boolean;
   /** 점수 범위 필터 - 최소 */
   scoreFrom?: number;
   /** 점수 범위 필터 - 최대 */
@@ -67,6 +86,14 @@ export interface DownwardEvaluationFilter {
   evaluationDateFrom?: Date;
   /** 평가일 범위 - 종료 */
   evaluationDateTo?: Date;
+  /** 페이지 번호 (1부터 시작) */
+  page?: number;
+  /** 페이지 크기 */
+  limit?: number;
+  /** 정렬 기준 */
+  orderBy?: string;
+  /** 정렬 방향 */
+  orderDirection?: 'ASC' | 'DESC';
 }
 
 /**

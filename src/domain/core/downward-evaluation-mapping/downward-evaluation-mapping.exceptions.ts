@@ -88,3 +88,29 @@ export class DownwardEvaluationMappingPeriodExpiredException extends DownwardEva
     this.name = 'DownwardEvaluationMappingPeriodExpiredException';
   }
 }
+
+// 하향평가 매핑 유효성 검사 예외
+export class DownwardEvaluationMappingValidationException extends DownwardEvaluationMappingDomainException {
+  constructor(message: string) {
+    super(
+      `하향평가 매핑 유효성 검사 실패: ${message}`,
+      'DOWNWARD_EVALUATION_MAPPING_VALIDATION_ERROR',
+      400,
+      { message },
+    );
+    this.name = 'DownwardEvaluationMappingValidationException';
+  }
+}
+
+// 하향평가 매핑 중복 예외 (새로운 이름)
+export class DownwardEvaluationMappingDuplicateException extends DownwardEvaluationMappingDomainException {
+  constructor(employeeId: string, evaluatorId: string, periodId: string) {
+    super(
+      `이미 존재하는 하향평가 매핑입니다: 피평가자 ${employeeId}, 평가자 ${evaluatorId}, 기간 ${periodId}`,
+      'DOWNWARD_EVALUATION_MAPPING_DUPLICATE',
+      409,
+      { employeeId, evaluatorId, periodId },
+    );
+    this.name = 'DownwardEvaluationMappingDuplicateException';
+  }
+}

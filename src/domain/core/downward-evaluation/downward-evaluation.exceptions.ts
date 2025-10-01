@@ -76,3 +76,29 @@ export class DownwardEvaluationPermissionDeniedException extends DownwardEvaluat
     this.name = 'DownwardEvaluationPermissionDeniedException';
   }
 }
+
+// 하향평가 유효성 검사 예외
+export class DownwardEvaluationValidationException extends DownwardEvaluationDomainException {
+  constructor(message: string) {
+    super(
+      `하향평가 유효성 검사 실패: ${message}`,
+      'DOWNWARD_EVALUATION_VALIDATION_ERROR',
+      400,
+      { message },
+    );
+    this.name = 'DownwardEvaluationValidationException';
+  }
+}
+
+// 하향평가 중복 예외 (새로운 이름)
+export class DownwardEvaluationDuplicateException extends DownwardEvaluationDomainException {
+  constructor(evaluationType: string, evaluatorId: string) {
+    super(
+      `이미 존재하는 하향평가입니다: 유형 ${evaluationType}, 평가자 ${evaluatorId}`,
+      'DOWNWARD_EVALUATION_DUPLICATE',
+      409,
+      { evaluationType, evaluatorId },
+    );
+    this.name = 'DownwardEvaluationDuplicateException';
+  }
+}
