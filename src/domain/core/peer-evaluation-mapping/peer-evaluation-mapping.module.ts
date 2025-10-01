@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { PeerEvaluationMapping } from './peer-evaluation-mapping.entity';
+import { PeerEvaluationMappingService } from './peer-evaluation-mapping.service';
 
 /**
- * 동료평가 맵핑 도메인 모듈
- * 동료평가와 관련 엔티티 간의 관계를 관리하는 도메인 모듈입니다.
+ * 동료평가 매핑 모듈
+ * 동료평가 매핑 관련 기능을 제공합니다.
  */
 @Module({
-  imports: [],
-  providers: [],
-  exports: [],
+  imports: [TypeOrmModule.forFeature([PeerEvaluationMapping])],
+  providers: [PeerEvaluationMappingService],
+  exports: [PeerEvaluationMappingService],
 })
 export class PeerEvaluationMappingModule {}

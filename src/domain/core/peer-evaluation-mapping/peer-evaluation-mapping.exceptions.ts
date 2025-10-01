@@ -79,3 +79,42 @@ export class PeerEvaluationMappingPeriodExpiredException extends PeerEvaluationM
     this.name = 'PeerEvaluationMappingPeriodExpiredException';
   }
 }
+
+// 동료평가 매핑 유효성 검사 예외
+export class PeerEvaluationMappingValidationException extends PeerEvaluationMappingDomainException {
+  constructor(message: string) {
+    super(
+      `동료평가 매핑 유효성 검사 실패: ${message}`,
+      'PEER_EVALUATION_MAPPING_VALIDATION_ERROR',
+      400,
+      { message },
+    );
+    this.name = 'PeerEvaluationMappingValidationException';
+  }
+}
+
+// 동료평가 매핑 중복 예외
+export class PeerEvaluationMappingDuplicateException extends PeerEvaluationMappingDomainException {
+  constructor(employeeId: string, evaluatorId: string, periodId: string) {
+    super(
+      `이미 존재하는 동료평가 매핑입니다: 피평가자 ${employeeId}, 평가자 ${evaluatorId}, 기간 ${periodId}`,
+      'PEER_EVALUATION_MAPPING_DUPLICATE',
+      409,
+      { employeeId, evaluatorId, periodId },
+    );
+    this.name = 'PeerEvaluationMappingDuplicateException';
+  }
+}
+
+// 자기 자신 동료평가 매핑 예외
+export class SelfPeerEvaluationMappingException extends PeerEvaluationMappingDomainException {
+  constructor(employeeId: string) {
+    super(
+      `자기 자신을 동료평가할 수 없습니다: ${employeeId}`,
+      'SELF_PEER_EVALUATION_MAPPING',
+      400,
+      { employeeId },
+    );
+    this.name = 'SelfPeerEvaluationMappingException';
+  }
+}

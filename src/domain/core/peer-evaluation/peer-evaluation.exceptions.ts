@@ -71,3 +71,29 @@ export class SelfPeerEvaluationException extends PeerEvaluationDomainException {
     this.name = 'SelfPeerEvaluationException';
   }
 }
+
+// 동료평가 유효성 검사 예외
+export class PeerEvaluationValidationException extends PeerEvaluationDomainException {
+  constructor(message: string) {
+    super(
+      `동료평가 유효성 검사 실패: ${message}`,
+      'PEER_EVALUATION_VALIDATION_ERROR',
+      400,
+      { message },
+    );
+    this.name = 'PeerEvaluationValidationException';
+  }
+}
+
+// 동료평가 중복 예외 (새로운 이름)
+export class PeerEvaluationDuplicateException extends PeerEvaluationDomainException {
+  constructor(evaluatorId: string, employeeId: string, periodId: string) {
+    super(
+      `이미 존재하는 동료평가입니다: 평가자 ${evaluatorId}, 피평가자 ${employeeId}, 기간 ${periodId}`,
+      'PEER_EVALUATION_DUPLICATE',
+      409,
+      { evaluatorId, employeeId, periodId },
+    );
+    this.name = 'PeerEvaluationDuplicateException';
+  }
+}
