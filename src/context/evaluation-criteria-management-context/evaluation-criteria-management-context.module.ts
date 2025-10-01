@@ -1,60 +1,59 @@
+import { Department } from '@domain/common/department/department.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
+import { Project } from '@domain/common/project/project.entity';
+import { ProjectModule } from '@domain/common/project/project.module';
+import { EvaluationLineMappingModule } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
+import { EvaluationLineModule } from '@domain/core/evaluation-line/evaluation-line.module';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
+import { EvaluationProjectAssignmentModule } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.module';
+import { EvaluationWbsAssignmentModule } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { EvaluationProjectAssignmentModule } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.module';
-import { EvaluationWbsAssignmentModule } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
-import { EvaluationLineModule } from '@domain/core/evaluation-line/evaluation-line.module';
-import { EvaluationLineMappingModule } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
-import { ProjectModule } from '@domain/common/project/project.module';
-import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { EvaluationCriteriaManagementService } from './evaluation-criteria-management.service';
-import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
-import { Employee } from '@domain/common/employee/employee.entity';
-import { Department } from '@domain/common/department/department.entity';
-import { Project } from '@domain/common/project/project.entity';
-import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 
 // Project Assignment Handlers
 import {
-  CreateProjectAssignmentHandler,
-  CancelProjectAssignmentHandler,
   BulkCreateProjectAssignmentHandler,
-  GetProjectAssignmentListHandler,
+  CancelProjectAssignmentHandler,
+  CreateProjectAssignmentHandler,
   GetEmployeeProjectAssignmentsHandler,
   GetProjectAssignedEmployeesHandler,
   GetProjectAssignmentDetailHandler,
+  GetProjectAssignmentListHandler,
   GetUnassignedEmployeesHandler,
 } from './handlers/project-assignment';
 
 // WBS Assignment Handlers
 import {
-  CreateWbsAssignmentHandler,
-  UpdateWbsAssignmentHandler,
-  CancelWbsAssignmentHandler,
   BulkCreateWbsAssignmentHandler,
-  ResetPeriodWbsAssignmentsHandler,
-  ResetProjectWbsAssignmentsHandler,
-  ResetEmployeeWbsAssignmentsHandler,
-  GetWbsAssignmentListHandler,
+  CancelWbsAssignmentHandler,
+  CreateWbsAssignmentHandler,
   GetEmployeeWbsAssignmentsHandler,
   GetProjectWbsAssignmentsHandler,
-  GetWbsItemAssignmentsHandler,
-  GetWbsAssignmentDetailHandler,
   GetUnassignedWbsItemsHandler,
+  GetWbsAssignmentDetailHandler,
+  GetWbsAssignmentListHandler,
+  GetWbsItemAssignmentsHandler,
+  ResetEmployeeWbsAssignmentsHandler,
+  ResetPeriodWbsAssignmentsHandler,
+  ResetProjectWbsAssignmentsHandler,
 } from './handlers/wbs-assignment';
 
 // Evaluation Line Handlers
-import {
-  ConfigureEmployeeWbsEvaluationLineHandler,
-  GetEvaluationLineListHandler,
-  GetEmployeeEvaluationLineMappingsHandler,
-  GetEvaluatorEmployeesHandler,
-  GetUpdaterEvaluationLineMappingsHandler,
-  GetEmployeeEvaluationSettingsHandler,
-} from './handlers/evaluation-line';
 import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
-import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
+import {
+  ConfigureEmployeeWbsEvaluationLineHandler,
+  GetEmployeeEvaluationLineMappingsHandler,
+  GetEmployeeEvaluationSettingsHandler,
+  GetEvaluationLineListHandler,
+  GetEvaluatorEmployeesHandler,
+  GetUpdaterEvaluationLineMappingsHandler,
+} from './handlers/evaluation-line';
+import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
 
 /**
  * 평가기준관리 컨텍스트 모듈 (MVP 버전)
@@ -77,7 +76,6 @@ import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
       Project,
       EvaluationPeriod,
       EvaluationWbsAssignment,
-      WbsItem,
     ]),
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,
@@ -85,6 +83,7 @@ import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
     EvaluationLineMappingModule,
     ProjectModule,
     EvaluationPeriodModule,
+    WbsItemModule,
   ],
   providers: [
     EvaluationCriteriaManagementService,
@@ -101,7 +100,6 @@ import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
     GetUnassignedEmployeesHandler,
     // WBS Assignment Command Handlers
     CreateWbsAssignmentHandler,
-    UpdateWbsAssignmentHandler,
     CancelWbsAssignmentHandler,
     BulkCreateWbsAssignmentHandler,
     ResetPeriodWbsAssignmentsHandler,

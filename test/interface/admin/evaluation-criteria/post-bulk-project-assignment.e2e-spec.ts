@@ -32,10 +32,9 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
 
-    // 테스트 데이터 생성
-    const { departments, employees } =
-      await testContextService.부서와_직원을_생성한다();
-    const { projects } = await testContextService.프로젝트와_WBS를_생성한다(3);
+    // 완전한 테스트 환경 생성 (부서, 직원, 프로젝트 모두 포함)
+    const { departments, employees, projects } =
+      await testContextService.완전한_테스트환경을_생성한다();
 
     testData = {
       departments,
@@ -112,22 +111,26 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         const employees = getRandomEmployees(3);
         const projects = getRandomProjects(3);
 
+        const assignedBy = employees[0].id; // 모든 할당에 동일한 assignedBy 사용
         const bulkAssignmentData = {
           assignments: [
             {
               employeeId: employees[0].id,
               projectId: projects[0].id,
               periodId: evaluationPeriodId,
+              assignedBy: assignedBy,
             },
             {
               employeeId: employees[1].id,
               projectId: projects[1].id,
               periodId: evaluationPeriodId,
+              assignedBy: assignedBy,
             },
             {
               employeeId: employees[2].id,
               projectId: projects[2].id,
               periodId: evaluationPeriodId,
+              assignedBy: assignedBy,
             },
           ],
         };
@@ -152,7 +155,7 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
             bulkAssignmentData.assignments[index].projectId,
           );
           expect(assignment.periodId).toBe(evaluationPeriodId);
-          expect(assignment.assignedBy).toBe('admin');
+          expect(assignment.assignedBy).toBe(assignedBy); // 모든 할당이 동일한 assignedBy
         });
       });
 
@@ -499,17 +502,20 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         const employees = getRandomEmployees(2);
         const projects = getRandomProjects(2);
 
+        const assignedBy = employees[0].id; // 모든 할당에 동일한 assignedBy 사용
         const bulkAssignmentData = {
           assignments: [
             {
               employeeId: employees[0].id,
               projectId: projects[0].id,
               periodId: evaluationPeriodId,
+              assignedBy: assignedBy,
             },
             {
               employeeId: employees[1].id,
               projectId: projects[1].id,
               periodId: evaluationPeriodId,
+              assignedBy: assignedBy,
             },
           ],
         };
@@ -521,10 +527,10 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
           .expect(201);
 
         // Then: 모든 할당에 감사 정보가 설정되어야 함
-        response.body.forEach((assignment: any) => {
-          expect(assignment.assignedBy).toBe('admin');
-          expect(assignment.createdBy).toBe('admin');
-          expect(assignment.updatedBy).toBe('admin');
+        response.body.forEach((assignment: any, index: number) => {
+          expect(assignment.assignedBy).toBe(assignedBy); // 모든 할당이 동일한 assignedBy
+          expect(assignment.createdBy).toBe(assignedBy);
+          expect(assignment.updatedBy).toBe(assignedBy);
           expect(assignment.createdAt).toBeDefined();
           expect(assignment.updatedAt).toBeDefined();
           expect(assignment.assignedDate).toBeDefined();
