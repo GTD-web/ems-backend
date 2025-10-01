@@ -82,7 +82,7 @@ export interface IEvaluationCriteriaManagementService {
   특정_평가기간에_프로젝트가_할당되지_않은_직원_목록을_조회한다(
     periodId: string,
     projectId?: string,
-  ): Promise<string[]>;
+  ): Promise<{ employees: EmployeeInfoDto[] }>;
 
   /**
    * 여러 프로젝트를 대량으로 할당한다

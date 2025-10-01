@@ -133,7 +133,7 @@ export class EvaluationCriteriaManagementService
   async 특정_평가기간에_프로젝트가_할당되지_않은_직원_목록을_조회한다(
     periodId: string,
     projectId?: string,
-  ): Promise<string[]> {
+  ): Promise<{ employees: EmployeeInfoDto[] }> {
     const query = new GetUnassignedEmployeesQuery(periodId, projectId);
     return await this.queryBus.execute(query);
   }

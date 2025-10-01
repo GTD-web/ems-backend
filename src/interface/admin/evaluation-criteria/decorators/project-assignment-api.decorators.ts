@@ -14,6 +14,7 @@ import {
   ProjectAssignmentListResponseDto,
   EmployeeProjectsResponseDto,
   ProjectEmployeesResponseDto,
+  UnassignedEmployeesResponseDto,
 } from '../dto/project-assignment.dto';
 
 // ==================== GET 엔드포인트 데코레이터 ====================
@@ -174,7 +175,7 @@ export function GetUnassignedEmployees() {
     ApiResponse({
       status: 200,
       description: '할당되지 않은 직원 목록이 성공적으로 조회되었습니다.',
-      type: [String],
+      type: UnassignedEmployeesResponseDto,
     }),
   );
 }
