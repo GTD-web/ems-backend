@@ -12,6 +12,7 @@ import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-ass
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
 import { Project } from '@domain/common/project/project.entity';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 
 // Project Assignment Handlers
 import {
@@ -72,6 +73,7 @@ import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluatio
       Employee,
       Department,
       Project,
+      EvaluationPeriod,
     ]),
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,

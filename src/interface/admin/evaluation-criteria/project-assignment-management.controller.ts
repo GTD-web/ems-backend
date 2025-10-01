@@ -1,5 +1,6 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { v4 as uuidv4 } from 'uuid';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
   CreateProjectAssignmentDto,
@@ -37,9 +38,14 @@ export class ProjectAssignmentManagementController {
     @Body() createDto: CreateProjectAssignmentDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<any> {
-    const assignedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const assignedBy = createDto.assignedBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
     return await this.evaluationCriteriaManagementService.프로젝트를_할당한다(
-      { ...createDto, assignedBy },
+      {
+        employeeId: createDto.employeeId,
+        projectId: createDto.projectId,
+        periodId: createDto.periodId,
+        assignedBy: assignedBy,
+      },
       assignedBy,
     );
   }
@@ -67,7 +73,15 @@ export class ProjectAssignmentManagementController {
     @Query() filter: ProjectAssignmentFilterDto,
   ): Promise<any> {
     return await this.evaluationCriteriaManagementService.프로젝트_할당_목록을_조회한다(
-      filter,
+      {
+        periodId: filter.periodId,
+        employeeId: filter.employeeId,
+        projectId: filter.projectId,
+        page: filter.page,
+        limit: filter.limit,
+        orderBy: filter.orderBy,
+        orderDirection: filter.orderDirection,
+      },
     );
   }
 
@@ -131,16 +145,16 @@ export class ProjectAssignmentManagementController {
     @Body() bulkCreateDto: BulkCreateProjectAssignmentDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<any[]> {
-    const assignedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    const assignmentsWithAssignedBy = bulkCreateDto.assignments.map(
-      (assignment) => ({
-        ...assignment,
-        assignedBy,
-      }),
-    );
+    // 각 할당에서 assignedBy를 추출 (첫 번째 할당의 assignedBy 사용, 없으면 임시 UUID 생성)
+    const assignedBy = bulkCreateDto.assignments[0]?.assignedBy || uuidv4();
 
     return await this.evaluationCriteriaManagementService.프로젝트를_대량으로_할당한다(
-      assignmentsWithAssignedBy,
+      bulkCreateDto.assignments.map((assignment) => ({
+        employeeId: assignment.employeeId,
+        projectId: assignment.projectId,
+        periodId: assignment.periodId,
+        assignedBy,
+      })),
       assignedBy,
     );
   }

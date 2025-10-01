@@ -35,35 +35,14 @@ export class CreateProjectAssignmentDto {
   })
   @IsUUID()
   periodId: string;
-}
-
-/**
- * 프로젝트 할당 수정 DTO
- */
-export class UpdateProjectAssignmentDto {
-  @ApiPropertyOptional({
-    description: '할당 시작일',
-    example: '2024-01-01',
-  })
-  @IsOptional()
-  @IsDateString()
-  startDate?: string;
 
   @ApiPropertyOptional({
-    description: '할당 종료일',
-    example: '2024-12-31',
+    description: '할당자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
   })
   @IsOptional()
-  @IsDateString()
-  endDate?: string;
-
-  @ApiPropertyOptional({
-    description: '할당 비율 (0-100)',
-    example: 100,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  assignmentRatio?: number;
+  @IsUUID()
+  assignedBy?: string;
 }
 
 /**
@@ -126,6 +105,25 @@ export class ProjectAssignmentFilterDto {
   @IsOptional()
   @Type(() => Number)
   limit?: number = 10;
+
+  @ApiPropertyOptional({
+    description: '정렬 기준',
+    example: 'assignedDate',
+    default: 'assignedDate',
+  })
+  @IsOptional()
+  @IsString()
+  orderBy?: string = 'assignedDate';
+
+  @ApiPropertyOptional({
+    description: '정렬 방향',
+    example: 'DESC',
+    default: 'DESC',
+    enum: ['ASC', 'DESC'],
+  })
+  @IsOptional()
+  @IsEnum(['ASC', 'DESC'])
+  orderDirection?: 'ASC' | 'DESC' = 'DESC';
 }
 
 /**
@@ -191,6 +189,236 @@ export class ProjectAssignmentResponseDto {
     example: '2024-01-01T00:00:00.000Z',
   })
   updatedAt: Date;
+}
+
+/**
+ * 평가기간 정보 DTO
+ */
+export class EvaluationPeriodInfoDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '평가기간명',
+    example: '2024년 상반기 평가',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '시작일',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  startDate: Date;
+
+  @ApiProperty({
+    description: '종료일',
+    example: '2024-06-30T23:59:59.999Z',
+    required: false,
+  })
+  endDate?: Date;
+
+  @ApiProperty({
+    description: '상태',
+    example: 'ACTIVE',
+  })
+  status: string;
+
+  @ApiProperty({
+    description: '설명',
+    example: '2024년 상반기 직원 평가를 진행합니다.',
+    required: false,
+  })
+  description?: string;
+}
+
+/**
+ * 직원 정보 DTO
+ */
+export class EmployeeInfoDto {
+  @ApiProperty({
+    description: '직원 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '사번',
+    example: 'EMP001',
+  })
+  employeeNumber: string;
+
+  @ApiProperty({
+    description: '이름',
+    example: '홍길동',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '이메일',
+    example: 'hong@company.com',
+    required: false,
+  })
+  email?: string;
+
+  @ApiProperty({
+    description: '전화번호',
+    example: '010-1234-5678',
+    required: false,
+  })
+  phoneNumber?: string;
+
+  @ApiProperty({
+    description: '상태',
+    example: 'ACTIVE',
+  })
+  status: string;
+
+  @ApiProperty({
+    description: '부서 ID',
+    example: 'DEPT001',
+    required: false,
+  })
+  departmentId?: string;
+
+  @ApiProperty({
+    description: '부서명',
+    example: '개발팀',
+    required: false,
+  })
+  departmentName?: string;
+}
+
+/**
+ * 프로젝트 정보 DTO
+ */
+export class ProjectInfoDto {
+  @ApiProperty({
+    description: '프로젝트 ID',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '프로젝트명',
+    example: '루미르 통합 포털 개발',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '프로젝트 코드',
+    example: 'PROJ001',
+  })
+  projectCode: string;
+
+  @ApiProperty({
+    description: '상태',
+    example: 'ACTIVE',
+  })
+  status: string;
+
+  @ApiProperty({
+    description: '시작일',
+    example: '2024-01-01T00:00:00.000Z',
+    required: false,
+  })
+  startDate?: Date;
+
+  @ApiProperty({
+    description: '종료일',
+    example: '2024-12-31T23:59:59.999Z',
+    required: false,
+  })
+  endDate?: Date;
+
+  @ApiProperty({
+    description: '프로젝트 매니저 ID',
+    example: '123e4567-e89b-12d3-a456-426614174005',
+    required: false,
+  })
+  managerId?: string;
+}
+
+/**
+ * 프로젝트 할당 상세 응답 DTO (관련 정보 포함)
+ */
+export class ProjectAssignmentDetailResponseDto {
+  @ApiProperty({
+    description: '할당 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '할당일',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  assignedDate: Date;
+
+  @ApiProperty({
+    description: '생성일시',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: '수정일시',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  updatedAt: Date;
+
+  @ApiProperty({
+    description: '삭제일시',
+    example: null,
+    required: false,
+  })
+  deletedAt?: Date;
+
+  @ApiProperty({
+    description: '생성자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174004',
+    required: false,
+  })
+  createdBy?: string;
+
+  @ApiProperty({
+    description: '수정자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174005',
+    required: false,
+  })
+  updatedBy?: string;
+
+  @ApiProperty({
+    description: '버전',
+    example: 1,
+  })
+  version: number;
+
+  @ApiPropertyOptional({
+    description: '평가기간 정보',
+    type: EvaluationPeriodInfoDto,
+  })
+  evaluationPeriod?: EvaluationPeriodInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '직원 정보',
+    type: EmployeeInfoDto,
+  })
+  employee?: EmployeeInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '프로젝트 정보',
+    type: ProjectInfoDto,
+  })
+  project?: ProjectInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '할당자 정보',
+    type: EmployeeInfoDto,
+  })
+  assignedBy?: EmployeeInfoDto | null;
 }
 
 /**

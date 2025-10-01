@@ -43,6 +43,71 @@ export interface EvaluationProjectAssignmentDto {
 }
 
 /**
+ * 평가 프로젝트 할당 상세 DTO (관련 정보 포함)
+ */
+export interface EvaluationProjectAssignmentDetailDto {
+  /** 고유 식별자 (UUID) */
+  id: string;
+  /** 할당일 */
+  assignedDate: Date;
+  /** 생성 일시 */
+  createdAt: Date;
+  /** 수정 일시 */
+  updatedAt: Date;
+  /** 삭제 일시 */
+  deletedAt?: Date;
+  /** 생성자 ID */
+  createdBy?: string;
+  /** 수정자 ID */
+  updatedBy?: string;
+  /** 버전 */
+  version: number;
+
+  /** 평가기간 정보 */
+  evaluationPeriod?: {
+    id: string;
+    name: string;
+    startDate: Date;
+    endDate?: Date;
+    status: string;
+    description?: string;
+  } | null;
+
+  /** 직원 정보 */
+  employee?: {
+    id: string;
+    employeeNumber: string;
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+    status: string;
+    departmentId?: string;
+    departmentName?: string;
+  } | null;
+
+  /** 프로젝트 정보 */
+  project?: {
+    id: string;
+    name: string;
+    projectCode: string;
+    status: string;
+    startDate?: Date;
+    endDate?: Date;
+    managerId?: string;
+  } | null;
+
+  /** 할당자 정보 */
+  assignedBy?: {
+    id: string;
+    employeeNumber: string;
+    name: string;
+    email?: string;
+    departmentId?: string;
+    departmentName?: string;
+  } | null;
+}
+
+/**
  * 평가 프로젝트 할당 생성 데이터
  */
 export interface CreateEvaluationProjectAssignmentData {

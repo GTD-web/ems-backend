@@ -1,0 +1,423 @@
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
+import { Project } from './project.entity';
+import { ProjectDto, ProjectStatus } from './project.types';
+
+/**
+ * 프로젝트 테스트용 서비스
+ *
+ * 테스트 시 사용할 목데이터를 생성하고 관리하는 서비스입니다.
+ * 실제 운영 환경에서는 사용하지 않습니다.
+ */
+@Injectable()
+export class ProjectTestService {
+  constructor(
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
+  ) {}
+
+  /**
+   * 테스트용 프로젝트 목데이터를 생성한다
+   * @returns 생성된 프로젝트 목록
+   */
+  async 테스트용_목데이터를_생성한다(): Promise<ProjectDto[]> {
+    // 기존 테스트 데이터 정리
+    await this.테스트_데이터를_정리한다();
+
+    const testProjects = [
+      // 활성 프로젝트들
+      {
+        name: '루미르 통합 포탈 개발',
+        projectCode: 'LUMIR-001',
+        status: ProjectStatus.ACTIVE,
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-12-31'),
+        managerId: 'emp-001',
+      },
+      {
+        name: '평가 시스템 고도화',
+        projectCode: 'EVAL-001',
+        status: ProjectStatus.ACTIVE,
+        startDate: new Date('2024-02-01'),
+        endDate: new Date('2024-11-30'),
+        managerId: 'emp-003',
+      },
+      {
+        name: '사용자 인터페이스 개선',
+        projectCode: 'UI-001',
+        status: ProjectStatus.ACTIVE,
+        startDate: new Date('2024-03-01'),
+        endDate: new Date('2024-10-31'),
+        managerId: 'emp-005',
+      },
+      {
+        name: '데이터 마이그레이션',
+        projectCode: 'MIGR-001',
+        status: ProjectStatus.ACTIVE,
+        startDate: new Date('2024-04-01'),
+        endDate: new Date('2024-09-30'),
+        managerId: 'emp-006',
+      },
+      {
+        name: '보안 강화 프로젝트',
+        projectCode: 'SEC-001',
+        status: ProjectStatus.ACTIVE,
+        startDate: new Date('2024-05-01'),
+        endDate: new Date('2024-12-31'),
+        managerId: 'emp-007',
+      },
+
+      // 완료된 프로젝트들
+      {
+        name: '시스템 분석 및 설계',
+        projectCode: 'ANAL-001',
+        status: ProjectStatus.COMPLETED,
+        startDate: new Date('2023-10-01'),
+        endDate: new Date('2023-12-31'),
+        managerId: 'emp-001',
+      },
+      {
+        name: '프로토타입 개발',
+        projectCode: 'PROTO-001',
+        status: ProjectStatus.COMPLETED,
+        startDate: new Date('2023-11-01'),
+        endDate: new Date('2024-01-31'),
+        managerId: 'emp-003',
+      },
+      {
+        name: '초기 데이터 구축',
+        projectCode: 'DATA-001',
+        status: ProjectStatus.COMPLETED,
+        startDate: new Date('2023-12-01'),
+        endDate: new Date('2024-02-29'),
+        managerId: 'emp-010',
+      },
+
+      // 취소된 프로젝트들
+      {
+        name: '레거시 시스템 연동',
+        projectCode: 'LEGACY-001',
+        status: ProjectStatus.CANCELLED,
+        startDate: new Date('2024-01-15'),
+        endDate: new Date('2024-06-30'),
+        managerId: 'emp-002',
+      },
+      {
+        name: '모바일 앱 개발',
+        projectCode: 'MOBILE-001',
+        status: ProjectStatus.CANCELLED,
+        startDate: new Date('2024-02-01'),
+        endDate: new Date('2024-08-31'),
+        managerId: 'emp-004',
+      },
+
+      // 코드 없는 프로젝트들
+      {
+        name: '내부 프로세스 개선',
+        projectCode: undefined,
+        status: ProjectStatus.ACTIVE,
+        startDate: new Date('2024-06-01'),
+        endDate: new Date('2024-12-31'),
+        managerId: 'emp-010',
+      },
+      {
+        name: '문서화 작업',
+        projectCode: undefined,
+        status: ProjectStatus.ACTIVE,
+        startDate: new Date('2024-07-01'),
+        endDate: new Date('2024-11-30'),
+        managerId: 'emp-011',
+      },
+    ];
+
+    // 프로젝트 엔티티 생성 및 저장
+    const projects = testProjects.map((proj) => {
+      const project = new Project(
+        proj.name,
+        proj.projectCode,
+        proj.status,
+        proj.startDate,
+        proj.endDate,
+        proj.managerId,
+      );
+      return project;
+    });
+
+    const savedProjects = await this.projectRepository.save(projects);
+
+    return savedProjects.map((project) => project.DTO로_변환한다());
+  }
+
+  /**
+   * 특정 프로젝트의 테스트 데이터를 생성한다
+   * @param projectData 프로젝트 데이터
+   * @returns 생성된 프로젝트 정보
+   */
+  async 특정_프로젝트_테스트데이터를_생성한다(projectData: {
+    name: string;
+    projectCode?: string;
+    status?: ProjectStatus;
+    startDate?: Date;
+    endDate?: Date;
+    managerId?: string;
+  }): Promise<ProjectDto> {
+    const project = new Project(
+      projectData.name,
+      projectData.projectCode,
+      projectData.status || ProjectStatus.ACTIVE,
+      projectData.startDate,
+      projectData.endDate,
+      projectData.managerId,
+    );
+
+    const savedProject = await this.projectRepository.save(project);
+    return savedProject.DTO로_변환한다();
+  }
+
+  /**
+   * 테스트용 랜덤 프로젝트 데이터를 생성한다
+   * @param count 생성할 프로젝트 수
+   * @returns 생성된 프로젝트 목록
+   */
+  async 랜덤_테스트데이터를_생성한다(
+    count: number = 10,
+  ): Promise<ProjectDto[]> {
+    const projects: Project[] = [];
+    const statuses: ProjectStatus[] = [
+      ProjectStatus.ACTIVE,
+      ProjectStatus.COMPLETED,
+      ProjectStatus.CANCELLED,
+    ];
+    const projectTypes = [
+      '개발',
+      '분석',
+      '설계',
+      '테스트',
+      '배포',
+      '유지보수',
+      '개선',
+      '마이그레이션',
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      const projectType =
+        projectTypes[Math.floor(Math.random() * projectTypes.length)];
+      const startYear = 2023 + Math.floor(Math.random() * 2);
+      const startMonth = Math.floor(Math.random() * 12);
+      const startDay = Math.floor(Math.random() * 28) + 1;
+      const duration = Math.floor(Math.random() * 12) + 1; // 1-12개월
+
+      const startDate = new Date(startYear, startMonth, startDay);
+      const endDate = new Date(startYear, startMonth + duration, startDay);
+
+      const project = new Project(
+        `테스트${projectType}프로젝트${i + 1}`,
+        `TEST${String(i + 1).padStart(3, '0')}`,
+        status,
+        startDate,
+        endDate,
+        `manager-${Math.floor(Math.random() * 5) + 1}`,
+      );
+      projects.push(project);
+    }
+
+    const savedProjects = await this.projectRepository.save(projects);
+    return savedProjects.map((project) => project.DTO로_변환한다());
+  }
+
+  /**
+   * 테스트 데이터를 정리한다
+   * @returns 삭제된 프로젝트 수
+   */
+  async 테스트_데이터를_정리한다(): Promise<number> {
+    // 테스트용 프로젝트들을 삭제 (projectCode가 TEST로 시작하거나 특정 패턴을 가진 것들)
+    const result = await this.projectRepository
+      .createQueryBuilder()
+      .delete()
+      .where(
+        'projectCode LIKE :pattern1 OR projectCode LIKE :pattern2 OR name LIKE :pattern3',
+        {
+          pattern1: 'TEST%',
+          pattern2: 'LUMIR-%',
+          pattern3: '테스트%',
+        },
+      )
+      .execute();
+
+    return result.affected || 0;
+  }
+
+  /**
+   * 모든 테스트 데이터를 삭제한다
+   * @returns 삭제된 프로젝트 수
+   */
+  async 모든_테스트데이터를_삭제한다(): Promise<number> {
+    const result = await this.projectRepository
+      .createQueryBuilder()
+      .delete()
+      .execute();
+
+    return result.affected || 0;
+  }
+
+  /**
+   * 상태별 프로젝트 테스트 데이터를 생성한다
+   * @param status 프로젝트 상태
+   * @param count 생성할 프로젝트 수
+   * @returns 생성된 프로젝트 목록
+   */
+  async 상태별_프로젝트_테스트데이터를_생성한다(
+    status: ProjectStatus,
+    count: number = 5,
+  ): Promise<ProjectDto[]> {
+    const projects: Project[] = [];
+    const projectTypes = [
+      '개발',
+      '분석',
+      '설계',
+      '테스트',
+      '배포',
+      '유지보수',
+      '개선',
+      '마이그레이션',
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const projectType =
+        projectTypes[Math.floor(Math.random() * projectTypes.length)];
+      const startYear = 2023 + Math.floor(Math.random() * 2);
+      const startMonth = Math.floor(Math.random() * 12);
+      const startDay = Math.floor(Math.random() * 28) + 1;
+      const duration = Math.floor(Math.random() * 12) + 1;
+
+      const startDate = new Date(startYear, startMonth, startDay);
+      const endDate = new Date(startYear, startMonth + duration, startDay);
+
+      const project = new Project(
+        `${status}${projectType}프로젝트${i + 1}`,
+        `${status.slice(0, 3).toUpperCase()}${String(i + 1).padStart(3, '0')}`,
+        status,
+        startDate,
+        endDate,
+        `manager-${Math.floor(Math.random() * 5) + 1}`,
+      );
+      projects.push(project);
+    }
+
+    const savedProjects = await this.projectRepository.save(projects);
+    return savedProjects.map((project) => project.DTO로_변환한다());
+  }
+
+  /**
+   * 매니저별 프로젝트 테스트 데이터를 생성한다
+   * @param managerId 매니저 ID
+   * @param count 생성할 프로젝트 수
+   * @returns 생성된 프로젝트 목록
+   */
+  async 매니저별_프로젝트_테스트데이터를_생성한다(
+    managerId: string,
+    count: number = 3,
+  ): Promise<ProjectDto[]> {
+    const projects: Project[] = [];
+    const projectTypes = [
+      '개발',
+      '분석',
+      '설계',
+      '테스트',
+      '배포',
+      '유지보수',
+      '개선',
+      '마이그레이션',
+    ];
+    const statuses: ProjectStatus[] = [
+      ProjectStatus.ACTIVE,
+      ProjectStatus.COMPLETED,
+      ProjectStatus.CANCELLED,
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const projectType =
+        projectTypes[Math.floor(Math.random() * projectTypes.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      const startYear = 2023 + Math.floor(Math.random() * 2);
+      const startMonth = Math.floor(Math.random() * 12);
+      const startDay = Math.floor(Math.random() * 28) + 1;
+      const duration = Math.floor(Math.random() * 12) + 1;
+
+      const startDate = new Date(startYear, startMonth, startDay);
+      const endDate = new Date(startYear, startMonth + duration, startDay);
+
+      const project = new Project(
+        `${managerId}매니저${projectType}프로젝트${i + 1}`,
+        `${managerId.slice(-3).toUpperCase()}${String(i + 1).padStart(3, '0')}`,
+        status,
+        startDate,
+        endDate,
+        managerId,
+      );
+      projects.push(project);
+    }
+
+    const savedProjects = await this.projectRepository.save(projects);
+    return savedProjects.map((project) => project.DTO로_변환한다());
+  }
+
+  /**
+   * 기간별 프로젝트 테스트 데이터를 생성한다
+   * @param startYear 시작 연도
+   * @param endYear 종료 연도
+   * @param count 생성할 프로젝트 수
+   * @returns 생성된 프로젝트 목록
+   */
+  async 기간별_프로젝트_테스트데이터를_생성한다(
+    startYear: number,
+    endYear: number,
+    count: number = 10,
+  ): Promise<ProjectDto[]> {
+    const projects: Project[] = [];
+    const projectTypes = [
+      '개발',
+      '분석',
+      '설계',
+      '테스트',
+      '배포',
+      '유지보수',
+      '개선',
+      '마이그레이션',
+    ];
+    const statuses: ProjectStatus[] = [
+      ProjectStatus.ACTIVE,
+      ProjectStatus.COMPLETED,
+      ProjectStatus.CANCELLED,
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const projectType =
+        projectTypes[Math.floor(Math.random() * projectTypes.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      const year =
+        startYear + Math.floor(Math.random() * (endYear - startYear + 1));
+      const month = Math.floor(Math.random() * 12);
+      const day = Math.floor(Math.random() * 28) + 1;
+      const duration = Math.floor(Math.random() * 12) + 1;
+
+      const startDate = new Date(year, month, day);
+      const endDate = new Date(year, month + duration, day);
+
+      const project = new Project(
+        `${year}년${projectType}프로젝트${i + 1}`,
+        `${year}${String(i + 1).padStart(3, '0')}`,
+        status,
+        startDate,
+        endDate,
+        `manager-${Math.floor(Math.random() * 5) + 1}`,
+      );
+      projects.push(project);
+    }
+
+    const savedProjects = await this.projectRepository.save(projects);
+    return savedProjects.map((project) => project.DTO로_변환한다());
+  }
+}

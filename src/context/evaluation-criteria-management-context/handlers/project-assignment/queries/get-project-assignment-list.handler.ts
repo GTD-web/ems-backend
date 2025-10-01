@@ -67,8 +67,8 @@ export class GetProjectAssignmentListHandler
     const totalCount = await queryBuilder.getCount();
 
     // 페이징 적용
-    const page = filter.page || 1;
-    const limit = filter.limit || 10;
+    const page = Math.max(1, filter.page || 1); // 최소 1페이지
+    const limit = Math.max(1, filter.limit || 10); // 최소 1개
     const offset = (page - 1) * limit;
 
     // JOIN 쿼리로 한 번에 모든 정보 조회
@@ -76,22 +76,22 @@ export class GetProjectAssignmentListHandler
       .leftJoinAndSelect(
         Employee,
         'employee',
-        'employee.id = assignment.employeeId AND employee.deletedAt IS NULL',
+        '"employee"."id"::varchar = "assignment"."employeeId"::varchar AND "employee"."deletedAt" IS NULL',
       )
       .leftJoinAndSelect(
         Department,
         'department',
-        'department.externalId = employee.departmentId AND department.deletedAt IS NULL',
+        '"department"."externalId"::varchar = "employee"."departmentId"::varchar AND "department"."deletedAt" IS NULL',
       )
       .leftJoinAndSelect(
         Employee,
         'assignedBy',
-        'assignedBy.id = assignment.assignedBy AND assignedBy.deletedAt IS NULL',
+        '"assignedBy"."id"::varchar = "assignment"."assignedBy"::varchar AND "assignedBy"."deletedAt" IS NULL',
       )
       .leftJoinAndSelect(
         Project,
         'project',
-        'project.id = assignment.projectId AND project.deletedAt IS NULL',
+        '"project"."id"::varchar = "assignment"."projectId"::varchar AND "project"."deletedAt" IS NULL',
       )
       .skip(offset)
       .take(limit)

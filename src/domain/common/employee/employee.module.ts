@@ -6,6 +6,7 @@ import { Employee } from './employee.entity';
 import { EmployeeRepository } from './employee.repository';
 import { EmployeeSyncService } from './employee-sync.service';
 import { EmployeeService } from './employee.service';
+import { EmployeeTestService } from './employee-test.service';
 
 @Module({
   imports: [
@@ -13,7 +14,17 @@ import { EmployeeService } from './employee.service';
     ConfigModule,
     ScheduleModule.forRoot(),
   ],
-  providers: [EmployeeRepository, EmployeeSyncService, EmployeeService],
-  exports: [EmployeeRepository, EmployeeSyncService, EmployeeService],
+  providers: [
+    EmployeeRepository,
+    EmployeeSyncService,
+    EmployeeService,
+    EmployeeTestService,
+  ],
+  exports: [
+    EmployeeRepository,
+    EmployeeSyncService,
+    EmployeeService,
+    EmployeeTestService,
+  ],
 })
 export class EmployeeModule {}

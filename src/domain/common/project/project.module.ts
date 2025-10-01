@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Project } from './project.entity';
 import { ProjectService } from './project.service';
+import { ProjectTestService } from './project-test.service';
 
 /**
  * 프로젝트 모듈 (평가 시스템 전용)
@@ -11,7 +12,7 @@ import { ProjectService } from './project.service';
  */
 @Module({
   imports: [TypeOrmModule.forFeature([Project])],
-  providers: [ProjectService],
-  exports: [ProjectService, TypeOrmModule],
+  providers: [ProjectService, ProjectTestService],
+  exports: [ProjectService, ProjectTestService, TypeOrmModule],
 })
 export class ProjectModule {}

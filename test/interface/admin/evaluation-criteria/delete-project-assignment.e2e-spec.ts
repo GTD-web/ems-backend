@@ -1,19 +1,28 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
-import { ProjectService } from '@domain/common/project/project.service';
-import { ProjectStatus } from '@domain/common/project/project.types';
+import { TestContextService } from '@context/test-context/test-context.service';
+import { DepartmentDto } from '@domain/common/department/department.types';
+import { EmployeeDto } from '@domain/common/employee/employee.types';
+import { ProjectDto } from '@domain/common/project/project.types';
 
 describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
   let testSuite: BaseE2ETest;
   let app: INestApplication;
   let dataSource: any;
+  let testContextService: TestContextService;
+  let testData: {
+    departments: DepartmentDto[];
+    employees: EmployeeDto[];
+    projects: ProjectDto[];
+  };
 
   beforeAll(async () => {
     testSuite = new BaseE2ETest();
     await testSuite.initializeApp();
     app = testSuite.app;
     dataSource = (testSuite as any).dataSource;
+    testContextService = app.get(TestContextService);
   });
 
   afterAll(async () => {
@@ -23,38 +32,55 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
 
-    // 모든 테스트에서 ProjectService 목킹
-    const projectService = app.get(ProjectService);
-    const mockProject = {
-      id: 'mock-project-id',
-      name: '테스트 프로젝트',
-      description: '테스트용 프로젝트',
-      status: ProjectStatus.ACTIVE,
-      isDeleted: false,
-      isActive: true,
-      isCompleted: false,
-      isCancelled: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+    // 테스트 데이터 생성
+    const { departments, employees } =
+      await testContextService.부서와_직원을_생성한다();
+    const { projects } = await testContextService.프로젝트와_WBS를_생성한다(3);
+
+    testData = {
+      departments,
+      employees,
+      projects,
     };
-    jest.spyOn(projectService, 'ID로_조회한다').mockResolvedValue(mockProject);
+
+    console.log('할당 취소 테스트 데이터 생성 완료:', {
+      departments: testData.departments.length,
+      employees: testData.employees.length,
+      projects: testData.projects.length,
+    });
   });
 
-  afterEach(() => {
-    // 각 테스트 후 목킹 정리
+  afterEach(async () => {
+    // 각 테스트 후 테스트 데이터 정리
+    await testContextService.테스트_데이터를_정리한다();
     jest.restoreAllMocks();
   });
 
-  // 임시 UUID 생성 헬퍼 함수
-  function generateTempUUID(): string {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
-      /[xy]/g,
-      function (c) {
-        const r = (Math.random() * 16) | 0;
-        const v = c === 'x' ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-      },
-    );
+  // 테스트 데이터 헬퍼 함수
+  function getRandomEmployee(): EmployeeDto {
+    return testData.employees[
+      Math.floor(Math.random() * testData.employees.length)
+    ];
+  }
+
+  function getRandomProject(): ProjectDto {
+    return testData.projects[
+      Math.floor(Math.random() * testData.projects.length)
+    ];
+  }
+
+  function getActiveProject(): ProjectDto {
+    return testData.projects.find((p) => p.isActive) || testData.projects[0];
+  }
+
+  function getRandomEmployees(count: number): EmployeeDto[] {
+    const shuffled = [...testData.employees].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+  }
+
+  function getRandomProjects(count: number): ProjectDto[] {
+    const shuffled = [...testData.projects].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
   }
 
   // ==================== 프로젝트 할당 취소 테스트 ====================
@@ -80,10 +106,13 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
 
       evaluationPeriodId = evaluationPeriodResponse.body.id;
 
-      // Given: 프로젝트 할당 생성
+      // Given: 실제 테스트 데이터로 프로젝트 할당 생성
+      const employee = getRandomEmployee();
+      const project = getActiveProject();
+
       const assignmentData = {
-        employeeId: generateTempUUID(),
-        projectId: generateTempUUID(),
+        employeeId: employee.id,
+        projectId: project.id,
         periodId: evaluationPeriodId,
       };
 
@@ -153,8 +182,8 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
 
     describe('실패 케이스', () => {
       it('존재하지 않는 할당 ID로 취소 시 404 에러가 발생해야 한다', async () => {
-        // Given: 존재하지 않는 할당 ID
-        const nonExistentId = generateTempUUID();
+        // Given: 존재하지 않는 할당 ID (실제 UUID 형식이지만 존재하지 않는 ID)
+        const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When: 존재하지 않는 할당 ID로 취소 시도
         const response = await request(app.getHttpServer()).delete(
@@ -341,12 +370,15 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
       });
 
       it('여러 할당을 동시에 취소할 수 있어야 한다', async () => {
-        // Given: 추가 할당 생성
+        // Given: 실제 테스트 데이터로 추가 할당 생성
+        const employees = getRandomEmployees(3);
+        const projects = getRandomProjects(3);
+
         const additionalAssignments: string[] = [];
         for (let i = 0; i < 3; i++) {
           const assignmentData = {
-            employeeId: generateTempUUID(),
-            projectId: generateTempUUID(),
+            employeeId: employees[i].id,
+            projectId: projects[i].id,
             periodId: evaluationPeriodId,
           };
 
@@ -411,12 +443,15 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
 
       const periodId = periodResponse.body.id;
 
-      // Given: 여러 할당 생성
+      // Given: 실제 테스트 데이터로 여러 할당 생성 (3개로 조정)
+      const employees = getRandomEmployees(3);
+      const projects = getRandomProjects(3);
+
       const assignmentIds: string[] = [];
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 3; i++) {
         const assignmentData = {
-          employeeId: generateTempUUID(),
-          projectId: generateTempUUID(),
+          employeeId: employees[i].id,
+          projectId: projects[i].id,
           periodId: periodId,
         };
 

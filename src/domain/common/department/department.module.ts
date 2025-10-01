@@ -6,6 +6,7 @@ import { Department } from './department.entity';
 import { DepartmentRepository } from './department.repository';
 import { DepartmentSyncService } from './department-sync.service';
 import { DepartmentService } from './department.service';
+import { DepartmentTestService } from './department-test.service';
 
 @Module({
   imports: [
@@ -13,7 +14,17 @@ import { DepartmentService } from './department.service';
     ConfigModule,
     ScheduleModule.forRoot(),
   ],
-  providers: [DepartmentRepository, DepartmentSyncService, DepartmentService],
-  exports: [DepartmentRepository, DepartmentSyncService, DepartmentService],
+  providers: [
+    DepartmentRepository,
+    DepartmentSyncService,
+    DepartmentService,
+    DepartmentTestService,
+  ],
+  exports: [
+    DepartmentRepository,
+    DepartmentSyncService,
+    DepartmentService,
+    DepartmentTestService,
+  ],
 })
 export class DepartmentModule {}

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WbsItem } from './wbs-item.entity';
 import { WbsItemService } from './wbs-item.service';
+import { WbsItemTestService } from './wbs-item-test.service';
 
 /**
  * WBS 항목 모듈 (평가 시스템 전용)
@@ -11,7 +12,7 @@ import { WbsItemService } from './wbs-item.service';
  */
 @Module({
   imports: [TypeOrmModule.forFeature([WbsItem])],
-  providers: [WbsItemService],
-  exports: [WbsItemService, TypeOrmModule],
+  providers: [WbsItemService, WbsItemTestService],
+  exports: [WbsItemService, WbsItemTestService, TypeOrmModule],
 })
 export class WbsItemModule {}
