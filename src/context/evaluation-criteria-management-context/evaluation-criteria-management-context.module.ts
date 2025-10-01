@@ -53,6 +53,8 @@ import {
   GetEmployeeEvaluationSettingsHandler,
 } from './handlers/evaluation-line';
 import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
+import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 
 /**
  * 평가기준관리 컨텍스트 모듈 (MVP 버전)
@@ -74,6 +76,8 @@ import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluatio
       Department,
       Project,
       EvaluationPeriod,
+      EvaluationWbsAssignment,
+      WbsItem,
     ]),
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,

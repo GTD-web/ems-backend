@@ -4,6 +4,7 @@ import { EvaluationPeriodManagementContextModule } from '../../context/evaluatio
 import { EvaluationCriteriaManagementContextModule } from '../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
 import { ProjectAssignmentManagementController } from './evaluation-criteria/project-assignment-management.controller';
+import { WbsAssignmentManagementController } from './evaluation-criteria/wbs-assignment-management.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -20,6 +21,7 @@ import { ProjectAssignmentManagementController } from './evaluation-criteria/pro
   controllers: [
     EvaluationPeriodManagementController, // 평가 기간 관리 컨트롤러
     ProjectAssignmentManagementController, // 프로젝트 할당 관리 컨트롤러
+    WbsAssignmentManagementController, // WBS 할당 관리 컨트롤러
   ],
   providers: [],
   exports: [],

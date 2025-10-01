@@ -1,13 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { EvaluationWbsAssignmentService } from '../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
-import { EvaluationWbsAssignmentFilter } from '../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
+import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
+import { Department } from '@domain/common/department/department.entity';
+import { Project } from '@domain/common/project/project.entity';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
+import { EvaluationWbsAssignmentFilter } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 
 /**
  * WBS 할당 목록 조회 쿼리
  */
 export class GetWbsAssignmentListQuery {
-  constructor(public readonly filter: EvaluationWbsAssignmentFilter) {}
+  constructor(
+    public readonly filter: EvaluationWbsAssignmentFilter,
+    public readonly page?: number,
+    public readonly limit?: number,
+    public readonly orderBy?: string,
+    public readonly orderDirection?: 'ASC' | 'DESC',
+  ) {}
 }
 
 /**
@@ -48,35 +60,152 @@ export class GetWbsAssignmentListHandler
   implements IQueryHandler<GetWbsAssignmentListQuery>
 {
   constructor(
-    private readonly wbsAssignmentService: EvaluationWbsAssignmentService,
+    @InjectRepository(EvaluationWbsAssignment)
+    private readonly wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   ) {}
 
   async execute(
     query: GetWbsAssignmentListQuery,
   ): Promise<WbsAssignmentListResult> {
-    const { filter } = query;
-    const assignments = await this.wbsAssignmentService.필터_조회한다(filter);
+    const { filter, page, limit, orderBy, orderDirection } = query;
 
-    // TODO: 실제 페이징 및 상세 정보 처리 필요
+    // 쿼리 빌더 생성
+    const queryBuilder = this.createQueryBuilder(
+      filter,
+      orderBy,
+      orderDirection,
+    );
+
+    // 총 개수 조회
+    const totalCount = await queryBuilder.getCount();
+
+    // 페이징 적용
+    const currentPage = Math.max(1, page || 1); // 최소 1페이지
+    const currentLimit = Math.max(1, limit || 10); // 최소 1개
+    const offset = (currentPage - 1) * currentLimit;
+
+    // JOIN 쿼리로 한 번에 모든 정보 조회
+    const assignments = await queryBuilder
+      .leftJoinAndSelect(
+        Employee,
+        'employee',
+        '"employee"."id"::varchar = "assignment"."employeeId"::varchar AND "employee"."deletedAt" IS NULL',
+      )
+      .leftJoinAndSelect(
+        Department,
+        'department',
+        '"department"."externalId"::varchar = "employee"."departmentId"::varchar AND "department"."deletedAt" IS NULL',
+      )
+      .leftJoinAndSelect(
+        Employee,
+        'assignedBy',
+        '"assignedBy"."id"::varchar = "assignment"."assignedBy"::varchar AND "assignedBy"."deletedAt" IS NULL',
+      )
+      .leftJoinAndSelect(
+        Project,
+        'project',
+        '"project"."id"::varchar = "assignment"."projectId"::varchar AND "project"."deletedAt" IS NULL',
+      )
+      .leftJoinAndSelect(
+        WbsItem,
+        'wbsItem',
+        '"wbsItem"."id"::varchar = "assignment"."wbsItemId"::varchar AND "wbsItem"."deletedAt" IS NULL',
+      )
+      .skip(offset)
+      .take(currentLimit)
+      .getMany();
+
+    // 조인된 정보를 포함한 결과 생성
+    const assignmentsWithDetails = assignments.map((assignment) => {
+      // 조인된 데이터에서 정보 추출
+      const employee = (assignment as any).employee;
+      const department = (assignment as any).department;
+      const assignedByEmployee = (assignment as any).assignedBy;
+      const project = (assignment as any).project;
+      const wbsItem = (assignment as any).wbsItem;
+
+      return {
+        id: assignment.id,
+        periodId: assignment.periodId,
+        employeeId: assignment.employeeId,
+        employeeName: employee?.name || '',
+        departmentName: department?.name || '',
+        projectId: assignment.projectId,
+        projectName: project?.name || '',
+        wbsItemId: assignment.wbsItemId,
+        wbsItemTitle: wbsItem?.title || '',
+        wbsItemCode: wbsItem?.code || '',
+        assignedDate: assignment.assignedDate,
+        assignedBy: assignment.assignedBy,
+        assignedByName: assignedByEmployee?.name || '',
+      };
+    });
+
     return {
-      assignments: assignments.map((a) => ({
-        id: a.id,
-        periodId: a.periodId,
-        employeeId: a.employeeId,
-        employeeName: '', // TODO: Employee 서비스에서 조회
-        departmentName: '', // TODO: Department 서비스에서 조회
-        projectId: a.projectId,
-        projectName: '', // TODO: Project 서비스에서 조회
-        wbsItemId: a.wbsItemId,
-        wbsItemTitle: '', // TODO: WbsItem 서비스에서 조회
-        wbsItemCode: '', // TODO: WbsItem 서비스에서 조회
-        assignedDate: a.assignedDate,
-        assignedBy: a.assignedBy,
-        assignedByName: '', // TODO: Employee 서비스에서 조회
-      })),
-      totalCount: assignments.length,
-      page: 1,
-      limit: assignments.length,
+      assignments: assignmentsWithDetails,
+      totalCount,
+      page: currentPage,
+      limit: currentLimit,
     };
+  }
+
+  private createQueryBuilder(
+    filter: EvaluationWbsAssignmentFilter,
+    orderBy?: string,
+    orderDirection?: 'ASC' | 'DESC',
+  ): SelectQueryBuilder<EvaluationWbsAssignment> {
+    const queryBuilder = this.wbsAssignmentRepository
+      .createQueryBuilder('assignment')
+      .where('assignment.deletedAt IS NULL');
+
+    // 필터 조건 적용
+    if (filter.periodId) {
+      queryBuilder.andWhere('assignment.periodId = :periodId', {
+        periodId: filter.periodId,
+      });
+    }
+
+    if (filter.employeeId) {
+      queryBuilder.andWhere('assignment.employeeId = :employeeId', {
+        employeeId: filter.employeeId,
+      });
+    }
+
+    if (filter.projectId) {
+      queryBuilder.andWhere('assignment.projectId = :projectId', {
+        projectId: filter.projectId,
+      });
+    }
+
+    if (filter.wbsItemId) {
+      queryBuilder.andWhere('assignment.wbsItemId = :wbsItemId', {
+        wbsItemId: filter.wbsItemId,
+      });
+    }
+
+    if (filter.assignedBy) {
+      queryBuilder.andWhere('assignment.assignedBy = :assignedBy', {
+        assignedBy: filter.assignedBy,
+      });
+    }
+
+    if (filter.assignedDateFrom) {
+      queryBuilder.andWhere('assignment.assignedDate >= :assignedDateFrom', {
+        assignedDateFrom: filter.assignedDateFrom,
+      });
+    }
+
+    if (filter.assignedDateTo) {
+      queryBuilder.andWhere('assignment.assignedDate <= :assignedDateTo', {
+        assignedDateTo: filter.assignedDateTo,
+      });
+    }
+
+    // 정렬
+    const sortBy = orderBy || 'assignedDate';
+    const sortDirection = orderDirection || 'DESC';
+    queryBuilder.orderBy(`assignment.${sortBy}`, sortDirection);
+
+    return queryBuilder;
   }
 }

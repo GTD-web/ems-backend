@@ -105,15 +105,6 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<EvaluationWbsAssignmentDto>;
 
   /**
-   * WBS 할당 정보를 수정한다
-   */
-  WBS_할당을_수정한다(
-    id: string,
-    data: UpdateEvaluationWbsAssignmentData,
-    updatedBy: string,
-  ): Promise<EvaluationWbsAssignmentDto>;
-
-  /**
    * WBS 할당을 취소한다
    */
   WBS_할당을_취소한다(id: string, cancelledBy: string): Promise<void>;
@@ -123,6 +114,10 @@ export interface IEvaluationCriteriaManagementService {
    */
   WBS_할당_목록을_조회한다(
     filter: EvaluationWbsAssignmentFilter,
+    page?: number,
+    limit?: number,
+    orderBy?: string,
+    orderDirection?: 'ASC' | 'DESC',
   ): Promise<WbsAssignmentListResult>;
 
   /**

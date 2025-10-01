@@ -5,11 +5,6 @@ export {
 } from './commands/create-wbs-assignment.handler';
 
 export {
-  UpdateWbsAssignmentCommand,
-  UpdateWbsAssignmentHandler,
-} from './commands/update-wbs-assignment.handler';
-
-export {
   CancelWbsAssignmentCommand,
   CancelWbsAssignmentHandler,
 } from './commands/cancel-wbs-assignment.handler';

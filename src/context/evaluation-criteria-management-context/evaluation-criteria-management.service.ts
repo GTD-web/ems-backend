@@ -29,7 +29,6 @@ import {
   ResetEmployeeWbsAssignmentsCommand,
   ResetPeriodWbsAssignmentsCommand,
   ResetProjectWbsAssignmentsCommand,
-  UpdateWbsAssignmentCommand,
   type WbsAssignmentListResult,
 } from './handlers/wbs-assignment';
 
@@ -161,15 +160,6 @@ export class EvaluationCriteriaManagementService
     return await this.commandBus.execute(command);
   }
 
-  async WBS_할당을_수정한다(
-    id: string,
-    data: UpdateEvaluationWbsAssignmentData,
-    updatedBy: string,
-  ): Promise<EvaluationWbsAssignmentDto> {
-    const command = new UpdateWbsAssignmentCommand(id, data, updatedBy);
-    return await this.commandBus.execute(command);
-  }
-
   async WBS_할당을_취소한다(id: string, cancelledBy: string): Promise<void> {
     const command = new CancelWbsAssignmentCommand(id, cancelledBy);
     await this.commandBus.execute(command);
@@ -177,8 +167,18 @@ export class EvaluationCriteriaManagementService
 
   async WBS_할당_목록을_조회한다(
     filter: EvaluationWbsAssignmentFilter,
+    page?: number,
+    limit?: number,
+    orderBy?: string,
+    orderDirection?: 'ASC' | 'DESC',
   ): Promise<WbsAssignmentListResult> {
-    const query = new GetWbsAssignmentListQuery(filter);
+    const query = new GetWbsAssignmentListQuery(
+      filter,
+      page,
+      limit,
+      orderBy,
+      orderDirection,
+    );
     return await this.queryBus.execute(query);
   }
 

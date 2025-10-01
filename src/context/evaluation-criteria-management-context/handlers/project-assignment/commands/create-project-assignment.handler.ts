@@ -70,8 +70,14 @@ export class CreateProjectAssignmentHandler
         );
       }
 
+      // assignedBy 파라미터를 data에 적용
+      const assignmentData = {
+        ...data,
+        assignedBy: assignedBy, // 커맨드에서 받은 assignedBy 사용
+      };
+
       const assignment = await this.projectAssignmentService.생성한다(
-        data,
+        assignmentData,
         manager,
       );
       return assignment.DTO로_변환한다();

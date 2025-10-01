@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { EvaluationWbsAssignmentService } from '../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
-import type { EvaluationWbsAssignmentDto } from '../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
+import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import type { EvaluationWbsAssignmentDto } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 
 /**
  * 프로젝트의 WBS 할당 조회 쿼리
@@ -22,17 +24,26 @@ export class GetProjectWbsAssignmentsHandler
   implements IQueryHandler<GetProjectWbsAssignmentsQuery>
 {
   constructor(
-    private readonly wbsAssignmentService: EvaluationWbsAssignmentService,
+    @InjectRepository(EvaluationWbsAssignment)
+    private readonly wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   ) {}
 
   async execute(
     query: GetProjectWbsAssignmentsQuery,
   ): Promise<EvaluationWbsAssignmentDto[]> {
     const { projectId, periodId } = query;
-    const assignments = await this.wbsAssignmentService.필터_조회한다({
-      projectId,
-      periodId,
+
+    const assignments = await this.wbsAssignmentRepository.find({
+      where: {
+        projectId,
+        periodId,
+        deletedAt: IsNull(),
+      },
+      order: {
+        assignedDate: 'DESC',
+      },
     });
-    return assignments.map((a) => a.DTO로_변환한다());
+
+    return assignments.map((assignment) => assignment.DTO로_변환한다());
   }
 }

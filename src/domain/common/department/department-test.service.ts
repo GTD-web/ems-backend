@@ -25,12 +25,17 @@ export class DepartmentTestService {
     // 기존 테스트 데이터 정리
     await this.테스트_데이터를_정리한다();
 
+    // 고유한 식별자를 위한 타임스탬프와 랜덤 값 생성
+    const timestamp = Date.now();
+    const randomId = Math.floor(Math.random() * 10000);
+    const uniqueSuffix = `${timestamp}-${randomId}`;
+
     const testDepartments = [
       // 최상위 부서들
       {
         name: '경영진',
-        code: 'EXEC',
-        externalId: 'exec-001',
+        code: `EXEC-${uniqueSuffix}`,
+        externalId: `exec-001-${uniqueSuffix}`,
         order: 1,
         managerId: 'manager-001',
         parentDepartmentId: null,
@@ -39,8 +44,8 @@ export class DepartmentTestService {
       },
       {
         name: '기술개발본부',
-        code: 'TECH',
-        externalId: 'tech-001',
+        code: `TECH-${uniqueSuffix}`,
+        externalId: `tech-001-${uniqueSuffix}`,
         order: 2,
         managerId: 'manager-002',
         parentDepartmentId: null,
@@ -49,8 +54,8 @@ export class DepartmentTestService {
       },
       {
         name: '영업본부',
-        code: 'SALES',
-        externalId: 'sales-001',
+        code: `SALES-${uniqueSuffix}`,
+        externalId: `sales-001-${uniqueSuffix}`,
         order: 3,
         managerId: 'manager-003',
         parentDepartmentId: null,
@@ -59,8 +64,8 @@ export class DepartmentTestService {
       },
       {
         name: '인사관리부',
-        code: 'HR',
-        externalId: 'hr-001',
+        code: `HR-${uniqueSuffix}`,
+        externalId: `hr-001-${uniqueSuffix}`,
         order: 4,
         managerId: 'manager-004',
         parentDepartmentId: null,
@@ -71,8 +76,8 @@ export class DepartmentTestService {
       // 기술개발본부 하위 부서들
       {
         name: '백엔드개발팀',
-        code: 'BACKEND',
-        externalId: 'backend-001',
+        code: `BACKEND-${uniqueSuffix}`,
+        externalId: `backend-001-${uniqueSuffix}`,
         order: 1,
         managerId: 'manager-005',
         parentDepartmentId: 'tech-001',
@@ -81,8 +86,8 @@ export class DepartmentTestService {
       },
       {
         name: '프론트엔드개발팀',
-        code: 'FRONTEND',
-        externalId: 'frontend-001',
+        code: `FRONTEND-${uniqueSuffix}`,
+        externalId: `frontend-001-${uniqueSuffix}`,
         order: 2,
         managerId: 'manager-006',
         parentDepartmentId: 'tech-001',
@@ -91,8 +96,8 @@ export class DepartmentTestService {
       },
       {
         name: '데이터팀',
-        code: 'DATA',
-        externalId: 'data-001',
+        code: `DATA-${uniqueSuffix}`,
+        externalId: `data-001-${uniqueSuffix}`,
         order: 3,
         managerId: 'manager-007',
         parentDepartmentId: 'tech-001',
@@ -101,8 +106,8 @@ export class DepartmentTestService {
       },
       {
         name: 'DevOps팀',
-        code: 'DEVOPS',
-        externalId: 'devops-001',
+        code: `DEVOPS-${uniqueSuffix}`,
+        externalId: `devops-001-${uniqueSuffix}`,
         order: 4,
         managerId: 'manager-008',
         parentDepartmentId: 'tech-001',
@@ -113,8 +118,8 @@ export class DepartmentTestService {
       // 영업본부 하위 부서들
       {
         name: '국내영업팀',
-        code: 'DOMESTIC',
-        externalId: 'domestic-001',
+        code: `DOMESTIC-${uniqueSuffix}`,
+        externalId: `domestic-001-${uniqueSuffix}`,
         order: 1,
         managerId: 'manager-009',
         parentDepartmentId: 'sales-001',
@@ -123,8 +128,8 @@ export class DepartmentTestService {
       },
       {
         name: '해외영업팀',
-        code: 'GLOBAL',
-        externalId: 'global-001',
+        code: `GLOBAL-${uniqueSuffix}`,
+        externalId: `global-001-${uniqueSuffix}`,
         order: 2,
         managerId: 'manager-010',
         parentDepartmentId: 'sales-001',
@@ -133,8 +138,8 @@ export class DepartmentTestService {
       },
       {
         name: '마케팅팀',
-        code: 'MARKETING',
-        externalId: 'marketing-001',
+        code: `MARKETING-${uniqueSuffix}`,
+        externalId: `marketing-001-${uniqueSuffix}`,
         order: 3,
         managerId: 'manager-011',
         parentDepartmentId: 'sales-001',
@@ -145,8 +150,8 @@ export class DepartmentTestService {
       // 인사관리부 하위 부서들
       {
         name: '채용팀',
-        code: 'RECRUIT',
-        externalId: 'recruit-001',
+        code: `RECRUIT-${uniqueSuffix}`,
+        externalId: `recruit-001-${uniqueSuffix}`,
         order: 1,
         managerId: 'manager-012',
         parentDepartmentId: 'hr-001',
@@ -155,8 +160,8 @@ export class DepartmentTestService {
       },
       {
         name: '교육팀',
-        code: 'TRAINING',
-        externalId: 'training-001',
+        code: `TRAINING-${uniqueSuffix}`,
+        externalId: `training-001-${uniqueSuffix}`,
         order: 2,
         managerId: 'manager-013',
         parentDepartmentId: 'hr-001',
@@ -165,8 +170,8 @@ export class DepartmentTestService {
       },
       {
         name: '급여팀',
-        code: 'PAYROLL',
-        externalId: 'payroll-001',
+        code: `PAYROLL-${uniqueSuffix}`,
+        externalId: `payroll-001-${uniqueSuffix}`,
         order: 3,
         managerId: 'manager-014',
         parentDepartmentId: 'hr-001',
@@ -177,8 +182,8 @@ export class DepartmentTestService {
       // 3단계 하위 부서들 (백엔드개발팀 하위)
       {
         name: 'API개발팀',
-        code: 'API',
-        externalId: 'api-001',
+        code: `API-${uniqueSuffix}`,
+        externalId: `api-001-${uniqueSuffix}`,
         order: 1,
         managerId: 'manager-015',
         parentDepartmentId: 'backend-001',
@@ -187,8 +192,8 @@ export class DepartmentTestService {
       },
       {
         name: '마이크로서비스팀',
-        code: 'MICROSERVICE',
-        externalId: 'microservice-001',
+        code: `MICROSERVICE-${uniqueSuffix}`,
+        externalId: `microservice-001-${uniqueSuffix}`,
         order: 2,
         managerId: 'manager-016',
         parentDepartmentId: 'backend-001',
@@ -199,8 +204,8 @@ export class DepartmentTestService {
       // 프론트엔드개발팀 하위
       {
         name: '웹개발팀',
-        code: 'WEB',
-        externalId: 'web-001',
+        code: `WEB-${uniqueSuffix}`,
+        externalId: `web-001-${uniqueSuffix}`,
         order: 1,
         managerId: 'manager-017',
         parentDepartmentId: 'frontend-001',
@@ -209,8 +214,8 @@ export class DepartmentTestService {
       },
       {
         name: '모바일개발팀',
-        code: 'MOBILE',
-        externalId: 'mobile-001',
+        code: `MOBILE-${uniqueSuffix}`,
+        externalId: `mobile-001-${uniqueSuffix}`,
         order: 2,
         managerId: 'manager-018',
         parentDepartmentId: 'frontend-001',
