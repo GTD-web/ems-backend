@@ -2,7 +2,6 @@ import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
   EvaluationProjectAssignmentFilter,
-  UpdateEvaluationProjectAssignmentData,
 } from '../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 import type {
   CreateEvaluationWbsAssignmentData,
@@ -43,15 +42,6 @@ export interface IEvaluationCriteriaManagementService {
   프로젝트를_할당한다(
     data: CreateEvaluationProjectAssignmentData,
     assignedBy: string,
-  ): Promise<EvaluationProjectAssignmentDto>;
-
-  /**
-   * 프로젝트 할당 정보를 수정한다
-   */
-  프로젝트_할당을_수정한다(
-    id: string,
-    data: UpdateEvaluationProjectAssignmentData,
-    updatedBy: string,
   ): Promise<EvaluationProjectAssignmentDto>;
 
   /**

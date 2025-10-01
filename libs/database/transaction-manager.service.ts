@@ -86,6 +86,20 @@ export class TransactionManagerService {
       stack: error.stack,
     });
 
+    // NestJS HTTP 예외들은 그대로 다시 던짐 (DatabaseException으로 래핑하지 않음)
+    if (error.response && error.status) {
+      throw error; // BadRequestException, UnprocessableEntityException 등
+    }
+
+    // 도메인 예외들을 HTTP 예외로 변환
+    if (error.code && typeof error.code === 'string') {
+      if (error.code.startsWith('DUPLICATE_')) {
+        const ConflictException = require('@nestjs/common').ConflictException;
+        throw new ConflictException(error.message);
+      }
+      // 다른 도메인 예외 코드들도 여기서 처리 가능
+    }
+
     // PostgreSQL 에러 코드 기반 분류
     if (error.code) {
       switch (error.code) {

@@ -47,7 +47,6 @@ export class CreateEvaluationPeriodCommandHandler
     const createDto = {
       name: createData.name,
       startDate: createData.startDate,
-      endDate: createData.peerEvaluationDeadline, // 하향/동료평가 마감일을 종료일로 사용
       description: createData.description,
       peerEvaluationDeadline: createData.peerEvaluationDeadline,
       maxSelfEvaluationRate: createData.maxSelfEvaluationRate,

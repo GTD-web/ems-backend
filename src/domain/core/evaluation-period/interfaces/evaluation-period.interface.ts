@@ -18,7 +18,7 @@ export interface IEvaluationPeriod extends IBaseEntity {
   /** 평가 기간 시작일 */
   startDate: Date;
   /** 평가 기간 종료일 */
-  endDate: Date;
+  endDate?: Date;
   /** 평가 기간 설명 */
   description?: string;
   /** 평가 기간 상태 */

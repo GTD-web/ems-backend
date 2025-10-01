@@ -47,7 +47,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // When: 평가 기간 시작
       const response = await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // Then: 응답 검증
       expect(response.body).toEqual({ success: true });
@@ -85,7 +85,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // When: 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // Then: 활성 목록에서 확인
       const activeResponse = await request(app.getHttpServer())
@@ -128,7 +128,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // When: 평가 기간 시작
       const response = await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // Then: 응답 및 상태 검증
       expect(response.body).toEqual(expect.any(Object));
@@ -159,7 +159,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // When: 평가 기간 시작
       const response = await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // Then: 응답 검증
       expect(response.body).toEqual(expect.any(Object));
@@ -251,7 +251,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // 첫 번째 시작 (성공)
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When & Then: 두 번째 시작 시도 (실패)
       const response = await request(app.getHttpServer())
@@ -280,7 +280,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 완료 (만약 완료 엔드포인트가 있다면)
       // 현재 컨트롤러에 완료 엔드포인트가 없으므로 이 테스트는 주석 처리
@@ -335,7 +335,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const results = await Promise.all(promises);
 
       // Then: 하나만 성공하고 나머지는 실패
-      const successCount = results.filter((r) => r.status === 201).length;
+      const successCount = results.filter((r) => r.status === 200).length;
       const errorCount = results.filter((r) => r.status === 422).length;
 
       expect(successCount).toBe(1);
@@ -478,7 +478,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // When: 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // Then: 기본 데이터는 변경되지 않고 상태만 변경
       const detailResponse = await request(app.getHttpServer())
@@ -527,7 +527,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // When: 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // Then: 생성자 정보 유지
       const detailResponse = await request(app.getHttpServer())
@@ -570,7 +570,7 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const startPromises = evaluationPeriodIds.map((id) =>
         request(app.getHttpServer())
           .post(`/admin/evaluation-periods/${id}/start`)
-          .expect(201),
+          .expect(200),
       );
 
       const startResponses = await Promise.all(startPromises);

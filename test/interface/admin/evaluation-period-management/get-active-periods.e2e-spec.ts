@@ -117,7 +117,7 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
         const period = createdPeriods[index];
         await request(testSuite.app.getHttpServer())
           .post(`/admin/evaluation-periods/${period.id}/start`)
-          .expect(201);
+          .expect(200);
         activatedPeriods.push(period);
       }
 
@@ -175,7 +175,7 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       // 평가 기간 활성화
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${periodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 활성 목록에 포함되는지 확인
       const activeResponse1 = await request(testSuite.app.getHttpServer())
@@ -219,7 +219,7 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       // 평가 기간 활성화
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${periodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 활성 목록에 포함되는지 확인
       const activeBeforeComplete = await request(testSuite.app.getHttpServer())
@@ -283,7 +283,7 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
         // 각 평가 기간 활성화
         await request(testSuite.app.getHttpServer())
           .post(`/admin/evaluation-periods/${createResponse.body.id}/start`)
-          .expect(201);
+          .expect(200);
       }
 
       // 2개 모두 활성 상태인지 확인
@@ -338,7 +338,7 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       // 평가 기간 시작
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${periodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 첫 번째 완료
       await request(testSuite.app.getHttpServer())
@@ -381,7 +381,7 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       // 첫 번째 시작
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${periodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When & Then: 이미 시작된 평가 기간을 다시 시작 시도
       await request(testSuite.app.getHttpServer())

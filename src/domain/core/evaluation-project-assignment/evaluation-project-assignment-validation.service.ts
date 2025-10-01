@@ -251,8 +251,7 @@ export class EvaluationProjectAssignmentValidationService {
       manager,
     );
 
-    // 평가기간 상태 검증
-    await this.평가기간상태검증한다(createData.periodId, manager);
+    // 평가기간 상태 검증은 컨텍스트 레벨에서 수행
   }
 
   /**
@@ -276,8 +275,7 @@ export class EvaluationProjectAssignmentValidationService {
       );
     }
 
-    // 평가기간 상태 검증
-    await this.평가기간상태검증한다(existingAssignment.periodId, manager);
+    // 평가기간 상태 검증은 컨텍스트 레벨에서 수행
 
     // 기존 업데이트 비즈니스 규칙 검증
     await this.업데이트비즈니스규칙검증한다(
@@ -405,24 +403,6 @@ export class EvaluationProjectAssignmentValidationService {
     if (!assignedBy?.trim()) {
       throw new EvaluationProjectAssignmentBusinessRuleViolationException(
         '유효하지 않은 할당자 ID입니다.',
-      );
-    }
-  }
-
-  /**
-   * 평가기간 상태를 검증한다
-   */
-  private async 평가기간상태검증한다(
-    periodId: string,
-    manager?: EntityManager,
-  ): Promise<void> {
-    // 실제 구현에서는 평가기간 서비스를 주입받아 상태 확인
-    // 완료된 평가기간에는 할당을 생성/수정할 수 없음
-    // 현재는 기본적인 검증만 수행
-
-    if (!periodId?.trim()) {
-      throw new EvaluationProjectAssignmentBusinessRuleViolationException(
-        '평가기간 상태를 확인할 수 없습니다.',
       );
     }
   }

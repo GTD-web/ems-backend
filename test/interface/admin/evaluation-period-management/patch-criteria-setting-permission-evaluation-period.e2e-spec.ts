@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import request from 'supertest';
+const request = require('supertest');
 import { DataSource } from 'typeorm';
 import { AppModule } from '../../../../src/app.module';
 import { EvaluationPeriod } from '../../../../src/domain/core/evaluation-period/evaluation-period.entity';
@@ -27,51 +27,47 @@ describe('PATCH /admin/evaluation-periods/:id/settings/criteria-permission (E2E)
   beforeEach(async () => {
     // 테스트용 평가 기간 생성 (WAITING 상태)
     const evaluationPeriod = new EvaluationPeriod();
-    Object.assign(evaluationPeriod, {
-      name: `테스트 평가 기간 ${Date.now()}`,
-      startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-12-31'),
-      status: EvaluationPeriodStatus.WAITING,
-      maxSelfEvaluationRate: 120,
-      criteriaSettingEnabled: false, // 기본값 false로 설정
-      selfEvaluationSettingEnabled: true,
-      finalEvaluationSettingEnabled: false,
-      gradeRanges: [
-        { grade: 'S', minRange: 95, maxRange: 100 },
-        { grade: 'A', minRange: 85, maxRange: 94 },
-        { grade: 'B', minRange: 75, maxRange: 84 },
-        { grade: 'C', minRange: 65, maxRange: 74 },
-        { grade: 'F', minRange: 0, maxRange: 64 },
-      ],
-      createdBy: 'test-user',
-      updatedBy: 'test-user',
-    });
+    evaluationPeriod.name = `테스트 평가 기간 ${Date.now()}`;
+    evaluationPeriod.startDate = new Date('2024-01-01');
+    evaluationPeriod.endDate = new Date('2024-12-31');
+    evaluationPeriod.status = EvaluationPeriodStatus.WAITING;
+    evaluationPeriod.maxSelfEvaluationRate = 120;
+    evaluationPeriod.criteriaSettingEnabled = false; // 기본값 false로 설정
+    evaluationPeriod.selfEvaluationSettingEnabled = true;
+    evaluationPeriod.finalEvaluationSettingEnabled = false;
+    evaluationPeriod.gradeRanges = [
+      { grade: 'S', minRange: 95, maxRange: 100 },
+      { grade: 'A', minRange: 85, maxRange: 94 },
+      { grade: 'B', minRange: 75, maxRange: 84 },
+      { grade: 'C', minRange: 65, maxRange: 74 },
+      { grade: 'F', minRange: 0, maxRange: 64 },
+    ];
+    evaluationPeriod.createdBy = 'test-user';
+    evaluationPeriod.updatedBy = 'test-user';
 
     const savedPeriod = await dataSource.manager.save(evaluationPeriod);
-    evaluationPeriodId = savedPeriod.id;
+    evaluationPeriodId = (savedPeriod as any).id;
 
     // 완료된 평가 기간 생성 (COMPLETED 상태)
     const completedPeriod = new EvaluationPeriod();
-    Object.assign(completedPeriod, {
-      name: `완료된 평가 기간 ${Date.now()}`,
-      startDate: new Date('2023-01-01'),
-      endDate: new Date('2023-12-31'),
-      status: EvaluationPeriodStatus.COMPLETED,
-      maxSelfEvaluationRate: 120,
-      criteriaSettingEnabled: true,
-      selfEvaluationSettingEnabled: true,
-      finalEvaluationSettingEnabled: false,
-      gradeRanges: [
-        { grade: 'A', minRange: 80, maxRange: 100 },
-        { grade: 'B', minRange: 60, maxRange: 79 },
-        { grade: 'C', minRange: 0, maxRange: 59 },
-      ],
-      createdBy: 'test-user',
-      updatedBy: 'test-user',
-    });
+    completedPeriod.name = `완료된 평가 기간 ${Date.now()}`;
+    completedPeriod.startDate = new Date('2023-01-01');
+    completedPeriod.endDate = new Date('2023-12-31');
+    completedPeriod.status = EvaluationPeriodStatus.COMPLETED;
+    completedPeriod.maxSelfEvaluationRate = 120;
+    completedPeriod.criteriaSettingEnabled = true;
+    completedPeriod.selfEvaluationSettingEnabled = true;
+    completedPeriod.finalEvaluationSettingEnabled = false;
+    completedPeriod.gradeRanges = [
+      { grade: 'A', minRange: 80, maxRange: 100 },
+      { grade: 'B', minRange: 60, maxRange: 79 },
+      { grade: 'C', minRange: 0, maxRange: 59 },
+    ];
+    completedPeriod.createdBy = 'test-user';
+    completedPeriod.updatedBy = 'test-user';
 
     const savedCompletedPeriod = await dataSource.manager.save(completedPeriod);
-    completedEvaluationPeriodId = savedCompletedPeriod.id;
+    completedEvaluationPeriodId = (savedCompletedPeriod as any).id;
   });
 
   afterEach(async () => {
@@ -377,13 +373,11 @@ describe('PATCH /admin/evaluation-periods/:id/settings/criteria-permission (E2E)
           `/admin/evaluation-periods/${completedEvaluationPeriodId}/settings/criteria-permission`,
         )
         .send(updateData)
-        .expect([200, 422, 500]);
+        .expect(422);
 
-      if (response.status !== 200) {
-        expect(response.body.message).toContain(
-          '완료된 평가 기간은 수정할 수 없습니다',
-        );
-      }
+      expect(response.body.message).toContain(
+        '완료된 평가 기간은 수정할 수 없습니다',
+      );
     });
   });
 
@@ -494,7 +488,7 @@ describe('PATCH /admin/evaluation-periods/:id/settings/criteria-permission (E2E)
   describe('성능 테스트', () => {
     it('연속적인 설정 변경 요청을 빠르게 처리할 수 있어야 한다', async () => {
       // Given
-      const requests = [];
+      const requests: any[] = [];
       for (let i = 0; i < 10; i++) {
         requests.push(
           request(app.getHttpServer())
@@ -511,7 +505,7 @@ describe('PATCH /admin/evaluation-periods/:id/settings/criteria-permission (E2E)
       const endTime = Date.now();
 
       // Then
-      responses.forEach((response) => {
+      responses.forEach((response: any) => {
         expect(response.status).toBe(200);
       });
 

@@ -5,11 +5,6 @@ export {
 } from './commands/create-project-assignment.handler';
 
 export {
-  UpdateProjectAssignmentCommand,
-  UpdateProjectAssignmentHandler,
-} from './commands/update-project-assignment.handler';
-
-export {
   CancelProjectAssignmentCommand,
   CancelProjectAssignmentHandler,
 } from './commands/cancel-project-assignment.handler';

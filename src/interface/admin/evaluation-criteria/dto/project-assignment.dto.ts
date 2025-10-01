@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUUID, IsArray, IsDateString, IsEnum } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsUUID,
+  IsArray,
+  IsDateString,
+  IsEnum,
+  ValidateNested,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
@@ -26,30 +35,6 @@ export class CreateProjectAssignmentDto {
   })
   @IsUUID()
   periodId: string;
-
-  @ApiPropertyOptional({
-    description: '할당 시작일',
-    example: '2024-01-01',
-  })
-  @IsOptional()
-  @IsDateString()
-  startDate?: string;
-
-  @ApiPropertyOptional({
-    description: '할당 종료일',
-    example: '2024-12-31',
-  })
-  @IsOptional()
-  @IsDateString()
-  endDate?: string;
-
-  @ApiPropertyOptional({
-    description: '할당 비율 (0-100)',
-    example: 100,
-  })
-  @IsOptional()
-  @Type(() => Number)
-  assignmentRatio?: number;
 }
 
 /**
@@ -90,6 +75,8 @@ export class BulkCreateProjectAssignmentDto {
     type: [CreateProjectAssignmentDto],
   })
   @IsArray()
+  @ArrayMinSize(1, { message: '할당 목록은 최소 1개 이상이어야 합니다.' })
+  @ValidateNested({ each: true })
   @Type(() => CreateProjectAssignmentDto)
   assignments: CreateProjectAssignmentDto[];
 }
@@ -170,22 +157,16 @@ export class ProjectAssignmentResponseDto {
   periodId: string;
 
   @ApiProperty({
-    description: '할당 시작일',
-    example: '2024-01-01',
+    description: '할당일',
+    example: '2024-01-01T00:00:00.000Z',
   })
-  startDate: string;
+  assignedDate: Date;
 
   @ApiProperty({
-    description: '할당 종료일',
-    example: '2024-12-31',
+    description: '할당자 ID',
+    example: 'admin',
   })
-  endDate: string;
-
-  @ApiProperty({
-    description: '할당 비율',
-    example: 100,
-  })
-  assignmentRatio: number;
+  assignedBy: string;
 
   @ApiProperty({
     description: '생성자 ID',

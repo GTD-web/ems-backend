@@ -327,7 +327,10 @@ export class EvaluationProjectAssignmentService
       // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
       await this.validationService.할당삭제비즈니스규칙검증한다(assignment);
 
-      await repository.delete(id);
+      // 소프트 삭제 수행 및 삭제자 정보 업데이트
+      assignment.메타데이터를_업데이트한다(deletedBy);
+      await repository.softDelete(id);
+
       this.logger.log(
         `평가 프로젝트 할당 삭제 완료 - ID: ${id}, 삭제자: ${deletedBy}`,
       );

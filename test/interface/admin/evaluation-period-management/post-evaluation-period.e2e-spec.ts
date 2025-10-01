@@ -306,11 +306,11 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      // When & Then: 날짜 변환 에러로 500 발생
+      // When & Then: 날짜 변환 에러로 400 발생
       await request(testSuite.app.getHttpServer())
         .post('/admin/evaluation-periods')
         .send(invalidDateData)
-        .expect(500);
+        .expect(400);
     });
 
     it('음수 maxSelfEvaluationRate인 경우 400 에러가 발생해야 한다', async () => {
@@ -343,11 +343,11 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
         ],
       };
 
-      // When & Then: 도메인 검증 에러로 500 발생
+      // When & Then: 도메인 검증 에러로 422 발생
       await request(testSuite.app.getHttpServer())
         .post('/admin/evaluation-periods')
         .send(invalidRangeData)
-        .expect(500);
+        .expect(422);
     });
 
     it('중복된 평가 기간 이름인 경우 409 에러가 발생해야 한다', async () => {
@@ -581,11 +581,11 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
         ],
       };
 
-      // When & Then: 동일한 값은 도메인 검증에 실패하므로 500 에러
+      // When & Then: 동일한 값은 도메인 검증에 실패하므로 422 에러
       await request(testSuite.app.getHttpServer())
         .post('/admin/evaluation-periods')
         .send(sameRangeData)
-        .expect(500);
+        .expect(422);
     });
 
     it('등급 구간 경계값 테스트 - 0-100 전체 범위', async () => {
@@ -825,11 +825,11 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
         ],
       };
 
-      // When & Then: 도메인 검증 에러로 500 발생
+      // When & Then: 도메인 검증 에러로 422 발생
       await request(testSuite.app.getHttpServer())
         .post('/admin/evaluation-periods')
         .send(duplicateGradeData)
-        .expect(500);
+        .expect(422);
     });
 
     it('겹치는 등급 구간 범위가 있는 경우 500 에러가 발생해야 한다', async () => {
@@ -845,11 +845,11 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
         ],
       };
 
-      // When & Then: 도메인 검증 에러로 500 발생
+      // When & Then: 도메인 검증 에러로 422 발생
       await request(testSuite.app.getHttpServer())
         .post('/admin/evaluation-periods')
         .send(overlappingRangeData)
-        .expect(500);
+        .expect(422);
     });
 
     it('시작일이 종료일보다 늦은 경우 201로 생성되어야 한다', async () => {
@@ -938,13 +938,11 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      // When & Then: 날짜 변환기가 자동으로 처리하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      // When & Then: 유효하지 않은 날짜로 400 에러 발생
+      await request(testSuite.app.getHttpServer())
         .post('/admin/evaluation-periods')
         .send(invalidLeapYearData)
-        .expect(201);
-
-      expect(response.body.name).toBe('평년 2월 29일 평가');
+        .expect(400);
     });
 
     it('매우 많은 등급 구간 (50개)을 가진 평가 기간을 생성해야 한다', async () => {

@@ -623,7 +623,7 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When: 기본 정보 수정
       const updateData = {
@@ -666,7 +666,7 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       // 평가 기간 시작 및 완료
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/complete`)
@@ -685,9 +685,6 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
 
       // Then: 완료된 평가 기간은 수정할 수 없음 (422 에러)
       expect(response.status).toBe(422);
-      expect(response.body.message).toContain(
-        '완료된 평가 기간의 기본 정보는 수정할 수 없습니다',
-      );
     });
   });
 

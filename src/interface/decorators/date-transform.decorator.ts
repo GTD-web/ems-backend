@@ -66,15 +66,26 @@ function convertToUTCDate(value: any): Date | undefined {
     return new Date(`${truncated}Z`);
   }
 
-  // 이미 Z나 타임존 정보가 있는 경우 그대로 사용
-  const date = new Date(value);
+  // 이미 Z나 타임존 정보가 있는 ISO 8601 형식 허용
+  if (
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})$/.test(
+      value,
+    )
+  ) {
+    const date = new Date(value);
 
-  // 유효한 날짜인지 확인
-  if (isNaN(date.getTime())) {
-    throw new BadRequestException(`올바르지 않은 날짜 형식입니다: ${value}`);
+    // 유효한 날짜인지 확인
+    if (isNaN(date.getTime())) {
+      throw new BadRequestException(`올바르지 않은 날짜 형식입니다: ${value}`);
+    }
+
+    return date;
   }
 
-  return date;
+  // 지원하지 않는 형식
+  throw new BadRequestException(
+    `지원하지 않는 날짜 형식입니다: ${value}. YYYY-MM-DD 또는 ISO 8601 형식을 사용해주세요.`,
+  );
 }
 
 /**
@@ -85,7 +96,7 @@ function convertToUTCDate(value: any): Date | undefined {
  * - YYYY-MM-DDTHH:mm:ss → UTC 시간으로 강제 변환
  * - YYYY-MM-DDTHH:mm:ss.sss → UTC 시간으로 강제 변환
  * - YYYY-MM-DDTHH:mm:ss.ssssss → UTC 시간으로 강제 변환 (마이크로초 → 밀리초)
- * - ISO 8601 with timezone → 그대로 사용
+ * - ISO 8601 with timezone (Z, +HH:mm, -HH:mm) → 그대로 사용
  *
  * @example
  * ```typescript

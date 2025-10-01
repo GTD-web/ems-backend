@@ -764,7 +764,7 @@ describe('PATCH /admin/evaluation-periods/:id/performance-deadline', () => {
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/complete`)
         .expect(200);
 
-      // When & Then: 업무 수행 마감일 수정 시 400 에러 발생
+      // When & Then: 업무 수행 마감일 수정 시 422 에러 발생
       // 도메인 정책: "완료된 평가 기간의 기본 정보는 수정할 수 없습니다."
       const updateData = {
         performanceDeadline: '2024-05-15',
@@ -775,7 +775,7 @@ describe('PATCH /admin/evaluation-periods/:id/performance-deadline', () => {
           `/admin/evaluation-periods/${evaluationPeriodId}/performance-deadline`,
         )
         .send(updateData)
-        .expect(400);
+        .expect(422);
 
       expect(response.body.message).toContain('완료된');
     });

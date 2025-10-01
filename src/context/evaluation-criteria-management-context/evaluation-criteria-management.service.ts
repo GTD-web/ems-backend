@@ -7,7 +7,6 @@ import {
   BulkCreateProjectAssignmentCommand,
   CancelProjectAssignmentCommand,
   CreateProjectAssignmentCommand,
-  UpdateProjectAssignmentCommand,
   GetEmployeeProjectAssignmentsQuery,
   GetProjectAssignedEmployeesQuery,
   GetProjectAssignmentDetailQuery,
@@ -53,7 +52,6 @@ import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
   EvaluationProjectAssignmentFilter,
-  UpdateEvaluationProjectAssignmentData,
 } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 import type {
   CreateEvaluationWbsAssignmentData,
@@ -87,15 +85,6 @@ export class EvaluationCriteriaManagementService
     assignedBy: string,
   ): Promise<EvaluationProjectAssignmentDto> {
     const command = new CreateProjectAssignmentCommand(data, assignedBy);
-    return await this.commandBus.execute(command);
-  }
-
-  async 프로젝트_할당을_수정한다(
-    id: string,
-    data: UpdateEvaluationProjectAssignmentData,
-    updatedBy: string,
-  ): Promise<EvaluationProjectAssignmentDto> {
-    const command = new UpdateProjectAssignmentCommand(id, data, updatedBy);
     return await this.commandBus.execute(command);
   }
 

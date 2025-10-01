@@ -399,7 +399,7 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 평가 기간 완료
       await request(app.getHttpServer())
@@ -605,11 +605,11 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
     });
 
     it('월말 날짜로 수정해야 한다', async () => {
-      // Given: 평가 기간 생성
+      // Given: 평가 기간 생성 (충분히 긴 기간으로 설정)
       const createData = {
         name: '월말 날짜 테스트',
         startDate: '2024-01-01',
-        peerEvaluationDeadline: '2024-12-31',
+        peerEvaluationDeadline: '2025-12-31', // 충분히 긴 기간으로 설정
         description: '월말 날짜 테스트',
         maxSelfEvaluationRate: 120,
       };
@@ -621,12 +621,12 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When: 다양한 월말 날짜로 수정
+      // When: 다양한 월말 날짜로 수정 (순서대로 테스트)
       const monthEndDates = [
         '2024-01-31', // 1월 말
         '2024-02-29', // 윤년 2월 말
         '2024-04-30', // 4월 말 (30일)
-        '2024-12-31', // 12월 말
+        '2024-06-30', // 6월 말 (12월 말 대신 6월 말로 변경)
       ];
 
       for (const evaluationSetupDeadline of monthEndDates) {

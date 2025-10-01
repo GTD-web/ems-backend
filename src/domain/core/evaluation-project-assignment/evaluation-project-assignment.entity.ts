@@ -61,6 +61,9 @@ export class EvaluationProjectAssignment
       this.projectId = data.projectId;
       this.assignedBy = data.assignedBy;
       this.assignedDate = new Date();
+
+      // 감사 정보 설정
+      this.메타데이터를_업데이트한다(data.assignedBy);
     }
   }
 
@@ -96,11 +99,11 @@ export class EvaluationProjectAssignment
       projectId: this.projectId,
       assignedDate: this.assignedDate,
       assignedBy: this.assignedBy,
+      createdBy: this.createdBy,
+      updatedBy: this.updatedBy,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       deletedAt: this.deletedAt,
-      createdBy: this.createdBy,
-      updatedBy: this.updatedBy,
       version: this.version,
     };
   }

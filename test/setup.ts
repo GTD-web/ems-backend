@@ -20,18 +20,15 @@ beforeAll(async () => {
   process.env.NODE_ENV = 'test';
   process.env.DB_SYNCHRONIZE = 'true';
   process.env.DB_LOGGING = 'false';
+  process.env.LOG_LEVEL = 'silent';
 
-  console.log(`✅ PostgreSQL 테스트 컨테이너가 시작되었습니다: ${databaseUrl}`);
+  // console.log(`✅ PostgreSQL 테스트 컨테이너가 시작되었습니다: ${databaseUrl}`);
 }, 60000);
 
 afterAll(async () => {
   if (postgresContainer) {
-    console.log('🛑 PostgreSQL 테스트 컨테이너를 종료합니다...');
+    // console.log('🛑 PostgreSQL 테스트 컨테이너를 종료합니다...');
     await postgresContainer.stop();
     console.log('✅ PostgreSQL 테스트 컨테이너가 종료되었습니다.');
   }
 }, 30000);
-
-
-
-

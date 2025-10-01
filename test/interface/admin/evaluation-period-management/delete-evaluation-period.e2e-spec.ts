@@ -54,25 +54,23 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
 
     // 활성 평가 기간 생성 (ACTIVE 상태)
     const activePeriod = new EvaluationPeriod();
-    Object.assign(activePeriod, {
-      name: `활성 평가 기간 ${Date.now()}`,
-      startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-12-31'),
-      status: EvaluationPeriodStatus.ACTIVE,
-      maxSelfEvaluationRate: 120,
-      criteriaSettingEnabled: true,
-      selfEvaluationSettingEnabled: true,
-      finalEvaluationSettingEnabled: false,
-      gradeRanges: [
-        { grade: 'S', minRange: 95, maxRange: 100 },
-        { grade: 'A', minRange: 85, maxRange: 94 },
-        { grade: 'B', minRange: 75, maxRange: 84 },
-        { grade: 'C', minRange: 65, maxRange: 74 },
-        { grade: 'F', minRange: 0, maxRange: 64 },
-      ],
-      createdBy: 'test-user',
-      updatedBy: 'test-user',
-    });
+    activePeriod.name = `활성 평가 기간 ${Date.now()}`;
+    activePeriod.startDate = new Date('2024-01-01');
+    activePeriod.endDate = new Date('2024-12-31');
+    activePeriod.status = EvaluationPeriodStatus.IN_PROGRESS;
+    activePeriod.maxSelfEvaluationRate = 120;
+    activePeriod.criteriaSettingEnabled = true;
+    activePeriod.selfEvaluationSettingEnabled = true;
+    activePeriod.finalEvaluationSettingEnabled = false;
+    activePeriod.gradeRanges = [
+      { grade: 'S', minRange: 95, maxRange: 100 },
+      { grade: 'A', minRange: 85, maxRange: 94 },
+      { grade: 'B', minRange: 75, maxRange: 84 },
+      { grade: 'C', minRange: 65, maxRange: 74 },
+      { grade: 'F', minRange: 0, maxRange: 64 },
+    ];
+    activePeriod.createdBy = 'test-user';
+    activePeriod.updatedBy = 'test-user';
 
     const savedActivePeriod = await dataSource.manager.save(activePeriod);
     activeEvaluationPeriodId = savedActivePeriod.id;
@@ -257,16 +255,22 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
 
   describe('실패 케이스 - 상태별 삭제 제한', () => {
     it('활성 상태의 평가 기간 삭제 시 422 에러가 발생해야 한다', async () => {
-      // When & Then
+      // Given - 활성 상태 확인
+      const activePeriod = await dataSource.manager.findOne(EvaluationPeriod, {
+        where: { id: activeEvaluationPeriodId },
+      });
+      expect(activePeriod).not.toBeNull();
+      expect(activePeriod!.status).toBe(EvaluationPeriodStatus.IN_PROGRESS);
+      expect(activePeriod!.활성화된_상태인가()).toBe(true);
+
+      // When & Then - 422 에러만 허용
       const response = await request(app.getHttpServer())
         .delete(`/admin/evaluation-periods/${activeEvaluationPeriodId}`)
-        .expect([200, 422, 500]); // 비즈니스 로직에 따라 다를 수 있음
+        .expect(422);
 
-      if (response.status !== 200) {
-        expect(response.body.message).toContain(
-          '삭제할 수 없는 상태' || '진행 중인 평가',
-        );
-      }
+      expect(response.body.message).toContain(
+        '활성 상태인 평가 기간은 삭제할 수 없습니다',
+      );
     });
   });
 
@@ -424,7 +428,7 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
   describe('성능 테스트', () => {
     it('여러 평가 기간을 연속으로 빠르게 삭제할 수 있어야 한다', async () => {
       // Given - 추가 평가 기간들 생성
-      const additionalPeriods = [];
+      const additionalPeriods: string[] = [];
       for (let i = 0; i < 5; i++) {
         const period = new EvaluationPeriod();
         Object.assign(period, {

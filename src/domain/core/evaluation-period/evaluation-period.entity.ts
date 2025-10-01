@@ -2,6 +2,7 @@ import { BaseEntity } from '@libs/database/base/base.entity';
 import { Transform } from 'class-transformer';
 import { Column, Entity, Index } from 'typeorm';
 import {
+  EvaluationPeriodBusinessRuleViolationException,
   EvaluationPeriodRequiredDataMissingException,
   InvalidEvaluationPeriodDateRangeException,
   InvalidEvaluationPeriodStatusTransitionException,
@@ -53,12 +54,13 @@ export class EvaluationPeriod
 
   @Column({
     type: 'timestamp',
+    nullable: true,
     comment: '평가 기간 종료일',
   })
   @Transform(({ value }) =>
     value instanceof Date ? value.toISOString() : value,
   )
-  endDate: Date;
+  endDate?: Date;
 
   @Column({
     type: 'text',
@@ -461,7 +463,9 @@ export class EvaluationPeriod
    */
   평가기간_내인가(): boolean {
     const now = new Date();
-    return now >= this.startDate && now <= this.endDate;
+    return (
+      now >= this.startDate && (this.endDate ? now <= this.endDate : false)
+    );
   }
 
   /**
@@ -470,7 +474,7 @@ export class EvaluationPeriod
    */
   만료된_상태인가(): boolean {
     const now = new Date();
-    return now > this.endDate;
+    return this.endDate ? now > this.endDate : false;
   }
 
   /**
@@ -588,7 +592,8 @@ export class EvaluationPeriod
     const newStartDate = startDate || this.startDate;
     const newEndDate = endDate || this.endDate;
 
-    if (newStartDate >= newEndDate) {
+    // endDate가 있을 때만 날짜 범위 검증
+    if (newEndDate && newStartDate >= newEndDate) {
       throw new InvalidEvaluationPeriodDateRangeException(
         '시작일은 종료일보다 이전이어야 합니다.',
       );
@@ -764,25 +769,29 @@ export class EvaluationPeriod
    */
   private 등급구간_유효성_검증한다(gradeRanges: GradeRange[]): void {
     if (!gradeRanges || gradeRanges.length === 0) {
-      throw new Error('등급 구간은 최소 1개 이상 설정되어야 합니다.');
+      throw new EvaluationPeriodBusinessRuleViolationException(
+        '등급 구간은 최소 1개 이상 설정되어야 합니다.',
+      );
     }
 
     // 등급 중복 검증
     const grades = gradeRanges.map((range) => range.grade);
     const uniqueGrades = new Set(grades);
     if (grades.length !== uniqueGrades.size) {
-      throw new Error('중복된 등급이 존재합니다.');
+      throw new EvaluationPeriodBusinessRuleViolationException(
+        '중복된 등급이 존재합니다.',
+      );
     }
 
     // 점수 범위 검증
     for (const range of gradeRanges) {
       if (range.minRange >= range.maxRange) {
-        throw new Error(
+        throw new EvaluationPeriodBusinessRuleViolationException(
           `등급 ${range.grade}의 최소 범위는 최대 범위보다 작아야 합니다.`,
         );
       }
       if (range.minRange < 0 || range.maxRange > 100) {
-        throw new Error(
+        throw new EvaluationPeriodBusinessRuleViolationException(
           `등급 ${range.grade}의 점수 범위는 0-100 사이여야 합니다.`,
         );
       }
@@ -796,7 +805,7 @@ export class EvaluationPeriod
       const current = sortedRanges[i];
       const next = sortedRanges[i + 1];
       if (current.maxRange >= next.minRange) {
-        throw new Error(
+        throw new EvaluationPeriodBusinessRuleViolationException(
           `등급 ${current.grade}와 ${next.grade}의 점수 범위가 겹칩니다.`,
         );
       }

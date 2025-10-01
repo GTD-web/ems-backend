@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder } from 'typeorm';
+import { Repository, SelectQueryBuilder, IsNull } from 'typeorm';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
@@ -47,6 +47,12 @@ export class GetProjectAssignmentListHandler
   constructor(
     @InjectRepository(EvaluationProjectAssignment)
     private readonly projectAssignmentRepository: Repository<EvaluationProjectAssignment>,
+    @InjectRepository(Employee)
+    private readonly employeeRepository: Repository<Employee>,
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
   ) {}
 
   async execute(

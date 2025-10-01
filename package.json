@@ -20,7 +20,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:e2e:watch": "jest --config ./test/jest-e2e.json --watch",
     "test:e2e:cov": "jest --config ./test/jest-e2e.json --coverage",
-    "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config ./test/jest-e2e.json --runInBand"
+    "test:e2e:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --config ./test/jest-e2e.json --runInBand",
+    "test:e2e:simple": "cross-env NODE_ENV=test LOG_LEVEL=silent jest --config ./test/jest-e2e.json --verbose=false --passWithNoTests",
+    "test:e2e:fast": "cross-env NODE_ENV=test LOG_LEVEL=error jest --config ./test/jest-e2e-fast.json --maxWorkers=5 --silent",
+    "test:e2e:single": "cross-env NODE_ENV=test LOG_LEVEL=error jest --config ./test/jest-e2e-fast.json --maxWorkers=1 --silent --testPathPatterns"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -51,6 +54,7 @@
     "@types/node": "^22.10.7",
     "@types/pg": "^8.15.5",
     "@types/supertest": "^6.0.2",
+    "cross-env": "^7.0.3",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",

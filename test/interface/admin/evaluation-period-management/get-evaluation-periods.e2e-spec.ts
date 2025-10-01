@@ -526,12 +526,12 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       // 두 번째 평가 기간 시작 (진행 중 상태로 변경)
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${createdPeriods[1].id}/start`)
-        .expect(201);
+        .expect(200);
 
       // 세 번째 평가 기간 시작 후 완료
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${createdPeriods[2].id}/start`)
-        .expect(201);
+        .expect(200);
 
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${createdPeriods[2].id}/complete`)

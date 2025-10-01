@@ -1,23 +1,21 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-  Put,
-  Query,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Body, Controller, Param, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
   CreateProjectAssignmentDto,
-  UpdateProjectAssignmentDto,
   BulkCreateProjectAssignmentDto,
   ProjectAssignmentFilterDto,
-  ProjectAssignmentResponseDto,
-  ProjectAssignmentListResponseDto,
 } from './dto/project-assignment.dto';
+import {
+  CreateProjectAssignment,
+  CancelProjectAssignment,
+  GetProjectAssignmentList,
+  GetProjectAssignmentDetail,
+  GetEmployeeProjectAssignments,
+  GetProjectAssignedEmployees,
+  GetUnassignedEmployees,
+  BulkCreateProjectAssignments,
+} from './decorators/project-assignment-api.decorators';
 
 /**
  * 프로젝트 할당 관리 컨트롤러
@@ -34,16 +32,7 @@ export class ProjectAssignmentManagementController {
   /**
    * 프로젝트 할당 생성
    */
-  @Post()
-  @ApiOperation({
-    summary: '프로젝트 할당 생성',
-    description: '특정 직원을 특정 평가기간의 프로젝트에 할당합니다.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '프로젝트 할당이 성공적으로 생성되었습니다.',
-    type: ProjectAssignmentResponseDto,
-  })
+  @CreateProjectAssignment()
   async createProjectAssignment(
     @Body() createDto: CreateProjectAssignmentDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
@@ -56,43 +45,9 @@ export class ProjectAssignmentManagementController {
   }
 
   /**
-   * 프로젝트 할당 수정
-   */
-  @Put(':id')
-  @ApiOperation({
-    summary: '프로젝트 할당 수정',
-    description: '기존 프로젝트 할당의 정보를 수정합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '프로젝트 할당이 성공적으로 수정되었습니다.',
-    type: ProjectAssignmentResponseDto,
-  })
-  async updateProjectAssignment(
-    @Param('id') id: string,
-    @Body() updateDto: UpdateProjectAssignmentDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
-  ): Promise<any> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationCriteriaManagementService.프로젝트_할당을_수정한다(
-      id,
-      updateDto as any,
-      updatedBy,
-    );
-  }
-
-  /**
    * 프로젝트 할당 취소
    */
-  @Delete(':id')
-  @ApiOperation({
-    summary: '프로젝트 할당 취소',
-    description: '기존 프로젝트 할당을 취소합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '프로젝트 할당이 성공적으로 취소되었습니다.',
-  })
+  @CancelProjectAssignment()
   async cancelProjectAssignment(
     @Param('id') id: string,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
@@ -107,16 +62,7 @@ export class ProjectAssignmentManagementController {
   /**
    * 프로젝트 할당 목록 조회
    */
-  @Get()
-  @ApiOperation({
-    summary: '프로젝트 할당 목록 조회',
-    description: '필터 조건에 맞는 프로젝트 할당 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '프로젝트 할당 목록이 성공적으로 조회되었습니다.',
-    type: ProjectAssignmentListResponseDto,
-  })
+  @GetProjectAssignmentList()
   async getProjectAssignmentList(
     @Query() filter: ProjectAssignmentFilterDto,
   ): Promise<any> {
@@ -128,16 +74,7 @@ export class ProjectAssignmentManagementController {
   /**
    * 프로젝트 할당 상세 조회
    */
-  @Get(':id')
-  @ApiOperation({
-    summary: '프로젝트 할당 상세 조회',
-    description: '특정 프로젝트 할당의 상세 정보를 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '프로젝트 할당 상세 정보가 성공적으로 조회되었습니다.',
-    type: ProjectAssignmentResponseDto,
-  })
+  @GetProjectAssignmentDetail()
   async getProjectAssignmentDetail(@Param('id') id: string): Promise<any> {
     return await this.evaluationCriteriaManagementService.프로젝트_할당_상세를_조회한다(
       id,
@@ -147,17 +84,7 @@ export class ProjectAssignmentManagementController {
   /**
    * 특정 평가기간에 직원에게 할당된 프로젝트 조회
    */
-  @Get('employees/:employeeId/periods/:periodId')
-  @ApiOperation({
-    summary: '직원의 프로젝트 할당 조회',
-    description:
-      '특정 평가기간에 특정 직원에게 할당된 모든 프로젝트를 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '직원의 프로젝트 할당 목록이 성공적으로 조회되었습니다.',
-    type: [ProjectAssignmentResponseDto],
-  })
+  @GetEmployeeProjectAssignments()
   async getEmployeeProjectAssignments(
     @Param('employeeId') employeeId: string,
     @Param('periodId') periodId: string,
@@ -171,17 +98,7 @@ export class ProjectAssignmentManagementController {
   /**
    * 특정 평가기간에 프로젝트에 할당된 직원 조회
    */
-  @Get('projects/:projectId/periods/:periodId')
-  @ApiOperation({
-    summary: '프로젝트에 할당된 직원 조회',
-    description:
-      '특정 평가기간에 특정 프로젝트에 할당된 모든 직원을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '프로젝트에 할당된 직원 목록이 성공적으로 조회되었습니다.',
-    type: [ProjectAssignmentResponseDto],
-  })
+  @GetProjectAssignedEmployees()
   async getProjectAssignedEmployees(
     @Param('projectId') projectId: string,
     @Param('periodId') periodId: string,
@@ -195,17 +112,7 @@ export class ProjectAssignmentManagementController {
   /**
    * 특정 평가기간에 프로젝트가 할당되지 않은 직원 목록 조회
    */
-  @Get('unassigned-employees')
-  @ApiOperation({
-    summary: '할당되지 않은 직원 목록 조회',
-    description:
-      '특정 평가기간에 프로젝트가 할당되지 않은 직원 목록을 조회합니다.',
-  })
-  @ApiResponse({
-    status: 200,
-    description: '할당되지 않은 직원 목록이 성공적으로 조회되었습니다.',
-    type: [String],
-  })
+  @GetUnassignedEmployees()
   async getUnassignedEmployees(
     @Query('periodId') periodId: string,
     @Query('projectId') projectId?: string,
@@ -219,16 +126,7 @@ export class ProjectAssignmentManagementController {
   /**
    * 프로젝트 대량 할당
    */
-  @Post('bulk')
-  @ApiOperation({
-    summary: '프로젝트 대량 할당',
-    description: '여러 직원에게 여러 프로젝트를 한 번에 할당합니다.',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '프로젝트 대량 할당이 성공적으로 완료되었습니다.',
-    type: [ProjectAssignmentResponseDto],
-  })
+  @BulkCreateProjectAssignments()
   async bulkCreateProjectAssignments(
     @Body() bulkCreateDto: BulkCreateProjectAssignmentDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가

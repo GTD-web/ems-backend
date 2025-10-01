@@ -15,8 +15,14 @@
     "^@interface/(.*)$": "<rootDir>/../src/interface/$1"
   },
   "setupFilesAfterEnv": ["./setup.ts"],
-  "testTimeout": 30000,
-  "maxWorkers": 1,
+  "testTimeout": 15000,
+  "maxWorkers": "50%",
   "forceExit": true,
-  "detectOpenHandles": true
+  "detectOpenHandles": false,
+  "bail": 1,
+  "cache": true,
+  "verbose": false,
+  "silent": false,
+  "collectCoverage": false,
+  "passWithNoTests": true
 }

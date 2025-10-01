@@ -525,7 +525,7 @@ describe('PATCH /admin/evaluation-periods/:id/peer-evaluation-deadline', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When: ACTIVE 상태에서 하향/동료평가 마감일 수정
       const updateData = {
@@ -566,7 +566,7 @@ describe('PATCH /admin/evaluation-periods/:id/peer-evaluation-deadline', () => {
       // 평가 기간 시작 후 완료
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/complete`)

@@ -160,7 +160,7 @@ export function CreateEvaluationPeriod() {
 export function StartEvaluationPeriod() {
   return applyDecorators(
     Post(':id/start'),
-    HttpCode(HttpStatus.CREATED),
+    HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '평가 기간 시작',
       description: `**테스트 케이스:**
@@ -174,7 +174,7 @@ export function StartEvaluationPeriod() {
     }),
     ApiParam({ name: 'id', description: '평가 기간 ID' }),
     ApiResponse({
-      status: 201,
+      status: 200,
       description: '평가 기간이 성공적으로 시작되었습니다.',
       schema: {
         type: 'object',

@@ -47,7 +47,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When: 평가 기간 완료
       const response = await request(app.getHttpServer())
@@ -86,7 +86,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 활성 목록에 있는지 확인
       const activeBeforeResponse = await request(app.getHttpServer())
@@ -139,7 +139,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When: 평가 기간 완료
       const response = await request(app.getHttpServer())
@@ -175,7 +175,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When: 평가 기간 완료
       const response = await request(app.getHttpServer())
@@ -298,7 +298,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 첫 번째 완료 (성공)
       await request(app.getHttpServer())
@@ -338,7 +338,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When: 동시에 완료 요청
       const promises = Array(3)
@@ -421,7 +421,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When & Then: GET 메서드로 완료 시도
       const response = await request(app.getHttpServer()).get(
@@ -449,7 +449,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When & Then: PUT 메서드로 완료 시도
       const response = await request(app.getHttpServer()).put(
@@ -477,7 +477,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When & Then: DELETE 메서드로 완료 시도
       const response = await request(app.getHttpServer()).delete(
@@ -515,7 +515,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 시작된 상태의 데이터 저장
       const startedResponse = await request(app.getHttpServer())
@@ -571,7 +571,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When: 평가 기간 완료
       await request(app.getHttpServer())
@@ -618,7 +618,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       const startPromises = evaluationPeriodIds.map((id) =>
         request(app.getHttpServer())
           .post(`/admin/evaluation-periods/${id}/start`)
-          .expect(201),
+          .expect(200),
       );
 
       await Promise.all(startPromises);
@@ -692,7 +692,7 @@ describe('POST /admin/evaluation-periods/:id/complete', () => {
       // Step 2: 시작 (IN_PROGRESS 상태)
       const startResponse = await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       expect(startResponse.body).toEqual({ success: true });
 

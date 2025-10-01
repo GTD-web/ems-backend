@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EvaluationProjectAssignmentService } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.service';
 import { ProjectService } from '@domain/common/project/project.service';
@@ -35,7 +39,7 @@ export class CancelProjectAssignmentHandler
       // 프로젝트 할당이 존재하는지 확인
       const assignment = await this.projectAssignmentService.ID로_조회한다(id);
       if (!assignment) {
-        throw new BadRequestException(
+        throw new NotFoundException(
           `프로젝트 할당 ID ${id}에 해당하는 할당을 찾을 수 없습니다.`,
         );
       }
@@ -46,7 +50,7 @@ export class CancelProjectAssignmentHandler
         assignmentDto.projectId,
       );
       if (!project) {
-        throw new BadRequestException(
+        throw new NotFoundException(
           `프로젝트 ID ${assignmentDto.projectId}에 해당하는 프로젝트를 찾을 수 없습니다.`,
         );
       }

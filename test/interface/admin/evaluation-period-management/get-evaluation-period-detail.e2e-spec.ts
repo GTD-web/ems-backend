@@ -117,7 +117,7 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       // 평가 기간 활성화
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${periodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // When & Then: 활성화된 평가 기간 상세 조회
       const response = await request(testSuite.app.getHttpServer())
@@ -318,7 +318,7 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       // 평가 기간 시작
       await request(testSuite.app.getHttpServer())
         .post(`/admin/evaluation-periods/${periodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 평가 기간 완료
       await request(testSuite.app.getHttpServer())

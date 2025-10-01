@@ -527,6 +527,11 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
         throw new EvaluationPeriodNotFoundException(id);
       }
 
+      // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
+      await this.validationService.수동허용설정변경비즈니스규칙검증한다(
+        evaluationPeriod,
+      );
+
       // 엔티티 도메인 로직 실행 (Entity 레벨)
       if (criteriaSettingEnabled !== undefined) {
         if (criteriaSettingEnabled) {

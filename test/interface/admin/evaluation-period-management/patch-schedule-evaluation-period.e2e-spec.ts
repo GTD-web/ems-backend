@@ -39,8 +39,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -59,40 +70,63 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
       // 부분 수정 시 기존 값이 유지되어야 함
       expect(response.body.name).toBe(createData.name);
       expect(response.body.description).toBe(createData.description);
-      expect(response.body.peerEvaluationDeadline).toBe('2024-06-30');
+      expect(response.body.peerEvaluationDeadline).toBe(
+        '2024-06-30T00:00:00.000Z',
+      );
     });
 
-    it('평가 기간 종료일을 성공적으로 수정해야 한다', async () => {
-      // Given: 평가 기간 생성
+    it('하향/동료평가 마감일을 성공적으로 수정해야 한다 (추가)', async () => {
+      // Given: 평가 기간 생성 (최소한의 데이터로 생성)
       const createData = {
-        name: '종료일 수정 테스트 평가기간',
+        name: '하향동료평가 마감일 수정 테스트 평가기간',
         startDate: '2024-01-01T00:00:00.000Z',
-        peerEvaluationDeadline: '2024-06-30T00:00:00.000Z',
+        peerEvaluationDeadline: '2024-06-15T00:00:00.000Z',
         description: '종료일 수정 테스트',
         maxSelfEvaluationRate: 130,
       };
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When: 종료일 수정
+      // When: 하향/동료평가 마감일 수정 (기존보다 늦게 설정)
       const updateData = {
-        endDate: '2024-12-31T00:00:00.000Z',
+        peerEvaluationDeadline: '2024-12-31T00:00:00.000Z',
       };
 
       const response = await request(app.getHttpServer())
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/schedule`)
-        .send(updateData)
-        .expect(200);
+        .send(updateData);
+
+      // 디버깅을 위한 로깅
+      if (response.status !== 200) {
+        console.log('❌ 종료일 수정 테스트 실패 - 응답 상태:', response.status);
+        console.log('❌ 에러 메시지:', response.body);
+        console.log('❌ 요청 데이터:', updateData);
+      }
+
+      expect(response.status).toBe(200);
 
       // Then: 응답 검증
-      expect(response.body.endDate).toBe('2024-12-31T00:00:00.000Z');
+      expect(response.body.peerEvaluationDeadline).toBe(
+        '2024-12-31T00:00:00.000Z',
+      );
       // 부분 수정 시 기존 값이 유지되어야 함
-      expect(response.body.startDate).toBe('2024-01-01');
+      expect(response.body.startDate).toBe('2024-01-01T00:00:00.000Z');
       expect(response.body.name).toBe(createData.name);
     });
 
@@ -108,8 +142,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -128,7 +173,7 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         '2024-01-15T00:00:00.000Z',
       );
       // 부분 수정 시 기존 값이 유지되어야 함
-      expect(response.body.startDate).toBe('2024-01-01');
+      expect(response.body.startDate).toBe('2024-01-01T00:00:00.000Z');
       expect(response.body.name).toBe(createData.name);
     });
 
@@ -144,8 +189,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -164,7 +220,7 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         '2024-05-31T00:00:00.000Z',
       );
       // 부분 수정 시 기존 값이 유지되어야 함
-      expect(response.body.startDate).toBe('2024-01-01');
+      expect(response.body.startDate).toBe('2024-01-01T00:00:00.000Z');
       expect(response.body.name).toBe(createData.name);
     });
 
@@ -180,8 +236,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -200,7 +267,7 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         '2024-06-15T00:00:00.000Z',
       );
       // 부분 수정 시 기존 값이 유지되어야 함
-      expect(response.body.startDate).toBe('2024-01-01');
+      expect(response.body.startDate).toBe('2024-01-01T00:00:00.000Z');
       expect(response.body.name).toBe(createData.name);
     });
 
@@ -216,8 +283,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -236,45 +314,65 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         '2024-07-15T00:00:00.000Z',
       );
       // 부분 수정 시 기존 값이 유지되어야 함
-      expect(response.body.startDate).toBe('2024-01-01');
+      expect(response.body.startDate).toBe('2024-01-01T00:00:00.000Z');
       expect(response.body.name).toBe(createData.name);
     });
 
     it('전체 일정을 한 번에 수정해야 한다', async () => {
-      // Given: 평가 기간 생성
+      // Given: 평가 기간 생성 (올바른 순서로 생성)
       const createData = {
         name: '전체 일정 수정 테스트',
         startDate: '2024-01-01T00:00:00.000Z',
-        peerEvaluationDeadline: '2024-06-30T00:00:00.000Z',
+        peerEvaluationDeadline: '2024-06-15T00:00:00.000Z',
         description: '전체 일정 수정 테스트',
         maxSelfEvaluationRate: 120,
       };
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When: 전체 일정 수정
+      // When: 전체 일정 수정 (올바른 순서: 평가설정 < 업무수행 < 자기평가 < 하향/동료평가)
       const updateData = {
         startDate: '2024-02-01T00:00:00.000Z',
-        endDate: '2024-12-31T00:00:00.000Z',
         evaluationSetupDeadline: '2024-02-15T00:00:00.000Z',
         performanceDeadline: '2024-10-31T00:00:00.000Z',
         selfEvaluationDeadline: '2024-11-15T00:00:00.000Z',
-        peerEvaluationDeadline: '2024-11-30T00:00:00.000Z',
+        peerEvaluationDeadline: '2024-12-15T00:00:00.000Z',
       };
 
       const response = await request(app.getHttpServer())
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/schedule`)
-        .send(updateData)
-        .expect(200);
+        .send(updateData);
+
+      // 디버깅을 위한 로깅
+      if (response.status !== 200) {
+        console.log(
+          '❌ 전체 일정 수정 테스트 실패 - 응답 상태:',
+          response.status,
+        );
+        console.log('❌ 에러 메시지:', response.body);
+        console.log('❌ 요청 데이터:', updateData);
+      }
+
+      expect(response.status).toBe(200);
 
       // Then: 응답 검증
       expect(response.body.startDate).toBe('2024-02-01T00:00:00.000Z');
-      expect(response.body.endDate).toBe('2024-12-31T00:00:00.000Z');
       expect(response.body.evaluationSetupDeadline).toBe(
         '2024-02-15T00:00:00.000Z',
       );
@@ -285,7 +383,7 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         '2024-11-15T00:00:00.000Z',
       );
       expect(response.body.peerEvaluationDeadline).toBe(
-        '2024-11-30T00:00:00.000Z',
+        '2024-12-15T00:00:00.000Z',
       );
       // 기본 정보는 변경되지 않아야 함
       expect(response.body.name).toBe(createData.name);
@@ -293,7 +391,7 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
     });
 
     it('일부 일정만 선택적으로 수정해야 한다', async () => {
-      // Given: 평가 기간 생성
+      // Given: 평가 기간 생성 (올바른 순서로 생성)
       const createData = {
         name: '선택적 일정 수정 테스트',
         startDate: '2024-01-01T00:00:00.000Z',
@@ -304,15 +402,25 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When: 일부 일정만 수정 (시작일, 종료일, 자기평가 마감일만)
+      // When: 일부 일정만 수정 (평가설정과 자기평가 마감일 추가)
       const updateData = {
-        startDate: '2024-01-15T00:00:00.000Z',
-        endDate: '2024-12-15T00:00:00.000Z',
+        evaluationSetupDeadline: '2024-02-15T00:00:00.000Z',
         selfEvaluationDeadline: '2024-06-10T00:00:00.000Z',
       };
 
@@ -322,15 +430,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         .expect(200);
 
       // Then: 응답 검증
-      expect(response.body.startDate).toBe('2024-01-15T00:00:00.000Z');
-      expect(response.body.endDate).toBe('2024-12-15T00:00:00.000Z');
+      expect(response.body.evaluationSetupDeadline).toBe(
+        '2024-02-15T00:00:00.000Z',
+      );
       expect(response.body.selfEvaluationDeadline).toBe(
         '2024-06-10T00:00:00.000Z',
       );
-      // 수정하지 않은 필드는 기존 값 또는 null 유지
-      expect(response.body.peerEvaluationDeadline).toBe('2024-06-30');
-      expect(response.body.evaluationSetupDeadline).toBeNull();
-      expect(response.body.performanceDeadline).toBeNull();
+      // 수정하지 않은 필드는 기존 값이 유지되어야 함
+      expect(response.body.startDate).toBe('2024-01-01T00:00:00.000Z');
+      expect(response.body.peerEvaluationDeadline).toBe(
+        '2024-06-30T00:00:00.000Z',
+      );
+      expect(response.body.performanceDeadline).toBeNull(); // 생성 시 설정하지 않았으므로 null
+      expect(response.body.endDate).toBeNull(); // endDate는 시스템에서 자동으로 관리되므로 null
     });
 
     it('빈 객체로 요청 시 기존 값이 유지되어야 한다', async () => {
@@ -345,8 +457,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -359,8 +482,10 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         .expect(200);
 
       // Then: 기존 값이 모두 유지되어야 함
-      expect(response.body.startDate).toBe('2024-01-01');
-      expect(response.body.peerEvaluationDeadline).toBe('2024-06-30');
+      expect(response.body.startDate).toBe('2024-01-01T00:00:00.000Z');
+      expect(response.body.peerEvaluationDeadline).toBe(
+        '2024-06-30T00:00:00.000Z',
+      );
       expect(response.body.name).toBe(createData.name);
       expect(response.body.description).toBe(createData.description);
     });
@@ -377,8 +502,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -396,9 +532,9 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         .send(updateData)
         .expect(200);
 
-      // Then: 모든 날짜가 올바른 순서로 설정되어야 함 (endDate는 기존 값 유지)
-      expect(response.body.startDate).toBe('2024-01-01');
-      expect(response.body.endDate).toBe('2024-12-31'); // 기존 값 유지
+      // Then: 모든 날짜가 올바른 순서로 설정되어야 함 (endDate는 시스템 관리)
+      expect(response.body.startDate).toBe('2024-01-01T00:00:00.000Z');
+      expect(response.body.endDate).toBeNull(); // endDate는 시스템에서 자동으로 관리
       expect(response.body.evaluationSetupDeadline).toBe(
         '2024-02-28T00:00:00.000Z',
       );
@@ -459,8 +595,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -507,8 +654,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -532,32 +690,93 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
   // ==================== 비즈니스 로직 검증 ====================
 
   describe('비즈니스 로직 검증', () => {
-    it('시작일이 기존 종료일보다 늦을 때 400 에러가 발생해야 한다', async () => {
-      // Given: 평가 기간 생성 (종료일: 2024-06-30)
+    it('시작일이 동료평가 마감일보다 늦을 때 400 에러가 발생해야 한다', async () => {
+      // Given: 평가 기간 생성
       const createData = {
-        name: '날짜 순서 검증 테스트',
+        name: '시작일 동료평가 마감일 검증 테스트',
         startDate: '2024-01-01',
         peerEvaluationDeadline: '2024-06-30',
-        description: '날짜 순서 검증 테스트',
+        description: '시작일 동료평가 마감일 검증 테스트',
         maxSelfEvaluationRate: 120,
       };
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When & Then: 시작일이 기존 종료일보다 늦을 때 400 에러 발생
+      // When & Then: 시작일이 동료평가 마감일보다 늦을 때 400 에러 발생
       const updateData = {
-        startDate: '2024-12-31', // 기존 종료일(2024-06-30)보다 늦음
+        startDate: '2024-12-31', // 동료평가 마감일(2024-06-30)보다 늦음
       };
 
-      await request(app.getHttpServer())
+      const response = await request(app.getHttpServer())
+        .patch(`/admin/evaluation-periods/${evaluationPeriodId}/schedule`)
+        .send(updateData);
+
+      // 디버깅을 위한 로깅
+      if (response.status !== 400) {
+        console.log('❌ 시작일 검증 테스트 실패 - 응답 상태:', response.status);
+        console.log('❌ 에러 메시지:', response.body);
+        console.log('❌ 요청 데이터:', updateData);
+      }
+
+      expect(response.status).toBe(400);
+    });
+
+    it('시작일이 동료평가 마감일보다 이전일 때 성공해야 한다', async () => {
+      // Given: 평가 기간 생성 (동료평가 마감일: 2024-12-31)
+      const createData = {
+        name: '시작일 정상 수정 테스트',
+        startDate: '2024-01-01',
+        peerEvaluationDeadline: '2024-12-31',
+        description: '시작일 정상 수정 테스트',
+        maxSelfEvaluationRate: 120,
+      };
+
+      const createResponse = await request(app.getHttpServer())
+        .post('/admin/evaluation-periods')
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
+
+      const evaluationPeriodId = createResponse.body.id;
+
+      // When: 시작일을 동료평가 마감일보다 이전으로 수정
+      const updateData = {
+        startDate: '2024-06-01', // 동료평가 마감일(2024-12-31)보다 이전
+      };
+
+      const response = await request(app.getHttpServer())
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/schedule`)
         .send(updateData)
-        .expect(400);
+        .expect(200);
+
+      // Then: 시작일이 성공적으로 수정되어야 함
+      expect(response.body.startDate).toBe('2024-06-01T00:00:00.000Z');
     });
 
     it('마감일들이 논리적 순서를 위반할 때 400 에러가 발생해야 한다', async () => {
@@ -572,8 +791,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -624,15 +854,26 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 평가 기간 완료
       await request(app.getHttpServer())
@@ -655,7 +896,7 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
   describe('데이터 무결성 검증', () => {
     it('일정 수정 후 다른 필드들이 변경되지 않아야 한다', async () => {
-      // Given: 복잡한 평가 기간 생성
+      // Given: 복잡한 평가 기간 생성 (올바른 순서)
       const createData = {
         name: '데이터 무결성 테스트',
         startDate: '2024-01-01T00:00:00.000Z',
@@ -672,16 +913,27 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
       const originalData = createResponse.body;
 
-      // When: 일정만 수정
+      // When: 일정만 수정 (시작일과 평가설정 마감일 추가)
       const updateData = {
         startDate: '2024-01-15T00:00:00.000Z',
-        endDate: '2024-12-15T00:00:00.000Z',
+        evaluationSetupDeadline: '2024-02-15T00:00:00.000Z',
       };
 
       const response = await request(app.getHttpServer())
@@ -709,7 +961,16 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       // 수정된 일정 필드만 변경되었는지 확인
       expect(response.body.startDate).toBe('2024-01-15T00:00:00.000Z');
-      expect(response.body.endDate).toBe('2024-12-15T00:00:00.000Z');
+      expect(response.body.evaluationSetupDeadline).toBe(
+        '2024-02-15T00:00:00.000Z',
+      );
+      // 수정하지 않은 일정 필드들은 기존 값 유지
+      expect(response.body.endDate).toBeNull(); // endDate는 시스템에서 자동으로 관리되므로 null
+      expect(response.body.performanceDeadline).toBeNull(); // 생성 시 설정하지 않았으므로 null
+      expect(response.body.selfEvaluationDeadline).toBeNull(); // 생성 시 설정하지 않았으므로 null
+      expect(response.body.peerEvaluationDeadline).toBe(
+        '2024-06-30T00:00:00.000Z',
+      );
     });
 
     it('동시성 처리: 동일한 평가 기간을 동시에 수정할 때 하나만 성공해야 한다', async () => {
@@ -724,8 +985,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -751,10 +1023,11 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 
-      // 마지막 수정이 반영되어야 함 (조회 시에는 date 형식으로 반환됨)
-      expect(['2024-01-15', '2024-02-01']).toContain(
-        finalResponse.body.startDate,
-      );
+      // 마지막 수정이 반영되어야 함 (조회 시에는 ISO 형식으로 반환됨)
+      expect([
+        '2024-01-15T00:00:00.000Z',
+        '2024-02-01T00:00:00.000Z',
+      ]).toContain(finalResponse.body.startDate);
     });
   });
 
@@ -773,8 +1046,19 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
@@ -793,7 +1077,7 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
     });
 
     it('타임존이 다른 날짜로 수정해야 한다', async () => {
-      // Given: 평가 기간 생성
+      // Given: 평가 기간 생성 (올바른 순서)
       const createData = {
         name: '타임존 테스트',
         startDate: '2024-01-01T00:00:00.000Z',
@@ -804,16 +1088,27 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When: 다양한 타임존 형식으로 수정
+      // When: 다양한 타임존 형식으로 수정 (순서 보장)
       const timeZoneFormats = [
         { startDate: '2024-02-01T00:00:00Z' },
-        { endDate: '2024-12-31T23:59:59.999Z' },
-        { evaluationSetupDeadline: '2024-02-15T09:00:00+09:00' },
+        { evaluationSetupDeadline: '2024-02-20T09:00:00+09:00' },
+        { performanceDeadline: '2024-06-01T15:00:00-05:00' },
       ];
 
       for (const updateData of timeZoneFormats) {
@@ -823,44 +1118,86 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
           .expect(200);
 
         // Then: UTC로 정규화되어 저장되어야 함
-        const fieldName = Object.keys(updateData)[0];
-        expect(response.body[fieldName]).toMatch(
-          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-        );
+        const fieldNames = Object.keys(updateData);
+        for (const fieldName of fieldNames) {
+          expect(response.body[fieldName]).toMatch(
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+          );
+        }
       }
     });
 
     it('매우 먼 미래 날짜로 수정해야 한다', async () => {
-      // Given: 평가 기간 생성
+      // Given: 평가 기간 생성 (올바른 순서)
       const createData = {
         name: '먼 미래 날짜 테스트',
+        description: '먼 미래 날짜 테스트',
         startDate: '2024-01-01T00:00:00.000Z',
         peerEvaluationDeadline: '2024-06-30T00:00:00.000Z',
-        description: '먼 미래 날짜 테스트',
         maxSelfEvaluationRate: 120,
+        gradeRanges: [
+          { grade: 'S', minRange: 95, maxRange: 100 },
+          { grade: 'A', minRange: 85, maxRange: 94 },
+          { grade: 'B', minRange: 75, maxRange: 84 },
+          { grade: 'C', minRange: 65, maxRange: 74 },
+        ],
       };
 
       const createResponse = await request(app.getHttpServer())
         .post('/admin/evaluation-periods')
-        .send(createData)
-        .expect(201);
+        .send(createData);
+
+      // 평가 기간 생성 실패 시 디버깅
+      if (createResponse.status !== 201) {
+        console.log(
+          '❌ 평가 기간 생성 실패 - 응답 상태:',
+          createResponse.status,
+        );
+        console.log('❌ 에러 메시지:', createResponse.body);
+        console.log('❌ 생성 데이터:', createData);
+      }
+
+      expect(createResponse.status).toBe(201);
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When: 먼 미래 날짜로 수정
+      // When: 먼 미래 날짜로 수정 (peerEvaluationDeadline을 먼저 수정해서 endDate 범위 확장)
+      // 1단계: peerEvaluationDeadline만 먼저 수정
+      await request(app.getHttpServer())
+        .patch(`/admin/evaluation-periods/${evaluationPeriodId}/schedule`)
+        .send({ peerEvaluationDeadline: '2099-12-31T00:00:00.000Z' })
+        .expect(200);
+
+      // 2단계: 전체 일정을 먼 미래로 수정
       const updateData = {
         startDate: '2099-01-01T00:00:00.000Z',
-        endDate: '2099-12-31T00:00:00.000Z',
+        evaluationSetupDeadline: '2099-02-15T00:00:00.000Z',
+        performanceDeadline: '2099-05-31T00:00:00.000Z',
+        selfEvaluationDeadline: '2099-06-15T00:00:00.000Z',
+        peerEvaluationDeadline: '2099-12-30T00:00:00.000Z',
       };
 
       const response = await request(app.getHttpServer())
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/schedule`)
-        .send(updateData)
-        .expect(200);
+        .send(updateData);
+
+      // 디버깅을 위한 로깅
+      if (response.status !== 200) {
+        console.log(
+          '❌ 먼 미래 날짜 수정 테스트 실패 - 응답 상태:',
+          response.status,
+        );
+        console.log('❌ 에러 메시지:', response.body);
+        console.log('❌ 요청 데이터:', updateData);
+      }
+
+      expect(response.status).toBe(200);
 
       // Then: 먼 미래 날짜가 정상적으로 처리되어야 함
       expect(response.body.startDate).toBe('2099-01-01T00:00:00.000Z');
-      expect(response.body.endDate).toBe('2099-12-31T00:00:00.000Z');
+      expect(response.body.peerEvaluationDeadline).toBe(
+        '2099-12-30T00:00:00.000Z',
+      );
     });
   });
 });

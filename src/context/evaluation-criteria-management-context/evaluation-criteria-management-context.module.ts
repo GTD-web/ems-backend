@@ -9,11 +9,13 @@ import { ProjectModule } from '@domain/common/project/project.module';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { EvaluationCriteriaManagementService } from './evaluation-criteria-management.service';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
+import { Department } from '@domain/common/department/department.entity';
+import { Project } from '@domain/common/project/project.entity';
 
 // Project Assignment Handlers
 import {
   CreateProjectAssignmentHandler,
-  UpdateProjectAssignmentHandler,
   CancelProjectAssignmentHandler,
   BulkCreateProjectAssignmentHandler,
   GetProjectAssignmentListHandler,
@@ -49,6 +51,7 @@ import {
   GetUpdaterEvaluationLineMappingsHandler,
   GetEmployeeEvaluationSettingsHandler,
 } from './handlers/evaluation-line';
+import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
 
 /**
  * 평가기준관리 컨텍스트 모듈 (MVP 버전)
@@ -64,19 +67,24 @@ import {
 @Module({
   imports: [
     CqrsModule,
-    TypeOrmModule.forFeature([EvaluationProjectAssignment]),
+    TypeOrmModule.forFeature([
+      EvaluationProjectAssignment,
+      Employee,
+      Department,
+      Project,
+    ]),
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,
     EvaluationLineModule,
     EvaluationLineMappingModule,
     ProjectModule,
+    EvaluationPeriodModule,
   ],
   providers: [
     EvaluationCriteriaManagementService,
     TransactionManagerService,
     // Project Assignment Command Handlers
     CreateProjectAssignmentHandler,
-    UpdateProjectAssignmentHandler,
     CancelProjectAssignmentHandler,
     BulkCreateProjectAssignmentHandler,
     // Project Assignment Query Handlers

@@ -251,13 +251,13 @@ describe('PATCH /admin/evaluation-periods/:id/start-date', () => {
   // ==================== 비즈니스 로직 검증 ====================
 
   describe('비즈니스 로직 검증', () => {
-    it('시작일이 기존 종료일보다 늦을 때 400 에러가 발생해야 한다', async () => {
-      // Given: 평가 기간 생성 (종료일: 2024-06-30)
+    it('시작일이 동료평가 마감일보다 늦을 때 400 에러가 발생해야 한다', async () => {
+      // Given: 평가 기간 생성 (동료평가 마감일: 2024-06-30)
       const createData = {
-        name: '시작일 종료일 검증 테스트',
+        name: '시작일 동료평가 마감일 검증 테스트',
         startDate: '2024-01-01',
         peerEvaluationDeadline: '2024-06-30',
-        description: '시작일 종료일 검증 테스트',
+        description: '시작일 동료평가 마감일 검증 테스트',
         maxSelfEvaluationRate: 120,
       };
 
@@ -268,15 +268,46 @@ describe('PATCH /admin/evaluation-periods/:id/start-date', () => {
 
       const evaluationPeriodId = createResponse.body.id;
 
-      // When & Then: 시작일이 기존 종료일보다 늦을 때 400 에러 발생
+      // When & Then: 시작일이 동료평가 마감일보다 늦을 때 400 에러 발생
       const updateData = {
-        startDate: '2024-12-31', // 기존 종료일(2024-06-30)보다 늦음
+        startDate: '2024-12-31', // 동료평가 마감일(2024-06-30)보다 늦음
       };
 
       await request(app.getHttpServer())
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/start-date`)
         .send(updateData)
         .expect(400);
+    });
+
+    it('시작일이 동료평가 마감일보다 이전일 때 성공해야 한다', async () => {
+      // Given: 평가 기간 생성 (동료평가 마감일: 2024-12-31)
+      const createData = {
+        name: '시작일 정상 수정 테스트',
+        startDate: '2024-01-01',
+        peerEvaluationDeadline: '2024-12-31',
+        description: '시작일 정상 수정 테스트',
+        maxSelfEvaluationRate: 120,
+      };
+
+      const createResponse = await request(app.getHttpServer())
+        .post('/admin/evaluation-periods')
+        .send(createData)
+        .expect(201);
+
+      const evaluationPeriodId = createResponse.body.id;
+
+      // When: 시작일을 동료평가 마감일보다 이전으로 수정
+      const updateData = {
+        startDate: '2024-06-01', // 동료평가 마감일(2024-12-31)보다 이전
+      };
+
+      const response = await request(app.getHttpServer())
+        .patch(`/admin/evaluation-periods/${evaluationPeriodId}/start-date`)
+        .send(updateData)
+        .expect(200);
+
+      // Then: 시작일이 성공적으로 수정되어야 함
+      expect(response.body.startDate).toBe('2024-06-01T00:00:00.000Z');
     });
 
     it('시작일이 기존 마감일들보다 늦을 때 400 에러가 발생해야 한다', async () => {
@@ -339,7 +370,7 @@ describe('PATCH /admin/evaluation-periods/:id/start-date', () => {
       // 평가 기간 시작
       await request(app.getHttpServer())
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
-        .expect(201);
+        .expect(200);
 
       // 평가 기간 완료
       await request(app.getHttpServer())
