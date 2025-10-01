@@ -153,3 +153,29 @@ export class WbsSelfEvaluationMappingProjectMismatchException extends WbsSelfEva
     this.name = 'WbsSelfEvaluationMappingProjectMismatchException';
   }
 }
+
+// WBS 자가평가 매핑 유효성 검사 예외
+export class WbsSelfEvaluationMappingValidationException extends WbsSelfEvaluationMappingDomainException {
+  constructor(message: string) {
+    super(
+      `WBS 자가평가 매핑 유효성 검사 실패: ${message}`,
+      'WBS_SELF_EVALUATION_MAPPING_VALIDATION_ERROR',
+      400,
+      { message },
+    );
+    this.name = 'WbsSelfEvaluationMappingValidationException';
+  }
+}
+
+// WBS 자가평가 매핑 중복 예외
+export class WbsSelfEvaluationMappingDuplicateException extends WbsSelfEvaluationMappingDomainException {
+  constructor(periodId: string, employeeId: string, wbsItemId: string) {
+    super(
+      `이미 존재하는 WBS 자가평가 매핑입니다: 기간 ${periodId}, 직원 ${employeeId}, WBS ${wbsItemId}`,
+      'WBS_SELF_EVALUATION_MAPPING_DUPLICATE',
+      409,
+      { periodId, employeeId, wbsItemId },
+    );
+    this.name = 'WbsSelfEvaluationMappingDuplicateException';
+  }
+}

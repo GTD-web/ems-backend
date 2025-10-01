@@ -96,3 +96,29 @@ export class DeliverableFileSizeExceededException extends DeliverableDomainExcep
     this.name = 'DeliverableFileSizeExceededException';
   }
 }
+
+// 산출물 유효성 검사 예외
+export class DeliverableValidationException extends DeliverableDomainException {
+  constructor(message: string) {
+    super(
+      `산출물 유효성 검사 실패: ${message}`,
+      'DELIVERABLE_VALIDATION_ERROR',
+      400,
+      { message },
+    );
+    this.name = 'DeliverableValidationException';
+  }
+}
+
+// 산출물 중복 예외 (새로운 이름)
+export class DeliverableDuplicateException extends DeliverableDomainException {
+  constructor(name: string) {
+    super(
+      `이미 존재하는 산출물입니다: 이름 ${name}`,
+      'DELIVERABLE_DUPLICATE',
+      409,
+      { name },
+    );
+    this.name = 'DeliverableDuplicateException';
+  }
+}

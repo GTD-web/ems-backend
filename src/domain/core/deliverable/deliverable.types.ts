@@ -21,17 +21,17 @@ export enum DeliverableType {
 }
 
 /**
- * 산출물 생성 DTO
+ * 산출물 생성 데이터
  */
-export interface CreateDeliverableDto {
-  /** WBS 항목 ID */
-  wbsItemId: string;
+export interface CreateDeliverableData {
   /** 산출물명 */
   name: string;
   /** 산출물 설명 */
   description?: string;
   /** 산출물 유형 */
   type: DeliverableType;
+  /** 산출물 상태 */
+  status?: DeliverableStatus;
   /** 예상 완료일 */
   expectedCompletionDate?: Date;
   /** 파일 경로 */
@@ -40,12 +40,14 @@ export interface CreateDeliverableDto {
   fileSize?: number;
   /** MIME 타입 */
   mimeType?: string;
+  /** 생성자 ID */
+  createdBy: string;
 }
 
 /**
- * 산출물 업데이트 DTO
+ * 산출물 수정 데이터
  */
-export interface UpdateDeliverableDto {
+export interface UpdateDeliverableData {
   /** 산출물명 */
   name?: string;
   /** 산출물 설명 */
@@ -54,8 +56,6 @@ export interface UpdateDeliverableDto {
   type?: DeliverableType;
   /** 예상 완료일 */
   expectedCompletionDate?: Date;
-  /** 실제 완료일 */
-  actualCompletionDate?: Date;
   /** 상태 */
   status?: DeliverableStatus;
   /** 파일 경로 */
@@ -72,8 +72,6 @@ export interface UpdateDeliverableDto {
 export interface DeliverableDto {
   /** 산출물 고유 식별자 */
   id: string;
-  /** WBS 항목 ID */
-  wbsItemId: string;
   /** 산출물명 */
   name: string;
   /** 산출물 설명 */
@@ -102,8 +100,6 @@ export interface DeliverableDto {
  * 산출물 필터
  */
 export interface DeliverableFilter {
-  /** WBS 항목 ID */
-  wbsItemId?: string;
   /** 산출물 유형 */
   type?: DeliverableType;
   /** 상태 */
@@ -120,6 +116,14 @@ export interface DeliverableFilter {
   actualCompletionDateFrom?: Date;
   /** 실제 완료일 범위 - 종료 */
   actualCompletionDateTo?: Date;
+  /** 페이지 번호 (1부터 시작) */
+  page?: number;
+  /** 페이지 크기 */
+  limit?: number;
+  /** 정렬 기준 */
+  orderBy?: string;
+  /** 정렬 방향 */
+  orderDirection?: 'ASC' | 'DESC';
 }
 
 /**

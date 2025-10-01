@@ -1,92 +1,165 @@
 /**
- * WBS 자기평가 생성 DTO
- * 실제 자기평가 데이터만 포함합니다.
+ * WBS 자가평가 관련 타입 정의
  */
-export interface CreateWbsSelfEvaluationDto {
-  /** 평가 내용 */
-  evaluationContent?: string;
-  /** 평가 점수 */
-  score?: number;
-}
 
 /**
- * WBS 자기평가 업데이트 DTO
- */
-export interface UpdateWbsSelfEvaluationDto {
-  /** 평가 내용 */
-  evaluationContent?: string;
-  /** 평가 점수 */
-  score?: number;
-}
-
-/**
- * WBS 자기평가 DTO
- * 실제 자기평가 데이터만 포함합니다.
+ * WBS 자가평가 DTO
  */
 export interface WbsSelfEvaluationDto {
-  /** WBS 자기평가 고유 식별자 */
+  /** 고유 식별자 (UUID) */
   id: string;
-  /** 평가 내용 */
-  evaluationContent?: string;
-  /** 평가 점수 */
-  score?: number;
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 직원 ID */
+  employeeId: string;
+  /** WBS 항목 ID */
+  wbsItemId: string;
   /** 평가일 */
-  evaluationDate?: Date;
-  /** 제출 여부 */
-  isSubmitted: boolean;
-  /** 제출일시 */
-  submittedAt?: Date;
-  /** 생성일시 */
+  evaluationDate: Date;
+  /** 자가평가 내용 */
+  selfEvaluationContent: string;
+  /** 자가평가 점수 (1-5) */
+  selfEvaluationScore: number;
+  /** 추가 의견 */
+  additionalComments?: string;
+  /** 생성 일시 */
   createdAt: Date;
-  /** 수정일시 */
+  /** 수정 일시 */
   updatedAt: Date;
+  /** 삭제 일시 */
+  deletedAt?: Date;
+  /** 생성자 ID */
+  createdBy?: string;
+  /** 수정자 ID */
+  updatedBy?: string;
+  /** 버전 */
+  version: number;
+
+  // 조인된 정보 (선택적)
+  /** 평가기간 이름 */
+  periodName?: string;
+  /** 직원 이름 */
+  employeeName?: string;
+  /** WBS 항목 이름 */
+  wbsItemName?: string;
 }
 
 /**
- * WBS 자기평가 필터
- * 실제 자기평가 데이터 기준 필터입니다.
+ * WBS 자가평가 상세 DTO (관련 정보 포함)
+ */
+export interface WbsSelfEvaluationDetailDto {
+  /** 고유 식별자 (UUID) */
+  id: string;
+  /** 평가일 */
+  evaluationDate: Date;
+  /** 자가평가 내용 */
+  selfEvaluationContent: string;
+  /** 자가평가 점수 (1-5) */
+  selfEvaluationScore: number;
+  /** 추가 의견 */
+  additionalComments?: string;
+  /** 생성 일시 */
+  createdAt: Date;
+  /** 수정 일시 */
+  updatedAt: Date;
+  /** 삭제 일시 */
+  deletedAt?: Date;
+  /** 생성자 ID */
+  createdBy?: string;
+  /** 수정자 ID */
+  updatedBy?: string;
+  /** 버전 */
+  version: number;
+
+  /** 평가기간 정보 */
+  evaluationPeriod?: {
+    id: string;
+    name: string;
+    startDate: Date;
+    endDate?: Date;
+    status: string;
+    description?: string;
+  } | null;
+
+  /** 직원 정보 */
+  employee?: {
+    id: string;
+    employeeNumber: string;
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+    status: string;
+    departmentId?: string;
+    departmentName?: string;
+  } | null;
+
+  /** WBS 항목 정보 */
+  wbsItem?: {
+    id: string;
+    name: string;
+    description?: string;
+    projectId: string;
+    projectName?: string;
+    status: string;
+  } | null;
+}
+
+/**
+ * WBS 자가평가 생성 데이터
+ */
+export interface CreateWbsSelfEvaluationData {
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 직원 ID */
+  employeeId: string;
+  /** WBS 항목 ID */
+  wbsItemId: string;
+  /** 자가평가 내용 */
+  selfEvaluationContent: string;
+  /** 자가평가 점수 (1-5) */
+  selfEvaluationScore: number;
+  /** 추가 의견 */
+  additionalComments?: string;
+  /** 생성자 ID */
+  createdBy: string;
+}
+
+/**
+ * WBS 자가평가 수정 데이터
+ */
+export interface UpdateWbsSelfEvaluationData {
+  /** 자가평가 내용 */
+  selfEvaluationContent?: string;
+  /** 자가평가 점수 (1-5) */
+  selfEvaluationScore?: number;
+  /** 추가 의견 */
+  additionalComments?: string;
+}
+
+/**
+ * WBS 자가평가 필터
  */
 export interface WbsSelfEvaluationFilter {
-  /** 제출된 평가만 조회 */
-  submittedOnly?: boolean;
-  /** 점수 범위 필터 - 최소 */
-  scoreFrom?: number;
-  /** 점수 범위 필터 - 최대 */
-  scoreTo?: number;
-  /** 평가일 범위 - 시작 */
+  /** 평가 기간 ID */
+  periodId?: string;
+  /** 직원 ID */
+  employeeId?: string;
+  /** WBS 항목 ID */
+  wbsItemId?: string;
+  /** 평가일 시작 */
   evaluationDateFrom?: Date;
-  /** 평가일 범위 - 종료 */
+  /** 평가일 종료 */
   evaluationDateTo?: Date;
-  /** 제출일 범위 - 시작 */
-  submittedDateFrom?: Date;
-  /** 제출일 범위 - 종료 */
-  submittedDateTo?: Date;
-}
-
-/**
- * WBS 자기평가 통계
- */
-export interface WbsSelfEvaluationStatistics {
-  /** 전체 WBS 자기평가 수 */
-  totalEvaluations: number;
-  /** 제출된 평가 수 */
-  submittedEvaluations: number;
-  /** 미제출 평가 수 */
-  unsubmittedEvaluations: number;
-  /** 완료된 평가 수 */
-  completedEvaluations: number;
-  /** 미완료 평가 수 */
-  incompleteEvaluations: number;
-  /** 평균 점수 */
-  averageScore: number;
-  /** 최고 점수 */
-  maxScore: number;
-  /** 최저 점수 */
-  minScore: number;
-  /** 직원별 자기평가 수 */
-  evaluationsByEmployee: Record<string, number>;
-  /** WBS 항목별 자기평가 수 */
-  evaluationsByWbsItem: Record<string, number>;
-  /** 제출률 (%) */
-  submissionRate: number;
+  /** 점수 범위 시작 */
+  scoreFrom?: number;
+  /** 점수 범위 종료 */
+  scoreTo?: number;
+  /** 페이지 번호 (1부터 시작) */
+  page?: number;
+  /** 페이지 크기 */
+  limit?: number;
+  /** 정렬 기준 */
+  orderBy?: string;
+  /** 정렬 방향 */
+  orderDirection?: 'ASC' | 'DESC';
 }

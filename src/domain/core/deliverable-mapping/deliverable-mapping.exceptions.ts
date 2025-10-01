@@ -53,3 +53,29 @@ export class DeliverableMappingPermissionDeniedException extends DeliverableMapp
     this.name = 'DeliverableMappingPermissionDeniedException';
   }
 }
+
+// 산출물 매핑 유효성 검사 예외
+export class DeliverableMappingValidationException extends DeliverableMappingDomainException {
+  constructor(message: string) {
+    super(
+      `산출물 매핑 유효성 검사 실패: ${message}`,
+      'DELIVERABLE_MAPPING_VALIDATION_ERROR',
+      400,
+      { message },
+    );
+    this.name = 'DeliverableMappingValidationException';
+  }
+}
+
+// 산출물 매핑 중복 예외 (새로운 이름)
+export class DeliverableMappingDuplicateException extends DeliverableMappingDomainException {
+  constructor(employeeId: string, deliverableId: string) {
+    super(
+      `이미 존재하는 산출물 매핑입니다: 직원 ${employeeId}, 산출물 ${deliverableId}`,
+      'DELIVERABLE_MAPPING_DUPLICATE',
+      409,
+      { employeeId, deliverableId },
+    );
+    this.name = 'DeliverableMappingDuplicateException';
+  }
+}

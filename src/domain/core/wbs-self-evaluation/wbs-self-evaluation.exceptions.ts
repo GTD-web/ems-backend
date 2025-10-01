@@ -110,3 +110,29 @@ export class WbsSelfEvaluationCannotSubmitException extends WbsSelfEvaluationDom
     this.name = 'WbsSelfEvaluationCannotSubmitException';
   }
 }
+
+// WBS 자가평가 유효성 검사 예외
+export class WbsSelfEvaluationValidationException extends WbsSelfEvaluationDomainException {
+  constructor(message: string) {
+    super(
+      `WBS 자가평가 유효성 검사 실패: ${message}`,
+      'WBS_SELF_EVALUATION_VALIDATION_ERROR',
+      400,
+      { message },
+    );
+    this.name = 'WbsSelfEvaluationValidationException';
+  }
+}
+
+// WBS 자가평가 중복 예외
+export class WbsSelfEvaluationDuplicateException extends WbsSelfEvaluationDomainException {
+  constructor(periodId: string, employeeId: string, wbsItemId: string) {
+    super(
+      `이미 존재하는 WBS 자가평가입니다: 기간 ${periodId}, 직원 ${employeeId}, WBS ${wbsItemId}`,
+      'WBS_SELF_EVALUATION_DUPLICATE',
+      409,
+      { periodId, employeeId, wbsItemId },
+    );
+    this.name = 'WbsSelfEvaluationDuplicateException';
+  }
+}

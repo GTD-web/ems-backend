@@ -11,7 +11,7 @@ import { EvaluationPeriodModule } from './evaluation-period/evaluation-period.mo
 import { PeerEvaluationModule } from './peer-evaluation/peer-evaluation.module';
 import { PeerEvaluationMappingModule } from './peer-evaluation-mapping/peer-evaluation-mapping.module';
 import { WbsEvaluationCriteriaModule } from './wbs-evaluation-criteria/wbs-evaluation-criteria.module';
-import { WbsEvaluationModule } from './wbs-self-evaluation/wbs-self-evaluation.module';
+import { WbsSelfEvaluationModule } from './wbs-self-evaluation/wbs-self-evaluation.module';
 import { WbsSelfEvaluationMappingModule } from './wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.module';
 import { EvaluationWbsAssignmentModule } from './evaluation-wbs-assignment';
 import { EvaluationProjectAssignmentModule } from './evaluation-project-assignment/evaluation-project-assignment.module';
@@ -36,7 +36,7 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     EmployeeEvaluationStatusModule,
 
     // 평가 데이터 관리
-    WbsEvaluationModule,
+    WbsSelfEvaluationModule,
     DownwardEvaluationModule,
     PeerEvaluationModule,
 
@@ -65,7 +65,7 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     EmployeeEvaluationStatusModule,
 
     // 평가 데이터 관리
-    WbsEvaluationModule,
+    WbsSelfEvaluationModule,
     DownwardEvaluationModule,
     PeerEvaluationModule,
 
