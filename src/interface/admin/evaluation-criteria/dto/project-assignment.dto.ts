@@ -189,6 +189,18 @@ export class ProjectAssignmentResponseDto {
     example: '2024-01-01T00:00:00.000Z',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description: '버전',
+    example: 1,
+  })
+  version: number;
+
+  @ApiPropertyOptional({
+    description: '프로젝트 정보',
+    type: () => ProjectInfoDto,
+  })
+  project?: ProjectInfoDto | null;
 }
 
 /**
@@ -419,6 +431,17 @@ export class ProjectAssignmentDetailResponseDto {
     type: EmployeeInfoDto,
   })
   assignedBy?: EmployeeInfoDto | null;
+}
+
+/**
+ * 직원 프로젝트 목록 응답 DTO (프로젝트 정보만 포함)
+ */
+export class EmployeeProjectsResponseDto {
+  @ApiProperty({
+    description: '할당된 프로젝트 목록',
+    type: [ProjectInfoDto],
+  })
+  projects: ProjectInfoDto[];
 }
 
 /**

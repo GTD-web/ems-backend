@@ -69,44 +69,44 @@ export class GetProjectAssignmentDetailHandler
       .select([
         // 할당 정보
         'assignment.id AS assignment_id',
-        'assignment.assignedDate AS assignment_assignedDate',
-        'assignment.createdAt AS assignment_createdAt',
-        'assignment.updatedAt AS assignment_updatedAt',
-        'assignment.deletedAt AS assignment_deletedAt',
-        'assignment.createdBy AS assignment_createdBy',
-        'assignment.updatedBy AS assignment_updatedBy',
+        'assignment.assignedDate AS assignment_assigneddate',
+        'assignment.createdAt AS assignment_createdat',
+        'assignment.updatedAt AS assignment_updatedat',
+        'assignment.deletedAt AS assignment_deletedat',
+        'assignment.createdBy AS assignment_createdby',
+        'assignment.updatedBy AS assignment_updatedby',
         'assignment.version AS assignment_version',
         // 평가기간 정보
         'period.id AS period_id',
         'period.name AS period_name',
-        'period.startDate AS period_startDate',
-        'period.endDate AS period_endDate',
+        'period.startDate AS period_startdate',
+        'period.endDate AS period_enddate',
         'period.status AS period_status',
         'period.description AS period_description',
         // 직원 정보
         'employee.id AS employee_id',
-        'employee.employeeNumber AS employee_employeeNumber',
+        'employee.employeeNumber AS employee_employeenumber',
         'employee.name AS employee_name',
         'employee.email AS employee_email',
-        'employee.phoneNumber AS employee_phoneNumber',
+        'employee.phoneNumber AS employee_phonenumber',
         'employee.status AS employee_status',
-        'employee.departmentId AS employee_departmentId',
-        'employeeDept.name AS employeeDept_name',
+        'employee.departmentId AS employee_departmentid',
+        'employeeDept.name AS employeedept_name',
         // 프로젝트 정보
         'project.id AS project_id',
         'project.name AS project_name',
-        'project.projectCode AS project_projectCode',
+        'project.projectCode AS project_projectcode',
         'project.status AS project_status',
-        'project.startDate AS project_startDate',
-        'project.endDate AS project_endDate',
-        'project.managerId AS project_managerId',
+        'project.startDate AS project_startdate',
+        'project.endDate AS project_enddate',
+        'project.managerId AS project_managerid',
         // 할당자 정보
-        'assignedByEmployee.id AS assignedByEmployee_id',
-        'assignedByEmployee.employeeNumber AS assignedByEmployee_employeeNumber',
-        'assignedByEmployee.name AS assignedByEmployee_name',
-        'assignedByEmployee.email AS assignedByEmployee_email',
-        'assignedByEmployee.departmentId AS assignedByEmployee_departmentId',
-        'assignedByDept.name AS assignedByDept_name',
+        'assignedByEmployee.id AS assignedbyemployee_id',
+        'assignedByEmployee.employeeNumber AS assignedbyemployee_employeenumber',
+        'assignedByEmployee.name AS assignedbyemployee_name',
+        'assignedByEmployee.email AS assignedbyemployee_email',
+        'assignedByEmployee.departmentId AS assignedbyemployee_departmentid',
+        'assignedByDept.name AS assignedbydept_name',
       ])
       .where('assignment.id = :assignmentId', { assignmentId })
       .andWhere('assignment.deletedAt IS NULL')
@@ -118,19 +118,19 @@ export class GetProjectAssignmentDetailHandler
 
     return {
       id: result.assignment_id,
-      assignedDate: result.assignment_assignedDate || new Date(), // null인 경우 현재 시간으로 설정
-      createdAt: result.assignment_createdAt,
-      updatedAt: result.assignment_updatedAt,
-      deletedAt: result.assignment_deletedAt,
-      createdBy: result.assignment_createdBy,
-      updatedBy: result.assignment_updatedBy,
+      assignedDate: result.assignment_assigneddate || new Date(), // null인 경우 현재 시간으로 설정
+      createdAt: result.assignment_createdat,
+      updatedAt: result.assignment_updatedat,
+      deletedAt: result.assignment_deletedat,
+      createdBy: result.assignment_createdby,
+      updatedBy: result.assignment_updatedby,
       version: result.assignment_version,
       evaluationPeriod: result.period_id
         ? {
             id: result.period_id,
             name: result.period_name,
-            startDate: result.period_startDate,
-            endDate: result.period_endDate,
+            startDate: result.period_startdate,
+            endDate: result.period_enddate,
             status: result.period_status,
             description: result.period_description,
           }
@@ -138,34 +138,34 @@ export class GetProjectAssignmentDetailHandler
       employee: result.employee_id
         ? {
             id: result.employee_id,
-            employeeNumber: result.employee_employeeNumber,
+            employeeNumber: result.employee_employeenumber,
             name: result.employee_name,
             email: result.employee_email,
-            phoneNumber: result.employee_phoneNumber,
+            phoneNumber: result.employee_phonenumber,
             status: result.employee_status,
-            departmentId: result.employee_departmentId,
-            departmentName: result.employeeDept_name,
+            departmentId: result.employee_departmentid,
+            departmentName: result.employeedept_name,
           }
         : null,
       project: result.project_id
         ? {
             id: result.project_id,
             name: result.project_name,
-            projectCode: result.project_projectCode,
+            projectCode: result.project_projectcode,
             status: result.project_status,
-            startDate: result.project_startDate,
-            endDate: result.project_endDate,
-            managerId: result.project_managerId,
+            startDate: result.project_startdate,
+            endDate: result.project_enddate,
+            managerId: result.project_managerid,
           }
         : null,
-      assignedBy: result.assignedByEmployee_id
+      assignedBy: result.assignedbyemployee_id
         ? {
-            id: result.assignedByEmployee_id,
-            employeeNumber: result.assignedByEmployee_employeeNumber,
-            name: result.assignedByEmployee_name,
-            email: result.assignedByEmployee_email,
-            departmentId: result.assignedByEmployee_departmentId,
-            departmentName: result.assignedByDept_name,
+            id: result.assignedbyemployee_id,
+            employeeNumber: result.assignedbyemployee_employeenumber,
+            name: result.assignedbyemployee_name,
+            email: result.assignedbyemployee_email,
+            departmentId: result.assignedbyemployee_departmentid,
+            departmentName: result.assignedbydept_name,
           }
         : null,
     };

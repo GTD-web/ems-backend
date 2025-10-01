@@ -20,29 +20,30 @@ import {
   BulkCreateWbsAssignmentCommand,
   CancelWbsAssignmentCommand,
   CreateWbsAssignmentCommand,
-  ResetEmployeeWbsAssignmentsCommand,
-  ResetPeriodWbsAssignmentsCommand,
-  ResetProjectWbsAssignmentsCommand,
-  UpdateWbsAssignmentCommand,
   GetEmployeeWbsAssignmentsQuery,
   GetProjectWbsAssignmentsQuery,
   GetUnassignedWbsItemsQuery,
   GetWbsAssignmentDetailQuery,
   GetWbsAssignmentListQuery,
   GetWbsItemAssignmentsQuery,
+  ResetEmployeeWbsAssignmentsCommand,
+  ResetPeriodWbsAssignmentsCommand,
+  ResetProjectWbsAssignmentsCommand,
+  UpdateWbsAssignmentCommand,
   type WbsAssignmentListResult,
 } from './handlers/wbs-assignment';
 
 // Evaluation Line Commands & Queries
 import {
   ConfigureEmployeeWbsEvaluationLineCommand,
-  GetEvaluatorEmployeesQuery,
   GetEmployeeEvaluationLineMappingsQuery,
   GetEmployeeEvaluationSettingsQuery,
   GetEvaluationLineListQuery,
+  GetEvaluatorEmployeesQuery,
   GetUpdaterEvaluationLineMappingsQuery,
 } from './handlers/evaluation-line';
 
+import { ProjectInfoDto } from '@/interface/admin/evaluation-criteria/dto/project-assignment.dto';
 import type { EvaluationLineMappingDto } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type {
   EvaluationLineDto,
@@ -106,7 +107,7 @@ export class EvaluationCriteriaManagementService
   async 특정_평가기간에_직원에게_할당된_프로젝트를_조회한다(
     employeeId: string,
     periodId: string,
-  ): Promise<EvaluationProjectAssignmentDto[]> {
+  ): Promise<{ projects: ProjectInfoDto[] }> {
     const query = new GetEmployeeProjectAssignmentsQuery(employeeId, periodId);
     return await this.queryBus.execute(query);
   }

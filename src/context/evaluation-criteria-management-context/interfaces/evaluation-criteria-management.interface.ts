@@ -1,3 +1,9 @@
+import { ProjectInfoDto } from '@/interface/admin/evaluation-criteria/dto/project-assignment.dto';
+import type { EvaluationLineMappingDto } from '../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
+import type {
+  EvaluationLineDto,
+  EvaluationLineFilter,
+} from '../../../domain/core/evaluation-line/evaluation-line.types';
 import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
@@ -9,18 +15,6 @@ import type {
   EvaluationWbsAssignmentFilter,
   UpdateEvaluationWbsAssignmentData,
 } from '../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
-import type {
-  CreateEvaluationLineDto,
-  EvaluationLineDto,
-  EvaluationLineFilter,
-  UpdateEvaluationLineDto,
-} from '../../../domain/core/evaluation-line/evaluation-line.types';
-import type {
-  CreateEvaluationLineMappingData,
-  EvaluationLineMappingDto,
-  EvaluationLineMappingFilter,
-  UpdateEvaluationLineMappingData,
-} from '../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type { ProjectAssignmentListResult } from '../handlers/project-assignment/queries/get-project-assignment-list.handler';
 import type { WbsAssignmentListResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 
@@ -62,7 +56,7 @@ export interface IEvaluationCriteriaManagementService {
   특정_평가기간에_직원에게_할당된_프로젝트를_조회한다(
     employeeId: string,
     periodId: string,
-  ): Promise<EvaluationProjectAssignmentDto[]>;
+  ): Promise<{ projects: ProjectInfoDto[] }>;
 
   /**
    * 프로젝트 할당 상세를 조회한다

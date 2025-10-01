@@ -478,6 +478,225 @@ export class EmployeeTestService {
   }
 
   /**
+   * 현재 데이터베이스에 있는 직원 수를 조회한다
+   * @returns 직원 수
+   */
+  async 현재_직원_수를_조회한다(): Promise<number> {
+    const count = await this.employeeRepository.count({
+      where: { deletedAt: IsNull() },
+    });
+    return count;
+  }
+
+  /**
+   * 현재 데이터베이스에 있는 모든 직원을 조회한다
+   * @returns 직원 목록
+   */
+  async 현재_직원_목록을_조회한다(): Promise<EmployeeDto[]> {
+    const employees = await this.employeeRepository.find({
+      where: { deletedAt: IsNull() },
+      order: { createdAt: 'ASC' },
+    });
+    return employees.map((employee) => employee.DTO로_변환한다());
+  }
+
+  /**
+   * 테스트용 직원이 존재하는지 확인한다
+   * @returns 테스트용 직원 존재 여부
+   */
+  async 테스트용_직원이_존재하는가(): Promise<boolean> {
+    const count = await this.employeeRepository.count({
+      where: [
+        { externalId: 'emp-001', deletedAt: IsNull() },
+        { externalId: 'emp-002', deletedAt: IsNull() },
+        { externalId: 'emp-003', deletedAt: IsNull() },
+      ],
+    });
+    return count > 0;
+  }
+
+  /**
+   * 직원 데이터가 충분한지 확인하고 부족하면 생성한다
+   * @param minCount 최소 필요한 직원 수
+   * @returns 직원 목록
+   */
+  async 직원_데이터를_확인하고_생성한다(
+    minCount: number = 3,
+  ): Promise<EmployeeDto[]> {
+    const currentCount = await this.현재_직원_수를_조회한다();
+
+    console.log(`현재 직원 수: ${currentCount}, 최소 필요 수: ${minCount}`);
+
+    if (currentCount < minCount) {
+      console.log('직원 데이터가 부족합니다. 새로 생성합니다...');
+      // 기존 데이터 정리를 하지 않고 바로 생성
+      const employees = await this.테스트용_직원_데이터만_생성한다();
+      console.log(`새로 생성된 직원 수: ${employees.length}`);
+      return employees;
+    } else {
+      console.log('충분한 직원 데이터가 존재합니다.');
+      return await this.현재_직원_목록을_조회한다();
+    }
+  }
+
+  /**
+   * 테스트용 직원 데이터만 생성한다 (기존 데이터 정리 없이)
+   * @returns 생성된 직원 목록
+   */
+  async 테스트용_직원_데이터만_생성한다(): Promise<EmployeeDto[]> {
+    const testEmployees = [
+      // 경영진
+      {
+        employeeNumber: 'EMP001',
+        name: '김대표',
+        email: 'ceo@company.com',
+        phoneNumber: '010-0001-0001',
+        dateOfBirth: new Date('1970-01-01'),
+        gender: 'MALE' as EmployeeGender,
+        hireDate: new Date('2020-01-01'),
+        managerId: undefined,
+        status: '재직중' as EmployeeStatus,
+        departmentId: 'exec-001',
+        positionId: 'pos-001',
+        rankId: 'rank-001',
+        externalId: 'emp-001',
+        externalCreatedAt: new Date('2024-01-01'),
+        externalUpdatedAt: new Date('2024-01-01'),
+      },
+      {
+        employeeNumber: 'EMP002',
+        name: '박이사',
+        email: 'director@company.com',
+        phoneNumber: '010-0002-0002',
+        dateOfBirth: new Date('1975-05-15'),
+        gender: 'FEMALE' as EmployeeGender,
+        hireDate: new Date('2020-03-01'),
+        managerId: 'emp-001',
+        status: '재직중' as EmployeeStatus,
+        departmentId: 'exec-001',
+        positionId: 'pos-002',
+        rankId: 'rank-002',
+        externalId: 'emp-002',
+        externalCreatedAt: new Date('2024-01-01'),
+        externalUpdatedAt: new Date('2024-01-01'),
+      },
+      {
+        employeeNumber: 'EMP003',
+        name: '이개발팀장',
+        email: 'dev.manager@company.com',
+        phoneNumber: '010-0003-0003',
+        dateOfBirth: new Date('1980-03-20'),
+        gender: 'MALE' as EmployeeGender,
+        hireDate: new Date('2021-01-15'),
+        managerId: 'emp-002',
+        status: '재직중' as EmployeeStatus,
+        departmentId: 'tech-001',
+        positionId: 'pos-003',
+        rankId: 'rank-003',
+        externalId: 'emp-003',
+        externalCreatedAt: new Date('2024-01-02'),
+        externalUpdatedAt: new Date('2024-01-02'),
+      },
+      {
+        employeeNumber: 'EMP004',
+        name: '정백엔드개발자',
+        email: 'backend.dev@company.com',
+        phoneNumber: '010-0004-0004',
+        dateOfBirth: new Date('1985-07-10'),
+        gender: 'MALE' as EmployeeGender,
+        hireDate: new Date('2021-06-01'),
+        managerId: 'emp-003',
+        status: '재직중' as EmployeeStatus,
+        departmentId: 'backend-001',
+        positionId: 'pos-004',
+        rankId: 'rank-004',
+        externalId: 'emp-004',
+        externalCreatedAt: new Date('2024-01-02'),
+        externalUpdatedAt: new Date('2024-01-02'),
+      },
+      {
+        employeeNumber: 'EMP005',
+        name: '최프론트엔드개발자',
+        email: 'frontend.dev@company.com',
+        phoneNumber: '010-0005-0005',
+        dateOfBirth: new Date('1988-11-25'),
+        gender: 'FEMALE' as EmployeeGender,
+        hireDate: new Date('2021-08-15'),
+        managerId: 'emp-003',
+        status: '재직중' as EmployeeStatus,
+        departmentId: 'frontend-001',
+        positionId: 'pos-004',
+        rankId: 'rank-004',
+        externalId: 'emp-005',
+        externalCreatedAt: new Date('2024-01-02'),
+        externalUpdatedAt: new Date('2024-01-02'),
+      },
+    ];
+
+    // 직원 엔티티 생성 및 저장
+    const employees = testEmployees.map((emp) => {
+      const employee = new Employee(
+        emp.employeeNumber,
+        emp.name,
+        emp.email,
+        emp.externalId,
+        emp.phoneNumber,
+        emp.dateOfBirth,
+        emp.gender,
+        emp.hireDate,
+        emp.managerId,
+        emp.status,
+        emp.departmentId,
+        emp.positionId,
+        emp.rankId,
+        emp.externalCreatedAt,
+        emp.externalUpdatedAt,
+      );
+      return employee;
+    });
+
+    const savedEmployees = await this.employeeRepository.save(employees);
+    console.log(`데이터베이스에 저장된 직원 수: ${savedEmployees.length}`);
+
+    // 트랜잭션 강제 커밋 및 격리 수준 조정
+    try {
+      // 현재 트랜잭션 커밋
+      await this.employeeRepository.manager.connection.query('COMMIT');
+      console.log('직원 데이터 트랜잭션 커밋 완료');
+
+      // READ UNCOMMITTED로 격리 수준 변경 (테스트 환경에서만)
+      if (process.env.NODE_ENV === 'test') {
+        await this.employeeRepository.manager.connection.query(
+          'SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED',
+        );
+        console.log('테스트 환경: 격리 수준을 READ UNCOMMITTED로 변경');
+      }
+
+      // 새 트랜잭션 시작
+      await this.employeeRepository.manager.connection.query('BEGIN');
+      console.log('새 트랜잭션 시작');
+    } catch (error) {
+      console.warn('트랜잭션 처리 중 오류:', error.message);
+
+      // 실패 시 강제로 데이터 플러시
+      try {
+        await this.employeeRepository.manager.connection.query('SELECT 1'); // 연결 확인
+        console.log('데이터베이스 연결 확인 완료');
+      } catch (syncError) {
+        console.warn('데이터베이스 연결 확인 실패:', syncError.message);
+      }
+    }
+
+    // 저장 후 실제로 조회되는지 확인 (새 쿼리로)
+    const verifyCount = await this.employeeRepository.manager.connection.query(
+      'SELECT COUNT(*) as count FROM employee WHERE "deletedAt" IS NULL',
+    );
+    console.log(`저장 후 검증 - 현재 직원 수: ${verifyCount[0]?.count || 0}`);
+
+    return savedEmployees.map((employee) => employee.DTO로_변환한다());
+  }
+
+  /**
    * 매니저-하위직원 관계를 가진 테스트 데이터를 생성한다
    * @param managerCount 매니저 수
    * @param employeesPerManager 매니저당 하위 직원 수

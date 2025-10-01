@@ -60,12 +60,6 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     // 테스트용 할당 데이터 생성
     await createTestAssignments();
-
-    console.log('목록 조회 테스트 데이터 생성 완료:', {
-      departments: testData.departments.length,
-      employees: testData.employees.length,
-      projects: testData.projects.length,
-    });
   });
 
   afterEach(async () => {

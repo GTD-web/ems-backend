@@ -3,7 +3,8 @@ import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
-import { EvaluationProjectAssignmentDto } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
+import { Project } from '@domain/common/project/project.entity';
+import { ProjectInfoDto } from '@/interface/admin/evaluation-criteria/dto/project-assignment.dto';
 
 /**
  * 직원의 프로젝트 할당 조회 쿼리
@@ -30,17 +31,44 @@ export class GetEmployeeProjectAssignmentsHandler
 
   async execute(
     query: GetEmployeeProjectAssignmentsQuery,
-  ): Promise<EvaluationProjectAssignmentDto[]> {
+  ): Promise<{ projects: ProjectInfoDto[] }> {
     const { employeeId, periodId } = query;
 
-    const assignments = await this.projectAssignmentRepository
+    const results = await this.projectAssignmentRepository
       .createQueryBuilder('assignment')
+      .leftJoin(
+        Project,
+        'project',
+        'project.id = assignment.projectId AND project.deletedAt IS NULL',
+      )
+      .select([
+        // 프로젝트 정보만 선택
+        'project.id AS project_id',
+        'project.name AS project_name',
+        'project.projectCode AS project_projectcode',
+        'project.status AS project_status',
+        'project.startDate AS project_startdate',
+        'project.endDate AS project_enddate',
+        'project.managerId AS project_managerid',
+      ])
       .where('assignment.deletedAt IS NULL')
       .andWhere('assignment.periodId = :periodId', { periodId })
       .andWhere('assignment.employeeId = :employeeId', { employeeId })
       .orderBy('assignment.assignedDate', 'DESC')
-      .getMany();
+      .getRawMany();
 
-    return assignments.map((assignment) => assignment.DTO로_변환한다());
+    const projects: ProjectInfoDto[] = results
+      .filter((result) => result.project_id) // null 프로젝트 제외
+      .map((result) => ({
+        id: result.project_id,
+        name: result.project_name,
+        projectCode: result.project_projectcode,
+        status: result.project_status,
+        startDate: result.project_startdate,
+        endDate: result.project_enddate,
+        managerId: result.project_managerid,
+      }));
+
+    return { projects };
   }
 }

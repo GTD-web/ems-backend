@@ -41,9 +41,9 @@ export class TestContextService {
     const departments =
       await this.departmentTestService.테스트용_목데이터를_생성한다();
 
-    // 3. 직원 데이터 생성
+    // 3. 직원 데이터 생성 (자동 확인 및 생성)
     const employees =
-      await this.employeeTestService.테스트용_목데이터를_생성한다();
+      await this.employeeTestService.직원_데이터를_확인하고_생성한다(5);
 
     // 4. 프로젝트 데이터 생성
     const projects =
@@ -76,19 +76,15 @@ export class TestContextService {
     departments: DepartmentDto[];
     employees: EmployeeDto[];
   }> {
-    // 기존 테스트 데이터 정리
-    await this.테스트_데이터를_정리한다();
-
-    // 부서 데이터 생성
+    // 부서 데이터만 생성 (직원은 이미 생성되었다고 가정)
     const departments =
       await this.departmentTestService.테스트용_목데이터를_생성한다();
 
-    // 직원 데이터 생성
-    const employees =
-      await this.employeeTestService.테스트용_목데이터를_생성한다();
+    // 기존 직원 데이터 조회 (재생성하지 않음)
+    const employees = await this.employeeTestService.현재_직원_목록을_조회한다();
 
     console.log(
-      `부서 ${departments.length}, 직원 ${employees.length} 생성 완료`,
+      `부서 ${departments.length}, 기존 직원 ${employees.length} 조회 완료`,
     );
     return {
       departments,
@@ -230,9 +226,9 @@ export class TestContextService {
     const departments =
       await this.departmentTestService.테스트용_목데이터를_생성한다();
 
-    // 3. 직원 생성 (부서별로)
+    // 3. 직원 생성 (자동 확인 및 생성)
     const employees =
-      await this.employeeTestService.테스트용_목데이터를_생성한다();
+      await this.employeeTestService.직원_데이터를_확인하고_생성한다(10);
 
     // 4. 프로젝트 생성
     const projects =
@@ -324,14 +320,31 @@ export class TestContextService {
     projectCount: number;
     wbsItemCount: number;
   }> {
-    // 실제 카운트는 각 서비스에서 제공하지 않으므로 간단한 확인만 수행
-    console.log('테스트 환경 상태 확인 완료');
+    const employeeCount =
+      await this.employeeTestService.현재_직원_수를_조회한다();
+
+    console.log(`현재 테스트 환경 상태 - 직원: ${employeeCount}명`);
 
     return {
       departmentCount: 0,
-      employeeCount: 0,
+      employeeCount,
       projectCount: 0,
       wbsItemCount: 0,
     };
+  }
+
+  /**
+   * 직원 데이터만 확인하고 필요시 생성한다
+   * @param minCount 최소 필요한 직원 수
+   * @returns 직원 목록
+   */
+  async 직원_데이터를_확인하고_준비한다(
+    minCount: number = 3,
+  ): Promise<EmployeeDto[]> {
+    console.log('=== 직원 데이터 확인 및 준비 ===');
+    const employees =
+      await this.employeeTestService.직원_데이터를_확인하고_생성한다(minCount);
+    console.log(`준비된 직원 수: ${employees.length}`);
+    return employees;
   }
 }

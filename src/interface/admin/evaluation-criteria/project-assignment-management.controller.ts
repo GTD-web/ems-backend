@@ -3,20 +3,21 @@ import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
-  CreateProjectAssignmentDto,
-  BulkCreateProjectAssignmentDto,
-  ProjectAssignmentFilterDto,
-} from './dto/project-assignment.dto';
-import {
-  CreateProjectAssignment,
+  BulkCreateProjectAssignments,
   CancelProjectAssignment,
-  GetProjectAssignmentList,
-  GetProjectAssignmentDetail,
+  CreateProjectAssignment,
   GetEmployeeProjectAssignments,
   GetProjectAssignedEmployees,
+  GetProjectAssignmentDetail,
+  GetProjectAssignmentList,
   GetUnassignedEmployees,
-  BulkCreateProjectAssignments,
 } from './decorators/project-assignment-api.decorators';
+import {
+  BulkCreateProjectAssignmentDto,
+  CreateProjectAssignmentDto,
+  EmployeeProjectsResponseDto,
+  ProjectAssignmentFilterDto
+} from './dto/project-assignment.dto';
 
 /**
  * 프로젝트 할당 관리 컨트롤러
@@ -102,7 +103,7 @@ export class ProjectAssignmentManagementController {
   async getEmployeeProjectAssignments(
     @Param('employeeId') employeeId: string,
     @Param('periodId') periodId: string,
-  ): Promise<any[]> {
+  ): Promise<EmployeeProjectsResponseDto> {
     return await this.evaluationCriteriaManagementService.특정_평가기간에_직원에게_할당된_프로젝트를_조회한다(
       employeeId,
       periodId,

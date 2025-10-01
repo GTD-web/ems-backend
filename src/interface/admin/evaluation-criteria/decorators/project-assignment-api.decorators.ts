@@ -12,6 +12,7 @@ import {
   ProjectAssignmentResponseDto,
   ProjectAssignmentDetailResponseDto,
   ProjectAssignmentListResponseDto,
+  EmployeeProjectsResponseDto,
 } from '../dto/project-assignment.dto';
 
 // ==================== GET 엔드포인트 데코레이터 ====================
@@ -72,7 +73,8 @@ export function GetProjectAssignmentDetail() {
     Get(':id'),
     ApiOperation({
       summary: '프로젝트 할당 상세 조회',
-      description: '특정 프로젝트 할당의 상세 정보를 관련된 평가기간, 직원, 프로젝트, 할당자 정보와 함께 조회합니다.',
+      description:
+        '특정 프로젝트 할당의 상세 정보를 관련된 평가기간, 직원, 프로젝트, 할당자 정보와 함께 조회합니다.',
     }),
     ApiParam({
       name: 'id',
@@ -94,7 +96,7 @@ export function GetEmployeeProjectAssignments() {
   return applyDecorators(
     Get('employees/:employeeId/periods/:periodId'),
     ApiOperation({
-      summary: '직원의 프로젝트 할당 조회',
+      summary: '직원에게 할당한 프로젝트 목록 조회',
       description:
         '특정 평가기간에 특정 직원에게 할당된 모든 프로젝트를 조회합니다.',
     }),
@@ -110,8 +112,8 @@ export function GetEmployeeProjectAssignments() {
     }),
     ApiResponse({
       status: 200,
-      description: '직원의 프로젝트 할당 목록이 성공적으로 조회되었습니다.',
-      type: [ProjectAssignmentResponseDto],
+      description: '직원의 할당된 프로젝트 목록이 성공적으로 조회되었습니다.',
+      type: EmployeeProjectsResponseDto,
     }),
   );
 }
@@ -123,7 +125,7 @@ export function GetProjectAssignedEmployees() {
   return applyDecorators(
     Get('projects/:projectId/periods/:periodId'),
     ApiOperation({
-      summary: '프로젝트에 할당된 직원 조회',
+      summary: '프로젝트에 할당된 직원 목록 조회',
       description:
         '특정 평가기간에 특정 프로젝트에 할당된 모든 직원을 조회합니다.',
     }),
