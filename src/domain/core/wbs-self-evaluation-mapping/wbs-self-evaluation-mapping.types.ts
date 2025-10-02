@@ -22,6 +22,8 @@ export interface WbsSelfEvaluationMappingDto {
   isCompleted: boolean;
   /** 완료일 */
   completedAt?: Date;
+  /** 자가평가 ID */
+  selfEvaluationId?: string;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */
@@ -58,6 +60,8 @@ export interface WbsSelfEvaluationMappingDetailDto {
   isCompleted: boolean;
   /** 완료일 */
   completedAt?: Date;
+  /** 자가평가 ID */
+  selfEvaluationId?: string;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */
@@ -136,6 +140,8 @@ export interface UpdateWbsSelfEvaluationMappingData {
   assignedBy?: string;
   /** 자가평가 완료 여부 */
   isCompleted?: boolean;
+  /** 자가평가 ID */
+  selfEvaluationId?: string;
 }
 
 /**

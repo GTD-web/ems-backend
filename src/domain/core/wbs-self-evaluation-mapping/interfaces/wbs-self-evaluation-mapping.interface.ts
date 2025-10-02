@@ -18,6 +18,8 @@ export interface IWbsSelfEvaluationMapping {
   isCompleted: boolean;
   /** 완료일 */
   completedAt?: Date;
+  /** 자가평가 ID */
+  selfEvaluationId?: string;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */

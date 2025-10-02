@@ -63,6 +63,13 @@ export class WbsSelfEvaluationMapping
   })
   completedAt?: Date;
 
+  @Column({
+    type: 'uuid',
+    nullable: true,
+    comment: '자가평가 ID',
+  })
+  selfEvaluationId?: string;
+
   constructor(data?: CreateWbsSelfEvaluationMappingData) {
     super();
     if (data) {
@@ -112,6 +119,21 @@ export class WbsSelfEvaluationMapping
   자가평가_완료를_취소한다(): void {
     this.isCompleted = false;
     this.completedAt = undefined;
+    this.selfEvaluationId = undefined;
+  }
+
+  /**
+   * 자가평가 ID를 설정한다
+   */
+  자가평가_ID를_설정한다(selfEvaluationId: string): void {
+    this.selfEvaluationId = selfEvaluationId;
+  }
+
+  /**
+   * 자가평가가 연결되어 있는지 확인한다
+   */
+  자가평가가_연결되어_있는가(): boolean {
+    return !!this.selfEvaluationId;
   }
 
   /**
@@ -134,6 +156,7 @@ export class WbsSelfEvaluationMapping
       assignedBy: this.assignedBy,
       isCompleted: this.isCompleted,
       completedAt: this.completedAt,
+      selfEvaluationId: this.selfEvaluationId,
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
       createdAt: this.createdAt,

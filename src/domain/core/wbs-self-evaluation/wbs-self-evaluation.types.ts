@@ -8,12 +8,6 @@
 export interface WbsSelfEvaluationDto {
   /** 고유 식별자 (UUID) */
   id: string;
-  /** 평가 기간 ID */
-  periodId: string;
-  /** 직원 ID */
-  employeeId: string;
-  /** WBS 항목 ID */
-  wbsItemId: string;
   /** 평가일 */
   evaluationDate: Date;
   /** 자가평가 내용 */
@@ -34,14 +28,6 @@ export interface WbsSelfEvaluationDto {
   updatedBy?: string;
   /** 버전 */
   version: number;
-
-  // 조인된 정보 (선택적)
-  /** 평가기간 이름 */
-  periodName?: string;
-  /** 직원 이름 */
-  employeeName?: string;
-  /** WBS 항목 이름 */
-  wbsItemName?: string;
 }
 
 /**
@@ -70,50 +56,12 @@ export interface WbsSelfEvaluationDetailDto {
   updatedBy?: string;
   /** 버전 */
   version: number;
-
-  /** 평가기간 정보 */
-  evaluationPeriod?: {
-    id: string;
-    name: string;
-    startDate: Date;
-    endDate?: Date;
-    status: string;
-    description?: string;
-  } | null;
-
-  /** 직원 정보 */
-  employee?: {
-    id: string;
-    employeeNumber: string;
-    name: string;
-    email?: string;
-    phoneNumber?: string;
-    status: string;
-    departmentId?: string;
-    departmentName?: string;
-  } | null;
-
-  /** WBS 항목 정보 */
-  wbsItem?: {
-    id: string;
-    name: string;
-    description?: string;
-    projectId: string;
-    projectName?: string;
-    status: string;
-  } | null;
 }
 
 /**
  * WBS 자가평가 생성 데이터
  */
 export interface CreateWbsSelfEvaluationData {
-  /** 평가 기간 ID */
-  periodId: string;
-  /** 직원 ID */
-  employeeId: string;
-  /** WBS 항목 ID */
-  wbsItemId: string;
   /** 자가평가 내용 */
   selfEvaluationContent: string;
   /** 자가평가 점수 (1-5) */
@@ -140,12 +88,6 @@ export interface UpdateWbsSelfEvaluationData {
  * WBS 자가평가 필터
  */
 export interface WbsSelfEvaluationFilter {
-  /** 평가 기간 ID */
-  periodId?: string;
-  /** 직원 ID */
-  employeeId?: string;
-  /** WBS 항목 ID */
-  wbsItemId?: string;
   /** 평가일 시작 */
   evaluationDateFrom?: Date;
   /** 평가일 종료 */

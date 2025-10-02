@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { WbsSelfEvaluationMapping } from './wbs-self-evaluation-mapping.entity';
 import {
   WbsSelfEvaluationMappingDuplicateException,
@@ -24,43 +25,54 @@ export class WbsSelfEvaluationMappingService {
   constructor(
     @InjectRepository(WbsSelfEvaluationMapping)
     private readonly wbsSelfEvaluationMappingRepository: Repository<WbsSelfEvaluationMapping>,
+    private readonly transactionManager: TransactionManagerService,
   ) {}
+
+  /**
+   * 안전한 도메인 작업을 실행한다
+   */
+  private async executeSafeDomainOperation<T>(
+    operation: () => Promise<T>,
+    context: string,
+  ): Promise<T> {
+    return this.transactionManager.executeSafeOperation(operation, context);
+  }
 
   /**
    * WBS 자가평가 매핑을 생성한다
    */
   async 생성한다(
     createData: CreateWbsSelfEvaluationMappingData,
+    manager?: EntityManager,
   ): Promise<WbsSelfEvaluationMapping> {
-    this.logger.log(
-      `WBS 자가평가 매핑 생성 시작 - 직원: ${createData.employeeId}, WBS: ${createData.wbsItemId}`,
-    );
-
-    // 중복 검사
-    await this.중복_검사를_수행한다(
-      createData.periodId,
-      createData.employeeId,
-      createData.wbsItemId,
-    );
-
-    // 유효성 검사
-    this.유효성을_검사한다(createData);
-
-    try {
-      const wbsSelfEvaluationMapping = new WbsSelfEvaluationMapping(createData);
-      const saved = await this.wbsSelfEvaluationMappingRepository.save(
-        wbsSelfEvaluationMapping,
+    return this.executeSafeDomainOperation(async () => {
+      this.logger.log(
+        `WBS 자가평가 매핑 생성 시작 - 직원: ${createData.employeeId}, WBS: ${createData.wbsItemId}`,
       );
+
+      // 중복 검사
+      await this.중복_검사를_수행한다(
+        createData.periodId,
+        createData.employeeId,
+        createData.wbsItemId,
+        manager,
+      );
+
+      // 유효성 검사
+      this.유효성을_검사한다(createData);
+
+      const repository = this.transactionManager.getRepository(
+        WbsSelfEvaluationMapping,
+        this.wbsSelfEvaluationMappingRepository,
+        manager,
+      );
+
+      const wbsSelfEvaluationMapping = new WbsSelfEvaluationMapping(createData);
+      const saved = await repository.save(wbsSelfEvaluationMapping);
 
       this.logger.log(`WBS 자가평가 매핑 생성 완료 - ID: ${saved.id}`);
       return saved;
-    } catch (error) {
-      this.logger.error(
-        `WBS 자가평가 매핑 생성 실패 - 직원: ${createData.employeeId}, WBS: ${createData.wbsItemId}`,
-        error.stack,
-      );
-      throw error;
-    }
+    }, '생성한다');
   }
 
   /**
@@ -304,8 +316,15 @@ export class WbsSelfEvaluationMappingService {
     periodId: string,
     employeeId: string,
     wbsItemId: string,
+    manager?: EntityManager,
   ): Promise<void> {
-    const existing = await this.wbsSelfEvaluationMappingRepository.findOne({
+    const repository = this.transactionManager.getRepository(
+      WbsSelfEvaluationMapping,
+      this.wbsSelfEvaluationMappingRepository,
+      manager,
+    );
+
+    const existing = await repository.findOne({
       where: {
         periodId,
         employeeId,
@@ -349,5 +368,98 @@ export class WbsSelfEvaluationMappingService {
         '할당자 ID는 필수입니다.',
       );
     }
+  }
+
+  /**
+   * 자가평가 ID를 설정한다
+   */
+  async 자가평가_ID를_설정한다(
+    mappingId: string,
+    selfEvaluationId: string,
+    updatedBy: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluationMapping> {
+    return this.executeSafeDomainOperation(async () => {
+      this.logger.log(
+        `자가평가 ID 설정 시작 - 매핑 ID: ${mappingId}, 자가평가 ID: ${selfEvaluationId}`,
+      );
+
+      const repository = this.transactionManager.getRepository(
+        WbsSelfEvaluationMapping,
+        this.wbsSelfEvaluationMappingRepository,
+        manager,
+      );
+
+      const mapping = await repository.findOne({ where: { id: mappingId } });
+      if (!mapping) {
+        throw new WbsSelfEvaluationMappingNotFoundException(mappingId);
+      }
+
+      mapping.자가평가_ID를_설정한다(selfEvaluationId);
+      mapping.메타데이터를_업데이트한다(updatedBy);
+
+      const saved = await repository.save(mapping);
+
+      this.logger.log(`자가평가 ID 설정 완료 - 매핑 ID: ${mappingId}`);
+      return saved;
+    }, '자가평가_ID를_설정한다');
+  }
+
+  /**
+   * 자가평가를 완료로 표시한다
+   */
+  async 자가평가를_완료한다(
+    mappingId: string,
+    selfEvaluationId: string,
+    updatedBy: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluationMapping> {
+    return this.executeSafeDomainOperation(async () => {
+      this.logger.log(`자가평가 완료 처리 시작 - 매핑 ID: ${mappingId}`);
+
+      const repository = this.transactionManager.getRepository(
+        WbsSelfEvaluationMapping,
+        this.wbsSelfEvaluationMappingRepository,
+        manager,
+      );
+
+      const mapping = await repository.findOne({ where: { id: mappingId } });
+      if (!mapping) {
+        throw new WbsSelfEvaluationMappingNotFoundException(mappingId);
+      }
+
+      mapping.자가평가_ID를_설정한다(selfEvaluationId);
+      mapping.자가평가를_완료한다();
+      mapping.메타데이터를_업데이트한다(updatedBy);
+
+      const saved = await repository.save(mapping);
+
+      this.logger.log(`자가평가 완료 처리 완료 - 매핑 ID: ${mappingId}`);
+      return saved;
+    }, '자가평가를_완료한다');
+  }
+
+  /**
+   * 자가평가 ID로 매핑을 조회한다
+   */
+  async 자가평가_ID로_조회한다(
+    selfEvaluationId: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluationMapping | null> {
+    return this.executeSafeDomainOperation(async () => {
+      this.logger.debug(
+        `자가평가 ID로 매핑 조회 - 자가평가 ID: ${selfEvaluationId}`,
+      );
+
+      const repository = this.transactionManager.getRepository(
+        WbsSelfEvaluationMapping,
+        this.wbsSelfEvaluationMappingRepository,
+        manager,
+      );
+
+      return await repository.findOne({
+        where: { selfEvaluationId },
+      });
+    }, '자가평가_ID로_조회한다');
   }
 }

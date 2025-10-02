@@ -11,32 +11,11 @@ import type {
  * 직원이 특정 WBS 항목에 대해 수행한 자가평가를 관리합니다.
  */
 @Entity('wbs_self_evaluation')
-@Index(['periodId', 'employeeId'])
-@Index(['periodId', 'wbsItemId'])
-@Index(['employeeId', 'wbsItemId'])
 @Index(['evaluationDate'])
 export class WbsSelfEvaluation
   extends BaseEntity<WbsSelfEvaluationDto>
   implements IWbsSelfEvaluation
 {
-  @Column({
-    type: 'uuid',
-    comment: '평가 기간 ID',
-  })
-  periodId: string;
-
-  @Column({
-    type: 'uuid',
-    comment: '직원 ID',
-  })
-  employeeId: string;
-
-  @Column({
-    type: 'uuid',
-    comment: 'WBS 항목 ID',
-  })
-  wbsItemId: string;
-
   @Column({
     type: 'timestamp with time zone',
     comment: '평가일',
@@ -66,9 +45,6 @@ export class WbsSelfEvaluation
   constructor(data?: CreateWbsSelfEvaluationData) {
     super();
     if (data) {
-      this.periodId = data.periodId;
-      this.employeeId = data.employeeId;
-      this.wbsItemId = data.wbsItemId;
       this.selfEvaluationContent = data.selfEvaluationContent;
       this.selfEvaluationScore = data.selfEvaluationScore;
       this.additionalComments = data.additionalComments;
@@ -77,27 +53,6 @@ export class WbsSelfEvaluation
       // 감사 정보 설정
       this.메타데이터를_업데이트한다(data.createdBy);
     }
-  }
-
-  /**
-   * 특정 평가기간에 속하는지 확인한다
-   */
-  평가기간과_일치하는가(periodId: string): boolean {
-    return this.periodId === periodId;
-  }
-
-  /**
-   * 특정 직원의 자가평가인지 확인한다
-   */
-  해당_직원의_자가평가인가(employeeId: string): boolean {
-    return this.employeeId === employeeId;
-  }
-
-  /**
-   * 특정 WBS 항목의 자가평가인지 확인한다
-   */
-  해당_WBS항목의_자가평가인가(wbsItemId: string): boolean {
-    return this.wbsItemId === wbsItemId;
   }
 
   /**
@@ -139,9 +94,6 @@ export class WbsSelfEvaluation
   DTO로_변환한다(): WbsSelfEvaluationDto {
     return {
       id: this.id,
-      periodId: this.periodId,
-      employeeId: this.employeeId,
-      wbsItemId: this.wbsItemId,
       evaluationDate: this.evaluationDate,
       selfEvaluationContent: this.selfEvaluationContent,
       selfEvaluationScore: this.selfEvaluationScore,

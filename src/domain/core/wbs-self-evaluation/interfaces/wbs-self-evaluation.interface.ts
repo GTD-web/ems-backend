@@ -4,12 +4,6 @@
 export interface IWbsSelfEvaluation {
   /** 고유 식별자 (UUID) */
   id: string;
-  /** 평가 기간 ID */
-  periodId: string;
-  /** 직원 ID */
-  employeeId: string;
-  /** WBS 항목 ID */
-  wbsItemId: string;
   /** 평가일 */
   evaluationDate: Date;
   /** 자가평가 내용 */

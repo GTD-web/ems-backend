@@ -81,7 +81,8 @@ export class TestContextService {
       await this.departmentTestService.테스트용_목데이터를_생성한다();
 
     // 기존 직원 데이터 조회 (재생성하지 않음)
-    const employees = await this.employeeTestService.현재_직원_목록을_조회한다();
+    const employees =
+      await this.employeeTestService.현재_직원_목록을_조회한다();
 
     console.log(
       `부서 ${departments.length}, 기존 직원 ${employees.length} 조회 완료`,
