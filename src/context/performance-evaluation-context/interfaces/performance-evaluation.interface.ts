@@ -26,6 +26,13 @@ import {
   GetDownwardEvaluationListQuery,
   GetDownwardEvaluationDetailQuery,
 } from '../handlers/downward-evaluation';
+import { WbsSelfEvaluationDto } from '@/domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { WbsSelfEvaluationMappingDto } from '@/domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
+import {
+  WbsSelfEvaluationResponseDto,
+  WbsSelfEvaluationBasicDto,
+  EmployeeSelfEvaluationsResponseDto,
+} from '@/interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
 
 /**
  * 성과평가 컨텍스트 서비스 인터페이스
@@ -38,28 +45,28 @@ export interface IPerformanceEvaluationService {
    */
   WBS자기평가를_생성한다(
     command: CreateWbsSelfEvaluationCommand,
-  ): Promise<string>;
+  ): Promise<WbsSelfEvaluationResponseDto>;
 
   /**
    * WBS 자기평가를 수정한다
    */
   WBS자기평가를_수정한다(
     command: UpdateWbsSelfEvaluationCommand,
-  ): Promise<void>;
+  ): Promise<WbsSelfEvaluationBasicDto>;
 
   /**
    * WBS 자기평가를 제출한다
    */
   WBS자기평가를_제출한다(
     command: SubmitWbsSelfEvaluationCommand,
-  ): Promise<void>;
+  ): Promise<WbsSelfEvaluationResponseDto>;
 
   /**
    * 직원의 자기평가 목록을 조회한다
    */
   직원의_자기평가_목록을_조회한다(
     query: GetEmployeeSelfEvaluationsQuery,
-  ): Promise<any>;
+  ): Promise<EmployeeSelfEvaluationsResponseDto>;
 
   /**
    * WBS 자기평가 상세정보를 조회한다
@@ -128,4 +135,3 @@ export interface IPerformanceEvaluationService {
     query: GetDownwardEvaluationDetailQuery,
   ): Promise<any>;
 }
-

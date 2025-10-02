@@ -1,10 +1,11 @@
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
-import { WbsSelfEvaluationService } from 'src/domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
+import { WbsSelfEvaluationDto } from '@/domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { WbsSelfEvaluationService } from 'src/domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 
 /**
- * WBS ?�기?��? ?�정 커맨??
+ * WBS 자기평가 수정 커맨드
  */
 export class UpdateWbsSelfEvaluationCommand {
   constructor(
@@ -17,7 +18,7 @@ export class UpdateWbsSelfEvaluationCommand {
 }
 
 /**
- * WBS ?�기?��? ?�정 ?�들??
+ * WBS 자기평가 수정 핸들러
  */
 @Injectable()
 @CommandHandler(UpdateWbsSelfEvaluationCommand)
@@ -31,7 +32,9 @@ export class UpdateWbsSelfEvaluationHandler
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
-  async execute(command: UpdateWbsSelfEvaluationCommand): Promise<void> {
+  async execute(
+    command: UpdateWbsSelfEvaluationCommand,
+  ): Promise<WbsSelfEvaluationDto> {
     const {
       evaluationId,
       selfEvaluationContent,
@@ -44,7 +47,7 @@ export class UpdateWbsSelfEvaluationHandler
 
     return await this.transactionManager.executeTransaction(async () => {
       // 자기평가 수정
-      await this.wbsSelfEvaluationService.수정한다(
+      const evaluation = await this.wbsSelfEvaluationService.수정한다(
         evaluationId,
         {
           selfEvaluationContent,
@@ -55,7 +58,7 @@ export class UpdateWbsSelfEvaluationHandler
       );
 
       this.logger.log('WBS 자기평가 수정 완료', { evaluationId });
+      return evaluation.DTO로_변환한다();
     });
   }
 }
-

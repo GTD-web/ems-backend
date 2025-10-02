@@ -33,7 +33,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api-docs', app, document, {
+  SwaggerModule.setup('admin/api-docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true, // 인증 정보를 브라우저 세션에 저장
       tagsSorter: 'alpha',
@@ -79,7 +79,7 @@ async function bootstrap() {
     `🚀 Application is running on: http://localhost:${process.env.PORT || 3000}`,
   );
   console.log(
-    `📚 Swagger documentation: http://localhost:${process.env.PORT || 3000}/api-docs`,
+    `📚 Swagger documentation: http://localhost:${process.env.PORT || 3000}/admin/api-docs`,
   );
 }
 bootstrap();

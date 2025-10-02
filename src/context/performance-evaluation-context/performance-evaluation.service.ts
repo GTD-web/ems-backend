@@ -29,6 +29,13 @@ import {
 } from './handlers/downward-evaluation';
 
 import { IPerformanceEvaluationService } from './interfaces/performance-evaluation.interface';
+import { WbsSelfEvaluationDto } from '@/domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { WbsSelfEvaluationMappingDto } from '@/domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
+import {
+  WbsSelfEvaluationResponseDto,
+  WbsSelfEvaluationBasicDto,
+  EmployeeSelfEvaluationsResponseDto,
+} from '@/interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
 
 /**
  * 성과평가 컨텍스트 서비스
@@ -52,7 +59,7 @@ export class PerformanceEvaluationService
    */
   async WBS자기평가를_생성한다(
     command: CreateWbsSelfEvaluationCommand,
-  ): Promise<string> {
+  ): Promise<WbsSelfEvaluationResponseDto> {
     this.logger.log('WBS 자기평가 생성 시작', {
       employeeId: command.employeeId,
       wbsItemId: command.wbsItemId,
@@ -68,15 +75,16 @@ export class PerformanceEvaluationService
    */
   async WBS자기평가를_수정한다(
     command: UpdateWbsSelfEvaluationCommand,
-  ): Promise<void> {
+  ): Promise<WbsSelfEvaluationBasicDto> {
     this.logger.log('WBS 자기평가 수정 시작', {
       evaluationId: command.evaluationId,
     });
 
-    await this.commandBus.execute(command);
+    const result = await this.commandBus.execute(command);
     this.logger.log('WBS 자기평가 수정 완료', {
       evaluationId: command.evaluationId,
     });
+    return result;
   }
 
   /**
@@ -84,15 +92,16 @@ export class PerformanceEvaluationService
    */
   async WBS자기평가를_제출한다(
     command: SubmitWbsSelfEvaluationCommand,
-  ): Promise<void> {
+  ): Promise<WbsSelfEvaluationResponseDto> {
     this.logger.log('WBS 자기평가 제출 시작', {
       evaluationId: command.evaluationId,
     });
 
-    await this.commandBus.execute(command);
+    const result = await this.commandBus.execute(command);
     this.logger.log('WBS 자기평가 제출 완료', {
       evaluationId: command.evaluationId,
     });
+    return result;
   }
 
   /**
@@ -100,7 +109,7 @@ export class PerformanceEvaluationService
    */
   async 직원의_자기평가_목록을_조회한다(
     query: GetEmployeeSelfEvaluationsQuery,
-  ): Promise<any> {
+  ): Promise<EmployeeSelfEvaluationsResponseDto> {
     this.logger.log('직원 자기평가 목록 조회', {
       employeeId: query.employeeId,
     });

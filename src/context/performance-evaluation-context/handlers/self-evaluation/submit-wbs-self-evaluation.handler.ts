@@ -1,8 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
-import { WbsSelfEvaluationService } from '../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
-import { WbsSelfEvaluationMappingService } from '../../../../domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.service';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
+import { WbsSelfEvaluationMappingService } from '@domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { WbsSelfEvaluationDto } from '@/domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { WbsSelfEvaluationMappingDto } from '@/domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
 
 /**
  * WBS 자기평가 제출 커맨드
@@ -30,7 +32,10 @@ export class SubmitWbsSelfEvaluationHandler
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
-  async execute(command: SubmitWbsSelfEvaluationCommand): Promise<void> {
+  async execute(command: SubmitWbsSelfEvaluationCommand): Promise<{
+    evaluation: WbsSelfEvaluationDto;
+    evaluationMapping: WbsSelfEvaluationMappingDto;
+  }> {
     const { evaluationId, submittedBy } = command;
 
     this.logger.log('WBS 자기평가 제출 핸들러 실행', { evaluationId });
@@ -40,7 +45,7 @@ export class SubmitWbsSelfEvaluationHandler
       const evaluation =
         await this.wbsSelfEvaluationService.조회한다(evaluationId);
       if (!evaluation) {
-        throw new Error('존재하지 않는 자기평가입니다.');
+        throw new BadRequestException('존재하지 않는 자기평가입니다.');
       }
 
       // 점수 검증
@@ -48,7 +53,9 @@ export class SubmitWbsSelfEvaluationHandler
         !evaluation.selfEvaluationContent ||
         !evaluation.selfEvaluationScore
       ) {
-        throw new Error('평가 내용과 점수는 필수 입력 항목입니다.');
+        throw new BadRequestException(
+          '평가 내용과 점수는 필수 입력 항목입니다.',
+        );
       }
 
       // 자기평가 ID로 매핑을 찾아서 완료 처리
@@ -57,17 +64,23 @@ export class SubmitWbsSelfEvaluationHandler
           evaluationId,
         );
 
-      if (mapping) {
-        await this.wbsSelfEvaluationMappingService.자가평가를_완료한다(
-          mapping.id,
-          evaluationId,
-          submittedBy,
+      if (!mapping) {
+        throw new BadRequestException(
+          '해당 자가평가에 대한 매핑을 찾을 수 없습니다.',
         );
-      } else {
-        throw new Error('해당 자가평가에 대한 매핑을 찾을 수 없습니다.');
       }
+      await this.wbsSelfEvaluationMappingService.자가평가를_완료한다(
+        mapping.id,
+        evaluationId,
+        submittedBy,
+      );
 
       this.logger.log('WBS 자기평가 제출 완료', { evaluationId });
+
+      return {
+        evaluation: evaluation.DTO로_변환한다(),
+        evaluationMapping: mapping.DTO로_변환한다(),
+      };
     });
   }
 }
