@@ -9,7 +9,7 @@ import {
   IsDateString,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
-import type { WbsSelfEvaluationDto } from '../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.types';  
+import type { WbsSelfEvaluationDto } from '../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import type { WbsSelfEvaluationMappingDto } from '../../../../domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
 
 /**
@@ -343,8 +343,16 @@ export class WbsSelfEvaluationDetailResponseDto {
     properties: {
       id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440005' },
       name: { type: 'string', example: '2024년 1분기 평가' },
-      startDate: { type: 'string', format: 'date-time', example: '2024-01-01T00:00:00Z' },
-      endDate: { type: 'string', format: 'date-time', example: '2024-03-31T23:59:59Z' },
+      startDate: {
+        type: 'string',
+        format: 'date-time',
+        example: '2024-01-01T00:00:00Z',
+      },
+      endDate: {
+        type: 'string',
+        format: 'date-time',
+        example: '2024-03-31T23:59:59Z',
+      },
       status: { type: 'string', example: 'ACTIVE' },
       description: { type: 'string', example: '2024년 1분기 성과평가 기간' },
     },
@@ -385,8 +393,16 @@ export class WbsSelfEvaluationDetailResponseDto {
       name: { type: 'string', example: '시스템 개발' },
       description: { type: 'string', example: '고객 관리 시스템 개발 업무' },
       plannedHours: { type: 'number', example: 160 },
-      startDate: { type: 'string', format: 'date-time', example: '2024-01-01T09:00:00Z' },
-      endDate: { type: 'string', format: 'date-time', example: '2024-03-31T18:00:00Z' },
+      startDate: {
+        type: 'string',
+        format: 'date-time',
+        example: '2024-01-01T09:00:00Z',
+      },
+      endDate: {
+        type: 'string',
+        format: 'date-time',
+        example: '2024-03-31T18:00:00Z',
+      },
       status: { type: 'string', example: 'IN_PROGRESS' },
     },
   })
