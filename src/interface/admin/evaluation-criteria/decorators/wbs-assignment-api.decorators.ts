@@ -508,3 +508,83 @@ export const ResetEmployeeWbsAssignments = () =>
       description: '직원 또는 평가기간을 찾을 수 없습니다.',
     }),
   );
+
+/**
+ * WBS 할당 순서 변경 엔드포인트 데코레이터
+ */
+export const ChangeWbsAssignmentOrder = () =>
+  applyDecorators(
+    Patch(':id/order'),
+    ApiOperation({
+      summary: 'WBS 할당 순서 변경',
+      description: `WBS 할당의 표시 순서를 위 또는 아래로 이동합니다. 같은 프로젝트-평가기간 내에서 인접한 항목과 순서를 자동으로 교환합니다.
+
+**기능:**
+- 위로 이동(up): 현재 항목과 바로 위 항목의 순서를 교환
+- 아래로 이동(down): 현재 항목과 바로 아래 항목의 순서를 교환
+- 자동 재정렬: 순서 교환 시 두 항목만 업데이트되어 효율적
+- 경계 처리: 첫 번째 항목을 위로, 마지막 항목을 아래로 이동 시도시 현재 상태 유지
+
+**테스트 케이스:**
+- 위로 이동: 중간 항목을 위로 이동 시 순서 교환 확인
+- 아래로 이동: 중간 항목을 아래로 이동 시 순서 교환 확인
+- 첫 번째 항목 위로: 이미 첫 번째 항목을 위로 이동 시 순서 변화 없음
+- 마지막 항목 아래로: 이미 마지막 항목을 아래로 이동 시 순서 변화 없음
+- 단일 항목: 할당이 하나만 있을 때 순서 변경 시도
+- 존재하지 않는 ID: 유효하지 않은 할당 ID로 요청 시 404 에러
+- 잘못된 방향: 'up' 또는 'down' 이외의 값 전달 시 400 에러
+- 완료된 평가기간: 완료된 평가기간의 할당 순서 변경 시 422 에러
+- 다른 프로젝트 항목: 같은 프로젝트-평가기간의 항목들만 영향받음
+- 순서 일관성: 이동 후 displayOrder 값의 일관성 유지
+- 동시 순서 변경: 동일 할당에 대한 동시 순서 변경 요청 처리
+- 트랜잭션 보장: 순서 변경 중 오류 시 롤백 처리`,
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'WBS 할당 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiQuery({
+      name: 'direction',
+      description: '이동 방향',
+      enum: ['up', 'down'],
+      required: true,
+      example: 'up',
+    }),
+    ApiBody({
+      schema: {
+        type: 'object',
+        properties: {
+          updatedBy: {
+            type: 'string',
+            format: 'uuid',
+            description: '변경 수행자 ID (UUID 형식)',
+            example: '123e4567-e89b-12d3-a456-426614174003',
+          },
+        },
+      },
+      required: false,
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'WBS 할당 순서가 성공적으로 변경되었습니다.',
+    }),
+    ApiResponse({
+      status: 400,
+      description:
+        '잘못된 요청 데이터 (UUID 형식 오류, 잘못된 direction 값 등)',
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'WBS 할당을 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: 422,
+      description: '비즈니스 로직 오류 (완료된 평가기간의 순서 변경 제한 등)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );

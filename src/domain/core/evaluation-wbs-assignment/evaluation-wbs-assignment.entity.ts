@@ -16,6 +16,7 @@ import type {
 @Index(['employeeId', 'wbsItemId'])
 @Index(['projectId', 'wbsItemId'])
 @Index(['assignedDate'])
+@Index(['periodId', 'projectId', 'displayOrder'])
 export class EvaluationWbsAssignment
   extends BaseEntity<EvaluationWbsAssignmentDto>
   implements IEvaluationWbsAssignment
@@ -61,6 +62,13 @@ export class EvaluationWbsAssignment
   })
   assignedBy: string;
 
+  @Column({
+    type: 'int',
+    comment: '표시 순서 (같은 프로젝트-평가기간 내에서의 순서)',
+    default: 0,
+  })
+  displayOrder: number;
+
   constructor(data?: CreateEvaluationWbsAssignmentData) {
     super();
     if (data) {
@@ -70,6 +78,7 @@ export class EvaluationWbsAssignment
       this.wbsItemId = data.wbsItemId;
       this.assignedBy = data.assignedBy;
       this.assignedDate = new Date();
+      this.displayOrder = 0;
     }
   }
 
@@ -102,6 +111,16 @@ export class EvaluationWbsAssignment
   }
 
   /**
+   * 순서를 변경한다
+   */
+  순서를_변경한다(newOrder: number): void {
+    if (newOrder < 0) {
+      throw new Error('표시 순서는 0 이상이어야 합니다.');
+    }
+    this.displayOrder = newOrder;
+  }
+
+  /**
    * DTO로 변환한다
    */
   DTO로_변환한다(): EvaluationWbsAssignmentDto {
@@ -113,6 +132,7 @@ export class EvaluationWbsAssignment
       wbsItemId: this.wbsItemId,
       assignedDate: this.assignedDate,
       assignedBy: this.assignedBy,
+      displayOrder: this.displayOrder,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       deletedAt: this.deletedAt,

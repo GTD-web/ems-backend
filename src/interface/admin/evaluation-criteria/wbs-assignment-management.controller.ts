@@ -1,10 +1,11 @@
-import { Body, Controller, Param, Query } from '@nestjs/common';
+import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
   BulkCreateWbsAssignments,
   CancelWbsAssignment,
+  ChangeWbsAssignmentOrder,
   CreateWbsAssignment,
   GetEmployeeWbsAssignments,
   GetProjectWbsAssignments,
@@ -18,6 +19,8 @@ import {
 } from './decorators/wbs-assignment-api.decorators';
 import {
   BulkCreateWbsAssignmentDto,
+  ChangeWbsAssignmentOrderBodyDto,
+  ChangeWbsAssignmentOrderQueryDto,
   CreateWbsAssignmentDto,
   EmployeeWbsAssignmentsResponseDto,
   ProjectWbsAssignmentsResponseDto,
@@ -245,6 +248,24 @@ export class WbsAssignmentManagementController {
       employeeId,
       periodId,
       resetBy,
+    );
+  }
+
+  /**
+   * WBS 할당 순서 변경
+   */
+  @ChangeWbsAssignmentOrder()
+  async changeWbsAssignmentOrder(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query() queryDto: ChangeWbsAssignmentOrderQueryDto,
+    @Body() bodyDto: ChangeWbsAssignmentOrderBodyDto,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+  ): Promise<any> {
+    const updatedBy = bodyDto.updatedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.evaluationCriteriaManagementService.WBS_할당_순서를_변경한다(
+      id,
+      queryDto.direction,
+      updatedBy,
     );
   }
 }

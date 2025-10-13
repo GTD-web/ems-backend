@@ -12,6 +12,7 @@ import {
   CreateEvaluationWbsAssignmentData,
   UpdateEvaluationWbsAssignmentData,
   EvaluationWbsAssignmentFilter,
+  OrderDirection,
 } from './evaluation-wbs-assignment.types';
 import { IEvaluationWbsAssignment } from './interfaces/evaluation-wbs-assignment.interface';
 import { IEvaluationWbsAssignmentService } from './interfaces/evaluation-wbs-assignment.service.interface';
@@ -291,14 +292,29 @@ export class EvaluationWbsAssignmentService
         entityManager,
       );
 
-      // 엔티티 생성 (불변성 검증 자동 실행)
-      const assignment = new EvaluationWbsAssignment(createData);
-
       const repository = this.transactionManager.getRepository(
         EvaluationWbsAssignment,
         this.evaluationWbsAssignmentRepository,
         entityManager,
       );
+
+      // 같은 직원-프로젝트-평가기간의 마지막 displayOrder 조회
+      const lastAssignment = await repository.findOne({
+        where: {
+          periodId: createData.periodId,
+          projectId: createData.projectId,
+          employeeId: createData.employeeId,
+        },
+        order: { displayOrder: 'DESC' },
+      });
+
+      // 엔티티 생성 (불변성 검증 자동 실행)
+      const assignment = new EvaluationWbsAssignment(createData);
+
+      // displayOrder 자동 설정: 마지막 순서 + 1
+      assignment.displayOrder = lastAssignment
+        ? lastAssignment.displayOrder + 1
+        : 0;
 
       const savedAssignment = await repository.save(assignment);
       this.logger.log(`평가 WBS 할당 생성 완료 - ID: ${savedAssignment.id}`);
@@ -523,5 +539,82 @@ export class EvaluationWbsAssignmentService
         `WBS 항목 할당 전체 삭제 완료 - WBS 항목 ID: ${wbsItemId}, 삭제자: ${deletedBy}`,
       );
     }, 'WBS항목_할당_전체삭제한다');
+  }
+
+  /**
+   * WBS 할당 순서를 변경한다 (위로 이동 또는 아래로 이동)
+   * 같은 프로젝트-평가기간 내에서 순서를 변경한다
+   */
+  async 순서를_변경한다(
+    assignmentId: string,
+    direction: OrderDirection,
+    updatedBy: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationWbsAssignment> {
+    return this.executeSafeDomainOperation(async () => {
+      const entityManager = manager || this.dataSource.manager;
+      const repository = this.transactionManager.getRepository(
+        EvaluationWbsAssignment,
+        this.evaluationWbsAssignmentRepository,
+        entityManager,
+      );
+
+      // 현재 할당 조회
+      const currentAssignment = await repository.findOne({
+        where: { id: assignmentId },
+      });
+      if (!currentAssignment) {
+        throw new EvaluationWbsAssignmentNotFoundException(assignmentId);
+      }
+
+      // 같은 직원-프로젝트-평가기간의 모든 할당 조회 (displayOrder 순으로 정렬)
+      const allAssignments = await repository.find({
+        where: {
+          periodId: currentAssignment.periodId,
+          projectId: currentAssignment.projectId,
+          employeeId: currentAssignment.employeeId,
+        },
+        order: { displayOrder: 'ASC' },
+      });
+
+      // 현재 위치 찾기
+      const currentIndex = allAssignments.findIndex(
+        (a) => a.id === assignmentId,
+      );
+
+      // 이동 가능 여부 확인
+      if (direction === 'up' && currentIndex === 0) {
+        this.logger.warn(`이미 첫 번째 항목입니다 - ID: ${assignmentId}`);
+        return currentAssignment;
+      }
+
+      if (direction === 'down' && currentIndex === allAssignments.length - 1) {
+        this.logger.warn(`이미 마지막 항목입니다 - ID: ${assignmentId}`);
+        return currentAssignment;
+      }
+
+      // 교환할 항목 찾기
+      const targetIndex =
+        direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      const targetAssignment = allAssignments[targetIndex];
+
+      // 순서 교환
+      const tempOrder = currentAssignment.displayOrder;
+      currentAssignment.순서를_변경한다(targetAssignment.displayOrder);
+      targetAssignment.순서를_변경한다(tempOrder);
+
+      // 메타데이터 업데이트
+      currentAssignment.메타데이터를_업데이트한다(updatedBy);
+      targetAssignment.메타데이터를_업데이트한다(updatedBy);
+
+      // 저장
+      await repository.save([currentAssignment, targetAssignment]);
+
+      this.logger.log(
+        `WBS 할당 순서 변경 완료 - ID: ${assignmentId}, 방향: ${direction}`,
+      );
+
+      return currentAssignment;
+    }, '순서를_변경한다');
   }
 }

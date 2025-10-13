@@ -20,6 +20,7 @@ import {
 import {
   BulkCreateWbsAssignmentCommand,
   CancelWbsAssignmentCommand,
+  ChangeWbsAssignmentOrderCommand,
   CreateWbsAssignmentCommand,
   GetEmployeeWbsAssignmentsQuery,
   GetProjectWbsAssignmentsQuery,
@@ -76,6 +77,7 @@ import type {
   EvaluationWbsAssignmentDto,
   EvaluationWbsAssignmentFilter,
   UpdateEvaluationWbsAssignmentData,
+  OrderDirection as WbsOrderDirection,
 } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 import type {
   CreateWbsEvaluationCriteriaData,
@@ -300,6 +302,19 @@ export class EvaluationCriteriaManagementService
       resetBy,
     );
     await this.commandBus.execute(command);
+  }
+
+  async WBS_할당_순서를_변경한다(
+    assignmentId: string,
+    direction: WbsOrderDirection,
+    updatedBy: string,
+  ): Promise<EvaluationWbsAssignmentDto> {
+    const command = new ChangeWbsAssignmentOrderCommand(
+      assignmentId,
+      direction,
+      updatedBy,
+    );
+    return await this.commandBus.execute(command);
   }
 
   // ============================================================================

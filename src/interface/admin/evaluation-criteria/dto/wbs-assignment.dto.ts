@@ -9,6 +9,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { OrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 
 /**
  * WBS 할당 생성 DTO
@@ -212,4 +213,31 @@ export class ResetWbsAssignmentsDto {
   @IsString()
   @IsUUID()
   resetBy: string;
+}
+
+/**
+ * WBS 할당 순서 변경 Query DTO
+ */
+export class ChangeWbsAssignmentOrderQueryDto {
+  @ApiProperty({
+    description: '이동 방향 (up: 위로, down: 아래로)',
+    example: OrderDirection.UP,
+    enum: OrderDirection,
+    enumName: 'OrderDirection',
+  })
+  @IsEnum(OrderDirection, { message: '이동 방향은 up 또는 down이어야 합니다.' })
+  direction: OrderDirection;
+}
+
+/**
+ * WBS 할당 순서 변경 Body DTO
+ */
+export class ChangeWbsAssignmentOrderBodyDto {
+  @ApiPropertyOptional({
+    description: '변경 수행자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+  })
+  @IsOptional()
+  @IsUUID()
+  updatedBy?: string;
 }

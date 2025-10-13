@@ -20,6 +20,8 @@ export interface EvaluationWbsAssignmentDto {
   assignedDate: Date;
   /** 할당자 ID */
   assignedBy: string;
+  /** 표시 순서 (같은 프로젝트-평가기간 내에서의 순서) */
+  displayOrder: number;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */
@@ -90,4 +92,24 @@ export interface EvaluationWbsAssignmentFilter {
   assignedDateFrom?: Date;
   /** 할당일 종료 */
   assignedDateTo?: Date;
+}
+
+/**
+ * 순서 변경 방향 Enum
+ */
+export enum OrderDirection {
+  UP = 'up',
+  DOWN = 'down',
+}
+
+/**
+ * WBS 할당 순서 변경 데이터
+ */
+export interface ChangeWbsAssignmentOrderData {
+  /** 할당 ID */
+  assignmentId: string;
+  /** 이동 방향 */
+  direction: OrderDirection;
+  /** 변경 수행자 ID */
+  updatedBy: string;
 }

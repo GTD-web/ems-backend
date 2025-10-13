@@ -15,6 +15,11 @@ export {
 } from './commands/bulk-create-wbs-assignment.handler';
 
 export {
+  ChangeWbsAssignmentOrderCommand,
+  ChangeWbsAssignmentOrderHandler,
+} from './commands/change-wbs-assignment-order.handler';
+
+export {
   ResetPeriodWbsAssignmentsCommand,
   ResetPeriodWbsAssignmentsHandler,
 } from './commands/reset-period-wbs-assignments.handler';
@@ -65,6 +70,7 @@ export {
 import { CreateWbsAssignmentHandler } from './commands/create-wbs-assignment.handler';
 import { CancelWbsAssignmentHandler } from './commands/cancel-wbs-assignment.handler';
 import { BulkCreateWbsAssignmentHandler } from './commands/bulk-create-wbs-assignment.handler';
+import { ChangeWbsAssignmentOrderHandler } from './commands/change-wbs-assignment-order.handler';
 import { ResetPeriodWbsAssignmentsHandler } from './commands/reset-period-wbs-assignments.handler';
 import { ResetProjectWbsAssignmentsHandler } from './commands/reset-project-wbs-assignments.handler';
 import { ResetEmployeeWbsAssignmentsHandler } from './commands/reset-employee-wbs-assignments.handler';
@@ -79,6 +85,7 @@ export const WBS_ASSIGNMENT_COMMAND_HANDLERS = [
   CreateWbsAssignmentHandler,
   CancelWbsAssignmentHandler,
   BulkCreateWbsAssignmentHandler,
+  ChangeWbsAssignmentOrderHandler,
   ResetPeriodWbsAssignmentsHandler,
   ResetProjectWbsAssignmentsHandler,
   ResetEmployeeWbsAssignmentsHandler,
