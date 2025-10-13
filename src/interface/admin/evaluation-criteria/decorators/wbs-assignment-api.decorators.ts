@@ -140,23 +140,45 @@ export const CreateWbsAssignment = () =>
 export const CancelWbsAssignment = () =>
   applyDecorators(
     Delete(':id'),
+    HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: 'WBS 할당 취소',
-      description: '기존 WBS 할당을 취소합니다.',
+      description: `**중요**: 기존 WBS 할당을 취소(소프트 삭제)합니다. 할당 취소 시 평가기준 정리 및 멱등성 보장을 수행합니다.
+
+**자동 수행 작업:**
+- 소프트 삭제: 실제 레코드 삭제가 아닌 deletedAt 필드를 업데이트
+- 평가기준 정리: 해당 WBS 항목의 마지막 할당인 경우 관련 평가기준도 자동 삭제
+- 평가라인 매핑 정리: 할당과 연결된 평가라인 매핑 자동 삭제
+- 멱등성 보장: 이미 취소되었거나 존재하지 않는 할당 ID로 요청해도 200 OK 반환
+
+**테스트 케이스:**
+- 기본 할당 취소: 유효한 할당 ID로 취소 시 성공
+- 소프트 삭제 확인: deletedAt 필드가 설정되고 물리적 삭제는 되지 않음
+- 마지막 할당 취소: 해당 WBS의 마지막 할당 취소 시 평가기준도 자동 삭제
+- 평가기준 유지: 다른 할당이 남아있으면 평가기준은 유지됨
+- 여러 할당 순차 취소: 동일 직원의 여러 할당을 순차적으로 취소 가능
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 멱등성 - 존재하지 않는 ID: 유효한 UUID이지만 존재하지 않는 할당 ID로 취소 시도 시 200 성공 반환
+- 멱등성 - 이미 취소된 할당: 이미 취소된 할당을 다시 취소 시도 시 200 성공 반환
+- 할당 목록 제외: 취소된 할당은 목록 조회에서 제외됨
+- 상세 조회 불가: 취소된 할당은 상세 조회 시 404 반환
+- 대량 할당 후 전체 취소: 모든 할당을 취소하면 평가기준도 모두 삭제됨
+- 트랜잭션 보장: 할당 취소와 평가기준 정리가 원자적으로 수행됨`,
     }),
     ApiParam({
       name: 'id',
-      description: 'WBS 할당 ID',
+      description: 'WBS 할당 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000',
     }),
     ApiResponse({
       status: 200,
       description: 'WBS 할당이 성공적으로 취소되었습니다.',
     }),
     ApiResponse({
-      status: 404,
-      description: 'WBS 할당을 찾을 수 없습니다.',
+      status: 400,
+      description: '잘못된 요청 데이터 (UUID 형식 오류)',
     }),
   );
 

@@ -66,7 +66,7 @@ export class WbsAssignmentManagementController {
    */
   @CancelWbsAssignment()
   async cancelWbsAssignment(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<void> {
     const cancelledBy = 'admin'; // TODO: 실제 사용자 ID로 변경

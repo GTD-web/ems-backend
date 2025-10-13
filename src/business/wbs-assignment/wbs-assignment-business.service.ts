@@ -107,7 +107,14 @@ export class WbsAssignmentBusinessService {
   }
 
   /**
-   * WBS 할당을 취소하고 관련 알림을 발송한다
+   * WBS 할당을 취소하고 관련 평가기준을 정리한다
+   *
+   * 비즈니스 규칙:
+   * - 마지막 할당 취소 시 해당 WBS의 평가기준도 자동 삭제
+   *
+   * 참고:
+   * - 컨텍스트 레벨에서 멱등성 보장 (할당이 없어도 성공 처리)
+   * - 비즈니스 서비스는 평가기준 정리만 수행하므로, 할당이 없으면 조기 반환
    */
   async WBS_할당을_취소한다(params: {
     assignmentId: string;
@@ -117,22 +124,28 @@ export class WbsAssignmentBusinessService {
       assignmentId: params.assignmentId,
     });
 
-    // 1. 할당 정보 조회 (삭제 전에 wbsItemId를 알아야 함)
+    // 1. 할당 정보 조회 (평가기준 정리를 위해 wbsItemId와 periodId 필요)
     const assignment =
       await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(
         params.assignmentId,
       );
 
+    // 할당이 없으면 평가기준 정리할 것이 없으므로 조기 반환
+    // (컨텍스트에서 취소는 이미 멱등성을 보장함)
     if (!assignment) {
-      this.logger.warn('할당을 찾을 수 없습니다', {
-        assignmentId: params.assignmentId,
-      });
+      this.logger.log(
+        'WBS 할당을 찾을 수 없습니다. 평가기준 정리를 생략합니다.',
+        {
+          assignmentId: params.assignmentId,
+        },
+      );
       return;
     }
 
     const wbsItemId = assignment.wbsItemId;
+    const periodId = assignment.periodId;
 
-    // 2. WBS 할당 취소 (컨텍스트 호출)
+    // 2. WBS 할당 취소 (컨텍스트 호출 - 멱등성 보장됨)
     await this.evaluationCriteriaManagementService.WBS_할당을_취소한다(
       params.assignmentId,
       params.cancelledBy,
@@ -142,7 +155,7 @@ export class WbsAssignmentBusinessService {
     const remainingAssignments =
       await this.evaluationCriteriaManagementService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(
         wbsItemId,
-        assignment.periodId,
+        periodId,
       );
 
     // 4. 마지막 할당이었다면 평가기준 삭제
@@ -169,7 +182,8 @@ export class WbsAssignmentBusinessService {
 
     this.logger.log('WBS 할당 취소 및 평가기준 정리 완료', {
       assignmentId: params.assignmentId,
-      criteriaDeleted: remainingAssignments.length === 0,
+      criteriaDeleted:
+        !remainingAssignments || remainingAssignments.length === 0,
     });
   }
 

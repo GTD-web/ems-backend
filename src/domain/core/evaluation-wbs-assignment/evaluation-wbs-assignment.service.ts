@@ -371,7 +371,9 @@ export class EvaluationWbsAssignmentService
   }
 
   /**
-   * 평가 WBS 할당을 삭제한다
+   * 평가 WBS 할당을 삭제한다 (도메인 레벨 - 순수 삭제만 수행)
+   *
+   * 참고: 존재 여부 검증은 컨텍스트 레벨에서 수행
    */
   async 삭제한다(
     id: string,
@@ -386,8 +388,13 @@ export class EvaluationWbsAssignmentService
       );
 
       const assignment = await repository.findOne({ where: { id } });
+
+      // 할당이 없으면 조용히 종료 (멱등성 보장)
       if (!assignment) {
-        throw new EvaluationWbsAssignmentNotFoundException(id);
+        this.logger.log(
+          `삭제할 할당을 찾을 수 없습니다 - ID: ${id} (이미 삭제되었을 수 있음)`,
+        );
+        return;
       }
 
       // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
@@ -544,13 +551,15 @@ export class EvaluationWbsAssignmentService
   /**
    * WBS 할당 순서를 변경한다 (위로 이동 또는 아래로 이동)
    * 같은 프로젝트-평가기간 내에서 순서를 변경한다
+   *
+   * 참고: 할당 존재 여부 검증은 컨텍스트 레벨에서 수행
    */
   async 순서를_변경한다(
     assignmentId: string,
     direction: OrderDirection,
     updatedBy: string,
     manager?: EntityManager,
-  ): Promise<IEvaluationWbsAssignment> {
+  ): Promise<IEvaluationWbsAssignment | null> {
     return this.executeSafeDomainOperation(async () => {
       const entityManager = manager || this.dataSource.manager;
       const repository = this.transactionManager.getRepository(
@@ -563,8 +572,13 @@ export class EvaluationWbsAssignmentService
       const currentAssignment = await repository.findOne({
         where: { id: assignmentId },
       });
+
+      // 할당이 없으면 null 반환 (컨텍스트에서 검증)
       if (!currentAssignment) {
-        throw new EvaluationWbsAssignmentNotFoundException(assignmentId);
+        this.logger.log(
+          `순서를 변경할 할당을 찾을 수 없습니다 - ID: ${assignmentId}`,
+        );
+        return null;
       }
 
       // 같은 직원-프로젝트-평가기간의 모든 할당 조회 (displayOrder 순으로 정렬)

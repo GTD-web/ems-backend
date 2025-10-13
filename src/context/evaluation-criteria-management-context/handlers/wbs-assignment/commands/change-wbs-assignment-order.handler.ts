@@ -81,6 +81,13 @@ export class ChangeWbsAssignmentOrderHandler
         manager,
       );
 
+      // 도메인 서비스에서 null을 반환할 수 있음 (이중 검증 방지)
+      if (!updatedAssignment) {
+        throw new NotFoundException(
+          `WBS 할당 ID ${assignmentId}에 해당하는 할당을 찾을 수 없습니다.`,
+        );
+      }
+
       return updatedAssignment.DTO로_변환한다();
     });
   }
