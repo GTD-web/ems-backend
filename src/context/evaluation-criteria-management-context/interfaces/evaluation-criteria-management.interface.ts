@@ -7,6 +7,7 @@ import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
   EvaluationProjectAssignmentFilter,
+  OrderDirection,
 } from '../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 import type {
   ProjectInfoDto,
@@ -97,6 +98,15 @@ export interface IEvaluationCriteriaManagementService {
     assignments: CreateEvaluationProjectAssignmentData[],
     assignedBy: string,
   ): Promise<EvaluationProjectAssignmentDto[]>;
+
+  /**
+   * 프로젝트 할당 순서를 변경한다 (위로 이동 또는 아래로 이동)
+   */
+  프로젝트_할당_순서를_변경한다(
+    assignmentId: string,
+    direction: OrderDirection,
+    updatedBy: string,
+  ): Promise<EvaluationProjectAssignmentDto>;
 
   // ============================================================================
   // WBS 할당 관리

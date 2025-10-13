@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PerformanceEvaluationService } from '@/context/performance-evaluation-context/performance-evaluation.service';
+import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import {
   CreatePeerEvaluationCommand,
   UpdatePeerEvaluationCommand,
@@ -7,7 +7,7 @@ import {
   SubmitPeerEvaluationCommand,
   GetPeerEvaluationListQuery,
   GetPeerEvaluationDetailQuery,
-} from '@/context/performance-evaluation-context/handlers/peer-evaluation';
+} from '@context/performance-evaluation-context/handlers/peer-evaluation';
 
 /**
  * 동료평가 비즈니스 서비스

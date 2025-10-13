@@ -3,6 +3,7 @@ import type {
   EvaluationProjectAssignmentFilter,
   CreateEvaluationProjectAssignmentData,
   UpdateEvaluationProjectAssignmentData,
+  OrderDirection,
 } from '../evaluation-project-assignment.types';
 import type { IEvaluationProjectAssignment } from './evaluation-project-assignment.interface';
 
@@ -17,54 +18,6 @@ export interface IEvaluationProjectAssignmentService {
     id: string,
     manager?: EntityManager,
   ): Promise<IEvaluationProjectAssignment | null>;
-
-  /**
-   * 모든 평가 프로젝트 할당을 조회한다
-   */
-  전체_조회한다(
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]>;
-
-  /**
-   * 평가기간별 할당을 조회한다
-   */
-  평가기간별_조회한다(
-    periodId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]>;
-
-  /**
-   * 직원별 할당을 조회한다
-   */
-  직원별_조회한다(
-    employeeId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]>;
-
-  /**
-   * 프로젝트별 할당을 조회한다
-   */
-  프로젝트별_조회한다(
-    projectId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]>;
-
-  /**
-   * 특정 평가기간의 직원별 할당을 조회한다
-   */
-  평가기간_직원별_조회한다(
-    periodId: string,
-    employeeId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]>;
-
-  /**
-   * 필터 조건으로 할당을 조회한다
-   */
-  필터_조회한다(
-    filter: EvaluationProjectAssignmentFilter,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]>;
 
   /**
    * 평가 프로젝트 할당을 생성한다
@@ -127,6 +80,26 @@ export interface IEvaluationProjectAssignmentService {
   프로젝트_할당_전체삭제한다(
     projectId: string,
     deletedBy: string,
+    manager?: EntityManager,
+  ): Promise<void>;
+
+  /**
+   * 프로젝트 할당 순서를 변경한다 (위로 이동 또는 아래로 이동)
+   */
+  순서를_변경한다(
+    assignmentId: string,
+    direction: OrderDirection,
+    updatedBy: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationProjectAssignment>;
+
+  /**
+   * 특정 직원-평가기간의 프로젝트 할당 순서를 재정렬한다
+   */
+  순서를_재정렬한다(
+    periodId: string,
+    employeeId: string,
+    updatedBy: string,
     manager?: EntityManager,
   ): Promise<void>;
 }

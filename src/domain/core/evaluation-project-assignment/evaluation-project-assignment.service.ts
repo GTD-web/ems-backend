@@ -9,6 +9,7 @@ import {
   CreateEvaluationProjectAssignmentData,
   UpdateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentFilter,
+  OrderDirection,
 } from './evaluation-project-assignment.types';
 import { IEvaluationProjectAssignment } from './interfaces/evaluation-project-assignment.interface';
 import { IEvaluationProjectAssignmentService } from './interfaces/evaluation-project-assignment.service.interface';
@@ -44,6 +45,7 @@ export class EvaluationProjectAssignmentService
 
   /**
    * ID로 평가 프로젝트 할당을 조회한다
+   * 커맨드 핸들러에서 검증 목적으로 사용
    */
   async ID로_조회한다(
     id: string,
@@ -62,168 +64,6 @@ export class EvaluationProjectAssignmentService
   }
 
   /**
-   * 모든 평가 프로젝트 할당을 조회한다
-   */
-  async 전체_조회한다(
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]> {
-    return this.executeSafeDomainOperation(async () => {
-      const repository = this.transactionManager.getRepository(
-        EvaluationProjectAssignment,
-        this.evaluationProjectAssignmentRepository,
-        manager,
-      );
-
-      return await repository.find({
-        order: { assignedDate: 'DESC' },
-      });
-    }, '전체_조회한다');
-  }
-
-  /**
-   * 평가기간별 할당을 조회한다
-   */
-  async 평가기간별_조회한다(
-    periodId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]> {
-    return this.executeSafeDomainOperation(async () => {
-      const repository = this.transactionManager.getRepository(
-        EvaluationProjectAssignment,
-        this.evaluationProjectAssignmentRepository,
-        manager,
-      );
-
-      return await repository.find({
-        where: { periodId },
-        order: { assignedDate: 'DESC' },
-      });
-    }, '평가기간별_조회한다');
-  }
-
-  /**
-   * 직원별 할당을 조회한다
-   */
-  async 직원별_조회한다(
-    employeeId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]> {
-    return this.executeSafeDomainOperation(async () => {
-      const repository = this.transactionManager.getRepository(
-        EvaluationProjectAssignment,
-        this.evaluationProjectAssignmentRepository,
-        manager,
-      );
-
-      return await repository.find({
-        where: { employeeId },
-        order: { assignedDate: 'DESC' },
-      });
-    }, '직원별_조회한다');
-  }
-
-  /**
-   * 프로젝트별 할당을 조회한다
-   */
-  async 프로젝트별_조회한다(
-    projectId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]> {
-    return this.executeSafeDomainOperation(async () => {
-      const repository = this.transactionManager.getRepository(
-        EvaluationProjectAssignment,
-        this.evaluationProjectAssignmentRepository,
-        manager,
-      );
-
-      return await repository.find({
-        where: { projectId },
-        order: { assignedDate: 'DESC' },
-      });
-    }, '프로젝트별_조회한다');
-  }
-
-  /**
-   * 특정 평가기간의 직원별 할당을 조회한다
-   */
-  async 평가기간_직원별_조회한다(
-    periodId: string,
-    employeeId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]> {
-    return this.executeSafeDomainOperation(async () => {
-      const repository = this.transactionManager.getRepository(
-        EvaluationProjectAssignment,
-        this.evaluationProjectAssignmentRepository,
-        manager,
-      );
-
-      return await repository.find({
-        where: { periodId, employeeId },
-        order: { assignedDate: 'DESC' },
-      });
-    }, '평가기간_직원별_조회한다');
-  }
-
-  /**
-   * 필터 조건으로 할당을 조회한다
-   */
-  async 필터_조회한다(
-    filter: EvaluationProjectAssignmentFilter,
-    manager?: EntityManager,
-  ): Promise<IEvaluationProjectAssignment[]> {
-    return this.executeSafeDomainOperation(async () => {
-      const repository = this.transactionManager.getRepository(
-        EvaluationProjectAssignment,
-        this.evaluationProjectAssignmentRepository,
-        manager,
-      );
-
-      const queryBuilder = repository.createQueryBuilder('assignment');
-
-      if (filter.periodId) {
-        queryBuilder.andWhere('assignment.periodId = :periodId', {
-          periodId: filter.periodId,
-        });
-      }
-
-      if (filter.employeeId) {
-        queryBuilder.andWhere('assignment.employeeId = :employeeId', {
-          employeeId: filter.employeeId,
-        });
-      }
-
-      if (filter.projectId) {
-        queryBuilder.andWhere('assignment.projectId = :projectId', {
-          projectId: filter.projectId,
-        });
-      }
-
-      if (filter.assignedBy) {
-        queryBuilder.andWhere('assignment.assignedBy = :assignedBy', {
-          assignedBy: filter.assignedBy,
-        });
-      }
-
-      if (filter.assignedDateFrom) {
-        queryBuilder.andWhere('assignment.assignedDate >= :assignedDateFrom', {
-          assignedDateFrom: filter.assignedDateFrom,
-        });
-      }
-
-      if (filter.assignedDateTo) {
-        queryBuilder.andWhere('assignment.assignedDate <= :assignedDateTo', {
-          assignedDateTo: filter.assignedDateTo,
-        });
-      }
-
-      return await queryBuilder
-        .orderBy('assignment.assignedDate', 'DESC')
-        .getMany();
-    }, '필터_조회한다');
-  }
-
-  /**
    * 평가 프로젝트 할당을 생성한다
    */
   async 생성한다(
@@ -238,6 +78,16 @@ export class EvaluationProjectAssignmentService
         createData,
         entityManager,
       );
+
+      // displayOrder가 지정되지 않은 경우 자동으로 다음 순서 계산
+      if (createData.displayOrder === undefined) {
+        const maxOrder = await this.최대_순서를_조회한다(
+          createData.periodId,
+          createData.employeeId,
+          entityManager,
+        );
+        createData.displayOrder = maxOrder + 1;
+      }
 
       // 엔티티 생성 (불변성 검증 자동 실행)
       const assignment = new EvaluationProjectAssignment(createData);
@@ -446,5 +296,144 @@ export class EvaluationProjectAssignmentService
         `프로젝트 할당 전체 삭제 완료 - 프로젝트 ID: ${projectId}, 삭제자: ${deletedBy}`,
       );
     }, '프로젝트_할당_전체삭제한다');
+  }
+
+  /**
+   * 특정 직원-평가기간의 최대 순서를 조회한다
+   */
+  public async 최대_순서를_조회한다(
+    periodId: string,
+    employeeId: string,
+    manager?: EntityManager,
+  ): Promise<number> {
+    const repository = this.transactionManager.getRepository(
+      EvaluationProjectAssignment,
+      this.evaluationProjectAssignmentRepository,
+      manager,
+    );
+
+    const result = await repository
+      .createQueryBuilder('assignment')
+      .select('MAX(assignment.displayOrder)', 'maxOrder')
+      .where('assignment.periodId = :periodId', { periodId })
+      .andWhere('assignment.employeeId = :employeeId', { employeeId })
+      .getRawOne();
+
+    return result?.maxOrder ?? -1;
+  }
+
+  /**
+   * 프로젝트 할당 순서를 변경한다 (위로 이동 또는 아래로 이동)
+   */
+  async 순서를_변경한다(
+    assignmentId: string,
+    direction: OrderDirection,
+    updatedBy: string,
+    manager?: EntityManager,
+  ): Promise<IEvaluationProjectAssignment> {
+    return this.executeSafeDomainOperation(async () => {
+      const entityManager = manager || this.dataSource.manager;
+      const repository = this.transactionManager.getRepository(
+        EvaluationProjectAssignment,
+        this.evaluationProjectAssignmentRepository,
+        entityManager,
+      );
+
+      // 현재 할당 조회
+      const currentAssignment = await repository.findOne({
+        where: { id: assignmentId },
+      });
+      if (!currentAssignment) {
+        throw new EvaluationProjectAssignmentNotFoundException(assignmentId);
+      }
+
+      const currentOrder = currentAssignment.displayOrder;
+
+      // 같은 직원-평가기간의 모든 할당 조회 (displayOrder 순으로 정렬)
+      const allAssignments = await repository.find({
+        where: {
+          periodId: currentAssignment.periodId,
+          employeeId: currentAssignment.employeeId,
+        },
+        order: { displayOrder: 'ASC' },
+      });
+
+      // 현재 위치 찾기
+      const currentIndex = allAssignments.findIndex(
+        (a) => a.id === assignmentId,
+      );
+
+      // 이동 가능 여부 확인
+      if (direction === 'up' && currentIndex === 0) {
+        this.logger.warn(`이미 첫 번째 항목입니다 - ID: ${assignmentId}`);
+        return currentAssignment;
+      }
+
+      if (direction === 'down' && currentIndex === allAssignments.length - 1) {
+        this.logger.warn(`이미 마지막 항목입니다 - ID: ${assignmentId}`);
+        return currentAssignment;
+      }
+
+      // 교환할 항목 찾기
+      const targetIndex =
+        direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      const targetAssignment = allAssignments[targetIndex];
+
+      // 순서 교환
+      const tempOrder = currentAssignment.displayOrder;
+      currentAssignment.순서를_변경한다(targetAssignment.displayOrder);
+      targetAssignment.순서를_변경한다(tempOrder);
+
+      // 메타데이터 업데이트
+      currentAssignment.메타데이터를_업데이트한다(updatedBy);
+      targetAssignment.메타데이터를_업데이트한다(updatedBy);
+
+      // 저장
+      await repository.save([currentAssignment, targetAssignment]);
+
+      this.logger.log(
+        `프로젝트 할당 순서 변경 완료 - ID: ${assignmentId}, 방향: ${direction}`,
+      );
+
+      return currentAssignment;
+    }, '순서를_변경한다');
+  }
+
+  /**
+   * 특정 직원-평가기간의 프로젝트 할당 순서를 재정렬한다
+   * 모든 할당의 displayOrder를 0부터 순차적으로 재설정한다
+   */
+  async 순서를_재정렬한다(
+    periodId: string,
+    employeeId: string,
+    updatedBy: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationProjectAssignment,
+        this.evaluationProjectAssignmentRepository,
+        manager,
+      );
+
+      // 같은 직원-평가기간의 모든 할당 조회 (현재 순서대로 정렬)
+      const assignments = await repository.find({
+        where: { periodId, employeeId },
+        order: { displayOrder: 'ASC', assignedDate: 'DESC' },
+      });
+
+      // 순서 재정렬
+      assignments.forEach((assignment, index) => {
+        assignment.순서를_변경한다(index);
+        assignment.메타데이터를_업데이트한다(updatedBy);
+      });
+
+      // 저장
+      await repository.save(assignments);
+
+      this.logger.log(
+        `프로젝트 할당 순서 재정렬 완료 - 평가기간 ID: ${periodId}, 직원 ID: ${employeeId}, 항목 수: ${assignments.length}`,
+      );
+    }, '순서를_재정렬한다');
   }
 }

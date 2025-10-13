@@ -1,8 +1,8 @@
-import { WbsSelfEvaluationDto } from '@/domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { WbsSelfEvaluationService } from 'src/domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
+import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 
 /**
  * WBS 자기평가 수정 커맨드

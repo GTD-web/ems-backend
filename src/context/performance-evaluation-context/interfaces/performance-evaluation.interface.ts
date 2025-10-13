@@ -3,7 +3,7 @@ import {
   EmployeeSelfEvaluationsResponseDto,
   WbsSelfEvaluationBasicDto,
   WbsSelfEvaluationResponseDto,
-} from '@/interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
+} from '@interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
 import {
   CreateDownwardEvaluationCommand,
   GetDownwardEvaluationDetailQuery,

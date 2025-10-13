@@ -18,58 +18,21 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EvaluationCriteriaManagementService } from './evaluation-criteria-management.service';
 
 // Project Assignment Handlers
-import {
-  BulkCreateProjectAssignmentHandler,
-  CancelProjectAssignmentHandler,
-  CreateProjectAssignmentHandler,
-  GetEmployeeProjectAssignmentsHandler,
-  GetProjectAssignedEmployeesHandler,
-  GetProjectAssignmentDetailHandler,
-  GetProjectAssignmentListHandler,
-  GetUnassignedEmployeesHandler,
-} from './handlers/project-assignment';
+import { PROJECT_ASSIGNMENT_HANDLERS } from './handlers/project-assignment';
 
 // WBS Assignment Handlers
-import {
-  BulkCreateWbsAssignmentHandler,
-  CancelWbsAssignmentHandler,
-  CreateWbsAssignmentHandler,
-  GetEmployeeWbsAssignmentsHandler,
-  GetProjectWbsAssignmentsHandler,
-  GetUnassignedWbsItemsHandler,
-  GetWbsAssignmentDetailHandler,
-  GetWbsAssignmentListHandler,
-  GetWbsItemAssignmentsHandler,
-  ResetEmployeeWbsAssignmentsHandler,
-  ResetPeriodWbsAssignmentsHandler,
-  ResetProjectWbsAssignmentsHandler,
-} from './handlers/wbs-assignment';
+import { WBS_ASSIGNMENT_HANDLERS } from './handlers/wbs-assignment';
 
 // Evaluation Line Handlers
+import { EVALUATION_LINE_HANDLERS } from './handlers/evaluation-line';
+
+// WBS Evaluation Criteria Handlers
+import { WBS_EVALUATION_CRITERIA_HANDLERS } from './handlers/wbs-evaluation-criteria';
+
+// Domain Modules
 import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
-import {
-  ConfigureEmployeeWbsEvaluationLineHandler,
-  ConfigurePrimaryEvaluatorHandler,
-  ConfigureSecondaryEvaluatorHandler,
-  GetEmployeeEvaluationLineMappingsHandler,
-  GetEmployeeEvaluationSettingsHandler,
-  GetEvaluationLineListHandler,
-  GetEvaluatorEmployeesHandler,
-  GetUpdaterEvaluationLineMappingsHandler,
-} from './handlers/evaluation-line';
-
-// WBS Evaluation Criteria Handlers
-import {
-  CreateWbsEvaluationCriteriaHandler,
-  UpdateWbsEvaluationCriteriaHandler,
-  DeleteWbsEvaluationCriteriaHandler,
-  DeleteWbsItemEvaluationCriteriaHandler,
-  GetWbsEvaluationCriteriaListHandler,
-  GetWbsEvaluationCriteriaDetailHandler,
-  GetWbsItemEvaluationCriteriaHandler,
-} from './handlers/wbs-evaluation-criteria';
 
 import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
 
@@ -110,48 +73,14 @@ import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
   providers: [
     EvaluationCriteriaManagementService,
     TransactionManagerService,
-    // Project Assignment Command Handlers
-    CreateProjectAssignmentHandler,
-    CancelProjectAssignmentHandler,
-    BulkCreateProjectAssignmentHandler,
-    // Project Assignment Query Handlers
-    GetProjectAssignmentListHandler,
-    GetEmployeeProjectAssignmentsHandler,
-    GetProjectAssignedEmployeesHandler,
-    GetProjectAssignmentDetailHandler,
-    GetUnassignedEmployeesHandler,
-    // WBS Assignment Command Handlers
-    CreateWbsAssignmentHandler,
-    CancelWbsAssignmentHandler,
-    BulkCreateWbsAssignmentHandler,
-    ResetPeriodWbsAssignmentsHandler,
-    ResetProjectWbsAssignmentsHandler,
-    ResetEmployeeWbsAssignmentsHandler,
-    // WBS Assignment Query Handlers
-    GetWbsAssignmentListHandler,
-    GetEmployeeWbsAssignmentsHandler,
-    GetProjectWbsAssignmentsHandler,
-    GetWbsItemAssignmentsHandler,
-    GetWbsAssignmentDetailHandler,
-    GetUnassignedWbsItemsHandler,
+    // Project Assignment Handlers
+    ...PROJECT_ASSIGNMENT_HANDLERS,
+    // WBS Assignment Handlers
+    ...WBS_ASSIGNMENT_HANDLERS,
     // Evaluation Line Handlers
-    ConfigureEmployeeWbsEvaluationLineHandler,
-    ConfigurePrimaryEvaluatorHandler,
-    ConfigureSecondaryEvaluatorHandler,
-    GetEvaluationLineListHandler,
-    GetEmployeeEvaluationLineMappingsHandler,
-    GetEvaluatorEmployeesHandler,
-    GetUpdaterEvaluationLineMappingsHandler,
-    GetEmployeeEvaluationSettingsHandler,
-    // WBS Evaluation Criteria Command Handlers
-    CreateWbsEvaluationCriteriaHandler,
-    UpdateWbsEvaluationCriteriaHandler,
-    DeleteWbsEvaluationCriteriaHandler,
-    DeleteWbsItemEvaluationCriteriaHandler,
-    // WBS Evaluation Criteria Query Handlers
-    GetWbsEvaluationCriteriaListHandler,
-    GetWbsEvaluationCriteriaDetailHandler,
-    GetWbsItemEvaluationCriteriaHandler,
+    ...EVALUATION_LINE_HANDLERS,
+    // WBS Evaluation Criteria Handlers
+    ...WBS_EVALUATION_CRITERIA_HANDLERS,
   ],
   exports: [EvaluationCriteriaManagementService],
 })

@@ -3,8 +3,8 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 import { WbsSelfEvaluationMappingService } from '@domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
-import { WbsSelfEvaluationDto } from '@/domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
-import { WbsSelfEvaluationMappingDto } from '@/domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
+import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { WbsSelfEvaluationMappingDto } from '@domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
 
 /**
  * WBS 자기평가 제출 커맨드

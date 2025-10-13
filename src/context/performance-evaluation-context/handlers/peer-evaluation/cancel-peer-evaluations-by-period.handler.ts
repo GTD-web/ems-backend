@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { PeerEvaluationService } from '@/domain/core/peer-evaluation/peer-evaluation.service';
-import { PeerEvaluationMappingService } from '@/domain/core/peer-evaluation-mapping/peer-evaluation-mapping.service';
+import { PeerEvaluationService } from '@domain/core/peer-evaluation/peer-evaluation.service';
+import { PeerEvaluationMappingService } from '@domain/core/peer-evaluation-mapping/peer-evaluation-mapping.service';
 
 /**
  * 평가기간의 피평가자의 모든 동료평가 취소 커맨드

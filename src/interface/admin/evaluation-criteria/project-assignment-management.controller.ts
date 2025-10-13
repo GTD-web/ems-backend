@@ -1,10 +1,12 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
+import { ParseId } from '../../decorators/parse-uuid.decorator';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
   BulkCreateProjectAssignments,
   CancelProjectAssignment,
+  ChangeProjectAssignmentOrder,
   CreateProjectAssignment,
   GetEmployeeProjectAssignments,
   GetProjectAssignedEmployees,
@@ -14,9 +16,11 @@ import {
 } from './decorators/project-assignment-api.decorators';
 import {
   BulkCreateProjectAssignmentDto,
+  ChangeProjectAssignmentOrderDto,
   CreateProjectAssignmentDto,
   EmployeeProjectsResponseDto,
   ProjectAssignmentFilterDto,
+  ProjectAssignmentResponseDto,
   ProjectEmployeesResponseDto,
   UnassignedEmployeesResponseDto,
 } from './dto/project-assignment.dto';
@@ -89,17 +93,8 @@ export class ProjectAssignmentManagementController {
   }
 
   /**
-   * 프로젝트 할당 상세 조회
-   */
-  @GetProjectAssignmentDetail()
-  async getProjectAssignmentDetail(@Param('id') id: string): Promise<any> {
-    return await this.evaluationCriteriaManagementService.프로젝트_할당_상세를_조회한다(
-      id,
-    );
-  }
-
-  /**
    * 특정 평가기간에 직원에게 할당된 프로젝트 조회
+   * 주의: 구체적인 경로를 :id 경로보다 먼저 정의해야 함
    */
   @GetEmployeeProjectAssignments()
   async getEmployeeProjectAssignments(
@@ -114,6 +109,7 @@ export class ProjectAssignmentManagementController {
 
   /**
    * 특정 평가기간에 프로젝트에 할당된 직원 조회
+   * 주의: 구체적인 경로를 :id 경로보다 먼저 정의해야 함
    */
   @GetProjectAssignedEmployees()
   async getProjectAssignedEmployees(
@@ -128,6 +124,7 @@ export class ProjectAssignmentManagementController {
 
   /**
    * 특정 평가기간에 프로젝트가 할당되지 않은 직원 목록 조회
+   * 주의: 구체적인 경로를 :id 경로보다 먼저 정의해야 함
    */
   @GetUnassignedEmployees()
   async getUnassignedEmployees(
@@ -137,6 +134,17 @@ export class ProjectAssignmentManagementController {
     return await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트가_할당되지_않은_직원_목록을_조회한다(
       periodId,
       projectId,
+    );
+  }
+
+  /**
+   * 프로젝트 할당 상세 조회
+   * 주의: 파라미터 경로(:id)는 구체적인 경로들 뒤에 배치해야 함
+   */
+  @GetProjectAssignmentDetail()
+  async getProjectAssignmentDetail(@Param('id') id: string): Promise<any> {
+    return await this.evaluationCriteriaManagementService.프로젝트_할당_상세를_조회한다(
+      id,
     );
   }
 
@@ -159,6 +167,23 @@ export class ProjectAssignmentManagementController {
         assignedBy,
       })),
       assignedBy,
+    );
+  }
+
+  /**
+   * 프로젝트 할당 순서 변경
+   */
+  @ChangeProjectAssignmentOrder()
+  async changeProjectAssignmentOrder(
+    @ParseId() id: string,
+    @Body() changeOrderDto: ChangeProjectAssignmentOrderDto,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+  ): Promise<ProjectAssignmentResponseDto> {
+    const updatedBy = changeOrderDto.updatedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.evaluationCriteriaManagementService.프로젝트_할당_순서를_변경한다(
+      id,
+      changeOrderDto.direction,
+      updatedBy,
     );
   }
 }

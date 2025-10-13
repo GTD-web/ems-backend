@@ -15,6 +15,7 @@ import type {
 @Index(['periodId', 'projectId'])
 @Index(['employeeId', 'projectId'])
 @Index(['assignedDate'])
+@Index(['periodId', 'employeeId', 'displayOrder'])
 export class EvaluationProjectAssignment
   extends BaseEntity<EvaluationProjectAssignmentDto>
   implements IEvaluationProjectAssignment
@@ -49,6 +50,13 @@ export class EvaluationProjectAssignment
   })
   assignedBy: string;
 
+  @Column({
+    type: 'int',
+    comment: '표시 순서 (같은 직원-평가기간 내에서의 순서)',
+    default: 0,
+  })
+  displayOrder: number;
+
   constructor(data?: CreateEvaluationProjectAssignmentData) {
     super();
     if (data) {
@@ -57,6 +65,7 @@ export class EvaluationProjectAssignment
       this.projectId = data.projectId;
       this.assignedBy = data.assignedBy;
       this.assignedDate = new Date();
+      this.displayOrder = data.displayOrder ?? 0;
 
       // 감사 정보 설정
       this.메타데이터를_업데이트한다(data.assignedBy);
@@ -85,6 +94,16 @@ export class EvaluationProjectAssignment
   }
 
   /**
+   * 순서를 변경한다
+   */
+  순서를_변경한다(newOrder: number): void {
+    if (newOrder < 0) {
+      throw new Error('표시 순서는 0 이상이어야 합니다.');
+    }
+    this.displayOrder = newOrder;
+  }
+
+  /**
    * DTO로 변환한다
    */
   DTO로_변환한다(): EvaluationProjectAssignmentDto {
@@ -95,6 +114,7 @@ export class EvaluationProjectAssignment
       projectId: this.projectId,
       assignedDate: this.assignedDate,
       assignedBy: this.assignedBy,
+      displayOrder: this.displayOrder,
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
       createdAt: this.createdAt,

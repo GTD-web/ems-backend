@@ -10,6 +10,7 @@ import {
   ArrayMinSize,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { OrderDirection } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 
 /**
  * 프로젝트 할당 생성 DTO
@@ -58,6 +59,28 @@ export class BulkCreateProjectAssignmentDto {
   @ValidateNested({ each: true })
   @Type(() => CreateProjectAssignmentDto)
   assignments: CreateProjectAssignmentDto[];
+}
+
+/**
+ * 프로젝트 할당 순서 변경 DTO
+ */
+export class ChangeProjectAssignmentOrderDto {
+  @ApiProperty({
+    description: '이동 방향 (up: 위로, down: 아래로)',
+    example: OrderDirection.UP,
+    enum: OrderDirection,
+    enumName: 'OrderDirection',
+  })
+  @IsEnum(OrderDirection, { message: '이동 방향은 up 또는 down이어야 합니다.' })
+  direction: OrderDirection;
+
+  @ApiPropertyOptional({
+    description: '변경 수행자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+  })
+  @IsOptional()
+  @IsUUID()
+  updatedBy?: string;
 }
 
 /**
@@ -167,16 +190,22 @@ export class ProjectAssignmentResponseDto {
   assignedBy: string;
 
   @ApiProperty({
+    description: '표시 순서 (같은 직원-평가기간 내에서의 순서)',
+    example: 0,
+  })
+  displayOrder: number;
+
+  @ApiPropertyOptional({
     description: '생성자 ID',
     example: '123e4567-e89b-12d3-a456-426614174004',
   })
-  createdBy: string;
+  createdBy?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '수정자 ID',
     example: '123e4567-e89b-12d3-a456-426614174005',
   })
-  updatedBy: string;
+  updatedBy?: string;
 
   @ApiProperty({
     description: '생성일시',

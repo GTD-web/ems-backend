@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PerformanceEvaluationContextModule } from '@/context/performance-evaluation-context/performance-evaluation-context.module';
+import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
 import { PeerEvaluationBusinessService } from './peer-evaluation-business.service';
 
 /**

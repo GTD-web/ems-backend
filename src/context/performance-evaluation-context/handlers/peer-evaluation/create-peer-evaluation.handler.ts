@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PeerEvaluationService } from '@domain/core/peer-evaluation/peer-evaluation.service';
 import { PeerEvaluationMappingService } from '@domain/core/peer-evaluation-mapping/peer-evaluation-mapping.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
-import { PeerEvaluationStatus } from '@/domain/core/peer-evaluation/peer-evaluation.types';
+import { PeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 
 /**
  * 동료평가 생성 커맨드

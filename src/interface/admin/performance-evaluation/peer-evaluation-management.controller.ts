@@ -1,7 +1,7 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
-import { PeerEvaluationBusinessService } from '@/business/peer-evaluation/peer-evaluation-business.service';
+import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
 import {
   UpsertPeerEvaluation,
   SubmitPeerEvaluation,

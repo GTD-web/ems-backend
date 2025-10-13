@@ -6,6 +6,7 @@ import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-cr
 import {
   BulkCreateProjectAssignmentCommand,
   CancelProjectAssignmentCommand,
+  ChangeProjectAssignmentOrderCommand,
   CreateProjectAssignmentCommand,
   GetEmployeeProjectAssignmentsQuery,
   GetProjectAssignedEmployeesQuery,
@@ -58,7 +59,7 @@ import {
 import {
   ProjectInfoDto,
   EmployeeInfoDto,
-} from '@/interface/admin/evaluation-criteria/dto/project-assignment.dto';
+} from '@interface/admin/evaluation-criteria/dto/project-assignment.dto';
 import type { EvaluationLineMappingDto } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type {
   EvaluationLineDto,
@@ -68,6 +69,7 @@ import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
   EvaluationProjectAssignmentFilter,
+  OrderDirection,
 } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 import type {
   CreateEvaluationWbsAssignmentData,
@@ -163,6 +165,19 @@ export class EvaluationCriteriaManagementService
     const command = new BulkCreateProjectAssignmentCommand(
       assignments,
       assignedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  async 프로젝트_할당_순서를_변경한다(
+    assignmentId: string,
+    direction: OrderDirection,
+    updatedBy: string,
+  ): Promise<EvaluationProjectAssignmentDto> {
+    const command = new ChangeProjectAssignmentOrderCommand(
+      assignmentId,
+      direction,
+      updatedBy,
     );
     return await this.commandBus.execute(command);
   }

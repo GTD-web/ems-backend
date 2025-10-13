@@ -30,6 +30,7 @@ export interface ProjectAssignmentListResult {
     assignedDate: Date;
     assignedBy: string;
     assignedByName: string;
+    displayOrder: number;
   }>;
   totalCount: number;
   page: number;
@@ -116,6 +117,7 @@ export class GetProjectAssignmentListHandler
         assignedDate: assignment.assignedDate,
         assignedBy: assignment.assignedBy,
         assignedByName: assignedByEmployee?.name || '',
+        displayOrder: assignment.displayOrder,
       };
     });
 
@@ -171,10 +173,14 @@ export class GetProjectAssignmentListHandler
       });
     }
 
-    // 정렬
+    // 정렬 - displayOrder를 먼저, 그 다음 지정된 정렬 기준
+    queryBuilder.addOrderBy('assignment.displayOrder', 'ASC');
+
     const orderBy = filter.orderBy || 'assignedDate';
     const orderDirection = filter.orderDirection || 'DESC';
-    queryBuilder.orderBy(`assignment.${orderBy}`, orderDirection);
+    if (orderBy !== 'displayOrder') {
+      queryBuilder.addOrderBy(`assignment.${orderBy}`, orderDirection);
+    }
 
     return queryBuilder;
   }

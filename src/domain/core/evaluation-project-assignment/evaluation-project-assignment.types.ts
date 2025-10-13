@@ -18,6 +18,8 @@ export interface EvaluationProjectAssignmentDto {
   assignedDate: Date;
   /** 할당자 ID */
   assignedBy: string;
+  /** 표시 순서 (같은 직원-평가기간 내에서의 순서) */
+  displayOrder: number;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */
@@ -119,6 +121,8 @@ export interface CreateEvaluationProjectAssignmentData {
   projectId: string;
   /** 할당자 ID */
   assignedBy: string;
+  /** 표시 순서 (선택적, 미지정시 자동 계산) */
+  displayOrder?: number;
 }
 
 /**
@@ -129,6 +133,8 @@ export interface UpdateEvaluationProjectAssignmentData {
   projectId?: string;
   /** 할당자 ID */
   assignedBy?: string;
+  /** 표시 순서 (선택적) */
+  displayOrder?: number;
 }
 
 /**
@@ -155,4 +161,36 @@ export interface EvaluationProjectAssignmentFilter {
   orderBy?: string;
   /** 정렬 방향 */
   orderDirection?: 'ASC' | 'DESC';
+}
+
+/**
+ * 순서 변경 방향 Enum
+ */
+export enum OrderDirection {
+  UP = 'up',
+  DOWN = 'down',
+}
+
+/**
+ * 프로젝트 할당 순서 변경 데이터
+ */
+export interface ChangeProjectAssignmentOrderData {
+  /** 할당 ID */
+  assignmentId: string;
+  /** 이동 방향 */
+  direction: OrderDirection;
+  /** 변경 수행자 ID */
+  updatedBy: string;
+}
+
+/**
+ * 순서 재정렬 데이터
+ */
+export interface ReorderProjectAssignmentsData {
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 직원 ID */
+  employeeId: string;
+  /** 재정렬 수행자 ID */
+  updatedBy: string;
 }

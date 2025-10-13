@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
-import { PeerEvaluationService } from '@/domain/core/peer-evaluation/peer-evaluation.service';
+import { PeerEvaluationService } from '@domain/core/peer-evaluation/peer-evaluation.service';
 
 /**
  * 동료평가 취소 커맨드
