@@ -1,4 +1,13 @@
-import { applyDecorators, Post, Get, Put, Delete, Patch } from '@nestjs/common';
+import {
+  applyDecorators,
+  Post,
+  Get,
+  Put,
+  Delete,
+  Patch,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import {
   ApiOperation,
   ApiResponse,
@@ -14,9 +23,37 @@ import {
 export const CreateWbsAssignment = () =>
   applyDecorators(
     Post(),
+    HttpCode(HttpStatus.CREATED),
     ApiOperation({
       summary: 'WBS 할당 생성',
-      description: '특정 직원에게 WBS 항목을 할당합니다.',
+      description: `**중요**: 특정 직원에게 특정 평가기간의 WBS 항목을 할당합니다. 할당 시 중복 검증, 평가기간 상태 검증, 자동 평가기준 생성, 평가라인 자동 구성 등을 수행합니다.
+
+**자동 수행 작업:**
+- WBS 평가기준 자동 생성: 해당 WBS 항목에 평가기준이 없는 경우 빈 평가기준을 자동으로 생성
+- 평가라인 자동 구성: 직원의 관리자를 1차 평가자, 프로젝트 PM을 2차 평가자로 자동 설정
+- 중복 검증: 동일한 직원-WBS-프로젝트-평가기간 조합의 중복 할당 방지
+
+**테스트 케이스:**
+- 기본 할당: 유효한 직원, WBS 항목, 프로젝트, 평가기간으로 할당 생성
+- 할당자 정보: 할당 생성 시 assignedBy, createdBy, updatedBy 정보가 올바르게 설정됨
+- 할당 날짜: assignedDate가 현재 시간으로 자동 설정됨
+- 평가기준 자동 생성: WBS 항목에 평가기준이 없는 경우 빈 평가기준 자동 생성 확인
+- 평가라인 자동 구성: 1차 평가자(관리자), 2차 평가자(PM) 자동 설정 확인
+- PM과 관리자 동일: PM이 관리자와 같은 경우 2차 평가자 미설정
+- 평가라인 중복 방지: 이미 평가라인이 있는 경우 중복 생성하지 않음
+- 중복 할당 방지: 동일한 직원-WBS-프로젝트-평가기간 조합 중복 생성 시 409 에러
+- 중복 평가기준 처리: 동시에 동일 WBS 평가기준 생성 시 적절한 에러 반환
+- 필수 필드 검증: employeeId, wbsItemId, projectId, periodId 누락 시 400 에러
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 직원 존재 검증: 존재하지 않는 직원 ID 시 404 에러
+- WBS 항목 존재 검증: 존재하지 않는 WBS 항목 ID 시 404 에러
+- 프로젝트 존재 검증: 존재하지 않는 프로젝트 ID 시 404 에러
+- 평가기간 존재 검증: 존재하지 않는 평가기간 ID 시 404 에러
+- 완료된 평가기간 제한: 완료된 평가기간에 할당 생성 시 422 에러
+- 진행 중 평가기간 허용: 진행 중인 평가기간에는 할당 생성 가능
+- 할당 목록 반영: 생성된 할당이 목록 조회에 즉시 반영됨
+- 상세 조회 가능: 생성된 할당의 상세 정보 조회 가능
+- 감사 정보: 생성일시, 수정일시, 생성자, 수정자 정보 자동 기록`,
     }),
     ApiBody({
       description: 'WBS 할당 생성 데이터',
@@ -27,24 +64,34 @@ export const CreateWbsAssignment = () =>
             type: 'string',
             format: 'uuid',
             description: '직원 ID',
+            example: '123e4567-e89b-12d3-a456-426614174000',
           },
           wbsItemId: {
             type: 'string',
             format: 'uuid',
             description: 'WBS 항목 ID',
+            example: '123e4567-e89b-12d3-a456-426614174001',
+          },
+          projectId: {
+            type: 'string',
+            format: 'uuid',
+            description: '프로젝트 ID',
+            example: '123e4567-e89b-12d3-a456-426614174002',
           },
           periodId: {
             type: 'string',
             format: 'uuid',
             description: '평가기간 ID',
+            example: '123e4567-e89b-12d3-a456-426614174003',
           },
           assignedBy: {
             type: 'string',
             format: 'uuid',
-            description: '할당자 ID',
+            description: '할당자 ID (선택사항)',
+            example: '123e4567-e89b-12d3-a456-426614174004',
           },
         },
-        required: ['employeeId', 'wbsItemId', 'periodId'],
+        required: ['employeeId', 'wbsItemId', 'projectId', 'periodId'],
       },
     }),
     ApiResponse({
@@ -56,6 +103,7 @@ export const CreateWbsAssignment = () =>
           id: { type: 'string', format: 'uuid' },
           employeeId: { type: 'string', format: 'uuid' },
           wbsItemId: { type: 'string', format: 'uuid' },
+          projectId: { type: 'string', format: 'uuid' },
           periodId: { type: 'string', format: 'uuid' },
           assignedBy: { type: 'string', format: 'uuid' },
           createdAt: { type: 'string', format: 'date-time' },
@@ -65,11 +113,24 @@ export const CreateWbsAssignment = () =>
     }),
     ApiResponse({
       status: 400,
-      description: '잘못된 요청 데이터입니다.',
+      description: '잘못된 요청 데이터 (필수 필드 누락, UUID 형식 오류 등)',
     }),
     ApiResponse({
       status: 404,
-      description: '직원, WBS 항목 또는 평가기간을 찾을 수 없습니다.',
+      description: '직원, WBS 항목, 프로젝트 또는 평가기간을 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: 409,
+      description:
+        '중복된 할당입니다. (동일한 직원-WBS-프로젝트-평가기간 조합)',
+    }),
+    ApiResponse({
+      status: 422,
+      description: '비즈니스 로직 오류 (완료된 평가기간에 할당 생성 불가 등)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류',
     }),
   );
 
@@ -341,9 +402,41 @@ export const GetUnassignedWbsItems = () =>
 export const BulkCreateWbsAssignments = () =>
   applyDecorators(
     Post('bulk'),
+    HttpCode(HttpStatus.CREATED),
     ApiOperation({
       summary: 'WBS 대량 할당',
-      description: '여러 직원에게 WBS 항목을 대량으로 할당합니다.',
+      description: `**중요**: 여러 직원에게 여러 WBS 항목을 한 번에 할당합니다. 모든 할당이 성공하거나 모두 실패하는 트랜잭션 방식으로 처리됩니다. 각 할당마다 평가기준 자동 생성과 평가라인 자동 구성이 수행됩니다.
+
+**자동 수행 작업:**
+- WBS 평가기준 자동 생성: 각 WBS 항목에 평가기준이 없는 경우 빈 평가기준을 자동으로 생성
+- 평가라인 자동 구성: 각 할당마다 직원의 관리자를 1차 평가자, 프로젝트 PM을 2차 평가자로 자동 설정
+- 중복 검증: 동일한 직원-WBS-프로젝트-평가기간 조합의 중복 할당 방지
+- 트랜잭션 처리: 일부 할당 실패 시 전체 롤백
+
+**테스트 케이스:**
+- 다중 할당: 여러 직원을 여러 WBS 항목에 대량 할당
+- 단일 직원 다중 WBS: 한 직원을 여러 WBS 항목에 할당
+- 다중 직원 단일 WBS: 여러 직원을 한 WBS 항목에 할당
+- 평가기준 자동 생성: 각 WBS 항목에 평가기준이 없는 경우 자동 생성 확인
+- 평가기준 중복 방지: 동일 WBS 항목은 평가기준을 한 번만 생성
+- 평가라인 자동 구성: 각 할당마다 1차, 2차 평가자 자동 설정 확인
+- 평가라인 중복 방지: 이미 평가라인이 있는 경우 중복 생성하지 않음
+- PM과 관리자 동일: PM이 관리자와 같은 경우 2차 평가자 미설정
+- 트랜잭션 처리: 일부 할당 실패 시 전체 롤백 확인
+- 감사 정보: 모든 할당에 assignedBy, createdBy, updatedBy 정보 설정
+- 할당 날짜: 모든 할당에 assignedDate 자동 설정
+- 빈 배열 검증: 빈 할당 배열로 요청 시 400 에러
+- 필수 필드 검증: 각 할당의 필수 필드 누락 시 400 에러
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 직원 존재 검증: 존재하지 않는 직원 ID 포함 시 404 에러
+- WBS 항목 존재 검증: 존재하지 않는 WBS 항목 ID 포함 시 404 에러
+- 프로젝트 존재 검증: 존재하지 않는 프로젝트 ID 포함 시 404 에러
+- 평가기간 존재 검증: 존재하지 않는 평가기간 ID 포함 시 404 에러
+- 완료된 평가기간 제한: 완료된 평가기간에 할당 생성 시 422 에러
+- 중복 할당 방지: 기존 할당과 중복 시 409 에러 및 전체 롤백
+- 성능 테스트: 10개 이상 할당을 30초 이내 처리
+- 동시성 테스트: 여러 대량 할당 요청 동시 처리
+- 최소 1개 검증: 할당 목록은 최소 1개 이상 필수`,
     }),
     ApiBody({
       description: 'WBS 대량 할당 데이터',
@@ -352,15 +445,43 @@ export const BulkCreateWbsAssignments = () =>
         properties: {
           assignments: {
             type: 'array',
+            description: 'WBS 할당 목록 (최소 1개 이상)',
+            minItems: 1,
             items: {
               type: 'object',
               properties: {
-                employeeId: { type: 'string', format: 'uuid' },
-                wbsItemId: { type: 'string', format: 'uuid' },
-                periodId: { type: 'string', format: 'uuid' },
-                assignedBy: { type: 'string', format: 'uuid' },
+                employeeId: {
+                  type: 'string',
+                  format: 'uuid',
+                  description: '직원 ID',
+                  example: '123e4567-e89b-12d3-a456-426614174000',
+                },
+                wbsItemId: {
+                  type: 'string',
+                  format: 'uuid',
+                  description: 'WBS 항목 ID',
+                  example: '123e4567-e89b-12d3-a456-426614174001',
+                },
+                projectId: {
+                  type: 'string',
+                  format: 'uuid',
+                  description: '프로젝트 ID',
+                  example: '123e4567-e89b-12d3-a456-426614174002',
+                },
+                periodId: {
+                  type: 'string',
+                  format: 'uuid',
+                  description: '평가기간 ID',
+                  example: '123e4567-e89b-12d3-a456-426614174003',
+                },
+                assignedBy: {
+                  type: 'string',
+                  format: 'uuid',
+                  description: '할당자 ID (선택사항)',
+                  example: '123e4567-e89b-12d3-a456-426614174004',
+                },
               },
-              required: ['employeeId', 'wbsItemId', 'periodId'],
+              required: ['employeeId', 'wbsItemId', 'projectId', 'periodId'],
             },
           },
         },
@@ -369,11 +490,44 @@ export const BulkCreateWbsAssignments = () =>
     }),
     ApiResponse({
       status: 201,
-      description: 'WBS 대량 할당이 성공적으로 생성되었습니다.',
+      description: 'WBS 대량 할당이 성공적으로 완료되었습니다.',
+      schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            employeeId: { type: 'string', format: 'uuid' },
+            wbsItemId: { type: 'string', format: 'uuid' },
+            projectId: { type: 'string', format: 'uuid' },
+            periodId: { type: 'string', format: 'uuid' },
+            assignedBy: { type: 'string', format: 'uuid' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+      },
     }),
     ApiResponse({
       status: 400,
-      description: '잘못된 요청 데이터입니다.',
+      description:
+        '잘못된 요청 데이터 (빈 배열, 필수 필드 누락, UUID 형식 오류 등)',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '직원, WBS 항목, 프로젝트 또는 평가기간을 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: 409,
+      description: '중복된 할당이 포함되어 있습니다.',
+    }),
+    ApiResponse({
+      status: 422,
+      description: '비즈니스 로직 오류 (완료된 평가기간에 할당 생성 불가 등)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
     }),
   );
 
