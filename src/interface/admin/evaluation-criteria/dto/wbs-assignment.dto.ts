@@ -15,27 +15,42 @@ import { OrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluatio
  * WBS 할당 생성 DTO
  */
 export class CreateWbsAssignmentDto {
-  @ApiProperty({ description: '직원 ID', example: 'employee-uuid' })
+  @ApiProperty({
+    description: '직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
   @IsString()
   @IsUUID()
   employeeId: string;
 
-  @ApiProperty({ description: 'WBS 항목 ID', example: 'wbs-item-uuid' })
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
   @IsString()
   @IsUUID()
   wbsItemId: string;
 
-  @ApiProperty({ description: '프로젝트 ID', example: 'project-uuid' })
+  @ApiProperty({
+    description: '프로젝트 ID',
+    example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+  })
   @IsString()
   @IsUUID()
   projectId: string;
 
-  @ApiProperty({ description: '평가기간 ID', example: 'period-uuid' })
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
   @IsString()
   @IsUUID()
   periodId: string;
 
-  @ApiPropertyOptional({ description: '할당자 ID', example: 'admin-uuid' })
+  @ApiPropertyOptional({
+    description: '할당자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
   @IsOptional()
   @IsString()
   @IsUUID()
@@ -46,25 +61,37 @@ export class CreateWbsAssignmentDto {
  * WBS 할당 필터 DTO
  */
 export class WbsAssignmentFilterDto {
-  @ApiPropertyOptional({ description: '평가기간 ID', example: 'period-uuid' })
+  @ApiPropertyOptional({
+    description: '평가기간 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
   @IsOptional()
   @IsString()
   @IsUUID()
   periodId?: string;
 
-  @ApiPropertyOptional({ description: '직원 ID', example: 'employee-uuid' })
+  @ApiPropertyOptional({
+    description: '직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
   @IsOptional()
   @IsString()
   @IsUUID()
   employeeId?: string;
 
-  @ApiPropertyOptional({ description: 'WBS 항목 ID', example: 'wbs-item-uuid' })
+  @ApiPropertyOptional({
+    description: 'WBS 항목 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
   @IsOptional()
   @IsString()
   @IsUUID()
   wbsItemId?: string;
 
-  @ApiPropertyOptional({ description: '프로젝트 ID', example: 'project-uuid' })
+  @ApiPropertyOptional({
+    description: '프로젝트 ID',
+    example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+  })
   @IsOptional()
   @IsString()
   @IsUUID()
@@ -106,18 +133,18 @@ export class BulkCreateWbsAssignmentDto {
     type: [CreateWbsAssignmentDto],
     example: [
       {
-        employeeId: 'employee-uuid-1',
-        wbsItemId: 'wbs-item-uuid-1',
-        projectId: 'project-uuid-1',
-        periodId: 'period-uuid',
-        assignedBy: 'admin-uuid',
+        employeeId: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+        wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+        projectId: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+        periodId: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+        assignedBy: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
       },
       {
-        employeeId: 'employee-uuid-2',
-        wbsItemId: 'wbs-item-uuid-2',
-        projectId: 'project-uuid-2',
-        periodId: 'period-uuid',
-        assignedBy: 'admin-uuid',
+        employeeId: 'a2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d',
+        wbsItemId: 'b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e',
+        projectId: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+        periodId: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+        assignedBy: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
       },
     ],
   })
@@ -136,13 +163,14 @@ export class EmployeeWbsAssignmentsResponseDto {
     type: 'array',
     example: [
       {
-        id: 'assignment-uuid',
-        employeeId: 'employee-uuid',
-        wbsItemId: 'wbs-item-uuid',
-        periodId: 'period-uuid',
-        assignedBy: 'admin-uuid',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
+        id: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+        employeeId: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+        wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+        projectId: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+        periodId: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+        assignedBy: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+        createdAt: '2024-10-01T09:00:00Z',
+        updatedAt: '2024-10-01T09:00:00Z',
       },
     ],
   })
@@ -158,13 +186,14 @@ export class ProjectWbsAssignmentsResponseDto {
     type: 'array',
     example: [
       {
-        id: 'assignment-uuid',
-        employeeId: 'employee-uuid',
-        wbsItemId: 'wbs-item-uuid',
-        periodId: 'period-uuid',
-        assignedBy: 'admin-uuid',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
+        id: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+        employeeId: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+        wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+        projectId: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+        periodId: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+        assignedBy: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+        createdAt: '2024-10-01T09:00:00Z',
+        updatedAt: '2024-10-01T09:00:00Z',
       },
     ],
   })
@@ -180,13 +209,14 @@ export class WbsItemAssignmentsResponseDto {
     type: 'array',
     example: [
       {
-        id: 'assignment-uuid',
-        employeeId: 'employee-uuid',
-        wbsItemId: 'wbs-item-uuid',
-        periodId: 'period-uuid',
-        assignedBy: 'admin-uuid',
-        createdAt: '2024-01-01T00:00:00Z',
-        updatedAt: '2024-01-01T00:00:00Z',
+        id: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+        employeeId: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+        wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+        projectId: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+        periodId: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+        assignedBy: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+        createdAt: '2024-10-01T09:00:00Z',
+        updatedAt: '2024-10-01T09:00:00Z',
       },
     ],
   })
@@ -200,7 +230,10 @@ export class UnassignedWbsItemsResponseDto {
   @ApiProperty({
     description: '할당되지 않은 WBS 항목 ID 목록',
     type: [String],
-    example: ['wbs-item-uuid-1', 'wbs-item-uuid-2'],
+    example: [
+      'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+      'b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e',
+    ],
   })
   wbsItemIds: string[];
 }
@@ -209,7 +242,10 @@ export class UnassignedWbsItemsResponseDto {
  * WBS 할당 초기화 DTO
  */
 export class ResetWbsAssignmentsDto {
-  @ApiProperty({ description: '초기화자 ID', example: 'admin-uuid' })
+  @ApiProperty({
+    description: '초기화자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
   @IsString()
   @IsUUID()
   resetBy: string;

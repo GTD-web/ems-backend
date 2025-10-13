@@ -198,6 +198,7 @@ export const GetWbsAssignmentList = () =>
       required: false,
       type: 'string',
       format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiQuery({
       name: 'employeeId',
@@ -205,6 +206,7 @@ export const GetWbsAssignmentList = () =>
       required: false,
       type: 'string',
       format: 'uuid',
+      example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
     }),
     ApiQuery({
       name: 'wbsItemId',
@@ -212,6 +214,7 @@ export const GetWbsAssignmentList = () =>
       required: false,
       type: 'string',
       format: 'uuid',
+      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiQuery({
       name: 'projectId',
@@ -219,6 +222,7 @@ export const GetWbsAssignmentList = () =>
       required: false,
       type: 'string',
       format: 'uuid',
+      example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
     }),
     ApiQuery({
       name: 'page',
@@ -269,6 +273,7 @@ export const GetWbsAssignmentDetail = () =>
       description: 'WBS 할당 ID',
       type: 'string',
       format: 'uuid',
+      example: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
     }),
     ApiResponse({
       status: 200,
@@ -295,12 +300,14 @@ export const GetEmployeeWbsAssignments = () =>
       description: '직원 ID',
       type: 'string',
       format: 'uuid',
+      example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
     }),
     ApiParam({
       name: 'periodId',
       description: '평가기간 ID',
       type: 'string',
       format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiResponse({
       status: 200,
@@ -327,12 +334,14 @@ export const GetProjectWbsAssignments = () =>
       description: '프로젝트 ID',
       type: 'string',
       format: 'uuid',
+      example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
     }),
     ApiParam({
       name: 'periodId',
       description: '평가기간 ID',
       type: 'string',
       format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiResponse({
       status: 200,
@@ -359,12 +368,14 @@ export const GetWbsItemAssignments = () =>
       description: 'WBS 항목 ID',
       type: 'string',
       format: 'uuid',
+      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiParam({
       name: 'periodId',
       description: '평가기간 ID',
       type: 'string',
       format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiResponse({
       status: 200,
@@ -393,6 +404,7 @@ export const GetUnassignedWbsItems = () =>
       required: true,
       type: 'string',
       format: 'uuid',
+      example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
     }),
     ApiQuery({
       name: 'periodId',
@@ -400,6 +412,7 @@ export const GetUnassignedWbsItems = () =>
       required: true,
       type: 'string',
       format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiQuery({
       name: 'employeeId',
@@ -407,6 +420,7 @@ export const GetUnassignedWbsItems = () =>
       required: false,
       type: 'string',
       format: 'uuid',
+      example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
     }),
     ApiResponse({
       status: 200,
@@ -568,6 +582,7 @@ export const ResetPeriodWbsAssignments = () =>
       description: '평가기간 ID',
       type: 'string',
       format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiBody({
       description: '초기화 데이터',
@@ -608,12 +623,14 @@ export const ResetProjectWbsAssignments = () =>
       description: '프로젝트 ID',
       type: 'string',
       format: 'uuid',
+      example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
     }),
     ApiParam({
       name: 'periodId',
       description: '평가기간 ID',
       type: 'string',
       format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiBody({
       description: '초기화 데이터',
@@ -654,12 +671,14 @@ export const ResetEmployeeWbsAssignments = () =>
       description: '직원 ID',
       type: 'string',
       format: 'uuid',
+      example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
     }),
     ApiParam({
       name: 'periodId',
       description: '평가기간 ID',
       type: 'string',
       format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiBody({
       description: '초기화 데이터',
