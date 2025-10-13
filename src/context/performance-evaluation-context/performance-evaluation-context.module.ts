@@ -10,6 +10,7 @@ import { WbsSelfEvaluation } from '../../domain/core/wbs-self-evaluation/wbs-sel
 import { WbsSelfEvaluationMapping } from '../../domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.entity';
 import { DownwardEvaluation } from '../../domain/core/downward-evaluation/downward-evaluation.entity';
 import { PeerEvaluation } from '../../domain/core/peer-evaluation/peer-evaluation.entity';
+import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evaluation.entity';
 import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '../../domain/common/employee/employee.entity';
 import { WbsItem } from '../../domain/common/wbs-item/wbs-item.entity';
@@ -31,6 +32,7 @@ import { QueryHandlers } from './handlers/query-handlers';
       WbsSelfEvaluationMapping,
       DownwardEvaluation,
       PeerEvaluation,
+      FinalEvaluation,
       EvaluationPeriod,
       Employee,
       WbsItem,

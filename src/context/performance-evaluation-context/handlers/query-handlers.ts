@@ -7,17 +7,25 @@ import { GetPeerEvaluationDetailHandler } from './peer-evaluation/get-peer-evalu
 import { GetDownwardEvaluationListHandler } from './downward-evaluation/get-downward-evaluation-list.handler';
 import { GetDownwardEvaluationDetailHandler } from './downward-evaluation/get-downward-evaluation-detail.handler';
 
+import { GetFinalEvaluationHandler } from './final-evaluation/get-final-evaluation.handler';
+import { GetFinalEvaluationListHandler } from './final-evaluation/get-final-evaluation-list.handler';
+import { GetFinalEvaluationByEmployeePeriodHandler } from './final-evaluation/get-final-evaluation-by-employee-period.handler';
+
 export const QueryHandlers = [
-  // ?�기?��? 쿼리 ?�들??
+  // 자기평가 쿼리 핸들러
   GetEmployeeSelfEvaluationsHandler,
   GetWbsSelfEvaluationDetailHandler,
 
-  // ?�료?��? 쿼리 ?�들??
+  // 동료평가 쿼리 핸들러
   GetPeerEvaluationListHandler,
   GetPeerEvaluationDetailHandler,
 
-  // ?�향?��? 쿼리 ?�들??
+  // 하향평가 쿼리 핸들러
   GetDownwardEvaluationListHandler,
   GetDownwardEvaluationDetailHandler,
-];
 
+  // 최종평가 쿼리 핸들러
+  GetFinalEvaluationHandler,
+  GetFinalEvaluationListHandler,
+  GetFinalEvaluationByEmployeePeriodHandler,
+];

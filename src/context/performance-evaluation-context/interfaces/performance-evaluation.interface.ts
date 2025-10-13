@@ -1,38 +1,41 @@
 // 성과평가 컨텍스트 인터페이스 정의
 import {
-  CreateWbsSelfEvaluationCommand,
-  SubmitWbsSelfEvaluationCommand,
-  UpdateWbsSelfEvaluationCommand,
-} from '../handlers/self-evaluation';
-import {
-  CreatePeerEvaluationCommand,
-  SubmitPeerEvaluationCommand,
-  UpdatePeerEvaluationCommand,
-} from '../handlers/peer-evaluation';
+  EmployeeSelfEvaluationsResponseDto,
+  WbsSelfEvaluationBasicDto,
+  WbsSelfEvaluationResponseDto,
+} from '@/interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
 import {
   CreateDownwardEvaluationCommand,
+  GetDownwardEvaluationDetailQuery,
+  GetDownwardEvaluationListQuery,
   SubmitDownwardEvaluationCommand,
   UpdateDownwardEvaluationCommand,
 } from '../handlers/downward-evaluation';
 import {
-  GetEmployeeSelfEvaluationsQuery,
-  GetWbsSelfEvaluationDetailQuery,
-} from '../handlers/self-evaluation';
+  CancelConfirmationFinalEvaluationCommand,
+  ConfirmFinalEvaluationCommand,
+  CreateFinalEvaluationCommand,
+  DeleteFinalEvaluationCommand,
+  GetFinalEvaluationByEmployeePeriodQuery,
+  GetFinalEvaluationListQuery,
+  GetFinalEvaluationQuery,
+  UpdateFinalEvaluationCommand,
+  UpsertFinalEvaluationCommand,
+} from '../handlers/final-evaluation';
 import {
-  GetPeerEvaluationListQuery,
+  CreatePeerEvaluationCommand,
   GetPeerEvaluationDetailQuery,
+  GetPeerEvaluationListQuery,
+  SubmitPeerEvaluationCommand,
+  UpdatePeerEvaluationCommand,
 } from '../handlers/peer-evaluation';
 import {
-  GetDownwardEvaluationListQuery,
-  GetDownwardEvaluationDetailQuery,
-} from '../handlers/downward-evaluation';
-import { WbsSelfEvaluationDto } from '@/domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
-import { WbsSelfEvaluationMappingDto } from '@/domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
-import {
-  WbsSelfEvaluationResponseDto,
-  WbsSelfEvaluationBasicDto,
-  EmployeeSelfEvaluationsResponseDto,
-} from '@/interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
+  CreateWbsSelfEvaluationCommand,
+  GetEmployeeSelfEvaluationsQuery,
+  GetWbsSelfEvaluationDetailQuery,
+  SubmitWbsSelfEvaluationCommand,
+  UpdateWbsSelfEvaluationCommand,
+} from '../handlers/self-evaluation';
 
 /**
  * 성과평가 컨텍스트 서비스 인터페이스
@@ -133,5 +136,56 @@ export interface IPerformanceEvaluationService {
    */
   하향평가_상세정보를_조회한다(
     query: GetDownwardEvaluationDetailQuery,
+  ): Promise<any>;
+
+  // ==================== 최종평가 관련 메서드 ====================
+
+  /**
+   * 최종평가를 생성한다
+   */
+  최종평가를_생성한다(command: CreateFinalEvaluationCommand): Promise<string>;
+
+  /**
+   * 최종평가를 수정한다
+   */
+  최종평가를_수정한다(command: UpdateFinalEvaluationCommand): Promise<void>;
+
+  /**
+   * 최종평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
+   */
+  최종평가를_저장한다(command: UpsertFinalEvaluationCommand): Promise<string>;
+
+  /**
+   * 최종평가를 삭제한다
+   */
+  최종평가를_삭제한다(command: DeleteFinalEvaluationCommand): Promise<void>;
+
+  /**
+   * 최종평가를 확정한다
+   */
+  최종평가를_확정한다(command: ConfirmFinalEvaluationCommand): Promise<void>;
+
+  /**
+   * 최종평가 확정을 취소한다
+   */
+  최종평가_확정을_취소한다(
+    command: CancelConfirmationFinalEvaluationCommand,
+  ): Promise<void>;
+
+  /**
+   * 최종평가를 조회한다
+   */
+  최종평가를_조회한다(query: GetFinalEvaluationQuery): Promise<any>;
+
+  /**
+   * 최종평가 목록을 조회한다
+   */
+  최종평가_목록을_조회한다(query: GetFinalEvaluationListQuery): Promise<any>;
+
+  /**
+   * 직원-평가기간별 최종평가를 조회한다
+   */
+  직원_평가기간별_최종평가를_조회한다(
+    query: GetFinalEvaluationByEmployeePeriodQuery,
   ): Promise<any>;
 }

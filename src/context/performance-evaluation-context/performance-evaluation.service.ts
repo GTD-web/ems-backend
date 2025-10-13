@@ -33,6 +33,19 @@ import {
   GetDownwardEvaluationDetailQuery,
 } from './handlers/downward-evaluation';
 
+// 최종평가 관련 커맨드 및 쿼리
+import {
+  CreateFinalEvaluationCommand,
+  UpdateFinalEvaluationCommand,
+  UpsertFinalEvaluationCommand,
+  DeleteFinalEvaluationCommand,
+  ConfirmFinalEvaluationCommand,
+  CancelConfirmationFinalEvaluationCommand,
+  GetFinalEvaluationQuery,
+  GetFinalEvaluationListQuery,
+  GetFinalEvaluationByEmployeePeriodQuery,
+} from './handlers/final-evaluation';
+
 import { IPerformanceEvaluationService } from './interfaces/performance-evaluation.interface';
 import { WbsSelfEvaluationDto } from '@/domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import { WbsSelfEvaluationMappingDto } from '@/domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
@@ -371,6 +384,140 @@ export class PerformanceEvaluationService
   ): Promise<any> {
     this.logger.log('하향평가 상세정보 조회', {
       evaluationId: query.evaluationId,
+    });
+    return await this.queryBus.execute(query);
+  }
+
+  // ==================== 최종평가 관련 메서드 ====================
+
+  /**
+   * 최종평가를 생성한다
+   */
+  async 최종평가를_생성한다(
+    command: CreateFinalEvaluationCommand,
+  ): Promise<string> {
+    this.logger.log('최종평가 생성 시작', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('최종평가 생성 완료', { evaluationId: result });
+    return result;
+  }
+
+  /**
+   * 최종평가를 수정한다
+   */
+  async 최종평가를_수정한다(
+    command: UpdateFinalEvaluationCommand,
+  ): Promise<void> {
+    this.logger.log('최종평가 수정 시작', {
+      id: command.id,
+    });
+
+    await this.commandBus.execute(command);
+    this.logger.log('최종평가 수정 완료', {
+      id: command.id,
+    });
+  }
+
+  /**
+   * 최종평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
+   */
+  async 최종평가를_저장한다(
+    command: UpsertFinalEvaluationCommand,
+  ): Promise<string> {
+    this.logger.log('최종평가 저장 시작', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('최종평가 저장 완료', {
+      evaluationId: result,
+    });
+    return result;
+  }
+
+  /**
+   * 최종평가를 삭제한다
+   */
+  async 최종평가를_삭제한다(
+    command: DeleteFinalEvaluationCommand,
+  ): Promise<void> {
+    this.logger.log('최종평가 삭제 시작', {
+      id: command.id,
+    });
+
+    await this.commandBus.execute(command);
+    this.logger.log('최종평가 삭제 완료', {
+      id: command.id,
+    });
+  }
+
+  /**
+   * 최종평가를 확정한다
+   */
+  async 최종평가를_확정한다(
+    command: ConfirmFinalEvaluationCommand,
+  ): Promise<void> {
+    this.logger.log('최종평가 확정 시작', {
+      id: command.id,
+    });
+
+    await this.commandBus.execute(command);
+    this.logger.log('최종평가 확정 완료', {
+      id: command.id,
+    });
+  }
+
+  /**
+   * 최종평가 확정을 취소한다
+   */
+  async 최종평가_확정을_취소한다(
+    command: CancelConfirmationFinalEvaluationCommand,
+  ): Promise<void> {
+    this.logger.log('최종평가 확정 취소 시작', {
+      id: command.id,
+    });
+
+    await this.commandBus.execute(command);
+    this.logger.log('최종평가 확정 취소 완료', {
+      id: command.id,
+    });
+  }
+
+  /**
+   * 최종평가를 조회한다
+   */
+  async 최종평가를_조회한다(query: GetFinalEvaluationQuery): Promise<any> {
+    this.logger.log('최종평가 조회', { id: query.id });
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 최종평가 목록을 조회한다
+   */
+  async 최종평가_목록을_조회한다(
+    query: GetFinalEvaluationListQuery,
+  ): Promise<any> {
+    this.logger.log('최종평가 목록 조회', {
+      employeeId: query.employeeId,
+      periodId: query.periodId,
+    });
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 직원-평가기간별 최종평가를 조회한다
+   */
+  async 직원_평가기간별_최종평가를_조회한다(
+    query: GetFinalEvaluationByEmployeePeriodQuery,
+  ): Promise<any> {
+    this.logger.log('직원-평가기간별 최종평가 조회', {
+      employeeId: query.employeeId,
+      periodId: query.periodId,
     });
     return await this.queryBus.execute(query);
   }

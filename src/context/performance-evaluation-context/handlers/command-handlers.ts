@@ -15,14 +15,21 @@ import { UpdateDownwardEvaluationHandler } from './downward-evaluation/update-do
 import { UpsertDownwardEvaluationHandler } from './downward-evaluation/upsert-downward-evaluation.handler';
 import { SubmitDownwardEvaluationHandler } from './downward-evaluation/submit-downward-evaluation.handler';
 
+import { CreateFinalEvaluationHandler } from './final-evaluation/create-final-evaluation.handler';
+import { UpdateFinalEvaluationHandler } from './final-evaluation/update-final-evaluation.handler';
+import { UpsertFinalEvaluationHandler } from './final-evaluation/upsert-final-evaluation.handler';
+import { DeleteFinalEvaluationHandler } from './final-evaluation/delete-final-evaluation.handler';
+import { ConfirmFinalEvaluationHandler } from './final-evaluation/confirm-final-evaluation.handler';
+import { CancelConfirmationFinalEvaluationHandler } from './final-evaluation/cancel-confirmation-final-evaluation.handler';
+
 export const CommandHandlers = [
-  // ?�기?��? 커맨???�들??
+  // 자기평가 커맨드 핸들러
   CreateWbsSelfEvaluationHandler,
   UpdateWbsSelfEvaluationHandler,
   UpsertWbsSelfEvaluationHandler,
   SubmitWbsSelfEvaluationHandler,
 
-  // ?�료?��? 커맨???�들??
+  // 동료평가 커맨드 핸들러
   CreatePeerEvaluationHandler,
   UpdatePeerEvaluationHandler,
   UpsertPeerEvaluationHandler,
@@ -30,9 +37,17 @@ export const CommandHandlers = [
   CancelPeerEvaluationHandler,
   CancelPeerEvaluationsByPeriodHandler,
 
-  // ?�향?��? 커맨???�들??
+  // 하향평가 커맨드 핸들러
   CreateDownwardEvaluationHandler,
   UpdateDownwardEvaluationHandler,
   UpsertDownwardEvaluationHandler,
   SubmitDownwardEvaluationHandler,
+
+  // 최종평가 커맨드 핸들러
+  CreateFinalEvaluationHandler,
+  UpdateFinalEvaluationHandler,
+  UpsertFinalEvaluationHandler,
+  DeleteFinalEvaluationHandler,
+  ConfirmFinalEvaluationHandler,
+  CancelConfirmationFinalEvaluationHandler,
 ];

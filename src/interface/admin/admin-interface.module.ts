@@ -12,6 +12,7 @@ import { WbsEvaluationCriteriaManagementController } from './evaluation-criteria
 import { WbsSelfEvaluationManagementController } from './performance-evaluation/wbs-self-evaluation-management.controller';
 import { DownwardEvaluationManagementController } from './performance-evaluation/downward-evaluation-management.controller';
 import { PeerEvaluationManagementController } from './performance-evaluation/peer-evaluation-management.controller';
+import { FinalEvaluationManagementController } from './performance-evaluation/final-evaluation-management.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -36,6 +37,7 @@ import { PeerEvaluationManagementController } from './performance-evaluation/pee
     WbsSelfEvaluationManagementController, // WBS 자기평가 관리 컨트롤러
     DownwardEvaluationManagementController, // 하향평가 관리 컨트롤러
     PeerEvaluationManagementController, // 동료평가 관리 컨트롤러
+    FinalEvaluationManagementController, // 최종평가 관리 컨트롤러
   ],
   providers: [],
   exports: [],

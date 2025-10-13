@@ -10,6 +10,7 @@ import { EvaluationLineMappingModule } from './evaluation-line-mapping/evaluatio
 import { EvaluationPeriodModule } from './evaluation-period/evaluation-period.module';
 import { PeerEvaluationModule } from './peer-evaluation/peer-evaluation.module';
 import { PeerEvaluationMappingModule } from './peer-evaluation-mapping/peer-evaluation-mapping.module';
+import { FinalEvaluationModule } from './final-evaluation/final-evaluation.module';
 import { WbsEvaluationCriteriaModule } from './wbs-evaluation-criteria/wbs-evaluation-criteria.module';
 import { WbsSelfEvaluationModule } from './wbs-self-evaluation/wbs-self-evaluation.module';
 import { WbsSelfEvaluationMappingModule } from './wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.module';
@@ -39,6 +40,7 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     WbsSelfEvaluationModule,
     DownwardEvaluationModule,
     PeerEvaluationModule,
+    FinalEvaluationModule,
 
     // 산출물 관리
     DeliverableModule,
@@ -68,6 +70,7 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     WbsSelfEvaluationModule,
     DownwardEvaluationModule,
     PeerEvaluationModule,
+    FinalEvaluationModule,
 
     // 산출물 관리
     DeliverableModule,
