@@ -183,10 +183,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment2.id}/order`,
         )
-        .send({
-          direction: 'up',
-          updatedBy,
-        })
+        .query({ direction: 'up' })
+        .send({ updatedBy })
         .expect(200);
 
       // Then: 순서가 변경되어야 함
@@ -236,10 +234,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment2.id}/order`,
         )
-        .send({
-          direction: 'down',
-          updatedBy: testData.employees[0].id,
-        })
+        .query({ direction: 'down' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(200);
 
       // Then: 순서가 변경되어야 함
@@ -281,10 +277,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment1.id}/order`,
         )
-        .send({
-          direction: 'up',
-          updatedBy: testData.employees[0].id,
-        })
+        .query({ direction: 'up' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(200);
 
       // Then: 성공하지만 순서는 변경되지 않음
@@ -318,10 +312,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment3.id}/order`,
         )
-        .send({
-          direction: 'down',
-          updatedBy: testData.employees[0].id,
-        })
+        .query({ direction: 'down' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(200);
 
       // Then: 성공하지만 순서는 변경되지 않음
@@ -369,7 +361,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment4.id}/order`,
         )
-        .send({ direction: 'up', updatedBy: testData.employees[0].id })
+        .query({ direction: 'up' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(200);
 
       // 2. assignment4를 위로 이동 (3->2)
@@ -377,7 +370,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment4.id}/order`,
         )
-        .send({ direction: 'up', updatedBy: testData.employees[0].id })
+        .query({ direction: 'up' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(200);
 
       // 3. assignment1을 아래로 이동 (1->2)
@@ -385,7 +379,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment1.id}/order`,
         )
-        .send({ direction: 'down', updatedBy: testData.employees[0].id })
+        .query({ direction: 'down' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(200);
 
       // Then: 최종 순서 확인
@@ -411,10 +406,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
       // When & Then: 도메인 예외가 NotFoundException(404)로 변환됨
       const response = await request(app.getHttpServer())
         .patch(`/admin/evaluation-criteria/project-assignments/${fakeId}/order`)
-        .send({
-          direction: 'up',
-          updatedBy: testData.employees[0].id,
-        })
+        .query({ direction: 'up' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(404);
 
       expect(response.body.message).toContain('찾을 수 없습니다');
@@ -437,10 +430,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment.id}/order`,
         )
-        .send({
-          direction: 'invalid',
-          updatedBy: testData.employees[0].id,
-        })
+        .query({ direction: 'invalid' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(400);
 
       expect(response.body.message).toBeDefined();
@@ -470,10 +461,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment.id}/order`,
         )
-        .send({
-          direction: 'up',
-          updatedBy: testData.employees[0].id,
-        })
+        .query({ direction: 'up' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(422);
 
       expect(response.body.message).toContain('완료된 평가기간');
@@ -488,10 +477,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${invalidId}/order`,
         )
-        .send({
-          direction: 'up',
-          updatedBy: testData.employees[0].id,
-        })
+        .query({ direction: 'up' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(400);
     });
 
@@ -512,9 +499,7 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${assignment.id}/order`,
         )
-        .send({
-          updatedBy: testData.employees[0].id,
-        })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(400);
 
       expect(response.body.message).toBeDefined();
@@ -558,7 +543,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${emp1Assignment2.id}/order`,
         )
-        .send({ direction: 'up', updatedBy: testData.employees[0].id })
+        .query({ direction: 'up' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(200);
 
       // Then: 직원1의 순서만 변경되고 직원2의 순서는 유지되어야 함
@@ -616,7 +602,8 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order', () =>
         .patch(
           `/admin/evaluation-criteria/project-assignments/${p1Assignment2.id}/order`,
         )
-        .send({ direction: 'up', updatedBy: testData.employees[0].id })
+        .query({ direction: 'up' })
+        .send({ updatedBy: testData.employees[0].id })
         .expect(200);
 
       // Then: 평가기간1의 순서만 변경되고 평가기간2의 순서는 유지되어야 함

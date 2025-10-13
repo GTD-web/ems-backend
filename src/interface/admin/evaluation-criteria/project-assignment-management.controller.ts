@@ -16,7 +16,8 @@ import {
 } from './decorators/project-assignment-api.decorators';
 import {
   BulkCreateProjectAssignmentDto,
-  ChangeProjectAssignmentOrderDto,
+  ChangeProjectAssignmentOrderQueryDto,
+  ChangeProjectAssignmentOrderBodyDto,
   CreateProjectAssignmentDto,
   EmployeeProjectsResponseDto,
   ProjectAssignmentFilterDto,
@@ -176,13 +177,14 @@ export class ProjectAssignmentManagementController {
   @ChangeProjectAssignmentOrder()
   async changeProjectAssignmentOrder(
     @ParseId() id: string,
-    @Body() changeOrderDto: ChangeProjectAssignmentOrderDto,
+    @Query() queryDto: ChangeProjectAssignmentOrderQueryDto,
+    @Body() bodyDto: ChangeProjectAssignmentOrderBodyDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<ProjectAssignmentResponseDto> {
-    const updatedBy = changeOrderDto.updatedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = bodyDto.updatedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
     return await this.evaluationCriteriaManagementService.프로젝트_할당_순서를_변경한다(
       id,
-      changeOrderDto.direction,
+      queryDto.direction,
       updatedBy,
     );
   }

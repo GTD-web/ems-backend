@@ -62,9 +62,9 @@ export class BulkCreateProjectAssignmentDto {
 }
 
 /**
- * 프로젝트 할당 순서 변경 DTO
+ * 프로젝트 할당 순서 변경 Query DTO
  */
-export class ChangeProjectAssignmentOrderDto {
+export class ChangeProjectAssignmentOrderQueryDto {
   @ApiProperty({
     description: '이동 방향 (up: 위로, down: 아래로)',
     example: OrderDirection.UP,
@@ -73,7 +73,12 @@ export class ChangeProjectAssignmentOrderDto {
   })
   @IsEnum(OrderDirection, { message: '이동 방향은 up 또는 down이어야 합니다.' })
   direction: OrderDirection;
+}
 
+/**
+ * 프로젝트 할당 순서 변경 Body DTO
+ */
+export class ChangeProjectAssignmentOrderBodyDto {
   @ApiPropertyOptional({
     description: '변경 수행자 ID',
     example: '123e4567-e89b-12d3-a456-426614174003',

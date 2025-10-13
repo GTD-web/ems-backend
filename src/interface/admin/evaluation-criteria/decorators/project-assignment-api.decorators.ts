@@ -8,7 +8,13 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger';
 import {
   ProjectAssignmentResponseDto,
   ProjectAssignmentDetailResponseDto,
@@ -579,6 +585,27 @@ export function ChangeProjectAssignmentOrder() {
       description: '프로젝트 할당 ID (UUID 형식)',
       example: '550e8400-e29b-41d4-a716-446655440002',
       schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiQuery({
+      name: 'direction',
+      description: '이동 방향',
+      enum: ['up', 'down'],
+      required: true,
+      example: 'up',
+    }),
+    ApiBody({
+      schema: {
+        type: 'object',
+        properties: {
+          updatedBy: {
+            type: 'string',
+            format: 'uuid',
+            description: '변경 수행자 ID (UUID 형식)',
+            example: '123e4567-e89b-12d3-a456-426614174003',
+          },
+        },
+      },
+      required: false,
     }),
     ApiResponse({
       status: 200,
