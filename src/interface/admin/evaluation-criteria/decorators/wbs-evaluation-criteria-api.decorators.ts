@@ -34,6 +34,7 @@ export const GetWbsEvaluationCriteriaList = () =>
       description: 'WBS 항목 ID',
       required: false,
       type: String,
+      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiQuery({
       name: 'criteriaSearch',
@@ -85,6 +86,7 @@ export const GetWbsEvaluationCriteriaDetail = () =>
       description: 'WBS 평가기준 ID',
       type: 'string',
       format: 'uuid',
+      example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
     }),
     ApiResponse({
       status: 200,
@@ -121,6 +123,7 @@ export const GetWbsItemEvaluationCriteria = () =>
       description: 'WBS 항목 ID',
       type: 'string',
       format: 'uuid',
+      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiResponse({
       status: 200,
@@ -350,6 +353,7 @@ export const DeleteWbsEvaluationCriteria = () =>
       description: 'WBS 평가기준 ID',
       type: 'string',
       format: 'uuid',
+      example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
     }),
     ApiResponse({
       status: 200,
@@ -376,6 +380,7 @@ export const DeleteWbsItemEvaluationCriteria = () =>
       description: 'WBS 항목 ID',
       type: 'string',
       format: 'uuid',
+      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiResponse({
       status: 200,

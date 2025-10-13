@@ -35,22 +35,34 @@ export class EvaluationLineFilterDto {
  * 직원-WBS별 평가라인 구성 요청 DTO
  */
 export class ConfigureEmployeeWbsEvaluationLineDto {
-  @ApiProperty({ description: '직원 ID', example: 'employee-uuid' })
+  @ApiProperty({
+    description: '직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
   @IsString()
   @IsUUID()
   employeeId: string;
 
-  @ApiProperty({ description: 'WBS 항목 ID', example: 'wbs-item-uuid' })
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
   @IsString()
   @IsUUID()
   wbsItemId: string;
 
-  @ApiProperty({ description: '평가기간 ID', example: 'period-uuid' })
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
   @IsString()
   @IsUUID()
   periodId: string;
 
-  @ApiPropertyOptional({ description: '생성자 ID', example: 'admin-uuid' })
+  @ApiPropertyOptional({
+    description: '생성자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
   @IsOptional()
   @IsString()
   @IsUUID()
@@ -78,7 +90,10 @@ export class ConfigureEmployeeWbsEvaluationLineResponseDto {
  * 평가라인 DTO
  */
 export class EvaluationLineDto {
-  @ApiProperty({ description: '평가라인 ID', example: 'line-uuid' })
+  @ApiProperty({
+    description: '평가라인 ID',
+    example: 'g2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d',
+  })
   id: string;
 
   @ApiProperty({ description: '평가자 유형', example: 'primary' })
@@ -93,10 +108,10 @@ export class EvaluationLineDto {
   @ApiProperty({ description: '자동 할당 여부', example: false })
   isAutoAssigned: boolean;
 
-  @ApiProperty({ description: '생성일시', example: '2024-01-01T00:00:00Z' })
+  @ApiProperty({ description: '생성일시', example: '2024-10-01T09:00:00Z' })
   createdAt: Date;
 
-  @ApiProperty({ description: '수정일시', example: '2024-01-01T00:00:00Z' })
+  @ApiProperty({ description: '수정일시', example: '2024-10-01T09:00:00Z' })
   updatedAt: Date;
 }
 
@@ -104,31 +119,52 @@ export class EvaluationLineDto {
  * 평가라인 매핑 DTO
  */
 export class EvaluationLineMappingDto {
-  @ApiProperty({ description: '매핑 ID', example: 'mapping-uuid' })
+  @ApiProperty({
+    description: '매핑 ID',
+    example: 'h3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e',
+  })
   id: string;
 
-  @ApiProperty({ description: '피평가자 ID', example: 'employee-uuid' })
+  @ApiProperty({
+    description: '피평가자 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
   employeeId: string;
 
-  @ApiProperty({ description: '평가자 ID', example: 'evaluator-uuid' })
+  @ApiProperty({
+    description: '평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
   evaluatorId: string;
 
-  @ApiPropertyOptional({ description: 'WBS 항목 ID', example: 'wbs-item-uuid' })
+  @ApiPropertyOptional({
+    description: 'WBS 항목 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
   wbsItemId?: string;
 
-  @ApiProperty({ description: '평가라인 ID', example: 'line-uuid' })
+  @ApiProperty({
+    description: '평가라인 ID',
+    example: 'g2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d',
+  })
   evaluationLineId: string;
 
-  @ApiPropertyOptional({ description: '생성자 ID', example: 'admin-uuid' })
+  @ApiPropertyOptional({
+    description: '생성자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
   createdBy?: string;
 
-  @ApiPropertyOptional({ description: '수정자 ID', example: 'admin-uuid' })
+  @ApiPropertyOptional({
+    description: '수정자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
   updatedBy?: string;
 
-  @ApiProperty({ description: '생성일시', example: '2024-01-01T00:00:00Z' })
+  @ApiProperty({ description: '생성일시', example: '2024-10-01T09:00:00Z' })
   createdAt: Date;
 
-  @ApiProperty({ description: '수정일시', example: '2024-01-01T00:00:00Z' })
+  @ApiProperty({ description: '수정일시', example: '2024-10-01T09:00:00Z' })
   updatedAt: Date;
 }
 
@@ -136,7 +172,10 @@ export class EvaluationLineMappingDto {
  * 직원 평가라인 매핑 조회 응답 DTO
  */
 export class EmployeeEvaluationLineMappingsResponseDto {
-  @ApiProperty({ description: '직원 ID', example: 'employee-uuid' })
+  @ApiProperty({
+    description: '직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
   employeeId: string;
 
   @ApiProperty({
@@ -150,7 +189,10 @@ export class EmployeeEvaluationLineMappingsResponseDto {
  * 평가자별 피평가자 조회 응답 DTO
  */
 export class EvaluatorEmployeesResponseDto {
-  @ApiProperty({ description: '평가자 ID', example: 'evaluator-uuid' })
+  @ApiProperty({
+    description: '평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
   evaluatorId: string;
 
   @ApiProperty({
@@ -184,10 +226,16 @@ export class EvaluatorEmployeesResponseDto {
  * 직원 평가설정 통합 조회 응답 DTO
  */
 export class EmployeeEvaluationSettingsResponseDto {
-  @ApiProperty({ description: '직원 ID', example: 'employee-uuid' })
+  @ApiProperty({
+    description: '직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
   employeeId: string;
 
-  @ApiProperty({ description: '평가기간 ID', example: 'period-uuid' })
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
   periodId: string;
 
   @ApiProperty({
@@ -215,12 +263,18 @@ export class EmployeeEvaluationSettingsResponseDto {
  * 1차 평가자 구성 요청 DTO
  */
 export class ConfigurePrimaryEvaluatorDto {
-  @ApiProperty({ description: '1차 평가자 ID', example: 'evaluator-uuid' })
+  @ApiProperty({
+    description: '1차 평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
   @IsString()
   @IsUUID()
   evaluatorId: string;
 
-  @ApiPropertyOptional({ description: '생성자 ID', example: 'admin-uuid' })
+  @ApiPropertyOptional({
+    description: '생성자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
   @IsOptional()
   @IsString()
   @IsUUID()
@@ -231,12 +285,18 @@ export class ConfigurePrimaryEvaluatorDto {
  * 2차 평가자 구성 요청 DTO
  */
 export class ConfigureSecondaryEvaluatorDto {
-  @ApiProperty({ description: '2차 평가자 ID', example: 'evaluator-uuid' })
+  @ApiProperty({
+    description: '2차 평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
   @IsString()
   @IsUUID()
   evaluatorId: string;
 
-  @ApiPropertyOptional({ description: '생성자 ID', example: 'admin-uuid' })
+  @ApiPropertyOptional({
+    description: '생성자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
   @IsOptional()
   @IsString()
   @IsUUID()
