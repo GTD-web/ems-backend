@@ -7,6 +7,8 @@ import { CreatePeerEvaluationHandler } from './peer-evaluation/create-peer-evalu
 import { UpdatePeerEvaluationHandler } from './peer-evaluation/update-peer-evaluation.handler';
 import { UpsertPeerEvaluationHandler } from './peer-evaluation/upsert-peer-evaluation.handler';
 import { SubmitPeerEvaluationHandler } from './peer-evaluation/submit-peer-evaluation.handler';
+import { CancelPeerEvaluationHandler } from './peer-evaluation/cancel-peer-evaluation.handler';
+import { CancelPeerEvaluationsByPeriodHandler } from './peer-evaluation/cancel-peer-evaluations-by-period.handler';
 
 import { CreateDownwardEvaluationHandler } from './downward-evaluation/create-downward-evaluation.handler';
 import { UpdateDownwardEvaluationHandler } from './downward-evaluation/update-downward-evaluation.handler';
@@ -25,6 +27,8 @@ export const CommandHandlers = [
   UpdatePeerEvaluationHandler,
   UpsertPeerEvaluationHandler,
   SubmitPeerEvaluationHandler,
+  CancelPeerEvaluationHandler,
+  CancelPeerEvaluationsByPeriodHandler,
 
   // ?�향?��? 커맨???�들??
   CreateDownwardEvaluationHandler,

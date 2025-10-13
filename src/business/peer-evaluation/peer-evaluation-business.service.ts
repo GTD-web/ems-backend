@@ -148,6 +148,77 @@ export class PeerEvaluationBusinessService {
   }
 
   /**
+   * 동료평가를 취소한다
+   */
+  async 동료평가를_취소한다(params: {
+    evaluationId: string;
+    cancelledBy: string;
+  }): Promise<void> {
+    this.logger.log('동료평가 취소 비즈니스 로직 시작', {
+      evaluationId: params.evaluationId,
+    });
+
+    // 1. 동료평가 취소 (컨텍스트 호출)
+    await this.performanceEvaluationService.동료평가를_취소한다(
+      params.evaluationId,
+      params.cancelledBy,
+    );
+
+    // 2. 알림 발송 (추후 구현)
+    // TODO: 동료평가 취소 알림 발송
+    // await this.notificationService.send({
+    //   type: 'PEER_EVALUATION_CANCELLED',
+    //   recipientId: evaluateeId,
+    //   data: {
+    //     evaluationId: params.evaluationId,
+    //   },
+    // });
+
+    this.logger.log('동료평가 취소 완료', {
+      evaluationId: params.evaluationId,
+    });
+  }
+
+  /**
+   * 평가기간의 피평가자의 모든 동료평가를 취소한다
+   */
+  async 피평가자의_동료평가를_일괄_취소한다(params: {
+    evaluateeId: string;
+    periodId: string;
+    cancelledBy: string;
+  }): Promise<{ cancelledCount: number }> {
+    this.logger.log('피평가자의 동료평가 일괄 취소 비즈니스 로직 시작', {
+      evaluateeId: params.evaluateeId,
+      periodId: params.periodId,
+    });
+
+    // 1. 동료평가 일괄 취소 (컨텍스트 호출)
+    const result =
+      await this.performanceEvaluationService.피평가자의_동료평가를_일괄_취소한다(
+        params.evaluateeId,
+        params.periodId,
+        params.cancelledBy,
+      );
+
+    // 2. 알림 발송 (추후 구현)
+    // TODO: 동료평가 일괄 취소 알림 발송
+    // await this.notificationService.send({
+    //   type: 'PEER_EVALUATIONS_CANCELLED',
+    //   recipientId: params.evaluateeId,
+    //   data: {
+    //     periodId: params.periodId,
+    //     cancelledCount: result.cancelledCount,
+    //   },
+    // });
+
+    this.logger.log('피평가자의 동료평가 일괄 취소 완료', {
+      cancelledCount: result.cancelledCount,
+    });
+
+    return result;
+  }
+
+  /**
    * 동료평가를 제출하고 알림을 발송한다
    */
   async 동료평가를_제출한다(params: {

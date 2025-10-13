@@ -7,6 +7,8 @@ import {
   SubmitPeerEvaluation,
   GetEvaluatorPeerEvaluations,
   GetPeerEvaluationDetail,
+  CancelPeerEvaluation,
+  CancelPeerEvaluationsByPeriod,
 } from './decorators/peer-evaluation-api.decorators';
 import {
   CreatePeerEvaluationBodyDto,
@@ -106,5 +108,43 @@ export class PeerEvaluationManagementController {
         evaluationId: id,
       },
     );
+  }
+
+  /**
+   * 동료평가 취소
+   */
+  @CancelPeerEvaluation()
+  async cancelPeerEvaluation(@Param('id') id: string): Promise<void> {
+    const cancelledBy = uuidv4(); // TODO: 추후 요청자 ID로 변경
+
+    await this.peerEvaluationBusinessService.동료평가를_취소한다({
+      evaluationId: id,
+      cancelledBy,
+    });
+  }
+
+  /**
+   * 평가기간의 피평가자의 모든 동료평가 취소
+   */
+  @CancelPeerEvaluationsByPeriod()
+  async cancelPeerEvaluationsByPeriod(
+    @Param('evaluateeId') evaluateeId: string,
+    @Param('periodId') periodId: string,
+  ): Promise<{ message: string; cancelledCount: number }> {
+    const cancelledBy = uuidv4(); // TODO: 추후 요청자 ID로 변경
+
+    const result =
+      await this.peerEvaluationBusinessService.피평가자의_동료평가를_일괄_취소한다(
+        {
+          evaluateeId,
+          periodId,
+          cancelledBy,
+        },
+      );
+
+    return {
+      message: '동료평가들이 성공적으로 취소되었습니다.',
+      cancelledCount: result.cancelledCount,
+    };
   }
 }

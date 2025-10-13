@@ -42,7 +42,7 @@ export class PeerEvaluation
 
   @Column({
     type: 'enum',
-    enum: ['pending', 'in_progress', 'completed'],
+    enum: ['pending', 'in_progress', 'completed', 'cancelled'],
     default: 'pending',
     comment: '평가 상태',
   })
@@ -147,6 +147,19 @@ export class PeerEvaluation
 
     if (updatedBy) {
       this.메타데이터를_업데이트한다(updatedBy);
+    }
+  }
+
+  /**
+   * 동료평가를 취소한다
+   */
+  취소한다(cancelledBy?: string): void {
+    this.status = PeerEvaluationStatus.CANCELLED;
+    this.isCompleted = false;
+    this.completedAt = undefined;
+
+    if (cancelledBy) {
+      this.메타데이터를_업데이트한다(cancelledBy);
     }
   }
 

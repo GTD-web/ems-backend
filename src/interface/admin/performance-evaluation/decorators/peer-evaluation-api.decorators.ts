@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Put,
+  Delete,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
@@ -289,6 +290,105 @@ export function GetPeerEvaluationDetail() {
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
       description: '동료평가를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 동료평가 취소 API 데코레이터
+ */
+export function CancelPeerEvaluation() {
+  return applyDecorators(
+    Delete(':id'),
+    HttpCode(HttpStatus.NO_CONTENT),
+    ApiOperation({
+      summary: '동료평가 취소',
+      description:
+        '단일 동료평가를 취소합니다. 상태가 "cancelled"로 변경됩니다.',
+    }),
+    ApiParam({
+      name: 'id',
+      description: '동료평가 ID',
+      example: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    ApiResponse({
+      status: HttpStatus.NO_CONTENT,
+      description: '동료평가가 성공적으로 취소되었습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 파라미터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '동료평가를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 평가기간의 피평가자의 모든 동료평가 취소 API 데코레이터
+ */
+export function CancelPeerEvaluationsByPeriod() {
+  return applyDecorators(
+    Delete('evaluatee/:evaluateeId/period/:periodId/cancel-all'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '평가기간의 피평가자의 모든 동료평가 취소',
+      description:
+        '특정 피평가자의 특정 평가기간 내 모든 동료평가를 일괄 취소합니다.',
+    }),
+    ApiParam({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '동료평가들이 성공적으로 취소되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          message: {
+            type: 'string',
+            example: '동료평가들이 성공적으로 취소되었습니다.',
+          },
+          cancelledCount: {
+            type: 'number',
+            example: 5,
+            description: '취소된 동료평가 개수',
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 파라미터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '피평가자 또는 평가기간을 찾을 수 없습니다.',
     }),
   );
 }

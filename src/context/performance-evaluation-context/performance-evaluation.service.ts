@@ -19,6 +19,8 @@ import {
   SubmitPeerEvaluationCommand,
   GetPeerEvaluationListQuery,
   GetPeerEvaluationDetailQuery,
+  CancelPeerEvaluationCommand,
+  CancelPeerEvaluationsByPeriodCommand,
 } from './handlers/peer-evaluation';
 
 // 하향평가 관련 커맨드 및 쿼리
@@ -195,6 +197,51 @@ export class PerformanceEvaluationService
     const result = await this.commandBus.execute(command);
     this.logger.log('동료평가 저장 완료', {
       evaluationId: result,
+    });
+    return result;
+  }
+
+  /**
+   * 동료평가를 취소한다
+   */
+  async 동료평가를_취소한다(
+    evaluationId: string,
+    cancelledBy: string,
+  ): Promise<void> {
+    this.logger.log('동료평가 취소 시작', {
+      evaluationId,
+    });
+
+    const command = new CancelPeerEvaluationCommand(evaluationId, cancelledBy);
+
+    await this.commandBus.execute(command);
+    this.logger.log('동료평가 취소 완료', {
+      evaluationId,
+    });
+  }
+
+  /**
+   * 평가기간의 피평가자의 모든 동료평가를 취소한다
+   */
+  async 피평가자의_동료평가를_일괄_취소한다(
+    evaluateeId: string,
+    periodId: string,
+    cancelledBy: string,
+  ): Promise<{ cancelledCount: number }> {
+    this.logger.log('피평가자의 동료평가 일괄 취소 시작', {
+      evaluateeId,
+      periodId,
+    });
+
+    const command = new CancelPeerEvaluationsByPeriodCommand(
+      evaluateeId,
+      periodId,
+      cancelledBy,
+    );
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('피평가자의 동료평가 일괄 취소 완료', {
+      cancelledCount: result.cancelledCount,
     });
     return result;
   }

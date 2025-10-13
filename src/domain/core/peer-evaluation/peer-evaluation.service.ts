@@ -115,6 +115,65 @@ export class PeerEvaluationService {
   }
 
   /**
+   * 동료평가를 취소한다
+   */
+  async 취소한다(id: string, cancelledBy: string): Promise<PeerEvaluation> {
+    this.logger.log(`동료평가 취소 시작 - ID: ${id}`);
+
+    const peerEvaluation = await this.조회한다(id);
+    if (!peerEvaluation) {
+      throw new PeerEvaluationNotFoundException(id);
+    }
+
+    try {
+      peerEvaluation.취소한다(cancelledBy);
+      const saved = await this.peerEvaluationRepository.save(peerEvaluation);
+
+      this.logger.log(`동료평가 취소 완료 - ID: ${id}`);
+      return saved;
+    } catch (error) {
+      this.logger.error(`동료평가 취소 실패 - ID: ${id}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * 여러 동료평가를 일괄 취소한다
+   */
+  async 일괄_취소한다(
+    ids: string[],
+    cancelledBy: string,
+  ): Promise<PeerEvaluation[]> {
+    this.logger.log(`동료평가 일괄 취소 시작 - 대상 개수: ${ids.length}개`);
+
+    try {
+      const evaluations = await this.peerEvaluationRepository.findByIds(ids);
+
+      if (evaluations.length === 0) {
+        this.logger.warn(`취소할 동료평가를 찾을 수 없습니다.`);
+        return [];
+      }
+
+      evaluations.forEach((evaluation) => {
+        evaluation.취소한다(cancelledBy);
+      });
+
+      const saved = await this.peerEvaluationRepository.save(evaluations);
+
+      this.logger.log(
+        `동료평가 일괄 취소 완료 - 취소된 개수: ${saved.length}개`,
+      );
+      return saved;
+    } catch (error) {
+      this.logger.error(
+        `동료평가 일괄 취소 실패 - 대상 개수: ${ids.length}개`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * 동료평가를 삭제한다
    */
   async 삭제한다(id: string, deletedBy: string): Promise<void> {
