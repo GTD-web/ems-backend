@@ -7,6 +7,8 @@ import {
   Param,
   Query,
   Body,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiOperation,
@@ -150,11 +152,90 @@ export const GetWbsItemEvaluationCriteria = () =>
   );
 
 /**
+ * WBS 평가기준 저장 (Upsert) API 데코레이터
+ * - 평가기준 ID가 Body에 없으면 생성
+ * - 평가기준 ID가 Body에 있으면 수정
+ */
+export const UpsertWbsEvaluationCriteria = () =>
+  applyDecorators(
+    Post('wbs-item/:wbsItemId'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: 'WBS 평가기준 저장 (Upsert)',
+      description: `WBS 평가기준을 저장합니다. 평가기준 ID가 없으면 생성하고, 있으면 수정합니다.
+
+**동작 방식:**
+- Body에 id가 없으면: 새로운 평가기준 생성
+- Body에 id가 있으면: 기존 평가기준 수정
+
+**사용 사례:**
+- 평가기준 최초 작성 시: id 없이 전송
+- 평가기준 수정 시: 기존 id와 함께 전송`,
+    }),
+    ApiParam({
+      name: 'wbsItemId',
+      description: 'WBS 항목 ID',
+      type: 'string',
+      format: 'uuid',
+      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+    }),
+    ApiBody({
+      description: 'WBS 평가기준 저장 데이터',
+      schema: {
+        type: 'object',
+        properties: {
+          criteria: {
+            type: 'string',
+            description: '평가기준 내용',
+            example: '코드 품질 및 성능 최적화',
+          },
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: '평가기준 ID (선택사항 - 있으면 수정, 없으면 생성)',
+            example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+          },
+          actionBy: {
+            type: 'string',
+            format: 'uuid',
+            description: '생성/수정자 ID (선택사항)',
+            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+          },
+        },
+        required: ['criteria'],
+      },
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'WBS 평가기준이 성공적으로 저장되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          wbsItemId: { type: 'string', format: 'uuid' },
+          criteria: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'WBS 항목 또는 평가기준을 찾을 수 없습니다.',
+    }),
+  );
+
+/**
  * WBS 평가기준 생성 API 데코레이터
  */
 export const CreateWbsEvaluationCriteria = () =>
   applyDecorators(
     Post(),
+    HttpCode(HttpStatus.CREATED),
     ApiOperation({
       summary: 'WBS 평가기준 생성',
       description: '새로운 WBS 평가기준을 생성합니다.',

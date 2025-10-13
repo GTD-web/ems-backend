@@ -472,6 +472,29 @@ export class EvaluationCriteriaManagementService
     return await this.commandBus.execute(command);
   }
 
+  /**
+   * WBS 평가기준 저장 (Upsert)
+   * - id가 없으면 생성
+   * - id가 있으면 수정
+   */
+  async WBS_평가기준을_저장한다(
+    wbsItemId: string,
+    criteria: string,
+    actionBy: string,
+    id?: string,
+  ): Promise<WbsEvaluationCriteriaDto> {
+    if (id) {
+      // 수정
+      return await this.WBS_평가기준을_수정한다(id, { criteria }, actionBy);
+    } else {
+      // 생성
+      return await this.WBS_평가기준을_생성한다(
+        { wbsItemId, criteria },
+        actionBy,
+      );
+    }
+  }
+
   async WBS_평가기준을_삭제한다(id: string, deletedBy: string): Promise<void> {
     const command = new DeleteWbsEvaluationCriteriaCommand(id, deletedBy);
     await this.commandBus.execute(command);

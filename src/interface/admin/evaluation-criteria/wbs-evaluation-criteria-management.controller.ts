@@ -1,18 +1,17 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { v4 as uuidv4 } from 'uuid';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
-  CreateWbsEvaluationCriteria,
   DeleteWbsEvaluationCriteria,
   DeleteWbsItemEvaluationCriteria,
   GetWbsEvaluationCriteriaDetail,
   GetWbsEvaluationCriteriaList,
   GetWbsItemEvaluationCriteria,
-  UpdateWbsEvaluationCriteria,
+  UpsertWbsEvaluationCriteria,
 } from './decorators/wbs-evaluation-criteria-api.decorators';
 import {
-  CreateWbsEvaluationCriteriaDto,
-  UpdateWbsEvaluationCriteriaDto,
+  UpsertWbsEvaluationCriteriaBodyDto,
   WbsEvaluationCriteriaDto,
   WbsEvaluationCriteriaFilterDto,
   WbsItemEvaluationCriteriaResponseDto,
@@ -77,32 +76,20 @@ export class WbsEvaluationCriteriaManagementController {
   }
 
   /**
-   * WBS 평가기준 생성
+   * WBS 평가기준 저장 (Upsert: 없으면 생성, 있으면 수정)
    */
-  @CreateWbsEvaluationCriteria()
-  async createWbsEvaluationCriteria(
-    @Body() createData: CreateWbsEvaluationCriteriaDto,
+  @UpsertWbsEvaluationCriteria()
+  async upsertWbsEvaluationCriteria(
+    @Param('wbsItemId') wbsItemId: string,
+    @Body() dto: UpsertWbsEvaluationCriteriaBodyDto,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<WbsEvaluationCriteriaDto> {
-    const createdBy = 'system'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationCriteriaManagementService.WBS_평가기준을_생성한다(
-      createData,
-      createdBy,
-    );
-  }
-
-  /**
-   * WBS 평가기준 수정
-   */
-  @UpdateWbsEvaluationCriteria()
-  async updateWbsEvaluationCriteria(
-    @Param('id') id: string,
-    @Body() updateData: UpdateWbsEvaluationCriteriaDto,
-  ): Promise<WbsEvaluationCriteriaDto> {
-    const updatedBy = 'system'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationCriteriaManagementService.WBS_평가기준을_수정한다(
-      id,
-      updateData,
-      updatedBy,
+    const actionBy = dto.actionBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
+    return await this.evaluationCriteriaManagementService.WBS_평가기준을_저장한다(
+      wbsItemId,
+      dto.criteria,
+      actionBy,
+      dto.id,
     );
   }
 
