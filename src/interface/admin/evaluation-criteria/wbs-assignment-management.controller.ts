@@ -197,7 +197,7 @@ export class WbsAssignmentManagementController {
    */
   @ResetPeriodWbsAssignments()
   async resetPeriodWbsAssignments(
-    @Param('periodId') periodId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
     @Body() resetDto: ResetWbsAssignmentsDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<void> {
@@ -215,8 +215,8 @@ export class WbsAssignmentManagementController {
    */
   @ResetProjectWbsAssignments()
   async resetProjectWbsAssignments(
-    @Param('projectId') projectId: string,
-    @Param('periodId') periodId: string,
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
     @Body() resetDto: ResetWbsAssignmentsDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<void> {
@@ -235,8 +235,8 @@ export class WbsAssignmentManagementController {
    */
   @ResetEmployeeWbsAssignments()
   async resetEmployeeWbsAssignments(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
     @Body() resetDto: ResetWbsAssignmentsDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<void> {

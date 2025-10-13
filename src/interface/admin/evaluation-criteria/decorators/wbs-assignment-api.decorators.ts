@@ -575,7 +575,29 @@ export const ResetPeriodWbsAssignments = () =>
     Delete('period/:periodId'),
     ApiOperation({
       summary: '평가기간 WBS 할당 초기화',
-      description: '특정 평가기간의 모든 WBS 할당을 초기화합니다.',
+      description: `**중요**: 특정 평가기간의 모든 WBS 할당을 일괄 초기화합니다. 초기화 시 관련 평가기준도 함께 삭제되며, 모든 프로젝트의 할당이 삭제됩니다.
+
+**자동 수행 작업:**
+- WBS 할당 전체 삭제: 해당 평가기간의 모든 프로젝트, 모든 직원의 WBS 할당 삭제
+- 평가기준 정리: 삭제된 할당과 연관된 WBS 평가기준 자동 삭제
+- 평가라인 정리: 삭제된 할당과 연관된 평가라인 자동 삭제
+- 멱등성 보장: 이미 초기화된 평가기간을 다시 초기화해도 오류 없이 성공 처리
+
+**범위:**
+- 동일 평가기간 내 모든 프로젝트의 할당 삭제
+- 동일 평가기간 내 모든 직원의 할당 삭제
+- 다른 평가기간의 할당은 영향받지 않음
+
+**테스트 케이스:**
+- 전체 초기화: 평가기간의 모든 WBS 할당이 삭제됨
+- 여러 프로젝트 초기화: 동일 평가기간 내 여러 프로젝트의 할당이 모두 초기화됨
+- 다른 평가기간 격리: 다른 평가기간의 할당은 영향받지 않음
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 멱등성 보장: 존재하지 않는 평가기간으로 초기화 시도 시 성공 처리 (200)
+- 재초기화 가능: 이미 초기화된 평가기간을 다시 초기화해도 성공 처리 (200)
+- 평가기준 정리: 초기화 후 관련 평가기준도 함께 삭제됨
+- 목록 조회 반영: 초기화 후 목록 조회 시 결과가 비어있음
+- 감사 정보: 초기화 일시, 초기화자 정보 자동 기록`,
     }),
     ApiParam({
       name: 'periodId',
@@ -593,6 +615,7 @@ export const ResetPeriodWbsAssignments = () =>
             type: 'string',
             format: 'uuid',
             description: '초기화자 ID',
+            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
           },
         },
         required: ['resetBy'],
@@ -603,8 +626,9 @@ export const ResetPeriodWbsAssignments = () =>
       description: '평가기간 WBS 할당이 성공적으로 초기화되었습니다.',
     }),
     ApiResponse({
-      status: 404,
-      description: '평가기간을 찾을 수 없습니다.',
+      status: 400,
+      description:
+        '잘못된 요청입니다. UUID 형식이 올바르지 않거나 필수 필드가 누락되었습니다.',
     }),
   );
 
@@ -616,7 +640,32 @@ export const ResetProjectWbsAssignments = () =>
     Delete('project/:projectId/period/:periodId'),
     ApiOperation({
       summary: '프로젝트 WBS 할당 초기화',
-      description: '특정 평가기간의 특정 프로젝트 WBS 할당을 초기화합니다.',
+      description: `**중요**: 특정 평가기간의 특정 프로젝트에 속한 모든 WBS 할당을 초기화합니다. 프로젝트 단위로 할당을 일괄 삭제하며, 관련 평가기준도 함께 삭제됩니다.
+
+**자동 수행 작업:**
+- 프로젝트별 WBS 할당 삭제: 해당 프로젝트-평가기간 조합의 모든 직원 WBS 할당 삭제
+- 평가기준 정리: 삭제된 할당과 연관된 WBS 평가기준 자동 삭제
+- 평가라인 정리: 삭제된 할당과 연관된 평가라인 자동 삭제
+- 멱등성 보장: 이미 초기화된 프로젝트를 다시 초기화해도 오류 없이 성공 처리
+
+**범위:**
+- 지정된 프로젝트-평가기간의 모든 할당만 삭제
+- 다른 프로젝트의 할당은 영향받지 않음
+- 다른 평가기간의 동일 프로젝트 할당은 영향받지 않음
+
+**사용 시나리오:**
+- 특정 프로젝트의 평가 설정을 전체 재구성할 때
+- 프로젝트 구성원이 크게 변경되어 할당을 새로 설정할 때
+- 잘못된 할당 설정을 일괄 초기화하고 다시 시작할 때
+
+**테스트 케이스:**
+- 프로젝트별 초기화: 특정 프로젝트의 모든 WBS 할당이 삭제됨
+- 다른 프로젝트 격리: 다른 프로젝트의 할당은 영향받지 않음
+- 다른 평가기간 격리: 다른 평가기간의 동일 프로젝트 할당은 영향받지 않음
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 부분 초기화: 전체가 아닌 특정 프로젝트만 선택적으로 초기화 가능
+- 데이터 유지: 다른 범위의 데이터는 정상적으로 유지됨
+- 감사 정보: 초기화 일시, 초기화자 정보 자동 기록`,
     }),
     ApiParam({
       name: 'projectId',
@@ -641,6 +690,7 @@ export const ResetProjectWbsAssignments = () =>
             type: 'string',
             format: 'uuid',
             description: '초기화자 ID',
+            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
           },
         },
         required: ['resetBy'],
@@ -651,8 +701,9 @@ export const ResetProjectWbsAssignments = () =>
       description: '프로젝트 WBS 할당이 성공적으로 초기화되었습니다.',
     }),
     ApiResponse({
-      status: 404,
-      description: '프로젝트 또는 평가기간을 찾을 수 없습니다.',
+      status: 400,
+      description:
+        '잘못된 요청입니다. UUID 형식이 올바르지 않거나 필수 필드가 누락되었습니다.',
     }),
   );
 
@@ -664,7 +715,33 @@ export const ResetEmployeeWbsAssignments = () =>
     Delete('employee/:employeeId/period/:periodId'),
     ApiOperation({
       summary: '직원 WBS 할당 초기화',
-      description: '특정 평가기간의 특정 직원 WBS 할당을 초기화합니다.',
+      description: `**중요**: 특정 평가기간의 특정 직원에게 할당된 모든 WBS 항목을 초기화합니다. 직원 단위로 할당을 일괄 삭제하며, 관련 평가기준도 함께 삭제됩니다.
+
+**자동 수행 작업:**
+- 직원별 WBS 할당 삭제: 해당 직원-평가기간 조합의 모든 WBS 할당 삭제 (모든 프로젝트 포함)
+- 평가기준 정리: 삭제된 할당과 연관된 WBS 평가기준 자동 삭제
+- 평가라인 정리: 삭제된 할당과 연관된 평가라인 자동 삭제
+- 멱등성 보장: 이미 초기화된 직원을 다시 초기화해도 오류 없이 성공 처리
+
+**범위:**
+- 지정된 직원-평가기간의 모든 할당만 삭제 (모든 프로젝트의 WBS 포함)
+- 다른 직원의 할당은 영향받지 않음
+- 다른 평가기간의 동일 직원 할당은 영향받지 않음
+
+**사용 시나리오:**
+- 특정 직원의 평가 설정을 전체 재구성할 때
+- 직원이 담당 프로젝트를 변경하여 할당을 새로 설정할 때
+- 직원이 퇴사하거나 휴직하여 할당을 일괄 제거할 때
+- 잘못된 할당 설정을 초기화하고 다시 시작할 때
+
+**테스트 케이스:**
+- 직원별 초기화: 특정 직원의 모든 WBS 할당이 삭제됨 (모든 프로젝트)
+- 다른 직원 격리: 다른 직원의 할당은 영향받지 않음
+- 다른 평가기간 격리: 다른 평가기간의 동일 직원 할당은 영향받지 않음
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 부분 초기화: 전체가 아닌 특정 직원만 선택적으로 초기화 가능
+- 데이터 유지: 다른 범위의 데이터는 정상적으로 유지됨
+- 감사 정보: 초기화 일시, 초기화자 정보 자동 기록`,
     }),
     ApiParam({
       name: 'employeeId',
@@ -689,6 +766,7 @@ export const ResetEmployeeWbsAssignments = () =>
             type: 'string',
             format: 'uuid',
             description: '초기화자 ID',
+            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
           },
         },
         required: ['resetBy'],
@@ -699,8 +777,9 @@ export const ResetEmployeeWbsAssignments = () =>
       description: '직원 WBS 할당이 성공적으로 초기화되었습니다.',
     }),
     ApiResponse({
-      status: 404,
-      description: '직원 또는 평가기간을 찾을 수 없습니다.',
+      status: 400,
+      description:
+        '잘못된 요청입니다. UUID 형식이 올바르지 않거나 필수 필드가 누락되었습니다.',
     }),
   );
 
