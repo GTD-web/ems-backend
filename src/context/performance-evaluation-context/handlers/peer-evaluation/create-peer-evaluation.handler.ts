@@ -74,7 +74,7 @@ export class CreatePeerEvaluationHandler
         mappedBy: createdBy,
       });
 
-      this.logger.log('?�료?��? ?�성 ?�료', { evaluationId: evaluation.id });
+      this.logger.log('동료평가 생성 완료', { evaluationId: evaluation.id });
       return evaluation.id;
     });
   }

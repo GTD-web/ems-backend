@@ -4,6 +4,7 @@ import { CommonDomainModule } from './domain/common/common-domain.module';
 import { CoreDomainModule } from './domain/core/core-domain.module';
 import { SubDomainModule } from './domain/sub/sub-domain.module';
 import { DomainContextModule } from './context/domain-context.module';
+import { BusinessModule } from './business/business.module';
 import { InterfaceModule } from './interface/interface.module';
 
 @Module({
@@ -12,8 +13,9 @@ import { InterfaceModule } from './interface/interface.module';
     CommonDomainModule,
     CoreDomainModule,
     SubDomainModule,
-    InterfaceModule, // API 인터페이스 모듈 추가
     DomainContextModule,
+    BusinessModule, // 비즈니스 레이어 모듈 추가
+    InterfaceModule, // API 인터페이스 모듈 추가
   ],
   controllers: [],
   providers: [],

@@ -5,6 +5,7 @@ import { SubmitWbsSelfEvaluationHandler } from './self-evaluation/submit-wbs-sel
 
 import { CreatePeerEvaluationHandler } from './peer-evaluation/create-peer-evaluation.handler';
 import { UpdatePeerEvaluationHandler } from './peer-evaluation/update-peer-evaluation.handler';
+import { UpsertPeerEvaluationHandler } from './peer-evaluation/upsert-peer-evaluation.handler';
 import { SubmitPeerEvaluationHandler } from './peer-evaluation/submit-peer-evaluation.handler';
 
 import { CreateDownwardEvaluationHandler } from './downward-evaluation/create-downward-evaluation.handler';
@@ -22,6 +23,7 @@ export const CommandHandlers = [
   // ?�료?��? 커맨???�들??
   CreatePeerEvaluationHandler,
   UpdatePeerEvaluationHandler,
+  UpsertPeerEvaluationHandler,
   SubmitPeerEvaluationHandler,
 
   // ?�향?��? 커맨???�들??

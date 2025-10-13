@@ -15,6 +15,7 @@ import {
 import {
   CreatePeerEvaluationCommand,
   UpdatePeerEvaluationCommand,
+  UpsertPeerEvaluationCommand,
   SubmitPeerEvaluationCommand,
   GetPeerEvaluationListQuery,
   GetPeerEvaluationDetailQuery,
@@ -178,6 +179,24 @@ export class PerformanceEvaluationService
     this.logger.log('동료평가 수정 완료', {
       evaluationId: command.evaluationId,
     });
+  }
+
+  /**
+   * 동료평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
+   */
+  async 동료평가를_저장한다(
+    command: UpsertPeerEvaluationCommand,
+  ): Promise<string> {
+    this.logger.log('동료평가 저장 시작', {
+      evaluatorId: command.evaluatorId,
+      evaluateeId: command.evaluateeId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('동료평가 저장 완료', {
+      evaluationId: result,
+    });
+    return result;
   }
 
   /**

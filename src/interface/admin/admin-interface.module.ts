@@ -3,6 +3,7 @@ import { DomainContextModule } from '../../context/domain-context.module';
 import { EvaluationPeriodManagementContextModule } from '../../context/evaluation-period-management-context/evaluation-period-management-context.module';
 import { EvaluationCriteriaManagementContextModule } from '../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { PerformanceEvaluationContextModule } from '../../context/performance-evaluation-context/performance-evaluation-context.module';
+import { BusinessModule } from '../../business/business.module';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
 import { ProjectAssignmentManagementController } from './evaluation-criteria/project-assignment-management.controller';
 import { WbsAssignmentManagementController } from './evaluation-criteria/wbs-assignment-management.controller';
@@ -10,6 +11,7 @@ import { EvaluationLineManagementController } from './evaluation-criteria/evalua
 import { WbsEvaluationCriteriaManagementController } from './evaluation-criteria/wbs-evaluation-criteria-management.controller';
 import { WbsSelfEvaluationManagementController } from './performance-evaluation/wbs-self-evaluation-management.controller';
 import { DownwardEvaluationManagementController } from './performance-evaluation/downward-evaluation-management.controller';
+import { PeerEvaluationManagementController } from './performance-evaluation/peer-evaluation-management.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -23,6 +25,7 @@ import { DownwardEvaluationManagementController } from './performance-evaluation
     EvaluationPeriodManagementContextModule, // 평가 기간 관리 컨텍스트 모듈 주입
     EvaluationCriteriaManagementContextModule, // 평가기준 관리 컨텍스트 모듈 주입
     PerformanceEvaluationContextModule, // 성과평가 컨텍스트 모듈 주입
+    BusinessModule, // 비즈니스 레이어 모듈 주입
   ],
   controllers: [
     EvaluationPeriodManagementController, // 평가 기간 관리 컨트롤러
@@ -32,6 +35,7 @@ import { DownwardEvaluationManagementController } from './performance-evaluation
     WbsEvaluationCriteriaManagementController, // WBS 평가기준 관리 컨트롤러
     WbsSelfEvaluationManagementController, // WBS 자기평가 관리 컨트롤러
     DownwardEvaluationManagementController, // 하향평가 관리 컨트롤러
+    PeerEvaluationManagementController, // 동료평가 관리 컨트롤러
   ],
   providers: [],
   exports: [],

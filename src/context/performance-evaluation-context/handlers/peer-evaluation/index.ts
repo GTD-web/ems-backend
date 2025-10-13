@@ -10,6 +10,11 @@ export {
 } from './update-peer-evaluation.handler';
 
 export {
+  UpsertPeerEvaluationCommand,
+  UpsertPeerEvaluationHandler,
+} from './upsert-peer-evaluation.handler';
+
+export {
   SubmitPeerEvaluationCommand,
   SubmitPeerEvaluationHandler,
 } from './submit-peer-evaluation.handler';
@@ -24,4 +29,3 @@ export {
   GetPeerEvaluationDetailQuery,
   GetPeerEvaluationDetailHandler,
 } from './get-peer-evaluation-detail.handler';
-
