@@ -1,7 +1,7 @@
 import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
-import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
 import {
   BulkCreateWbsAssignments,
   CancelWbsAssignment,
@@ -40,7 +40,7 @@ import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-ma
 @Controller('admin/evaluation-criteria/wbs-assignments')
 export class WbsAssignmentManagementController {
   constructor(
-    private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
+    private readonly wbsAssignmentBusinessService: WbsAssignmentBusinessService,
   ) {}
 
   /**
@@ -52,16 +52,13 @@ export class WbsAssignmentManagementController {
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<any> {
     const assignedBy = createDto.assignedBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
-    return await this.evaluationCriteriaManagementService.WBS를_할당한다(
-      {
-        employeeId: createDto.employeeId,
-        wbsItemId: createDto.wbsItemId,
-        projectId: createDto.projectId,
-        periodId: createDto.periodId,
-        assignedBy: assignedBy,
-      },
-      assignedBy,
-    );
+    return await this.wbsAssignmentBusinessService.WBS를_할당한다({
+      employeeId: createDto.employeeId,
+      wbsItemId: createDto.wbsItemId,
+      projectId: createDto.projectId,
+      periodId: createDto.periodId,
+      assignedBy: assignedBy,
+    });
   }
 
   /**
@@ -73,10 +70,10 @@ export class WbsAssignmentManagementController {
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<void> {
     const cancelledBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationCriteriaManagementService.WBS_할당을_취소한다(
-      id,
+    return await this.wbsAssignmentBusinessService.WBS_할당을_취소한다({
+      assignmentId: id,
       cancelledBy,
-    );
+    });
   }
 
   /**
@@ -86,18 +83,16 @@ export class WbsAssignmentManagementController {
   async getWbsAssignmentList(
     @Query() filter: WbsAssignmentFilterDto,
   ): Promise<WbsAssignmentListResult> {
-    return await this.evaluationCriteriaManagementService.WBS_할당_목록을_조회한다(
-      {
-        periodId: filter.periodId,
-        employeeId: filter.employeeId,
-        wbsItemId: filter.wbsItemId,
-        projectId: filter.projectId,
-      },
-      filter.page,
-      filter.limit,
-      filter.orderBy,
-      filter.orderDirection,
-    );
+    return await this.wbsAssignmentBusinessService.WBS_할당_목록을_조회한다({
+      periodId: filter.periodId,
+      employeeId: filter.employeeId,
+      wbsItemId: filter.wbsItemId,
+      projectId: filter.projectId,
+      page: filter.page,
+      limit: filter.limit,
+      orderBy: filter.orderBy,
+      orderDirection: filter.orderDirection,
+    });
   }
 
   /**
@@ -105,9 +100,7 @@ export class WbsAssignmentManagementController {
    */
   @GetWbsAssignmentDetail()
   async getWbsAssignmentDetail(@Param('id') id: string): Promise<any> {
-    return await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(
-      id,
-    );
+    return await this.wbsAssignmentBusinessService.WBS_할당_상세를_조회한다(id);
   }
 
   /**
@@ -119,7 +112,7 @@ export class WbsAssignmentManagementController {
     @Param('periodId') periodId: string,
   ): Promise<EmployeeWbsAssignmentsResponseDto> {
     const wbsAssignments =
-      await this.evaluationCriteriaManagementService.특정_평가기간에_직원에게_할당된_WBS를_조회한다(
+      await this.wbsAssignmentBusinessService.특정_평가기간에_직원에게_할당된_WBS를_조회한다(
         employeeId,
         periodId,
       );
@@ -135,7 +128,7 @@ export class WbsAssignmentManagementController {
     @Param('periodId') periodId: string,
   ): Promise<ProjectWbsAssignmentsResponseDto> {
     const wbsAssignments =
-      await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트의_WBS_할당을_조회한다(
+      await this.wbsAssignmentBusinessService.특정_평가기간에_프로젝트의_WBS_할당을_조회한다(
         projectId,
         periodId,
       );
@@ -151,7 +144,7 @@ export class WbsAssignmentManagementController {
     @Param('periodId') periodId: string,
   ): Promise<WbsItemAssignmentsResponseDto> {
     const wbsAssignments =
-      await this.evaluationCriteriaManagementService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(
+      await this.wbsAssignmentBusinessService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(
         wbsItemId,
         periodId,
       );
@@ -168,7 +161,7 @@ export class WbsAssignmentManagementController {
     @Query('employeeId') employeeId?: string,
   ): Promise<UnassignedWbsItemsResponseDto> {
     const wbsItemIds =
-      await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트에서_할당되지_않은_WBS_항목_목록을_조회한다(
+      await this.wbsAssignmentBusinessService.특정_평가기간에_프로젝트에서_할당되지_않은_WBS_항목_목록을_조회한다(
         projectId,
         periodId,
         employeeId,
@@ -187,8 +180,8 @@ export class WbsAssignmentManagementController {
     // 각 할당에서 assignedBy를 추출 (첫 번째 할당의 assignedBy 사용, 없으면 임시 UUID 생성)
     const assignedBy = bulkCreateDto.assignments[0]?.assignedBy || uuidv4();
 
-    return await this.evaluationCriteriaManagementService.WBS를_대량으로_할당한다(
-      bulkCreateDto.assignments.map((assignment) => ({
+    return await this.wbsAssignmentBusinessService.WBS를_대량으로_할당한다({
+      assignments: bulkCreateDto.assignments.map((assignment) => ({
         employeeId: assignment.employeeId,
         wbsItemId: assignment.wbsItemId,
         projectId: assignment.projectId,
@@ -196,7 +189,7 @@ export class WbsAssignmentManagementController {
         assignedBy,
       })),
       assignedBy,
-    );
+    });
   }
 
   /**
@@ -209,9 +202,11 @@ export class WbsAssignmentManagementController {
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<void> {
     const resetBy = resetDto.resetBy || 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationCriteriaManagementService.평가기간의_WBS_할당을_초기화한다(
-      periodId,
-      resetBy,
+    return await this.wbsAssignmentBusinessService.평가기간의_WBS_할당을_초기화한다(
+      {
+        periodId,
+        resetBy,
+      },
     );
   }
 
@@ -226,10 +221,12 @@ export class WbsAssignmentManagementController {
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<void> {
     const resetBy = resetDto.resetBy || 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationCriteriaManagementService.프로젝트의_WBS_할당을_초기화한다(
-      projectId,
-      periodId,
-      resetBy,
+    return await this.wbsAssignmentBusinessService.프로젝트의_WBS_할당을_초기화한다(
+      {
+        projectId,
+        periodId,
+        resetBy,
+      },
     );
   }
 
@@ -244,10 +241,12 @@ export class WbsAssignmentManagementController {
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<void> {
     const resetBy = resetDto.resetBy || 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationCriteriaManagementService.직원의_WBS_할당을_초기화한다(
-      employeeId,
-      periodId,
-      resetBy,
+    return await this.wbsAssignmentBusinessService.직원의_WBS_할당을_초기화한다(
+      {
+        employeeId,
+        periodId,
+        resetBy,
+      },
     );
   }
 
@@ -262,10 +261,10 @@ export class WbsAssignmentManagementController {
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<any> {
     const updatedBy = bodyDto.updatedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.evaluationCriteriaManagementService.WBS_할당_순서를_변경한다(
-      id,
-      queryDto.direction,
+    return await this.wbsAssignmentBusinessService.WBS_할당_순서를_변경한다({
+      assignmentId: id,
+      direction: queryDto.direction,
       updatedBy,
-    );
+    });
   }
 }

@@ -4,10 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, Repository } from 'typeorm';
 import { WbsEvaluationCriteria } from './wbs-evaluation-criteria.entity';
 import {
-  WbsEvaluationCriteriaBusinessRuleViolationException,
+  InvalidWbsEvaluationCriteriaDataFormatException,
   WbsEvaluationCriteriaDuplicateException,
   WbsEvaluationCriteriaRequiredDataMissingException,
-  InvalidWbsEvaluationCriteriaDataFormatException,
 } from './wbs-evaluation-criteria.exceptions';
 import {
   CreateWbsEvaluationCriteriaData,
@@ -94,7 +93,7 @@ export class WbsEvaluationCriteriaValidationService {
       );
     }
 
-    if (!createData.criteria) {
+    if (createData.criteria === undefined || createData.criteria === null) {
       throw new WbsEvaluationCriteriaRequiredDataMissingException(
         '평가 기준 내용은 필수입니다.',
       );
@@ -117,14 +116,8 @@ export class WbsEvaluationCriteriaValidationService {
       );
     }
 
-    // 평가 기준 내용 검증
-    if (createData.criteria.trim().length === 0) {
-      throw new InvalidWbsEvaluationCriteriaDataFormatException(
-        '평가 기준 내용은 비어있을 수 없습니다.',
-      );
-    }
-
-    if (createData.criteria.length > 1000) {
+    // 평가 기준 내용 검증 (빈 문자열 허용)
+    if (createData.criteria && createData.criteria.length > 1000) {
       throw new InvalidWbsEvaluationCriteriaDataFormatException(
         '평가 기준 내용은 1000자를 초과할 수 없습니다.',
       );
@@ -276,4 +269,3 @@ export class WbsEvaluationCriteriaValidationService {
     return count > 0;
   }
 }
-
