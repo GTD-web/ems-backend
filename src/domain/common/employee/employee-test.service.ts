@@ -301,6 +301,28 @@ export class EmployeeTestService {
 
     const savedEmployees = await this.employeeRepository.save(employees);
 
+    // UUID 매핑 테이블 생성
+    const externalIdToUuid = new Map<string, string>();
+    savedEmployees.forEach((emp) => {
+      externalIdToUuid.set(emp.externalId, emp.id);
+    });
+
+    // managerId를 externalId에서 UUID로 변환
+    const employeesToUpdate = savedEmployees
+      .filter((emp) => emp.managerId)
+      .map((emp) => {
+        const managerUuid = externalIdToUuid.get(emp.managerId!);
+        if (managerUuid) {
+          emp.managerId = managerUuid;
+        }
+        return emp;
+      });
+
+    // 업데이트된 직원들 저장
+    if (employeesToUpdate.length > 0) {
+      await this.employeeRepository.save(employeesToUpdate);
+    }
+
     return savedEmployees.map((employee) => employee.DTO로_변환한다());
   }
 
@@ -657,6 +679,29 @@ export class EmployeeTestService {
 
     const savedEmployees = await this.employeeRepository.save(employees);
     console.log(`데이터베이스에 저장된 직원 수: ${savedEmployees.length}`);
+
+    // UUID 매핑 테이블 생성
+    const externalIdToUuid = new Map<string, string>();
+    savedEmployees.forEach((emp) => {
+      externalIdToUuid.set(emp.externalId, emp.id);
+    });
+
+    // managerId를 externalId에서 UUID로 변환
+    const employeesToUpdate = savedEmployees
+      .filter((emp) => emp.managerId)
+      .map((emp) => {
+        const managerUuid = externalIdToUuid.get(emp.managerId!);
+        if (managerUuid) {
+          emp.managerId = managerUuid;
+        }
+        return emp;
+      });
+
+    // 업데이트된 직원들 저장
+    if (employeesToUpdate.length > 0) {
+      await this.employeeRepository.save(employeesToUpdate);
+      console.log(`managerId를 UUID로 업데이트: ${employeesToUpdate.length}명`);
+    }
 
     // 트랜잭션 강제 커밋 및 격리 수준 조정
     try {

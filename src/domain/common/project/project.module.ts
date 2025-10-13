@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Project } from './project.entity';
 import { ProjectService } from './project.service';
 import { ProjectTestService } from './project-test.service';
+import { Employee } from '@domain/common/employee/employee.entity';
 
 /**
  * 프로젝트 모듈 (평가 시스템 전용)
@@ -11,7 +12,7 @@ import { ProjectTestService } from './project-test.service';
  * 외부 시스템 연동 없이 독립적으로 운영됩니다.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Project])],
+  imports: [TypeOrmModule.forFeature([Project, Employee])],
   providers: [ProjectService, ProjectTestService],
   exports: [ProjectService, ProjectTestService, TypeOrmModule],
 })

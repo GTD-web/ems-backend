@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Project } from './project.entity';
 import { ProjectDto, ProjectStatus } from './project.types';
+import { Employee } from '@domain/common/employee/employee.entity';
 
 /**
  * 프로젝트 테스트용 서비스
@@ -15,6 +16,8 @@ export class ProjectTestService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(Employee)
+    private readonly employeeRepository: Repository<Employee>,
   ) {}
 
   /**
@@ -131,20 +134,43 @@ export class ProjectTestService {
       },
     ];
 
+    // 직원 UUID 매핑 조회
+    const externalIds = [
+      ...new Set(testProjects.map((p) => p.managerId).filter((id) => id)),
+    ];
+    const employees = await this.employeeRepository.find({
+      where: externalIds.map((externalId) => ({ externalId })),
+    });
+
+    const externalIdToUuid = new Map<string, string>();
+    employees.forEach((emp) => {
+      externalIdToUuid.set(emp.externalId, emp.id);
+    });
+
     // 프로젝트 엔티티 생성 및 저장
     const projects = testProjects.map((proj) => {
+      // managerId를 externalId에서 UUID로 변환
+      const managerUuid = proj.managerId
+        ? externalIdToUuid.get(proj.managerId)
+        : undefined;
+
       const project = new Project(
         proj.name,
         proj.projectCode,
         proj.status,
         proj.startDate,
         proj.endDate,
-        proj.managerId,
+        managerUuid,
       );
       return project;
     });
 
     const savedProjects = await this.projectRepository.save(projects);
+
+    console.log(`프로젝트 생성 완료: ${savedProjects.length}개`);
+    console.log(
+      `managerId가 UUID로 변환된 프로젝트: ${savedProjects.filter((p) => p.managerId).length}개`,
+    );
 
     return savedProjects.map((project) => project.DTO로_변환한다());
   }

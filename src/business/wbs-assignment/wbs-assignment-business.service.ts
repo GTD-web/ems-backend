@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { EmployeeService } from '@domain/common/employee/employee.service';
+import { ProjectService } from '@domain/common/project/project.service';
 import type {
   CreateEvaluationWbsAssignmentData,
   OrderDirection,
@@ -19,6 +21,8 @@ export class WbsAssignmentBusinessService {
 
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
+    private readonly employeeService: EmployeeService,
+    private readonly projectService: ProjectService,
     // private readonly notificationService: NotificationService, // TODO: 알림 서비스 추가 시 주입
     // private readonly organizationManagementService: OrganizationManagementService, // TODO: 조직 관리 서비스 추가 시 주입
   ) {}
@@ -74,7 +78,16 @@ export class WbsAssignmentBusinessService {
       );
     }
 
-    // 3. 알림 발송 (추후 구현)
+    // 3. 평가라인 자동 구성
+    await this.평가라인을_자동으로_구성한다(
+      params.employeeId,
+      params.wbsItemId,
+      params.projectId,
+      params.periodId,
+      params.assignedBy,
+    );
+
+    // 4. 알림 발송 (추후 구현)
     // TODO: WBS 할당 알림 발송
     // await this.notificationService.send({
     //   type: 'WBS_ASSIGNED',
@@ -86,7 +99,7 @@ export class WbsAssignmentBusinessService {
     //   },
     // });
 
-    this.logger.log('WBS 할당 및 평가기준 생성, 알림 발송 완료', {
+    this.logger.log('WBS 할당, 평가기준 생성, 평가라인 구성 완료', {
       assignmentId: assignment.id,
     });
 
@@ -221,7 +234,20 @@ export class WbsAssignmentBusinessService {
       }),
     );
 
-    // 3. 각 직원에게 알림 발송 (추후 구현)
+    // 3. 각 할당에 대해 평가라인 자동 구성
+    await Promise.all(
+      params.assignments.map(async (assignment) => {
+        await this.평가라인을_자동으로_구성한다(
+          assignment.employeeId,
+          assignment.wbsItemId,
+          assignment.projectId,
+          assignment.periodId,
+          params.assignedBy,
+        );
+      }),
+    );
+
+    // 4. 각 직원에게 알림 발송 (추후 구현)
     // TODO: 대량 할당 알림 발송
     // const uniqueEmployeeIds = [
     //   ...new Set(params.assignments.map((a) => a.employeeId)),
@@ -240,7 +266,7 @@ export class WbsAssignmentBusinessService {
     //   ),
     // );
 
-    this.logger.log('WBS 대량 할당, 평가기준 생성 및 알림 발송 완료', {
+    this.logger.log('WBS 대량 할당, 평가기준 생성, 평가라인 구성 완료', {
       count: assignments.length,
     });
 
@@ -607,5 +633,141 @@ export class WbsAssignmentBusinessService {
       periodId,
       employeeId,
     );
+  }
+
+  /**
+   * 평가라인을 자동으로 구성한다
+   * - 1차 평가자: 피평가자의 담당 평가자 (Employee.managerId)
+   * - 2차 평가자: 프로젝트 PM (Project.managerId)
+   */
+  private async 평가라인을_자동으로_구성한다(
+    employeeId: string,
+    wbsItemId: string,
+    projectId: string,
+    periodId: string,
+    createdBy: string,
+  ): Promise<void> {
+    try {
+      this.logger.log('평가라인 자동 구성 시작', {
+        employeeId,
+        wbsItemId,
+        projectId,
+      });
+
+      // 1. 기존 평가라인 매핑 조회 (중복 체크)
+      const existingMappings =
+        await this.evaluationCriteriaManagementService.특정_직원의_평가라인_매핑을_조회한다(
+          employeeId,
+        );
+
+      // 해당 WBS에 대한 기존 매핑 필터링
+      const existingMappingsForWbs = existingMappings.filter(
+        (mapping) => mapping.wbsItemId === wbsItemId,
+      );
+
+      if (existingMappingsForWbs.length > 0) {
+        this.logger.log(
+          '이미 평가라인이 구성되어 있어 자동 구성을 생략합니다',
+          {
+            employeeId,
+            wbsItemId,
+            existingMappingsCount: existingMappingsForWbs.length,
+          },
+        );
+        return;
+      }
+
+      // 2. 직원 정보 조회 (담당 평가자 확인)
+      const employee = await this.employeeService.ID로_조회한다(employeeId);
+      if (!employee) {
+        this.logger.warn('직원을 찾을 수 없습니다', { employeeId });
+        return;
+      }
+
+      // 3. 프로젝트 정보 조회 (PM 확인)
+      const project = await this.projectService.ID로_조회한다(projectId);
+      if (!project) {
+        this.logger.warn('프로젝트를 찾을 수 없습니다', { projectId });
+        return;
+      }
+
+      // 4. 1차 평가자 구성 (담당 평가자)
+      if (employee.managerId) {
+        this.logger.log('1차 평가자(담당 평가자) 구성', {
+          evaluatorId: employee.managerId,
+        });
+
+        try {
+          await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(
+            employeeId,
+            wbsItemId,
+            periodId,
+            employee.managerId,
+            createdBy,
+          );
+        } catch (error) {
+          this.logger.error('1차 평가자 구성 실패', {
+            error: error.message,
+            employeeId,
+            evaluatorId: employee.managerId,
+          });
+        }
+      } else {
+        this.logger.warn('담당 평가자(managerId)가 설정되지 않았습니다', {
+          employeeId,
+        });
+      }
+
+      // 5. 2차 평가자 구성 (프로젝트 PM)
+      if (project.managerId) {
+        // PM이 담당 평가자와 동일한 경우 2차 평가자 설정 안 함
+        if (project.managerId === employee.managerId) {
+          this.logger.log(
+            'PM과 담당 평가자가 동일하여 2차 평가자를 구성하지 않습니다',
+            { managerId: project.managerId },
+          );
+        } else {
+          this.logger.log('2차 평가자(프로젝트 PM) 구성', {
+            evaluatorId: project.managerId,
+          });
+
+          try {
+            await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
+              employeeId,
+              wbsItemId,
+              periodId,
+              project.managerId,
+              createdBy,
+            );
+          } catch (error) {
+            this.logger.error('2차 평가자 구성 실패', {
+              error: error.message,
+              employeeId,
+              evaluatorId: project.managerId,
+            });
+          }
+        }
+      } else {
+        this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {
+          projectId,
+        });
+      }
+
+      this.logger.log('평가라인 자동 구성 완료', {
+        employeeId,
+        wbsItemId,
+        primaryEvaluator: employee.managerId,
+        secondaryEvaluator:
+          project.managerId !== employee.managerId ? project.managerId : null,
+      });
+    } catch (error) {
+      this.logger.error('평가라인 자동 구성 중 오류 발생', {
+        error: error.message,
+        employeeId,
+        wbsItemId,
+        projectId,
+      });
+      // 평가라인 구성 실패는 치명적이지 않으므로 에러를 throw하지 않음
+    }
   }
 }
