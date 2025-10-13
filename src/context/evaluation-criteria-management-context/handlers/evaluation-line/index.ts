@@ -5,6 +5,18 @@ export {
   type ConfigureEmployeeWbsEvaluationLineResult,
 } from './commands/configure-employee-wbs-evaluation-line.handler';
 
+export {
+  ConfigurePrimaryEvaluatorCommand,
+  ConfigurePrimaryEvaluatorHandler,
+  type ConfigurePrimaryEvaluatorResult,
+} from './commands/configure-primary-evaluator.handler';
+
+export {
+  ConfigureSecondaryEvaluatorCommand,
+  ConfigureSecondaryEvaluatorHandler,
+  type ConfigureSecondaryEvaluatorResult,
+} from './commands/configure-secondary-evaluator.handler';
+
 // Queries
 export {
   GetEmployeeEvaluationLineMappingsQuery,

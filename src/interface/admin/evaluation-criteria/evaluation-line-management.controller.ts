@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
   ConfigureEmployeeWbsEvaluationLine,
+  ConfigurePrimaryEvaluator,
+  ConfigureSecondaryEvaluator,
   GetEmployeeEvaluationLineMappings,
   GetEmployeeEvaluationSettings,
   GetEvaluationLineList,
@@ -12,6 +14,9 @@ import {
 } from './decorators/evaluation-line-api.decorators';
 import {
   ConfigureEmployeeWbsEvaluationLineResponseDto,
+  ConfigureEvaluatorResponseDto,
+  ConfigurePrimaryEvaluatorDto,
+  ConfigureSecondaryEvaluatorDto,
   EmployeeEvaluationLineMappingsResponseDto,
   EmployeeEvaluationSettingsResponseDto,
   EvaluationLineDto,
@@ -127,5 +132,45 @@ export class EvaluationLineManagementController {
       periodId,
       ...settings,
     };
+  }
+
+  /**
+   * 1차 평가자 구성
+   */
+  @ConfigurePrimaryEvaluator()
+  async configurePrimaryEvaluator(
+    @Param('employeeId') employeeId: string,
+    @Param('wbsItemId') wbsItemId: string,
+    @Param('periodId') periodId: string,
+    @Body() dto: ConfigurePrimaryEvaluatorDto,
+  ): Promise<ConfigureEvaluatorResponseDto> {
+    const createdBy = dto.createdBy || uuidv4();
+    return await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(
+      employeeId,
+      wbsItemId,
+      periodId,
+      dto.evaluatorId,
+      createdBy,
+    );
+  }
+
+  /**
+   * 2차 평가자 구성
+   */
+  @ConfigureSecondaryEvaluator()
+  async configureSecondaryEvaluator(
+    @Param('employeeId') employeeId: string,
+    @Param('wbsItemId') wbsItemId: string,
+    @Param('periodId') periodId: string,
+    @Body() dto: ConfigureSecondaryEvaluatorDto,
+  ): Promise<ConfigureEvaluatorResponseDto> {
+    const createdBy = dto.createdBy || uuidv4();
+    return await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
+      employeeId,
+      wbsItemId,
+      periodId,
+      dto.evaluatorId,
+      createdBy,
+    );
   }
 }

@@ -210,3 +210,71 @@ export class EmployeeEvaluationSettingsResponseDto {
   })
   evaluationLineMappings: EvaluationLineMappingDto[];
 }
+
+/**
+ * 1차 평가자 구성 요청 DTO
+ */
+export class ConfigurePrimaryEvaluatorDto {
+  @ApiProperty({ description: '1차 평가자 ID', example: 'evaluator-uuid' })
+  @IsString()
+  @IsUUID()
+  evaluatorId: string;
+
+  @ApiPropertyOptional({ description: '생성자 ID', example: 'admin-uuid' })
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  createdBy?: string;
+}
+
+/**
+ * 2차 평가자 구성 요청 DTO
+ */
+export class ConfigureSecondaryEvaluatorDto {
+  @ApiProperty({ description: '2차 평가자 ID', example: 'evaluator-uuid' })
+  @IsString()
+  @IsUUID()
+  evaluatorId: string;
+
+  @ApiPropertyOptional({ description: '생성자 ID', example: 'admin-uuid' })
+  @IsOptional()
+  @IsString()
+  @IsUUID()
+  createdBy?: string;
+}
+
+/**
+ * 평가자 구성 응답 DTO
+ */
+export class ConfigureEvaluatorResponseDto {
+  @ApiProperty({
+    description: '결과 메시지',
+    example: '평가라인 구성이 완료되었습니다.',
+  })
+  message: string;
+
+  @ApiProperty({ description: '생성된 평가라인 수', example: 1 })
+  createdLines: number;
+
+  @ApiProperty({ description: '생성된 매핑 수', example: 1 })
+  createdMappings: number;
+
+  @ApiProperty({
+    description: '평가라인 매핑 정보',
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      employeeId: { type: 'string', format: 'uuid' },
+      evaluatorId: { type: 'string', format: 'uuid' },
+      wbsItemId: { type: 'string', format: 'uuid' },
+      evaluationLineId: { type: 'string', format: 'uuid' },
+    },
+  })
+  mapping: {
+    id: string;
+    employeeId: string;
+    evaluatorId: string;
+    wbsItemId: string;
+    evaluationLineId: string;
+  };
+}

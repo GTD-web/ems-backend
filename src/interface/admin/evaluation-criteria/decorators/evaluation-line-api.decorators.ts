@@ -331,3 +331,165 @@ export const GetEmployeeEvaluationSettings = () =>
       description: '직원 또는 평가기간을 찾을 수 없습니다.',
     }),
   );
+
+/**
+ * 1차 평가자 구성 API 데코레이터
+ */
+export const ConfigurePrimaryEvaluator = () =>
+  applyDecorators(
+    Post(
+      'employee/:employeeId/wbs/:wbsItemId/period/:periodId/primary-evaluator',
+    ),
+    ApiOperation({
+      summary: '1차 평가자 구성',
+      description: '특정 직원의 특정 WBS 항목에 대한 1차 평가자를 구성합니다.',
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'wbsItemId',
+      description: 'WBS 항목 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiBody({
+      description: '1차 평가자 구성 데이터',
+      schema: {
+        type: 'object',
+        properties: {
+          evaluatorId: {
+            type: 'string',
+            format: 'uuid',
+            description: '1차 평가자 ID',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'uuid',
+            description: '생성자 ID (선택)',
+          },
+        },
+        required: ['evaluatorId'],
+      },
+    }),
+    ApiResponse({
+      status: 201,
+      description: '1차 평가자 구성이 성공적으로 완료되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+          createdLines: { type: 'number' },
+          createdMappings: { type: 'number' },
+          mapping: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              employeeId: { type: 'string', format: 'uuid' },
+              evaluatorId: { type: 'string', format: 'uuid' },
+              wbsItemId: { type: 'string', format: 'uuid' },
+              evaluationLineId: { type: 'string', format: 'uuid' },
+            },
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '직원, WBS 항목 또는 평가기간을 찾을 수 없습니다.',
+    }),
+  );
+
+/**
+ * 2차 평가자 구성 API 데코레이터
+ */
+export const ConfigureSecondaryEvaluator = () =>
+  applyDecorators(
+    Post(
+      'employee/:employeeId/wbs/:wbsItemId/period/:periodId/secondary-evaluator',
+    ),
+    ApiOperation({
+      summary: '2차 평가자 구성',
+      description: '특정 직원의 특정 WBS 항목에 대한 2차 평가자를 구성합니다.',
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'wbsItemId',
+      description: 'WBS 항목 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiBody({
+      description: '2차 평가자 구성 데이터',
+      schema: {
+        type: 'object',
+        properties: {
+          evaluatorId: {
+            type: 'string',
+            format: 'uuid',
+            description: '2차 평가자 ID',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'uuid',
+            description: '생성자 ID (선택)',
+          },
+        },
+        required: ['evaluatorId'],
+      },
+    }),
+    ApiResponse({
+      status: 201,
+      description: '2차 평가자 구성이 성공적으로 완료되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          message: { type: 'string' },
+          createdLines: { type: 'number' },
+          createdMappings: { type: 'number' },
+          mapping: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              employeeId: { type: 'string', format: 'uuid' },
+              evaluatorId: { type: 'string', format: 'uuid' },
+              wbsItemId: { type: 'string', format: 'uuid' },
+              evaluationLineId: { type: 'string', format: 'uuid' },
+            },
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '직원, WBS 항목 또는 평가기간을 찾을 수 없습니다.',
+    }),
+  );

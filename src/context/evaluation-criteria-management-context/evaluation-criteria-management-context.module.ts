@@ -51,6 +51,8 @@ import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import {
   ConfigureEmployeeWbsEvaluationLineHandler,
+  ConfigurePrimaryEvaluatorHandler,
+  ConfigureSecondaryEvaluatorHandler,
   GetEmployeeEvaluationLineMappingsHandler,
   GetEmployeeEvaluationSettingsHandler,
   GetEvaluationLineListHandler,
@@ -134,6 +136,8 @@ import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
     GetUnassignedWbsItemsHandler,
     // Evaluation Line Handlers
     ConfigureEmployeeWbsEvaluationLineHandler,
+    ConfigurePrimaryEvaluatorHandler,
+    ConfigureSecondaryEvaluatorHandler,
     GetEvaluationLineListHandler,
     GetEmployeeEvaluationLineMappingsHandler,
     GetEvaluatorEmployeesHandler,

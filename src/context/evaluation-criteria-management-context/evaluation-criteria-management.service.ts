@@ -46,6 +46,8 @@ import {
 // Evaluation Line Commands & Queries
 import {
   ConfigureEmployeeWbsEvaluationLineCommand,
+  ConfigurePrimaryEvaluatorCommand,
+  ConfigureSecondaryEvaluatorCommand,
   GetEmployeeEvaluationLineMappingsQuery,
   GetEmployeeEvaluationSettingsQuery,
   GetEvaluationLineListQuery,
@@ -350,6 +352,70 @@ export class EvaluationCriteriaManagementService
       employeeId,
       wbsItemId,
       periodId,
+      createdBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 1차_평가자를_구성한다
+   * 직원, WBS, 평가기간에 따라 1차 평가자를 지정하여 평가라인을 구성한다
+   */
+  async 일차_평가자를_구성한다(
+    employeeId: string,
+    wbsItemId: string,
+    periodId: string,
+    evaluatorId: string,
+    createdBy: string,
+  ): Promise<{
+    message: string;
+    createdLines: number;
+    createdMappings: number;
+    mapping: {
+      id: string;
+      employeeId: string;
+      evaluatorId: string;
+      wbsItemId: string;
+      evaluationLineId: string;
+    };
+  }> {
+    const command = new ConfigurePrimaryEvaluatorCommand(
+      employeeId,
+      wbsItemId,
+      periodId,
+      evaluatorId,
+      createdBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 2차_평가자를_구성한다
+   * 직원, WBS, 평가기간에 따라 2차 평가자를 지정하여 평가라인을 구성한다
+   */
+  async 이차_평가자를_구성한다(
+    employeeId: string,
+    wbsItemId: string,
+    periodId: string,
+    evaluatorId: string,
+    createdBy: string,
+  ): Promise<{
+    message: string;
+    createdLines: number;
+    createdMappings: number;
+    mapping: {
+      id: string;
+      employeeId: string;
+      evaluatorId: string;
+      wbsItemId: string;
+      evaluationLineId: string;
+    };
+  }> {
+    const command = new ConfigureSecondaryEvaluatorCommand(
+      employeeId,
+      wbsItemId,
+      periodId,
+      evaluatorId,
       createdBy,
     );
     return await this.commandBus.execute(command);
