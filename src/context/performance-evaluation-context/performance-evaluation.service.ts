@@ -5,6 +5,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import {
   CreateWbsSelfEvaluationCommand,
   UpdateWbsSelfEvaluationCommand,
+  UpsertWbsSelfEvaluationCommand,
   SubmitWbsSelfEvaluationCommand,
   GetEmployeeSelfEvaluationsQuery,
   GetWbsSelfEvaluationDetailQuery,
@@ -23,6 +24,7 @@ import {
 import {
   CreateDownwardEvaluationCommand,
   UpdateDownwardEvaluationCommand,
+  UpsertDownwardEvaluationCommand,
   SubmitDownwardEvaluationCommand,
   GetDownwardEvaluationListQuery,
   GetDownwardEvaluationDetailQuery,
@@ -84,6 +86,22 @@ export class PerformanceEvaluationService
     this.logger.log('WBS 자기평가 수정 완료', {
       evaluationId: command.evaluationId,
     });
+    return result;
+  }
+
+  /**
+   * WBS 자기평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
+   */
+  async WBS자기평가를_저장한다(
+    command: UpsertWbsSelfEvaluationCommand,
+  ): Promise<WbsSelfEvaluationResponseDto> {
+    this.logger.log('WBS 자기평가 저장 시작', {
+      employeeId: command.employeeId,
+      wbsItemId: command.wbsItemId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('WBS 자기평가 저장 완료');
     return result;
   }
 
@@ -232,6 +250,25 @@ export class PerformanceEvaluationService
     this.logger.log('하향평가 수정 완료', {
       evaluationId: command.evaluationId,
     });
+  }
+
+  /**
+   * 하향평가를 Upsert한다 (있으면 수정, 없으면 생성)
+   */
+  async 하향평가를_저장한다(
+    command: UpsertDownwardEvaluationCommand,
+  ): Promise<string> {
+    this.logger.log('하향평가 저장 시작', {
+      evaluatorId: command.evaluatorId,
+      evaluateeId: command.evaluateeId,
+      evaluationType: command.evaluationType,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('하향평가 저장 완료', {
+      evaluationId: result,
+    });
+    return result;
   }
 
   /**

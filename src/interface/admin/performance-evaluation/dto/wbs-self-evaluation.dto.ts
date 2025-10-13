@@ -13,30 +13,9 @@ import type { WbsSelfEvaluationDto } from '../../../../domain/core/wbs-self-eval
 import type { WbsSelfEvaluationMappingDto } from '../../../../domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
 
 /**
- * WBS 자기평가 생성 DTO
+ * WBS 자기평가 생성 Body DTO (경로 파라미터 제외)
  */
-export class CreateWbsSelfEvaluationDto {
-  @ApiProperty({
-    description: '직원 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  @IsUUID()
-  employeeId: string;
-
-  @ApiProperty({
-    description: 'WBS 항목 ID',
-    example: '550e8400-e29b-41d4-a716-446655440001',
-  })
-  @IsUUID()
-  wbsItemId: string;
-
-  @ApiProperty({
-    description: '평가기간 ID',
-    example: '550e8400-e29b-41d4-a716-446655440002',
-  })
-  @IsUUID()
-  periodId: string;
-
+export class CreateWbsSelfEvaluationBodyDto {
   @ApiProperty({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',

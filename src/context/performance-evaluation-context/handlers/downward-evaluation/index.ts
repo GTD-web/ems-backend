@@ -10,6 +10,11 @@ export {
 } from './update-downward-evaluation.handler';
 
 export {
+  UpsertDownwardEvaluationCommand,
+  UpsertDownwardEvaluationHandler,
+} from './upsert-downward-evaluation.handler';
+
+export {
   SubmitDownwardEvaluationCommand,
   SubmitDownwardEvaluationHandler,
 } from './submit-downward-evaluation.handler';
@@ -24,4 +29,3 @@ export {
   GetDownwardEvaluationDetailQuery,
   GetDownwardEvaluationDetailHandler,
 } from './get-downward-evaluation-detail.handler';
-

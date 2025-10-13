@@ -11,11 +11,10 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBearerAuth,
   ApiBody,
 } from '@nestjs/swagger';
 import {
-  CreateWbsSelfEvaluationDto,
+  CreateWbsSelfEvaluationBodyDto,
   UpdateWbsSelfEvaluationDto,
   SubmitWbsSelfEvaluationDto,
   WbsSelfEvaluationFilterDto,
@@ -26,23 +25,45 @@ import {
 } from '../dto/wbs-self-evaluation.dto';
 
 /**
- * WBS 자기평가 생성 API 데코레이터
+ * WBS 자기평가 저장 API 데코레이터 (Upsert: 없으면 생성, 있으면 수정)
  */
-export function CreateWbsSelfEvaluation() {
+export function UpsertWbsSelfEvaluation() {
   return applyDecorators(
-    Post(),
-    HttpCode(HttpStatus.CREATED),
+    Post('employee/:employeeId/wbs/:wbsItemId/period/:periodId'),
+    HttpCode(HttpStatus.OK),
     ApiOperation({
-      summary: 'WBS 자기평가 생성',
-      description: '새로운 WBS 자기평가를 생성합니다.',
+      summary: 'WBS 자기평가 저장',
+      description:
+        'WBS 자기평가를 저장합니다. 기존 평가가 있으면 수정하고, 없으면 새로 생성합니다.',
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    ApiParam({
+      name: 'wbsItemId',
+      description: 'WBS 항목 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiBody({
-      type: CreateWbsSelfEvaluationDto,
+      type: CreateWbsSelfEvaluationBodyDto,
       description: 'WBS 자기평가 생성 정보',
     }),
     ApiResponse({
-      status: HttpStatus.CREATED,
-      description: 'WBS 자기평가가 성공적으로 생성되었습니다.',
+      status: HttpStatus.OK,
+      description: 'WBS 자기평가가 성공적으로 저장되었습니다.',
       type: WbsSelfEvaluationResponseDto,
     }),
     ApiResponse({
@@ -58,10 +79,9 @@ export function CreateWbsSelfEvaluation() {
       description: '권한이 없습니다.',
     }),
     ApiResponse({
-      status: HttpStatus.CONFLICT,
-      description: '이미 존재하는 자기평가입니다.',
+      status: HttpStatus.NOT_FOUND,
+      description: '직원, WBS 항목 또는 평가기간을 찾을 수 없습니다.',
     }),
-    ApiBearerAuth(),
   );
 }
 
@@ -106,7 +126,6 @@ export function UpdateWbsSelfEvaluation() {
       status: HttpStatus.NOT_FOUND,
       description: '자기평가를 찾을 수 없습니다.',
     }),
-    ApiBearerAuth(),
   );
 }
 
@@ -155,7 +174,6 @@ export function SubmitWbsSelfEvaluation() {
       status: HttpStatus.CONFLICT,
       description: '이미 제출된 자기평가입니다.',
     }),
-    ApiBearerAuth(),
   );
 }
 
@@ -220,7 +238,6 @@ export function GetEmployeeSelfEvaluations() {
       status: HttpStatus.NOT_FOUND,
       description: '직원을 찾을 수 없습니다.',
     }),
-    ApiBearerAuth(),
   );
 }
 
@@ -261,6 +278,5 @@ export function GetWbsSelfEvaluationDetail() {
       status: HttpStatus.NOT_FOUND,
       description: '자기평가를 찾을 수 없습니다.',
     }),
-    ApiBearerAuth(),
   );
 }

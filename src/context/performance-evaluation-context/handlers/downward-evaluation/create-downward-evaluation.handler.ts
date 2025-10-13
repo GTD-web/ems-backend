@@ -51,7 +51,7 @@ export class CreateDownwardEvaluationHandler
       createdBy,
     } = command;
 
-    this.logger.log('?�향?��? ?�성 ?�들???�행', {
+    this.logger.log('하향평가 생성 핸들러 실행', {
       evaluatorId,
       evaluateeId,
       periodId,

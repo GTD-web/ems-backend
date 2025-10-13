@@ -3,27 +3,24 @@ import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
 import {
-  CreateWbsSelfEvaluation,
-  UpdateWbsSelfEvaluation,
+  UpsertWbsSelfEvaluation,
   SubmitWbsSelfEvaluation,
   GetEmployeeSelfEvaluations,
   GetWbsSelfEvaluationDetail,
 } from './decorators/wbs-self-evaluation-api.decorators';
 import {
-  CreateWbsSelfEvaluationDto,
-  UpdateWbsSelfEvaluationDto,
+  CreateWbsSelfEvaluationBodyDto,
   SubmitWbsSelfEvaluationDto,
   WbsSelfEvaluationFilterDto,
   WbsSelfEvaluationResponseDto,
   WbsSelfEvaluationDetailResponseDto,
   EmployeeSelfEvaluationsResponseDto,
-  WbsSelfEvaluationBasicDto,
 } from './dto/wbs-self-evaluation.dto';
 
 /**
  * WBS 자기평가 관리 컨트롤러
  *
- * WBS 자기평가의 생성, 수정, 제출, 조회 기능을 제공합니다.
+ * WBS 자기평가의 저장(생성/수정), 제출, 조회 기능을 제공합니다.
  */
 @ApiTags('C-1. 관리자 - 성과평가 - WBS 자기평가')
 @Controller('admin/performance-evaluation/wbs-self-evaluations')
@@ -33,41 +30,25 @@ export class WbsSelfEvaluationManagementController {
   ) {}
 
   /**
-   * WBS 자기평가 생성
+   * WBS 자기평가 저장 (Upsert: 없으면 생성, 있으면 수정)
    */
-  @CreateWbsSelfEvaluation()
-  async createWbsSelfEvaluation(
-    @Body() createDto: CreateWbsSelfEvaluationDto,
+  @UpsertWbsSelfEvaluation()
+  async upsertWbsSelfEvaluation(
+    @Param('employeeId') employeeId: string,
+    @Param('wbsItemId') wbsItemId: string,
+    @Param('periodId') periodId: string,
+    @Body() dto: CreateWbsSelfEvaluationBodyDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<WbsSelfEvaluationResponseDto> {
-    const createdBy = createDto.createdBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
-    return await this.performanceEvaluationService.WBS자기평가를_생성한다({
-      employeeId: createDto.employeeId,
-      wbsItemId: createDto.wbsItemId,
-      periodId: createDto.periodId,
-      selfEvaluationContent: createDto.selfEvaluationContent,
-      selfEvaluationScore: createDto.selfEvaluationScore,
-      additionalComments: createDto.additionalComments,
-      createdBy,
-    });
-  }
-
-  /**
-   * WBS 자기평가 수정
-   */
-  @UpdateWbsSelfEvaluation()
-  async updateWbsSelfEvaluation(
-    @Param('id') id: string,
-    @Body() updateDto: UpdateWbsSelfEvaluationDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
-  ): Promise<WbsSelfEvaluationBasicDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.performanceEvaluationService.WBS자기평가를_수정한다({
-      evaluationId: id,
-      selfEvaluationContent: updateDto.selfEvaluationContent,
-      selfEvaluationScore: updateDto.selfEvaluationScore,
-      additionalComments: updateDto.additionalComments,
-      updatedBy,
+    const actionBy = dto.createdBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
+    return await this.performanceEvaluationService.WBS자기평가를_저장한다({
+      employeeId,
+      wbsItemId,
+      periodId,
+      selfEvaluationContent: dto.selfEvaluationContent,
+      selfEvaluationScore: dto.selfEvaluationScore,
+      additionalComments: dto.additionalComments,
+      actionBy,
     });
   }
 

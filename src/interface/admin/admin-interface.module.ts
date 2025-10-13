@@ -9,6 +9,7 @@ import { WbsAssignmentManagementController } from './evaluation-criteria/wbs-ass
 import { EvaluationLineManagementController } from './evaluation-criteria/evaluation-line-management.controller';
 import { WbsEvaluationCriteriaManagementController } from './evaluation-criteria/wbs-evaluation-criteria-management.controller';
 import { WbsSelfEvaluationManagementController } from './performance-evaluation/wbs-self-evaluation-management.controller';
+import { DownwardEvaluationManagementController } from './performance-evaluation/downward-evaluation-management.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -30,6 +31,7 @@ import { WbsSelfEvaluationManagementController } from './performance-evaluation/
     EvaluationLineManagementController, // 평가라인 관리 컨트롤러
     WbsEvaluationCriteriaManagementController, // WBS 평가기준 관리 컨트롤러
     WbsSelfEvaluationManagementController, // WBS 자기평가 관리 컨트롤러
+    DownwardEvaluationManagementController, // 하향평가 관리 컨트롤러
   ],
   providers: [],
   exports: [],

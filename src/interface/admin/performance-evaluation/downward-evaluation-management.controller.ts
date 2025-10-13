@@ -1,0 +1,144 @@
+import { Body, Controller, Param, Query } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+import { v4 as uuidv4 } from 'uuid';
+import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
+import {
+  UpsertPrimaryDownwardEvaluation,
+  UpsertSecondaryDownwardEvaluation,
+  SubmitDownwardEvaluation,
+  GetEvaluatorDownwardEvaluations,
+  GetDownwardEvaluationDetail,
+} from './decorators/downward-evaluation-api.decorators';
+import {
+  CreatePrimaryDownwardEvaluationBodyDto,
+  CreateSecondaryDownwardEvaluationBodyDto,
+  SubmitDownwardEvaluationDto,
+  DownwardEvaluationFilterDto,
+  DownwardEvaluationResponseDto,
+  DownwardEvaluationListResponseDto,
+  DownwardEvaluationDetailResponseDto,
+} from './dto/downward-evaluation.dto';
+
+/**
+ * 하향평가 관리 컨트롤러
+ *
+ * 하향평가의 저장(생성/수정), 제출, 조회 기능을 제공합니다.
+ */
+@ApiTags('C-2. 관리자 - 성과평가 - 하향평가')
+@Controller('admin/performance-evaluation/downward-evaluations')
+export class DownwardEvaluationManagementController {
+  constructor(
+    private readonly performanceEvaluationService: PerformanceEvaluationService,
+  ) {}
+
+  /**
+   * 1차 하향평가 저장 (Upsert: 없으면 생성, 있으면 수정)
+   */
+  @UpsertPrimaryDownwardEvaluation()
+  async upsertPrimaryDownwardEvaluation(
+    @Param('evaluateeId') evaluateeId: string,
+    @Param('periodId') periodId: string,
+    @Param('projectId') projectId: string,
+    @Body() dto: CreatePrimaryDownwardEvaluationBodyDto,
+  ): Promise<DownwardEvaluationResponseDto> {
+    const actionBy = dto.createdBy || uuidv4();
+    const evaluatorId = dto.evaluatorId || uuidv4(); // TODO: 추후 요청자 ID로 변경
+    const evaluationId =
+      await this.performanceEvaluationService.하향평가를_저장한다({
+        evaluatorId,
+        evaluateeId,
+        periodId,
+        projectId,
+        selfEvaluationId: dto.selfEvaluationId,
+        evaluationType: 'primary',
+        downwardEvaluationContent: dto.downwardEvaluationContent,
+        downwardEvaluationScore: dto.downwardEvaluationScore,
+        actionBy,
+      });
+
+    return {
+      id: evaluationId,
+      message: '1차 하향평가가 성공적으로 저장되었습니다.',
+    };
+  }
+
+  /**
+   * 2차 하향평가 저장 (Upsert: 없으면 생성, 있으면 수정)
+   */
+  @UpsertSecondaryDownwardEvaluation()
+  async upsertSecondaryDownwardEvaluation(
+    @Param('evaluateeId') evaluateeId: string,
+    @Param('periodId') periodId: string,
+    @Param('projectId') projectId: string,
+    @Body() dto: CreateSecondaryDownwardEvaluationBodyDto,
+  ): Promise<DownwardEvaluationResponseDto> {
+    const actionBy = dto.createdBy || uuidv4();
+    const evaluatorId = dto.evaluatorId || uuidv4(); // TODO: 추후 요청자 ID로 변경
+    const evaluationId =
+      await this.performanceEvaluationService.하향평가를_저장한다({
+        evaluatorId,
+        evaluateeId,
+        periodId,
+        projectId,
+        selfEvaluationId: dto.selfEvaluationId,
+        evaluationType: 'secondary',
+        downwardEvaluationContent: dto.downwardEvaluationContent,
+        downwardEvaluationScore: dto.downwardEvaluationScore,
+        actionBy,
+      });
+
+    return {
+      id: evaluationId,
+      message: '2차 하향평가가 성공적으로 저장되었습니다.',
+    };
+  }
+
+  /**
+   * 하향평가 제출
+   */
+  @SubmitDownwardEvaluation()
+  async submitDownwardEvaluation(
+    @Param('id') id: string,
+    @Body() submitDto: SubmitDownwardEvaluationDto,
+  ): Promise<void> {
+    const submittedBy = submitDto.submittedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    await this.performanceEvaluationService.하향평가를_제출한다({
+      evaluationId: id,
+      submittedBy,
+    });
+  }
+
+  /**
+   * 평가자의 하향평가 목록 조회
+   */
+  @GetEvaluatorDownwardEvaluations()
+  async getEvaluatorDownwardEvaluations(
+    @Param('evaluatorId') evaluatorId: string,
+    @Query() filter: DownwardEvaluationFilterDto,
+  ): Promise<DownwardEvaluationListResponseDto> {
+    return await this.performanceEvaluationService.하향평가_목록을_조회한다({
+      evaluatorId,
+      evaluateeId: filter.evaluateeId,
+      periodId: filter.periodId,
+      projectId: filter.projectId,
+      evaluationType: filter.evaluationType,
+      isCompleted: filter.isCompleted,
+      page: filter.page || 1,
+      limit: filter.limit || 10,
+    });
+  }
+
+  /**
+   * 하향평가 상세정보 조회
+   */
+  @GetDownwardEvaluationDetail()
+  async getDownwardEvaluationDetail(
+    @Param('id') id: string,
+  ): Promise<DownwardEvaluationDetailResponseDto> {
+    return await this.performanceEvaluationService.하향평가_상세정보를_조회한다(
+      {
+        evaluationId: id,
+      },
+    );
+  }
+}

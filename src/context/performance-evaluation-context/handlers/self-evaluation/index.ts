@@ -10,6 +10,11 @@ export {
 } from './update-wbs-self-evaluation.handler';
 
 export {
+  UpsertWbsSelfEvaluationCommand,
+  UpsertWbsSelfEvaluationHandler,
+} from './upsert-wbs-self-evaluation.handler';
+
+export {
   SubmitWbsSelfEvaluationCommand,
   SubmitWbsSelfEvaluationHandler,
 } from './submit-wbs-self-evaluation.handler';
@@ -24,4 +29,3 @@ export {
   GetWbsSelfEvaluationDetailQuery,
   GetWbsSelfEvaluationDetailHandler,
 } from './get-wbs-self-evaluation-detail.handler';
-
