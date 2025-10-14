@@ -514,20 +514,23 @@ export class EvaluationCriteriaManagementService
     }
   }
 
-  async WBS_평가기준을_삭제한다(id: string, deletedBy: string): Promise<void> {
+  async WBS_평가기준을_삭제한다(
+    id: string,
+    deletedBy: string,
+  ): Promise<boolean> {
     const command = new DeleteWbsEvaluationCriteriaCommand(id, deletedBy);
-    await this.commandBus.execute(command);
+    return await this.commandBus.execute(command);
   }
 
   async WBS_항목의_평가기준을_전체삭제한다(
     wbsItemId: string,
     deletedBy: string,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const command = new DeleteWbsItemEvaluationCriteriaCommand(
       wbsItemId,
       deletedBy,
     );
-    await this.commandBus.execute(command);
+    return await this.commandBus.execute(command);
   }
 
   async WBS_평가기준_목록을_조회한다(
@@ -537,9 +540,22 @@ export class EvaluationCriteriaManagementService
     return await this.queryBus.execute(query);
   }
 
-  async WBS_평가기준_상세를_조회한다(
-    id: string,
-  ): Promise<WbsEvaluationCriteriaDto | null> {
+  async WBS_평가기준_상세를_조회한다(id: string): Promise<{
+    id: string;
+    criteria: string;
+    createdAt: Date;
+    updatedAt: Date;
+    wbsItem: {
+      id: string;
+      wbsCode: string;
+      title: string;
+      status: string;
+      level: number;
+      startDate: Date;
+      endDate: Date;
+      progressPercentage: string;
+    } | null;
+  } | null> {
     const query = new GetWbsEvaluationCriteriaDetailQuery(id);
     return await this.queryBus.execute(query);
   }

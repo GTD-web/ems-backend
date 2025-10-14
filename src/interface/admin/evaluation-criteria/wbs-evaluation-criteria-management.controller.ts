@@ -13,6 +13,7 @@ import {
 import {
   UpsertWbsEvaluationCriteriaBodyDto,
   WbsEvaluationCriteriaDto,
+  WbsEvaluationCriteriaDetailDto,
   WbsEvaluationCriteriaFilterDto,
   WbsItemEvaluationCriteriaResponseDto,
 } from './dto/wbs-evaluation-criteria.dto';
@@ -51,7 +52,7 @@ export class WbsEvaluationCriteriaManagementController {
   @GetWbsEvaluationCriteriaDetail()
   async getWbsEvaluationCriteriaDetail(
     @Param('id') id: string,
-  ): Promise<WbsEvaluationCriteriaDto | null> {
+  ): Promise<WbsEvaluationCriteriaDetailDto | null> {
     return await this.evaluationCriteriaManagementService.WBS_평가기준_상세를_조회한다(
       id,
     );
@@ -96,12 +97,16 @@ export class WbsEvaluationCriteriaManagementController {
    * WBS 평가기준 삭제
    */
   @DeleteWbsEvaluationCriteria()
-  async deleteWbsEvaluationCriteria(@Param('id') id: string): Promise<void> {
+  async deleteWbsEvaluationCriteria(
+    @Param('id') id: string,
+  ): Promise<{ success: boolean }> {
     const deletedBy = 'system'; // TODO: 실제 사용자 ID로 변경
-    await this.evaluationCriteriaManagementService.WBS_평가기준을_삭제한다(
-      id,
-      deletedBy,
-    );
+    const success =
+      await this.evaluationCriteriaManagementService.WBS_평가기준을_삭제한다(
+        id,
+        deletedBy,
+      );
+    return { success };
   }
 
   /**
@@ -110,11 +115,13 @@ export class WbsEvaluationCriteriaManagementController {
   @DeleteWbsItemEvaluationCriteria()
   async deleteWbsItemEvaluationCriteria(
     @Param('wbsItemId') wbsItemId: string,
-  ): Promise<void> {
+  ): Promise<{ success: boolean }> {
     const deletedBy = 'system'; // TODO: 실제 사용자 ID로 변경
-    await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(
-      wbsItemId,
-      deletedBy,
-    );
+    const success =
+      await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(
+        wbsItemId,
+        deletedBy,
+      );
+    return { success };
   }
 }

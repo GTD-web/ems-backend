@@ -17,7 +17,7 @@ export class DeleteWbsEvaluationCriteriaCommand {
  */
 @CommandHandler(DeleteWbsEvaluationCriteriaCommand)
 export class DeleteWbsEvaluationCriteriaHandler
-  implements ICommandHandler<DeleteWbsEvaluationCriteriaCommand>
+  implements ICommandHandler<DeleteWbsEvaluationCriteriaCommand, boolean>
 {
   private readonly logger = new Logger(DeleteWbsEvaluationCriteriaHandler.name);
 
@@ -25,7 +25,7 @@ export class DeleteWbsEvaluationCriteriaHandler
     private readonly wbsEvaluationCriteriaService: WbsEvaluationCriteriaService,
   ) {}
 
-  async execute(command: DeleteWbsEvaluationCriteriaCommand) {
+  async execute(command: DeleteWbsEvaluationCriteriaCommand): Promise<boolean> {
     const { id, deletedBy } = command;
 
     this.logger.log(`WBS 평가기준 삭제 시작 - ID: ${id}, 삭제자: ${deletedBy}`);
@@ -34,6 +34,8 @@ export class DeleteWbsEvaluationCriteriaHandler
       await this.wbsEvaluationCriteriaService.삭제한다(id, deletedBy);
 
       this.logger.log(`WBS 평가기준 삭제 완료 - ID: ${id}`);
+
+      return true;
     } catch (error) {
       this.logger.error(`WBS 평가기준 삭제 실패 - ID: ${id}`, error.stack);
       throw error;

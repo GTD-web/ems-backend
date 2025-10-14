@@ -300,7 +300,7 @@ export interface IEvaluationCriteriaManagementService {
   /**
    * WBS 평가기준을 삭제한다
    */
-  WBS_평가기준을_삭제한다(id: string, deletedBy: string): Promise<void>;
+  WBS_평가기준을_삭제한다(id: string, deletedBy: string): Promise<boolean>;
 
   /**
    * WBS 항목의 모든 평가기준을 삭제한다
@@ -308,7 +308,7 @@ export interface IEvaluationCriteriaManagementService {
   WBS_항목의_평가기준을_전체삭제한다(
     wbsItemId: string,
     deletedBy: string,
-  ): Promise<void>;
+  ): Promise<boolean>;
 
   /**
    * WBS 평가기준 목록을 조회한다
@@ -318,11 +318,24 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<WbsEvaluationCriteriaDto[]>;
 
   /**
-   * WBS 평가기준 상세를 조회한다
+   * WBS 평가기준 상세를 조회한다 (WBS 항목 정보 포함)
    */
-  WBS_평가기준_상세를_조회한다(
-    id: string,
-  ): Promise<WbsEvaluationCriteriaDto | null>;
+  WBS_평가기준_상세를_조회한다(id: string): Promise<{
+    id: string;
+    criteria: string;
+    createdAt: Date;
+    updatedAt: Date;
+    wbsItem: {
+      id: string;
+      wbsCode: string;
+      title: string;
+      status: string;
+      level: number;
+      startDate: Date;
+      endDate: Date;
+      progressPercentage: string;
+    } | null;
+  } | null>;
 
   /**
    * 특정 WBS 항목의 평가기준을 조회한다

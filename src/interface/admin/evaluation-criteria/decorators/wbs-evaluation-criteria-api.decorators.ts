@@ -27,26 +27,53 @@ export const GetWbsEvaluationCriteriaList = () =>
     Get(),
     ApiOperation({
       summary: 'WBS 평가기준 목록 조회',
-      description: '필터 조건에 따라 WBS 평가기준 목록을 조회합니다.',
+      description: `필터 조건에 따라 WBS 평가기준 목록을 조회합니다.
+
+**필터 조건:**
+- wbsItemId: 특정 WBS 항목의 평가기준만 필터링
+- criteriaSearch: 평가기준 내용 부분 검색 (LIKE 검색)
+- criteriaExact: 평가기준 내용 완전 일치 검색
+- 필터 조건을 조합하여 사용 가능
+
+**응답 특징:**
+- 삭제된 평가기준은 목록에 포함되지 않음
+- 빈 배열 반환 가능 (평가기준이 없는 경우)
+- 생성일시 기준 내림차순 정렬
+
+**테스트 케이스:**
+- 전체 조회: 모든 WBS 평가기준 조회 성공
+- 빈 목록: 평가기준이 없는 경우 빈 배열 반환
+- wbsItemId 필터: 특정 WBS 항목의 평가기준만 필터링하여 조회
+- criteriaSearch 필터: 평가기준 내용 부분 검색으로 필터링
+- criteriaExact 필터: 평가기준 내용 완전 일치 검색으로 필터링
+- 복합 필터: 여러 필터 조건 동시 적용 가능
+- 삭제된 평가기준 제외: 삭제된 평가기준은 목록에 포함되지 않음
+- 대량 조회: 많은 수의 평가기준을 조회 가능
+- 잘못된 UUID: 잘못된 UUID 형식의 wbsItemId로 조회 시 400 또는 500 에러
+- 존재하지 않는 wbsItemId: 존재하지 않는 wbsItemId로 조회 시 빈 배열 반환
+- 빈 문자열 criteriaSearch: 모든 평가기준 반환
+- 빈 문자열 criteriaExact: 빈 배열 또는 빈 기준만 반환`,
     }),
     ApiQuery({
       name: 'wbsItemId',
-      description: 'WBS 항목 ID',
+      description: 'WBS 항목 ID (선택사항)',
       required: false,
       type: String,
       example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiQuery({
       name: 'criteriaSearch',
-      description: '기준 내용 검색 (부분 일치)',
+      description: '기준 내용 검색 (부분 일치, 선택사항)',
       required: false,
       type: String,
+      example: '코드',
     }),
     ApiQuery({
       name: 'criteriaExact',
-      description: '기준 내용 완전 일치',
+      description: '기준 내용 완전 일치 (선택사항)',
       required: false,
       type: String,
+      example: '코드 품질',
     }),
     ApiResponse({
       status: 200,
@@ -63,6 +90,15 @@ export const GetWbsEvaluationCriteriaList = () =>
             updatedAt: { type: 'string', format: 'date-time' },
           },
         },
+        example: [
+          {
+            id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+            wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+            criteria: '코드 품질 및 성능 최적화',
+            createdAt: '2024-01-15T10:30:00.000Z',
+            updatedAt: '2024-01-15T10:30:00.000Z',
+          },
+        ],
       },
     }),
     ApiResponse({
@@ -79,7 +115,30 @@ export const GetWbsEvaluationCriteriaDetail = () =>
     Get(':id'),
     ApiOperation({
       summary: 'WBS 평가기준 상세 조회',
-      description: '특정 WBS 평가기준의 상세 정보를 조회합니다.',
+      description: `특정 WBS 평가기준의 상세 정보를 조회합니다.
+
+**동작 방식:**
+- 평가기준 ID로 상세 정보 조회
+- WBS 항목 정보를 함께 반환 (LEFT JOIN)
+- WBS 항목이 삭제된 경우 wbsItem은 null
+- 삭제된 평가기준 조회 시 빈 객체 반환
+
+**테스트 케이스:**
+- 유효한 ID 조회: 평가기준 상세 정보 성공적으로 조회
+- WBS 항목 정보 포함: wbsItem 객체가 응답에 포함되며 모든 필드 존재
+- 필드 정확성: WBS 항목 정보가 DB 데이터와 일치
+- 필수 필드 존재: id, criteria, createdAt, updatedAt, wbsItem 필드 모두 존재
+- 필드 null 아님: 모든 반환 데이터가 null이 아님 (wbsItem 제외)
+- 여러 평가기준 조회: 각각의 평가기준을 올바르게 구분하여 조회
+- WBS 항목 삭제: WBS 항목이 삭제된 경우 wbsItem이 null로 반환
+- 존재하지 않는 ID: 존재하지 않는 ID로 조회 시 빈 객체 반환
+- 잘못된 UUID: 잘못된 UUID 형식 시 400 또는 500 에러
+- 삭제된 평가기준: 삭제된 평가기준 조회 시 빈 객체 반환
+- 생성-조회-수정-조회: 전체 라이프사이클 검증
+- 생성-조회-삭제-조회: 삭제 후 빈 객체 반환 확인
+- 목록-상세 연동: 목록조회 결과로 상세조회 가능
+- 데이터 정합성: 생성 시 데이터와 상세조회 데이터 일치
+- DB 일치: WBS 항목 정보가 실제 DB 데이터와 일치`,
     }),
     ApiParam({
       name: 'id',
@@ -95,10 +154,39 @@ export const GetWbsEvaluationCriteriaDetail = () =>
         type: 'object',
         properties: {
           id: { type: 'string', format: 'uuid' },
-          wbsItemId: { type: 'string', format: 'uuid' },
           criteria: { type: 'string' },
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
+          wbsItem: {
+            type: 'object',
+            nullable: true,
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              wbsCode: { type: 'string' },
+              title: { type: 'string' },
+              status: { type: 'string' },
+              level: { type: 'number' },
+              startDate: { type: 'string', format: 'date-time' },
+              endDate: { type: 'string', format: 'date-time' },
+              progressPercentage: { type: 'string' },
+            },
+          },
+        },
+        example: {
+          id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+          criteria: '코드 품질 및 성능 최적화',
+          createdAt: '2024-01-15T10:30:00.000Z',
+          updatedAt: '2024-01-15T10:30:00.000Z',
+          wbsItem: {
+            id: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+            wbsCode: 'WBS-001',
+            title: '백엔드 개발',
+            status: 'IN_PROGRESS',
+            level: 2,
+            startDate: '2024-01-01T00:00:00.000Z',
+            endDate: '2024-03-31T00:00:00.000Z',
+            progressPercentage: '65.5',
+          },
         },
       },
     }),
@@ -116,7 +204,26 @@ export const GetWbsItemEvaluationCriteria = () =>
     Get('wbs-item/:wbsItemId'),
     ApiOperation({
       summary: 'WBS 항목별 평가기준 조회',
-      description: '특정 WBS 항목의 모든 평가기준을 조회합니다.',
+      description: `특정 WBS 항목의 평가기준을 조회합니다.
+
+**동작 방식:**
+- WBS 항목당 하나의 평가기준만 존재
+- 평가기준이 없는 경우 빈 배열 반환
+- 삭제된 평가기준은 조회에서 제외
+- 응답에 항상 wbsItemId 포함
+
+**테스트 케이스:**
+- 평가기준 조회: 특정 WBS 항목의 평가기준을 성공적으로 조회
+- 빈 배열 반환: 평가기준이 없는 WBS 항목 조회 시 빈 배열 반환
+- 삭제된 평가기준 제외: 삭제된 평가기준은 조회 결과에 포함되지 않음
+- 단일 평가기준: WBS 항목당 하나의 평가기준만 조회됨 (최신 것)
+- 독립성 보장: 여러 WBS 항목의 평가기준은 서로 독립적으로 관리
+- wbsItemId 포함: 응답에 항상 wbsItemId가 포함됨
+- 잘못된 UUID: 잘못된 UUID 형식의 wbsItemId로 조회 시 400 또는 500 에러
+- 존재하지 않는 wbsItemId: 존재하지 않는 wbsItemId로 조회 시 빈 배열 반환
+- 빈 문자열 wbsItemId: 빈 문자열로 조회 시 404 또는 500 에러
+- 생성-조회-수정-조회: 전체 라이프사이클 테스트
+- 생성-조회-삭제-조회: 삭제 후 빈 배열 반환 확인`,
     }),
     ApiParam({
       name: 'wbsItemId',
@@ -131,9 +238,14 @@ export const GetWbsItemEvaluationCriteria = () =>
       schema: {
         type: 'object',
         properties: {
-          wbsItemId: { type: 'string', format: 'uuid' },
+          wbsItemId: {
+            type: 'string',
+            format: 'uuid',
+            description: '조회한 WBS 항목 ID',
+          },
           criteria: {
             type: 'array',
+            description: '평가기준 목록 (최대 1개)',
             items: {
               type: 'object',
               properties: {
@@ -146,11 +258,27 @@ export const GetWbsItemEvaluationCriteria = () =>
             },
           },
         },
+        example: {
+          wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+          criteria: [
+            {
+              id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+              wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+              criteria: '코드 품질 및 성능 최적화',
+              createdAt: '2024-01-15T10:30:00.000Z',
+              updatedAt: '2024-01-15T10:30:00.000Z',
+            },
+          ],
+        },
       },
     }),
     ApiResponse({
-      status: 404,
-      description: 'WBS 항목을 찾을 수 없습니다.',
+      status: 400,
+      description: '잘못된 UUID 형식입니다.',
+    }),
+    ApiResponse({
+      status: 500,
+      description: 'DB 레벨 UUID 검증 실패 또는 서버 내부 오류입니다.',
     }),
   );
 
@@ -365,7 +493,22 @@ export const DeleteWbsEvaluationCriteria = () =>
     Delete(':id'),
     ApiOperation({
       summary: 'WBS 평가기준 삭제',
-      description: '기존 WBS 평가기준을 삭제합니다.',
+      description: `WBS 평가기준을 삭제합니다. Soft Delete 방식으로 삭제됩니다.
+
+**동작 방식:**
+- 평가기준을 Soft Delete 처리 (deletedAt 설정)
+- 삭제된 평가기준은 목록 조회에서 제외됨
+- 삭제된 평가기준은 상세 조회 시 null 또는 빈 객체 반환
+- 이미 삭제된 평가기준을 다시 삭제해도 에러가 발생하지 않음
+
+**테스트 케이스:**
+- 유효한 평가기준 ID로 삭제: 평가기준이 성공적으로 삭제됨
+- DB soft delete 확인: deletedAt이 설정되고 데이터는 유지됨
+- 목록 조회 제외: 삭제된 평가기준은 목록에서 보이지 않음
+- 상세 조회: 삭제된 평가기준은 null 또는 빈 객체 반환
+- 중복 삭제 허용: 이미 삭제된 평가기준을 다시 삭제해도 404 또는 200 반환
+- 존재하지 않는 ID: 404 또는 500 에러 반환
+- 잘못된 UUID 형식: 400 또는 500 에러 반환`,
     }),
     ApiParam({
       name: 'id',
@@ -377,6 +520,16 @@ export const DeleteWbsEvaluationCriteria = () =>
     ApiResponse({
       status: 200,
       description: 'WBS 평가기준이 성공적으로 삭제되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          success: {
+            type: 'boolean',
+            example: true,
+            description: '삭제 성공 여부',
+          },
+        },
+      },
     }),
     ApiResponse({
       status: 404,
@@ -392,7 +545,28 @@ export const DeleteWbsItemEvaluationCriteria = () =>
     Delete('wbs-item/:wbsItemId'),
     ApiOperation({
       summary: 'WBS 항목 평가기준 전체 삭제',
-      description: '특정 WBS 항목의 모든 평가기준을 삭제합니다.',
+      description: `특정 WBS 항목의 평가기준을 삭제합니다. WBS 항목당 하나의 평가기준만 존재하므로 해당 평가기준을 삭제합니다.
+
+**동작 방식:**
+- WBS 항목에 연결된 평가기준을 Soft Delete 처리
+- 평가기준이 없는 WBS 항목에 대해서도 에러 없이 처리
+- 다른 WBS 항목의 평가기준은 영향받지 않음
+
+**사용 사례:**
+- WBS 항목 재설정 시 기존 평가기준 제거
+- WBS 항목 삭제 전 평가기준 정리
+- 평가기준 초기화
+
+**테스트 케이스:**
+- WBS 항목 평가기준 삭제: 평가기준이 성공적으로 삭제됨
+- DB soft delete 확인: deletedAt이 설정되고 활성 평가기준이 없음
+- 목록 조회 결과: 삭제 후 빈 배열 반환
+- 평가기준 없는 경우: 평가기준이 없어도 200 또는 404 반환
+- 중복 삭제 허용: 이미 삭제된 평가기준을 다시 삭제해도 에러 없음
+- 다른 WBS 항목 보호: 다른 WBS 항목의 평가기준은 영향받지 않음
+- 존재하지 않는 WBS 항목: 200 또는 404 반환
+- 잘못된 UUID 형식: 400 또는 500 에러 반환
+- 재생성 가능: 삭제 후 동일한 WBS 항목에 새 평가기준 생성 가능`,
     }),
     ApiParam({
       name: 'wbsItemId',
@@ -403,7 +577,17 @@ export const DeleteWbsItemEvaluationCriteria = () =>
     }),
     ApiResponse({
       status: 200,
-      description: 'WBS 항목의 모든 평가기준이 성공적으로 삭제되었습니다.',
+      description: 'WBS 항목의 평가기준이 성공적으로 삭제되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          success: {
+            type: 'boolean',
+            example: true,
+            description: '삭제 성공 여부',
+          },
+        },
+      },
     }),
     ApiResponse({
       status: 404,

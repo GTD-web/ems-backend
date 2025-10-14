@@ -17,7 +17,7 @@ export class DeleteWbsItemEvaluationCriteriaCommand {
  */
 @CommandHandler(DeleteWbsItemEvaluationCriteriaCommand)
 export class DeleteWbsItemEvaluationCriteriaHandler
-  implements ICommandHandler<DeleteWbsItemEvaluationCriteriaCommand>
+  implements ICommandHandler<DeleteWbsItemEvaluationCriteriaCommand, boolean>
 {
   private readonly logger = new Logger(
     DeleteWbsItemEvaluationCriteriaHandler.name,
@@ -27,7 +27,9 @@ export class DeleteWbsItemEvaluationCriteriaHandler
     private readonly wbsEvaluationCriteriaService: WbsEvaluationCriteriaService,
   ) {}
 
-  async execute(command: DeleteWbsItemEvaluationCriteriaCommand) {
+  async execute(
+    command: DeleteWbsItemEvaluationCriteriaCommand,
+  ): Promise<boolean> {
     const { wbsItemId, deletedBy } = command;
 
     this.logger.log(
@@ -43,6 +45,8 @@ export class DeleteWbsItemEvaluationCriteriaHandler
       this.logger.log(
         `WBS 항목 평가기준 전체 삭제 완료 - WBS 항목 ID: ${wbsItemId}`,
       );
+
+      return true;
     } catch (error) {
       this.logger.error(
         `WBS 항목 평가기준 전체 삭제 실패 - WBS 항목 ID: ${wbsItemId}`,
