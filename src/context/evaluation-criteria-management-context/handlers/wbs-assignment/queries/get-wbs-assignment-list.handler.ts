@@ -89,27 +89,27 @@ export class GetWbsAssignmentListHandler
       .leftJoinAndSelect(
         Employee,
         'employee',
-        '"employee"."id"::varchar = "assignment"."employeeId"::varchar AND "employee"."deletedAt" IS NULL',
+        'employee.id = assignment.employeeId AND employee.deletedAt IS NULL',
       )
       .leftJoinAndSelect(
         Department,
         'department',
-        '"department"."externalId"::varchar = "employee"."departmentId"::varchar AND "department"."deletedAt" IS NULL',
+        '"department"."externalId" = "employee"."departmentId" AND "department"."deletedAt" IS NULL',
       )
       .leftJoinAndSelect(
         Employee,
         'assignedBy',
-        '"assignedBy"."id"::varchar = "assignment"."assignedBy"::varchar AND "assignedBy"."deletedAt" IS NULL',
+        'assignedBy.id = assignment.assignedBy AND assignedBy.deletedAt IS NULL',
       )
       .leftJoinAndSelect(
         Project,
         'project',
-        '"project"."id"::varchar = "assignment"."projectId"::varchar AND "project"."deletedAt" IS NULL',
+        'project.id = assignment.projectId AND project.deletedAt IS NULL',
       )
       .leftJoinAndSelect(
         WbsItem,
         'wbsItem',
-        '"wbsItem"."id"::varchar = "assignment"."wbsItemId"::varchar AND "wbsItem"."deletedAt" IS NULL',
+        'wbsItem.id = assignment.wbsItemId AND wbsItem.deletedAt IS NULL',
       )
       .skip(offset)
       .take(currentLimit)

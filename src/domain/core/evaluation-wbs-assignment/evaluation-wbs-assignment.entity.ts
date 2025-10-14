@@ -22,29 +22,25 @@ export class EvaluationWbsAssignment
   implements IEvaluationWbsAssignment
 {
   @Column({
-    type: 'varchar',
-    length: 255,
+    type: 'uuid',
     comment: '평가 기간 ID',
   })
   periodId: string;
 
   @Column({
-    type: 'varchar',
-    length: 255,
+    type: 'uuid',
     comment: '직원 ID',
   })
   employeeId: string;
 
   @Column({
-    type: 'varchar',
-    length: 255,
+    type: 'uuid',
     comment: '프로젝트 ID',
   })
   projectId: string;
 
   @Column({
-    type: 'varchar',
-    length: 255,
+    type: 'uuid',
     comment: 'WBS 항목 ID',
   })
   wbsItemId: string;
@@ -56,8 +52,7 @@ export class EvaluationWbsAssignment
   assignedDate: Date;
 
   @Column({
-    type: 'varchar',
-    length: 255,
+    type: 'uuid',
     comment: '할당자 ID',
   })
   assignedBy: string;

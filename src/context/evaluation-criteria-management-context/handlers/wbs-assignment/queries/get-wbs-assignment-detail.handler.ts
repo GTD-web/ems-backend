@@ -118,7 +118,7 @@ export class GetWbsAssignmentDetailHandler
       .leftJoin(
         Employee,
         'employee',
-        '"employee"."id"::varchar = "assignment"."employeeId"::varchar AND "employee"."deletedAt" IS NULL',
+        'employee.id = assignment.employeeId AND employee.deletedAt IS NULL',
       )
       .leftJoin(
         Department,
@@ -128,22 +128,22 @@ export class GetWbsAssignmentDetailHandler
       .leftJoin(
         Project,
         'project',
-        '"project"."id"::varchar = "assignment"."projectId"::varchar AND "project"."deletedAt" IS NULL',
+        'project.id = assignment.projectId AND project.deletedAt IS NULL',
       )
       .leftJoin(
         WbsItem,
         'wbsItem',
-        '"wbsItem"."id"::varchar = "assignment"."wbsItemId"::varchar AND "wbsItem"."deletedAt" IS NULL',
+        'wbsItem.id = assignment.wbsItemId AND wbsItem.deletedAt IS NULL',
       )
       .leftJoin(
         EvaluationPeriod,
         'period',
-        '"period"."id"::varchar = "assignment"."periodId"::varchar AND "period"."deletedAt" IS NULL',
+        'period.id = assignment.periodId AND period.deletedAt IS NULL',
       )
       .leftJoin(
         Employee,
         'assignedByEmployee',
-        '"assignedByEmployee"."id"::varchar = "assignment"."assignedBy"::varchar AND "assignedByEmployee"."deletedAt" IS NULL',
+        'assignedByEmployee.id = assignment.assignedBy AND assignedByEmployee.deletedAt IS NULL',
       )
       .select([
         // 할당 정보

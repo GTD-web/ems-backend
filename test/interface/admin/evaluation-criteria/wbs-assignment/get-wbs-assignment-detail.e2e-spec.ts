@@ -134,7 +134,9 @@ describe('WBS 할당 상세 조회 (GET /admin/evaluation-criteria/wbs-assignmen
 
   // 헬퍼 함수: 활성 프로젝트 선택
   const getActiveProject = () => {
-    return testData.projects.find((p: any) => p.isActive) || testData.projects[0];
+    return (
+      testData.projects.find((p: any) => p.isActive) || testData.projects[0]
+    );
   };
 
   describe('성공 케이스', () => {
@@ -547,4 +549,3 @@ describe('WBS 할당 상세 조회 (GET /admin/evaluation-criteria/wbs-assignmen
     });
   });
 });
-

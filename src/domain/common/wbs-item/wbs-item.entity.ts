@@ -65,23 +65,20 @@ export class WbsItem extends BaseEntity<WbsItemDto> implements IWbsItem {
   progressPercentage?: number;
 
   @Column({
-    type: 'varchar',
-    length: 255,
+    type: 'uuid',
     nullable: true,
     comment: '담당자 ID',
   })
   assignedToId?: string;
 
   @Column({
-    type: 'varchar',
-    length: 255,
+    type: 'uuid',
     comment: '프로젝트 ID',
   })
   projectId: string;
 
   @Column({
-    type: 'varchar',
-    length: 255,
+    type: 'uuid',
     nullable: true,
     comment: '상위 WBS 항목 ID',
   })

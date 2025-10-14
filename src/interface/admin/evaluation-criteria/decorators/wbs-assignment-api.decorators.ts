@@ -400,14 +400,24 @@ export const GetWbsAssignmentDetail = () =>
 - 관련 정보 포함: 직원, 부서, 프로젝트, WBS 항목, 평가기간, 할당자 정보
 - 취소되지 않은 할당만 조회
 
-**반환 정보:**
-- 할당 기본 정보: id, periodId, employeeId, projectId, wbsItemId, assignedDate 등
-- 직원 정보: name, employeeNumber, email, departmentId, status
-- 부서 정보: name, code
-- 프로젝트 정보: name, code, status, startDate, endDate
-- WBS 항목 정보: wbsCode, title, status, level, startDate, endDate, progressPercentage
-- 평가기간 정보: name, startDate, endDate, status
-- 할당자 정보: name, employeeNumber`,
+**테스트 케이스:**
+- 기본 상세 조회: WBS 할당 상세 정보를 성공적으로 조회
+- 연관 직원 정보: 연관된 직원 정보가 포함되어 조회됨
+- 연관 부서 정보: 연관된 부서 정보가 포함되어 조회됨
+- 연관 프로젝트 정보: 연관된 프로젝트 정보가 포함되어 조회됨
+- 연관 WBS 항목 정보: 연관된 WBS 항목 정보가 포함되어 조회됨
+- 연관 평가기간 정보: 연관된 평가기간 정보가 포함되어 조회됨
+- 연관 할당자 정보: 연관된 할당자 정보가 포함되어 조회됨
+- 존재하지 않는 조합: 존재하지 않는 조합으로 조회 시 404 에러
+- 취소된 할당 제외: 취소된 WBS 할당은 조회되지 않음 (404)
+- employeeId 누락: employeeId 누락 시 400 에러
+- wbsItemId 누락: wbsItemId 누락 시 400 에러
+- projectId 누락: projectId 누락 시 400 에러
+- periodId 누락: periodId 누락 시 400 에러
+- 잘못된 UUID - employeeId: 잘못된 UUID 형식의 employeeId 전달 시 400 에러
+- 잘못된 UUID - wbsItemId: 잘못된 UUID 형식의 wbsItemId 전달 시 400 에러
+- 잘못된 UUID - projectId: 잘못된 UUID 형식의 projectId 전달 시 400 에러
+- 잘못된 UUID - periodId: 잘못된 UUID 형식의 periodId 전달 시 400 에러`,
     }),
     ApiQuery({
       name: 'employeeId',
