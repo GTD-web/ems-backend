@@ -23,8 +23,9 @@ export class CreateWbsEvaluationCriteriaDto {
 
 /**
  * WBS 평가기준 저장 (Upsert) DTO
- * - 평가기준 ID가 없으면 생성
- * - 평가기준 ID가 있으면 수정
+ * - wbsItemId에 평가기준이 없으면 생성
+ * - wbsItemId에 평가기준이 있으면 수정
+ * - WBS 항목당 하나의 평가기준만 존재
  */
 export class UpsertWbsEvaluationCriteriaBodyDto {
   @ApiProperty({
@@ -33,14 +34,6 @@ export class UpsertWbsEvaluationCriteriaBodyDto {
   })
   @IsString()
   criteria: string;
-
-  @ApiPropertyOptional({
-    description: '평가기준 ID (선택사항 - 있으면 수정, 없으면 생성)',
-    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
-  })
-  @IsOptional()
-  @IsUUID()
-  id?: string;
 
   @ApiPropertyOptional({
     description: '생성/수정자 ID (선택사항)',

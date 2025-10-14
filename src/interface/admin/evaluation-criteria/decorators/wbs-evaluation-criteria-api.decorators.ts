@@ -156,8 +156,8 @@ export const GetWbsItemEvaluationCriteria = () =>
 
 /**
  * WBS 평가기준 저장 (Upsert) API 데코레이터
- * - 평가기준 ID가 Body에 없으면 생성
- * - 평가기준 ID가 Body에 있으면 수정
+ * - WBS 항목당 하나의 평가기준만 존재
+ * - wbsItemId를 기준으로 자동으로 생성/수정 결정
  */
 export const UpsertWbsEvaluationCriteria = () =>
   applyDecorators(
@@ -165,15 +165,39 @@ export const UpsertWbsEvaluationCriteria = () =>
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: 'WBS 평가기준 저장 (Upsert)',
-      description: `WBS 평가기준을 저장합니다. 평가기준 ID가 없으면 생성하고, 있으면 수정합니다.
+      description: `**중요**: WBS 항목의 평가기준을 생성하거나 수정합니다. WBS 항목당 하나의 평가기준만 존재하므로, wbsItemId를 기준으로 자동으로 생성/수정이 결정됩니다.
 
 **동작 방식:**
-- Body에 id가 없으면: 새로운 평가기준 생성
-- Body에 id가 있으면: 기존 평가기준 수정
+- wbsItemId에 평가기준이 없으면: 새로운 평가기준 생성
+- wbsItemId에 평가기준이 있으면: 기존 평가기준 수정
+- Body에 id 값을 보낼 필요 없음 (내부적으로 wbsItemId로 조회)
 
 **사용 사례:**
-- 평가기준 최초 작성 시: id 없이 전송
-- 평가기준 수정 시: 기존 id와 함께 전송`,
+- 평가기준 최초 작성 시: criteria만 전송
+- 평가기준 수정 시: criteria만 전송 (시스템이 자동으로 기존 평가기준 찾아 수정)
+- WBS 항목당 단일 평가기준 관리
+
+**테스트 케이스:**
+- 기본 생성: 새로운 WBS 평가기준을 성공적으로 생성
+- actionBy 없이 생성: actionBy 없이도 평가기준 생성 가능 (임시 UUID 자동 생성)
+- 같은 WBS 여러 번 저장: 동일 WBS 항목에 여러 번 저장 시 덮어쓰기됨
+- 긴 평가기준 내용: 긴 텍스트 평가기준 저장 가능
+- 다른 WBS 동일 내용: 다른 WBS 항목에 동일한 평가기준 내용 생성 가능
+- 기존 평가기준 자동 수정: 동일 wbsItemId로 재요청 시 자동으로 수정됨
+- updatedAt 갱신: 수정 시 updatedAt이 자동으로 갱신됨
+- 동일 내용 수정: 동일한 내용으로도 수정 가능
+- createdAt 불변: 수정 시 createdAt은 변경되지 않음 (10ms 이내 오차 허용)
+- 빈 문자열 허용: 시스템이 빈 문자열 criteria를 허용함
+- criteria 필드 필수: criteria 필드 누락 시 400 에러
+- 존재하지 않는 wbsItemId: 존재하지 않는 WBS 항목 ID로 요청 시 400 또는 404 에러
+- 잘못된 UUID - wbsItemId: 잘못된 UUID 형식의 wbsItemId 전달 시 400 에러
+- 잘못된 UUID - actionBy: 잘못된 UUID 형식의 actionBy로 요청 시 400 에러
+- DB 저장 확인: 생성/수정된 평가기준이 DB에 올바르게 저장됨
+- DB 수정 확인: 수정된 평가기준이 DB에 올바르게 반영됨
+- 특수 문자 지원: 특수 문자가 포함된 평가기준 저장 가능
+- 줄바꿈 지원: 줄바꿈이 포함된 평가기준 저장 가능
+- 이모지 지원: 이모지가 포함된 평가기준 저장 가능
+- 다국어 지원: 한글, 영문, 숫자가 혼합된 평가기준 저장 가능`,
     }),
     ApiParam({
       name: 'wbsItemId',
@@ -183,7 +207,8 @@ export const UpsertWbsEvaluationCriteria = () =>
       example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiBody({
-      description: 'WBS 평가기준 저장 데이터',
+      description:
+        'WBS 평가기준 저장 데이터 (wbsItemId를 기준으로 자동 생성/수정)',
       schema: {
         type: 'object',
         properties: {
@@ -191,12 +216,6 @@ export const UpsertWbsEvaluationCriteria = () =>
             type: 'string',
             description: '평가기준 내용',
             example: '코드 품질 및 성능 최적화',
-          },
-          id: {
-            type: 'string',
-            format: 'uuid',
-            description: '평가기준 ID (선택사항 - 있으면 수정, 없으면 생성)',
-            example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
           },
           actionBy: {
             type: 'string',

@@ -76,7 +76,7 @@ export class WbsEvaluationCriteriaManagementController {
   }
 
   /**
-   * WBS 평가기준 저장 (Upsert: 없으면 생성, 있으면 수정)
+   * WBS 평가기준 저장 (Upsert: wbsItemId 기준으로 자동 생성/수정)
    */
   @UpsertWbsEvaluationCriteria()
   async upsertWbsEvaluationCriteria(
@@ -89,7 +89,6 @@ export class WbsEvaluationCriteriaManagementController {
       wbsItemId,
       dto.criteria,
       actionBy,
-      dto.id,
     );
   }
 

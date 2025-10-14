@@ -484,20 +484,29 @@ export class EvaluationCriteriaManagementService
 
   /**
    * WBS 평가기준 저장 (Upsert)
-   * - id가 없으면 생성
-   * - id가 있으면 수정
+   * - wbsItemId에 평가기준이 없으면 생성
+   * - wbsItemId에 평가기준이 있으면 수정
+   * - WBS 항목당 하나의 평가기준만 존재
    */
   async WBS_평가기준을_저장한다(
     wbsItemId: string,
     criteria: string,
     actionBy: string,
-    id?: string,
   ): Promise<WbsEvaluationCriteriaDto> {
-    if (id) {
-      // 수정
-      return await this.WBS_평가기준을_수정한다(id, { criteria }, actionBy);
+    // wbsItemId로 기존 평가기준 조회
+    const existingCriteria =
+      await this.특정_WBS항목의_평가기준을_조회한다(wbsItemId);
+
+    if (existingCriteria && existingCriteria.length > 0) {
+      // 기존 평가기준이 있으면 수정
+      const criteriaToUpdate = existingCriteria[0];
+      return await this.WBS_평가기준을_수정한다(
+        criteriaToUpdate.id,
+        { criteria },
+        actionBy,
+      );
     } else {
-      // 생성
+      // 기존 평가기준이 없으면 생성
       return await this.WBS_평가기준을_생성한다(
         { wbsItemId, criteria },
         actionBy,
