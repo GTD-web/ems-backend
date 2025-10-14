@@ -390,21 +390,239 @@ export const GetWbsAssignmentList = () =>
  */
 export const GetWbsAssignmentDetail = () =>
   applyDecorators(
-    Get(':id'),
+    Get('detail'),
     ApiOperation({
       summary: 'WBS 할당 상세 조회',
-      description: '특정 WBS 할당의 상세 정보를 조회합니다.',
+      description: `특정 WBS 할당의 상세 정보를 조회합니다. 직원, 프로젝트, WBS 항목, 평가기간을 기준으로 조회합니다.
+
+**기능:**
+- WBS 할당 상세 정보 조회
+- 관련 정보 포함: 직원, 부서, 프로젝트, WBS 항목, 평가기간, 할당자 정보
+- 취소되지 않은 할당만 조회
+
+**반환 정보:**
+- 할당 기본 정보: id, periodId, employeeId, projectId, wbsItemId, assignedDate 등
+- 직원 정보: name, employeeNumber, email, departmentId, status
+- 부서 정보: name, code
+- 프로젝트 정보: name, code, status, startDate, endDate
+- WBS 항목 정보: wbsCode, title, status, level, startDate, endDate, progressPercentage
+- 평가기간 정보: name, startDate, endDate, status
+- 할당자 정보: name, employeeNumber`,
     }),
-    ApiParam({
-      name: 'id',
-      description: 'WBS 할당 ID',
+    ApiQuery({
+      name: 'employeeId',
+      description: '직원 ID (UUID 형식, 필수)',
+      required: true,
       type: 'string',
       format: 'uuid',
-      example: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+      example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+    }),
+    ApiQuery({
+      name: 'wbsItemId',
+      description: 'WBS 항목 ID (UUID 형식, 필수)',
+      required: true,
+      type: 'string',
+      format: 'uuid',
+      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+    }),
+    ApiQuery({
+      name: 'projectId',
+      description: '프로젝트 ID (UUID 형식, 필수)',
+      required: true,
+      type: 'string',
+      format: 'uuid',
+      example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+    }),
+    ApiQuery({
+      name: 'periodId',
+      description: '평가기간 ID (UUID 형식, 필수)',
+      required: true,
+      type: 'string',
+      format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiResponse({
       status: 200,
-      description: 'WBS 할당 상세 정보가 성공적으로 조회되었습니다.',
+      description:
+        'WBS 할당 상세 정보가 성공적으로 조회되었습니다. (관련 정보 모두 포함)',
+      schema: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+            description: 'WBS 할당 ID',
+            example: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+          },
+          periodId: {
+            type: 'string',
+            format: 'uuid',
+            description: '평가기간 ID',
+            example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+          },
+          employeeId: {
+            type: 'string',
+            format: 'uuid',
+            description: '직원 ID',
+            example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+          },
+          projectId: {
+            type: 'string',
+            format: 'uuid',
+            description: '프로젝트 ID',
+            example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+          },
+          wbsItemId: {
+            type: 'string',
+            format: 'uuid',
+            description: 'WBS 항목 ID',
+            example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+          },
+          assignedDate: {
+            type: 'string',
+            format: 'date-time',
+            description: '할당 날짜',
+            example: '2024-10-01T09:00:00.000Z',
+          },
+          assignedBy: {
+            type: 'string',
+            format: 'uuid',
+            description: '할당자 ID',
+            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+          },
+          displayOrder: {
+            type: 'number',
+            nullable: true,
+            description: '표시 순서',
+            example: 1,
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
+            description: '생성일시',
+            example: '2024-10-01T09:00:00.000Z',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'date-time',
+            description: '수정일시',
+            example: '2024-10-01T09:00:00.000Z',
+          },
+          createdBy: {
+            type: 'string',
+            format: 'uuid',
+            description: '생성자 ID',
+            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+          },
+          updatedBy: {
+            type: 'string',
+            format: 'uuid',
+            description: '수정자 ID',
+            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+          },
+          employee: {
+            type: 'object',
+            nullable: true,
+            description: '직원 정보',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string', example: '홍길동' },
+              employeeNumber: { type: 'string', example: 'EMP-001' },
+              email: { type: 'string', example: 'hong@example.com' },
+              departmentId: { type: 'string', example: 'dept-001' },
+              status: { type: 'string', example: 'ACTIVE' },
+            },
+          },
+          department: {
+            type: 'object',
+            nullable: true,
+            description: '부서 정보',
+            properties: {
+              id: { type: 'string', example: 'dept-001' },
+              name: { type: 'string', example: '개발팀' },
+              code: { type: 'string', example: 'DEV' },
+            },
+          },
+          project: {
+            type: 'object',
+            nullable: true,
+            description: '프로젝트 정보',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string', example: '루미르 통합 포털 프로젝트' },
+              code: { type: 'string', example: 'LUMIR-001' },
+              status: { type: 'string', example: 'IN_PROGRESS' },
+              startDate: {
+                type: 'string',
+                format: 'date',
+                example: '2024-01-01',
+              },
+              endDate: {
+                type: 'string',
+                format: 'date',
+                example: '2024-12-31',
+              },
+            },
+          },
+          wbsItem: {
+            type: 'object',
+            nullable: true,
+            description: 'WBS 항목 정보',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              wbsCode: { type: 'string', example: '1.1' },
+              title: { type: 'string', example: '요구사항 분석' },
+              status: { type: 'string', example: 'IN_PROGRESS' },
+              level: { type: 'number', example: 1 },
+              startDate: {
+                type: 'string',
+                format: 'date',
+                example: '2024-01-01',
+              },
+              endDate: {
+                type: 'string',
+                format: 'date',
+                example: '2024-01-31',
+              },
+              progressPercentage: { type: 'string', example: '35.50' },
+            },
+          },
+          period: {
+            type: 'object',
+            nullable: true,
+            description: '평가기간 정보',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string', example: '2024년 상반기 평가' },
+              startDate: {
+                type: 'string',
+                format: 'date',
+                example: '2024-01-01',
+              },
+              endDate: {
+                type: 'string',
+                format: 'date',
+                example: '2024-06-30',
+              },
+              status: { type: 'string', example: 'IN_PROGRESS' },
+            },
+          },
+          assignedByEmployee: {
+            type: 'object',
+            nullable: true,
+            description: '할당자 정보',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string', example: '관리자' },
+              employeeNumber: { type: 'string', example: 'ADMIN-001' },
+            },
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 (필수 파라미터 누락 또는 UUID 형식 오류)',
     }),
     ApiResponse({
       status: 404,

@@ -28,6 +28,7 @@ import type {
 import type { WbsItemDto } from '../../../domain/common/wbs-item/wbs-item.types';
 import type { ProjectAssignmentListResult } from '../handlers/project-assignment/queries/get-project-assignment-list.handler';
 import type { WbsAssignmentListResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
+import type { WbsAssignmentDetailResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
 
 /**
  * 평가기준관리 서비스 인터페이스 (MVP 버전)
@@ -157,8 +158,11 @@ export interface IEvaluationCriteriaManagementService {
    * WBS 할당 상세를 조회한다
    */
   WBS_할당_상세를_조회한다(
-    assignmentId: string,
-  ): Promise<EvaluationWbsAssignmentDto | null>;
+    employeeId: string,
+    wbsItemId: string,
+    projectId: string,
+    periodId: string,
+  ): Promise<WbsAssignmentDetailResult | null>;
 
   /**
    * 특정 평가기간에 WBS 항목에 할당된 직원을 조회한다

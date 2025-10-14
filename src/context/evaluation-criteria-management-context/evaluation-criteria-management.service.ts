@@ -32,6 +32,7 @@ import {
   ResetPeriodWbsAssignmentsCommand,
   ResetProjectWbsAssignmentsCommand,
   type WbsAssignmentListResult,
+  type WbsAssignmentDetailResult,
 } from './handlers/wbs-assignment';
 
 // WBS Evaluation Criteria Commands & Queries
@@ -236,9 +237,17 @@ export class EvaluationCriteriaManagementService
   }
 
   async WBS_할당_상세를_조회한다(
-    assignmentId: string,
-  ): Promise<EvaluationWbsAssignmentDto | null> {
-    const query = new GetWbsAssignmentDetailQuery(assignmentId);
+    employeeId: string,
+    wbsItemId: string,
+    projectId: string,
+    periodId: string,
+  ): Promise<WbsAssignmentDetailResult | null> {
+    const query = new GetWbsAssignmentDetailQuery(
+      employeeId,
+      wbsItemId,
+      projectId,
+      periodId,
+    );
     return await this.queryBus.execute(query);
   }
 

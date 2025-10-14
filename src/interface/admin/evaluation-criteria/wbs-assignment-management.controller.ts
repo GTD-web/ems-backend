@@ -1,4 +1,11 @@
-import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
@@ -27,6 +34,7 @@ import {
   ProjectWbsAssignmentsResponseDto,
   ResetWbsAssignmentsDto,
   UnassignedWbsItemsResponseDto,
+  WbsAssignmentDetailResponseDto,
   WbsAssignmentFilterDto,
   WbsItemAssignmentsResponseDto,
 } from './dto/wbs-assignment.dto';
@@ -164,8 +172,25 @@ export class WbsAssignmentManagementController {
    * WBS 할당 상세 조회
    */
   @GetWbsAssignmentDetail()
-  async getWbsAssignmentDetail(@Param('id') id: string): Promise<any> {
-    return await this.wbsAssignmentBusinessService.WBS_할당_상세를_조회한다(id);
+  async getWbsAssignmentDetail(
+    @Query('employeeId', ParseUUIDPipe) employeeId: string,
+    @Query('wbsItemId', ParseUUIDPipe) wbsItemId: string,
+    @Query('projectId', ParseUUIDPipe) projectId: string,
+    @Query('periodId', ParseUUIDPipe) periodId: string,
+  ): Promise<WbsAssignmentDetailResponseDto> {
+    const result =
+      await this.wbsAssignmentBusinessService.WBS_할당_상세를_조회한다(
+        employeeId,
+        wbsItemId,
+        projectId,
+        periodId,
+      );
+
+    if (!result) {
+      throw new NotFoundException('WBS 할당을 찾을 수 없습니다.');
+    }
+
+    return result;
   }
 
   /**

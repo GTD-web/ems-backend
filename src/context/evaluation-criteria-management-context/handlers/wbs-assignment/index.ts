@@ -59,6 +59,7 @@ export {
 export {
   GetWbsAssignmentDetailQuery,
   GetWbsAssignmentDetailHandler,
+  type WbsAssignmentDetailResult,
 } from './queries/get-wbs-assignment-detail.handler';
 
 export {

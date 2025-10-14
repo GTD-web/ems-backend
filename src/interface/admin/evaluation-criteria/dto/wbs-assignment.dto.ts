@@ -283,6 +283,157 @@ export class UnassignedWbsItemsResponseDto {
 }
 
 /**
+ * WBS 할당 상세 조회 응답 DTO
+ */
+export class WbsAssignmentDetailResponseDto {
+  @ApiProperty({
+    description: 'WBS 할당 ID',
+    example: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: '프로젝트 ID',
+    example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+  })
+  projectId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '할당 날짜',
+    example: '2024-10-01T09:00:00.000Z',
+  })
+  assignedDate: Date;
+
+  @ApiProperty({
+    description: '할당자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
+  assignedBy: string;
+
+  @ApiPropertyOptional({
+    description: '표시 순서',
+    example: 1,
+    nullable: true,
+  })
+  displayOrder: number | null;
+
+  @ApiProperty({
+    description: '생성일시',
+    example: '2024-10-01T09:00:00.000Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: '수정일시',
+    example: '2024-10-01T09:00:00.000Z',
+  })
+  updatedAt: Date;
+
+  @ApiPropertyOptional({
+    description: '생성자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
+  createdBy?: string;
+
+  @ApiPropertyOptional({
+    description: '수정자 ID',
+    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+  })
+  updatedBy?: string;
+
+  @ApiPropertyOptional({
+    description: '직원 정보',
+    nullable: true,
+  })
+  employee: {
+    id: string;
+    name: string;
+    employeeNumber: string;
+    email: string;
+    departmentId: string;
+    status: string;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: '부서 정보',
+    nullable: true,
+  })
+  department: {
+    id: string;
+    name: string;
+    code: string;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: '프로젝트 정보',
+    nullable: true,
+  })
+  project: {
+    id: string;
+    name: string;
+    code: string;
+    status: string;
+    startDate: Date;
+    endDate: Date;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: 'WBS 항목 정보',
+    nullable: true,
+  })
+  wbsItem: {
+    id: string;
+    wbsCode: string;
+    title: string;
+    status: string;
+    level: number;
+    startDate: Date;
+    endDate: Date;
+    progressPercentage: string;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: '평가기간 정보',
+    nullable: true,
+  })
+  period: {
+    id: string;
+    name: string;
+    startDate: Date;
+    endDate: Date;
+    status: string;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: '할당자 정보',
+    nullable: true,
+  })
+  assignedByEmployee: {
+    id: string;
+    name: string;
+    employeeNumber: string;
+  } | null;
+}
+
+/**
  * WBS 할당 초기화 DTO
  */
 export class ResetWbsAssignmentsDto {

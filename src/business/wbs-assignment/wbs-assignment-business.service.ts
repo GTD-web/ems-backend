@@ -126,10 +126,17 @@ export class WbsAssignmentBusinessService {
     });
 
     // 1. 할당 정보 조회 (평가기준 정리를 위해 wbsItemId와 periodId 필요)
-    const assignment =
-      await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(
-        params.assignmentId,
+    // 목록 조회를 통해 assignmentId로 할당을 찾습니다
+    const allAssignments =
+      await this.evaluationCriteriaManagementService.WBS_할당_목록을_조회한다(
+        {},
+        1,
+        10000,
       );
+
+    const assignment = allAssignments.assignments.find(
+      (a) => a.id === params.assignmentId,
+    );
 
     // 할당이 없으면 평가기준 정리할 것이 없으므로 조기 반환
     // (컨텍스트에서 취소는 이미 멱등성을 보장함)
@@ -565,13 +572,24 @@ export class WbsAssignmentBusinessService {
   /**
    * WBS 할당 상세를 조회한다
    */
-  async WBS_할당_상세를_조회한다(assignmentId: string): Promise<any> {
+  async WBS_할당_상세를_조회한다(
+    employeeId: string,
+    wbsItemId: string,
+    projectId: string,
+    periodId: string,
+  ): Promise<any> {
     this.logger.log('WBS 할당 상세 조회 비즈니스 로직', {
-      assignmentId,
+      employeeId,
+      wbsItemId,
+      projectId,
+      periodId,
     });
 
     return await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(
-      assignmentId,
+      employeeId,
+      wbsItemId,
+      projectId,
+      periodId,
     );
   }
 
