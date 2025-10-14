@@ -190,11 +190,40 @@ export const GetWbsAssignmentList = () =>
     Get(),
     ApiOperation({
       summary: 'WBS 할당 목록 조회',
-      description: '필터 조건에 따라 WBS 할당 목록을 조회합니다.',
+      description: `**중요**: 필터 조건에 따라 WBS 할당 목록을 조회합니다. 페이징, 정렬, 다중 필터 조건을 지원하며 취소된 할당은 자동으로 제외됩니다.
+
+**기능:**
+- 필터링: 평가기간, 직원, 프로젝트, WBS 항목 등 다양한 조건으로 필터링
+- 페이징: page, limit 파라미터로 페이징 지원
+- 정렬: orderBy, orderDirection으로 정렬 기준 및 방향 설정
+- 연관 데이터: 직원명, 프로젝트명, WBS 항목명 등 연관 정보 자동 포함
+- 취소 제외: 취소(소프트 삭제)된 할당은 자동으로 제외
+
+**테스트 케이스:**
+- 기본 목록 조회: 필터 없이 전체 WBS 할당 목록 조회
+- 빈 목록 조회: 할당이 없을 때 빈 배열 반환
+- 평가기간 필터링: 특정 평가기간의 할당만 조회
+- 직원 필터링: 특정 직원에게 할당된 WBS만 조회
+- 프로젝트 필터링: 특정 프로젝트의 WBS 할당만 조회
+- WBS 항목 필터링: 특정 WBS 항목에 대한 할당만 조회
+- 복합 필터링: 여러 필터 조건을 동시에 적용하여 조회
+- 페이지 크기 지정: limit 파라미터로 한 페이지에 표시할 항목 수 지정
+- 특정 페이지 조회: page 파라미터로 원하는 페이지 조회
+- 할당일 오름차순: assignedDate 기준 오름차순 정렬
+- 할당일 내림차순: assignedDate 기준 내림차순 정렬
+- 잘못된 UUID - periodId: 잘못된 UUID 형식의 periodId 전달 시 400 에러
+- 잘못된 UUID - employeeId: 잘못된 UUID 형식의 employeeId 전달 시 400 에러
+- 잘못된 page 값: 음수나 0 등 잘못된 page 값 전달 시 적절한 처리
+- 잘못된 orderDirection: ASC, DESC 이외의 값 전달 시 400 에러
+- 필터링, 페이징, 정렬 동시 적용: 모든 기능을 동시에 사용하여 조회
+- 취소된 할당 제외: 취소된 할당은 목록에서 자동 제외
+- 대용량 데이터: 1000개 이상의 할당 목록 조회 성능 검증
+- 동시 조회: 동일한 조건으로 동시에 여러 조회 요청 처리
+- 연관 데이터 포함: 직원명, 프로젝트명, WBS 코드 등 조인 데이터 포함`,
     }),
     ApiQuery({
       name: 'periodId',
-      description: '평가기간 ID',
+      description: '평가기간 ID (UUID 형식)',
       required: false,
       type: 'string',
       format: 'uuid',
@@ -202,7 +231,7 @@ export const GetWbsAssignmentList = () =>
     }),
     ApiQuery({
       name: 'employeeId',
-      description: '직원 ID',
+      description: '직원 ID (UUID 형식)',
       required: false,
       type: 'string',
       format: 'uuid',
@@ -210,7 +239,7 @@ export const GetWbsAssignmentList = () =>
     }),
     ApiQuery({
       name: 'wbsItemId',
-      description: 'WBS 항목 ID',
+      description: 'WBS 항목 ID (UUID 형식)',
       required: false,
       type: 'string',
       format: 'uuid',
@@ -218,7 +247,7 @@ export const GetWbsAssignmentList = () =>
     }),
     ApiQuery({
       name: 'projectId',
-      description: '프로젝트 ID',
+      description: '프로젝트 ID (UUID 형식)',
       required: false,
       type: 'string',
       format: 'uuid',
@@ -226,28 +255,28 @@ export const GetWbsAssignmentList = () =>
     }),
     ApiQuery({
       name: 'page',
-      description: '페이지 번호',
+      description: '페이지 번호 (1부터 시작)',
       required: false,
       type: 'number',
       example: 1,
     }),
     ApiQuery({
       name: 'limit',
-      description: '페이지 크기',
+      description: '페이지당 항목 수 (기본값: 10)',
       required: false,
       type: 'number',
       example: 10,
     }),
     ApiQuery({
       name: 'orderBy',
-      description: '정렬 기준',
+      description: '정렬 기준 필드 (기본값: assignedDate)',
       required: false,
       type: 'string',
-      example: 'createdAt',
+      example: 'assignedDate',
     }),
     ApiQuery({
       name: 'orderDirection',
-      description: '정렬 방향',
+      description: '정렬 방향 (ASC: 오름차순, DESC: 내림차순)',
       required: false,
       enum: ['ASC', 'DESC'],
       example: 'DESC',
@@ -255,6 +284,104 @@ export const GetWbsAssignmentList = () =>
     ApiResponse({
       status: 200,
       description: 'WBS 할당 목록이 성공적으로 조회되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          assignments: {
+            type: 'array',
+            description: 'WBS 할당 목록',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: '550e8400-e29b-41d4-a716-446655440000',
+                },
+                periodId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+                },
+                employeeId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+                },
+                projectId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+                },
+                wbsItemId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+                },
+                assignedDate: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+                assignedBy: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+                },
+                employeeName: {
+                  type: 'string',
+                  example: '홍길동',
+                },
+                projectName: {
+                  type: 'string',
+                  example: '루미르 통합 포털 프로젝트',
+                },
+                wbsCode: {
+                  type: 'string',
+                  example: 'WBS-001',
+                },
+                wbsName: {
+                  type: 'string',
+                  example: '백엔드 API 개발',
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+                updatedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+              },
+            },
+          },
+          totalCount: {
+            type: 'number',
+            description: '전체 항목 수',
+            example: 25,
+          },
+          page: {
+            type: 'number',
+            description: '현재 페이지 번호',
+            example: 1,
+          },
+          limit: {
+            type: 'number',
+            description: '페이지당 항목 수',
+            example: 10,
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터 (UUID 형식 오류, 잘못된 정렬 방향 등)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류',
     }),
   );
 
@@ -293,18 +420,39 @@ export const GetEmployeeWbsAssignments = () =>
     Get('employee/:employeeId/period/:periodId'),
     ApiOperation({
       summary: '직원 WBS 할당 조회',
-      description: '특정 평가기간에 직원에게 할당된 WBS 항목들을 조회합니다.',
+      description: `**중요**: 특정 평가기간에 특정 직원에게 할당된 모든 WBS 항목을 조회합니다. 취소된 할당은 자동으로 제외됩니다.
+
+**기능:**
+- 직원별 WBS 조회: 특정 직원의 WBS 할당 전체 목록 조회
+- 평가기간 필터: 특정 평가기간의 할당만 조회
+- 취소 제외: 취소(소프트 삭제)된 할당은 자동으로 제외
+- 연관 데이터: 프로젝트명, WBS 항목명 등 연관 정보 자동 포함
+- 빈 결과 처리: 할당이 없으면 빈 배열 반환
+
+**테스트 케이스:**
+- 기본 조회: 특정 직원의 특정 평가기간 WBS 할당 조회
+- 빈 결과: WBS 할당이 없는 경우 빈 배열 반환
+- 다중 WBS 할당: 여러 WBS가 할당된 경우 모두 조회
+- 취소된 할당 제외: 취소된 WBS 할당은 조회 결과에서 제외
+- 다른 직원 격리: 다른 직원의 WBS 할당은 조회되지 않음
+- 다른 평가기간 격리: 다른 평가기간의 WBS 할당은 조회되지 않음
+- 잘못된 UUID - employeeId: 잘못된 UUID 형식의 employeeId 전달 시 400 에러
+- 잘못된 UUID - periodId: 잘못된 UUID 형식의 periodId 전달 시 400 에러
+- 존재하지 않는 직원: 존재하지 않는 직원 ID로 요청 시 빈 배열 반환
+- 존재하지 않는 평가기간: 존재하지 않는 평가기간 ID로 요청 시 빈 배열 반환
+- 연관 데이터 포함: 조회 결과에 프로젝트, WBS 항목 등 필수 연관 데이터 포함
+- 복합 할당: 한 프로젝트 내 여러 WBS 할당을 한 번에 조회`,
     }),
     ApiParam({
       name: 'employeeId',
-      description: '직원 ID',
+      description: '직원 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
     }),
     ApiParam({
       name: 'periodId',
-      description: '평가기간 ID',
+      description: '평가기간 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
@@ -312,10 +460,73 @@ export const GetEmployeeWbsAssignments = () =>
     ApiResponse({
       status: 200,
       description: '직원 WBS 할당 목록이 성공적으로 조회되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          wbsAssignments: {
+            type: 'array',
+            description: 'WBS 할당 목록',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+                },
+                employeeId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+                },
+                wbsItemId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+                },
+                projectId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+                },
+                periodId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+                },
+                assignedDate: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+                assignedBy: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+                updatedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+              },
+            },
+          },
+        },
+      },
     }),
     ApiResponse({
-      status: 404,
-      description: '직원 또는 평가기간을 찾을 수 없습니다.',
+      status: 400,
+      description: '잘못된 요청 데이터 (UUID 형식 오류)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류',
     }),
   );
 
@@ -327,18 +538,38 @@ export const GetProjectWbsAssignments = () =>
     Get('project/:projectId/period/:periodId'),
     ApiOperation({
       summary: '프로젝트 WBS 할당 조회',
-      description: '특정 평가기간에 프로젝트의 WBS 할당을 조회합니다.',
+      description: `**중요**: 특정 평가기간에 특정 프로젝트의 모든 WBS 할당을 조회합니다. 취소된 할당은 자동으로 제외됩니다.
+
+**기능:**
+- 프로젝트별 WBS 조회: 특정 프로젝트의 모든 WBS 할당 조회
+- 평가기간 필터: 특정 평가기간의 할당만 조회
+- 취소 제외: 취소(소프트 삭제)된 할당은 자동으로 제외
+- 연관 데이터: 직원명, WBS 항목명 등 연관 정보 자동 포함
+- 빈 결과 처리: 할당이 없으면 빈 배열 반환
+
+**테스트 케이스:**
+- 기본 조회: 특정 프로젝트의 특정 평가기간 WBS 할당 조회
+- 빈 결과: WBS 할당이 없는 경우 빈 배열 반환
+- 다중 WBS 할당: 여러 직원에게 여러 WBS가 할당된 경우 모두 조회
+- 취소된 할당 제외: 취소된 WBS 할당은 조회 결과에서 제외
+- 다른 프로젝트 격리: 다른 프로젝트의 WBS 할당은 조회되지 않음
+- 다른 평가기간 격리: 다른 평가기간의 WBS 할당은 조회되지 않음
+- 잘못된 UUID - projectId: 잘못된 UUID 형식의 projectId 전달 시 400 에러
+- 잘못된 UUID - periodId: 잘못된 UUID 형식의 periodId 전달 시 400 에러
+- 존재하지 않는 프로젝트: 존재하지 않는 프로젝트 ID로 요청 시 빈 배열 반환
+- 존재하지 않는 평가기간: 존재하지 않는 평가기간 ID로 요청 시 빈 배열 반환
+- 연관 데이터 포함: 조회 결과에 직원명, WBS 항목명 등 필수 연관 데이터 포함`,
     }),
     ApiParam({
       name: 'projectId',
-      description: '프로젝트 ID',
+      description: '프로젝트 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
     }),
     ApiParam({
       name: 'periodId',
-      description: '평가기간 ID',
+      description: '평가기간 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
@@ -346,10 +577,85 @@ export const GetProjectWbsAssignments = () =>
     ApiResponse({
       status: 200,
       description: '프로젝트 WBS 할당 목록이 성공적으로 조회되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          wbsAssignments: {
+            type: 'array',
+            description: 'WBS 할당 목록',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+                },
+                employeeId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+                },
+                employeeName: {
+                  type: 'string',
+                  example: '홍길동',
+                },
+                wbsItemId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+                },
+                wbsCode: {
+                  type: 'string',
+                  example: 'WBS-001',
+                },
+                wbsName: {
+                  type: 'string',
+                  example: '백엔드 API 개발',
+                },
+                projectId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+                },
+                periodId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+                },
+                assignedDate: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+                assignedBy: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+                updatedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+              },
+            },
+          },
+        },
+      },
     }),
     ApiResponse({
-      status: 404,
-      description: '프로젝트 또는 평가기간을 찾을 수 없습니다.',
+      status: 400,
+      description: '잘못된 요청 데이터 (UUID 형식 오류)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류',
     }),
   );
 
@@ -361,18 +667,43 @@ export const GetWbsItemAssignments = () =>
     Get('wbs-item/:wbsItemId/period/:periodId'),
     ApiOperation({
       summary: 'WBS 항목 할당된 직원 조회',
-      description: '특정 평가기간에 WBS 항목에 할당된 직원들을 조회합니다.',
+      description: `**중요**: 특정 평가기간에 특정 WBS 항목에 할당된 모든 직원을 조회합니다. 취소된 할당은 자동으로 제외됩니다.
+
+**기능:**
+- WBS 항목별 직원 조회: 특정 WBS에 할당된 모든 직원 조회
+- 평가기간 필터: 특정 평가기간의 할당만 조회
+- 취소 제외: 취소(소프트 삭제)된 할당은 자동으로 제외
+- 연관 데이터: 직원명, 부서명, 프로젝트명 등 연관 정보 자동 포함
+- 빈 결과 처리: 할당이 없으면 빈 배열 반환
+
+**사용 시나리오:**
+- WBS 작업 담당자 확인: 특정 WBS 항목을 누가 수행하는지 확인
+- 평가자 배정: 해당 WBS에 평가자를 배정하기 위한 직원 목록 조회
+- 작업 분배 검토: WBS 항목별 작업 분배 현황 확인
+
+**테스트 케이스:**
+- 기본 조회: 특정 WBS 항목의 특정 평가기간 직원 할당 조회
+- 빈 결과: 직원 할당이 없는 경우 빈 배열 반환
+- 다중 직원 할당: 여러 직원이 할당된 경우 모두 조회
+- 취소된 할당 제외: 취소된 할당은 조회 결과에서 제외
+- 다른 WBS 항목 격리: 다른 WBS 항목의 할당은 조회되지 않음
+- 다른 평가기간 격리: 다른 평가기간의 할당은 조회되지 않음
+- 잘못된 UUID - wbsItemId: 잘못된 UUID 형식의 wbsItemId 전달 시 400 에러
+- 잘못된 UUID - periodId: 잘못된 UUID 형식의 periodId 전달 시 400 에러
+- 존재하지 않는 WBS 항목: 존재하지 않는 WBS 항목 ID로 요청 시 빈 배열 반환
+- 존재하지 않는 평가기간: 존재하지 않는 평가기간 ID로 요청 시 빈 배열 반환
+- 연관 데이터 포함: 조회 결과에 직원명, 부서명, 프로젝트명 등 필수 연관 데이터 포함`,
     }),
     ApiParam({
       name: 'wbsItemId',
-      description: 'WBS 항목 ID',
+      description: 'WBS 항목 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiParam({
       name: 'periodId',
-      description: '평가기간 ID',
+      description: '평가기간 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
@@ -380,10 +711,85 @@ export const GetWbsItemAssignments = () =>
     ApiResponse({
       status: 200,
       description: 'WBS 항목 할당된 직원 목록이 성공적으로 조회되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          wbsAssignments: {
+            type: 'array',
+            description: '할당된 직원 목록',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'f6a7b8c9-d0e1-4f2a-3b4c-5d6e7f8a9b0c',
+                },
+                employeeId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+                },
+                employeeName: {
+                  type: 'string',
+                  example: '홍길동',
+                },
+                departmentName: {
+                  type: 'string',
+                  example: '개발팀',
+                },
+                wbsItemId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+                },
+                projectId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+                },
+                projectName: {
+                  type: 'string',
+                  example: '루미르 통합 포털 프로젝트',
+                },
+                periodId: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+                },
+                assignedDate: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+                assignedBy: {
+                  type: 'string',
+                  format: 'uuid',
+                  example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
+                },
+                createdAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+                updatedAt: {
+                  type: 'string',
+                  format: 'date-time',
+                  example: '2025-01-15T09:00:00.000Z',
+                },
+              },
+            },
+          },
+        },
+      },
     }),
     ApiResponse({
-      status: 404,
-      description: 'WBS 항목 또는 평가기간을 찾을 수 없습니다.',
+      status: 400,
+      description: '잘못된 요청 데이터 (UUID 형식 오류)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류',
     }),
   );
 
@@ -395,12 +801,32 @@ export const GetUnassignedWbsItems = () =>
     Get('unassigned'),
     ApiOperation({
       summary: '할당되지 않은 WBS 항목 조회',
-      description:
-        '특정 평가기간에 프로젝트에서 할당되지 않은 WBS 항목들을 조회합니다.',
+      description: `특정 평가기간에 프로젝트에서 아직 할당되지 않은 WBS 항목들을 조회합니다. 선택적으로 특정 직원에게 할당되지 않은 WBS 항목만 조회할 수 있습니다.
+
+**기능:**
+- 미할당 WBS 조회: 특정 프로젝트에서 할당되지 않은 WBS 항목 조회
+- 직원별 미할당 조회: 특정 직원에게 할당되지 않은 WBS 항목 조회 (employeeId 제공 시)
+- 평가기간 필터: 특정 평가기간의 할당 상태만 고려
+- 취소된 할당 반영: 취소된 할당은 미할당으로 간주
+- WBS 항목 전체 정보 반환: ID뿐만 아니라 WBS 항목의 모든 상세 정보 포함
+
+**테스트 케이스:**
+- 전체 미할당 조회: employeeId 없이 프로젝트의 모든 미할당 WBS 조회
+- 직원별 미할당 조회: 특정 직원에게 할당되지 않은 WBS만 조회
+- 모두 할당된 경우: 모든 WBS가 할당된 경우 빈 배열 반환
+- 일부 할당된 경우: 일부만 할당된 경우 미할당 WBS만 반환
+- 취소된 할당 반영: 취소된 할당은 미할당으로 간주하여 조회됨
+- 다른 직원 할당 제외: 다른 직원에게 할당된 WBS는 미할당으로 간주
+- 다른 평가기간 무시: 다른 평가기간의 할당은 고려하지 않음
+- 필수 파라미터 검증: projectId, periodId 누락 시 400 에러
+- 잘못된 UUID 검증: 잘못된 UUID 형식 시 400 에러
+- 존재하지 않는 프로젝트: 존재하지 않는 프로젝트 ID로 요청 시 400 에러
+- 존재하지 않는 평가기간: 존재하지 않는 평가기간 ID로 요청 시 400 에러
+- 존재하지 않는 직원: 존재하지 않는 직원 ID로 요청 시 400 에러`,
     }),
     ApiQuery({
       name: 'projectId',
-      description: '프로젝트 ID',
+      description: '프로젝트 ID (UUID 형식, 필수)',
       required: true,
       type: 'string',
       format: 'uuid',
@@ -408,7 +834,7 @@ export const GetUnassignedWbsItems = () =>
     }),
     ApiQuery({
       name: 'periodId',
-      description: '평가기간 ID',
+      description: '평가기간 ID (UUID 형식, 필수)',
       required: true,
       type: 'string',
       format: 'uuid',
@@ -416,7 +842,8 @@ export const GetUnassignedWbsItems = () =>
     }),
     ApiQuery({
       name: 'employeeId',
-      description: '직원 ID (선택사항)',
+      description:
+        '직원 ID (UUID 형식, 선택사항) - 제공 시 해당 직원에게 할당되지 않은 WBS만 조회',
       required: false,
       type: 'string',
       format: 'uuid',
@@ -424,11 +851,101 @@ export const GetUnassignedWbsItems = () =>
     }),
     ApiResponse({
       status: 200,
-      description: '할당되지 않은 WBS 항목 목록이 성공적으로 조회되었습니다.',
+      description:
+        '할당되지 않은 WBS 항목 목록이 성공적으로 조회되었습니다. (전체 정보 포함)',
+      schema: {
+        type: 'object',
+        properties: {
+          wbsItems: {
+            type: 'array',
+            description: '할당되지 않은 WBS 항목 목록 (전체 정보)',
+            items: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'string',
+                  format: 'uuid',
+                  description: 'WBS 항목 ID',
+                  example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+                },
+                wbsCode: {
+                  type: 'string',
+                  description: 'WBS 코드',
+                  example: '1.1',
+                },
+                title: {
+                  type: 'string',
+                  description: 'WBS 제목',
+                  example: '요구사항 분석',
+                },
+                status: {
+                  type: 'string',
+                  description: 'WBS 상태',
+                  enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD'],
+                  example: 'IN_PROGRESS',
+                },
+                projectId: {
+                  type: 'string',
+                  format: 'uuid',
+                  description: '프로젝트 ID',
+                  example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+                },
+                parentWbsId: {
+                  type: 'string',
+                  format: 'uuid',
+                  description: '상위 WBS ID (최상위인 경우 null)',
+                  example: null,
+                  nullable: true,
+                },
+                level: {
+                  type: 'number',
+                  description: 'WBS 레벨 (1: 최상위)',
+                  example: 1,
+                },
+                startDate: {
+                  type: 'string',
+                  format: 'date',
+                  description: 'WBS 시작일',
+                  example: '2024-01-01',
+                },
+                endDate: {
+                  type: 'string',
+                  format: 'date',
+                  description: 'WBS 종료일',
+                  example: '2024-01-31',
+                },
+                progressPercentage: {
+                  type: 'string',
+                  description: '진행률 (%)',
+                  example: '35.50',
+                },
+              },
+            },
+            example: [
+              {
+                id: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+                wbsCode: '1.1',
+                title: '요구사항 분석',
+                status: 'IN_PROGRESS',
+                projectId: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+                parentWbsId: null,
+                level: 1,
+                startDate: '2024-01-01',
+                endDate: '2024-01-31',
+                progressPercentage: '35.50',
+              },
+            ],
+          },
+        },
+      },
     }),
     ApiResponse({
-      status: 404,
-      description: '프로젝트 또는 평가기간을 찾을 수 없습니다.',
+      status: 400,
+      description: '잘못된 요청 데이터 (필수 파라미터 누락, UUID 형식 오류)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류',
     }),
   );
 

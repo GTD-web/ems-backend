@@ -23,6 +23,7 @@ import {
   ChangeWbsAssignmentOrderQueryDto,
   CreateWbsAssignmentDto,
   EmployeeWbsAssignmentsResponseDto,
+  GetUnassignedWbsItemsDto,
   ProjectWbsAssignmentsResponseDto,
   ResetWbsAssignmentsDto,
   UnassignedWbsItemsResponseDto,
@@ -96,20 +97,12 @@ export class WbsAssignmentManagementController {
   }
 
   /**
-   * WBS 할당 상세 조회
-   */
-  @GetWbsAssignmentDetail()
-  async getWbsAssignmentDetail(@Param('id') id: string): Promise<any> {
-    return await this.wbsAssignmentBusinessService.WBS_할당_상세를_조회한다(id);
-  }
-
-  /**
    * 특정 평가기간에 직원에게 할당된 WBS 조회
    */
   @GetEmployeeWbsAssignments()
   async getEmployeeWbsAssignments(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
   ): Promise<EmployeeWbsAssignmentsResponseDto> {
     const wbsAssignments =
       await this.wbsAssignmentBusinessService.특정_평가기간에_직원에게_할당된_WBS를_조회한다(
@@ -124,8 +117,8 @@ export class WbsAssignmentManagementController {
    */
   @GetProjectWbsAssignments()
   async getProjectWbsAssignments(
-    @Param('projectId') projectId: string,
-    @Param('periodId') periodId: string,
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
   ): Promise<ProjectWbsAssignmentsResponseDto> {
     const wbsAssignments =
       await this.wbsAssignmentBusinessService.특정_평가기간에_프로젝트의_WBS_할당을_조회한다(
@@ -140,8 +133,8 @@ export class WbsAssignmentManagementController {
    */
   @GetWbsItemAssignments()
   async getWbsItemAssignments(
-    @Param('wbsItemId') wbsItemId: string,
-    @Param('periodId') periodId: string,
+    @Param('wbsItemId', ParseUUIDPipe) wbsItemId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
   ): Promise<WbsItemAssignmentsResponseDto> {
     const wbsAssignments =
       await this.wbsAssignmentBusinessService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(
@@ -156,17 +149,23 @@ export class WbsAssignmentManagementController {
    */
   @GetUnassignedWbsItems()
   async getUnassignedWbsItems(
-    @Query('projectId') projectId: string,
-    @Query('periodId') periodId: string,
-    @Query('employeeId') employeeId?: string,
+    @Query() queryDto: GetUnassignedWbsItemsDto,
   ): Promise<UnassignedWbsItemsResponseDto> {
-    const wbsItemIds =
+    const wbsItems =
       await this.wbsAssignmentBusinessService.특정_평가기간에_프로젝트에서_할당되지_않은_WBS_항목_목록을_조회한다(
-        projectId,
-        periodId,
-        employeeId,
+        queryDto.projectId,
+        queryDto.periodId,
+        queryDto.employeeId,
       );
-    return { wbsItemIds };
+    return { wbsItems };
+  }
+
+  /**
+   * WBS 할당 상세 조회
+   */
+  @GetWbsAssignmentDetail()
+  async getWbsAssignmentDetail(@Param('id') id: string): Promise<any> {
+    return await this.wbsAssignmentBusinessService.WBS_할당_상세를_조회한다(id);
   }
 
   /**

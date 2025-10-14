@@ -7,9 +7,11 @@ import {
   IsEnum,
   IsArray,
   ValidateNested,
+  IsNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+import { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 
 /**
  * WBS 할당 생성 DTO
@@ -224,18 +226,60 @@ export class WbsItemAssignmentsResponseDto {
 }
 
 /**
+ * 할당되지 않은 WBS 항목 조회 Query DTO
+ */
+export class GetUnassignedWbsItemsDto {
+  @ApiProperty({
+    description: '프로젝트 ID (필수)',
+    example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+  })
+  @IsNotEmpty({ message: 'projectId는 필수입니다.' })
+  @IsString()
+  @IsUUID('4', { message: 'projectId는 유효한 UUID 형식이어야 합니다.' })
+  projectId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID (필수)',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  @IsNotEmpty({ message: 'periodId는 필수입니다.' })
+  @IsString()
+  @IsUUID('4', { message: 'periodId는 유효한 UUID 형식이어야 합니다.' })
+  periodId: string;
+
+  @ApiPropertyOptional({
+    description: '직원 ID (선택사항)',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  @IsOptional()
+  @IsString()
+  @IsUUID('4', { message: 'employeeId는 유효한 UUID 형식이어야 합니다.' })
+  employeeId?: string;
+}
+
+/**
  * 할당되지 않은 WBS 항목 응답 DTO
  */
 export class UnassignedWbsItemsResponseDto {
   @ApiProperty({
-    description: '할당되지 않은 WBS 항목 ID 목록',
-    type: [String],
+    description: '할당되지 않은 WBS 항목 목록 (WBS 항목 전체 정보 포함)',
+    type: 'array',
     example: [
-      'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
-      'b3c4d5e6-f7a8-4b9c-0d1e-2f3a4b5c6d7e',
+      {
+        id: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+        wbsCode: '1.1',
+        title: '요구사항 분석',
+        status: 'IN_PROGRESS',
+        projectId: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+        parentWbsId: null,
+        level: 1,
+        startDate: '2024-01-01',
+        endDate: '2024-01-31',
+        progressPercentage: '0.00',
+      },
     ],
   })
-  wbsItemIds: string[];
+  wbsItems: WbsItemDto[];
 }
 
 /**

@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
+import { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 
 /**
  * 할당되지 않은 WBS 항목 조회 쿼리
@@ -31,16 +32,18 @@ export class GetUnassignedWbsItemsHandler
     private readonly wbsItemRepository: Repository<WbsItem>,
   ) {}
 
-  async execute(query: GetUnassignedWbsItemsQuery): Promise<string[]> {
+  async execute(query: GetUnassignedWbsItemsQuery): Promise<WbsItemDto[]> {
     const { projectId, periodId, employeeId } = query;
 
-    // 프로젝트의 모든 WBS 항목 조회
+    // 프로젝트의 모든 WBS 항목 조회 (전체 정보)
     const allWbsItems = await this.wbsItemRepository.find({
       where: {
         projectId,
         deletedAt: IsNull(),
       },
-      select: ['id'],
+      order: {
+        wbsCode: 'ASC',
+      },
     });
 
     // 할당된 WBS 항목 조회
@@ -59,10 +62,13 @@ export class GetUnassignedWbsItemsHandler
       select: ['wbsItemId'],
     });
 
-    const assignedWbsItemIds = assignedWbsItems.map((a) => a.wbsItemId);
-    const allWbsItemIds = allWbsItems.map((item) => item.id);
+    const assignedWbsItemIds = new Set(
+      assignedWbsItems.map((a) => a.wbsItemId),
+    );
 
-    // 할당되지 않은 WBS 항목 ID 반환
-    return allWbsItemIds.filter((id) => !assignedWbsItemIds.includes(id));
+    // 할당되지 않은 WBS 항목 전체 정보 반환
+    return allWbsItems
+      .filter((item) => !assignedWbsItemIds.has(item.id))
+      .map((item) => item.DTO로_변환한다());
   }
 }

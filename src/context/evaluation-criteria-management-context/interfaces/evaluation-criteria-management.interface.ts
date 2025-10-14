@@ -25,6 +25,7 @@ import type {
   WbsEvaluationCriteriaDto,
   WbsEvaluationCriteriaFilter,
 } from '../../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
+import type { WbsItemDto } from '../../../domain/common/wbs-item/wbs-item.types';
 import type { ProjectAssignmentListResult } from '../handlers/project-assignment/queries/get-project-assignment-list.handler';
 import type { WbsAssignmentListResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 
@@ -174,7 +175,7 @@ export interface IEvaluationCriteriaManagementService {
     projectId: string,
     periodId: string,
     employeeId?: string,
-  ): Promise<string[]>;
+  ): Promise<WbsItemDto[]>;
 
   /**
    * 여러 WBS를 대량으로 할당한다

@@ -85,6 +85,7 @@ import type {
   WbsEvaluationCriteriaDto,
   WbsEvaluationCriteriaFilter,
 } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
+import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 
 /**
  * 평가기준관리 서비스 (MVP 버전)
@@ -253,7 +254,7 @@ export class EvaluationCriteriaManagementService
     projectId: string,
     periodId: string,
     employeeId?: string,
-  ): Promise<string[]> {
+  ): Promise<WbsItemDto[]> {
     const query = new GetUnassignedWbsItemsQuery(
       projectId,
       periodId,

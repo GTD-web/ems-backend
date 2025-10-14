@@ -6,6 +6,7 @@ import type {
   CreateEvaluationWbsAssignmentData,
   OrderDirection,
 } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 
 /**
  * WBS 할당 비즈니스 서비스
@@ -635,7 +636,7 @@ export class WbsAssignmentBusinessService {
     projectId: string,
     periodId: string,
     employeeId?: string,
-  ): Promise<string[]> {
+  ): Promise<WbsItemDto[]> {
     this.logger.log('할당되지 않은 WBS 항목 조회 비즈니스 로직', {
       projectId,
       periodId,
