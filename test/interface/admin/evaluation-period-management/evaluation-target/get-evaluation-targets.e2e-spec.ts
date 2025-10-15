@@ -120,12 +120,16 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(employees.length);
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(Array.isArray(response.body.targets)).toBe(true);
+        expect(response.body.targets.length).toBe(employees.length);
 
-        response.body.forEach((target: any) => {
+        response.body.targets.forEach((target: any) => {
           expect(target.id).toBeDefined();
-          expect(target.evaluationPeriodId).toBe(period.id);
+          expect(target.evaluationPeriodId).toBeUndefined(); // 중복 제거됨
+          expect(target.employeeId).toBeUndefined(); // 중복 제거됨
+          expect(target.employee).toBeDefined();
+          expect(target.employee.id).toBeDefined();
           expect(target.isExcluded).toBeDefined();
         });
       });
@@ -150,8 +154,9 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then - 제외되지 않은 2명만 반환
-        expect(response.body.length).toBe(2);
-        response.body.forEach((target: any) => {
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(response.body.targets.length).toBe(2);
+        response.body.targets.forEach((target: any) => {
           expect(target.isExcluded).toBe(false);
         });
       });
@@ -177,9 +182,10 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then - 모든 4명 반환
-        expect(response.body.length).toBe(4);
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(response.body.targets.length).toBe(4);
 
-        const excludedCount = response.body.filter(
+        const excludedCount = response.body.targets.filter(
           (target: any) => target.isExcluded,
         ).length;
         expect(excludedCount).toBe(2);
@@ -195,8 +201,9 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(0);
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(Array.isArray(response.body.targets)).toBe(true);
+        expect(response.body.targets.length).toBe(0);
       });
 
       it('반환된 데이터에 필수 필드가 모두 포함되어야 한다', async () => {
@@ -211,11 +218,14 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(response.body.length).toBe(1);
-        const target = response.body[0];
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(response.body.targets.length).toBe(1);
+        const target = response.body.targets[0];
         expect(target.id).toBeDefined();
-        expect(target.evaluationPeriodId).toBe(period.id);
-        expect(target.employeeId).toBe(employee.id);
+        expect(target.evaluationPeriodId).toBeUndefined(); // 중복 제거됨
+        expect(target.employeeId).toBeUndefined(); // 중복 제거됨
+        expect(target.employee).toBeDefined();
+        expect(target.employee.id).toBe(employee.id);
         expect(target.isExcluded).toBeDefined();
         expect(target.createdBy).toBeDefined();
         expect(target.createdAt).toBeDefined();
@@ -233,8 +243,9 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(0);
+        expect(response.body.evaluationPeriodId).toBe(nonExistentPeriodId);
+        expect(Array.isArray(response.body.targets)).toBe(true);
+        expect(response.body.targets.length).toBe(0);
       });
 
       it('잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러가 발생해야 한다', async () => {
@@ -274,10 +285,11 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then - 제외된 3명만 반환
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(3);
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(Array.isArray(response.body.targets)).toBe(true);
+        expect(response.body.targets.length).toBe(3);
 
-        response.body.forEach((target: any) => {
+        response.body.targets.forEach((target: any) => {
           expect(target.isExcluded).toBe(true);
           expect(target.excludeReason).toBeDefined();
           expect(target.excludedBy).toBeDefined();
@@ -301,10 +313,11 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(response.body.length).toBe(3);
-        expect(response.body.every((target: any) => target.isExcluded)).toBe(
-          true,
-        );
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(response.body.targets.length).toBe(3);
+        expect(
+          response.body.targets.every((target: any) => target.isExcluded),
+        ).toBe(true);
       });
 
       it('제외된 대상자가 없는 경우 빈 배열이 반환되어야 한다', async () => {
@@ -323,8 +336,9 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(0);
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(Array.isArray(response.body.targets)).toBe(true);
+        expect(response.body.targets.length).toBe(0);
       });
 
       it('제외 정보가 올바르게 반환되어야 한다', async () => {
@@ -348,9 +362,10 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(response.body.length).toBe(1);
-        expect(response.body[0].excludeReason).toBe(excludeReason);
-        expect(response.body[0].excludedBy).toBe(excludedBy);
+        expect(response.body.evaluationPeriodId).toBe(period.id);
+        expect(response.body.targets.length).toBe(1);
+        expect(response.body.targets[0].excludeReason).toBe(excludeReason);
+        expect(response.body.targets[0].excludedBy).toBe(excludedBy);
       });
     });
 
@@ -367,8 +382,9 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(0);
+        expect(response.body.evaluationPeriodId).toBe(nonExistentPeriodId);
+        expect(Array.isArray(response.body.targets)).toBe(true);
+        expect(response.body.targets.length).toBe(0);
       });
 
       it('잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러가 발생해야 한다', async () => {

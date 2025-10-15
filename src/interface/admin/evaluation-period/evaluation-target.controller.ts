@@ -17,6 +17,7 @@ import {
 import {
   EvaluationTargetMappingResponseDto,
   EvaluationTargetStatusResponseDto,
+  EvaluationTargetsResponseDto,
   ExcludeEvaluationTargetDto,
   GetEvaluationTargetsQueryDto,
   IncludeEvaluationTargetDto,
@@ -110,11 +111,20 @@ export class EvaluationTargetController {
   async getEvaluationTargets(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @Query() query: GetEvaluationTargetsQueryDto,
-  ): Promise<EvaluationTargetMappingResponseDto[]> {
-    return await this.evaluationPeriodManagementService.평가기간의_평가대상자_조회한다(
+  ): Promise<EvaluationTargetsResponseDto> {
+    const targets =
+      await this.evaluationPeriodManagementService.평가기간의_평가대상자_조회한다(
+        evaluationPeriodId,
+        query.includeExcluded ?? false,
+      );
+
+    return {
       evaluationPeriodId,
-      query.includeExcluded ?? false,
-    );
+      targets: targets.map((target) => {
+        const { evaluationPeriodId: _, employeeId: __, ...rest } = target;
+        return rest;
+      }),
+    };
   }
 
   /**
@@ -123,10 +133,19 @@ export class EvaluationTargetController {
   @GetExcludedEvaluationTargets()
   async getExcludedEvaluationTargets(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
-  ): Promise<EvaluationTargetMappingResponseDto[]> {
-    return await this.evaluationPeriodManagementService.평가기간의_제외된_대상자_조회한다(
+  ): Promise<EvaluationTargetsResponseDto> {
+    const targets =
+      await this.evaluationPeriodManagementService.평가기간의_제외된_대상자_조회한다(
+        evaluationPeriodId,
+      );
+
+    return {
       evaluationPeriodId,
-    );
+      targets: targets.map((target) => {
+        const { evaluationPeriodId: _, employeeId: __, ...rest } = target;
+        return rest;
+      }),
+    };
   }
 
   /**

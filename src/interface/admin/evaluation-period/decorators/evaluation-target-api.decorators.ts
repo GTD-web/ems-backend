@@ -21,6 +21,7 @@ import {
 import {
   EvaluationTargetMappingResponseDto,
   EvaluationTargetStatusResponseDto,
+  EvaluationTargetsResponseDto,
 } from '../dto/evaluation-target.dto';
 
 /**
@@ -221,7 +222,7 @@ export const GetEvaluationTargets = () =>
     Get(':evaluationPeriodId/targets'),
     ApiOperation({
       summary: '평가기간의 평가 대상자 조회',
-      description: `**중요**: 특정 평가기간의 평가 대상자 목록을 조회합니다. includeExcluded 파라미터로 제외된 대상자 포함 여부를 제어할 수 있습니다.
+      description: `**중요**: 특정 평가기간의 평가 대상자 목록을 조회합니다. includeExcluded 파라미터로 제외된 대상자 포함 여부를 제어할 수 있습니다. 각 평가 대상자 정보에는 직원 상세 정보(employee 객체)가 함께 포함됩니다.
 
 **테스트 케이스:**
 - 기본 조회: 평가기간의 모든 평가 대상자를 조회할 수 있어야 함
@@ -230,7 +231,8 @@ export const GetEvaluationTargets = () =>
 - 제외 상태 확인: includeExcluded 미전달 시 반환된 모든 대상자의 isExcluded가 false
 - 제외 수 확인: includeExcluded=true 시 제외된 대상자 수 확인 가능
 - 빈 결과: 평가 대상자가 없는 경우 빈 배열 반환
-- 필수 필드: 반환된 데이터에 id, evaluationPeriodId, employeeId, isExcluded, createdBy, createdAt 등 필수 필드 포함
+- 필수 필드: 반환된 데이터에 id, evaluationPeriodId, employeeId, employee, isExcluded, createdBy, createdAt 등 필수 필드 포함
+- 직원 정보 포함: employee 객체에 id, employeeNumber, name, email, departmentName, rankName, status 필드 포함
 - 존재하지 않는 평가기간: 평가기간 미존재 시 빈 배열 반환
 - 잘못된 UUID: 잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러`,
     }),
@@ -250,30 +252,7 @@ export const GetEvaluationTargets = () =>
     }),
     ApiOkResponse({
       description: '평가 대상자 목록 조회 성공',
-      type: [EvaluationTargetMappingResponseDto],
-      schema: {
-        type: 'array',
-        items: {
-          $ref: '#/components/schemas/EvaluationTargetMappingResponseDto',
-        },
-        example: [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174000',
-            employeeId: '223e4567-e89b-12d3-a456-426614174001',
-            isExcluded: false,
-            excludeReason: null,
-            excludedBy: null,
-            excludedAt: null,
-            createdBy: 'admin-user-id',
-            updatedBy: 'admin-user-id',
-            createdAt: '2024-01-15T00:00:00.000Z',
-            updatedAt: '2024-01-15T00:00:00.000Z',
-            deletedAt: null,
-            version: 1,
-          },
-        ],
-      },
+      type: EvaluationTargetsResponseDto,
     }),
   );
 
@@ -285,13 +264,14 @@ export const GetExcludedEvaluationTargets = () =>
     Get(':evaluationPeriodId/targets/excluded'),
     ApiOperation({
       summary: '제외된 평가 대상자 조회',
-      description: `**중요**: 특정 평가기간에서 제외된 평가 대상자 목록만 조회합니다. 모든 반환된 대상자는 isExcluded=true 상태입니다.
+      description: `**중요**: 특정 평가기간에서 제외된 평가 대상자 목록만 조회합니다. 모든 반환된 대상자는 isExcluded=true 상태입니다. 각 평가 대상자 정보에는 직원 상세 정보(employee 객체)가 함께 포함됩니다.
 
 **테스트 케이스:**
 - 기본 조회: 제외된 평가 대상자만 조회할 수 있어야 함
 - isExcluded 상태: 모든 대상자가 isExcluded=true 상태여야 함
 - 제외 정보 포함: excludeReason, excludedBy, excludedAt 필드가 정의되어 있음
 - 제외 정보 정확성: 제외 사유와 처리자 정보가 올바르게 반환됨
+- 직원 정보 포함: employee 객체에 id, employeeNumber, name, email, departmentName, rankName, status 필드 포함
 - 빈 결과: 제외된 대상자가 없는 경우 빈 배열 반환
 - 존재하지 않는 평가기간: 평가기간 미존재 시 빈 배열 반환
 - 잘못된 UUID: 잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러`,
@@ -304,30 +284,7 @@ export const GetExcludedEvaluationTargets = () =>
     }),
     ApiOkResponse({
       description: '제외된 평가 대상자 목록 조회 성공',
-      type: [EvaluationTargetMappingResponseDto],
-      schema: {
-        type: 'array',
-        items: {
-          $ref: '#/components/schemas/EvaluationTargetMappingResponseDto',
-        },
-        example: [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174000',
-            employeeId: '223e4567-e89b-12d3-a456-426614174001',
-            isExcluded: true,
-            excludeReason: '휴직으로 인한 평가 제외',
-            excludedBy: 'hr-manager-id',
-            excludedAt: '2024-01-20T09:30:00.000Z',
-            createdBy: 'admin-user-id',
-            updatedBy: 'hr-manager-id',
-            createdAt: '2024-01-15T00:00:00.000Z',
-            updatedAt: '2024-01-20T09:30:00.000Z',
-            deletedAt: null,
-            version: 2,
-          },
-        ],
-      },
+      type: EvaluationTargetsResponseDto,
     }),
   );
 
