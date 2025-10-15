@@ -249,8 +249,31 @@ export const GetEvaluationTargets = () =>
       example: 'false',
     }),
     ApiOkResponse({
-      description: '평가 대상자 조회 성공',
+      description: '평가 대상자 목록 조회 성공',
       type: [EvaluationTargetMappingResponseDto],
+      schema: {
+        type: 'array',
+        items: {
+          $ref: '#/components/schemas/EvaluationTargetMappingResponseDto',
+        },
+        example: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174000',
+            employeeId: '223e4567-e89b-12d3-a456-426614174001',
+            isExcluded: false,
+            excludeReason: null,
+            excludedBy: null,
+            excludedAt: null,
+            createdBy: 'admin-user-id',
+            updatedBy: 'admin-user-id',
+            createdAt: '2024-01-15T00:00:00.000Z',
+            updatedAt: '2024-01-15T00:00:00.000Z',
+            deletedAt: null,
+            version: 1,
+          },
+        ],
+      },
     }),
   );
 
@@ -280,8 +303,31 @@ export const GetExcludedEvaluationTargets = () =>
       example: '123e4567-e89b-12d3-a456-426614174000',
     }),
     ApiOkResponse({
-      description: '제외된 평가 대상자 조회 성공',
+      description: '제외된 평가 대상자 목록 조회 성공',
       type: [EvaluationTargetMappingResponseDto],
+      schema: {
+        type: 'array',
+        items: {
+          $ref: '#/components/schemas/EvaluationTargetMappingResponseDto',
+        },
+        example: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174000',
+            employeeId: '223e4567-e89b-12d3-a456-426614174001',
+            isExcluded: true,
+            excludeReason: '휴직으로 인한 평가 제외',
+            excludedBy: 'hr-manager-id',
+            excludedAt: '2024-01-20T09:30:00.000Z',
+            createdBy: 'admin-user-id',
+            updatedBy: 'hr-manager-id',
+            createdAt: '2024-01-15T00:00:00.000Z',
+            updatedAt: '2024-01-20T09:30:00.000Z',
+            deletedAt: null,
+            version: 2,
+          },
+        ],
+      },
     }),
   );
 
@@ -311,8 +357,46 @@ export const GetEmployeeEvaluationPeriods = () =>
       example: '223e4567-e89b-12d3-a456-426614174001',
     }),
     ApiOkResponse({
-      description: '직원의 평가기간 맵핑 조회 성공',
+      description: '직원의 평가기간 맵핑 목록 조회 성공',
       type: [EvaluationTargetMappingResponseDto],
+      schema: {
+        type: 'array',
+        items: {
+          $ref: '#/components/schemas/EvaluationTargetMappingResponseDto',
+        },
+        example: [
+          {
+            id: '550e8400-e29b-41d4-a716-446655440000',
+            evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174000',
+            employeeId: '223e4567-e89b-12d3-a456-426614174001',
+            isExcluded: false,
+            excludeReason: null,
+            excludedBy: null,
+            excludedAt: null,
+            createdBy: 'admin-user-id',
+            updatedBy: 'admin-user-id',
+            createdAt: '2024-01-15T00:00:00.000Z',
+            updatedAt: '2024-01-15T00:00:00.000Z',
+            deletedAt: null,
+            version: 1,
+          },
+          {
+            id: '660e8400-e29b-41d4-a716-446655440001',
+            evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174999',
+            employeeId: '223e4567-e89b-12d3-a456-426614174001',
+            isExcluded: true,
+            excludeReason: '이전 평가기간 제외',
+            excludedBy: 'hr-manager-id',
+            excludedAt: '2023-12-20T09:30:00.000Z',
+            createdBy: 'admin-user-id',
+            updatedBy: 'hr-manager-id',
+            createdAt: '2023-12-15T00:00:00.000Z',
+            updatedAt: '2023-12-20T09:30:00.000Z',
+            deletedAt: null,
+            version: 2,
+          },
+        ],
+      },
     }),
   );
 
@@ -350,6 +434,28 @@ export const CheckEvaluationTarget = () =>
     ApiOkResponse({
       description: '평가 대상 여부 확인 성공',
       type: EvaluationTargetStatusResponseDto,
+      schema: {
+        type: 'object',
+        properties: {
+          isEvaluationTarget: {
+            type: 'boolean',
+            description: '평가 대상 여부',
+          },
+          evaluationPeriodId: {
+            type: 'string',
+            description: '평가기간 ID',
+          },
+          employeeId: {
+            type: 'string',
+            description: '직원 ID',
+          },
+        },
+        example: {
+          isEvaluationTarget: true,
+          evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174000',
+          employeeId: '223e4567-e89b-12d3-a456-426614174001',
+        },
+      },
     }),
   );
 
