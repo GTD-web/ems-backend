@@ -1,10 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
-import { WbsSelfEvaluationMappingService } from '@domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
-import { WbsSelfEvaluationMappingDto } from '@domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
 
 /**
  * WBS 자기평가 제출 커맨드
@@ -28,14 +26,12 @@ export class SubmitWbsSelfEvaluationHandler
 
   constructor(
     private readonly wbsSelfEvaluationService: WbsSelfEvaluationService,
-    private readonly wbsSelfEvaluationMappingService: WbsSelfEvaluationMappingService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
-  async execute(command: SubmitWbsSelfEvaluationCommand): Promise<{
-    evaluation: WbsSelfEvaluationDto;
-    evaluationMapping: WbsSelfEvaluationMappingDto;
-  }> {
+  async execute(
+    command: SubmitWbsSelfEvaluationCommand,
+  ): Promise<WbsSelfEvaluationDto> {
     const { evaluationId, submittedBy } = command;
 
     this.logger.log('WBS 자기평가 제출 핸들러 실행', { evaluationId });
@@ -58,29 +54,16 @@ export class SubmitWbsSelfEvaluationHandler
         );
       }
 
-      // 자기평가 ID로 매핑을 찾아서 완료 처리
-      const mapping =
-        await this.wbsSelfEvaluationMappingService.자가평가_ID로_조회한다(
-          evaluationId,
-        );
-
-      if (!mapping) {
-        throw new BadRequestException(
-          '해당 자가평가에 대한 매핑을 찾을 수 없습니다.',
-        );
-      }
-      await this.wbsSelfEvaluationMappingService.자가평가를_완료한다(
-        mapping.id,
+      // 자기평가 완료 처리
+      const updatedEvaluation = await this.wbsSelfEvaluationService.수정한다(
         evaluationId,
+        { isCompleted: true },
         submittedBy,
       );
 
       this.logger.log('WBS 자기평가 제출 완료', { evaluationId });
 
-      return {
-        evaluation: evaluation.DTO로_변환한다(),
-        evaluationMapping: mapping.DTO로_변환한다(),
-      };
+      return updatedEvaluation.DTO로_변환한다();
     });
   }
 }

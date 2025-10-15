@@ -2,7 +2,6 @@ import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WbsSelfEvaluationMapping } from '@domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.entity';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
@@ -26,8 +25,8 @@ export class GetWbsSelfEvaluationDetailHandler
   private readonly logger = new Logger(GetWbsSelfEvaluationDetailHandler.name);
 
   constructor(
-    @InjectRepository(WbsSelfEvaluationMapping)
-    private readonly wbsSelfEvaluationMappingRepository: Repository<WbsSelfEvaluationMapping>,
+    @InjectRepository(WbsSelfEvaluation)
+    private readonly wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>,
   ) {}
 
   async execute(query: GetWbsSelfEvaluationDetailQuery): Promise<any> {
@@ -35,32 +34,34 @@ export class GetWbsSelfEvaluationDetailHandler
 
     this.logger.log('WBS 자기평가 상세정보 조회 핸들러 실행', { evaluationId });
 
-    // 매핑 테이블을 통해 관련 데이터들을 조인하여 조회
-    const result = await this.wbsSelfEvaluationMappingRepository
-      .createQueryBuilder('mapping')
-      .leftJoin(
-        WbsSelfEvaluation,
-        'evaluation',
-        'evaluation.id = mapping.selfEvaluationId AND evaluation.deletedAt IS NULL',
-      )
+    // 자기평가를 관련 데이터들과 조인하여 조회
+    const result = await this.wbsSelfEvaluationRepository
+      .createQueryBuilder('evaluation')
       .leftJoin(
         EvaluationPeriod,
         'period',
-        'period.id = mapping.periodId AND period.deletedAt IS NULL',
+        'period.id = evaluation.periodId AND period.deletedAt IS NULL',
       )
       .leftJoin(
         Employee,
         'employee',
-        'employee.id = mapping.employeeId AND employee.deletedAt IS NULL',
+        'employee.id = evaluation.employeeId AND employee.deletedAt IS NULL',
       )
       .leftJoin(
         WbsItem,
         'wbsItem',
-        'wbsItem.id = mapping.wbsItemId AND wbsItem.deletedAt IS NULL',
+        'wbsItem.id = evaluation.wbsItemId AND wbsItem.deletedAt IS NULL',
       )
       .select([
         // 자기평가 정보
         'evaluation.id AS evaluation_id',
+        'evaluation.periodId AS evaluation_periodid',
+        'evaluation.employeeId AS evaluation_employeeid',
+        'evaluation.wbsItemId AS evaluation_wbsitemid',
+        'evaluation.assignedBy AS evaluation_assignedby',
+        'evaluation.assignedDate AS evaluation_assigneddate',
+        'evaluation.isCompleted AS evaluation_iscompleted',
+        'evaluation.completedAt AS evaluation_completedat',
         'evaluation.evaluationDate AS evaluation_evaluationdate',
         'evaluation.selfEvaluationContent AS evaluation_selfevaluationcontent',
         'evaluation.selfEvaluationScore AS evaluation_selfevaluationscore',
@@ -93,8 +94,8 @@ export class GetWbsSelfEvaluationDetailHandler
         'wbsItem.endDate AS wbsitem_enddate',
         'wbsItem.status AS wbsitem_status',
       ])
-      .where('mapping.selfEvaluationId = :evaluationId', { evaluationId })
-      .andWhere('mapping.deletedAt IS NULL')
+      .where('evaluation.id = :evaluationId', { evaluationId })
+      .andWhere('evaluation.deletedAt IS NULL')
       .getRawOne();
 
     if (!result || !result.evaluation_id) {
@@ -107,6 +108,13 @@ export class GetWbsSelfEvaluationDetailHandler
     return {
       // 자기평가 기본 정보
       id: result.evaluation_id,
+      periodId: result.evaluation_periodid,
+      employeeId: result.evaluation_employeeid,
+      wbsItemId: result.evaluation_wbsitemid,
+      assignedBy: result.evaluation_assignedby,
+      assignedDate: result.evaluation_assigneddate,
+      isCompleted: result.evaluation_iscompleted,
+      completedAt: result.evaluation_completedat,
       evaluationDate: result.evaluation_evaluationdate,
       selfEvaluationContent: result.evaluation_selfevaluationcontent,
       selfEvaluationScore: result.evaluation_selfevaluationscore,

@@ -8,6 +8,20 @@
 export interface WbsSelfEvaluationDto {
   /** 고유 식별자 (UUID) */
   id: string;
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 직원 ID */
+  employeeId: string;
+  /** WBS 항목 ID */
+  wbsItemId: string;
+  /** 할당자 ID */
+  assignedBy: string;
+  /** 할당일 */
+  assignedDate: Date;
+  /** 자가평가 완료 여부 */
+  isCompleted: boolean;
+  /** 완료일 */
+  completedAt?: Date;
   /** 평가일 */
   evaluationDate: Date;
   /** 자가평가 내용 */
@@ -36,6 +50,20 @@ export interface WbsSelfEvaluationDto {
 export interface WbsSelfEvaluationDetailDto {
   /** 고유 식별자 (UUID) */
   id: string;
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 직원 ID */
+  employeeId: string;
+  /** WBS 항목 ID */
+  wbsItemId: string;
+  /** 할당자 ID */
+  assignedBy: string;
+  /** 할당일 */
+  assignedDate: Date;
+  /** 자가평가 완료 여부 */
+  isCompleted: boolean;
+  /** 완료일 */
+  completedAt?: Date;
   /** 평가일 */
   evaluationDate: Date;
   /** 자가평가 내용 */
@@ -62,6 +90,14 @@ export interface WbsSelfEvaluationDetailDto {
  * WBS 자가평가 생성 데이터
  */
 export interface CreateWbsSelfEvaluationData {
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 직원 ID */
+  employeeId: string;
+  /** WBS 항목 ID */
+  wbsItemId: string;
+  /** 할당자 ID */
+  assignedBy: string;
   /** 자가평가 내용 */
   selfEvaluationContent: string;
   /** 자가평가 점수 (1-5) */
@@ -76,6 +112,10 @@ export interface CreateWbsSelfEvaluationData {
  * WBS 자가평가 수정 데이터
  */
 export interface UpdateWbsSelfEvaluationData {
+  /** 할당자 ID */
+  assignedBy?: string;
+  /** 자가평가 완료 여부 */
+  isCompleted?: boolean;
   /** 자가평가 내용 */
   selfEvaluationContent?: string;
   /** 자가평가 점수 (1-5) */
@@ -88,6 +128,26 @@ export interface UpdateWbsSelfEvaluationData {
  * WBS 자가평가 필터
  */
 export interface WbsSelfEvaluationFilter {
+  /** 평가 기간 ID */
+  periodId?: string;
+  /** 직원 ID */
+  employeeId?: string;
+  /** WBS 항목 ID */
+  wbsItemId?: string;
+  /** 할당자 ID */
+  assignedBy?: string;
+  /** 완료된 자가평가만 조회 */
+  completedOnly?: boolean;
+  /** 미완료 자가평가만 조회 */
+  uncompletedOnly?: boolean;
+  /** 할당일 시작 */
+  assignedDateFrom?: Date;
+  /** 할당일 종료 */
+  assignedDateTo?: Date;
+  /** 완료일 시작 */
+  completedDateFrom?: Date;
+  /** 완료일 종료 */
+  completedDateTo?: Date;
   /** 평가일 시작 */
   evaluationDateFrom?: Date;
   /** 평가일 종료 */

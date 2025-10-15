@@ -10,7 +10,6 @@ import {
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 import type { WbsSelfEvaluationDto } from '../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
-import type { WbsSelfEvaluationMappingDto } from '../../../../domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.types';
 
 /**
  * WBS 자기평가 생성 Body DTO (경로 파라미터 제외)
@@ -152,6 +151,48 @@ export class WbsSelfEvaluationBasicDto {
   id: string;
 
   @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440005',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '직원 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440003',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '할당자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440004',
+  })
+  assignedBy: string;
+
+  @ApiProperty({
+    description: '할당일',
+    example: '2024-01-01T09:00:00Z',
+  })
+  assignedDate: Date;
+
+  @ApiProperty({
+    description: '완료 여부',
+    example: false,
+  })
+  isCompleted: boolean;
+
+  @ApiPropertyOptional({
+    description: '완료일',
+    example: '2024-01-15T15:00:00Z',
+  })
+  completedAt?: Date;
+
+  @ApiProperty({
     description: '평가일',
     example: '2024-01-15T09:00:00Z',
   })
@@ -195,14 +236,25 @@ export class WbsSelfEvaluationBasicDto {
 }
 
 /**
- * 자기평가 매핑 기본 정보 DTO
+ * WBS 자기평가 응답 DTO
  */
-export class WbsSelfEvaluationMappingBasicDto {
+export class WbsSelfEvaluationResponseDto extends WbsSelfEvaluationBasicDto {}
+
+/**
+ * WBS 자기평가 상세 응답 DTO
+ */
+export class WbsSelfEvaluationDetailResponseDto {
   @ApiProperty({
-    description: '매핑 ID',
-    example: '550e8400-e29b-41d4-a716-446655440001',
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
   id: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440005',
+  })
+  periodId: string;
 
   @ApiProperty({
     description: '직원 ID',
@@ -217,44 +269,28 @@ export class WbsSelfEvaluationMappingBasicDto {
   wbsItemId: string;
 
   @ApiProperty({
-    description: '평가기간 ID',
+    description: '할당자 ID',
     example: '550e8400-e29b-41d4-a716-446655440004',
   })
-  periodId: string;
+  assignedBy: string;
 
   @ApiProperty({
-    description: '자기평가 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: '할당일',
+    example: '2024-01-01T09:00:00Z',
   })
-  selfEvaluationId: string;
-}
-
-/**
- * WBS 자기평가 응답 DTO
- */
-export class WbsSelfEvaluationResponseDto {
-  @ApiProperty({
-    description: '자기평가 정보',
-    type: WbsSelfEvaluationBasicDto,
-  })
-  evaluation: WbsSelfEvaluationBasicDto;
+  assignedDate: Date;
 
   @ApiProperty({
-    description: '자기평가 매핑 정보',
-    type: WbsSelfEvaluationMappingBasicDto,
+    description: '완료 여부',
+    example: false,
   })
-  evaluationMapping: WbsSelfEvaluationMappingBasicDto;
-}
+  isCompleted: boolean;
 
-/**
- * WBS 자기평가 상세 응답 DTO
- */
-export class WbsSelfEvaluationDetailResponseDto {
-  @ApiProperty({
-    description: '자기평가 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+  @ApiPropertyOptional({
+    description: '완료일',
+    example: '2024-01-15T15:00:00Z',
   })
-  id: string;
+  completedAt?: Date;
 
   @ApiProperty({
     description: '평가일',

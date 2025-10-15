@@ -6,6 +6,7 @@ import { WbsSelfEvaluation } from './wbs-self-evaluation.entity';
 import {
   WbsSelfEvaluationNotFoundException,
   WbsSelfEvaluationValidationException,
+  DuplicateWbsSelfEvaluationException,
 } from './wbs-self-evaluation.exceptions';
 import type {
   CreateWbsSelfEvaluationData,
@@ -56,6 +57,14 @@ export class WbsSelfEvaluationService {
         manager,
       );
 
+      // 중복 검사
+      await this.중복_검사를_수행한다(
+        createData.periodId,
+        createData.employeeId,
+        createData.wbsItemId,
+        repository,
+      );
+
       const wbsSelfEvaluation = new WbsSelfEvaluation(createData);
       const saved = await repository.save(wbsSelfEvaluation);
 
@@ -92,13 +101,33 @@ export class WbsSelfEvaluationService {
         this.점수_유효성을_검사한다(updateData.selfEvaluationScore);
       }
 
-      wbsSelfEvaluation.자가평가를_수정한다(
+      // 필드 업데이트
+      if (updateData.assignedBy !== undefined) {
+        wbsSelfEvaluation.assignedBy = updateData.assignedBy;
+      }
+
+      if (updateData.isCompleted !== undefined) {
+        if (updateData.isCompleted) {
+          wbsSelfEvaluation.자가평가를_완료한다();
+        } else {
+          wbsSelfEvaluation.자가평가_완료를_취소한다();
+        }
+      }
+
+      if (
         updateData.selfEvaluationContent ||
-          wbsSelfEvaluation.selfEvaluationContent,
-        updateData.selfEvaluationScore || wbsSelfEvaluation.selfEvaluationScore,
-        updateData.additionalComments,
-        updatedBy,
-      );
+        updateData.selfEvaluationScore ||
+        updateData.additionalComments !== undefined
+      ) {
+        wbsSelfEvaluation.자가평가를_수정한다(
+          updateData.selfEvaluationContent ||
+            wbsSelfEvaluation.selfEvaluationContent,
+          updateData.selfEvaluationScore ||
+            wbsSelfEvaluation.selfEvaluationScore,
+          updateData.additionalComments,
+          updatedBy,
+        );
+      }
 
       const saved = await repository.save(wbsSelfEvaluation);
 
@@ -179,6 +208,66 @@ export class WbsSelfEvaluationService {
       let queryBuilder = repository.createQueryBuilder('evaluation');
 
       // 필터 적용
+      if (filter.periodId) {
+        queryBuilder.andWhere('evaluation.periodId = :periodId', {
+          periodId: filter.periodId,
+        });
+      }
+
+      if (filter.employeeId) {
+        queryBuilder.andWhere('evaluation.employeeId = :employeeId', {
+          employeeId: filter.employeeId,
+        });
+      }
+
+      if (filter.wbsItemId) {
+        queryBuilder.andWhere('evaluation.wbsItemId = :wbsItemId', {
+          wbsItemId: filter.wbsItemId,
+        });
+      }
+
+      if (filter.assignedBy) {
+        queryBuilder.andWhere('evaluation.assignedBy = :assignedBy', {
+          assignedBy: filter.assignedBy,
+        });
+      }
+
+      if (filter.completedOnly) {
+        queryBuilder.andWhere('evaluation.isCompleted = :isCompleted', {
+          isCompleted: true,
+        });
+      }
+
+      if (filter.uncompletedOnly) {
+        queryBuilder.andWhere('evaluation.isCompleted = :isCompleted', {
+          isCompleted: false,
+        });
+      }
+
+      if (filter.assignedDateFrom) {
+        queryBuilder.andWhere('evaluation.assignedDate >= :assignedDateFrom', {
+          assignedDateFrom: filter.assignedDateFrom,
+        });
+      }
+
+      if (filter.assignedDateTo) {
+        queryBuilder.andWhere('evaluation.assignedDate <= :assignedDateTo', {
+          assignedDateTo: filter.assignedDateTo,
+        });
+      }
+
+      if (filter.completedDateFrom) {
+        queryBuilder.andWhere('evaluation.completedAt >= :completedDateFrom', {
+          completedDateFrom: filter.completedDateFrom,
+        });
+      }
+
+      if (filter.completedDateTo) {
+        queryBuilder.andWhere('evaluation.completedAt <= :completedDateTo', {
+          completedDateTo: filter.completedDateTo,
+        });
+      }
+
       if (filter.evaluationDateFrom) {
         queryBuilder.andWhere(
           'evaluation.evaluationDate >= :evaluationDateFrom',
@@ -225,9 +314,85 @@ export class WbsSelfEvaluationService {
   }
 
   /**
+   * 평가기간별 WBS 자가평가 목록을 조회한다
+   */
+  async 평가기간별_조회한다(
+    periodId: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluation[]> {
+    return this.필터_조회한다({ periodId }, manager);
+  }
+
+  /**
+   * 직원별 WBS 자가평가 목록을 조회한다
+   */
+  async 직원별_조회한다(
+    employeeId: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluation[]> {
+    return this.필터_조회한다({ employeeId }, manager);
+  }
+
+  /**
+   * WBS 항목별 자가평가 목록을 조회한다
+   */
+  async WBS항목별_조회한다(
+    wbsItemId: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluation[]> {
+    return this.필터_조회한다({ wbsItemId }, manager);
+  }
+
+  /**
+   * 중복 검사를 수행한다
+   */
+  private async 중복_검사를_수행한다(
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    repository: Repository<WbsSelfEvaluation>,
+  ): Promise<void> {
+    const existing = await repository.findOne({
+      where: {
+        periodId,
+        employeeId,
+        wbsItemId,
+      },
+    });
+
+    if (existing) {
+      throw new DuplicateWbsSelfEvaluationException(
+        periodId,
+        employeeId,
+        wbsItemId,
+      );
+    }
+  }
+
+  /**
    * 유효성을 검사한다
    */
   private 유효성을_검사한다(data: CreateWbsSelfEvaluationData): void {
+    if (!data.periodId?.trim()) {
+      throw new WbsSelfEvaluationValidationException(
+        '평가 기간 ID는 필수입니다.',
+      );
+    }
+
+    if (!data.employeeId?.trim()) {
+      throw new WbsSelfEvaluationValidationException('직원 ID는 필수입니다.');
+    }
+
+    if (!data.wbsItemId?.trim()) {
+      throw new WbsSelfEvaluationValidationException(
+        'WBS 항목 ID는 필수입니다.',
+      );
+    }
+
+    if (!data.assignedBy?.trim()) {
+      throw new WbsSelfEvaluationValidationException('할당자 ID는 필수입니다.');
+    }
+
     if (!data.selfEvaluationContent?.trim()) {
       throw new WbsSelfEvaluationValidationException(
         '자가평가 내용은 필수입니다.',

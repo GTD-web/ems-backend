@@ -35,6 +35,14 @@ export type EvaluationLineStatus = 'complete' | 'in_progress' | 'none';
 export type SelfEvaluationStatus = 'complete' | 'in_progress' | 'none';
 
 /**
+ * 하향평가 진행 상태
+ * - complete: 하향평가가 완료됨 (완료)
+ * - in_progress: 하향평가가 존재하나 완료되지 않음 (입력중)
+ * - none: 하향평가가 존재하지 않음 (미존재)
+ */
+export type DownwardEvaluationStatus = 'complete' | 'in_progress' | 'none';
+
+/**
  * 직원 평가 기간 현황 DTO
  * 특정 평가기간에서 특정 직원의 참여 현황 정보
  */
@@ -129,6 +137,32 @@ export interface EmployeeEvaluationPeriodStatusDto {
     totalMappingCount: number;
     /** 완료된 WBS 자기평가 수 */
     completedMappingCount: number;
+  };
+
+  /** 하향평가 진행 정보 */
+  downwardEvaluation: {
+    /** 1차 평가 정보 (1명) */
+    primary: {
+      /** 평가자 ID */
+      evaluatorId: string | null;
+      /** 하향평가 상태 */
+      status: DownwardEvaluationStatus;
+      /** 할당된 WBS 수 */
+      assignedWbsCount: number;
+      /** 완료된 하향평가 수 */
+      completedEvaluationCount: number;
+    };
+    /** 2차 평가 정보 배열 (여러 명 가능) */
+    secondary: Array<{
+      /** 평가자 ID */
+      evaluatorId: string;
+      /** 하향평가 상태 */
+      status: DownwardEvaluationStatus;
+      /** 할당된 WBS 수 */
+      assignedWbsCount: number;
+      /** 완료된 하향평가 수 */
+      completedEvaluationCount: number;
+    }>;
   };
 }
 

@@ -7,7 +7,6 @@ import { CommonDomainModule } from '../../domain/common/common-domain.module';
 
 // 엔티티 imports
 import { WbsSelfEvaluation } from '../../domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
-import { WbsSelfEvaluationMapping } from '../../domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.entity';
 import { DownwardEvaluation } from '../../domain/core/downward-evaluation/downward-evaluation.entity';
 import { PeerEvaluation } from '../../domain/core/peer-evaluation/peer-evaluation.entity';
 import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evaluation.entity';
@@ -29,7 +28,6 @@ import { QueryHandlers } from './handlers/query-handlers';
     CommonDomainModule,
     TypeOrmModule.forFeature([
       WbsSelfEvaluation,
-      WbsSelfEvaluationMapping,
       DownwardEvaluation,
       PeerEvaluation,
       FinalEvaluation,
