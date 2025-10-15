@@ -10,6 +10,16 @@ export enum DownwardEvaluationType {
  * 하향평가 생성 데이터
  */
 export interface CreateDownwardEvaluationData {
+  /** 피평가자 ID */
+  employeeId: string;
+  /** 평가자 ID */
+  evaluatorId: string;
+  /** 프로젝트 ID */
+  projectId: string;
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 자기평가 ID */
+  selfEvaluationId?: string;
   /** 하향평가 내용 */
   downwardEvaluationContent?: string;
   /** 하향평가 점수 */
@@ -28,6 +38,8 @@ export interface CreateDownwardEvaluationData {
  * 하향평가 수정 데이터
  */
 export interface UpdateDownwardEvaluationData {
+  /** 자기평가 ID */
+  selfEvaluationId?: string;
   /** 하향평가 내용 */
   downwardEvaluationContent?: string;
   /** 하향평가 점수 */
@@ -42,6 +54,16 @@ export interface UpdateDownwardEvaluationData {
 export interface DownwardEvaluationDto {
   /** 하향평가 고유 식별자 */
   id: string;
+  /** 피평가자 ID */
+  employeeId: string;
+  /** 평가자 ID */
+  evaluatorId: string;
+  /** 프로젝트 ID */
+  projectId: string;
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 자기평가 ID */
+  selfEvaluationId?: string;
   /** 하향평가 내용 */
   downwardEvaluationContent?: string;
   /** 하향평가 점수 */
@@ -72,12 +94,26 @@ export interface DownwardEvaluationDto {
  * 하향평가 필터
  */
 export interface DownwardEvaluationFilter {
+  /** 피평가자 ID */
+  employeeId?: string;
+  /** 평가자 ID */
+  evaluatorId?: string;
+  /** 프로젝트 ID */
+  projectId?: string;
+  /** 평가 기간 ID */
+  periodId?: string;
+  /** 자기평가 ID */
+  selfEvaluationId?: string;
   /** 평가 유형 */
   evaluationType?: DownwardEvaluationType;
   /** 완료된 평가만 조회 */
   completedOnly?: boolean;
   /** 미완료 평가만 조회 */
   uncompletedOnly?: boolean;
+  /** 자기평가가 연결된 평가만 조회 */
+  withSelfEvaluation?: boolean;
+  /** 자기평가가 연결되지 않은 평가만 조회 */
+  withoutSelfEvaluation?: boolean;
   /** 점수 범위 필터 - 최소 */
   scoreFrom?: number;
   /** 점수 범위 필터 - 최대 */

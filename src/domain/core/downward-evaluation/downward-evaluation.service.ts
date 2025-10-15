@@ -12,6 +12,7 @@ import type {
   UpdateDownwardEvaluationData,
   DownwardEvaluationFilter,
 } from './downward-evaluation.types';
+import { DownwardEvaluationType } from './downward-evaluation.types';
 
 /**
  * 하향평가 서비스
@@ -32,7 +33,17 @@ export class DownwardEvaluationService {
   async 생성한다(
     createData: CreateDownwardEvaluationData,
   ): Promise<DownwardEvaluation> {
-    this.logger.log(`하향평가 생성 시작 - 유형: ${createData.evaluationType}`);
+    this.logger.log(
+      `하향평가 생성 시작 - 피평가자: ${createData.employeeId}, 평가자: ${createData.evaluatorId}, 유형: ${createData.evaluationType}`,
+    );
+
+    // 중복 검사
+    await this.중복_검사를_수행한다(
+      createData.employeeId,
+      createData.evaluatorId,
+      createData.periodId,
+      createData.evaluationType,
+    );
 
     // 유효성 검사
     this.유효성을_검사한다(createData);
@@ -88,6 +99,18 @@ export class DownwardEvaluationService {
           downwardEvaluation.isCompleted = false;
           downwardEvaluation.completedAt = undefined;
           downwardEvaluation.메타데이터를_업데이트한다(updatedBy);
+        }
+      }
+
+      // 자기평가 연결/해제 처리
+      if (updateData.selfEvaluationId !== undefined) {
+        if (updateData.selfEvaluationId) {
+          downwardEvaluation.자기평가를_연결한다(
+            updateData.selfEvaluationId,
+            updatedBy,
+          );
+        } else {
+          downwardEvaluation.자기평가_연결을_해제한다(updatedBy);
         }
       }
 
@@ -155,10 +178,51 @@ export class DownwardEvaluationService {
         this.downwardEvaluationRepository.createQueryBuilder('evaluation');
 
       // 필터 적용
+      if (filter.employeeId) {
+        queryBuilder.andWhere('evaluation.employeeId = :employeeId', {
+          employeeId: filter.employeeId,
+        });
+      }
+
+      if (filter.evaluatorId) {
+        queryBuilder.andWhere('evaluation.evaluatorId = :evaluatorId', {
+          evaluatorId: filter.evaluatorId,
+        });
+      }
+
+      if (filter.projectId) {
+        queryBuilder.andWhere('evaluation.projectId = :projectId', {
+          projectId: filter.projectId,
+        });
+      }
+
+      if (filter.periodId) {
+        queryBuilder.andWhere('evaluation.periodId = :periodId', {
+          periodId: filter.periodId,
+        });
+      }
+
+      if (filter.selfEvaluationId) {
+        queryBuilder.andWhere(
+          'evaluation.selfEvaluationId = :selfEvaluationId',
+          {
+            selfEvaluationId: filter.selfEvaluationId,
+          },
+        );
+      }
+
       if (filter.evaluationType) {
         queryBuilder.andWhere('evaluation.evaluationType = :evaluationType', {
           evaluationType: filter.evaluationType,
         });
+      }
+
+      if (filter.withSelfEvaluation) {
+        queryBuilder.andWhere('evaluation.selfEvaluationId IS NOT NULL');
+      }
+
+      if (filter.withoutSelfEvaluation) {
+        queryBuilder.andWhere('evaluation.selfEvaluationId IS NULL');
       }
 
       if (filter.completedOnly) {
@@ -256,9 +320,128 @@ export class DownwardEvaluationService {
   }
 
   /**
+   * 특정 피평가자의 하향평가 목록을 조회한다
+   */
+  async 피평가자별_조회한다(employeeId: string): Promise<DownwardEvaluation[]> {
+    this.logger.debug(`피평가자별 하향평가 조회 - 피평가자: ${employeeId}`);
+
+    try {
+      return await this.필터_조회한다({ employeeId });
+    } catch (error) {
+      this.logger.error(
+        `피평가자별 하향평가 조회 실패 - 피평가자: ${employeeId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 특정 평가자의 하향평가 목록을 조회한다
+   */
+  async 평가자별_조회한다(evaluatorId: string): Promise<DownwardEvaluation[]> {
+    this.logger.debug(`평가자별 하향평가 조회 - 평가자: ${evaluatorId}`);
+
+    try {
+      return await this.필터_조회한다({ evaluatorId });
+    } catch (error) {
+      this.logger.error(
+        `평가자별 하향평가 조회 실패 - 평가자: ${evaluatorId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 특정 프로젝트의 하향평가 목록을 조회한다
+   */
+  async 프로젝트별_조회한다(projectId: string): Promise<DownwardEvaluation[]> {
+    this.logger.debug(`프로젝트별 하향평가 조회 - 프로젝트: ${projectId}`);
+
+    try {
+      return await this.필터_조회한다({ projectId });
+    } catch (error) {
+      this.logger.error(
+        `프로젝트별 하향평가 조회 실패 - 프로젝트: ${projectId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 특정 평가기간의 하향평가 목록을 조회한다
+   */
+  async 평가기간별_조회한다(periodId: string): Promise<DownwardEvaluation[]> {
+    this.logger.debug(`평가기간별 하향평가 조회 - 기간: ${periodId}`);
+
+    try {
+      return await this.필터_조회한다({ periodId });
+    } catch (error) {
+      this.logger.error(
+        `평가기간별 하향평가 조회 실패 - 기간: ${periodId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 중복 검사를 수행한다
+   */
+  private async 중복_검사를_수행한다(
+    employeeId: string,
+    evaluatorId: string,
+    periodId: string,
+    evaluationType: DownwardEvaluationType,
+  ): Promise<void> {
+    const existing = await this.downwardEvaluationRepository.findOne({
+      where: {
+        employeeId,
+        evaluatorId,
+        periodId,
+        evaluationType,
+      },
+    });
+
+    if (existing) {
+      throw new DownwardEvaluationDuplicateException(
+        employeeId,
+        evaluatorId,
+        periodId,
+      );
+    }
+  }
+
+  /**
    * 유효성을 검사한다
    */
   private 유효성을_검사한다(data: CreateDownwardEvaluationData): void {
+    if (!data.employeeId) {
+      throw new DownwardEvaluationValidationException(
+        '피평가자 ID는 필수입니다.',
+      );
+    }
+
+    if (!data.evaluatorId) {
+      throw new DownwardEvaluationValidationException(
+        '평가자 ID는 필수입니다.',
+      );
+    }
+
+    if (!data.projectId) {
+      throw new DownwardEvaluationValidationException(
+        '프로젝트 ID는 필수입니다.',
+      );
+    }
+
+    if (!data.periodId) {
+      throw new DownwardEvaluationValidationException(
+        '평가 기간 ID는 필수입니다.',
+      );
+    }
+
     if (!data.evaluationType) {
       throw new DownwardEvaluationValidationException(
         '평가 유형은 필수입니다.',

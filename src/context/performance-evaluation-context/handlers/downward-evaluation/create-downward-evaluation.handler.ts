@@ -1,7 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { DownwardEvaluationService } from '@domain/core/downward-evaluation/downward-evaluation.service';
-import { DownwardEvaluationMappingService } from '@domain/core/downward-evaluation-mapping/downward-evaluation-mapping.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 
@@ -34,7 +33,6 @@ export class CreateDownwardEvaluationHandler
 
   constructor(
     private readonly downwardEvaluationService: DownwardEvaluationService,
-    private readonly downwardEvaluationMappingService: DownwardEvaluationMappingService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -60,25 +58,19 @@ export class CreateDownwardEvaluationHandler
     });
 
     return await this.transactionManager.executeTransaction(async () => {
-      // 하향평가 생성
+      // 통합된 하향평가 생성 (매핑 정보 포함)
       const evaluation = await this.downwardEvaluationService.생성한다({
+        employeeId: evaluateeId,
+        evaluatorId,
+        projectId,
+        periodId,
+        selfEvaluationId,
         downwardEvaluationContent,
         downwardEvaluationScore,
         evaluationDate: new Date(),
         evaluationType: evaluationType as DownwardEvaluationType,
         isCompleted: false,
         createdBy,
-      });
-
-      // 하향평가 매핑 생성
-      await this.downwardEvaluationMappingService.생성한다({
-        employeeId: evaluateeId,
-        evaluatorId,
-        projectId,
-        periodId,
-        downwardEvaluationId: evaluation.id,
-        selfEvaluationId,
-        mappedBy: createdBy,
       });
 
       this.logger.log('하향평가 생성 완료', { evaluationId: evaluation.id });

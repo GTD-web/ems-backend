@@ -6,6 +6,16 @@ import type { DownwardEvaluationType } from '../downward-evaluation.types';
 export interface IDownwardEvaluation {
   /** 고유 식별자 (UUID) */
   id: string;
+  /** 피평가자 ID */
+  employeeId: string;
+  /** 평가자 ID */
+  evaluatorId: string;
+  /** 프로젝트 ID */
+  projectId: string;
+  /** 평가 기간 ID */
+  periodId: string;
+  /** 자기평가 ID */
+  selfEvaluationId?: string;
   /** 하향평가 내용 */
   downwardEvaluationContent?: string;
   /** 하향평가 점수 */

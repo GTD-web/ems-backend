@@ -1,8 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { DownwardEvaluationService } from '@domain/core/downward-evaluation/downward-evaluation.service';
-import { DownwardEvaluationMappingService } from '@domain/core/downward-evaluation-mapping/downward-evaluation-mapping.service';
-import { DownwardEvaluationMapping } from '@domain/core/downward-evaluation-mapping/downward-evaluation-mapping.entity';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 
@@ -36,7 +34,6 @@ export class UpsertDownwardEvaluationHandler
 
   constructor(
     private readonly downwardEvaluationService: DownwardEvaluationService,
-    private readonly downwardEvaluationMappingService: DownwardEvaluationMappingService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -62,57 +59,39 @@ export class UpsertDownwardEvaluationHandler
     });
 
     return await this.transactionManager.executeTransaction(async () => {
-      // 기존 매핑 조회 (evaluateeId, evaluatorId, periodId, projectId로 찾기)
-      const existingMappings =
-        await this.downwardEvaluationMappingService.필터_조회한다({
+      // 기존 하향평가 조회 (employeeId, evaluatorId, periodId, evaluationType로 찾기)
+      const existingEvaluations =
+        await this.downwardEvaluationService.필터_조회한다({
           employeeId: evaluateeId,
           evaluatorId,
           periodId,
           projectId,
+          evaluationType: evaluationType as DownwardEvaluationType,
         });
 
-      // 해당 evaluationType의 매핑 찾기
-      let existingMapping: DownwardEvaluationMapping | null = null;
-      if (existingMappings.length > 0) {
-        for (const mapping of existingMappings) {
-          const evaluation = await this.downwardEvaluationService.조회한다(
-            mapping.downwardEvaluationId,
-          );
-          if (evaluation && evaluation.evaluationType === evaluationType) {
-            existingMapping = mapping;
-            break;
-          }
-        }
-      }
+      const existingEvaluation =
+        existingEvaluations.length > 0 ? existingEvaluations[0] : null;
 
-      if (existingMapping) {
+      if (existingEvaluation) {
         // 기존 하향평가 수정
         this.logger.log('기존 하향평가 수정', {
-          evaluationId: existingMapping.downwardEvaluationId,
+          evaluationId: existingEvaluation.id,
         });
 
         await this.downwardEvaluationService.수정한다(
-          existingMapping.downwardEvaluationId,
+          existingEvaluation.id,
           {
             downwardEvaluationContent,
             downwardEvaluationScore,
+            selfEvaluationId:
+              selfEvaluationId !== existingEvaluation.selfEvaluationId
+                ? selfEvaluationId
+                : undefined,
           },
           actionBy,
         );
 
-        // 자기평가 ID가 변경된 경우 매핑 업데이트
-        if (
-          selfEvaluationId &&
-          existingMapping.selfEvaluationId !== selfEvaluationId
-        ) {
-          await this.downwardEvaluationMappingService.수정한다(
-            existingMapping.id,
-            { selfEvaluationId },
-            actionBy,
-          );
-        }
-
-        return existingMapping.downwardEvaluationId;
+        return existingEvaluation.id;
       } else {
         // 새로운 하향평가 생성
         this.logger.log('새로운 하향평가 생성', {
@@ -122,23 +101,17 @@ export class UpsertDownwardEvaluationHandler
         });
 
         const evaluation = await this.downwardEvaluationService.생성한다({
+          employeeId: evaluateeId,
+          evaluatorId,
+          projectId,
+          periodId,
+          selfEvaluationId,
           downwardEvaluationContent,
           downwardEvaluationScore,
           evaluationDate: new Date(),
           evaluationType: evaluationType as DownwardEvaluationType,
           isCompleted: false,
           createdBy: actionBy,
-        });
-
-        // 하향평가 매핑 생성
-        await this.downwardEvaluationMappingService.생성한다({
-          employeeId: evaluateeId,
-          evaluatorId,
-          projectId,
-          periodId,
-          downwardEvaluationId: evaluation.id,
-          selfEvaluationId,
-          mappedBy: actionBy,
         });
 
         this.logger.log('하향평가 생성 완료', { evaluationId: evaluation.id });

@@ -90,15 +90,45 @@ export class DownwardEvaluationValidationException extends DownwardEvaluationDom
   }
 }
 
-// 하향평가 중복 예외 (새로운 이름)
+// 하향평가 중복 예외
 export class DownwardEvaluationDuplicateException extends DownwardEvaluationDomainException {
-  constructor(evaluationType: string, evaluatorId: string) {
+  constructor(employeeId: string, evaluatorId: string, periodId: string) {
     super(
-      `이미 존재하는 하향평가입니다: 유형 ${evaluationType}, 평가자 ${evaluatorId}`,
+      `이미 존재하는 하향평가입니다: 피평가자 ${employeeId}, 평가자 ${evaluatorId}, 기간 ${periodId}`,
       'DOWNWARD_EVALUATION_DUPLICATE',
       409,
-      { evaluationType, evaluatorId },
+      { employeeId, evaluatorId, periodId },
     );
     this.name = 'DownwardEvaluationDuplicateException';
+  }
+}
+
+// 하향평가 평가자 불일치 예외
+export class DownwardEvaluationEvaluatorMismatchException extends DownwardEvaluationDomainException {
+  constructor(
+    evaluationId: string,
+    expectedEvaluatorId: string,
+    actualEvaluatorId: string,
+  ) {
+    super(
+      `하향평가의 평가자가 일치하지 않습니다: 평가 ${evaluationId}, 예상 평가자 ${expectedEvaluatorId}, 실제 평가자 ${actualEvaluatorId}`,
+      'DOWNWARD_EVALUATION_EVALUATOR_MISMATCH',
+      400,
+      { evaluationId, expectedEvaluatorId, actualEvaluatorId },
+    );
+    this.name = 'DownwardEvaluationEvaluatorMismatchException';
+  }
+}
+
+// 하향평가 기간 만료 예외
+export class DownwardEvaluationPeriodExpiredException extends DownwardEvaluationDomainException {
+  constructor(evaluationId: string, periodId: string) {
+    super(
+      `하향평가의 평가 기간이 만료되었습니다: 평가 ${evaluationId}, 기간 ${periodId}`,
+      'DOWNWARD_EVALUATION_PERIOD_EXPIRED',
+      400,
+      { evaluationId, periodId },
+    );
+    this.name = 'DownwardEvaluationPeriodExpiredException';
   }
 }

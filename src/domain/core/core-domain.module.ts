@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { DeliverableModule } from './deliverable/deliverable.module';
 import { DeliverableMappingModule } from './deliverable-mapping/deliverable-mapping.module';
 import { DownwardEvaluationModule } from './downward-evaluation/downward-evaluation.module';
-import { DownwardEvaluationMappingModule } from './downward-evaluation-mapping/downward-evaluation-mapping.module';
 import { EmployeeEvaluationStatusModule } from './employee-evaluation-status/employee-evaluation-status.module';
 import { EmployeeEvaluationStatusMappingModule } from './employee-evaluation-status-mapping/employee-evaluation-status-mapping.module';
 import { EvaluationLineModule } from './evaluation-line/evaluation-line.module';
@@ -51,7 +50,6 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     EvaluationLineMappingModule,
     EmployeeEvaluationStatusMappingModule,
     WbsSelfEvaluationMappingModule,
-    DownwardEvaluationMappingModule,
     PeerEvaluationMappingModule,
     DeliverableMappingModule,
   ],
@@ -82,7 +80,6 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     EvaluationLineMappingModule,
     EmployeeEvaluationStatusMappingModule,
     WbsSelfEvaluationMappingModule,
-    DownwardEvaluationMappingModule,
     PeerEvaluationMappingModule,
     DeliverableMappingModule,
   ],

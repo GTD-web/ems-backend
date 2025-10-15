@@ -10,15 +10,53 @@ import type {
 /**
  * 하향평가 엔티티
  * 상관이 자기평가를 평가하는 하향평가를 관리합니다.
+ * 피평가자, 평가자, 프로젝트, 평가기간 정보를 포함합니다.
  */
 @Entity('downward_evaluation')
+@Index(['employeeId'])
+@Index(['evaluatorId'])
+@Index(['projectId'])
+@Index(['periodId'])
+@Index(['selfEvaluationId'])
 @Index(['evaluationType'])
 @Index(['evaluationDate'])
 @Index(['downwardEvaluationScore'])
+@Index(['employeeId', 'evaluatorId', 'periodId'])
 export class DownwardEvaluation
   extends BaseEntity<DownwardEvaluationDto>
   implements IDownwardEvaluation
 {
+  @Column({
+    type: 'uuid',
+    comment: '피평가자 ID',
+  })
+  employeeId: string;
+
+  @Column({
+    type: 'uuid',
+    comment: '평가자 ID',
+  })
+  evaluatorId: string;
+
+  @Column({
+    type: 'uuid',
+    comment: '프로젝트 ID',
+  })
+  projectId: string;
+
+  @Column({
+    type: 'uuid',
+    comment: '평가 기간 ID',
+  })
+  periodId: string;
+
+  @Column({
+    type: 'uuid',
+    nullable: true,
+    comment: '자기평가 ID',
+  })
+  selfEvaluationId?: string;
+
   @Column({
     type: 'text',
     nullable: true,
@@ -64,6 +102,11 @@ export class DownwardEvaluation
   constructor(data?: CreateDownwardEvaluationData) {
     super();
     if (data) {
+      this.employeeId = data.employeeId;
+      this.evaluatorId = data.evaluatorId;
+      this.projectId = data.projectId;
+      this.periodId = data.periodId;
+      this.selfEvaluationId = data.selfEvaluationId;
       this.downwardEvaluationContent = data.downwardEvaluationContent;
       this.downwardEvaluationScore = data.downwardEvaluationScore;
       this.evaluationType = data.evaluationType;
@@ -126,6 +169,65 @@ export class DownwardEvaluation
   }
 
   /**
+   * 특정 피평가자의 평가인지 확인한다
+   */
+  해당_피평가자의_평가인가(employeeId: string): boolean {
+    return this.employeeId === employeeId;
+  }
+
+  /**
+   * 특정 평가자의 평가인지 확인한다
+   */
+  해당_평가자의_평가인가(evaluatorId: string): boolean {
+    return this.evaluatorId === evaluatorId;
+  }
+
+  /**
+   * 특정 프로젝트의 평가인지 확인한다
+   */
+  해당_프로젝트의_평가인가(projectId: string): boolean {
+    return this.projectId === projectId;
+  }
+
+  /**
+   * 특정 평가기간의 평가인지 확인한다
+   */
+  해당_평가기간의_평가인가(periodId: string): boolean {
+    return this.periodId === periodId;
+  }
+
+  /**
+   * 자기평가가 연결되어 있는지 확인한다
+   */
+  자기평가가_연결되어_있는가(): boolean {
+    return (
+      this.selfEvaluationId !== null && this.selfEvaluationId !== undefined
+    );
+  }
+
+  /**
+   * 자기평가를 연결한다
+   */
+  자기평가를_연결한다(selfEvaluationId: string, connectedBy?: string): void {
+    this.selfEvaluationId = selfEvaluationId;
+
+    if (connectedBy) {
+      this.메타데이터를_업데이트한다(connectedBy);
+    }
+  }
+
+  /**
+   * 자기평가 연결을 해제한다
+   */
+  자기평가_연결을_해제한다(disconnectedBy?: string): void {
+    this.selfEvaluationId = undefined;
+
+    if (disconnectedBy) {
+      this.메타데이터를_업데이트한다(disconnectedBy);
+    }
+  }
+
+  /**
    * 하향평가를 삭제한다
    */
   삭제한다(): void {
@@ -138,6 +240,11 @@ export class DownwardEvaluation
   DTO로_변환한다(): DownwardEvaluationDto {
     return {
       id: this.id,
+      employeeId: this.employeeId,
+      evaluatorId: this.evaluatorId,
+      projectId: this.projectId,
+      periodId: this.periodId,
+      selfEvaluationId: this.selfEvaluationId,
       downwardEvaluationContent: this.downwardEvaluationContent,
       downwardEvaluationScore: this.downwardEvaluationScore,
       evaluationDate: this.evaluationDate,
