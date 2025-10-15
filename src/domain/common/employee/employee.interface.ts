@@ -30,10 +30,20 @@ export interface IEmployee {
   readonly status: EmployeeStatus;
   /** 부서 ID (외부 시스템) */
   readonly departmentId?: string;
+  /** 부서명 */
+  readonly departmentName?: string;
+  /** 부서 코드 */
+  readonly departmentCode?: string;
   /** 직급 ID (외부 시스템) */
   readonly positionId?: string;
   /** 직책 ID (외부 시스템) */
   readonly rankId?: string;
+  /** 직책명 */
+  readonly rankName?: string;
+  /** 직책 코드 */
+  readonly rankCode?: string;
+  /** 직책 레벨 */
+  readonly rankLevel?: number;
   /** 외부 시스템 ID */
   readonly externalId: string;
   /** 외부 시스템 생성일 */
@@ -42,4 +52,12 @@ export interface IEmployee {
   readonly externalUpdatedAt: Date;
   /** 마지막 동기화 시간 */
   readonly lastSyncAt?: Date;
+  /** 목록 조회 제외 여부 */
+  readonly isExcludedFromList: boolean;
+  /** 조회 제외 사유 */
+  readonly excludeReason?: string;
+  /** 조회 제외 설정자 */
+  readonly excludedBy?: string;
+  /** 조회 제외 설정 일시 */
+  readonly excludedAt?: Date;
 }

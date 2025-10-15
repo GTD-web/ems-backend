@@ -95,6 +95,22 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
 
   @Column({
     type: 'varchar',
+    length: 200,
+    nullable: true,
+    comment: '부서명',
+  })
+  departmentName?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: '부서 코드',
+  })
+  departmentCode?: string;
+
+  @Column({
+    type: 'varchar',
     length: 255,
     nullable: true,
     comment: '직급 ID (외부 시스템)',
@@ -108,6 +124,29 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
     comment: '직책 ID (외부 시스템)',
   })
   rankId?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+    comment: '직책명',
+  })
+  rankName?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: '직책 코드',
+  })
+  rankCode?: string;
+
+  @Column({
+    type: 'integer',
+    nullable: true,
+    comment: '직책 레벨',
+  })
+  rankLevel?: number;
 
   @Column({
     type: 'varchar',
@@ -136,6 +175,36 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
   })
   lastSyncAt?: Date;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+    comment: '목록 조회 제외 여부',
+  })
+  isExcludedFromList: boolean;
+
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    comment: '조회 제외 사유',
+  })
+  excludeReason?: string;
+
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+    comment: '조회 제외 설정자',
+  })
+  excludedBy?: string;
+
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    comment: '조회 제외 설정 일시',
+  })
+  excludedAt?: Date;
+
   constructor(
     employeeNumber?: string,
     name?: string,
@@ -148,8 +217,13 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
     managerId?: string,
     status?: EmployeeStatus,
     departmentId?: string,
+    departmentName?: string,
+    departmentCode?: string,
     positionId?: string,
     rankId?: string,
+    rankName?: string,
+    rankCode?: string,
+    rankLevel?: number,
     externalCreatedAt?: Date,
     externalUpdatedAt?: Date,
   ) {
@@ -165,11 +239,17 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
     if (managerId) this.managerId = managerId;
     if (status) this.status = status;
     if (departmentId) this.departmentId = departmentId;
+    if (departmentName) this.departmentName = departmentName;
+    if (departmentCode) this.departmentCode = departmentCode;
     if (positionId) this.positionId = positionId;
     if (rankId) this.rankId = rankId;
+    if (rankName) this.rankName = rankName;
+    if (rankCode) this.rankCode = rankCode;
+    if (rankLevel !== undefined) this.rankLevel = rankLevel;
     if (externalCreatedAt) this.externalCreatedAt = externalCreatedAt;
     if (externalUpdatedAt) this.externalUpdatedAt = externalUpdatedAt;
     this.status = status || '재직중';
+    this.isExcludedFromList = false; // 기본값: 조회 제외 안 함
   }
 
   /**
@@ -197,12 +277,21 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
       managerId: this.managerId,
       status: this.status,
       departmentId: this.departmentId,
+      departmentName: this.departmentName,
+      departmentCode: this.departmentCode,
       positionId: this.positionId,
       rankId: this.rankId,
+      rankName: this.rankName,
+      rankCode: this.rankCode,
+      rankLevel: this.rankLevel,
       externalId: this.externalId,
       externalCreatedAt: this.externalCreatedAt,
       externalUpdatedAt: this.externalUpdatedAt,
       lastSyncAt: this.lastSyncAt,
+      isExcludedFromList: this.isExcludedFromList,
+      excludeReason: this.excludeReason,
+      excludedBy: this.excludedBy,
+      excludedAt: this.excludedAt,
 
       // 계산된 필드들
       get isDeleted() {

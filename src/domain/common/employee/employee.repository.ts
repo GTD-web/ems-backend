@@ -78,13 +78,24 @@ export class EmployeeRepository implements IEmployeeRepository {
   /**
    * 모든 직원 조회
    */
-  async findAllWithManager(manager?: EntityManager): Promise<Employee[]> {
+  async findAllWithManager(
+    manager?: EntityManager,
+    includeExcluded: boolean = false,
+  ): Promise<Employee[]> {
     const repository = this.transactionManager.getRepository(
       Employee,
       this.repository,
       manager,
     );
+
+    const where: any = {};
+    // 기본적으로 제외된 직원은 보이지 않음
+    if (!includeExcluded) {
+      where.isExcludedFromList = false;
+    }
+
     return repository.find({
+      where,
       order: { name: 'ASC' },
     });
   }
@@ -259,6 +270,13 @@ export class EmployeeRepository implements IEmployeeRepository {
     if (filter.managerId) {
       queryBuilder.andWhere('employee.managerId = :managerId', {
         managerId: filter.managerId,
+      });
+    }
+
+    // 조회 제외 필터 (기본값: false - 제외된 직원은 보이지 않음)
+    if (filter.includeExcluded !== true) {
+      queryBuilder.andWhere('employee.isExcludedFromList = :isExcluded', {
+        isExcluded: false,
       });
     }
 

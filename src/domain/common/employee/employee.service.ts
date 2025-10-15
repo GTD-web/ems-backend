@@ -106,6 +106,13 @@ export class EmployeeService {
       });
     }
 
+    // 조회 제외 필터 (기본값: false - 제외된 직원은 보이지 않음)
+    if (filter.includeExcluded !== true) {
+      queryBuilder.andWhere('employee.isExcludedFromList = :isExcluded', {
+        isExcluded: false,
+      });
+    }
+
     const employees = await queryBuilder.getMany();
     return employees.map((employee) => employee.DTO로_변환한다());
   }
@@ -169,6 +176,13 @@ export class EmployeeService {
       });
     }
 
+    // 조회 제외 필터 (기본값: false - 제외된 직원은 보이지 않음)
+    if (filter.includeExcluded !== true) {
+      queryBuilder.andWhere('employee.isExcludedFromList = :isExcluded', {
+        isExcluded: false,
+      });
+    }
+
     // 정렬
     queryBuilder.orderBy(`employee.${sortBy}`, sortOrder);
 
@@ -188,11 +202,21 @@ export class EmployeeService {
 
   /**
    * 전체 직원 목록을 조회한다
+   * @param includeExcluded 제외된 직원도 포함할지 여부 (기본값: false)
    * @returns 전체 직원 목록
    */
-  async 전체_조회한다(): Promise<EmployeeDto[]> {
+  async 전체_조회한다(
+    includeExcluded: boolean = false,
+  ): Promise<EmployeeDto[]> {
+    const where: any = { deletedAt: IsNull() };
+
+    // 기본적으로 제외된 직원은 보이지 않음
+    if (!includeExcluded) {
+      where.isExcludedFromList = false;
+    }
+
     const employees = await this.employeeRepository.find({
-      where: { deletedAt: IsNull() },
+      where,
       order: { name: 'ASC' },
     });
 
@@ -202,11 +226,22 @@ export class EmployeeService {
   /**
    * 부서별 직원 목록을 조회한다
    * @param departmentId 부서 ID
+   * @param includeExcluded 제외된 직원도 포함할지 여부 (기본값: false)
    * @returns 부서 직원 목록
    */
-  async 부서별_조회한다(departmentId: string): Promise<EmployeeDto[]> {
+  async 부서별_조회한다(
+    departmentId: string,
+    includeExcluded: boolean = false,
+  ): Promise<EmployeeDto[]> {
+    const where: any = { departmentId, deletedAt: IsNull() };
+
+    // 기본적으로 제외된 직원은 보이지 않음
+    if (!includeExcluded) {
+      where.isExcludedFromList = false;
+    }
+
     const employees = await this.employeeRepository.find({
-      where: { departmentId, deletedAt: IsNull() },
+      where,
       order: { name: 'ASC' },
     });
 
@@ -216,11 +251,22 @@ export class EmployeeService {
   /**
    * 매니저별 직원 목록을 조회한다
    * @param managerId 매니저 ID
+   * @param includeExcluded 제외된 직원도 포함할지 여부 (기본값: false)
    * @returns 매니저 하위 직원 목록
    */
-  async 매니저별_조회한다(managerId: string): Promise<EmployeeDto[]> {
+  async 매니저별_조회한다(
+    managerId: string,
+    includeExcluded: boolean = false,
+  ): Promise<EmployeeDto[]> {
+    const where: any = { managerId, deletedAt: IsNull() };
+
+    // 기본적으로 제외된 직원은 보이지 않음
+    if (!includeExcluded) {
+      where.isExcludedFromList = false;
+    }
+
     const employees = await this.employeeRepository.find({
-      where: { managerId, deletedAt: IsNull() },
+      where,
       order: { name: 'ASC' },
     });
 
@@ -229,11 +275,21 @@ export class EmployeeService {
 
   /**
    * 재직중인 직원 목록을 조회한다
+   * @param includeExcluded 제외된 직원도 포함할지 여부 (기본값: false)
    * @returns 재직중 직원 목록
    */
-  async 재직중_조회한다(): Promise<EmployeeDto[]> {
+  async 재직중_조회한다(
+    includeExcluded: boolean = false,
+  ): Promise<EmployeeDto[]> {
+    const where: any = { status: '재직중', deletedAt: IsNull() };
+
+    // 기본적으로 제외된 직원은 보이지 않음
+    if (!includeExcluded) {
+      where.isExcludedFromList = false;
+    }
+
     const employees = await this.employeeRepository.find({
-      where: { status: '재직중', deletedAt: IsNull() },
+      where,
       order: { name: 'ASC' },
     });
 
@@ -274,5 +330,76 @@ export class EmployeeService {
       where: { email, deletedAt: IsNull() },
     });
     return count > 0;
+  }
+
+  /**
+   * 직원을 조회 목록에서 제외한다
+   * @param id 직원 ID
+   * @param excludeReason 제외 사유
+   * @param excludedBy 제외 설정자
+   * @returns 업데이트된 직원 정보
+   */
+  async 조회에서_제외한다(
+    id: string,
+    excludeReason: string,
+    excludedBy: string,
+  ): Promise<EmployeeDto | null> {
+    const employee = await this.employeeRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+
+    if (!employee) {
+      return null;
+    }
+
+    employee.isExcludedFromList = true;
+    employee.excludeReason = excludeReason;
+    employee.excludedBy = excludedBy;
+    employee.excludedAt = new Date();
+    employee.updatedBy = excludedBy;
+
+    const updated = await this.employeeRepository.save(employee);
+    return updated.DTO로_변환한다();
+  }
+
+  /**
+   * 직원을 조회 목록에 다시 포함한다
+   * @param id 직원 ID
+   * @param updatedBy 포함 설정자
+   * @returns 업데이트된 직원 정보
+   */
+  async 조회에_포함한다(
+    id: string,
+    updatedBy: string,
+  ): Promise<EmployeeDto | null> {
+    const employee = await this.employeeRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+
+    if (!employee) {
+      return null;
+    }
+
+    employee.isExcludedFromList = false;
+    employee.excludeReason = undefined;
+    employee.excludedBy = undefined;
+    employee.excludedAt = undefined;
+    employee.updatedBy = updatedBy;
+
+    const updated = await this.employeeRepository.save(employee);
+    return updated.DTO로_변환한다();
+  }
+
+  /**
+   * 직원의 조회 제외 상태를 확인한다
+   * @param id 직원 ID
+   * @returns 제외 여부
+   */
+  async 조회에서_제외되었는가(id: string): Promise<boolean> {
+    const employee = await this.employeeRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+
+    return employee ? employee.isExcludedFromList : false;
   }
 }

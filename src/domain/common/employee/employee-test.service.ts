@@ -291,8 +291,13 @@ export class EmployeeTestService {
         emp.managerId,
         emp.status,
         emp.departmentId,
+        undefined, // departmentName
+        undefined, // departmentCode
         emp.positionId,
         emp.rankId,
+        undefined, // rankName
+        undefined, // rankCode
+        undefined, // rankLevel
         emp.externalCreatedAt,
         emp.externalUpdatedAt,
       );
@@ -360,8 +365,13 @@ export class EmployeeTestService {
       employeeData.managerId,
       employeeData.status || '재직중',
       employeeData.departmentId,
+      undefined, // departmentName
+      undefined, // departmentCode
       employeeData.positionId,
       employeeData.rankId,
+      undefined, // rankName
+      undefined, // rankCode
+      undefined, // rankLevel
       employeeData.externalCreatedAt || new Date(),
       employeeData.externalUpdatedAt || new Date(),
     );
@@ -405,8 +415,13 @@ export class EmployeeTestService {
         undefined,
         status,
         `dept-${Math.floor(Math.random() * 5) + 1}`,
+        undefined, // departmentName
+        undefined, // departmentCode
         `pos-${Math.floor(Math.random() * 5) + 1}`,
         `rank-${Math.floor(Math.random() * 5) + 1}`,
+        undefined, // rankName
+        undefined, // rankCode
+        undefined, // rankLevel
         new Date(),
         new Date(),
       );
@@ -487,8 +502,13 @@ export class EmployeeTestService {
         undefined,
         '재직중',
         departmentId,
+        undefined, // departmentName
+        undefined, // departmentCode
         `pos-${Math.floor(Math.random() * 3) + 1}`,
         `rank-${Math.floor(Math.random() * 3) + 1}`,
+        undefined, // rankName
+        undefined, // rankCode
+        undefined, // rankLevel
         new Date(),
         new Date(),
       );
@@ -669,8 +689,13 @@ export class EmployeeTestService {
         emp.managerId,
         emp.status,
         emp.departmentId,
+        undefined, // departmentName
+        undefined, // departmentCode
         emp.positionId,
         emp.rankId,
+        undefined, // rankName
+        undefined, // rankCode
+        undefined, // rankLevel
         emp.externalCreatedAt,
         emp.externalUpdatedAt,
       );
@@ -776,8 +801,13 @@ export class EmployeeTestService {
         undefined,
         '재직중',
         `dept-${i + 1}`,
+        undefined, // departmentName
+        undefined, // departmentCode
         'pos-mgr',
         'rank-mgr',
+        undefined, // rankName
+        undefined, // rankCode
+        undefined, // rankLevel
         new Date(),
         new Date(),
       );
@@ -808,8 +838,13 @@ export class EmployeeTestService {
           managerIds[mgrIndex],
           '재직중',
           `dept-${mgrIndex + 1}`,
+          undefined, // departmentName
+          undefined, // departmentCode
           'pos-emp',
           'rank-emp',
+          undefined, // rankName
+          undefined, // rankCode
+          undefined, // rankLevel
           new Date(),
           new Date(),
         );

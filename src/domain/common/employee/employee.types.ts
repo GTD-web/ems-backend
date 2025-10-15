@@ -50,10 +50,20 @@ export interface EmployeeDto {
   status: EmployeeStatus;
   /** 부서 ID (외부 시스템) */
   departmentId?: string;
+  /** 부서명 */
+  departmentName?: string;
+  /** 부서 코드 */
+  departmentCode?: string;
   /** 직급 ID (외부 시스템) */
   positionId?: string;
   /** 직책 ID (외부 시스템) */
   rankId?: string;
+  /** 직책명 */
+  rankName?: string;
+  /** 직책 코드 */
+  rankCode?: string;
+  /** 직책 레벨 */
+  rankLevel?: number;
   /** 외부 시스템 ID */
   externalId: string;
   /** 외부 시스템 생성일 */
@@ -62,14 +72,18 @@ export interface EmployeeDto {
   externalUpdatedAt: Date;
   /** 마지막 동기화 시간 */
   lastSyncAt?: Date;
+  /** 목록 조회 제외 여부 */
+  isExcludedFromList: boolean;
+  /** 조회 제외 사유 */
+  excludeReason?: string;
+  /** 조회 제외 설정자 */
+  excludedBy?: string;
+  /** 조회 제외 설정 일시 */
+  excludedAt?: Date;
 
   // 조인된 정보 필드들
-  /** 부서 이름 */
-  departmentName?: string;
   /** 직급 이름 */
   positionName?: string;
-  /** 직책 이름 */
-  rankName?: string;
   /** 매니저 이름 */
   managerName?: string;
 
@@ -108,6 +122,10 @@ export interface ExternalRankData {
   rank_name: string;
   rank_code: string;
   level: number;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+  id?: string;
 }
 
 // 외부 API 응답 - 부서 정보
@@ -154,8 +172,13 @@ export interface CreateEmployeeDto {
   managerId?: string;
   status: EmployeeStatus;
   departmentId?: string;
+  departmentName?: string;
+  departmentCode?: string;
   positionId?: string;
   rankId?: string;
+  rankName?: string;
+  rankCode?: string;
+  rankLevel?: number;
   externalId: string;
   externalCreatedAt: Date;
   externalUpdatedAt: Date;
@@ -172,10 +195,19 @@ export interface UpdateEmployeeDto {
   managerId?: string;
   status?: EmployeeStatus;
   departmentId?: string;
+  departmentName?: string;
+  departmentCode?: string;
   positionId?: string;
   rankId?: string;
+  rankName?: string;
+  rankCode?: string;
+  rankLevel?: number;
   externalUpdatedAt?: Date;
   lastSyncAt?: Date;
+  isExcludedFromList?: boolean;
+  excludeReason?: string;
+  excludedBy?: string;
+  excludedAt?: Date;
 }
 
 // 직원 동기화 결과
@@ -196,6 +228,7 @@ export interface EmployeeFilter {
   status?: EmployeeStatus;
   gender?: EmployeeGender;
   managerId?: string;
+  includeExcluded?: boolean; // true면 제외된 직원도 포함, false면 제외 (기본값: false)
 }
 
 // 직원 통계

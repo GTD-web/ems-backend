@@ -22,6 +22,7 @@ export class DepartmentSyncService {
   private readonly logger = new Logger(DepartmentSyncService.name);
   private readonly externalApiUrl: string;
   private readonly syncEnabled: boolean;
+  private readonly systemUserId = 'SYSTEM_SYNC'; // 시스템 동기화 사용자 ID
 
   constructor(
     private readonly departmentRepository: DepartmentRepository,
@@ -143,6 +144,7 @@ export class DepartmentSyncService {
                 parentDepartmentId: mappedData.parentDepartmentId,
                 externalUpdatedAt: mappedData.externalUpdatedAt,
                 lastSyncAt: syncStartTime,
+                updatedBy: this.systemUserId, // 시스템 동기화 사용자
               } as UpdateDepartmentDto);
 
               departmentsToSave.push(existingDepartment);
@@ -161,6 +163,8 @@ export class DepartmentSyncService {
               mappedData.externalUpdatedAt,
             );
             newDepartment.lastSyncAt = syncStartTime;
+            newDepartment.createdBy = this.systemUserId; // 시스템 동기화 사용자
+            newDepartment.updatedBy = this.systemUserId; // 시스템 동기화 사용자
 
             departmentsToSave.push(newDepartment);
             created++;
