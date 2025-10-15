@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { BaseE2ETest } from '../../../base-e2e.spec';
+import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('PATCH /admin/evaluation-periods/:id/peer-evaluation-deadline', () => {
   let testSuite: BaseE2ETest;

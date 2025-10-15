@@ -4,6 +4,7 @@ import { OrganizationManagementContextModule } from './organization-management-c
 import { EvaluationCriteriaManagementContextModule } from './evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { PerformanceEvaluationContextModule } from './performance-evaluation-context/performance-evaluation-context.module';
 import { TestContextModule } from './test-context/test-context.module';
+import { DashboardContextModule } from './dashboard-context/dashboard-context.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { TestContextModule } from './test-context/test-context.module';
     EvaluationCriteriaManagementContextModule,
     PerformanceEvaluationContextModule,
     TestContextModule,
+    DashboardContextModule,
   ],
   providers: [],
   exports: [
@@ -20,6 +22,7 @@ import { TestContextModule } from './test-context/test-context.module';
     EvaluationCriteriaManagementContextModule,
     PerformanceEvaluationContextModule,
     TestContextModule,
+    DashboardContextModule,
   ],
 })
 export class DomainContextModule {}

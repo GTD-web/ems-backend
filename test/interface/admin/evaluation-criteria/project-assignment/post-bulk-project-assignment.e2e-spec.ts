@@ -89,11 +89,26 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
 
     beforeEach(async () => {
       // Given: 평가 기간 생성
+      const timestamp = Date.now();
+      const uniqueId = Math.floor(Math.random() * 10000);
+      const year = 2030 + Math.floor(uniqueId % 50);
+      const month = Math.floor((uniqueId % 12) + 1)
+        .toString()
+        .padStart(2, '0');
+      const day = Math.floor((uniqueId % 28) + 1)
+        .toString()
+        .padStart(2, '0');
+
       const evaluationPeriodData = {
-        name: '대량 할당 테스트 평가기간',
-        startDate: '2024-01-01',
-        peerEvaluationDeadline: '2024-12-31',
-        description: '대량 할당 테스트용 평가기간',
+        name: `대량 할당 테스트 평가기간 ${timestamp}-${uniqueId}`,
+        startDate: `${year}-${month}-${day}`,
+        peerEvaluationDeadline: `${year}-${month}-${Math.min(
+          parseInt(day) + 20,
+          28,
+        )
+          .toString()
+          .padStart(2, '0')}`,
+        description: `대량 할당 테스트용 평가기간 ${timestamp}-${uniqueId}`,
         maxSelfEvaluationRate: 120,
       };
 

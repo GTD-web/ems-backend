@@ -286,7 +286,7 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
     it('프로젝트 ID로 필터링할 수 있어야 한다', async () => {
       // Given: 하나의 프로젝트에 여러 WBS 할당
       const periodId = await createEvaluationPeriod();
-      const employee1 = getRandomEmployee();
+      const employee1 = testData.employees[0];
       const employee2 = testData.employees[1];
       const project = getActiveProject();
 

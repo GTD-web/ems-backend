@@ -4,7 +4,9 @@ import { EvaluationPeriodManagementContextModule } from '../../context/evaluatio
 import { EvaluationCriteriaManagementContextModule } from '../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { PerformanceEvaluationContextModule } from '../../context/performance-evaluation-context/performance-evaluation-context.module';
 import { OrganizationManagementContextModule } from '../../context/organization-management-context/organization-management-context.module';
+import { DashboardContextModule } from '../../context/dashboard-context/dashboard-context.module';
 import { BusinessModule } from '../../business/business.module';
+import { DashboardController } from './dashboard/dashboard.controller';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
 import { EvaluationTargetController } from './evaluation-period/evaluation-target.controller';
 import { ProjectAssignmentManagementController } from './evaluation-criteria/project-assignment-management.controller';
@@ -30,9 +32,11 @@ import { EmployeeManagementController } from './employee-management/employee-man
     EvaluationCriteriaManagementContextModule, // 평가기준 관리 컨텍스트 모듈 주입
     PerformanceEvaluationContextModule, // 성과평가 컨텍스트 모듈 주입
     OrganizationManagementContextModule, // 조직 관리 컨텍스트 모듈 주입
+    DashboardContextModule, // 대시보드 컨텍스트 모듈 주입
     BusinessModule, // 비즈니스 레이어 모듈 주입
   ],
   controllers: [
+    DashboardController, // 대시보드 컨트롤러
     EvaluationPeriodManagementController, // 평가 기간 관리 컨트롤러
     EvaluationTargetController, // 평가 대상 관리 컨트롤러
     EmployeeManagementController, // 직원 관리 컨트롤러

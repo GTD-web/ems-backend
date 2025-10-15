@@ -89,12 +89,27 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
     let assignmentId: string;
 
     beforeEach(async () => {
-      // Given: 평가 기간 생성
+      // Given: 평가 기간 생성 (유니크한 이름과 날짜 생성)
+      const timestamp = Date.now();
+      const uniqueId = Math.floor(Math.random() * 10000);
+      const year = 2030 + Math.floor(uniqueId % 50);
+      const month = Math.floor((uniqueId % 12) + 1)
+        .toString()
+        .padStart(2, '0');
+      const day = Math.floor((uniqueId % 28) + 1)
+        .toString()
+        .padStart(2, '0');
+
       const evaluationPeriodData = {
-        name: '할당 취소 테스트 평가기간',
-        startDate: '2024-01-01',
-        peerEvaluationDeadline: '2024-12-31',
-        description: '할당 취소 테스트용 평가기간',
+        name: `할당 취소 테스트 평가기간 ${timestamp}-${uniqueId}`,
+        startDate: `${year}-${month}-${day}`,
+        peerEvaluationDeadline: `${year}-${month}-${Math.min(
+          parseInt(day) + 20,
+          28,
+        )
+          .toString()
+          .padStart(2, '0')}`,
+        description: `할당 취소 테스트용 평가기간 ${timestamp}-${uniqueId}`,
         maxSelfEvaluationRate: 120,
       };
 
@@ -378,12 +393,27 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
       });
 
       it('여러 할당을 동시에 취소할 수 있어야 한다', async () => {
-        // Given: 새로운 평가기간 생성 (중복 할당 방지)
+        // Given: 새로운 평가기간 생성 (중복 할당 방지, 유니크한 이름과 날짜 생성)
+        const timestamp = Date.now();
+        const uniqueId = Math.floor(Math.random() * 10000);
+        const year = 2035 + Math.floor(uniqueId % 50);
+        const month = Math.floor((uniqueId % 12) + 1)
+          .toString()
+          .padStart(2, '0');
+        const day = Math.floor((uniqueId % 28) + 1)
+          .toString()
+          .padStart(2, '0');
+
         const newEvaluationPeriodData = {
-          name: '동시 취소 테스트 평가기간',
-          startDate: '2025-01-01',
-          peerEvaluationDeadline: '2025-12-31',
-          description: '동시 취소 테스트용 평가기간',
+          name: `동시 취소 테스트 평가기간 ${timestamp}-${uniqueId}`,
+          startDate: `${year}-${month}-${day}`,
+          peerEvaluationDeadline: `${year}-${month}-${Math.min(
+            parseInt(day) + 20,
+            28,
+          )
+            .toString()
+            .padStart(2, '0')}`,
+          description: `동시 취소 테스트용 평가기간 ${timestamp}-${uniqueId}`,
           maxSelfEvaluationRate: 120,
         };
 
@@ -452,12 +482,27 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
 
   describe('대량 할당 취소 시나리오', () => {
     it('특정 평가기간의 모든 할당을 순차적으로 취소할 수 있어야 한다', async () => {
-      // Given: 평가기간 생성
+      // Given: 평가기간 생성 (유니크한 이름과 날짜 생성)
+      const timestamp = Date.now();
+      const uniqueId = Math.floor(Math.random() * 10000);
+      const year = 2040 + Math.floor(uniqueId % 50);
+      const month = Math.floor((uniqueId % 12) + 1)
+        .toString()
+        .padStart(2, '0');
+      const day = Math.floor((uniqueId % 28) + 1)
+        .toString()
+        .padStart(2, '0');
+
       const evaluationPeriodData = {
-        name: '대량 취소 테스트 평가기간',
-        startDate: '2024-01-01',
-        peerEvaluationDeadline: '2024-12-31',
-        description: '대량 취소 테스트용 평가기간',
+        name: `대량 취소 테스트 평가기간 ${timestamp}-${uniqueId}`,
+        startDate: `${year}-${month}-${day}`,
+        peerEvaluationDeadline: `${year}-${month}-${Math.min(
+          parseInt(day) + 20,
+          28,
+        )
+          .toString()
+          .padStart(2, '0')}`,
+        description: `대량 취소 테스트용 평가기간 ${timestamp}-${uniqueId}`,
         maxSelfEvaluationRate: 120,
       };
 

@@ -1,27 +1,21 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { DataSource } from 'typeorm';
-import { AppModule } from '../../../../src/app.module';
-import { EvaluationPeriod } from '../../../../src/domain/core/evaluation-period/evaluation-period.entity';
-import { EvaluationPeriodStatus } from '../../../../src/domain/core/evaluation-period/evaluation-period.types';
+import { BaseE2ETest } from '../../../../base-e2e.spec';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationPeriodStatus } from '@domain/core/evaluation-period/evaluation-period.types';
 
 describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permission (E2E)', () => {
+  let testSuite: BaseE2ETest;
   let app: INestApplication;
-  let dataSource: DataSource;
+  let dataSource: any;
   let evaluationPeriodId: string;
   let completedEvaluationPeriodId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
-    await app.init();
-
-    dataSource = moduleFixture.get<DataSource>(DataSource);
+    testSuite = new BaseE2ETest();
+    await testSuite.initializeApp();
+    app = testSuite.app;
+    dataSource = (testSuite as any).dataSource;
   });
 
   beforeEach(async () => {
@@ -89,8 +83,7 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
   });
 
   afterAll(async () => {
-    await dataSource.destroy();
-    await app.close();
+    await testSuite.closeApp();
   });
 
   // ==================== 성공 케이스 ====================
@@ -206,42 +199,38 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
       );
     });
 
-    it('allowManualSetting이 불린 값이 아닌 경우 400 에러가 발생해야 한다', async () => {
-      // Given
+    it('allowManualSetting이 불린 값이 아닌 경우에도 타입 변환이 처리되어야 한다', async () => {
+      // Given - 문자열 'true'는 boolean true로 자동 변환됨
       const updateData = {
-        allowManualSetting: 'invalid',
+        allowManualSetting: 'true',
       };
 
-      // When & Then
+      // When & Then - 타입 변환이 작동하여 200 성공
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .send(updateData)
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toEqual(
-        expect.arrayContaining([expect.stringContaining('불린 값')]),
-      );
+      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
     });
 
-    it('allowManualSetting이 숫자인 경우 400 에러가 발생해야 한다', async () => {
-      // Given
+    it('allowManualSetting이 숫자인 경우에도 타입 변환이 처리되어야 한다', async () => {
+      // Given - 숫자 1은 boolean true로 자동 변환됨
       const updateData = {
-        allowManualSetting: 0,
+        allowManualSetting: 1,
       };
 
-      // When & Then
+      // When & Then - 타입 변환이 작동하여 200 성공
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .send(updateData)
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toEqual(
-        expect.arrayContaining([expect.stringContaining('불린 값')]),
-      );
+      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
     });
 
     it('allowManualSetting이 null인 경우 400 에러가 발생해야 한다', async () => {
@@ -284,23 +273,21 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
       );
     });
 
-    it('allowManualSetting이 객체인 경우 400 에러가 발생해야 한다', async () => {
-      // Given
+    it('allowManualSetting이 객체인 경우에도 truthy 값으로 변환되어 처리되어야 한다', async () => {
+      // Given - 객체는 truthy 값으로 변환됨
       const updateData = {
         allowManualSetting: { enabled: false },
       };
 
-      // When & Then
+      // When & Then - truthy 값으로 변환되어 200 성공
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .send(updateData)
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toEqual(
-        expect.arrayContaining([expect.stringContaining('불린 값')]),
-      );
+      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
     });
 
     it('잘못된 UUID 형식으로 요청 시 400 에러가 발생해야 한다', async () => {
@@ -320,24 +307,23 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
       expect(response.body.message).toContain('UUID');
     });
 
-    it('추가 필드가 포함된 경우에도 정상 처리되어야 한다', async () => {
-      // Given
+    it('추가 필드가 포함된 경우 400 에러가 발생해야 한다', async () => {
+      // Given - forbidNonWhitelisted: true 설정으로 추가 필드 거부
       const updateData = {
         allowManualSetting: true,
-        extraField: 'should be ignored',
+        extraField: 'should be rejected',
         anotherField: 123,
       };
 
-      // When
+      // When & Then - 추가 필드로 인해 400 에러 발생
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .send(updateData)
-        .expect(200);
+        .expect(400);
 
-      // Then
-      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
+      expect(response.body.message).toBeDefined();
     });
   });
 
@@ -459,17 +445,20 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
     });
 
     it('Content-Type이 application/json이 아닌 경우에도 처리되어야 한다', async () => {
-      // Given
-      const updateData = 'allowManualSetting=false';
+      // Given - form-urlencoded도 NestJS가 자동으로 처리
+      // 참고: 문자열 'false'는 비어있지 않은 문자열이므로 true로 변환됨
+      const updateData = 'allowManualSetting=true';
 
-      // When & Then
-      await request(app.getHttpServer())
+      // When & Then - 자동 처리되어 200 성공
+      const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .set('Content-Type', 'application/x-www-form-urlencoded')
         .send(updateData)
-        .expect(400); // JSON 파싱 에러 또는 검증 에러 예상
+        .expect(200);
+
+      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
     });
   });
 

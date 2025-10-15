@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { BaseE2ETest } from '../../../base-e2e.spec';
+import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)', () => {
   const testSuite = new BaseE2ETest();

@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { DataSource } from 'typeorm';
-import { AppModule } from '../../../../src/app.module';
-import { EvaluationPeriod } from '../../../../src/domain/core/evaluation-period/evaluation-period.entity';
-import { EvaluationPeriodStatus } from '../../../../src/domain/core/evaluation-period/evaluation-period.types';
+import { AppModule } from '@/app.module';
+import { EvaluationPeriod } from '@/domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationPeriodStatus } from '@/domain/core/evaluation-period/evaluation-period.types';
 
 describe('PATCH /admin/evaluation-periods/:id/settings/final-evaluation-permission (E2E)', () => {
   let app: INestApplication;

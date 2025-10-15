@@ -1,27 +1,21 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { DataSource } from 'typeorm';
-import { AppModule } from '../../../../src/app.module';
-import { EvaluationPeriod } from '../../../../src/domain/core/evaluation-period/evaluation-period.entity';
-import { EvaluationPeriodStatus } from '../../../../src/domain/core/evaluation-period/evaluation-period.types';
+import { BaseE2ETest } from '../../../../base-e2e.spec';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationPeriodStatus } from '@domain/core/evaluation-period/evaluation-period.types';
 
 describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
+  let testSuite: BaseE2ETest;
   let app: INestApplication;
-  let dataSource: DataSource;
+  let dataSource: any;
   let evaluationPeriodId: string;
   let completedEvaluationPeriodId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
-    await app.init();
-
-    dataSource = moduleFixture.get<DataSource>(DataSource);
+    testSuite = new BaseE2ETest();
+    await testSuite.initializeApp();
+    app = testSuite.app;
+    dataSource = (testSuite as any).dataSource;
   });
 
   beforeEach(async () => {
@@ -85,8 +79,7 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
   });
 
   afterAll(async () => {
-    await dataSource.destroy();
-    await app.close();
+    await testSuite.closeApp();
   });
 
   // ==================== 성공 케이스 ====================
