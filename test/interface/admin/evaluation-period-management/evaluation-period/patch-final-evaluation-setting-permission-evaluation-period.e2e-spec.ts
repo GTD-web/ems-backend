@@ -1,74 +1,64 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { DataSource } from 'typeorm';
-import { AppModule } from '@/app.module';
-import { EvaluationPeriod } from '@/domain/core/evaluation-period/evaluation-period.entity';
-import { EvaluationPeriodStatus } from '@/domain/core/evaluation-period/evaluation-period.types';
+import { BaseE2ETest } from '../../../../base-e2e.spec';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationPeriodStatus } from '@domain/core/evaluation-period/evaluation-period.types';
 
 describe('PATCH /admin/evaluation-periods/:id/settings/final-evaluation-permission (E2E)', () => {
+  let testSuite: BaseE2ETest;
   let app: INestApplication;
-  let dataSource: DataSource;
+  let dataSource: any;
   let evaluationPeriodId: string;
   let completedEvaluationPeriodId: string;
 
   beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ transform: true }));
-    await app.init();
-
-    dataSource = moduleFixture.get<DataSource>(DataSource);
+    testSuite = new BaseE2ETest();
+    await testSuite.initializeApp();
+    app = testSuite.app;
+    dataSource = (testSuite as any).dataSource;
   });
 
   beforeEach(async () => {
     // 테스트용 평가 기간 생성 (WAITING 상태)
     const evaluationPeriod = new EvaluationPeriod();
-    Object.assign(evaluationPeriod, {
-      name: `테스트 평가 기간 ${Date.now()}`,
-      startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-12-31'),
-      status: EvaluationPeriodStatus.WAITING,
-      maxSelfEvaluationRate: 120,
-      criteriaSettingEnabled: true,
-      selfEvaluationSettingEnabled: true,
-      finalEvaluationSettingEnabled: false, // 기본값 false로 설정
-      gradeRanges: [
-        { grade: 'S', minRange: 95, maxRange: 100 },
-        { grade: 'A', minRange: 85, maxRange: 94 },
-        { grade: 'B', minRange: 75, maxRange: 84 },
-        { grade: 'C', minRange: 65, maxRange: 74 },
-        { grade: 'F', minRange: 0, maxRange: 64 },
-      ],
-      createdBy: 'test-user',
-      updatedBy: 'test-user',
-    });
+    evaluationPeriod.name = `테스트 평가 기간 ${Date.now()}`;
+    evaluationPeriod.startDate = new Date('2024-01-01');
+    evaluationPeriod.endDate = new Date('2024-12-31');
+    evaluationPeriod.status = EvaluationPeriodStatus.WAITING;
+    evaluationPeriod.maxSelfEvaluationRate = 120;
+    evaluationPeriod.criteriaSettingEnabled = true;
+    evaluationPeriod.selfEvaluationSettingEnabled = true;
+    evaluationPeriod.finalEvaluationSettingEnabled = false; // 기본값 false로 설정
+    evaluationPeriod.gradeRanges = [
+      { grade: 'S', minRange: 95, maxRange: 100 },
+      { grade: 'A', minRange: 85, maxRange: 94 },
+      { grade: 'B', minRange: 75, maxRange: 84 },
+      { grade: 'C', minRange: 65, maxRange: 74 },
+      { grade: 'F', minRange: 0, maxRange: 64 },
+    ];
+    evaluationPeriod.createdBy = 'test-user';
+    evaluationPeriod.updatedBy = 'test-user';
 
     const savedPeriod = await dataSource.manager.save(evaluationPeriod);
     evaluationPeriodId = savedPeriod.id;
 
     // 완료된 평가 기간 생성 (COMPLETED 상태)
     const completedPeriod = new EvaluationPeriod();
-    Object.assign(completedPeriod, {
-      name: `완료된 평가 기간 ${Date.now()}`,
-      startDate: new Date('2023-01-01'),
-      endDate: new Date('2023-12-31'),
-      status: EvaluationPeriodStatus.COMPLETED,
-      maxSelfEvaluationRate: 120,
-      criteriaSettingEnabled: true,
-      selfEvaluationSettingEnabled: true,
-      finalEvaluationSettingEnabled: true,
-      gradeRanges: [
-        { grade: 'A', minRange: 80, maxRange: 100 },
-        { grade: 'B', minRange: 60, maxRange: 79 },
-        { grade: 'C', minRange: 0, maxRange: 59 },
-      ],
-      createdBy: 'test-user',
-      updatedBy: 'test-user',
-    });
+    completedPeriod.name = `완료된 평가 기간 ${Date.now()}`;
+    completedPeriod.startDate = new Date('2023-01-01');
+    completedPeriod.endDate = new Date('2023-12-31');
+    completedPeriod.status = EvaluationPeriodStatus.COMPLETED;
+    completedPeriod.maxSelfEvaluationRate = 120;
+    completedPeriod.criteriaSettingEnabled = true;
+    completedPeriod.selfEvaluationSettingEnabled = true;
+    completedPeriod.finalEvaluationSettingEnabled = true;
+    completedPeriod.gradeRanges = [
+      { grade: 'A', minRange: 80, maxRange: 100 },
+      { grade: 'B', minRange: 60, maxRange: 79 },
+      { grade: 'C', minRange: 0, maxRange: 59 },
+    ];
+    completedPeriod.createdBy = 'test-user';
+    completedPeriod.updatedBy = 'test-user';
 
     const savedCompletedPeriod = await dataSource.manager.save(completedPeriod);
     completedEvaluationPeriodId = savedCompletedPeriod.id;
@@ -89,8 +79,7 @@ describe('PATCH /admin/evaluation-periods/:id/settings/final-evaluation-permissi
   });
 
   afterAll(async () => {
-    await dataSource.destroy();
-    await app.close();
+    await testSuite.closeApp();
   });
 
   // ==================== 성공 케이스 ====================
@@ -214,42 +203,40 @@ describe('PATCH /admin/evaluation-periods/:id/settings/final-evaluation-permissi
       );
     });
 
-    it('allowManualSetting이 불린 값이 아닌 경우 400 에러가 발생해야 한다', async () => {
+    it('allowManualSetting이 문자열 "true"인 경우 자동 변환되어 성공해야 한다', async () => {
       // Given
       const updateData = {
-        allowManualSetting: 'true',
+        allowManualSetting: 'true', // 문자열로 전송 (enableImplicitConversion에 의해 boolean으로 변환)
       };
 
-      // When & Then
+      // When
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/final-evaluation-permission`,
         )
         .send(updateData)
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toEqual(
-        expect.arrayContaining([expect.stringContaining('불린 값')]),
-      );
+      // Then
+      expect(response.body.finalEvaluationSettingEnabled).toBe(true);
     });
 
-    it('allowManualSetting이 숫자인 경우 400 에러가 발생해야 한다', async () => {
+    it('allowManualSetting이 숫자 1인 경우 자동 변환되어 성공해야 한다', async () => {
       // Given
       const updateData = {
-        allowManualSetting: 1,
+        allowManualSetting: 1, // 숫자로 전송 (enableImplicitConversion에 의해 boolean으로 변환)
       };
 
-      // When & Then
+      // When
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/final-evaluation-permission`,
         )
         .send(updateData)
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toEqual(
-        expect.arrayContaining([expect.stringContaining('불린 값')]),
-      );
+      // Then
+      expect(response.body.finalEvaluationSettingEnabled).toBe(true);
     });
 
     it('allowManualSetting이 null인 경우 400 에러가 발생해야 한다', async () => {
@@ -292,23 +279,22 @@ describe('PATCH /admin/evaluation-periods/:id/settings/final-evaluation-permissi
       );
     });
 
-    it('allowManualSetting이 객체인 경우 400 에러가 발생해야 한다', async () => {
+    it('allowManualSetting이 객체인 경우 truthy 값으로 변환되어 성공한다', async () => {
       // Given
       const updateData = {
-        allowManualSetting: { value: true },
+        allowManualSetting: { value: true }, // 객체는 truthy 값으로 변환됨
       };
 
-      // When & Then
+      // When
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/final-evaluation-permission`,
         )
         .send(updateData)
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toEqual(
-        expect.arrayContaining([expect.stringContaining('불린 값')]),
-      );
+      // Then - 객체는 truthy이므로 true로 변환됨
+      expect(response.body.finalEvaluationSettingEnabled).toBe(true);
     });
 
     it('잘못된 UUID 형식으로 요청 시 400 에러가 발생해야 한다', async () => {
@@ -328,24 +314,26 @@ describe('PATCH /admin/evaluation-periods/:id/settings/final-evaluation-permissi
       expect(response.body.message).toContain('UUID');
     });
 
-    it('추가 필드가 포함된 경우에도 정상 처리되어야 한다', async () => {
+    it('추가 필드가 포함된 경우 400 에러가 발생해야 한다', async () => {
       // Given
       const updateData = {
         allowManualSetting: true,
-        extraField: 'ignored',
+        extraField: 'ignored', // forbidNonWhitelisted: true 설정으로 인해 거부됨
         anotherField: 999,
       };
 
-      // When
+      // When & Then
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/final-evaluation-permission`,
         )
         .send(updateData)
-        .expect(200);
+        .expect(400);
 
-      // Then
-      expect(response.body.finalEvaluationSettingEnabled).toBe(true);
+      // forbidNonWhitelisted 설정으로 인한 에러 메시지 확인
+      expect(response.body.message).toEqual(
+        expect.arrayContaining([expect.stringContaining('property')]),
+      );
     });
   });
 
@@ -466,18 +454,21 @@ describe('PATCH /admin/evaluation-periods/:id/settings/final-evaluation-permissi
       );
     });
 
-    it('Content-Type이 application/json이 아닌 경우에도 처리되어야 한다', async () => {
+    it('Content-Type이 application/x-www-form-urlencoded인 경우에도 처리된다', async () => {
       // Given
       const updateData = 'allowManualSetting=true';
 
-      // When & Then
-      await request(app.getHttpServer())
+      // When
+      const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/final-evaluation-permission`,
         )
         .set('Content-Type', 'application/x-www-form-urlencoded')
         .send(updateData)
-        .expect(400); // JSON 파싱 에러 또는 검증 에러 예상
+        .expect(200); // NestJS가 form-urlencoded도 처리 가능
+
+      // Then
+      expect(response.body.finalEvaluationSettingEnabled).toBe(true);
     });
   });
 

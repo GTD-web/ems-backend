@@ -41,12 +41,20 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
       projects,
     };
 
-    // 평가기간 생성
+    // 평가기간 생성 - 유니크한 이름과 짧은 기간 사용하여 기존 데이터와 충돌 방지
+    const timestamp = Date.now();
+    const randomSuffix = Math.floor(Math.random() * 10000);
+    // 2026년도의 짧은 기간 (하루) 사용
+    const dayOfYear = Math.floor(Math.random() * 365) + 1;
+    const startDate = new Date(2026, 0, dayOfYear);
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1); // 하루 뒤
+
     const evaluationPeriodData = {
-      name: '목록 조회 테스트 평가기간',
-      startDate: '2024-01-01',
-      peerEvaluationDeadline: '2024-12-31',
-      description: '목록 조회 테스트용 평가기간',
+      name: `목록조회테스트_${timestamp}_${randomSuffix}`,
+      startDate: startDate.toISOString().split('T')[0],
+      peerEvaluationDeadline: endDate.toISOString().split('T')[0],
+      description: `목록 조회 테스트용 평가기간 ${timestamp}`,
       maxSelfEvaluationRate: 120,
     };
 
