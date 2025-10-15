@@ -18,7 +18,13 @@ import {
   UpdatePerformanceDeadlineCommand,
   UpdateSelfEvaluationDeadlineCommand,
   UpdateSelfEvaluationSettingPermissionCommand,
-} from './commands';
+  RegisterEvaluationTargetCommand,
+  RegisterBulkEvaluationTargetsCommand,
+  ExcludeEvaluationTargetCommand,
+  IncludeEvaluationTargetCommand,
+  UnregisterEvaluationTargetCommand,
+  UnregisterAllEvaluationTargetsCommand,
+} from './handlers';
 import {
   CreateEvaluationPeriodMinimalDto,
   UpdateCriteriaSettingPermissionDto,
@@ -39,7 +45,12 @@ import {
   GetActiveEvaluationPeriodsQuery,
   GetEvaluationPeriodDetailQuery,
   GetEvaluationPeriodListQuery,
-} from './queries';
+  GetEvaluationTargetsQuery,
+  GetExcludedEvaluationTargetsQuery,
+  GetEmployeeEvaluationPeriodsQuery,
+  CheckEvaluationTargetQuery,
+  GetEvaluationTargetsByFilterQuery,
+} from './handlers';
 
 /**
  * 평가 기간 관리 서비스
@@ -324,5 +335,153 @@ export class EvaluationPeriodManagementContextService
       changedBy,
     );
     return await this.commandBus.execute(command);
+  }
+
+  // ==================== 평가 대상자 관리 ====================
+
+  /**
+   * 평가 대상자를 등록한다
+   */
+  async 평가대상자_등록한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    createdBy: string,
+  ): Promise<any> {
+    const command = new RegisterEvaluationTargetCommand(
+      evaluationPeriodId,
+      employeeId,
+      createdBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가 대상자를 대량 등록한다
+   */
+  async 평가대상자_대량_등록한다(
+    evaluationPeriodId: string,
+    employeeIds: string[],
+    createdBy: string,
+  ): Promise<any[]> {
+    const command = new RegisterBulkEvaluationTargetsCommand(
+      evaluationPeriodId,
+      employeeIds,
+      createdBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가 대상에서 제외한다
+   */
+  async 평가대상에서_제외한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    excludeReason: string,
+    excludedBy: string,
+  ): Promise<any> {
+    const command = new ExcludeEvaluationTargetCommand(
+      evaluationPeriodId,
+      employeeId,
+      excludeReason,
+      excludedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가 대상에 포함한다 (제외 취소)
+   */
+  async 평가대상에_포함한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    updatedBy: string,
+  ): Promise<any> {
+    const command = new IncludeEvaluationTargetCommand(
+      evaluationPeriodId,
+      employeeId,
+      updatedBy,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가 대상자 등록을 해제한다
+   */
+  async 평가대상자_등록_해제한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+  ): Promise<boolean> {
+    const command = new UnregisterEvaluationTargetCommand(
+      evaluationPeriodId,
+      employeeId,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가기간의 모든 대상자를 해제한다
+   */
+  async 평가기간의_모든_대상자_해제한다(
+    evaluationPeriodId: string,
+  ): Promise<number> {
+    const command = new UnregisterAllEvaluationTargetsCommand(
+      evaluationPeriodId,
+    );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가기간의 평가대상자를 조회한다
+   */
+  async 평가기간의_평가대상자_조회한다(
+    evaluationPeriodId: string,
+    includeExcluded: boolean = false,
+  ): Promise<any[]> {
+    const query = new GetEvaluationTargetsQuery(
+      evaluationPeriodId,
+      includeExcluded,
+    );
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 평가기간의 제외된 대상자를 조회한다
+   */
+  async 평가기간의_제외된_대상자_조회한다(
+    evaluationPeriodId: string,
+  ): Promise<any[]> {
+    const query = new GetExcludedEvaluationTargetsQuery(evaluationPeriodId);
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 직원의 평가기간 맵핑을 조회한다
+   */
+  async 직원의_평가기간_맵핑_조회한다(employeeId: string): Promise<any[]> {
+    const query = new GetEmployeeEvaluationPeriodsQuery(employeeId);
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 평가 대상 여부를 확인한다
+   */
+  async 평가대상_여부_확인한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+  ): Promise<boolean> {
+    const query = new CheckEvaluationTargetQuery(
+      evaluationPeriodId,
+      employeeId,
+    );
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 필터로 평가대상자를 조회한다
+   */
+  async 필터로_평가대상자_조회한다(filter: any): Promise<any[]> {
+    const query = new GetEvaluationTargetsByFilterQuery(filter);
+    return await this.queryBus.execute(query);
   }
 }

@@ -6,6 +6,7 @@ import { PerformanceEvaluationContextModule } from '../../context/performance-ev
 import { OrganizationManagementContextModule } from '../../context/organization-management-context/organization-management-context.module';
 import { BusinessModule } from '../../business/business.module';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
+import { EvaluationTargetController } from './evaluation-period/evaluation-target.controller';
 import { ProjectAssignmentManagementController } from './evaluation-criteria/project-assignment-management.controller';
 import { WbsAssignmentManagementController } from './evaluation-criteria/wbs-assignment-management.controller';
 import { EvaluationLineManagementController } from './evaluation-criteria/evaluation-line-management.controller';
@@ -33,6 +34,7 @@ import { EmployeeManagementController } from './employee-management/employee-man
   ],
   controllers: [
     EvaluationPeriodManagementController, // 평가 기간 관리 컨트롤러
+    EvaluationTargetController, // 평가 대상 관리 컨트롤러
     EmployeeManagementController, // 직원 관리 컨트롤러
     ProjectAssignmentManagementController, // 프로젝트 할당 관리 컨트롤러
     WbsAssignmentManagementController, // WBS 할당 관리 컨트롤러

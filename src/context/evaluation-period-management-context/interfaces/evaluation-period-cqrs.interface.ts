@@ -9,7 +9,7 @@ import {
   UpdateFinalEvaluationSettingPermissionDto,
   UpdateManualSettingPermissionsDto,
 } from './evaluation-period-creation.interface';
-import { EvaluationPeriodListResult } from '../queries/evaluation-period.queries';
+import { EvaluationPeriodListResult } from '../handlers/evaluation-period/queries/get-evaluation-period-list.handler';
 
 /**
  * 평가 기간 관리 커맨드 서비스 인터페이스

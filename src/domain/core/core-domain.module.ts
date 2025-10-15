@@ -8,6 +8,7 @@ import { EmployeeEvaluationStatusMappingModule } from './employee-evaluation-sta
 import { EvaluationLineModule } from './evaluation-line/evaluation-line.module';
 import { EvaluationLineMappingModule } from './evaluation-line-mapping/evaluation-line-mapping.module';
 import { EvaluationPeriodModule } from './evaluation-period/evaluation-period.module';
+import { EvaluationPeriodEmployeeMappingModule } from './evaluation-period-employee-mapping/evaluation-period-employee-mapping.module';
 import { PeerEvaluationModule } from './peer-evaluation/peer-evaluation.module';
 import { PeerEvaluationMappingModule } from './peer-evaluation-mapping/peer-evaluation-mapping.module';
 import { FinalEvaluationModule } from './final-evaluation/final-evaluation.module';
@@ -26,6 +27,7 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
   imports: [
     // 평가 기간 및 설정 관리
     EvaluationPeriodModule,
+    EvaluationPeriodEmployeeMappingModule,
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,
 
@@ -56,6 +58,7 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
   exports: [
     // 평가 기간 및 설정 관리
     EvaluationPeriodModule,
+    EvaluationPeriodEmployeeMappingModule,
     EvaluationProjectAssignmentModule,
     EvaluationWbsAssignmentModule,
 
