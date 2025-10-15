@@ -73,7 +73,7 @@ export class AlreadyExcludedEvaluationTargetException extends EvaluationPeriodEm
     super(
       `이미 평가 대상에서 제외된 직원입니다: 평가기간 ${evaluationPeriodId}, 직원 ${employeeId}`,
       'ALREADY_EXCLUDED_EVALUATION_TARGET',
-      400,
+      409,
       { evaluationPeriodId, employeeId },
     );
     this.name = 'AlreadyExcludedEvaluationTargetException';
@@ -86,7 +86,7 @@ export class NotExcludedEvaluationTargetException extends EvaluationPeriodEmploy
     super(
       `평가 대상에서 제외되지 않은 직원입니다: 평가기간 ${evaluationPeriodId}, 직원 ${employeeId}`,
       'NOT_EXCLUDED_EVALUATION_TARGET',
-      400,
+      409,
       { evaluationPeriodId, employeeId },
     );
     this.name = 'NotExcludedEvaluationTargetException';

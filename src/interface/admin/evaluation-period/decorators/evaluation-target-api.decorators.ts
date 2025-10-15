@@ -1,4 +1,12 @@
-import { applyDecorators, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import {
+  applyDecorators,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+} from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -122,7 +130,7 @@ export const RegisterBulkEvaluationTargets = () =>
  */
 export const ExcludeEvaluationTarget = () =>
   applyDecorators(
-    Put(':evaluationPeriodId/targets/:employeeId/exclude'),
+    Patch(':evaluationPeriodId/targets/:employeeId/exclude'),
     ApiOperation({
       summary: '평가 대상 제외',
       description: `**중요**: 특정 평가기간에서 직원을 평가 대상에서 제외합니다. 제외된 대상자는 isExcluded가 true로 변경되며, 제외 사유와 처리자 정보가 저장됩니다.
@@ -130,10 +138,15 @@ export const ExcludeEvaluationTarget = () =>
 **테스트 케이스:**
 - 기본 제외: 평가 대상자를 성공적으로 제외 처리
 - 상태 변경: isExcluded가 false에서 true로 변경됨
-- 제외 정보 저장: excludeReason, excludedBy, excludedAt 필드가 정상 저장됨
+- 제외 정보 저장: excludeReason, excludedBy, excludedAt 필드가 올바르게 저장됨
+- DB 저장 확인: 제외 정보가 DB에 정상적으로 저장됨
+- 시간 검증: excludedAt 필드가 현재 시간으로 정확하게 설정됨
 - 등록되지 않은 대상자: 평가 대상자로 등록되지 않은 경우 404 에러
 - 중복 제외: 이미 제외된 대상자를 다시 제외 시 409 에러
-- 필수 필드 누락: excludeReason 또는 excludedBy 누락 시 400 에러`,
+- 제외 사유 누락: excludeReason 필드 누락 시 400 에러
+- 제외 처리자 누락: excludedBy 필드 누락 시 400 에러
+- 잘못된 평가기간 UUID: 형식이 올바르지 않은 평가기간 ID로 요청 시 400 에러
+- 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'evaluationPeriodId',
@@ -161,7 +174,7 @@ export const ExcludeEvaluationTarget = () =>
  */
 export const IncludeEvaluationTarget = () =>
   applyDecorators(
-    Put(':evaluationPeriodId/targets/:employeeId/include'),
+    Patch(':evaluationPeriodId/targets/:employeeId/include'),
     ApiOperation({
       summary: '평가 대상 포함 (제외 취소)',
       description: `**중요**: 평가 대상에서 제외된 직원을 다시 평가 대상에 포함시킵니다. isExcluded가 false로 변경되고 모든 제외 관련 필드가 초기화됩니다.
@@ -170,9 +183,14 @@ export const IncludeEvaluationTarget = () =>
 - 기본 포함: 제외된 대상자를 성공적으로 다시 평가 대상에 포함
 - 상태 변경: isExcluded가 true에서 false로 변경됨
 - 제외 정보 초기화: excludeReason, excludedBy, excludedAt가 모두 null로 초기화됨
+- DB 저장 확인: 포함 처리 후 제외 정보가 DB에서 null로 초기화됨
+- 반복 제외/포함: 제외 → 포함 → 다시 제외가 정상적으로 동작함
 - 등록되지 않은 대상자: 평가 대상자로 등록되지 않은 경우 404 에러
-- 중복 포함: 이미 포함된(제외되지 않은) 대상자를 포함 시 409 에러
-- 필수 필드 누락: updatedBy 필드 누락 시 400 에러`,
+- 제외되지 않은 대상자: 제외되지 않은 대상자를 포함 시 409 에러
+- 중복 포함: 이미 포함된 대상자를 다시 포함 시 409 에러
+- 필수 필드 누락: updatedBy 필드 누락 시 400 에러
+- 잘못된 평가기간 UUID: 형식이 올바르지 않은 평가기간 ID로 요청 시 400 에러
+- 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'evaluationPeriodId',
