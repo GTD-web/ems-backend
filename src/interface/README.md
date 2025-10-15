@@ -2,6 +2,16 @@
 
 > 컨트롤러 작성 가이드 및 Swagger 문서화 표준
 
+## ⚠️ 중요: 코딩 규칙
+
+**Interface 레이어 내에서 코드 작성 시 반드시 [AGENTS.md](./AGENTS.md) 규칙을 따라야 합니다.**
+
+특히 다음 사항을 엄수하세요:
+
+- ✅ **공용 데코레이터 우선 사용** (`@interface/decorators/`)
+- ❌ **인라인 `@Transform()` 직접 작성 금지**
+- 📖 **필수 규칙**: [AGENTS.md](./AGENTS.md) - AI와 개발자가 반드시 따라야 할 코딩 규칙
+
 ## 📁 구조 개요
 
 ```
@@ -105,15 +115,38 @@ export class FeatureController {
 
 ### DTO 변환 패턴
 
+> ⚠️ **중요**: 값 변환이 필요한 경우 반드시 `@interface/decorators/`의 공용 데코레이터를 사용하세요.
+>
+> - Boolean: `@ToBoolean()`, `@ToBooleanStrict()`
+> - Date: `@DateToUTC()`, `@OptionalDateToUTC()`
+> - UUID: `@ParseUUID()`
+>
+> 상세 규칙: [AGENTS.md](./AGENTS.md) - 공용 데코레이터 사용 규칙 참조
+
 #### 날짜 변환
 
 ```typescript
-// ✅ 올바른 방법 (UTC 데코레이터 사용 시)
-startDate: apiDto.startDate as unknown as Date,
-endDate: apiDto.endDate as unknown as Date,
+// DTO 정의
+import { DateToUTC, OptionalDateToUTC } from '@interface/decorators';
 
-// DTO에서 @DateToUTC() 또는 @OptionalDateToUTC() 데코레이터 사용
-// class-transformer가 자동으로 UTC Date 객체로 변환
+export class CreateFeatureDto {
+  @ApiProperty({ example: '2024-01-01' })
+  @DateToUTC() // ✅ 공용 데코레이터 사용
+  @IsDate()
+  startDate: Date;
+
+  @ApiPropertyOptional({ example: '2024-12-31' })
+  @OptionalDateToUTC() // ✅ Optional 날짜도 지원
+  @IsOptional()
+  @IsDate()
+  endDate?: Date;
+}
+
+// 컨트롤러에서는 이미 변환된 Date 객체 사용
+const contextDto = {
+  startDate: apiDto.startDate, // 이미 Date 객체
+  endDate: apiDto.endDate, // 이미 Date 객체 또는 undefined
+};
 ```
 
 #### 배열 매핑
@@ -145,10 +178,12 @@ const contextDto: CreateContextDto = {
 #### UUID 검증
 
 ```typescript
-// ✅ 올바른 방법 - 커스텀 ParseId 데코레이터 사용 (한국어 에러 메시지)
+// ✅ 올바른 방법 - 공용 ParseUUID 데코레이터 사용
+import { ParseUUID } from '@interface/decorators';
+
 @Get(':id')
 async getDetail(
-  @ParseId() id: string,
+  @ParseUUID('id') id: string,  // 자동으로 UUID 형식 검증
 ): Promise<FeatureDto> {
   return await this.service.getDetail(id);
 }
@@ -156,7 +191,7 @@ async getDetail(
 // 다른 파라미터명 사용 시
 @Get(':userId')
 async getUserDetail(
-  @ParseUUID('userId') userId: string,
+  @ParseUUID('userId') userId: string,  // 파라미터명 명시
 ): Promise<UserDto> {
   return await this.service.getUserDetail(userId);
 }

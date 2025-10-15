@@ -282,7 +282,10 @@ export class EvaluationPeriodEmployeeMappingService
     this.logger.debug(`직원 평가기간 맵핑 조회 - 직원: ${employeeId}`);
 
     try {
-      return await this.필터로_평가대상자를_조회한다({ employeeId });
+      return await this.필터로_평가대상자를_조회한다({
+        employeeId,
+        includeExcluded: true, // 제외된 맵핑도 포함하여 조회
+      });
     } catch (error) {
       this.logger.error(
         `직원 평가기간 맵핑 조회 실패 - 직원: ${employeeId}`,
@@ -400,6 +403,9 @@ export class EvaluationPeriodEmployeeMappingService
 
     try {
       let queryBuilder = this.repository.createQueryBuilder('mapping');
+
+      // 삭제되지 않은 항목만 조회
+      queryBuilder.where('mapping.deletedAt IS NULL');
 
       // 필터 적용
       if (filter.evaluationPeriodId) {

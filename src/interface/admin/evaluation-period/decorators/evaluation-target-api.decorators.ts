@@ -221,20 +221,18 @@ export const GetEvaluationTargets = () =>
     Get(':evaluationPeriodId/targets'),
     ApiOperation({
       summary: '평가기간의 평가 대상자 조회',
-      description: `
-특정 평가기간의 평가 대상자 목록을 조회합니다.
+      description: `**중요**: 특정 평가기간의 평가 대상자 목록을 조회합니다. includeExcluded 파라미터로 제외된 대상자 포함 여부를 제어할 수 있습니다.
 
-## 테스트 케이스
-
-### 성공 케이스
-- ✅ 평가기간의 모든 평가 대상자를 조회할 수 있어야 한다
-- ✅ includeExcluded=false 시 제외된 대상자가 포함되지 않아야 한다
-- ✅ includeExcluded=true 시 제외된 대상자도 포함되어야 한다
-- ✅ 평가 대상자가 없는 경우 빈 배열이 반환되어야 한다
-
-### 실패 케이스
-- ❌ 존재하지 않는 평가기간 ID로 요청 시 빈 배열이 반환되어야 한다 (또는 404)
-      `,
+**테스트 케이스:**
+- 기본 조회: 평가기간의 모든 평가 대상자를 조회할 수 있어야 함
+- includeExcluded 미전달: includeExcluded 파라미터를 전달하지 않으면 제외된 대상자가 포함되지 않음 (기본값 false)
+- includeExcluded=true: 제외된 대상자도 포함하여 조회됨
+- 제외 상태 확인: includeExcluded 미전달 시 반환된 모든 대상자의 isExcluded가 false
+- 제외 수 확인: includeExcluded=true 시 제외된 대상자 수 확인 가능
+- 빈 결과: 평가 대상자가 없는 경우 빈 배열 반환
+- 필수 필드: 반환된 데이터에 id, evaluationPeriodId, employeeId, isExcluded, createdBy, createdAt 등 필수 필드 포함
+- 존재하지 않는 평가기간: 평가기간 미존재 시 빈 배열 반환
+- 잘못된 UUID: 잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'evaluationPeriodId',
@@ -245,9 +243,10 @@ export const GetEvaluationTargets = () =>
     ApiQuery({
       name: 'includeExcluded',
       required: false,
-      description: '제외된 대상자 포함 여부',
-      type: Boolean,
-      example: false,
+      description:
+        '제외된 대상자 포함 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+      type: String,
+      example: 'false',
     }),
     ApiOkResponse({
       description: '평가 대상자 조회 성공',
@@ -263,19 +262,16 @@ export const GetExcludedEvaluationTargets = () =>
     Get(':evaluationPeriodId/targets/excluded'),
     ApiOperation({
       summary: '제외된 평가 대상자 조회',
-      description: `
-특정 평가기간에서 제외된 평가 대상자 목록을 조회합니다.
+      description: `**중요**: 특정 평가기간에서 제외된 평가 대상자 목록만 조회합니다. 모든 반환된 대상자는 isExcluded=true 상태입니다.
 
-## 테스트 케이스
-
-### 성공 케이스
-- ✅ 제외된 평가 대상자만 조회할 수 있어야 한다
-- ✅ 모든 대상자가 isExcluded=true 상태여야 한다
-- ✅ 제외된 대상자가 없는 경우 빈 배열이 반환되어야 한다
-
-### 실패 케이스
-- ❌ 존재하지 않는 평가기간 ID로 요청 시 빈 배열이 반환되어야 한다
-      `,
+**테스트 케이스:**
+- 기본 조회: 제외된 평가 대상자만 조회할 수 있어야 함
+- isExcluded 상태: 모든 대상자가 isExcluded=true 상태여야 함
+- 제외 정보 포함: excludeReason, excludedBy, excludedAt 필드가 정의되어 있음
+- 제외 정보 정확성: 제외 사유와 처리자 정보가 올바르게 반환됨
+- 빈 결과: 제외된 대상자가 없는 경우 빈 배열 반환
+- 존재하지 않는 평가기간: 평가기간 미존재 시 빈 배열 반환
+- 잘못된 UUID: 잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'evaluationPeriodId',
@@ -297,19 +293,16 @@ export const GetEmployeeEvaluationPeriods = () =>
     Get('employees/:employeeId/evaluation-periods'),
     ApiOperation({
       summary: '직원의 평가기간 맵핑 조회',
-      description: `
-특정 직원이 등록된 모든 평가기간 맵핑 정보를 조회합니다.
+      description: `**중요**: 특정 직원이 등록된 모든 평가기간 맵핑 정보를 조회합니다. 제외된 맵핑도 포함하여 반환됩니다.
 
-## 테스트 케이스
-
-### 성공 케이스
-- ✅ 직원이 등록된 모든 평가기간 맵핑을 조회할 수 있어야 한다
-- ✅ 여러 평가기간에 등록된 경우 모두 반환되어야 한다
-- ✅ 등록된 평가기간이 없는 경우 빈 배열이 반환되어야 한다
-
-### 실패 케이스
-- ❌ 존재하지 않는 직원 ID로 요청 시 빈 배열이 반환되어야 한다
-      `,
+**테스트 케이스:**
+- 기본 조회: 직원이 등록된 모든 평가기간 맵핑을 조회할 수 있어야 함
+- 다중 평가기간: 여러 평가기간에 등록된 경우 모두 반환됨
+- 제외 맵핑 포함: 제외된 평가기간 맵핑도 조회되어야 함
+- 제외 상태 확인: 제외된 맵핑의 isExcluded가 true로 설정됨
+- 빈 결과: 등록된 평가기간이 없는 경우 빈 배열 반환
+- 존재하지 않는 직원: 직원 미존재 시 빈 배열 반환
+- 잘못된 UUID: 잘못된 UUID 형식의 직원 ID로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'employeeId',
@@ -331,19 +324,16 @@ export const CheckEvaluationTarget = () =>
     Get(':evaluationPeriodId/targets/:employeeId/check'),
     ApiOperation({
       summary: '평가 대상 여부 확인',
-      description: `
-특정 직원이 특정 평가기간의 평가 대상인지 확인합니다.
+      description: `**중요**: 특정 직원이 특정 평가기간의 평가 대상인지 확인합니다. 제외된 대상자는 false로 반환됩니다.
 
-## 테스트 케이스
-
-### 성공 케이스
-- ✅ 등록된 평가 대상자인 경우 true를 반환해야 한다
-- ✅ 제외된 대상자인 경우 false를 반환해야 한다
-- ✅ 등록되지 않은 경우 false를 반환해야 한다
-
-### 실패 케이스
-- ❌ 잘못된 UUID 형식으로 요청 시 400 에러가 발생해야 한다
-      `,
+**테스트 케이스:**
+- 등록된 대상자: 등록된 평가 대상자인 경우 isEvaluationTarget이 true 반환
+- 제외된 대상자: 제외된 대상자인 경우 isEvaluationTarget이 false 반환
+- 등록되지 않은 대상자: 등록되지 않은 경우 isEvaluationTarget이 false 반환
+- 반복 제외/포함: 포함 → 제외 → 다시 포함 시 isEvaluationTarget이 true 반환
+- 응답 필드: evaluationPeriodId와 employeeId 필드가 정확히 반환됨
+- 잘못된 평가기간 UUID: 형식이 올바르지 않은 평가기간 ID로 요청 시 400 에러
+- 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'evaluationPeriodId',

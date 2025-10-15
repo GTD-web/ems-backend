@@ -9,6 +9,7 @@ import {
   IsUUID,
   MaxLength,
 } from 'class-validator';
+import { ToBoolean } from '@interface/decorators';
 
 /**
  * 평가 대상자 등록 요청 DTO
@@ -91,12 +92,12 @@ export class IncludeEvaluationTargetDto {
 export class GetEvaluationTargetsQueryDto {
   @ApiPropertyOptional({
     description: '제외된 대상자 포함 여부',
-    example: false,
-    default: false,
+    example: 'false',
+    default: 'false',
   })
   @IsOptional()
+  @ToBoolean(false) // 기본값 false
   @IsBoolean()
-  @Type(() => Boolean)
   includeExcluded?: boolean;
 }
 
