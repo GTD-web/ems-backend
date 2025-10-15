@@ -51,11 +51,8 @@ import {
   ConfigureEmployeeWbsEvaluationLineCommand,
   ConfigurePrimaryEvaluatorCommand,
   ConfigureSecondaryEvaluatorCommand,
-  GetEmployeeEvaluationLineMappingsQuery,
   GetEmployeeEvaluationSettingsQuery,
-  GetEvaluationLineListQuery,
   GetEvaluatorEmployeesQuery,
-  GetUpdaterEvaluationLineMappingsQuery,
 } from './handlers/evaluation-line';
 
 import {
@@ -331,20 +328,6 @@ export class EvaluationCriteriaManagementService
   // 평가라인 관리 (CQRS 패턴)
   // ============================================================================
 
-  async 평가라인_목록을_조회한다(
-    filter: EvaluationLineFilter,
-  ): Promise<EvaluationLineDto[]> {
-    const query = new GetEvaluationLineListQuery(filter);
-    return await this.queryBus.execute(query);
-  }
-
-  async 특정_직원의_평가라인_매핑을_조회한다(
-    employeeId: string,
-  ): Promise<EvaluationLineMappingDto[]> {
-    const query = new GetEmployeeEvaluationLineMappingsQuery(employeeId);
-    return await this.queryBus.execute(query);
-  }
-
   async 특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
     evaluatorId: string,
   ): Promise<{
@@ -360,13 +343,6 @@ export class EvaluationCriteriaManagementService
     }[];
   }> {
     const query = new GetEvaluatorEmployeesQuery(evaluatorId);
-    return await this.queryBus.execute(query);
-  }
-
-  async 특정_사용자가_수정한_평가라인_매핑을_조회한다(
-    updatedBy: string,
-  ): Promise<EvaluationLineMappingDto[]> {
-    const query = new GetUpdaterEvaluationLineMappingsQuery(updatedBy);
     return await this.queryBus.execute(query);
   }
 

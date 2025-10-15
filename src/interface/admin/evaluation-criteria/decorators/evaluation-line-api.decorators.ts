@@ -9,112 +9,6 @@ import {
 } from '@nestjs/swagger';
 
 /**
- * 평가라인 목록 조회 API 데코레이터
- */
-export const GetEvaluationLineList = () =>
-  applyDecorators(
-    Get(),
-    ApiOperation({
-      summary: '평가라인 목록 조회',
-      description: '필터 조건에 따라 평가라인 목록을 조회합니다.',
-    }),
-    ApiQuery({
-      name: 'evaluatorType',
-      description: '평가자 유형',
-      required: false,
-      enum: ['primary', 'secondary', 'additional'],
-    }),
-    ApiQuery({
-      name: 'isRequired',
-      description: '필수 평가자 여부',
-      required: false,
-      type: Boolean,
-    }),
-    ApiQuery({
-      name: 'isAutoAssigned',
-      description: '자동 할당 여부',
-      required: false,
-      type: Boolean,
-    }),
-    ApiResponse({
-      status: 200,
-      description: '평가라인 목록이 성공적으로 조회되었습니다.',
-      schema: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            evaluatorType: {
-              type: 'string',
-              enum: ['primary', 'secondary', 'additional'],
-            },
-            order: { type: 'number' },
-            isRequired: { type: 'boolean' },
-            isAutoAssigned: { type: 'boolean' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-          },
-        },
-      },
-    }),
-    ApiResponse({
-      status: 400,
-      description: '잘못된 요청 데이터입니다.',
-    }),
-  );
-
-/**
- * 직원 평가라인 매핑 조회 API 데코레이터
- */
-export const GetEmployeeEvaluationLineMappings = () =>
-  applyDecorators(
-    Get('employee/:employeeId/mappings'),
-    ApiOperation({
-      summary: '직원 평가라인 매핑 조회',
-      description: '특정 직원의 평가라인 매핑을 조회합니다.',
-    }),
-    ApiParam({
-      name: 'employeeId',
-      description: '직원 ID',
-      type: 'string',
-      format: 'uuid',
-      example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
-    }),
-    ApiResponse({
-      status: 200,
-      description: '직원 평가라인 매핑이 성공적으로 조회되었습니다.',
-      schema: {
-        type: 'object',
-        properties: {
-          employeeId: { type: 'string', format: 'uuid' },
-          mappings: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'string', format: 'uuid' },
-                employeeId: { type: 'string', format: 'uuid' },
-                evaluatorId: { type: 'string', format: 'uuid' },
-                wbsItemId: { type: 'string', format: 'uuid' },
-                evaluationLineId: { type: 'string', format: 'uuid' },
-                createdBy: { type: 'string', format: 'uuid' },
-                updatedBy: { type: 'string', format: 'uuid' },
-                createdAt: { type: 'string', format: 'date-time' },
-                updatedAt: { type: 'string', format: 'date-time' },
-              },
-            },
-          },
-        },
-      },
-    }),
-    ApiResponse({
-      status: 404,
-      description: '직원을 찾을 수 없습니다.',
-    }),
-  );
-
-/**
  * 평가자별 피평가자 조회 API 데코레이터
  */
 export const GetEvaluatorEmployees = () =>
@@ -122,7 +16,19 @@ export const GetEvaluatorEmployees = () =>
     Get('evaluator/:evaluatorId/employees'),
     ApiOperation({
       summary: '평가자별 피평가자 조회',
-      description: '특정 평가자가 평가해야 하는 피평가자 목록을 조회합니다.',
+      description: `특정 평가자가 평가해야 하는 피평가자 목록을 조회합니다.
+
+**테스트 케이스:**
+- 1차 평가자로 구성된 피평가자 목록 조회: WBS 할당 후 1차 평가자로 구성된 직원들의 목록을 성공적으로 조회 (200)
+- 2차 평가자로 구성된 피평가자 목록 조회: WBS 할당 후 2차 평가자로 구성된 직원들의 목록을 성공적으로 조회 (200)
+- 1차 및 2차 평가자 모두 구성된 경우: 서로 다른 직원에 대해 1차/2차 평가자로 구성된 모든 피평가자를 조회 (200)
+- 평가자로 구성되지 않은 경우: 평가자로 등록되지 않은 직원 ID로 조회 시 빈 배열 반환 (200)
+- WBS 항목 정보 포함: 각 피평가자의 WBS 항목 정보가 응답에 포함됨
+- 존재하지 않는 평가자 ID: 유효한 UUID이지만 존재하지 않는 평가자 ID로 조회 시 빈 배열 반환 (200)
+- 잘못된 UUID 형식: 잘못된 UUID 형식의 평가자 ID로 조회 시 에러 발생 (400 또는 500)
+- 빈 문자열 평가자 ID: 빈 문자열로 조회 시 에러 발생 (404 또는 500)
+- 타임스탬프 형식 검증: 조회된 피평가자 정보의 createdAt, updatedAt이 올바른 Date 형식
+- 중복 피평가자 처리: 같은 직원이 여러 WBS 항목에 대해 평가받는 경우 각각 반환됨`,
     }),
     ApiParam({
       name: 'evaluatorId',
@@ -151,58 +57,29 @@ export const GetEvaluatorEmployees = () =>
                 createdAt: { type: 'string', format: 'date-time' },
                 updatedAt: { type: 'string', format: 'date-time' },
               },
+              required: [
+                'employeeId',
+                'evaluationLineId',
+                'createdAt',
+                'updatedAt',
+              ],
             },
           },
         },
+        required: ['evaluatorId', 'employees'],
       },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 UUID 형식입니다.',
     }),
     ApiResponse({
       status: 404,
       description: '평가자를 찾을 수 없습니다.',
     }),
-  );
-
-/**
- * 수정자별 평가라인 매핑 조회 API 데코레이터
- */
-export const GetUpdaterEvaluationLineMappings = () =>
-  applyDecorators(
-    Get('updater/:updatedBy/mappings'),
-    ApiOperation({
-      summary: '수정자별 평가라인 매핑 조회',
-      description: '특정 사용자가 수정한 평가라인 매핑을 조회합니다.',
-    }),
-    ApiParam({
-      name: 'updatedBy',
-      description: '수정자 ID',
-      type: 'string',
-      format: 'uuid',
-      example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-    }),
     ApiResponse({
-      status: 200,
-      description: '수정자별 평가라인 매핑이 성공적으로 조회되었습니다.',
-      schema: {
-        type: 'array',
-        items: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            employeeId: { type: 'string', format: 'uuid' },
-            evaluatorId: { type: 'string', format: 'uuid' },
-            wbsItemId: { type: 'string', format: 'uuid' },
-            evaluationLineId: { type: 'string', format: 'uuid' },
-            createdBy: { type: 'string', format: 'uuid' },
-            updatedBy: { type: 'string', format: 'uuid' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-          },
-        },
-      },
-    }),
-    ApiResponse({
-      status: 404,
-      description: '수정자를 찾을 수 없습니다.',
+      status: 500,
+      description: '서버 내부 오류가 발생했습니다.',
     }),
   );
 

@@ -220,20 +220,6 @@ export interface IEvaluationCriteriaManagementService {
   // ============================================================================
 
   /**
-   * 평가라인 목록을 조회한다
-   */
-  평가라인_목록을_조회한다(
-    filter: EvaluationLineFilter,
-  ): Promise<EvaluationLineDto[]>;
-
-  /**
-   * 특정 직원의 평가라인 매핑을 조회한다
-   */
-  특정_직원의_평가라인_매핑을_조회한다(
-    employeeId: string,
-  ): Promise<EvaluationLineMappingDto[]>;
-
-  /**
    * 특정 평가자가 평가해야 하는 피평가자 목록을 조회한다
    */
   특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
@@ -250,13 +236,6 @@ export interface IEvaluationCriteriaManagementService {
       updatedAt: Date;
     }[];
   }>;
-
-  /**
-   * 특정 사용자가 수정한 평가라인 매핑을 조회한다
-   */
-  특정_사용자가_수정한_평가라인_매핑을_조회한다(
-    updatedBy: string,
-  ): Promise<EvaluationLineMappingDto[]>;
 
   // ============================================================================
   // 평가라인 구성 관리 (핵심 기능)

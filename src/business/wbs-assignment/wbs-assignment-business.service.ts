@@ -687,44 +687,21 @@ export class WbsAssignmentBusinessService {
         projectId,
       });
 
-      // 1. 기존 평가라인 매핑 조회 (중복 체크)
-      const existingMappings =
-        await this.evaluationCriteriaManagementService.특정_직원의_평가라인_매핑을_조회한다(
-          employeeId,
-        );
-
-      // 해당 WBS에 대한 기존 매핑 필터링
-      const existingMappingsForWbs = existingMappings.filter(
-        (mapping) => mapping.wbsItemId === wbsItemId,
-      );
-
-      if (existingMappingsForWbs.length > 0) {
-        this.logger.log(
-          '이미 평가라인이 구성되어 있어 자동 구성을 생략합니다',
-          {
-            employeeId,
-            wbsItemId,
-            existingMappingsCount: existingMappingsForWbs.length,
-          },
-        );
-        return;
-      }
-
-      // 2. 직원 정보 조회 (담당 평가자 확인)
+      // 1. 직원 정보 조회 (담당 평가자 확인)
       const employee = await this.employeeService.ID로_조회한다(employeeId);
       if (!employee) {
         this.logger.warn('직원을 찾을 수 없습니다', { employeeId });
         return;
       }
 
-      // 3. 프로젝트 정보 조회 (PM 확인)
+      // 2. 프로젝트 정보 조회 (PM 확인)
       const project = await this.projectService.ID로_조회한다(projectId);
       if (!project) {
         this.logger.warn('프로젝트를 찾을 수 없습니다', { projectId });
         return;
       }
 
-      // 4. 1차 평가자 구성 (담당 평가자)
+      // 3. 1차 평가자 구성 (담당 평가자) - Upsert 방식
       if (employee.managerId) {
         this.logger.log('1차 평가자(담당 평가자) 구성', {
           evaluatorId: employee.managerId,
@@ -751,7 +728,7 @@ export class WbsAssignmentBusinessService {
         });
       }
 
-      // 5. 2차 평가자 구성 (프로젝트 PM)
+      // 4. 2차 평가자 구성 (프로젝트 PM) - Upsert 방식
       if (project.managerId) {
         // PM이 담당 평가자와 동일한 경우 2차 평가자 설정 안 함
         if (project.managerId === employee.managerId) {

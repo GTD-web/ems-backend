@@ -1,24 +1,18 @@
-import { Body, Controller, Param, Query } from '@nestjs/common';
+import { Body, Controller, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
   ConfigurePrimaryEvaluator,
   ConfigureSecondaryEvaluator,
-  GetEmployeeEvaluationLineMappings,
   GetEmployeeEvaluationSettings,
-  GetEvaluationLineList,
   GetEvaluatorEmployees,
-  GetUpdaterEvaluationLineMappings,
 } from './decorators/evaluation-line-api.decorators';
 import {
   ConfigureEvaluatorResponseDto,
   ConfigurePrimaryEvaluatorDto,
   ConfigureSecondaryEvaluatorDto,
-  EmployeeEvaluationLineMappingsResponseDto,
   EmployeeEvaluationSettingsResponseDto,
-  EvaluationLineDto,
-  EvaluationLineFilterDto,
   EvaluatorEmployeesResponseDto,
 } from './dto/evaluation-line.dto';
 
@@ -35,40 +29,6 @@ export class EvaluationLineManagementController {
   ) {}
 
   /**
-   * 평가라인 목록 조회
-   */
-  @GetEvaluationLineList()
-  async getEvaluationLineList(
-    @Query() filter: EvaluationLineFilterDto,
-  ): Promise<EvaluationLineDto[]> {
-    return await this.evaluationCriteriaManagementService.평가라인_목록을_조회한다(
-      {
-        evaluatorType: filter.evaluatorType as any,
-        requiredOnly: filter.isRequired,
-        autoAssignedOnly: filter.isAutoAssigned,
-      },
-    );
-  }
-
-  /**
-   * 직원 평가라인 매핑 조회
-   */
-  @GetEmployeeEvaluationLineMappings()
-  async getEmployeeEvaluationLineMappings(
-    @Param('employeeId') employeeId: string,
-  ): Promise<EmployeeEvaluationLineMappingsResponseDto> {
-    const mappings =
-      await this.evaluationCriteriaManagementService.특정_직원의_평가라인_매핑을_조회한다(
-        employeeId,
-      );
-
-    return {
-      employeeId,
-      mappings,
-    };
-  }
-
-  /**
    * 평가자별 피평가자 조회
    */
   @GetEvaluatorEmployees()
@@ -77,18 +37,6 @@ export class EvaluationLineManagementController {
   ): Promise<EvaluatorEmployeesResponseDto> {
     return await this.evaluationCriteriaManagementService.특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
       evaluatorId,
-    );
-  }
-
-  /**
-   * 수정자별 평가라인 매핑 조회
-   */
-  @GetUpdaterEvaluationLineMappings()
-  async getUpdaterEvaluationLineMappings(
-    @Param('updatedBy') updatedBy: string,
-  ): Promise<any[]> {
-    return await this.evaluationCriteriaManagementService.특정_사용자가_수정한_평가라인_매핑을_조회한다(
-      updatedBy,
     );
   }
 
