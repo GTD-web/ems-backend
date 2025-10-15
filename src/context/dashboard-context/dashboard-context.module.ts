@@ -10,6 +10,7 @@ import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assign
 import { WbsEvaluationCriteria } from '../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import { EvaluationLine } from '../../domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationLineMapping } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { WbsSelfEvaluationMapping } from '../../domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.entity';
 import { QUERY_HANDLERS } from './handlers/queries';
 
 /**
@@ -30,6 +31,7 @@ import { QUERY_HANDLERS } from './handlers/queries';
       WbsEvaluationCriteria,
       EvaluationLine,
       EvaluationLineMapping,
+      WbsSelfEvaluationMapping,
     ]),
   ],
   providers: [DashboardService, ...QUERY_HANDLERS],

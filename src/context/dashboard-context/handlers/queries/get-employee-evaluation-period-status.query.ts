@@ -10,12 +10,14 @@ import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { WbsSelfEvaluationMapping } from '@domain/core/wbs-self-evaluation-mapping/wbs-self-evaluation-mapping.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import {
   EmployeeEvaluationPeriodStatusDto,
   EvaluationCriteriaStatus,
   WbsCriteriaStatus,
   EvaluationLineStatus,
+  SelfEvaluationStatus,
 } from '../../interfaces/dashboard-context.interface';
 
 /**
@@ -62,6 +64,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
     @InjectRepository(EvaluationLineMapping)
     private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
+    @InjectRepository(WbsSelfEvaluationMapping)
+    private readonly wbsSelfEvaluationMappingRepository: Repository<WbsSelfEvaluationMapping>,
   ) {}
 
   async execute(
@@ -181,7 +185,18 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           hasSecondaryEvaluator,
         );
 
-      // 10. DTO로 변환
+      // 10. 자기평가 진행 상태 조회
+      const { totalMappingCount, completedMappingCount } =
+        await this.자기평가_진행_상태를_조회한다(
+          evaluationPeriodId,
+          employeeId,
+        );
+
+      // 11. 자기평가 상태 계산
+      const selfEvaluationStatus: SelfEvaluationStatus =
+        this.자기평가_상태를_계산한다(totalMappingCount, completedMappingCount);
+
+      // 12. DTO로 변환
       const dto: EmployeeEvaluationPeriodStatusDto = {
         // 맵핑 기본 정보
         mappingId: result.mapping_id,
@@ -240,10 +255,17 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           hasPrimaryEvaluator,
           hasSecondaryEvaluator,
         },
+
+        // 자기평가 진행 정보
+        selfEvaluation: {
+          status: selfEvaluationStatus,
+          totalMappingCount,
+          completedMappingCount,
+        },
       };
 
       this.logger.debug(
-        `직원의 평가기간 현황 조회 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 프로젝트: ${projectCount}, WBS: ${wbsCount}, 평가항목상태: ${evaluationCriteriaStatus}, 평가기준있는WBS: ${wbsWithCriteriaCount}/${wbsCount}, 평가기준상태: ${wbsCriteriaStatus}, PRIMARY평가자: ${hasPrimaryEvaluator}, SECONDARY평가자: ${hasSecondaryEvaluator}, 평가라인상태: ${evaluationLineStatus}`,
+        `직원의 평가기간 현황 조회 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 프로젝트: ${projectCount}, WBS: ${wbsCount}, 평가항목상태: ${evaluationCriteriaStatus}, 평가기준있는WBS: ${wbsWithCriteriaCount}/${wbsCount}, 평가기준상태: ${wbsCriteriaStatus}, PRIMARY평가자: ${hasPrimaryEvaluator}, SECONDARY평가자: ${hasSecondaryEvaluator}, 평가라인상태: ${evaluationLineStatus}, 자기평가매핑: ${completedMappingCount}/${totalMappingCount}, 자기평가상태: ${selfEvaluationStatus}`,
       );
 
       return dto;
@@ -373,6 +395,59 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       return 'in_progress';
     } else {
       return 'none';
+    }
+  }
+
+  /**
+   * 자기평가 진행 상태를 조회한다
+   * 평가기간과 직원에 해당하는 WBS 자기평가 매핑의 전체 수와 완료된 수를 조회
+   */
+  private async 자기평가_진행_상태를_조회한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+  ): Promise<{ totalMappingCount: number; completedMappingCount: number }> {
+    // 전체 WBS 자기평가 매핑 수 조회
+    const totalMappingCount =
+      await this.wbsSelfEvaluationMappingRepository.count({
+        where: {
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          deletedAt: IsNull(),
+        },
+      });
+
+    // 완료된 WBS 자기평가 수 조회
+    const completedMappingCount =
+      await this.wbsSelfEvaluationMappingRepository.count({
+        where: {
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          isCompleted: true,
+          deletedAt: IsNull(),
+        },
+      });
+
+    return { totalMappingCount, completedMappingCount };
+  }
+
+  /**
+   * 자기평가 상태를 계산한다
+   * - 모든 WBS 자기평가가 완료됨: complete (완료)
+   * - 매핑이 있지만 일부만 완료되거나 모두 미완료: in_progress (입력중)
+   * - 매핑이 없음: none (미존재)
+   */
+  private 자기평가_상태를_계산한다(
+    totalMappingCount: number,
+    completedMappingCount: number,
+  ): SelfEvaluationStatus {
+    if (totalMappingCount === 0) {
+      return 'none';
+    }
+
+    if (completedMappingCount === totalMappingCount) {
+      return 'complete';
+    } else {
+      return 'in_progress';
     }
   }
 }

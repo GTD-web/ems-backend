@@ -27,6 +27,14 @@ export type WbsCriteriaStatus = 'complete' | 'in_progress' | 'none';
 export type EvaluationLineStatus = 'complete' | 'in_progress' | 'none';
 
 /**
+ * 자기평가 진행 상태
+ * - complete: 모든 WBS 자기평가가 완료됨 (완료)
+ * - in_progress: 일부 WBS 자기평가만 완료되거나 진행중 (입력중)
+ * - none: WBS 자기평가 매핑이 없음 (미존재)
+ */
+export type SelfEvaluationStatus = 'complete' | 'in_progress' | 'none';
+
+/**
  * 직원 평가 기간 현황 DTO
  * 특정 평가기간에서 특정 직원의 참여 현황 정보
  */
@@ -111,6 +119,16 @@ export interface EmployeeEvaluationPeriodStatusDto {
     hasPrimaryEvaluator: boolean;
     /** SECONDARY 라인 평가자 지정 여부 */
     hasSecondaryEvaluator: boolean;
+  };
+
+  /** 자기평가 진행 정보 */
+  selfEvaluation: {
+    /** 자기평가 진행 상태 */
+    status: SelfEvaluationStatus;
+    /** 전체 WBS 자기평가 매핑 수 */
+    totalMappingCount: number;
+    /** 완료된 WBS 자기평가 수 */
+    completedMappingCount: number;
   };
 }
 
