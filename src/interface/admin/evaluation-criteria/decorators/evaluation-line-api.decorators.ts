@@ -159,8 +159,22 @@ export const GetEmployeeEvaluationSettings = () =>
     Get('employee/:employeeId/period/:periodId/settings'),
     ApiOperation({
       summary: '직원 평가설정 통합 조회',
-      description:
-        '특정 직원의 특정 평가기간에 대한 모든 평가설정을 통합 조회합니다.',
+      description: `특정 직원의 특정 평가기간에 대한 모든 평가설정을 통합 조회합니다.
+
+**테스트 케이스:**
+- 프로젝트/WBS/평가라인 모두 있는 경우: 프로젝트 할당, WBS 할당, 평가라인 매핑이 모두 설정된 경우 전체 설정 조회 (200)
+- 프로젝트만 할당된 경우: 프로젝트 할당만 있고 WBS 할당과 평가라인 매핑은 빈 배열 반환 (200)
+- WBS만 할당된 경우: WBS 할당과 자동 생성된 평가라인 매핑 반환 (200)
+- 할당이 없는 경우: 모든 배열(projectAssignments, wbsAssignments, evaluationLineMappings)이 빈 배열로 반환 (200)
+- 여러 프로젝트/WBS 할당: 여러 프로젝트와 WBS가 할당된 경우 모든 할당 정보가 반환됨
+- 선택적 필드 검증: deletedAt, createdBy, updatedBy 등 선택적 필드가 있으면 올바른 타입으로 반환됨
+- 존재하지 않는 직원 ID: 유효한 UUID이지만 존재하지 않는 직원 ID로 조회 시 빈 배열들 반환 (200)
+- 존재하지 않는 평가기간 ID: 유효한 UUID이지만 존재하지 않는 평가기간 ID로 조회 시 빈 배열들 반환 (200)
+- 잘못된 UUID 형식 직원 ID: 잘못된 UUID 형식의 직원 ID로 조회 시 에러 발생 (400 또는 500)
+- 잘못된 UUID 형식 평가기간 ID: 잘못된 UUID 형식의 평가기간 ID로 조회 시 에러 발생 (400 또는 500)
+- 빈 문자열 직원 ID: 빈 문자열로 조회 시 에러 발생 (404 또는 500)
+- 타임스탬프 형식 검증: 모든 타임스탬프 필드(assignedDate, createdAt, updatedAt)가 올바른 Date 형식
+- 필수 필드 존재 확인: projectAssignments, wbsAssignments, evaluationLineMappings의 모든 필수 필드가 존재함`,
     }),
     ApiParam({
       name: 'employeeId',
@@ -186,11 +200,81 @@ export const GetEmployeeEvaluationSettings = () =>
           periodId: { type: 'string', format: 'uuid' },
           projectAssignments: {
             type: 'array',
-            items: { type: 'object' },
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                periodId: { type: 'string', format: 'uuid' },
+                employeeId: { type: 'string', format: 'uuid' },
+                projectId: { type: 'string', format: 'uuid' },
+                assignedDate: { type: 'string', format: 'date-time' },
+                assignedBy: { type: 'string', format: 'uuid' },
+                displayOrder: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+                createdBy: { type: 'string', format: 'uuid' },
+                updatedBy: { type: 'string', format: 'uuid' },
+                version: { type: 'number' },
+                periodName: { type: 'string' },
+                employeeName: { type: 'string' },
+                projectName: { type: 'string' },
+                assignedByName: { type: 'string' },
+              },
+              required: [
+                'id',
+                'periodId',
+                'employeeId',
+                'projectId',
+                'assignedDate',
+                'assignedBy',
+                'displayOrder',
+                'createdAt',
+                'updatedAt',
+                'version',
+              ],
+            },
           },
           wbsAssignments: {
             type: 'array',
-            items: { type: 'object' },
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                periodId: { type: 'string', format: 'uuid' },
+                employeeId: { type: 'string', format: 'uuid' },
+                projectId: { type: 'string', format: 'uuid' },
+                wbsItemId: { type: 'string', format: 'uuid' },
+                assignedDate: { type: 'string', format: 'date-time' },
+                assignedBy: { type: 'string', format: 'uuid' },
+                displayOrder: { type: 'number' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+                deletedAt: { type: 'string', format: 'date-time' },
+                createdBy: { type: 'string', format: 'uuid' },
+                updatedBy: { type: 'string', format: 'uuid' },
+                version: { type: 'number' },
+                periodName: { type: 'string' },
+                employeeName: { type: 'string' },
+                projectName: { type: 'string' },
+                wbsItemTitle: { type: 'string' },
+                wbsItemCode: { type: 'string' },
+                assignedByName: { type: 'string' },
+              },
+              required: [
+                'id',
+                'periodId',
+                'employeeId',
+                'projectId',
+                'wbsItemId',
+                'assignedDate',
+                'assignedBy',
+                'displayOrder',
+                'createdAt',
+                'updatedAt',
+                'version',
+              ],
+            },
           },
           evaluationLineMappings: {
             type: 'array',
@@ -207,14 +291,37 @@ export const GetEmployeeEvaluationSettings = () =>
                 createdAt: { type: 'string', format: 'date-time' },
                 updatedAt: { type: 'string', format: 'date-time' },
               },
+              required: [
+                'id',
+                'employeeId',
+                'evaluatorId',
+                'evaluationLineId',
+                'createdAt',
+                'updatedAt',
+              ],
             },
           },
         },
+        required: [
+          'employeeId',
+          'periodId',
+          'projectAssignments',
+          'wbsAssignments',
+          'evaluationLineMappings',
+        ],
       },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 UUID 형식입니다.',
     }),
     ApiResponse({
       status: 404,
       description: '직원 또는 평가기간을 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류가 발생했습니다.',
     }),
   );
 
