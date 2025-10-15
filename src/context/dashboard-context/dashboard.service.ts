@@ -4,7 +4,10 @@ import {
   IDashboardContext,
   EmployeeEvaluationPeriodStatusDto,
 } from './interfaces/dashboard-context.interface';
-import { GetEmployeeEvaluationPeriodStatusQuery } from './handlers/queries';
+import {
+  GetEmployeeEvaluationPeriodStatusQuery,
+  GetAllEmployeesEvaluationPeriodStatusQuery,
+} from './handlers/queries';
 
 /**
  * 대시보드 서비스
@@ -26,6 +29,18 @@ export class DashboardService implements IDashboardContext {
     const query = new GetEmployeeEvaluationPeriodStatusQuery(
       evaluationPeriodId,
       employeeId,
+    );
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 평가기간의 모든 피평가자 현황을 조회한다 (제외된 직원 제외)
+   */
+  async 평가기간의_모든_피평가자_현황을_조회한다(
+    evaluationPeriodId: string,
+  ): Promise<EmployeeEvaluationPeriodStatusDto[]> {
+    const query = new GetAllEmployeesEvaluationPeriodStatusQuery(
+      evaluationPeriodId,
     );
     return await this.queryBus.execute(query);
   }

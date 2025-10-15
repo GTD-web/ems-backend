@@ -2,7 +2,10 @@ import { Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
 import { ParseUUID } from '../../decorators/parse-uuid.decorator';
-import { GetEmployeeEvaluationPeriodStatus } from './decorators/dashboard-api.decorators';
+import {
+  GetEmployeeEvaluationPeriodStatus,
+  GetAllEmployeesEvaluationPeriodStatus,
+} from './decorators/dashboard-api.decorators';
 import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/dashboard.dto';
 
 /**
@@ -18,6 +21,18 @@ export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
   // ==================== GET: 조회 ====================
+
+  /**
+   * 평가기간의 모든 직원 현황을 조회합니다.
+   */
+  @GetAllEmployeesEvaluationPeriodStatus()
+  async getAllEmployeesEvaluationPeriodStatus(
+    @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
+  ): Promise<EmployeeEvaluationPeriodStatusResponseDto[]> {
+    return await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(
+      evaluationPeriodId,
+    );
+  }
 
   /**
    * 직원의 평가기간 현황을 조회합니다.
