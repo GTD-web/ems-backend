@@ -10,15 +10,38 @@ import type {
 /**
  * 동료평가 엔티티
  * 동료가 동료를 평가하는 동료평가를 관리합니다.
+ * 피평가자, 평가자, 평가기간 정보를 포함합니다.
  */
 @Entity('peer_evaluation')
 @Index(['status'])
 @Index(['evaluationDate'])
 @Index(['score'])
+@Index(['employeeId'])
+@Index(['evaluatorId'])
+@Index(['periodId'])
+@Index(['employeeId', 'evaluatorId', 'periodId'])
 export class PeerEvaluation
   extends BaseEntity<PeerEvaluationDto>
   implements IPeerEvaluation
 {
+  @Column({
+    type: 'uuid',
+    comment: '피평가자 ID',
+  })
+  employeeId: string;
+
+  @Column({
+    type: 'uuid',
+    comment: '평가자 ID',
+  })
+  evaluatorId: string;
+
+  @Column({
+    type: 'uuid',
+    comment: '평가 기간 ID',
+  })
+  periodId: string;
+
   @Column({
     type: 'text',
     nullable: true,
@@ -62,14 +85,40 @@ export class PeerEvaluation
   })
   completedAt?: Date;
 
+  @Column({
+    type: 'timestamp with time zone',
+    default: () => 'CURRENT_TIMESTAMP',
+    comment: '매핑일',
+  })
+  mappedDate: Date;
+
+  @Column({
+    type: 'uuid',
+    comment: '매핑자 ID',
+  })
+  mappedBy: string;
+
+  @Column({
+    type: 'boolean',
+    default: true,
+    comment: '활성 상태',
+  })
+  isActive: boolean;
+
   constructor(data?: CreatePeerEvaluationData) {
     super();
     if (data) {
+      this.employeeId = data.employeeId;
+      this.evaluatorId = data.evaluatorId;
+      this.periodId = data.periodId;
       this.evaluationContent = data.evaluationContent;
       this.score = data.score;
       this.status = data.status || PeerEvaluationStatus.PENDING;
       this.evaluationDate = data.evaluationDate || new Date();
       this.isCompleted = data.isCompleted || false;
+      this.mappedDate = data.mappedDate || new Date();
+      this.mappedBy = data.mappedBy || data.createdBy;
+      this.isActive = data.isActive !== undefined ? data.isActive : true;
 
       // 감사 정보 설정
       this.메타데이터를_업데이트한다(data.createdBy);
@@ -171,17 +220,73 @@ export class PeerEvaluation
   }
 
   /**
+   * 특정 피평가자의 평가인지 확인한다
+   */
+  해당_피평가자의_평가인가(employeeId: string): boolean {
+    return this.employeeId === employeeId;
+  }
+
+  /**
+   * 특정 평가자의 평가인지 확인한다
+   */
+  해당_평가자의_평가인가(evaluatorId: string): boolean {
+    return this.evaluatorId === evaluatorId;
+  }
+
+  /**
+   * 특정 평가기간의 평가인지 확인한다
+   */
+  해당_평가기간의_평가인가(periodId: string): boolean {
+    return this.periodId === periodId;
+  }
+
+  /**
+   * 자기 자신을 평가하는지 확인한다
+   */
+  자기_자신을_평가하는가(): boolean {
+    return this.employeeId === this.evaluatorId;
+  }
+
+  /**
+   * 매핑을 활성화한다
+   */
+  활성화한다(activatedBy?: string): void {
+    this.isActive = true;
+
+    if (activatedBy) {
+      this.메타데이터를_업데이트한다(activatedBy);
+    }
+  }
+
+  /**
+   * 매핑을 비활성화한다
+   */
+  비활성화한다(deactivatedBy?: string): void {
+    this.isActive = false;
+
+    if (deactivatedBy) {
+      this.메타데이터를_업데이트한다(deactivatedBy);
+    }
+  }
+
+  /**
    * DTO로 변환한다
    */
   DTO로_변환한다(): PeerEvaluationDto {
     return {
       id: this.id,
+      employeeId: this.employeeId,
+      evaluatorId: this.evaluatorId,
+      periodId: this.periodId,
       evaluationContent: this.evaluationContent,
       score: this.score,
       evaluationDate: this.evaluationDate,
       status: this.status,
       isCompleted: this.isCompleted,
       completedAt: this.completedAt,
+      mappedDate: this.mappedDate,
+      mappedBy: this.mappedBy,
+      isActive: this.isActive,
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
       createdAt: this.createdAt,

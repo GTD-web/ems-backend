@@ -1,7 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { PeerEvaluationService } from '@domain/core/peer-evaluation/peer-evaluation.service';
-import { PeerEvaluationMappingService } from '@domain/core/peer-evaluation-mapping/peer-evaluation-mapping.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { PeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 
@@ -32,7 +31,6 @@ export class CreatePeerEvaluationHandler
 
   constructor(
     private readonly peerEvaluationService: PeerEvaluationService,
-    private readonly peerEvaluationMappingService: PeerEvaluationMappingService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -55,23 +53,18 @@ export class CreatePeerEvaluationHandler
     });
 
     return await this.transactionManager.executeTransaction(async () => {
-      // 동료평가 생성
+      // 동료평가 생성 (매핑 정보 포함)
       const evaluation = await this.peerEvaluationService.생성한다({
+        employeeId: evaluateeId,
+        evaluatorId,
+        periodId,
         evaluationContent,
         score,
         evaluationDate: new Date(),
         status: PeerEvaluationStatus.PENDING,
         isCompleted: false,
-        createdBy,
-      });
-
-      // 동료평가 매핑 생성
-      await this.peerEvaluationMappingService.생성한다({
-        employeeId: evaluateeId,
-        evaluatorId,
-        periodId,
-        peerEvaluationId: evaluation.id,
         mappedBy: createdBy,
+        createdBy,
       });
 
       this.logger.log('동료평가 생성 완료', { evaluationId: evaluation.id });

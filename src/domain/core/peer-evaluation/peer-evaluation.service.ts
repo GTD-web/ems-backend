@@ -6,6 +6,7 @@ import {
   PeerEvaluationNotFoundException,
   PeerEvaluationValidationException,
   PeerEvaluationDuplicateException,
+  SelfPeerEvaluationException,
 } from './peer-evaluation.exceptions';
 import type {
   CreatePeerEvaluationData,
@@ -33,7 +34,20 @@ export class PeerEvaluationService {
     createData: CreatePeerEvaluationData,
   ): Promise<PeerEvaluation> {
     this.logger.log(
-      `동료평가 생성 시작 - 상태: ${createData.status || 'pending'}`,
+      `동료평가 생성 시작 - 피평가자: ${createData.employeeId}, 평가자: ${createData.evaluatorId}`,
+    );
+
+    // 자기 자신 평가 방지
+    this.자기_자신_평가_방지_검사(
+      createData.employeeId,
+      createData.evaluatorId,
+    );
+
+    // 중복 검사
+    await this.중복_검사를_수행한다(
+      createData.employeeId,
+      createData.evaluatorId,
+      createData.periodId,
     );
 
     // 유효성 검사
@@ -47,7 +61,7 @@ export class PeerEvaluationService {
       return saved;
     } catch (error) {
       this.logger.error(
-        `동료평가 생성 실패 - 상태: ${createData.status || 'pending'}`,
+        `동료평가 생성 실패 - 피평가자: ${createData.employeeId}, 평가자: ${createData.evaluatorId}`,
         error.stack,
       );
       throw error;
@@ -101,6 +115,15 @@ export class PeerEvaluationService {
           peerEvaluation.isCompleted = false;
           peerEvaluation.completedAt = undefined;
           peerEvaluation.메타데이터를_업데이트한다(updatedBy);
+        }
+      }
+
+      // 활성 상태 변경 처리
+      if (updateData.isActive !== undefined) {
+        if (updateData.isActive) {
+          peerEvaluation.활성화한다(updatedBy);
+        } else {
+          peerEvaluation.비활성화한다(updatedBy);
         }
       }
 
@@ -224,6 +247,30 @@ export class PeerEvaluationService {
         this.peerEvaluationRepository.createQueryBuilder('evaluation');
 
       // 필터 적용
+      if (filter.employeeId) {
+        queryBuilder.andWhere('evaluation.employeeId = :employeeId', {
+          employeeId: filter.employeeId,
+        });
+      }
+
+      if (filter.evaluatorId) {
+        queryBuilder.andWhere('evaluation.evaluatorId = :evaluatorId', {
+          evaluatorId: filter.evaluatorId,
+        });
+      }
+
+      if (filter.periodId) {
+        queryBuilder.andWhere('evaluation.periodId = :periodId', {
+          periodId: filter.periodId,
+        });
+      }
+
+      if (filter.mappedBy) {
+        queryBuilder.andWhere('evaluation.mappedBy = :mappedBy', {
+          mappedBy: filter.mappedBy,
+        });
+      }
+
       if (filter.status) {
         queryBuilder.andWhere('evaluation.status = :status', {
           status: filter.status,
@@ -251,6 +298,18 @@ export class PeerEvaluationService {
       if (filter.inProgressOnly) {
         queryBuilder.andWhere('evaluation.status = :status', {
           status: 'in_progress',
+        });
+      }
+
+      if (filter.activeOnly) {
+        queryBuilder.andWhere('evaluation.isActive = :isActive', {
+          isActive: true,
+        });
+      }
+
+      if (filter.inactiveOnly) {
+        queryBuilder.andWhere('evaluation.isActive = :isActive', {
+          isActive: false,
         });
       }
 
@@ -282,6 +341,18 @@ export class PeerEvaluationService {
             evaluationDateTo: filter.evaluationDateTo,
           },
         );
+      }
+
+      if (filter.mappedDateFrom) {
+        queryBuilder.andWhere('evaluation.mappedDate >= :mappedDateFrom', {
+          mappedDateFrom: filter.mappedDateFrom,
+        });
+      }
+
+      if (filter.mappedDateTo) {
+        queryBuilder.andWhere('evaluation.mappedDate <= :mappedDateTo', {
+          mappedDateTo: filter.mappedDateTo,
+        });
       }
 
       // 정렬
@@ -357,9 +428,158 @@ export class PeerEvaluationService {
   }
 
   /**
+   * 특정 피평가자의 동료평가를 조회한다
+   */
+  async 피평가자별_조회한다(employeeId: string): Promise<PeerEvaluation[]> {
+    this.logger.debug(`피평가자별 동료평가 조회 - 피평가자: ${employeeId}`);
+
+    try {
+      return await this.필터_조회한다({ employeeId });
+    } catch (error) {
+      this.logger.error(
+        `피평가자별 동료평가 조회 실패 - 피평가자: ${employeeId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 특정 평가자의 동료평가를 조회한다
+   */
+  async 평가자별_조회한다(evaluatorId: string): Promise<PeerEvaluation[]> {
+    this.logger.debug(`평가자별 동료평가 조회 - 평가자: ${evaluatorId}`);
+
+    try {
+      return await this.필터_조회한다({ evaluatorId });
+    } catch (error) {
+      this.logger.error(
+        `평가자별 동료평가 조회 실패 - 평가자: ${evaluatorId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 특정 평가기간의 동료평가를 조회한다
+   */
+  async 평가기간별_조회한다(periodId: string): Promise<PeerEvaluation[]> {
+    this.logger.debug(`평가기간별 동료평가 조회 - 기간: ${periodId}`);
+
+    try {
+      return await this.필터_조회한다({ periodId });
+    } catch (error) {
+      this.logger.error(
+        `평가기간별 동료평가 조회 실패 - 기간: ${periodId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 활성화한다
+   */
+  async 활성화한다(id: string, activatedBy: string): Promise<PeerEvaluation> {
+    this.logger.log(`동료평가 활성화 시작 - ID: ${id}`);
+
+    const peerEvaluation = await this.조회한다(id);
+    if (!peerEvaluation) {
+      throw new PeerEvaluationNotFoundException(id);
+    }
+
+    try {
+      peerEvaluation.활성화한다(activatedBy);
+      const saved = await this.peerEvaluationRepository.save(peerEvaluation);
+
+      this.logger.log(`동료평가 활성화 완료 - ID: ${id}`);
+      return saved;
+    } catch (error) {
+      this.logger.error(`동료평가 활성화 실패 - ID: ${id}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * 비활성화한다
+   */
+  async 비활성화한다(
+    id: string,
+    deactivatedBy: string,
+  ): Promise<PeerEvaluation> {
+    this.logger.log(`동료평가 비활성화 시작 - ID: ${id}`);
+
+    const peerEvaluation = await this.조회한다(id);
+    if (!peerEvaluation) {
+      throw new PeerEvaluationNotFoundException(id);
+    }
+
+    try {
+      peerEvaluation.비활성화한다(deactivatedBy);
+      const saved = await this.peerEvaluationRepository.save(peerEvaluation);
+
+      this.logger.log(`동료평가 비활성화 완료 - ID: ${id}`);
+      return saved;
+    } catch (error) {
+      this.logger.error(`동료평가 비활성화 실패 - ID: ${id}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * 자기 자신 평가 방지 검사
+   */
+  private 자기_자신_평가_방지_검사(
+    employeeId: string,
+    evaluatorId: string,
+  ): void {
+    if (employeeId === evaluatorId) {
+      throw new SelfPeerEvaluationException(employeeId);
+    }
+  }
+
+  /**
+   * 중복 검사를 수행한다
+   */
+  private async 중복_검사를_수행한다(
+    employeeId: string,
+    evaluatorId: string,
+    periodId: string,
+  ): Promise<void> {
+    const existing = await this.peerEvaluationRepository.findOne({
+      where: {
+        employeeId,
+        evaluatorId,
+        periodId,
+      },
+    });
+
+    if (existing) {
+      throw new PeerEvaluationDuplicateException(
+        evaluatorId,
+        employeeId,
+        periodId,
+      );
+    }
+  }
+
+  /**
    * 유효성을 검사한다
    */
   private 유효성을_검사한다(data: CreatePeerEvaluationData): void {
+    if (!data.employeeId) {
+      throw new PeerEvaluationValidationException('피평가자 ID는 필수입니다.');
+    }
+
+    if (!data.evaluatorId) {
+      throw new PeerEvaluationValidationException('평가자 ID는 필수입니다.');
+    }
+
+    if (!data.periodId) {
+      throw new PeerEvaluationValidationException('평가 기간 ID는 필수입니다.');
+    }
+
     if (data.score !== undefined) {
       this.점수_유효성을_검사한다(data.score);
     }

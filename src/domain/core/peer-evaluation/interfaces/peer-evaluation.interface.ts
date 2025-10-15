@@ -6,6 +6,12 @@ import type { PeerEvaluationStatus } from '../peer-evaluation.types';
 export interface IPeerEvaluation {
   /** 고유 식별자 (UUID) */
   id: string;
+  /** 피평가자 ID */
+  employeeId: string;
+  /** 평가자 ID */
+  evaluatorId: string;
+  /** 평가 기간 ID */
+  periodId: string;
   /** 동료평가 내용 */
   evaluationContent?: string;
   /** 동료평가 점수 */
@@ -18,6 +24,12 @@ export interface IPeerEvaluation {
   isCompleted: boolean;
   /** 평가 완료일 */
   completedAt?: Date;
+  /** 매핑일 */
+  mappedDate: Date;
+  /** 매핑자 ID */
+  mappedBy: string;
+  /** 활성 상태 */
+  isActive: boolean;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */

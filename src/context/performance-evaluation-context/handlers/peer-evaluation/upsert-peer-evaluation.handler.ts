@@ -1,8 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { PeerEvaluationService } from '@domain/core/peer-evaluation/peer-evaluation.service';
-import { PeerEvaluationMappingService } from '@domain/core/peer-evaluation-mapping/peer-evaluation-mapping.service';
-import { PeerEvaluationMapping } from '@domain/core/peer-evaluation-mapping/peer-evaluation-mapping.entity';
+import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.entity';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { PeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 
@@ -34,7 +33,6 @@ export class UpsertPeerEvaluationHandler
 
   constructor(
     private readonly peerEvaluationService: PeerEvaluationService,
-    private readonly peerEvaluationMappingService: PeerEvaluationMappingService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -57,27 +55,27 @@ export class UpsertPeerEvaluationHandler
     });
 
     return await this.transactionManager.executeTransaction(async () => {
-      // 기존 매핑 조회 (evaluateeId, evaluatorId, periodId로 찾기)
-      const existingMappings =
-        await this.peerEvaluationMappingService.필터_조회한다({
+      // 기존 동료평가 조회 (evaluateeId, evaluatorId, periodId로 찾기)
+      const existingEvaluations =
+        await this.peerEvaluationService.필터_조회한다({
           employeeId: evaluateeId,
           evaluatorId,
           periodId,
         });
 
-      let existingMapping: PeerEvaluationMapping | null = null;
-      if (existingMappings.length > 0) {
-        existingMapping = existingMappings[0];
+      let existingEvaluation: PeerEvaluation | null = null;
+      if (existingEvaluations.length > 0) {
+        existingEvaluation = existingEvaluations[0];
       }
 
-      if (existingMapping) {
+      if (existingEvaluation) {
         // 기존 동료평가 수정
         this.logger.log('기존 동료평가 수정', {
-          evaluationId: existingMapping.peerEvaluationId,
+          evaluationId: existingEvaluation.id,
         });
 
         await this.peerEvaluationService.수정한다(
-          existingMapping.peerEvaluationId,
+          existingEvaluation.id,
           {
             evaluationContent,
             score,
@@ -85,7 +83,7 @@ export class UpsertPeerEvaluationHandler
           actionBy,
         );
 
-        return existingMapping.peerEvaluationId;
+        return existingEvaluation.id;
       } else {
         // 새로운 동료평가 생성
         this.logger.log('새로운 동료평가 생성', {
@@ -94,21 +92,16 @@ export class UpsertPeerEvaluationHandler
         });
 
         const evaluation = await this.peerEvaluationService.생성한다({
+          employeeId: evaluateeId,
+          evaluatorId,
+          periodId,
           evaluationContent,
           score,
           evaluationDate: new Date(),
           status: PeerEvaluationStatus.PENDING,
           isCompleted: false,
-          createdBy: actionBy,
-        });
-
-        // 동료평가 매핑 생성
-        await this.peerEvaluationMappingService.생성한다({
-          employeeId: evaluateeId,
-          evaluatorId,
-          periodId,
-          peerEvaluationId: evaluation.id,
           mappedBy: actionBy,
+          createdBy: actionBy,
         });
 
         this.logger.log('동료평가 생성 완료', { evaluationId: evaluation.id });

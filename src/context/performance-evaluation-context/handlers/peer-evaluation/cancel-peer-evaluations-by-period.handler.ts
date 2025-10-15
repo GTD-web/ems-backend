@@ -1,7 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { PeerEvaluationService } from '@domain/core/peer-evaluation/peer-evaluation.service';
-import { PeerEvaluationMappingService } from '@domain/core/peer-evaluation-mapping/peer-evaluation-mapping.service';
 
 /**
  * 평가기간의 피평가자의 모든 동료평가 취소 커맨드
@@ -25,10 +24,7 @@ export class CancelPeerEvaluationsByPeriodHandler
     CancelPeerEvaluationsByPeriodHandler.name,
   );
 
-  constructor(
-    private readonly peerEvaluationService: PeerEvaluationService,
-    private readonly peerEvaluationMappingService: PeerEvaluationMappingService,
-  ) {}
+  constructor(private readonly peerEvaluationService: PeerEvaluationService) {}
 
   async execute(
     command: CancelPeerEvaluationsByPeriodCommand,
@@ -37,34 +33,25 @@ export class CancelPeerEvaluationsByPeriodHandler
       `평가기간의 피평가자의 모든 동료평가 취소 핸들러 실행 - 피평가자 ID: ${command.evaluateeId}, 평가기간 ID: ${command.periodId}`,
     );
 
-    // 1. 해당 피평가자의 평가기간 내 모든 매핑 조회
-    const mappings = await this.peerEvaluationMappingService.필터_조회한다({
+    // 1. 해당 피평가자의 평가기간 내 모든 동료평가 조회
+    const evaluations = await this.peerEvaluationService.필터_조회한다({
       employeeId: command.evaluateeId,
       periodId: command.periodId,
     });
 
-    this.logger.debug(`조회된 매핑 개수: ${mappings.length}개`);
+    this.logger.debug(`조회된 동료평가 개수: ${evaluations.length}개`);
 
-    if (mappings.length === 0) {
+    if (evaluations.length === 0) {
       this.logger.warn(
-        `취소할 동료평가 매핑을 찾을 수 없습니다 - 피평가자 ID: ${command.evaluateeId}, 평가기간 ID: ${command.periodId}`,
+        `취소할 동료평가를 찾을 수 없습니다 - 피평가자 ID: ${command.evaluateeId}, 평가기간 ID: ${command.periodId}`,
       );
       return { cancelledCount: 0 };
     }
 
-    // 2. 매핑에서 평가 ID 추출
-    const evaluationIds = mappings
-      .map((mapping) => mapping.peerEvaluationId)
-      .filter((id) => id !== null && id !== undefined);
+    // 2. 평가 ID 추출
+    const evaluationIds = evaluations.map((evaluation) => evaluation.id);
 
     this.logger.debug(`추출된 평가 ID 개수: ${evaluationIds.length}개`);
-
-    if (evaluationIds.length === 0) {
-      this.logger.warn(
-        `취소할 동료평가를 찾을 수 없습니다 - 피평가자 ID: ${command.evaluateeId}`,
-      );
-      return { cancelledCount: 0 };
-    }
 
     // 3. 일괄 취소 실행
     const cancelledEvaluations = await this.peerEvaluationService.일괄_취소한다(

@@ -97,3 +97,29 @@ export class PeerEvaluationDuplicateException extends PeerEvaluationDomainExcept
     this.name = 'PeerEvaluationDuplicateException';
   }
 }
+
+// 동료평가 권한 거부 예외
+export class PeerEvaluationPermissionDeniedException extends PeerEvaluationDomainException {
+  constructor(userId: string, action: string) {
+    super(
+      `동료평가에 대한 ${action} 권한이 없습니다: 사용자 ${userId}`,
+      'PEER_EVALUATION_PERMISSION_DENIED',
+      403,
+      { userId, action },
+    );
+    this.name = 'PeerEvaluationPermissionDeniedException';
+  }
+}
+
+// 동료평가 기간 만료 예외
+export class PeerEvaluationPeriodExpiredException extends PeerEvaluationDomainException {
+  constructor(evaluationId: string, periodId: string) {
+    super(
+      `동료평가의 평가 기간이 만료되었습니다: 평가 ${evaluationId}, 기간 ${periodId}`,
+      'PEER_EVALUATION_PERIOD_EXPIRED',
+      400,
+      { evaluationId, periodId },
+    );
+    this.name = 'PeerEvaluationPeriodExpiredException';
+  }
+}

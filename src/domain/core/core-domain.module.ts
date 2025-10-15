@@ -9,7 +9,6 @@ import { EvaluationLineMappingModule } from './evaluation-line-mapping/evaluatio
 import { EvaluationPeriodModule } from './evaluation-period/evaluation-period.module';
 import { EvaluationPeriodEmployeeMappingModule } from './evaluation-period-employee-mapping/evaluation-period-employee-mapping.module';
 import { PeerEvaluationModule } from './peer-evaluation/peer-evaluation.module';
-import { PeerEvaluationMappingModule } from './peer-evaluation-mapping/peer-evaluation-mapping.module';
 import { FinalEvaluationModule } from './final-evaluation/final-evaluation.module';
 import { WbsEvaluationCriteriaModule } from './wbs-evaluation-criteria/wbs-evaluation-criteria.module';
 import { WbsSelfEvaluationModule } from './wbs-self-evaluation/wbs-self-evaluation.module';
@@ -48,7 +47,6 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     // 매핑 테이블 관리
     EvaluationLineMappingModule,
     EmployeeEvaluationStatusMappingModule,
-    PeerEvaluationMappingModule,
     DeliverableMappingModule,
   ],
   exports: [
@@ -77,7 +75,6 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     // 매핑 테이블 관리
     EvaluationLineMappingModule,
     EmployeeEvaluationStatusMappingModule,
-    PeerEvaluationMappingModule,
     DeliverableMappingModule,
   ],
 })
