@@ -19,6 +19,7 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import {
+  EmployeeEvaluationPeriodsResponseDto,
   EvaluationTargetMappingResponseDto,
   EvaluationTargetStatusResponseDto,
   EvaluationTargetsResponseDto,
@@ -296,14 +297,15 @@ export const GetEmployeeEvaluationPeriods = () =>
     Get('employees/:employeeId/evaluation-periods'),
     ApiOperation({
       summary: '직원의 평가기간 맵핑 조회',
-      description: `**중요**: 특정 직원이 등록된 모든 평가기간 맵핑 정보를 조회합니다. 제외된 맵핑도 포함하여 반환됩니다.
+      description: `**중요**: 특정 직원이 등록된 모든 평가기간 맵핑 정보를 조회합니다. 제외된 맵핑도 포함하여 반환됩니다. 직원 정보는 최상위에 한 번만 제공되고, 맵핑 정보만 배열로 제공됩니다.
 
 **테스트 케이스:**
 - 기본 조회: 직원이 등록된 모든 평가기간 맵핑을 조회할 수 있어야 함
+- 직원 정보 포함: employee 객체에 직원의 기본 정보 포함
 - 다중 평가기간: 여러 평가기간에 등록된 경우 모두 반환됨
 - 제외 맵핑 포함: 제외된 평가기간 맵핑도 조회되어야 함
 - 제외 상태 확인: 제외된 맵핑의 isExcluded가 true로 설정됨
-- 빈 결과: 등록된 평가기간이 없는 경우 빈 배열 반환
+- 빈 맵핑: 등록된 평가기간이 없는 경우 빈 배열 반환
 - 존재하지 않는 직원: 직원 미존재 시 빈 배열 반환
 - 잘못된 UUID: 잘못된 UUID 형식의 직원 ID로 요청 시 400 에러`,
     }),
@@ -315,45 +317,7 @@ export const GetEmployeeEvaluationPeriods = () =>
     }),
     ApiOkResponse({
       description: '직원의 평가기간 맵핑 목록 조회 성공',
-      type: [EvaluationTargetMappingResponseDto],
-      schema: {
-        type: 'array',
-        items: {
-          $ref: '#/components/schemas/EvaluationTargetMappingResponseDto',
-        },
-        example: [
-          {
-            id: '550e8400-e29b-41d4-a716-446655440000',
-            evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174000',
-            employeeId: '223e4567-e89b-12d3-a456-426614174001',
-            isExcluded: false,
-            excludeReason: null,
-            excludedBy: null,
-            excludedAt: null,
-            createdBy: 'admin-user-id',
-            updatedBy: 'admin-user-id',
-            createdAt: '2024-01-15T00:00:00.000Z',
-            updatedAt: '2024-01-15T00:00:00.000Z',
-            deletedAt: null,
-            version: 1,
-          },
-          {
-            id: '660e8400-e29b-41d4-a716-446655440001',
-            evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174999',
-            employeeId: '223e4567-e89b-12d3-a456-426614174001',
-            isExcluded: true,
-            excludeReason: '이전 평가기간 제외',
-            excludedBy: 'hr-manager-id',
-            excludedAt: '2023-12-20T09:30:00.000Z',
-            createdBy: 'admin-user-id',
-            updatedBy: 'hr-manager-id',
-            createdAt: '2023-12-15T00:00:00.000Z',
-            updatedAt: '2023-12-20T09:30:00.000Z',
-            deletedAt: null,
-            version: 2,
-          },
-        ],
-      },
+      type: EmployeeEvaluationPeriodsResponseDto,
     }),
   );
 

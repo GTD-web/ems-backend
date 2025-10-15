@@ -420,12 +420,15 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(periods.length);
+        expect(response.body.employee).toBeDefined();
+        expect(response.body.employee.id).toBe(employee.id);
+        expect(Array.isArray(response.body.mappings)).toBe(true);
+        expect(response.body.mappings.length).toBe(periods.length);
 
-        response.body.forEach((mapping: any) => {
-          expect(mapping.employeeId).toBe(employee.id);
+        response.body.mappings.forEach((mapping: any) => {
           expect(mapping.evaluationPeriodId).toBeDefined();
+          expect(mapping.id).toBeDefined();
+          expect(mapping.employeeId).toBeUndefined(); // 중복 제거됨
         });
       });
 
@@ -446,7 +449,9 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(response.body.length).toBe(allPeriods.length);
+        expect(response.body.employee).toBeDefined();
+        expect(response.body.employee.id).toBe(employee.id);
+        expect(response.body.mappings.length).toBe(allPeriods.length);
       });
 
       it('등록된 평가기간이 없는 경우 빈 배열이 반환되어야 한다', async () => {
@@ -461,8 +466,10 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(0);
+        expect(response.body.employee).toBeDefined();
+        expect(response.body.employee.id).toBe(employee.id);
+        expect(Array.isArray(response.body.mappings)).toBe(true);
+        expect(response.body.mappings.length).toBe(0);
       });
 
       it('제외된 평가기간 맵핑도 조회되어야 한다', async () => {
@@ -485,9 +492,11 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then - 제외된 것도 포함하여 모두 반환
-        expect(response.body.length).toBe(periods.length);
+        expect(response.body.employee).toBeDefined();
+        expect(response.body.employee.id).toBe(employee.id);
+        expect(response.body.mappings.length).toBe(periods.length);
 
-        const excludedMapping = response.body.find(
+        const excludedMapping = response.body.mappings.find(
           (m: any) => m.evaluationPeriodId === periods[0].id,
         );
         expect(excludedMapping.isExcluded).toBe(true);
@@ -507,8 +516,10 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // Then
-        expect(Array.isArray(response.body)).toBe(true);
-        expect(response.body.length).toBe(0);
+        expect(response.body.employee).toBeDefined();
+        expect(response.body.employee.id).toBe(nonExistentEmployeeId);
+        expect(Array.isArray(response.body.mappings)).toBe(true);
+        expect(response.body.mappings.length).toBe(0);
       });
 
       it('잘못된 UUID 형식의 직원 ID로 요청 시 400 에러가 발생해야 한다', async () => {

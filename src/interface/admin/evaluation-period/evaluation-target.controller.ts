@@ -15,6 +15,7 @@ import {
   UnregisterEvaluationTarget,
 } from './decorators/evaluation-target-api.decorators';
 import {
+  EmployeeEvaluationPeriodsResponseDto,
   EvaluationTargetMappingResponseDto,
   EvaluationTargetStatusResponseDto,
   EvaluationTargetsResponseDto,
@@ -154,10 +155,31 @@ export class EvaluationTargetController {
   @GetEmployeeEvaluationPeriods()
   async getEmployeeEvaluationPeriods(
     @ParseUUID('employeeId') employeeId: string,
-  ): Promise<EvaluationTargetMappingResponseDto[]> {
-    return await this.evaluationPeriodManagementService.직원의_평가기간_맵핑_조회한다(
-      employeeId,
-    );
+  ): Promise<EmployeeEvaluationPeriodsResponseDto> {
+    const mappings =
+      await this.evaluationPeriodManagementService.직원의_평가기간_맵핑_조회한다(
+        employeeId,
+      );
+
+    // 첫 번째 맵핑에서 직원 정보 추출 (모든 맵핑의 직원 정보는 동일)
+    const employee =
+      mappings.length > 0
+        ? mappings[0].employee
+        : {
+            id: employeeId,
+            employeeNumber: '',
+            name: '알 수 없음',
+            email: '',
+            status: '',
+          };
+
+    return {
+      employee,
+      mappings: mappings.map((mapping) => {
+        const { employee: _, employeeId: __, ...rest } = mapping;
+        return rest;
+      }),
+    };
   }
 
   /**
