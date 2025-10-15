@@ -37,6 +37,15 @@ export interface EvaluationPeriodEmployeeMappingDto {
   /** 제외 처리 일시 */
   excludedAt?: Date | null;
 
+  /** 자기평가 수정 가능 여부 */
+  isSelfEvaluationEditable: boolean;
+
+  /** 1차평가(하향평가) 수정 가능 여부 */
+  isPrimaryEvaluationEditable: boolean;
+
+  /** 2차평가(하향평가) 수정 가능 여부 */
+  isSecondaryEvaluationEditable: boolean;
+
   /** 생성자 ID */
   createdBy: string;
 
@@ -90,6 +99,15 @@ export interface EvaluationTargetSummaryDto {
 
   /** 제외 처리 일시 */
   excludedAt?: Date | null;
+
+  /** 자기평가 수정 가능 여부 */
+  isSelfEvaluationEditable?: boolean;
+
+  /** 1차평가(하향평가) 수정 가능 여부 */
+  isPrimaryEvaluationEditable?: boolean;
+
+  /** 2차평가(하향평가) 수정 가능 여부 */
+  isSecondaryEvaluationEditable?: boolean;
 }
 
 /**
