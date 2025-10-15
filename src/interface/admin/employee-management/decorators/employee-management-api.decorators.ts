@@ -75,6 +75,26 @@ export function GetDepartmentHierarchy() {
 }
 
 /**
+ * 직원 목록을 포함한 부서 하이라키 구조 조회 엔드포인트 데코레이터
+ */
+export function GetDepartmentHierarchyWithEmployees() {
+  return applyDecorators(
+    Get('departments/hierarchy-with-employees'),
+    ApiOperation({
+      summary: '직원 목록 포함 부서 하이라키 구조 조회',
+      description:
+        '전체 부서 구조를 하이라키 형태로 반환하며, 각 부서별 소속 직원 목록을 포함합니다. 계층 정보와 직원 수 정보를 제공합니다.',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '직원 목록을 포함한 부서 하이라키 구조',
+      type: [Object], // 재귀적 구조이므로 Object로 표시
+    }),
+    ApiResponse({ status: 500, description: '서버 내부 오류' }),
+  );
+}
+
+/**
  * 제외된 직원 목록 조회 엔드포인트 데코레이터
  */
 export function GetExcludedEmployees() {

@@ -2,12 +2,16 @@ import { Body, Controller, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
 import { EmployeeDto } from '../../../domain/common/employee/employee.types';
-import { DepartmentHierarchyDto } from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
+import {
+  DepartmentHierarchyDto,
+  DepartmentHierarchyWithEmployeesDto,
+} from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
 import { ParseId } from '../../decorators/parse-uuid.decorator';
 import {
   ExcludeEmployeeFromList,
   GetAllEmployees,
   GetDepartmentHierarchy,
+  GetDepartmentHierarchyWithEmployees,
   GetEmployeeDetail,
   GetExcludedEmployees,
   IncludeEmployeeInList,
@@ -40,6 +44,16 @@ export class EmployeeManagementController {
   @GetDepartmentHierarchy()
   async getDepartmentHierarchy(): Promise<DepartmentHierarchyDto[]> {
     return await this.organizationManagementService.부서하이라키조회();
+  }
+
+  /**
+   * 직원 목록을 포함한 부서 하이라키 구조를 조회합니다.
+   */
+  @GetDepartmentHierarchyWithEmployees()
+  async getDepartmentHierarchyWithEmployees(): Promise<
+    DepartmentHierarchyWithEmployeesDto[]
+  > {
+    return await this.organizationManagementService.부서하이라키_직원포함_조회();
   }
 
   /**

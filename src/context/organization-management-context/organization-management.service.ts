@@ -6,6 +6,7 @@ import {
   IOrganizationManagementContext,
   OrganizationChartDto,
   DepartmentHierarchyDto,
+  DepartmentHierarchyWithEmployeesDto,
 } from './interfaces/organization-management-context.interface';
 import {
   GetAllDepartmentsQuery,
@@ -20,6 +21,7 @@ import {
   GetParentDepartmentQuery,
   GetActiveEmployeesQuery,
   GetDepartmentHierarchyQuery,
+  GetDepartmentHierarchyWithEmployeesQuery,
 } from './queries';
 import {
   ExcludeEmployeeFromListCommand,
@@ -154,5 +156,16 @@ export class OrganizationManagementService
    */
   async 부서하이라키조회(): Promise<DepartmentHierarchyDto[]> {
     return await this.queryBus.execute(new GetDepartmentHierarchyQuery());
+  }
+
+  /**
+   * 직원 목록을 포함한 부서 하이라키 구조를 조회합니다
+   */
+  async 부서하이라키_직원포함_조회(): Promise<
+    DepartmentHierarchyWithEmployeesDto[]
+  > {
+    return await this.queryBus.execute(
+      new GetDepartmentHierarchyWithEmployeesQuery(),
+    );
   }
 }

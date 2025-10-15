@@ -86,6 +86,12 @@ export interface IOrganizationManagementContext {
    * @returns 부서 하이라키 목록
    */
   부서하이라키조회(): Promise<DepartmentHierarchyDto[]>;
+
+  /**
+   * 직원 목록을 포함한 부서 하이라키 구조를 조회합니다
+   * @returns 직원 목록을 포함한 부서 하이라키 목록
+   */
+  부서하이라키_직원포함_조회(): Promise<DepartmentHierarchyWithEmployeesDto[]>;
 }
 
 /**
@@ -134,4 +140,56 @@ export interface DepartmentHierarchyDto {
   totalDescendants: number;
   /** 하위 부서 목록 */
   subDepartments: DepartmentHierarchyDto[];
+}
+
+/**
+ * 간결한 직원 정보 DTO (필수 필드만)
+ */
+export interface EmployeeSummaryDto {
+  /** 직원 ID */
+  id: string;
+  /** 직원 번호 */
+  employeeNumber: string;
+  /** 이름 */
+  name: string;
+  /** 이메일 */
+  email: string;
+  /** 직책명 */
+  rankName?: string;
+  /** 직책 코드 */
+  rankCode?: string;
+  /** 직책 레벨 */
+  rankLevel?: number;
+  /** 재직 여부 */
+  isActive: boolean;
+}
+
+/**
+ * 직원 목록을 포함한 부서 하이라키 DTO
+ */
+export interface DepartmentHierarchyWithEmployeesDto {
+  /** 부서 ID */
+  id: string;
+  /** 부서명 */
+  name: string;
+  /** 부서 코드 */
+  code: string;
+  /** 정렬 순서 */
+  order: number;
+  /** 상위 부서 ID (외부 시스템) */
+  parentDepartmentId?: string;
+  /** 현재 부서의 계층 레벨 (0이 최상위) */
+  level: number;
+  /** 이 부서 아래로 존재하는 최대 깊이 (하위 부서가 없으면 0) */
+  depth: number;
+  /** 직계 하위 부서 개수 */
+  childrenCount: number;
+  /** 모든 하위 부서 개수 (재귀적, 손자 부서 포함) */
+  totalDescendants: number;
+  /** 부서 소속 직원 수 */
+  employeeCount: number;
+  /** 부서 소속 직원 목록 */
+  employees: EmployeeSummaryDto[];
+  /** 하위 부서 목록 */
+  subDepartments: DepartmentHierarchyWithEmployeesDto[];
 }
