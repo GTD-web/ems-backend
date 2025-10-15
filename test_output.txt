@@ -1,4 +1,0 @@
-
-> lumir-evaluation-management-system@0.0.1 test:e2e:fast
-> cross-env NODE_ENV=test LOG_LEVEL=error jest --config ./test/jest-e2e-fast.json --maxWorkers=5 --silent test/interface/admin/evaluation-period-management/evaluation-target/register-evaluation-target.e2e-spec.ts
-
