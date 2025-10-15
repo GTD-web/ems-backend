@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { QueryBus } from '@nestjs/cqrs';
+import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { DepartmentDto } from '../../domain/common/department/department.types';
 import { EmployeeDto } from '../../domain/common/employee/employee.types';
 import {
   IOrganizationManagementContext,
   OrganizationChartDto,
+  DepartmentHierarchyDto,
 } from './interfaces/organization-management-context.interface';
 import {
   GetAllDepartmentsQuery,
@@ -18,7 +19,12 @@ import {
   GetSubDepartmentsQuery,
   GetParentDepartmentQuery,
   GetActiveEmployeesQuery,
-} from './queries/organization.queries';
+  GetDepartmentHierarchyQuery,
+} from './queries';
+import {
+  ExcludeEmployeeFromListCommand,
+  IncludeEmployeeInListCommand,
+} from './commands';
 
 /**
  * 조직 관리 서비스
@@ -30,7 +36,10 @@ import {
 export class OrganizationManagementService
   implements IOrganizationManagementContext
 {
-  constructor(private readonly queryBus: QueryBus) {}
+  constructor(
+    private readonly queryBus: QueryBus,
+    private readonly commandBus: CommandBus,
+  ) {}
 
   /**
    * 모든 부서 목록을 조회합니다
@@ -113,5 +122,37 @@ export class OrganizationManagementService
    */
   async 활성직원목록조회(): Promise<EmployeeDto[]> {
     return await this.queryBus.execute(new GetActiveEmployeesQuery());
+  }
+
+  /**
+   * 직원을 조회 목록에서 제외합니다
+   */
+  async 직원조회제외(
+    employeeId: string,
+    excludeReason: string,
+    excludedBy: string,
+  ): Promise<EmployeeDto> {
+    return await this.commandBus.execute(
+      new ExcludeEmployeeFromListCommand(employeeId, excludeReason, excludedBy),
+    );
+  }
+
+  /**
+   * 직원을 조회 목록에 포함합니다
+   */
+  async 직원조회포함(
+    employeeId: string,
+    updatedBy: string,
+  ): Promise<EmployeeDto> {
+    return await this.commandBus.execute(
+      new IncludeEmployeeInListCommand(employeeId, updatedBy),
+    );
+  }
+
+  /**
+   * 부서 하이라키 구조를 조회합니다
+   */
+  async 부서하이라키조회(): Promise<DepartmentHierarchyDto[]> {
+    return await this.queryBus.execute(new GetDepartmentHierarchyQuery());
   }
 }

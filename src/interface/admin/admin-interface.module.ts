@@ -3,6 +3,7 @@ import { DomainContextModule } from '../../context/domain-context.module';
 import { EvaluationPeriodManagementContextModule } from '../../context/evaluation-period-management-context/evaluation-period-management-context.module';
 import { EvaluationCriteriaManagementContextModule } from '../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { PerformanceEvaluationContextModule } from '../../context/performance-evaluation-context/performance-evaluation-context.module';
+import { OrganizationManagementContextModule } from '../../context/organization-management-context/organization-management-context.module';
 import { BusinessModule } from '../../business/business.module';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
 import { ProjectAssignmentManagementController } from './evaluation-criteria/project-assignment-management.controller';
@@ -13,6 +14,7 @@ import { WbsSelfEvaluationManagementController } from './performance-evaluation/
 import { DownwardEvaluationManagementController } from './performance-evaluation/downward-evaluation-management.controller';
 import { PeerEvaluationManagementController } from './performance-evaluation/peer-evaluation-management.controller';
 import { FinalEvaluationManagementController } from './performance-evaluation/final-evaluation-management.controller';
+import { EmployeeManagementController } from './employee-management/employee-management.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -26,10 +28,12 @@ import { FinalEvaluationManagementController } from './performance-evaluation/fi
     EvaluationPeriodManagementContextModule, // 평가 기간 관리 컨텍스트 모듈 주입
     EvaluationCriteriaManagementContextModule, // 평가기준 관리 컨텍스트 모듈 주입
     PerformanceEvaluationContextModule, // 성과평가 컨텍스트 모듈 주입
+    OrganizationManagementContextModule, // 조직 관리 컨텍스트 모듈 주입
     BusinessModule, // 비즈니스 레이어 모듈 주입
   ],
   controllers: [
     EvaluationPeriodManagementController, // 평가 기간 관리 컨트롤러
+    EmployeeManagementController, // 직원 관리 컨트롤러
     ProjectAssignmentManagementController, // 프로젝트 할당 관리 컨트롤러
     WbsAssignmentManagementController, // WBS 할당 관리 컨트롤러
     EvaluationLineManagementController, // 평가라인 관리 컨트롤러

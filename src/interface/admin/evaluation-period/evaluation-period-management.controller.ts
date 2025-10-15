@@ -60,7 +60,7 @@ import {
  * 평가 기간의 생성, 수정, 삭제, 상태 관리 등 관리자 권한이 필요한
  * 평가 관리 기능을 제공합니다.
  */
-@ApiTags('A-1. 관리자 - 평가기간')
+@ApiTags('A-2. 관리자 - 평가기간')
 @Controller('admin/evaluation-periods')
 // @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EvaluationPeriodManagementController {
