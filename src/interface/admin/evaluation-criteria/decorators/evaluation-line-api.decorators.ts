@@ -350,8 +350,20 @@ export const ConfigurePrimaryEvaluator = () =>
       'employee/:employeeId/wbs/:wbsItemId/period/:periodId/primary-evaluator',
     ),
     ApiOperation({
-      summary: '1차 평가자 구성',
-      description: '특정 직원의 특정 WBS 항목에 대한 1차 평가자를 구성합니다.',
+      summary: '1차 평가자 구성 (Upsert)',
+      description: `특정 직원의 특정 WBS 항목에 대한 1차 평가자를 구성합니다.
+
+**동작 방식:**
+- WBS 할당 시 자동으로 생성된 평가라인이 있는 경우: 평가자 업데이트
+- 평가라인이 없는 경우: 새로운 평가라인 및 매핑 생성
+- Upsert 방식으로 동작하여 중복 생성 방지
+
+**테스트 케이스:**
+- WBS 할당 시 자동 생성된 1차 평가자 업데이트: WBS 할당으로 자동 생성된 평가라인의 평가자를 새로운 평가자로 변경 (201)
+- DB 업데이트 확인: 업데이트된 매핑 정보가 DB에 정상적으로 저장됨
+- 여러 직원 업데이트: 서로 다른 직원의 1차 평가자를 각각 업데이트 가능
+- 잘못된 UUID: 잘못된 UUID 형식의 evaluatorId로 요청 시 400 에러
+- evaluatorId 누락: evaluatorId가 누락된 경우 400 에러`,
     }),
     ApiParam({
       name: 'employeeId',
@@ -436,8 +448,20 @@ export const ConfigureSecondaryEvaluator = () =>
       'employee/:employeeId/wbs/:wbsItemId/period/:periodId/secondary-evaluator',
     ),
     ApiOperation({
-      summary: '2차 평가자 구성',
-      description: '특정 직원의 특정 WBS 항목에 대한 2차 평가자를 구성합니다.',
+      summary: '2차 평가자 구성 (Upsert)',
+      description: `특정 직원의 특정 WBS 항목에 대한 2차 평가자를 구성합니다.
+
+**동작 방식:**
+- WBS 할당 시 자동으로 생성된 평가라인이 있는 경우: 평가자 업데이트
+- 평가라인이 없는 경우: 새로운 평가라인 및 매핑 생성
+- Upsert 방식으로 동작하여 중복 생성 방지
+
+**테스트 케이스:**
+- WBS 할당 시 자동 생성된 2차 평가자 업데이트: WBS 할당으로 자동 생성된 평가라인의 평가자를 새로운 평가자로 변경 (201)
+- DB 업데이트 확인: 업데이트된 매핑 정보가 DB에 정상적으로 저장됨
+- 1차/2차 평가자 함께 업데이트: 동일 직원의 1차 평가자와 2차 평가자를 연속으로 업데이트 가능
+- 잘못된 UUID: 잘못된 UUID 형식의 evaluatorId로 요청 시 400 에러
+- evaluatorId 누락: evaluatorId가 누락된 경우 400 에러`,
     }),
     ApiParam({
       name: 'employeeId',

@@ -22,6 +22,11 @@ export interface IEvaluationLineMapping extends IBaseEntity {
   DTO로_변환한다(): EvaluationLineMappingDto;
 
   /**
+   * 평가자를 변경한다
+   */
+  평가자를_변경한다(evaluatorId: string): void;
+
+  /**
    * 평가 라인을 변경한다
    */
   평가라인을_변경한다(evaluationLineId: string): void;

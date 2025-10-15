@@ -66,37 +66,65 @@ export class ConfigurePrimaryEvaluatorHandler
       let createdLines = 0;
       let createdMappings = 0;
 
-      // 1차 평가 라인 생성
-      const primaryEvaluationLine = await this.evaluationLineService.생성한다({
+      // 1차 평가 라인 조회 또는 생성
+      const evaluationLines = await this.evaluationLineService.필터_조회한다({
         evaluatorType: EvaluatorType.PRIMARY,
-        order: 1,
-        isRequired: true,
-        isAutoAssigned: false,
+        orderFrom: 1,
+        orderTo: 1,
       });
-      createdLines++;
 
-      // 중복 매핑 방지 체크
-      const existingMapping =
-        await this.evaluationLineMappingService.평가관계_존재_확인한다(
+      let primaryEvaluationLine;
+      if (evaluationLines.length > 0) {
+        primaryEvaluationLine = evaluationLines[0];
+      } else {
+        primaryEvaluationLine = await this.evaluationLineService.생성한다({
+          evaluatorType: EvaluatorType.PRIMARY,
+          order: 1,
+          isRequired: true,
+          isAutoAssigned: false,
+        });
+        createdLines++;
+      }
+
+      const evaluationLineId = primaryEvaluationLine.DTO로_변환한다().id;
+
+      // 기존 매핑 조회 (employeeId, wbsItemId, evaluationLineId 기준)
+      const existingMappings =
+        await this.evaluationLineMappingService.필터_조회한다({
+          employeeId,
+          wbsItemId,
+          evaluationLineId,
+        });
+
+      let mappingEntity;
+      if (existingMappings.length > 0) {
+        // 기존 매핑이 있으면 업데이트
+        const existingMapping = existingMappings[0];
+        const mappingId = existingMapping.DTO로_변환한다().id;
+
+        // 업데이트 메서드 사용
+        mappingEntity = await this.evaluationLineMappingService.업데이트한다(
+          mappingId,
+          { evaluatorId },
+          createdBy || evaluatorId,
+        );
+        this.logger.log(
+          `기존 1차 평가자 매핑 업데이트 - 매핑 ID: ${mappingId}, 새 평가자: ${evaluatorId}`,
+        );
+      } else {
+        // 새로 생성
+        mappingEntity = await this.evaluationLineMappingService.생성한다({
           employeeId,
           evaluatorId,
           wbsItemId,
-        );
-
-      if (existingMapping) {
-        throw new Error(
-          `이미 존재하는 평가관계입니다. 피평가자: ${employeeId}, 평가자: ${evaluatorId}, WBS: ${wbsItemId}`,
+          evaluationLineId,
+          createdBy,
+        });
+        createdMappings++;
+        this.logger.log(
+          `새 1차 평가자 매핑 생성 - 매핑 ID: ${mappingEntity.DTO로_변환한다().id}`,
         );
       }
-
-      const mappingEntity = await this.evaluationLineMappingService.생성한다({
-        employeeId,
-        evaluatorId,
-        wbsItemId,
-        evaluationLineId: primaryEvaluationLine.DTO로_변환한다().id,
-        createdBy,
-      });
-      createdMappings++;
 
       const mappingDto = mappingEntity.DTO로_변환한다();
       const mapping = {

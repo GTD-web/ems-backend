@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { DepartmentTestService } from '../../domain/common/department/department-test.service';
 import { EmployeeTestService } from '../../domain/common/employee/employee-test.service';
 import { ProjectTestService } from '../../domain/common/project/project-test.service';
@@ -7,6 +9,11 @@ import { DepartmentDto } from '../../domain/common/department/department.types';
 import { EmployeeDto } from '../../domain/common/employee/employee.types';
 import { ProjectDto } from '../../domain/common/project/project.types';
 import { WbsItemDto } from '../../domain/common/wbs-item/wbs-item.types';
+import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation-period.entity';
+import {
+  EvaluationPeriodDto,
+  EvaluationPeriodStatus,
+} from '../../domain/core/evaluation-period/evaluation-period.types';
 
 /**
  * 테스트용 컨텍스트 서비스
@@ -22,6 +29,8 @@ export class TestContextService {
     private readonly employeeTestService: EmployeeTestService,
     private readonly projectTestService: ProjectTestService,
     private readonly wbsItemTestService: WbsItemTestService,
+    @InjectRepository(EvaluationPeriod)
+    private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
   ) {}
 
   /**
@@ -33,6 +42,7 @@ export class TestContextService {
     employees: EmployeeDto[];
     projects: ProjectDto[];
     wbsItems: WbsItemDto[];
+    periods: EvaluationPeriodDto[];
   }> {
     // 1. 기존 테스트 데이터 정리
     await this.테스트_데이터를_정리한다();
@@ -57,15 +67,70 @@ export class TestContextService {
         )
       : [];
 
+    // 6. 평가기간 데이터 생성
+    const periods = await this.테스트용_평가기간을_생성한다();
+
     console.log(
-      `부서 ${departments.length}, 직원 ${employees.length}, 프로젝트 ${projects.length}, WBS 항목 ${wbsItems.length} 생성 완료`,
+      `부서 ${departments.length}, 직원 ${employees.length}, 프로젝트 ${projects.length}, WBS 항목 ${wbsItems.length}, 평가기간 ${periods.length} 생성 완료`,
     );
     return {
       departments,
       employees,
       projects,
       wbsItems,
+      periods,
     };
+  }
+
+  /**
+   * 테스트용 평가기간을 생성한다
+   * @returns 생성된 평가기간 목록
+   */
+  async 테스트용_평가기간을_생성한다(): Promise<EvaluationPeriodDto[]> {
+    const timestamp = Date.now();
+    const periods: EvaluationPeriodDto[] = [];
+
+    // 진행 중인 평가기간 생성
+    const inProgressPeriod = this.evaluationPeriodRepository.create({
+      name: `테스트 평가기간 (진행중) ${timestamp}`,
+      startDate: new Date('2024-01-01'),
+      peerEvaluationDeadline: new Date('2024-12-31'),
+      description: '테스트용 진행 중인 평가기간',
+      maxSelfEvaluationRate: 120,
+      status: EvaluationPeriodStatus.IN_PROGRESS,
+    });
+    const savedInProgress =
+      await this.evaluationPeriodRepository.save(inProgressPeriod);
+    periods.push(savedInProgress as any);
+
+    // 대기 중인 평가기간 생성
+    const waitingPeriod = this.evaluationPeriodRepository.create({
+      name: `테스트 평가기간 (대기) ${timestamp + 1}`,
+      startDate: new Date('2025-01-01'),
+      peerEvaluationDeadline: new Date('2025-12-31'),
+      description: '테스트용 대기 중인 평가기간',
+      maxSelfEvaluationRate: 120,
+      status: EvaluationPeriodStatus.WAITING,
+    });
+    const savedWaiting =
+      await this.evaluationPeriodRepository.save(waitingPeriod);
+    periods.push(savedWaiting as any);
+
+    // 완료된 평가기간 생성
+    const completedPeriod = this.evaluationPeriodRepository.create({
+      name: `테스트 평가기간 (완료) ${timestamp + 2}`,
+      startDate: new Date('2023-01-01'),
+      peerEvaluationDeadline: new Date('2023-12-31'),
+      description: '테스트용 완료된 평가기간',
+      maxSelfEvaluationRate: 120,
+      status: EvaluationPeriodStatus.COMPLETED,
+    });
+    const savedCompleted =
+      await this.evaluationPeriodRepository.save(completedPeriod);
+    periods.push(savedCompleted as any);
+
+    console.log(`평가기간 ${periods.length}개 생성 완료`);
+    return periods;
   }
 
   /**
@@ -219,6 +284,7 @@ export class TestContextService {
     employees: EmployeeDto[];
     projects: ProjectDto[];
     wbsItems: WbsItemDto[];
+    periods: EvaluationPeriodDto[];
   }> {
     // 1. 기존 테스트 데이터 정리
     await this.테스트_데이터를_정리한다();
@@ -247,8 +313,11 @@ export class TestContextService {
       }
     }
 
+    // 6. 평가기간 데이터 생성
+    const periods = await this.테스트용_평가기간을_생성한다();
+
     console.log(
-      `부서 ${departments.length}, 직원 ${employees.length}, 프로젝트 ${projects.length}, WBS 항목 ${allWbsItems.length} 생성 완료`,
+      `부서 ${departments.length}, 직원 ${employees.length}, 프로젝트 ${projects.length}, WBS 항목 ${allWbsItems.length}, 평가기간 ${periods.length} 생성 완료`,
     );
 
     return {
@@ -256,6 +325,7 @@ export class TestContextService {
       employees,
       projects,
       wbsItems: allWbsItems,
+      periods,
     };
   }
 
@@ -268,21 +338,41 @@ export class TestContextService {
     employees: number;
     projects: number;
     wbsItems: number;
+    periods: number;
   }> {
-    const [departmentCount, employeeCount, projectCount, wbsItemCount] =
-      await Promise.all([
-        this.departmentTestService.테스트_데이터를_정리한다(),
-        this.employeeTestService.테스트_데이터를_정리한다(),
-        this.projectTestService.테스트_데이터를_정리한다(),
-        this.wbsItemTestService.테스트_데이터를_정리한다(),
-      ]);
+    const [
+      departmentCount,
+      employeeCount,
+      projectCount,
+      wbsItemCount,
+      periodCount,
+    ] = await Promise.all([
+      this.departmentTestService.테스트_데이터를_정리한다(),
+      this.employeeTestService.테스트_데이터를_정리한다(),
+      this.projectTestService.테스트_데이터를_정리한다(),
+      this.wbsItemTestService.테스트_데이터를_정리한다(),
+      this.평가기간_테스트데이터를_정리한다(),
+    ]);
 
     return {
       departments: departmentCount,
       employees: employeeCount,
       projects: projectCount,
       wbsItems: wbsItemCount,
+      periods: periodCount,
     };
+  }
+
+  /**
+   * 평가기간 테스트 데이터를 정리한다
+   * @returns 정리된 평가기간 수
+   */
+  async 평가기간_테스트데이터를_정리한다(): Promise<number> {
+    const periods = await this.evaluationPeriodRepository.find();
+    if (periods.length > 0) {
+      await this.evaluationPeriodRepository.remove(periods);
+    }
+    return periods.length;
   }
 
   /**

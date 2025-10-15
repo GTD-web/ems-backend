@@ -353,6 +353,10 @@ export class EvaluationLineMappingService
       );
 
       // 업데이트 적용
+      if (updateData.evaluatorId !== undefined) {
+        mapping.평가자를_변경한다(updateData.evaluatorId);
+      }
+
       if (updateData.evaluationLineId !== undefined) {
         mapping.평가라인을_변경한다(updateData.evaluationLineId);
       }

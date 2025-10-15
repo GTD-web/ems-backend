@@ -3,7 +3,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
-  ConfigureEmployeeWbsEvaluationLine,
   ConfigurePrimaryEvaluator,
   ConfigureSecondaryEvaluator,
   GetEmployeeEvaluationLineMappings,
@@ -13,7 +12,6 @@ import {
   GetUpdaterEvaluationLineMappings,
 } from './decorators/evaluation-line-api.decorators';
 import {
-  ConfigureEmployeeWbsEvaluationLineResponseDto,
   ConfigureEvaluatorResponseDto,
   ConfigurePrimaryEvaluatorDto,
   ConfigureSecondaryEvaluatorDto,
@@ -91,25 +89,6 @@ export class EvaluationLineManagementController {
   ): Promise<any[]> {
     return await this.evaluationCriteriaManagementService.특정_사용자가_수정한_평가라인_매핑을_조회한다(
       updatedBy,
-    );
-  }
-
-  /**
-   * 직원-WBS별 평가라인 구성
-   */
-  @ConfigureEmployeeWbsEvaluationLine()
-  async configureEmployeeWbsEvaluationLine(
-    @Param('employeeId') employeeId: string,
-    @Param('wbsItemId') wbsItemId: string,
-    @Param('periodId') periodId: string,
-    @Body() body: { createdBy?: string },
-  ): Promise<ConfigureEmployeeWbsEvaluationLineResponseDto> {
-    const createdBy = body.createdBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
-    return await this.evaluationCriteriaManagementService.직원_WBS별_평가라인을_구성한다(
-      employeeId,
-      wbsItemId,
-      periodId,
-      createdBy,
     );
   }
 

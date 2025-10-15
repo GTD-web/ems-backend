@@ -71,6 +71,14 @@ export class EvaluationLineMapping
   }
 
   /**
+   * 평가자를 변경한다
+   */
+  평가자를_변경한다(evaluatorId: string): void {
+    this.evaluatorId = evaluatorId;
+    this.메타데이터를_업데이트한다();
+  }
+
+  /**
    * 평가 라인을 변경한다
    */
   평가라인을_변경한다(evaluationLineId: string): void {

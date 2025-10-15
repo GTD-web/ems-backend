@@ -41,6 +41,7 @@ export interface CreateEvaluationLineMappingData {
  * 평가 라인 맵핑 업데이트 데이터
  */
 export interface UpdateEvaluationLineMappingData {
+  evaluatorId?: string;
   evaluationLineId?: string;
   wbsItemId?: string;
   updatedBy?: string;
