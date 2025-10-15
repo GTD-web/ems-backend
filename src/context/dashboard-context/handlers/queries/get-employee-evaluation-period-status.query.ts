@@ -12,6 +12,8 @@ import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.ent
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
+import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.entity';
+import { FinalEvaluation } from '@domain/core/final-evaluation/final-evaluation.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import {
@@ -21,6 +23,8 @@ import {
   EvaluationLineStatus,
   SelfEvaluationStatus,
   DownwardEvaluationStatus,
+  PeerEvaluationStatus,
+  FinalEvaluationStatus,
 } from '../../interfaces/dashboard-context.interface';
 
 /**
@@ -71,6 +75,10 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     private readonly wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>,
     @InjectRepository(DownwardEvaluation)
     private readonly downwardEvaluationRepository: Repository<DownwardEvaluation>,
+    @InjectRepository(PeerEvaluation)
+    private readonly peerEvaluationRepository: Repository<PeerEvaluation>,
+    @InjectRepository(FinalEvaluation)
+    private readonly finalEvaluationRepository: Repository<FinalEvaluation>,
   ) {}
 
   async execute(
@@ -105,6 +113,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'mapping.excludeReason AS mapping_excludereason',
           'mapping.excludedAt AS mapping_excludedat',
           'mapping.deletedAt AS mapping_deletedat',
+          'mapping.isSelfEvaluationEditable AS mapping_isselfevaluationeditable',
+          'mapping.isPrimaryEvaluationEditable AS mapping_isprimaryevaluationeditable',
+          'mapping.isSecondaryEvaluationEditable AS mapping_issecondaryevaluationeditable',
           // 평가기간 정보
           'period.name AS period_name',
           'period.status AS period_status',
@@ -191,7 +202,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         );
 
       // 10. 자기평가 진행 상태 조회
-      const { totalMappingCount, completedMappingCount } =
+      const { totalMappingCount, completedMappingCount, averageScore } =
         await this.자기평가_진행_상태를_조회한다(
           evaluationPeriodId,
           employeeId,
@@ -207,14 +218,44 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         employeeId,
       );
 
-      // 13. DTO로 변환
+      // 13. 동료평가 상태 조회
+      const { totalRequestCount, completedRequestCount } =
+        await this.동료평가_상태를_조회한다(evaluationPeriodId, employeeId);
+
+      // 14. 동료평가 상태 계산
+      const peerEvaluationStatus: PeerEvaluationStatus =
+        this.동료평가_상태를_계산한다(totalRequestCount, completedRequestCount);
+
+      // 15. 최종평가 조회
+      const finalEvaluation = await this.최종평가를_조회한다(
+        evaluationPeriodId,
+        employeeId,
+      );
+
+      // 16. 최종평가 상태 계산
+      const finalEvaluationStatus: FinalEvaluationStatus =
+        this.최종평가_상태를_계산한다(finalEvaluation);
+
+      // 17. DTO로 변환
+      // 평가 대상 여부 계산
+      const isEvaluationTarget =
+        !result.mapping_isexcluded && !result.mapping_deletedat;
+
+      // 수정 가능 여부 계산
+      const isSelfEvaluationEditable =
+        result.mapping_isselfevaluationeditable && isEvaluationTarget;
+      const isPrimaryEvaluationEditable =
+        result.mapping_isprimaryevaluationeditable && isEvaluationTarget;
+      const isSecondaryEvaluationEditable =
+        result.mapping_issecondaryevaluationeditable && isEvaluationTarget;
+
       const dto: EmployeeEvaluationPeriodStatusDto = {
         // 맵핑 기본 정보
         mappingId: result.mapping_id,
         evaluationPeriodId: result.mapping_evaluationperiodid,
-        employeeId: result.mapping_employeeid, // 평가 대상 여부 (최상위)
-        isEvaluationTarget:
-          !result.mapping_isexcluded && !result.mapping_deletedat,
+        employeeId: result.mapping_employeeid,
+        // 평가 대상 여부 (최상위)
+        isEvaluationTarget,
 
         // 평가기간 정보 (오브젝트)
         evaluationPeriod: result.period_name
@@ -272,18 +313,44 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           status: selfEvaluationStatus,
           totalMappingCount,
           completedMappingCount,
+          isEditable: isSelfEvaluationEditable,
+          averageScore,
         },
 
         // 하향평가 진행 정보
         downwardEvaluation: {
-          primary,
-          secondary,
+          primary: {
+            ...primary,
+            isEditable: isPrimaryEvaluationEditable,
+          },
+          secondary: {
+            evaluators: secondary.evaluators,
+            isEditable: isSecondaryEvaluationEditable,
+            averageScore: secondary.averageScore,
+          },
+        },
+
+        // 동료평가 진행 정보
+        peerEvaluation: {
+          status: peerEvaluationStatus,
+          totalRequestCount,
+          completedRequestCount,
+        },
+
+        // 최종평가 정보
+        finalEvaluation: {
+          status: finalEvaluationStatus,
+          evaluationGrade: finalEvaluation?.evaluationGrade ?? null,
+          jobGrade: finalEvaluation?.jobGrade ?? null,
+          jobDetailedGrade: finalEvaluation?.jobDetailedGrade ?? null,
+          isConfirmed: finalEvaluation?.isConfirmed ?? false,
+          confirmedAt: finalEvaluation?.confirmedAt ?? null,
         },
       };
 
       const secondaryLog =
-        secondary.length > 0
-          ? secondary
+        secondary.evaluators.length > 0
+          ? secondary.evaluators
               .map(
                 (s) =>
                   `평가자${s.evaluatorId}: ${s.completedEvaluationCount}/${s.assignedWbsCount} (${s.status})`,
@@ -291,8 +358,20 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               .join(', ')
           : '없음';
 
+      const finalEvaluationLog = finalEvaluation
+        ? `${finalEvaluation.evaluationGrade}/${finalEvaluation.jobGrade}${finalEvaluation.jobDetailedGrade} (확정: ${finalEvaluation.isConfirmed})`
+        : '없음';
+
       this.logger.debug(
-        `직원의 평가기간 현황 조회 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 프로젝트: ${projectCount}, WBS: ${wbsCount}, 평가항목상태: ${evaluationCriteriaStatus}, 평가기준있는WBS: ${wbsWithCriteriaCount}/${wbsCount}, 평가기준상태: ${wbsCriteriaStatus}, PRIMARY평가자: ${hasPrimaryEvaluator}, SECONDARY평가자: ${hasSecondaryEvaluator}, 평가라인상태: ${evaluationLineStatus}, 자기평가매핑: ${completedMappingCount}/${totalMappingCount}, 자기평가상태: ${selfEvaluationStatus}, 1차하향평가(${primary.evaluatorId}): ${primary.completedEvaluationCount}/${primary.assignedWbsCount} (${primary.status}), 2차하향평가: [${secondaryLog}]`,
+        `직원의 평가기간 현황 조회 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, ` +
+          `프로젝트: ${projectCount}, WBS: ${wbsCount}, 평가항목상태: ${evaluationCriteriaStatus}, ` +
+          `평가기준있는WBS: ${wbsWithCriteriaCount}/${wbsCount}, 평가기준상태: ${wbsCriteriaStatus}, ` +
+          `PRIMARY평가자: ${hasPrimaryEvaluator}, SECONDARY평가자: ${hasSecondaryEvaluator}, 평가라인상태: ${evaluationLineStatus}, ` +
+          `자기평가: ${completedMappingCount}/${totalMappingCount} (${selfEvaluationStatus}, 평균점수: ${averageScore?.toFixed(2) ?? 'N/A'}, 수정가능: ${isSelfEvaluationEditable}), ` +
+          `1차하향평가(${primary.evaluatorId}): ${primary.completedEvaluationCount}/${primary.assignedWbsCount} (${primary.status}, 평균점수: ${primary.averageScore?.toFixed(2) ?? 'N/A'}, 수정가능: ${isPrimaryEvaluationEditable}), ` +
+          `2차하향평가: [${secondaryLog}] (평균점수: ${secondary.averageScore?.toFixed(2) ?? 'N/A'}, 수정가능: ${isSecondaryEvaluationEditable}), ` +
+          `동료평가: ${completedRequestCount}/${totalRequestCount} (${peerEvaluationStatus}), ` +
+          `최종평가: ${finalEvaluationLog} (${finalEvaluationStatus})`,
       );
 
       return dto;
@@ -427,12 +506,16 @@ export class GetEmployeeEvaluationPeriodStatusHandler
 
   /**
    * 자기평가 진행 상태를 조회한다
-   * 평가기간과 직원에 해당하는 WBS 자기평가의 전체 수와 완료된 수를 조회
+   * 평가기간과 직원에 해당하는 WBS 자기평가의 전체 수와 완료된 수, 평균 점수를 조회
    */
   private async 자기평가_진행_상태를_조회한다(
     evaluationPeriodId: string,
     employeeId: string,
-  ): Promise<{ totalMappingCount: number; completedMappingCount: number }> {
+  ): Promise<{
+    totalMappingCount: number;
+    completedMappingCount: number;
+    averageScore: number | null;
+  }> {
     // 전체 WBS 자기평가 수 조회
     const totalMappingCount = await this.wbsSelfEvaluationRepository.count({
       where: {
@@ -452,7 +535,24 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       },
     });
 
-    return { totalMappingCount, completedMappingCount };
+    // 평균 자기평가 점수 계산
+    let averageScore: number | null = null;
+    if (completedMappingCount > 0) {
+      const result = await this.wbsSelfEvaluationRepository
+        .createQueryBuilder('selfEval')
+        .select('AVG(selfEval.selfEvaluationScore)', 'avgScore')
+        .where('selfEval.periodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
+        .andWhere('selfEval.employeeId = :employeeId', { employeeId })
+        .andWhere('selfEval.isCompleted = :isCompleted', { isCompleted: true })
+        .andWhere('selfEval.deletedAt IS NULL')
+        .getRawOne();
+
+      averageScore = result?.avgScore ? parseFloat(result.avgScore) : null;
+    }
+
+    return { totalMappingCount, completedMappingCount, averageScore };
   }
 
   /**
@@ -489,13 +589,17 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       status: DownwardEvaluationStatus;
       assignedWbsCount: number;
       completedEvaluationCount: number;
+      averageScore: number | null;
     };
-    secondary: Array<{
-      evaluatorId: string;
-      status: DownwardEvaluationStatus;
-      assignedWbsCount: number;
-      completedEvaluationCount: number;
-    }>;
+    secondary: {
+      evaluators: Array<{
+        evaluatorId: string;
+        status: DownwardEvaluationStatus;
+        assignedWbsCount: number;
+        completedEvaluationCount: number;
+      }>;
+      averageScore: number | null;
+    };
   }> {
     // 1. PRIMARY 평가라인 조회
     const primaryLine = await this.evaluationLineRepository.findOne({
@@ -566,17 +670,53 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         );
         return {
           evaluatorId,
-          ...status,
+          status: status.status,
+          assignedWbsCount: status.assignedWbsCount,
+          completedEvaluationCount: status.completedEvaluationCount,
         };
       }),
     );
+
+    // 7. 모든 2차평가의 전체 평균 점수 계산
+    let secondaryAverageScore: number | null = null;
+    if (secondaryEvaluators.length > 0) {
+      // 모든 2차평가자의 완료된 하향평가 조회
+      const allSecondaryEvaluations =
+        await this.downwardEvaluationRepository.find({
+          where: {
+            periodId: evaluationPeriodId,
+            employeeId: employeeId,
+            evaluationType: DownwardEvaluationType.SECONDARY,
+            deletedAt: IsNull(),
+          },
+        });
+
+      // 완료된 평가 중 점수가 있는 것만 필터링
+      const completedWithScore = allSecondaryEvaluations.filter(
+        (evaluation) =>
+          evaluation.완료되었는가() &&
+          evaluation.downwardEvaluationScore !== null &&
+          evaluation.downwardEvaluationScore !== undefined,
+      );
+
+      if (completedWithScore.length > 0) {
+        const totalScore = completedWithScore.reduce(
+          (sum, evaluation) => sum + (evaluation.downwardEvaluationScore || 0),
+          0,
+        );
+        secondaryAverageScore = totalScore / completedWithScore.length;
+      }
+    }
 
     return {
       primary: {
         evaluatorId: primaryEvaluatorId,
         ...primaryStatus,
       },
-      secondary: secondaryStatuses,
+      secondary: {
+        evaluators: secondaryStatuses,
+        averageScore: secondaryAverageScore,
+      },
     };
   }
 
@@ -592,6 +732,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     status: DownwardEvaluationStatus;
     assignedWbsCount: number;
     completedEvaluationCount: number;
+    averageScore: number | null;
   }> {
     // 1. 피평가자에게 할당된 WBS 수 조회 (평가해야 할 WBS 개수)
     const assignedWbsCount = await this.wbsAssignmentRepository.count({
@@ -624,7 +765,24 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       evaluation.완료되었는가(),
     ).length;
 
-    // 4. 상태 결정
+    // 4. 평균 하향평가 점수 계산
+    let averageScore: number | null = null;
+    const completedEvaluations = downwardEvaluations.filter(
+      (evaluation) =>
+        evaluation.완료되었는가() &&
+        evaluation.downwardEvaluationScore !== null &&
+        evaluation.downwardEvaluationScore !== undefined,
+    );
+
+    if (completedEvaluations.length > 0) {
+      const totalScore = completedEvaluations.reduce(
+        (sum, evaluation) => sum + (evaluation.downwardEvaluationScore || 0),
+        0,
+      );
+      averageScore = totalScore / completedEvaluations.length;
+    }
+
+    // 5. 상태 결정
     let status: DownwardEvaluationStatus;
 
     // 할당된 WBS가 없으면 평가할 대상이 없음
@@ -650,6 +808,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       status,
       assignedWbsCount,
       completedEvaluationCount,
+      averageScore,
     };
   }
 
@@ -665,6 +824,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     status: DownwardEvaluationStatus;
     assignedWbsCount: number;
     completedEvaluationCount: number;
+    averageScore: number | null;
   }> {
     // 1. 피평가자에게 할당된 WBS 수 조회 (평가해야 할 WBS 개수)
     const assignedWbsCount = await this.wbsAssignmentRepository.count({
@@ -691,7 +851,24 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       evaluation.완료되었는가(),
     ).length;
 
-    // 4. 상태 결정
+    // 4. 평균 하향평가 점수 계산
+    let averageScore: number | null = null;
+    const completedEvaluations = downwardEvaluations.filter(
+      (evaluation) =>
+        evaluation.완료되었는가() &&
+        evaluation.downwardEvaluationScore !== null &&
+        evaluation.downwardEvaluationScore !== undefined,
+    );
+
+    if (completedEvaluations.length > 0) {
+      const totalScore = completedEvaluations.reduce(
+        (sum, evaluation) => sum + (evaluation.downwardEvaluationScore || 0),
+        0,
+      );
+      averageScore = totalScore / completedEvaluations.length;
+    }
+
+    // 5. 상태 결정
     let status: DownwardEvaluationStatus;
 
     // 할당된 WBS가 없으면 평가할 대상이 없음
@@ -717,6 +894,105 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       status,
       assignedWbsCount,
       completedEvaluationCount,
+      averageScore,
     };
+  }
+
+  /**
+   * 동료평가 상태를 조회한다
+   * 평가기간과 직원(피평가자)에 해당하는 동료평가의 전체 수와 완료된 수를 조회
+   */
+  private async 동료평가_상태를_조회한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+  ): Promise<{ totalRequestCount: number; completedRequestCount: number }> {
+    // 활성화된 동료평가 요청 전체 수 조회 (isActive = true, deletedAt IS NULL)
+    const totalRequestCount = await this.peerEvaluationRepository.count({
+      where: {
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+        isActive: true,
+        deletedAt: IsNull(),
+      },
+    });
+
+    // 완료된 동료평가 수 조회 (isCompleted = true)
+    const completedRequestCount = await this.peerEvaluationRepository.count({
+      where: {
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+        isActive: true,
+        isCompleted: true,
+        deletedAt: IsNull(),
+      },
+    });
+
+    return { totalRequestCount, completedRequestCount };
+  }
+
+  /**
+   * 동료평가 상태를 계산한다
+   * - 요청이 없으면: none (요청가능)
+   * - 모든 동료평가가 완료되었으면: complete (완료)
+   * - 일부만 완료되었거나 진행중: in_progress (입력중)
+   */
+  private 동료평가_상태를_계산한다(
+    totalRequestCount: number,
+    completedRequestCount: number,
+  ): PeerEvaluationStatus {
+    // 동료평가 요청이 없으면 요청가능
+    if (totalRequestCount === 0) {
+      return 'none';
+    }
+
+    // 모든 동료평가가 완료되었으면 완료
+    if (completedRequestCount === totalRequestCount) {
+      return 'complete';
+    }
+
+    // 일부만 완료되었거나 진행중
+    return 'in_progress';
+  }
+
+  /**
+   * 최종평가를 조회한다
+   * 평가기간과 직원에 해당하는 최종평가를 조회
+   */
+  private async 최종평가를_조회한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+  ): Promise<FinalEvaluation | null> {
+    const finalEvaluation = await this.finalEvaluationRepository.findOne({
+      where: {
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+        deletedAt: IsNull(),
+      },
+    });
+
+    return finalEvaluation;
+  }
+
+  /**
+   * 최종평가 상태를 계산한다
+   * - 최종평가가 없으면: none (미작성)
+   * - 최종평가가 확정되었으면: complete (확정)
+   * - 최종평가가 있지만 확정되지 않았으면: in_progress (작성중)
+   */
+  private 최종평가_상태를_계산한다(
+    finalEvaluation: FinalEvaluation | null,
+  ): FinalEvaluationStatus {
+    // 최종평가가 없으면 미작성
+    if (!finalEvaluation) {
+      return 'none';
+    }
+
+    // 최종평가가 확정되었으면 확정
+    if (finalEvaluation.isConfirmed) {
+      return 'complete';
+    }
+
+    // 최종평가가 있지만 확정되지 않았으면 작성중
+    return 'in_progress';
   }
 }

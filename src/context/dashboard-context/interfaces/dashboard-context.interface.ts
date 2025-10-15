@@ -43,6 +43,22 @@ export type SelfEvaluationStatus = 'complete' | 'in_progress' | 'none';
 export type DownwardEvaluationStatus = 'complete' | 'in_progress' | 'none';
 
 /**
+ * 동료평가 진행 상태
+ * - complete: 모든 동료평가가 완료됨 (완료)
+ * - in_progress: 동료평가가 존재하나 일부만 완료되거나 진행중 (입력중)
+ * - none: 동료평가 요청이 없음 (요청가능)
+ */
+export type PeerEvaluationStatus = 'complete' | 'in_progress' | 'none';
+
+/**
+ * 최종평가 진행 상태
+ * - complete: 최종평가가 확정됨 (확정)
+ * - in_progress: 최종평가가 존재하나 확정되지 않음 (작성중)
+ * - none: 최종평가가 없음 (미작성)
+ */
+export type FinalEvaluationStatus = 'complete' | 'in_progress' | 'none';
+
+/**
  * 직원 평가 기간 현황 DTO
  * 특정 평가기간에서 특정 직원의 참여 현황 정보
  */
@@ -137,6 +153,10 @@ export interface EmployeeEvaluationPeriodStatusDto {
     totalMappingCount: number;
     /** 완료된 WBS 자기평가 수 */
     completedMappingCount: number;
+    /** 자기평가 수정 가능 여부 */
+    isEditable: boolean;
+    /** 평균 자기평가 점수 (1-5점) */
+    averageScore: number | null;
   };
 
   /** 하향평가 진행 정보 */
@@ -151,18 +171,55 @@ export interface EmployeeEvaluationPeriodStatusDto {
       assignedWbsCount: number;
       /** 완료된 하향평가 수 */
       completedEvaluationCount: number;
+      /** 1차평가 수정 가능 여부 */
+      isEditable: boolean;
+      /** 평균 하향평가 점수 (1-5점) */
+      averageScore: number | null;
     };
-    /** 2차 평가 정보 배열 (여러 명 가능) */
-    secondary: Array<{
-      /** 평가자 ID */
-      evaluatorId: string;
-      /** 하향평가 상태 */
-      status: DownwardEvaluationStatus;
-      /** 할당된 WBS 수 */
-      assignedWbsCount: number;
-      /** 완료된 하향평가 수 */
-      completedEvaluationCount: number;
-    }>;
+    /** 2차 평가 정보 (여러 명 가능) */
+    secondary: {
+      /** 2차 평가자 목록 */
+      evaluators: Array<{
+        /** 평가자 ID */
+        evaluatorId: string;
+        /** 하향평가 상태 */
+        status: DownwardEvaluationStatus;
+        /** 할당된 WBS 수 */
+        assignedWbsCount: number;
+        /** 완료된 하향평가 수 */
+        completedEvaluationCount: number;
+      }>;
+      /** 2차평가 수정 가능 여부 */
+      isEditable: boolean;
+      /** 모든 2차평가의 평균 점수 (1-5점) */
+      averageScore: number | null;
+    };
+  };
+
+  /** 동료평가 진행 정보 */
+  peerEvaluation: {
+    /** 동료평가 진행 상태 */
+    status: PeerEvaluationStatus;
+    /** 총 동료평가 요청 수 */
+    totalRequestCount: number;
+    /** 완료된 동료평가 수 */
+    completedRequestCount: number;
+  };
+
+  /** 최종평가 정보 */
+  finalEvaluation: {
+    /** 최종평가 진행 상태 */
+    status: FinalEvaluationStatus;
+    /** 평가등급 (S, A, B, C, D 등) */
+    evaluationGrade: string | null;
+    /** 직무등급 (T1, T2, T3) */
+    jobGrade: string | null;
+    /** 직무 상세등급 (u, n, a) */
+    jobDetailedGrade: string | null;
+    /** 확정 여부 */
+    isConfirmed: boolean;
+    /** 확정일시 */
+    confirmedAt: Date | null;
   };
 }
 

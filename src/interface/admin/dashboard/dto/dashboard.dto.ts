@@ -180,6 +180,230 @@ export class EvaluationLineInfoDto {
 }
 
 /**
+ * 자기평가 진행 정보 DTO
+ */
+export class SelfEvaluationInfoDto {
+  @ApiProperty({
+    description: '자기평가 진행 상태',
+    enum: ['complete', 'in_progress', 'none'],
+    example: 'in_progress',
+  })
+  status: 'complete' | 'in_progress' | 'none';
+
+  @ApiProperty({
+    description: '전체 WBS 자기평가 수',
+    example: 5,
+  })
+  totalMappingCount: number;
+
+  @ApiProperty({
+    description: '완료된 WBS 자기평가 수',
+    example: 3,
+  })
+  completedMappingCount: number;
+
+  @ApiProperty({
+    description: '자기평가 수정 가능 여부',
+    example: true,
+  })
+  isEditable: boolean;
+
+  @ApiPropertyOptional({
+    description: '평균 자기평가 점수 (1-5점)',
+    example: 3.5,
+    nullable: true,
+  })
+  averageScore: number | null;
+}
+
+/**
+ * 하향평가 1차 정보 DTO
+ */
+export class PrimaryDownwardEvaluationDto {
+  @ApiPropertyOptional({
+    description: '1차 평가자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+    nullable: true,
+  })
+  evaluatorId: string | null;
+
+  @ApiProperty({
+    description: '1차 하향평가 진행 상태',
+    enum: ['complete', 'in_progress', 'none'],
+    example: 'in_progress',
+  })
+  status: 'complete' | 'in_progress' | 'none';
+
+  @ApiProperty({
+    description: '평가 대상 WBS 수',
+    example: 5,
+  })
+  assignedWbsCount: number;
+
+  @ApiProperty({
+    description: '완료된 평가 수',
+    example: 3,
+  })
+  completedEvaluationCount: number;
+
+  @ApiProperty({
+    description: '1차평가 수정 가능 여부',
+    example: true,
+  })
+  isEditable: boolean;
+
+  @ApiPropertyOptional({
+    description: '평균 하향평가 점수 (1-5점)',
+    example: 4.0,
+    nullable: true,
+  })
+  averageScore: number | null;
+}
+
+/**
+ * 2차 평가자 정보 DTO
+ */
+export class SecondaryEvaluatorDto {
+  @ApiProperty({
+    description: '2차 평가자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174004',
+  })
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '2차 하향평가 진행 상태',
+    enum: ['complete', 'in_progress', 'none'],
+    example: 'complete',
+  })
+  status: 'complete' | 'in_progress' | 'none';
+
+  @ApiProperty({
+    description: '평가 대상 WBS 수',
+    example: 5,
+  })
+  assignedWbsCount: number;
+
+  @ApiProperty({
+    description: '완료된 평가 수',
+    example: 5,
+  })
+  completedEvaluationCount: number;
+}
+
+/**
+ * 하향평가 2차 정보 DTO
+ */
+export class SecondaryDownwardEvaluationDto {
+  @ApiProperty({
+    description: '2차 평가자 목록',
+    type: () => [SecondaryEvaluatorDto],
+  })
+  evaluators: SecondaryEvaluatorDto[];
+
+  @ApiProperty({
+    description: '2차평가 수정 가능 여부',
+    example: true,
+  })
+  isEditable: boolean;
+
+  @ApiPropertyOptional({
+    description: '모든 2차평가의 평균 점수 (1-5점)',
+    example: 3.8,
+    nullable: true,
+  })
+  averageScore: number | null;
+}
+
+/**
+ * 하향평가 진행 정보 DTO
+ */
+export class DownwardEvaluationInfoDto {
+  @ApiProperty({
+    description: '1차 하향평가 정보',
+    type: () => PrimaryDownwardEvaluationDto,
+  })
+  primary: PrimaryDownwardEvaluationDto;
+
+  @ApiProperty({
+    description: '2차 하향평가 정보',
+    type: () => SecondaryDownwardEvaluationDto,
+  })
+  secondary: SecondaryDownwardEvaluationDto;
+}
+
+/**
+ * 동료평가 진행 정보 DTO
+ */
+export class PeerEvaluationInfoDto {
+  @ApiProperty({
+    description: '동료평가 진행 상태',
+    enum: ['complete', 'in_progress', 'none'],
+    example: 'in_progress',
+  })
+  status: 'complete' | 'in_progress' | 'none';
+
+  @ApiProperty({
+    description: '총 동료평가 요청 수',
+    example: 3,
+  })
+  totalRequestCount: number;
+
+  @ApiProperty({
+    description: '완료된 동료평가 수',
+    example: 1,
+  })
+  completedRequestCount: number;
+}
+
+/**
+ * 최종평가 정보 DTO
+ */
+export class FinalEvaluationInfoDto {
+  @ApiProperty({
+    description: '최종평가 진행 상태',
+    enum: ['complete', 'in_progress', 'none'],
+    example: 'complete',
+  })
+  status: 'complete' | 'in_progress' | 'none';
+
+  @ApiPropertyOptional({
+    description: '평가등급 (S, A, B, C, D 등)',
+    example: 'A',
+    nullable: true,
+  })
+  evaluationGrade: string | null;
+
+  @ApiPropertyOptional({
+    description: '직무등급 (T1, T2, T3)',
+    example: 'T2',
+    nullable: true,
+  })
+  jobGrade: string | null;
+
+  @ApiPropertyOptional({
+    description: '직무 상세등급 (u, n, a)',
+    example: 'n',
+    nullable: true,
+  })
+  jobDetailedGrade: string | null;
+
+  @ApiProperty({
+    description: '확정 여부',
+    example: true,
+  })
+  isConfirmed: boolean;
+
+  @ApiPropertyOptional({
+    description: '확정일시',
+    type: 'string',
+    format: 'date-time',
+    example: '2024-06-30T15:00:00.000Z',
+    nullable: true,
+  })
+  confirmedAt: Date | null;
+}
+
+/**
  * 평가 대상 제외 정보 DTO
  */
 export class ExclusionInfoDto {
@@ -271,4 +495,28 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
     type: () => EvaluationLineInfoDto,
   })
   evaluationLine: EvaluationLineInfoDto;
+
+  @ApiProperty({
+    description: '자기평가 진행 정보',
+    type: () => SelfEvaluationInfoDto,
+  })
+  selfEvaluation: SelfEvaluationInfoDto;
+
+  @ApiProperty({
+    description: '하향평가 진행 정보',
+    type: () => DownwardEvaluationInfoDto,
+  })
+  downwardEvaluation: DownwardEvaluationInfoDto;
+
+  @ApiProperty({
+    description: '동료평가 진행 정보',
+    type: () => PeerEvaluationInfoDto,
+  })
+  peerEvaluation: PeerEvaluationInfoDto;
+
+  @ApiProperty({
+    description: '최종평가 정보',
+    type: () => FinalEvaluationInfoDto,
+  })
+  finalEvaluation: FinalEvaluationInfoDto;
 }

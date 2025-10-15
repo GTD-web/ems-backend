@@ -67,7 +67,7 @@ export class DownwardEvaluation
   @Column({
     type: 'int',
     nullable: true,
-    comment: '하향평가 점수 (1-5)',
+    comment: '하향평가 점수',
   })
   downwardEvaluationScore?: number;
 

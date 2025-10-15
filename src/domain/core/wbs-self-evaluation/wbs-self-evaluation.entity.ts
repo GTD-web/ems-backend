@@ -78,7 +78,7 @@ export class WbsSelfEvaluation
 
   @Column({
     type: 'integer',
-    comment: '자가평가 점수 (1-5)',
+    comment: '자가평가 점수',
     default: 1,
   })
   selfEvaluationScore: number;

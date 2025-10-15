@@ -12,6 +12,8 @@ import { EvaluationLine } from '../../domain/core/evaluation-line/evaluation-lin
 import { EvaluationLineMapping } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { WbsSelfEvaluation } from '../../domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluation } from '../../domain/core/downward-evaluation/downward-evaluation.entity';
+import { PeerEvaluation } from '../../domain/core/peer-evaluation/peer-evaluation.entity';
+import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evaluation.entity';
 import { QUERY_HANDLERS } from './handlers/queries';
 
 /**
@@ -34,6 +36,8 @@ import { QUERY_HANDLERS } from './handlers/queries';
       EvaluationLineMapping,
       WbsSelfEvaluation,
       DownwardEvaluation,
+      PeerEvaluation,
+      FinalEvaluation,
     ]),
   ],
   providers: [DashboardService, ...QUERY_HANDLERS],
