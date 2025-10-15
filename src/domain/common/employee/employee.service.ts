@@ -381,9 +381,9 @@ export class EmployeeService {
     }
 
     employee.isExcludedFromList = false;
-    employee.excludeReason = undefined;
-    employee.excludedBy = undefined;
-    employee.excludedAt = undefined;
+    employee.excludeReason = null;
+    employee.excludedBy = null;
+    employee.excludedAt = null;
     employee.updatedBy = updatedBy;
 
     const updated = await this.employeeRepository.save(employee);

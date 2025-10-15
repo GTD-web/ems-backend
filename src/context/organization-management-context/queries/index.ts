@@ -3,7 +3,6 @@ export * from './get-all-departments.handler';
 export * from './get-department.handler';
 export * from './get-employees-by-department.handler';
 export * from './get-organization-chart.handler';
-export * from './get-employee.handler';
 export * from './get-all-employees.handler';
 export * from './get-manager.handler';
 export * from './get-subordinates.handler';
@@ -18,7 +17,6 @@ import { GetAllDepartmentsQueryHandler } from './get-all-departments.handler';
 import { GetDepartmentQueryHandler } from './get-department.handler';
 import { GetEmployeesByDepartmentQueryHandler } from './get-employees-by-department.handler';
 import { GetOrganizationChartQueryHandler } from './get-organization-chart.handler';
-import { GetEmployeeQueryHandler } from './get-employee.handler';
 import { GetAllEmployeesQueryHandler } from './get-all-employees.handler';
 import { GetManagerQueryHandler } from './get-manager.handler';
 import { GetSubordinatesQueryHandler } from './get-subordinates.handler';
@@ -33,7 +31,6 @@ export const QUERY_HANDLERS = [
   GetDepartmentQueryHandler,
   GetEmployeesByDepartmentQueryHandler,
   GetOrganizationChartQueryHandler,
-  GetEmployeeQueryHandler,
   GetAllEmployeesQueryHandler,
   GetManagerQueryHandler,
   GetSubordinatesQueryHandler,

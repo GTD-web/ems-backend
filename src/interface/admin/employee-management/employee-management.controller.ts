@@ -12,7 +12,6 @@ import {
   GetAllEmployees,
   GetDepartmentHierarchy,
   GetDepartmentHierarchyWithEmployees,
-  GetEmployeeDetail,
   GetExcludedEmployees,
   IncludeEmployeeInList,
 } from './decorators/employee-management-api.decorators';
@@ -78,20 +77,10 @@ export class EmployeeManagementController {
    */
   @GetExcludedEmployees()
   async getExcludedEmployees(): Promise<EmployeeDto[]> {
-    // 제외된 직원만 필터링하여 조회
+    // 제외된 직원만 필터링하여 조회 (includeExcluded: true로 전체 조회 후 필터링)
     const allEmployees =
-      await this.organizationManagementService.전체직원목록조회();
+      await this.organizationManagementService.전체직원목록조회(true);
     return allEmployees.filter((employee) => employee.isExcludedFromList);
-  }
-
-  /**
-   * 직원 상세 정보를 조회합니다.
-   */
-  @GetEmployeeDetail()
-  async getEmployeeDetail(
-    @ParseId() employeeId: string,
-  ): Promise<EmployeeDto | null> {
-    return await this.organizationManagementService.직원정보조회(employeeId);
   }
 
   // ==================== PATCH: 부분 수정 ====================

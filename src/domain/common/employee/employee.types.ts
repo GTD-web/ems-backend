@@ -75,11 +75,11 @@ export interface EmployeeDto {
   /** 목록 조회 제외 여부 */
   isExcludedFromList: boolean;
   /** 조회 제외 사유 */
-  excludeReason?: string;
+  excludeReason?: string | null;
   /** 조회 제외 설정자 */
-  excludedBy?: string;
+  excludedBy?: string | null;
   /** 조회 제외 설정 일시 */
-  excludedAt?: Date;
+  excludedAt?: Date | null;
 
   // 조인된 정보 필드들
   /** 직급 이름 */
@@ -205,9 +205,9 @@ export interface UpdateEmployeeDto {
   externalUpdatedAt?: Date;
   lastSyncAt?: Date;
   isExcludedFromList?: boolean;
-  excludeReason?: string;
-  excludedBy?: string;
-  excludedAt?: Date;
+  excludeReason?: string | null;
+  excludedBy?: string | null;
+  excludedAt?: Date | null;
 }
 
 // 직원 동기화 결과

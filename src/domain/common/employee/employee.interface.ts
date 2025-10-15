@@ -55,9 +55,9 @@ export interface IEmployee {
   /** 목록 조회 제외 여부 */
   readonly isExcludedFromList: boolean;
   /** 조회 제외 사유 */
-  readonly excludeReason?: string;
+  readonly excludeReason?: string | null;
   /** 조회 제외 설정자 */
-  readonly excludedBy?: string;
+  readonly excludedBy?: string | null;
   /** 조회 제외 설정 일시 */
-  readonly excludedAt?: Date;
+  readonly excludedAt?: Date | null;
 }

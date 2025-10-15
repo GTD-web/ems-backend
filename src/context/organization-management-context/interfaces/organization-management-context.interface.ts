@@ -35,17 +35,11 @@ export interface IOrganizationManagementContext {
   조직도조회(): Promise<OrganizationChartDto>;
 
   /**
-   * 직원 정보를 조회합니다
-   * @param employeeId 직원 ID
-   * @returns 직원 정보
-   */
-  직원정보조회(employeeId: string): Promise<EmployeeDto | null>;
-
-  /**
    * 모든 직원 목록을 조회합니다
+   * @param includeExcluded 제외된 직원 포함 여부 (기본값: false)
    * @returns 전체 직원 목록
    */
-  전체직원목록조회(): Promise<EmployeeDto[]>;
+  전체직원목록조회(includeExcluded?: boolean): Promise<EmployeeDto[]>;
 
   /**
    * 직원의 상급자를 조회합니다

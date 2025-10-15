@@ -13,7 +13,6 @@ import {
   GetDepartmentQuery,
   GetEmployeesByDepartmentQuery,
   GetOrganizationChartQuery,
-  GetEmployeeQuery,
   GetAllEmployeesQuery,
   GetManagerQuery,
   GetSubordinatesQuery,
@@ -74,17 +73,14 @@ export class OrganizationManagementService
   }
 
   /**
-   * 직원 정보를 조회합니다
-   */
-  async 직원정보조회(employeeId: string): Promise<EmployeeDto | null> {
-    return await this.queryBus.execute(new GetEmployeeQuery(employeeId));
-  }
-
-  /**
    * 모든 직원 목록을 조회합니다
    */
-  async 전체직원목록조회(): Promise<EmployeeDto[]> {
-    return await this.queryBus.execute(new GetAllEmployeesQuery());
+  async 전체직원목록조회(
+    includeExcluded: boolean = false,
+  ): Promise<EmployeeDto[]> {
+    return await this.queryBus.execute(
+      new GetAllEmployeesQuery(includeExcluded),
+    );
   }
 
   /**

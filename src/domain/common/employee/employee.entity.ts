@@ -188,7 +188,7 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
     nullable: true,
     comment: '조회 제외 사유',
   })
-  excludeReason?: string;
+  excludeReason?: string | null;
 
   @Column({
     type: 'varchar',
@@ -196,14 +196,14 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
     nullable: true,
     comment: '조회 제외 설정자',
   })
-  excludedBy?: string;
+  excludedBy?: string | null;
 
   @Column({
     type: 'timestamp',
     nullable: true,
     comment: '조회 제외 설정 일시',
   })
-  excludedAt?: Date;
+  excludedAt?: Date | null;
 
   constructor(
     employeeNumber?: string,
@@ -318,7 +318,11 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
       get yearsOfService() {
         if (!this.hireDate) return 0;
         const now = new Date();
-        const diffTime = Math.abs(now.getTime() - this.hireDate.getTime());
+        const hireDate =
+          this.hireDate instanceof Date
+            ? this.hireDate
+            : new Date(this.hireDate);
+        const diffTime = Math.abs(now.getTime() - hireDate.getTime());
         return Math.floor(diffTime / (1000 * 60 * 60 * 24 * 365));
       },
       get needsSync() {
