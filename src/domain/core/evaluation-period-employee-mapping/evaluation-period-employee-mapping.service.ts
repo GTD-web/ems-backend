@@ -370,6 +370,7 @@ export class EvaluationPeriodEmployeeMappingService
         .where('evaluationPeriodId = :evaluationPeriodId', {
           evaluationPeriodId,
         })
+        .andWhere('deletedAt IS NULL')
         .execute();
 
       const deletedCount = result.affected || 0;
