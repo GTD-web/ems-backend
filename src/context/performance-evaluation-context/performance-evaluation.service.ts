@@ -484,12 +484,106 @@ export class PerformanceEvaluationService
   }
 
   /**
-   * 하향평가를 제출한다
+   * 1차 하향평가를 제출한다
+   */
+  async 일차_하향평가를_제출한다(params: {
+    evaluateeId: string;
+    periodId: string;
+    projectId: string;
+    evaluatorId: string;
+    submittedBy: string;
+  }): Promise<void> {
+    this.logger.log('1차 하향평가 제출 시작', {
+      evaluateeId: params.evaluateeId,
+      periodId: params.periodId,
+      projectId: params.projectId,
+    });
+
+    // 1차 하향평가를 조회
+    const query = new GetDownwardEvaluationListQuery(
+      params.evaluatorId,
+      params.evaluateeId,
+      params.periodId,
+      params.projectId,
+      'primary',
+      undefined,
+      1,
+      1,
+    );
+
+    const result = await this.queryBus.execute(query);
+    if (!result.evaluations || result.evaluations.length === 0) {
+      throw new Error('1차 하향평가를 찾을 수 없습니다.');
+    }
+
+    const evaluation = result.evaluations[0];
+
+    // 제출 커맨드 실행
+    const command = new SubmitDownwardEvaluationCommand(
+      evaluation.id,
+      params.submittedBy,
+    );
+
+    await this.commandBus.execute(command);
+    this.logger.log('1차 하향평가 제출 완료', {
+      evaluationId: evaluation.id,
+    });
+  }
+
+  /**
+   * 2차 하향평가를 제출한다
+   */
+  async 이차_하향평가를_제출한다(params: {
+    evaluateeId: string;
+    periodId: string;
+    projectId: string;
+    evaluatorId: string;
+    submittedBy: string;
+  }): Promise<void> {
+    this.logger.log('2차 하향평가 제출 시작', {
+      evaluateeId: params.evaluateeId,
+      periodId: params.periodId,
+      projectId: params.projectId,
+    });
+
+    // 2차 하향평가를 조회
+    const query = new GetDownwardEvaluationListQuery(
+      params.evaluatorId,
+      params.evaluateeId,
+      params.periodId,
+      params.projectId,
+      'secondary',
+      undefined,
+      1,
+      1,
+    );
+
+    const result = await this.queryBus.execute(query);
+    if (!result.evaluations || result.evaluations.length === 0) {
+      throw new Error('2차 하향평가를 찾을 수 없습니다.');
+    }
+
+    const evaluation = result.evaluations[0];
+
+    // 제출 커맨드 실행
+    const command = new SubmitDownwardEvaluationCommand(
+      evaluation.id,
+      params.submittedBy,
+    );
+
+    await this.commandBus.execute(command);
+    this.logger.log('2차 하향평가 제출 완료', {
+      evaluationId: evaluation.id,
+    });
+  }
+
+  /**
+   * 하향평가를 제출한다 (ID로 직접)
    */
   async 하향평가를_제출한다(
     command: SubmitDownwardEvaluationCommand,
   ): Promise<void> {
-    this.logger.log('하향평가 제출 시작', {
+    this.logger.log('하향평가 제출 시작 (ID로 직접)', {
       evaluationId: command.evaluationId,
     });
 

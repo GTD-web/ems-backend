@@ -194,15 +194,148 @@ export function UpdateDownwardEvaluation() {
 }
 
 /**
- * 하향평가 제출 API 데코레이터
+ * 1차 하향평가 제출 API 데코레이터
+ */
+export function SubmitPrimaryDownwardEvaluation() {
+  return applyDecorators(
+    Post(
+      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/primary/submit',
+    ),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '1차 하향평가 제출',
+      description:
+        '1차 하향평가를 제출합니다. 제출 후에는 수정이 불가능합니다.',
+    }),
+    ApiParam({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440003',
+    }),
+    ApiBody({
+      type: SubmitDownwardEvaluationDto,
+      description: '1차 하향평가 제출 정보',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '1차 하향평가가 성공적으로 제출되었습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '1차 하향평가를 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.CONFLICT,
+      description: '이미 제출된 1차 하향평가입니다.',
+    }),
+  );
+}
+
+/**
+ * 2차 하향평가 제출 API 데코레이터
+ */
+export function SubmitSecondaryDownwardEvaluation() {
+  return applyDecorators(
+    Post(
+      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/secondary/submit',
+    ),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '2차 하향평가 제출',
+      description:
+        '2차 하향평가를 제출합니다. 제출 후에는 수정이 불가능합니다.',
+    }),
+    ApiParam({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440003',
+    }),
+    ApiBody({
+      type: SubmitDownwardEvaluationDto,
+      description: '2차 하향평가 제출 정보',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '2차 하향평가가 성공적으로 제출되었습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '2차 하향평가를 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.CONFLICT,
+      description: '이미 제출된 2차 하향평가입니다.',
+    }),
+  );
+}
+
+/**
+ * 하향평가 제출 API 데코레이터 (ID로 직접 제출)
  */
 export function SubmitDownwardEvaluation() {
   return applyDecorators(
     Post(':id/submit'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
-      summary: '하향평가 제출',
-      description: '하향평가를 제출합니다.',
+      summary: '하향평가 제출 (ID로 직접)',
+      description:
+        '하향평가 ID를 사용하여 직접 제출합니다. 1차/2차 구분 없이 ID로 제출할 때 사용합니다.',
     }),
     ApiParam({
       name: 'id',

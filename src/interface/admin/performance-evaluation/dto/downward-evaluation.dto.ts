@@ -9,7 +9,8 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
+import { ToBoolean } from '@interface/decorators';
 
 /**
  * 1차 하향평가 생성 Body DTO (경로 파라미터 제외)
@@ -189,7 +190,7 @@ export class DownwardEvaluationFilterDto {
     example: false,
   })
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
+  @ToBoolean(false)
   @IsBoolean()
   isCompleted?: boolean;
 
@@ -199,7 +200,7 @@ export class DownwardEvaluationFilterDto {
     default: 1,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   page?: number;
@@ -210,7 +211,7 @@ export class DownwardEvaluationFilterDto {
     default: 10,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   @Max(100)

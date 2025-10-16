@@ -5,6 +5,8 @@ import { PerformanceEvaluationService } from '../../../context/performance-evalu
 import {
   UpsertPrimaryDownwardEvaluation,
   UpsertSecondaryDownwardEvaluation,
+  SubmitPrimaryDownwardEvaluation,
+  SubmitSecondaryDownwardEvaluation,
   SubmitDownwardEvaluation,
   GetEvaluatorDownwardEvaluations,
   GetDownwardEvaluationDetail,
@@ -94,7 +96,47 @@ export class DownwardEvaluationManagementController {
   }
 
   /**
-   * 하향평가 제출
+   * 1차 하향평가 제출
+   */
+  @SubmitPrimaryDownwardEvaluation()
+  async submitPrimaryDownwardEvaluation(
+    @Param('evaluateeId') evaluateeId: string,
+    @Param('periodId') periodId: string,
+    @Param('projectId') projectId: string,
+    @Body() submitDto: SubmitDownwardEvaluationDto,
+  ): Promise<void> {
+    const submittedBy = submitDto.submittedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    await this.performanceEvaluationService.일차_하향평가를_제출한다({
+      evaluateeId,
+      periodId,
+      projectId,
+      evaluatorId: submitDto.submittedBy || 'admin', // TODO: 추후 요청자 ID로 변경
+      submittedBy,
+    });
+  }
+
+  /**
+   * 2차 하향평가 제출
+   */
+  @SubmitSecondaryDownwardEvaluation()
+  async submitSecondaryDownwardEvaluation(
+    @Param('evaluateeId') evaluateeId: string,
+    @Param('periodId') periodId: string,
+    @Param('projectId') projectId: string,
+    @Body() submitDto: SubmitDownwardEvaluationDto,
+  ): Promise<void> {
+    const submittedBy = submitDto.submittedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    await this.performanceEvaluationService.이차_하향평가를_제출한다({
+      evaluateeId,
+      periodId,
+      projectId,
+      evaluatorId: submitDto.submittedBy || 'admin', // TODO: 추후 요청자 ID로 변경
+      submittedBy,
+    });
+  }
+
+  /**
+   * 하향평가 제출 (ID로 직접)
    */
   @SubmitDownwardEvaluation()
   async submitDownwardEvaluation(
