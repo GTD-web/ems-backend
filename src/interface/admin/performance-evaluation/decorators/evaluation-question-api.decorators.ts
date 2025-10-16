@@ -17,9 +17,11 @@ import {
   UpdateEvaluationQuestionDto,
   EvaluationQuestionResponseDto,
   AddQuestionToGroupDto,
-  UpdateQuestionDisplayOrderDto,
+  AddMultipleQuestionsToGroupDto,
+  ReorderGroupQuestionsDto,
   QuestionGroupMappingResponseDto,
   SuccessResponseDto,
+  BatchSuccessResponseDto,
 } from '../dto/evaluation-question.dto';
 
 // ==================== 질문 그룹 API ====================
@@ -74,7 +76,7 @@ export function CreateQuestionGroup() {
  */
 export function UpdateQuestionGroup() {
   return applyDecorators(
-    Put('question-groups/:id'),
+    Patch('question-groups/:id'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '질문 그룹 수정',
@@ -283,14 +285,17 @@ export function CreateEvaluationQuestion() {
 - 평가에 사용할 질문 생성
 - 질문 내용은 중복될 수 없음
 - 점수 범위 설정 가능 (최소/최대 점수)
+- groupId 제공 시 해당 그룹에 자동으로 추가
 
 **테스트 케이스:**
 - 기본 생성: 질문 내용만 지정하여 생성
 - 점수 범위 포함: minScore, maxScore를 포함하여 생성
+- 그룹 자동 추가: groupId와 displayOrder를 포함하여 생성 시 해당 그룹에 자동 추가
 - 응답 구조 검증: 응답에 id와 message 필드 포함
 - 질문 내용 중복: 동일한 질문 내용으로 생성 시 409 에러
 - 질문 내용 누락: text 필드 누락 시 400 에러
-- 잘못된 점수 범위: minScore >= maxScore인 경우 400 에러`,
+- 잘못된 점수 범위: minScore >= maxScore인 경우 400 에러
+- 존재하지 않는 그룹: 유효하지 않은 groupId 제공 시 질문은 생성되나 그룹 추가는 실패`,
     }),
     ApiBody({
       type: CreateEvaluationQuestionDto,
@@ -317,7 +322,7 @@ export function CreateEvaluationQuestion() {
  */
 export function UpdateEvaluationQuestion() {
   return applyDecorators(
-    Put('evaluation-questions/:id'),
+    Patch('evaluation-questions/:id'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '평가 질문 수정',
@@ -537,15 +542,18 @@ export function AddQuestionToGroup() {
 **동작:**
 - 질문과 그룹을 매핑하여 추가
 - 동일한 질문이 여러 그룹에 속할 수 있음
-- 표시 순서 지정 가능
+- displayOrder 생략 시 자동으로 그룹의 마지막 순서로 배치
+- displayOrder 지정 시 해당 순서에 배치
 
 **테스트 케이스:**
-- 정상 추가: groupId, questionId, displayOrder를 지정하여 추가
+- 정상 추가: groupId, questionId로 추가 (displayOrder 자동 설정)
+- 순서 지정 추가: displayOrder를 명시적으로 지정하여 추가
+- 자동 순서 배치: displayOrder 생략 시 마지막 순서로 자동 배치
 - 응답 구조 검증: 응답에 매핑 id 포함
 - 중복 매핑 방지: 동일한 그룹에 동일한 질문 추가 시 409 에러
 - 존재하지 않는 그룹: 유효하지 않은 groupId로 요청 시 404 에러
 - 존재하지 않는 질문: 유효하지 않은 questionId로 요청 시 404 에러
-- 필수 필드 누락: groupId, questionId, displayOrder 중 하나라도 누락 시 400 에러`,
+- 필수 필드 누락: groupId 또는 questionId 누락 시 400 에러`,
     }),
     ApiBody({
       type: AddQuestionToGroupDto,
@@ -567,6 +575,97 @@ export function AddQuestionToGroup() {
     ApiResponse({
       status: HttpStatus.CONFLICT,
       description: '이미 해당 그룹에 질문이 추가되어 있습니다.',
+    }),
+  );
+}
+
+/**
+ * 그룹에 여러 질문 추가 API 데코레이터
+ */
+export function AddMultipleQuestionsToGroup() {
+  return applyDecorators(
+    Post('question-group-mappings/batch'),
+    HttpCode(HttpStatus.CREATED),
+    ApiOperation({
+      summary: '그룹에 여러 질문 추가',
+      description: `여러 질문을 한 번에 특정 그룹에 추가합니다.
+
+**동작:**
+- 여러 질문을 배치로 그룹에 추가
+- displayOrder는 startDisplayOrder부터 순차적으로 할당
+- 이미 그룹에 추가된 질문은 건너뜀
+- 개별 질문 추가 실패 시에도 나머지 질문은 계속 추가
+
+**테스트 케이스:**
+- 정상 추가: groupId와 questionIds 배열로 여러 질문 추가
+- 순차 순서: startDisplayOrder부터 순차적으로 displayOrder 할당
+- 응답 구조 검증: 응답에 ids, successCount, totalCount 포함
+- 중복 건너뛰기: 이미 추가된 질문은 건너뛰고 나머지만 추가
+- 존재하지 않는 그룹: 유효하지 않은 groupId로 요청 시 404 에러
+- 존재하지 않는 질문: 일부 questionId가 유효하지 않을 경우 404 에러
+- 필수 필드 누락: groupId 또는 questionIds 누락 시 400 에러`,
+    }),
+    ApiBody({
+      type: AddMultipleQuestionsToGroupDto,
+      description: '여러 질문-그룹 매핑 정보',
+    }),
+    ApiResponse({
+      status: HttpStatus.CREATED,
+      description: '그룹에 여러 질문이 성공적으로 추가되었습니다.',
+      type: BatchSuccessResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '그룹 또는 질문을 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 그룹 내 질문 순서 재정의 API 데코레이터
+ */
+export function ReorderGroupQuestions() {
+  return applyDecorators(
+    Put('question-group-mappings/reorder'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '그룹 내 질문 순서 재정의',
+      description: `그룹 내 질문들의 순서를 배열 인덱스 기준으로 재정렬합니다.
+
+**동작:**
+- 질문 ID 배열의 순서대로 displayOrder를 0부터 순차 할당
+- 그룹의 모든 질문 ID를 제공해야 함
+- 제공된 순서가 새로운 표시 순서가 됨
+
+**테스트 케이스:**
+- 정상 재정렬: groupId와 모든 questionIds 배열로 순서 재정의
+- 배열 순서 반영: 배열 인덱스 순서대로 displayOrder 할당 (0, 1, 2, ...)
+- 응답 구조 검증: 응답에 id와 message 포함
+- 일부 질문 누락: 그룹의 모든 질문을 포함하지 않으면 400 에러
+- 추가 질문 포함: 그룹에 없는 질문 ID 포함 시 400 에러
+- 중복 ID: 중복된 질문 ID 포함 시 400 에러
+- 존재하지 않는 그룹: 유효하지 않은 groupId로 요청 시 404 에러`,
+    }),
+    ApiBody({
+      type: ReorderGroupQuestionsDto,
+      description: '질문 순서 재정의 정보',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '그룹 내 질문 순서가 성공적으로 재정의되었습니다.',
+      type: SuccessResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '그룹을 찾을 수 없습니다.',
     }),
   );
 }
@@ -604,53 +703,6 @@ export function RemoveQuestionFromGroup() {
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description: '잘못된 요청입니다.',
-    }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
-      description: '매핑 정보를 찾을 수 없습니다.',
-    }),
-  );
-}
-
-/**
- * 질문 표시 순서 변경 API 데코레이터
- */
-export function UpdateQuestionDisplayOrder() {
-  return applyDecorators(
-    Patch('question-group-mappings/:mappingId/display-order'),
-    HttpCode(HttpStatus.OK),
-    ApiOperation({
-      summary: '질문 표시 순서 변경',
-      description: `그룹 내 질문의 표시 순서를 변경합니다.
-
-**동작:**
-- 질문-그룹 매핑의 표시 순서 변경
-- 질문이 표시되는 순서 조정
-
-**테스트 케이스:**
-- 정상 변경: displayOrder 값으로 순서 변경
-- 존재하지 않는 매핑: 잘못된 ID로 요청 시 404 에러
-- 음수 순서: displayOrder가 음수인 경우 400 에러
-- 잘못된 ID 형식: UUID 형식이 아닌 ID로 요청 시 400 에러`,
-    }),
-    ApiParam({
-      name: 'mappingId',
-      description: '질문-그룹 매핑 ID',
-      type: 'string',
-      format: 'uuid',
-    }),
-    ApiBody({
-      type: UpdateQuestionDisplayOrderDto,
-      description: '표시 순서 변경 정보',
-    }),
-    ApiResponse({
-      status: HttpStatus.OK,
-      description: '질문 표시 순서가 성공적으로 변경되었습니다.',
-      type: SuccessResponseDto,
-    }),
-    ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
-      description: '잘못된 요청 데이터입니다.',
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
@@ -726,6 +778,94 @@ export function GetQuestionGroupsByQuestion() {
       status: HttpStatus.OK,
       description: '질문이 속한 그룹 목록 조회 성공',
       type: [QuestionGroupMappingResponseDto],
+    }),
+  );
+}
+
+/**
+ * 질문 순서 위로 이동 API 데코레이터
+ */
+export function MoveQuestionUp() {
+  return applyDecorators(
+    Patch('question-group-mappings/:mappingId/move-up'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '질문 순서 위로 이동',
+      description: `그룹 내 질문의 순서를 한 칸 위로 이동합니다.
+
+**동작:**
+- 현재 질문과 바로 위 질문의 순서를 swap
+- 이미 첫 번째 위치인 경우 에러 반환
+
+**테스트 케이스:**
+- 정상 이동: 두 번째 이상 위치의 질문을 위로 이동
+- 응답 구조 검증: 응답에 id와 message 포함
+- 첫 번째 위치: 이미 첫 번째 위치의 질문 이동 시도 시 400 에러
+- 존재하지 않는 매핑: 잘못된 ID로 요청 시 404 에러
+- 잘못된 ID 형식: UUID 형식이 아닌 ID로 요청 시 400 에러`,
+    }),
+    ApiParam({
+      name: 'mappingId',
+      description: '질문-그룹 매핑 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '질문 순서가 성공적으로 위로 이동되었습니다.',
+      type: SuccessResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '이미 첫 번째 위치입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '매핑 정보를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 질문 순서 아래로 이동 API 데코레이터
+ */
+export function MoveQuestionDown() {
+  return applyDecorators(
+    Patch('question-group-mappings/:mappingId/move-down'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '질문 순서 아래로 이동',
+      description: `그룹 내 질문의 순서를 한 칸 아래로 이동합니다.
+
+**동작:**
+- 현재 질문과 바로 아래 질문의 순서를 swap
+- 이미 마지막 위치인 경우 에러 반환
+
+**테스트 케이스:**
+- 정상 이동: 마지막 이전 위치의 질문을 아래로 이동
+- 응답 구조 검증: 응답에 id와 message 포함
+- 마지막 위치: 이미 마지막 위치의 질문 이동 시도 시 400 에러
+- 존재하지 않는 매핑: 잘못된 ID로 요청 시 404 에러
+- 잘못된 ID 형식: UUID 형식이 아닌 ID로 요청 시 400 에러`,
+    }),
+    ApiParam({
+      name: 'mappingId',
+      description: '질문-그룹 매핑 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '질문 순서가 성공적으로 아래로 이동되었습니다.',
+      type: SuccessResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '이미 마지막 위치입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '매핑 정보를 찾을 수 없습니다.',
     }),
   );
 }

@@ -34,12 +34,14 @@ export class PeerEvaluationBusinessService {
     evaluatorId: string;
     evaluateeId: string;
     periodId: string;
+    questionIds?: string[];
     requestedBy: string;
   }): Promise<string> {
     this.logger.log('동료평가 요청 비즈니스 로직 시작', {
       evaluatorId: params.evaluatorId,
       evaluateeId: params.evaluateeId,
       periodId: params.periodId,
+      questionCount: params.questionIds?.length || 0,
     });
 
     // 1. 동료평가 요청 (PENDING 상태로 생성)
@@ -54,7 +56,19 @@ export class PeerEvaluationBusinessService {
         params.requestedBy,
       );
 
-    // 2. 알림 발송 (추후 구현)
+    // 2. 질문 매핑 생성 (questionIds가 제공된 경우)
+    if (params.questionIds && params.questionIds.length > 0) {
+      await this.performanceEvaluationService.동료평가에_질문을_매핑한다(
+        evaluationId,
+        params.questionIds,
+        params.requestedBy,
+      );
+      this.logger.log(
+        `동료평가 질문 매핑 완료 - 질문 개수: ${params.questionIds.length}`,
+      );
+    }
+
+    // 3. 알림 발송 (추후 구현)
     // TODO: 동료평가 요청 알림 발송
     // await this.notificationService.send({
     //   type: 'PEER_EVALUATION_REQUESTED',
@@ -79,12 +93,14 @@ export class PeerEvaluationBusinessService {
     evaluatorIds: string[];
     evaluateeId: string;
     periodId: string;
+    questionIds?: string[];
     requestedBy: string;
   }): Promise<{ ids: string[]; count: number }> {
     this.logger.log('여러 평가자에게 동료평가 요청 비즈니스 로직 시작', {
       evaluatorCount: params.evaluatorIds.length,
       evaluateeId: params.evaluateeId,
       periodId: params.periodId,
+      questionCount: params.questionIds?.length || 0,
     });
 
     const evaluationIds: string[] = [];
@@ -96,6 +112,7 @@ export class PeerEvaluationBusinessService {
           evaluatorId,
           evaluateeId: params.evaluateeId,
           periodId: params.periodId,
+          questionIds: params.questionIds,
           requestedBy: params.requestedBy,
         });
         evaluationIds.push(evaluationId);
@@ -124,12 +141,14 @@ export class PeerEvaluationBusinessService {
     evaluatorId: string;
     evaluateeIds: string[];
     periodId: string;
+    questionIds?: string[];
     requestedBy: string;
   }): Promise<{ ids: string[]; count: number }> {
     this.logger.log('여러 피평가자에 대한 동료평가 요청 비즈니스 로직 시작', {
       evaluatorId: params.evaluatorId,
       evaluateeCount: params.evaluateeIds.length,
       periodId: params.periodId,
+      questionCount: params.questionIds?.length || 0,
     });
 
     const evaluationIds: string[] = [];
@@ -141,6 +160,7 @@ export class PeerEvaluationBusinessService {
           evaluatorId: params.evaluatorId,
           evaluateeId,
           periodId: params.periodId,
+          questionIds: params.questionIds,
           requestedBy: params.requestedBy,
         });
         evaluationIds.push(evaluationId);
@@ -232,52 +252,6 @@ export class PeerEvaluationBusinessService {
     this.logger.log('동료평가 수정 완료', {
       evaluationId: params.evaluationId,
     });
-  }
-
-  /**
-   * 동료평가 내용을 저장한다 (평가자가 평가 내용을 작성/수정)
-   * Upsert: 기존 평가가 있으면 수정, 없으면 생성
-   */
-  async 동료평가_내용을_저장한다(params: {
-    evaluatorId: string;
-    evaluateeId: string;
-    periodId: string;
-    projectId: string;
-    peerEvaluationContent?: string;
-    peerEvaluationScore?: number;
-    actionBy: string;
-  }): Promise<string> {
-    this.logger.log('동료평가 내용 저장 비즈니스 로직 시작', {
-      evaluatorId: params.evaluatorId,
-      evaluateeId: params.evaluateeId,
-    });
-
-    // 1. 동료평가 내용 저장 (컨텍스트 호출 - upsert)
-    const evaluationId =
-      await this.performanceEvaluationService.동료평가를_저장한다(
-        params.evaluatorId,
-        params.evaluateeId,
-        params.periodId,
-        params.projectId,
-        params.peerEvaluationContent,
-        params.peerEvaluationScore,
-        params.actionBy,
-      );
-
-    // 2. 알림 발송 (추후 구현)
-    // TODO: 동료평가 내용 저장 알림 발송
-    // await this.notificationService.send({
-    //   type: 'PEER_EVALUATION_CONTENT_SAVED',
-    //   recipientId: params.evaluateeId,
-    //   data: {
-    //     evaluationId,
-    //     evaluatorId: params.evaluatorId,
-    //   },
-    // });
-
-    this.logger.log('동료평가 내용 저장 및 알림 발송 완료', { evaluationId });
-
-    return evaluationId;
   }
 
   /**

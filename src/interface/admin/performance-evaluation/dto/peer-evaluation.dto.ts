@@ -38,6 +38,18 @@ export class RequestPeerEvaluationDto {
   periodId: string;
 
   @ApiPropertyOptional({
+    description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440010',
+      '550e8400-e29b-41d4-a716-446655440011',
+    ],
+  })
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  questionIds?: string[];
+
+  @ApiPropertyOptional({
     description: '요청자 ID (관리자)',
     example: '550e8400-e29b-41d4-a716-446655440003',
   })
@@ -76,6 +88,18 @@ export class RequestPeerEvaluationToMultipleEvaluatorsDto {
   periodId: string;
 
   @ApiPropertyOptional({
+    description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440010',
+      '550e8400-e29b-41d4-a716-446655440011',
+    ],
+  })
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  questionIds?: string[];
+
+  @ApiPropertyOptional({
     description: '요청자 ID (관리자)',
     example: '550e8400-e29b-41d4-a716-446655440004',
   })
@@ -112,6 +136,18 @@ export class RequestMultiplePeerEvaluationsDto {
   })
   @IsUUID()
   periodId: string;
+
+  @ApiPropertyOptional({
+    description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440010',
+      '550e8400-e29b-41d4-a716-446655440011',
+    ],
+  })
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  questionIds?: string[];
 
   @ApiPropertyOptional({
     description: '요청자 ID (관리자)',

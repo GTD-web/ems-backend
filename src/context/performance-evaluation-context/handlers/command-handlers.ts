@@ -16,12 +16,12 @@ import { ClearWbsSelfEvaluationsByProjectHandler } from './self-evaluation/comma
 import {
   CreatePeerEvaluationHandler,
   UpdatePeerEvaluationHandler,
-  UpsertPeerEvaluationHandler,
   SubmitPeerEvaluationHandler,
   CancelPeerEvaluationHandler,
   CancelPeerEvaluationsByPeriodHandler,
   AddQuestionGroupToPeerEvaluationHandler,
   AddQuestionToPeerEvaluationHandler,
+  AddMultipleQuestionsToPeerEvaluationHandler,
   RemoveQuestionFromPeerEvaluationHandler,
   UpdatePeerEvaluationQuestionOrderHandler,
 } from './peer-evaluation';
@@ -68,12 +68,12 @@ export const CommandHandlers = [
   // 동료평가 커맨드 핸들러
   CreatePeerEvaluationHandler,
   UpdatePeerEvaluationHandler,
-  UpsertPeerEvaluationHandler,
   SubmitPeerEvaluationHandler,
   CancelPeerEvaluationHandler,
   CancelPeerEvaluationsByPeriodHandler,
   AddQuestionGroupToPeerEvaluationHandler,
   AddQuestionToPeerEvaluationHandler,
+  AddMultipleQuestionsToPeerEvaluationHandler,
   RemoveQuestionFromPeerEvaluationHandler,
   UpdatePeerEvaluationQuestionOrderHandler,
 

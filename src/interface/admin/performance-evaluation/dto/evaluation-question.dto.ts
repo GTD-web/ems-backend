@@ -145,6 +145,25 @@ export class CreateEvaluationQuestionDto {
   maxScore?: number;
 
   @ApiPropertyOptional({
+    description: '그룹 ID (선택사항 - 제공 시 해당 그룹에 자동 추가)',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsOptional()
+  @IsUUID()
+  groupId?: string;
+
+  @ApiPropertyOptional({
+    description: '표시 순서 (그룹 추가 시 사용)',
+    example: 1,
+    minimum: 0,
+    default: 0,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  displayOrder?: number;
+
+  @ApiPropertyOptional({
     description: '생성자 ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
@@ -259,15 +278,15 @@ export class AddQuestionToGroupDto {
   @IsUUID()
   questionId: string;
 
-  @ApiProperty({
-    description: '표시 순서',
+  @ApiPropertyOptional({
+    description: '표시 순서 (생략 시 그룹의 마지막 순서로 자동 배치)',
     example: 1,
     minimum: 0,
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsInt()
   @Min(0)
-  displayOrder: number;
+  displayOrder?: number;
 
   @ApiPropertyOptional({
     description: '생성자 ID',
@@ -279,18 +298,73 @@ export class AddQuestionToGroupDto {
 }
 
 /**
- * 질문 표시 순서 변경 DTO
+ * 그룹에 여러 질문 추가 DTO
  */
-export class UpdateQuestionDisplayOrderDto {
+export class AddMultipleQuestionsToGroupDto {
   @ApiProperty({
-    description: '새로운 표시 순서',
-    example: 5,
-    minimum: 0,
+    description: '그룹 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsNotEmpty()
+  @IsUUID()
+  groupId: string;
+
+  @ApiProperty({
+    description: '질문 ID 배열',
+    example: [
+      '123e4567-e89b-12d3-a456-426614174001',
+      '123e4567-e89b-12d3-a456-426614174002',
+      '123e4567-e89b-12d3-a456-426614174003',
+    ],
+    type: [String],
+  })
+  @IsNotEmpty()
+  questionIds: string[];
+
+  @ApiPropertyOptional({
+    description: '시작 표시 순서 (첫 질문부터 순차적으로 할당)',
+    example: 1,
+    minimum: 0,
+    default: 0,
+  })
+  @IsOptional()
   @IsInt()
   @Min(0)
-  displayOrder: number;
+  startDisplayOrder?: number;
+
+  @ApiPropertyOptional({
+    description: '생성자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsOptional()
+  @IsUUID()
+  createdBy?: string;
+}
+
+/**
+ * 그룹 내 질문 순서 재정의 DTO
+ */
+export class ReorderGroupQuestionsDto {
+  @ApiProperty({
+    description: '그룹 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsNotEmpty()
+  @IsUUID()
+  groupId: string;
+
+  @ApiProperty({
+    description:
+      '질문 ID 배열 (배열 순서대로 displayOrder가 0부터 순차 할당됨)',
+    example: [
+      '123e4567-e89b-12d3-a456-426614174003',
+      '123e4567-e89b-12d3-a456-426614174001',
+      '123e4567-e89b-12d3-a456-426614174002',
+    ],
+    type: [String],
+  })
+  @IsNotEmpty()
+  questionIds: string[];
 
   @ApiPropertyOptional({
     description: '수정자 ID',
@@ -361,3 +435,35 @@ export class SuccessResponseDto {
   message: string;
 }
 
+/**
+ * 배치 작업 성공 응답 DTO
+ */
+export class BatchSuccessResponseDto {
+  @ApiProperty({
+    description: '생성/수정된 리소스 ID 배열',
+    example: [
+      '123e4567-e89b-12d3-a456-426614174000',
+      '123e4567-e89b-12d3-a456-426614174001',
+    ],
+    type: [String],
+  })
+  ids: string[];
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '성공적으로 처리되었습니다.',
+  })
+  message: string;
+
+  @ApiProperty({
+    description: '성공 개수',
+    example: 2,
+  })
+  successCount: number;
+
+  @ApiProperty({
+    description: '전체 개수',
+    example: 3,
+  })
+  totalCount: number;
+}

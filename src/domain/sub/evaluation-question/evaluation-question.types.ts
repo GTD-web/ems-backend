@@ -8,6 +8,10 @@ export interface CreateEvaluationQuestionDto {
   minScore?: number;
   /** 최대 점수 */
   maxScore?: number;
+  /** 그룹 ID (선택사항 - 제공 시 해당 그룹에 자동 추가) */
+  groupId?: string;
+  /** 표시 순서 (그룹 추가 시 사용) */
+  displayOrder?: number;
 }
 
 /**

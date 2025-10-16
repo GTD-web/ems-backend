@@ -47,9 +47,9 @@ import {
   GetEvaluatorAssignedEvaluateesQuery,
   SubmitPeerEvaluationCommand,
   UpdatePeerEvaluationCommand,
-  UpsertPeerEvaluationCommand,
   AddQuestionGroupToPeerEvaluationCommand,
   AddQuestionToPeerEvaluationCommand,
+  AddMultipleQuestionsToPeerEvaluationCommand,
   RemoveQuestionFromPeerEvaluationCommand,
   UpdatePeerEvaluationQuestionOrderCommand,
   GetPeerEvaluationQuestionsQuery,
@@ -347,30 +347,6 @@ export class PerformanceEvaluationService
     );
 
     await this.commandBus.execute(command);
-  }
-
-  /**
-   * 동료평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
-   */
-  async 동료평가를_저장한다(
-    evaluatorId: string,
-    evaluateeId: string,
-    periodId: string,
-    projectId: string,
-    evaluationContent?: string,
-    score?: number,
-    actionBy?: string,
-  ): Promise<string> {
-    const command = new UpsertPeerEvaluationCommand(
-      evaluatorId,
-      evaluateeId,
-      periodId,
-      projectId,
-      actionBy || '시스템',
-    );
-
-    const result = await this.commandBus.execute(command);
-    return result;
   }
 
   /**
@@ -969,6 +945,26 @@ export class PerformanceEvaluationService
       questionId,
       displayOrder,
       questionGroupId,
+      createdBy,
+    );
+
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  /**
+   * 동료평가에 여러 질문을 매핑한다
+   * 동료평가 요청 시 질문 IDs를 받아서 일괄 매핑합니다.
+   */
+  async 동료평가에_질문을_매핑한다(
+    peerEvaluationId: string,
+    questionIds: string[],
+    createdBy: string,
+  ): Promise<string[]> {
+    const command = new AddMultipleQuestionsToPeerEvaluationCommand(
+      peerEvaluationId,
+      questionIds,
+      0, // startDisplayOrder는 0부터 시작
       createdBy,
     );
 

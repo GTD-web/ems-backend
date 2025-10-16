@@ -16,8 +16,11 @@ import {
   GetEvaluationQuestions,
   CopyEvaluationQuestion,
   AddQuestionToGroup,
+  AddMultipleQuestionsToGroup,
+  ReorderGroupQuestions,
   RemoveQuestionFromGroup,
-  UpdateQuestionDisplayOrder,
+  MoveQuestionUp,
+  MoveQuestionDown,
   GetGroupQuestions,
   GetQuestionGroupsByQuestion,
 } from './decorators/evaluation-question-api.decorators';
@@ -29,9 +32,11 @@ import {
   UpdateEvaluationQuestionDto,
   EvaluationQuestionResponseDto,
   AddQuestionToGroupDto,
-  UpdateQuestionDisplayOrderDto,
+  AddMultipleQuestionsToGroupDto,
+  ReorderGroupQuestionsDto,
   QuestionGroupMappingResponseDto,
   SuccessResponseDto,
+  BatchSuccessResponseDto,
 } from './dto/evaluation-question.dto';
 
 /**
@@ -157,6 +162,8 @@ export class EvaluationQuestionManagementController {
           text: dto.text,
           minScore: dto.minScore,
           maxScore: dto.maxScore,
+          groupId: dto.groupId,
+          displayOrder: dto.displayOrder,
         },
         createdBy,
       );
@@ -277,6 +284,52 @@ export class EvaluationQuestionManagementController {
   }
 
   /**
+   * 그룹에 여러 질문 추가
+   */
+  @AddMultipleQuestionsToGroup()
+  async addMultipleQuestionsToGroup(
+    @Body() dto: AddMultipleQuestionsToGroupDto,
+  ): Promise<BatchSuccessResponseDto> {
+    const createdBy = dto.createdBy || uuidv4();
+
+    const mappingIds =
+      await this.evaluationQuestionManagementService.그룹에_여러_질문을_추가한다(
+        dto.groupId,
+        dto.questionIds,
+        dto.startDisplayOrder ?? 0,
+        createdBy,
+      );
+
+    return {
+      ids: mappingIds,
+      message: '그룹에 여러 질문이 성공적으로 추가되었습니다.',
+      successCount: mappingIds.length,
+      totalCount: dto.questionIds.length,
+    };
+  }
+
+  /**
+   * 그룹 내 질문 순서 재정의
+   */
+  @ReorderGroupQuestions()
+  async reorderGroupQuestions(
+    @Body() dto: ReorderGroupQuestionsDto,
+  ): Promise<SuccessResponseDto> {
+    const updatedBy = dto.updatedBy || uuidv4();
+
+    await this.evaluationQuestionManagementService.그룹내_질문순서를_재정의한다(
+      dto.groupId,
+      dto.questionIds,
+      updatedBy,
+    );
+
+    return {
+      id: dto.groupId,
+      message: '그룹 내 질문 순서가 성공적으로 재정의되었습니다.',
+    };
+  }
+
+  /**
    * 그룹에서 질문 제거
    */
   @RemoveQuestionFromGroup()
@@ -292,24 +345,42 @@ export class EvaluationQuestionManagementController {
   }
 
   /**
-   * 질문 표시 순서 변경
+   * 질문 순서 위로 이동
    */
-  @UpdateQuestionDisplayOrder()
-  async updateQuestionDisplayOrder(
+  @MoveQuestionUp()
+  async moveQuestionUp(
     @Param('mappingId', ParseUUIDPipe) mappingId: string,
-    @Body() dto: UpdateQuestionDisplayOrderDto,
   ): Promise<SuccessResponseDto> {
-    const updatedBy = dto.updatedBy || uuidv4();
+    const updatedBy = uuidv4();
 
-    await this.evaluationQuestionManagementService.질문표시순서를_변경한다(
+    await this.evaluationQuestionManagementService.질문순서를_위로_이동한다(
       mappingId,
-      dto.displayOrder,
       updatedBy,
     );
 
     return {
       id: mappingId,
-      message: '질문 표시 순서가 성공적으로 변경되었습니다.',
+      message: '질문 순서가 성공적으로 위로 이동되었습니다.',
+    };
+  }
+
+  /**
+   * 질문 순서 아래로 이동
+   */
+  @MoveQuestionDown()
+  async moveQuestionDown(
+    @Param('mappingId', ParseUUIDPipe) mappingId: string,
+  ): Promise<SuccessResponseDto> {
+    const updatedBy = uuidv4();
+
+    await this.evaluationQuestionManagementService.질문순서를_아래로_이동한다(
+      mappingId,
+      updatedBy,
+    );
+
+    return {
+      id: mappingId,
+      message: '질문 순서가 성공적으로 아래로 이동되었습니다.',
     };
   }
 

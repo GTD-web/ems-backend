@@ -9,11 +9,6 @@ export {
 } from './update-peer-evaluation.handler';
 
 export {
-  UpsertPeerEvaluationCommand,
-  UpsertPeerEvaluationHandler,
-} from './upsert-peer-evaluation.handler';
-
-export {
   SubmitPeerEvaluationCommand,
   SubmitPeerEvaluationHandler,
 } from './submit-peer-evaluation.handler';
@@ -47,3 +42,8 @@ export {
   UpdatePeerEvaluationQuestionOrderCommand,
   UpdatePeerEvaluationQuestionOrderHandler,
 } from './update-peer-evaluation-question-order.handler';
+
+export {
+  AddMultipleQuestionsToPeerEvaluationCommand,
+  AddMultipleQuestionsToPeerEvaluationHandler,
+} from './add-multiple-questions-to-peer-evaluation.handler';

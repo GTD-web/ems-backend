@@ -352,7 +352,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
 
       it('많은 수의 평가기준을 조회할 수 있어야 한다', async () => {
         // Given: 10개의 평가기준 생성
-        const createPromises = [];
+        const createPromises: Promise<any>[] = [];
         for (let i = 0; i < 10; i++) {
           const wbsItem = testData.wbsItems[i % testData.wbsItems.length];
           createPromises.push(

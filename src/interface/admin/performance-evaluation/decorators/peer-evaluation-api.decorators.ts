@@ -45,10 +45,14 @@ export function RequestPeerEvaluation() {
 **동작:**
 - 평가자에게 피평가자를 평가하도록 할당
 - 평가 상태는 PENDING으로 생성됨
+- questionIds 제공 시 해당 질문들에 대해 작성 요청 (질문 매핑 자동 생성)
+- questionIds 생략 시 질문 없이 요청만 생성
 - 평가자는 할당된 목록을 조회하여 평가 작성 가능
 
 **테스트 케이스:**
 - 기본 요청: 평가자, 피평가자, 평가기간을 지정하여 동료평가 요청 생성
+- 질문 포함 요청: questionIds를 포함하여 특정 질문에 대한 평가 요청
+- 질문 생략 요청: questionIds 없이 요청만 생성
 - requestedBy 포함: 요청자 ID를 포함하여 요청 가능
 - requestedBy 생략: 요청자 ID 없이도 요청 가능 (기본값 사용)
 - 중복 요청 방지: 동일한 조건으로 여러 번 요청 시 중복 생성되지 않음 (동일 ID 반환)
@@ -57,6 +61,7 @@ export function RequestPeerEvaluation() {
 - 잘못된 evaluatorId: UUID 형식이 아닌 평가자 ID 입력 시 400 에러
 - 잘못된 evaluateeId: UUID 형식이 아닌 피평가자 ID 입력 시 400 에러
 - 잘못된 periodId: UUID 형식이 아닌 평가기간 ID 입력 시 400 에러
+- 잘못된 questionIds: UUID 형식이 아닌 질문 ID 포함 시 400 에러
 - 필수 필드 누락: evaluatorId, evaluateeId, periodId 중 하나라도 누락 시 400 에러`,
     }),
     ApiBody({
@@ -97,6 +102,8 @@ export function RequestPeerEvaluationToMultipleEvaluators() {
 **동작:**
 - 여러 평가자에게 동일한 피평가자에 대한 평가 요청 생성
 - 모든 평가 상태는 PENDING으로 생성됨
+- questionIds 제공 시 모든 평가자에게 동일한 질문들에 대해 작성 요청
+- questionIds 생략 시 질문 없이 요청만 생성
 - 각 평가자는 자신에게 할당된 평가를 조회 가능
 
 **테스트 케이스:**
@@ -149,6 +156,8 @@ export function RequestMultiplePeerEvaluations() {
 **동작:**
 - 한 명의 평가자에게 여러 피평가자에 대한 평가 요청 생성
 - 모든 평가 상태는 PENDING으로 생성됨
+- questionIds 제공 시 모든 피평가자에 대해 동일한 질문들에 대해 작성 요청
+- questionIds 생략 시 질문 없이 요청만 생성
 - 평가자는 자신에게 할당된 모든 평가를 조회 가능
 
 **테스트 케이스:**
@@ -183,72 +192,6 @@ export function RequestMultiplePeerEvaluations() {
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
       description: '평가자, 피평가자 또는 평가기간을 찾을 수 없습니다.',
-    }),
-  );
-}
-
-/**
- * 동료평가 내용 저장 API 데코레이터 (Upsert: 없으면 생성, 있으면 수정)
- */
-export function UpsertPeerEvaluation() {
-  return applyDecorators(
-    Post('evaluatee/:evaluateeId/period/:periodId/project/:projectId'),
-    HttpCode(HttpStatus.OK),
-    ApiOperation({
-      summary: '동료평가 내용 저장',
-      description: `평가자가 동료평가 내용(점수, 코멘트)을 작성/수정합니다.
-
-**동작:**
-- 관리자가 먼저 평가 요청을 생성해야 함 (PENDING 상태)
-- 평가자가 평가 내용(점수, 코멘트)을 입력
-- 기존 내용이 있으면 수정, 없으면 새로 생성
-- 저장 후에도 여러 번 수정 가능 (제출 전까지)`,
-    }),
-    ApiParam({
-      name: 'evaluateeId',
-      description: '피평가자 ID',
-      type: 'string',
-      format: 'uuid',
-      example: '550e8400-e29b-41d4-a716-446655440001',
-    }),
-    ApiParam({
-      name: 'periodId',
-      description: '평가기간 ID',
-      type: 'string',
-      format: 'uuid',
-      example: '550e8400-e29b-41d4-a716-446655440002',
-    }),
-    ApiParam({
-      name: 'projectId',
-      description: '프로젝트 ID',
-      type: 'string',
-      format: 'uuid',
-      example: '550e8400-e29b-41d4-a716-446655440003',
-    }),
-    ApiBody({
-      type: CreatePeerEvaluationBodyDto,
-      description: '동료평가 내용 정보 (점수, 코멘트)',
-    }),
-    ApiResponse({
-      status: HttpStatus.OK,
-      description: '동료평가 내용이 성공적으로 저장되었습니다.',
-      type: PeerEvaluationResponseDto,
-    }),
-    ApiResponse({
-      status: HttpStatus.BAD_REQUEST,
-      description: '잘못된 요청 데이터입니다.',
-    }),
-    ApiResponse({
-      status: HttpStatus.UNAUTHORIZED,
-      description: '인증이 필요합니다.',
-    }),
-    ApiResponse({
-      status: HttpStatus.FORBIDDEN,
-      description: '권한이 없습니다.',
-    }),
-    ApiResponse({
-      status: HttpStatus.NOT_FOUND,
-      description: '피평가자, 평가기간 또는 프로젝트를 찾을 수 없습니다.',
     }),
   );
 }

@@ -7,7 +7,6 @@ import {
   RequestPeerEvaluation,
   RequestPeerEvaluationToMultipleEvaluators,
   RequestMultiplePeerEvaluations,
-  UpsertPeerEvaluation,
   SubmitPeerEvaluation,
   GetEvaluatorPeerEvaluations,
   GetPeerEvaluationDetail,
@@ -55,6 +54,7 @@ export class PeerEvaluationManagementController {
         evaluatorId: dto.evaluatorId,
         evaluateeId: dto.evaluateeId,
         periodId: dto.periodId,
+        questionIds: dto.questionIds,
         requestedBy,
       });
 
@@ -79,6 +79,7 @@ export class PeerEvaluationManagementController {
           evaluatorIds: dto.evaluatorIds,
           evaluateeId: dto.evaluateeId,
           periodId: dto.periodId,
+          questionIds: dto.questionIds,
           requestedBy,
         },
       );
@@ -105,6 +106,7 @@ export class PeerEvaluationManagementController {
           evaluatorId: dto.evaluatorId,
           evaluateeIds: dto.evaluateeIds,
           periodId: dto.periodId,
+          questionIds: dto.questionIds,
           requestedBy,
         },
       );
@@ -113,36 +115,6 @@ export class PeerEvaluationManagementController {
       ids: result.ids,
       count: result.count,
       message: `${result.count}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
-    };
-  }
-
-  /**
-   * 동료평가 내용 저장 (평가자가 평가 내용을 작성/수정)
-   */
-  @UpsertPeerEvaluation()
-  async upsertPeerEvaluation(
-    @Param('evaluateeId') evaluateeId: string,
-    @Param('periodId') periodId: string,
-    @Param('projectId') projectId: string,
-    @Body() dto: CreatePeerEvaluationBodyDto,
-  ): Promise<PeerEvaluationResponseDto> {
-    const actionBy = dto.createdBy || uuidv4();
-    const evaluatorId = dto.evaluatorId || uuidv4(); // TODO: 추후 요청자 ID로 변경
-
-    const evaluationId =
-      await this.peerEvaluationBusinessService.동료평가_내용을_저장한다({
-        evaluatorId,
-        evaluateeId,
-        periodId,
-        projectId,
-        peerEvaluationContent: dto.peerEvaluationContent,
-        peerEvaluationScore: dto.peerEvaluationScore,
-        actionBy,
-      });
-
-    return {
-      id: evaluationId,
-      message: '동료평가 내용이 성공적으로 저장되었습니다.',
     };
   }
 

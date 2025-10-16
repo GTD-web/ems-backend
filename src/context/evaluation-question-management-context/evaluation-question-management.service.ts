@@ -44,6 +44,10 @@ import {
   AddQuestionToGroupCommand,
   RemoveQuestionFromGroupCommand,
   UpdateQuestionDisplayOrderCommand,
+  MoveQuestionUpCommand,
+  MoveQuestionDownCommand,
+  AddMultipleQuestionsToGroupCommand,
+  ReorderGroupQuestionsCommand,
   GetGroupQuestionsQuery,
   GetQuestionGroupsByQuestionQuery,
 } from './handlers/question-group-mapping';
@@ -240,6 +244,62 @@ export class EvaluationQuestionManagementService {
   }
 
   /**
+   * 질문 순서를 위로 이동한다
+   */
+  async 질문순서를_위로_이동한다(
+    mappingId: string,
+    updatedBy: string,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new MoveQuestionUpCommand(mappingId, updatedBy),
+    );
+  }
+
+  /**
+   * 질문 순서를 아래로 이동한다
+   */
+  async 질문순서를_아래로_이동한다(
+    mappingId: string,
+    updatedBy: string,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new MoveQuestionDownCommand(mappingId, updatedBy),
+    );
+  }
+
+  /**
+   * 그룹에 여러 질문을 추가한다
+   */
+  async 그룹에_여러_질문을_추가한다(
+    groupId: string,
+    questionIds: string[],
+    startDisplayOrder: number,
+    createdBy: string,
+  ): Promise<string[]> {
+    return await this.commandBus.execute(
+      new AddMultipleQuestionsToGroupCommand(
+        groupId,
+        questionIds,
+        startDisplayOrder,
+        createdBy,
+      ),
+    );
+  }
+
+  /**
+   * 그룹 내 질문 순서를 재정의한다
+   */
+  async 그룹내_질문순서를_재정의한다(
+    groupId: string,
+    questionIds: string[],
+    updatedBy: string,
+  ): Promise<void> {
+    await this.commandBus.execute(
+      new ReorderGroupQuestionsCommand(groupId, questionIds, updatedBy),
+    );
+  }
+
+  /**
    * 그룹의 질문 목록을 조회한다
    */
   async 그룹의_질문목록을_조회한다(
@@ -315,4 +375,3 @@ export class EvaluationQuestionManagementService {
     );
   }
 }
-
