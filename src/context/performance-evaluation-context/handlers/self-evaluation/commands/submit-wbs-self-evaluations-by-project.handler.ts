@@ -3,6 +3,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 import { EvaluationWbsAssignmentService } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
 
 /**
  * 프로젝트별 WBS 자기평가 제출 커맨드
@@ -71,6 +72,7 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
   constructor(
     private readonly wbsSelfEvaluationService: WbsSelfEvaluationService,
     private readonly evaluationWbsAssignmentService: EvaluationWbsAssignmentService,
+    private readonly evaluationPeriodService: EvaluationPeriodService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -86,6 +88,18 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
     });
 
     return await this.transactionManager.executeTransaction(async () => {
+      // 0. 평가기간 조회 및 점수 범위 확인
+      const evaluationPeriod =
+        await this.evaluationPeriodService.ID로_조회한다(periodId);
+
+      if (!evaluationPeriod) {
+        throw new BadRequestException(
+          `평가기간을 찾을 수 없습니다. (periodId: ${periodId})`,
+        );
+      }
+
+      const maxScore = evaluationPeriod.자기평가_달성률_최대값();
+
       // 1. 해당 프로젝트에 할당된 WBS 항목 조회
       const assignments =
         await this.evaluationWbsAssignmentService.필터_조회한다({
@@ -165,11 +179,11 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
           }
 
           // 점수 유효성 검증
-          if (!evaluation.점수가_유효한가()) {
+          if (!evaluation.점수가_유효한가(maxScore)) {
             failedEvaluations.push({
               evaluationId: evaluation.id,
               wbsItemId: evaluation.wbsItemId,
-              reason: '평가 점수가 유효하지 않습니다 (1-5 사이여야 함).',
+              reason: `평가 점수가 유효하지 않습니다 (0 ~ ${maxScore} 사이여야 함).`,
               selfEvaluationContent: evaluation.selfEvaluationContent,
               selfEvaluationScore: evaluation.selfEvaluationScore,
             });

@@ -405,12 +405,12 @@ export class WbsSelfEvaluationService {
   }
 
   /**
-   * 점수 유효성을 검사한다
+   * 점수 유효성을 검사한다 (최소값만 검증, 최대값은 Command Handler에서 검증)
    */
   private 점수_유효성을_검사한다(score: number): void {
-    if (score < 1 || score > 5) {
+    if (score < 0) {
       throw new WbsSelfEvaluationValidationException(
-        '자가평가 점수는 1-5 사이여야 합니다.',
+        '자가평가 점수는 0 이상이어야 합니다.',
       );
     }
   }

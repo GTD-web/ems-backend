@@ -1,8 +1,9 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
 
 /**
  * WBS 자기평가 Upsert 커맨드
@@ -32,6 +33,7 @@ export class UpsertWbsSelfEvaluationHandler
 
   constructor(
     private readonly wbsSelfEvaluationService: WbsSelfEvaluationService,
+    private readonly evaluationPeriodService: EvaluationPeriodService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -55,6 +57,24 @@ export class UpsertWbsSelfEvaluationHandler
     });
 
     return await this.transactionManager.executeTransaction(async () => {
+      // 평가기간 조회 및 점수 범위 검증
+      const evaluationPeriod =
+        await this.evaluationPeriodService.ID로_조회한다(periodId);
+
+      if (!evaluationPeriod) {
+        throw new BadRequestException(
+          `평가기간을 찾을 수 없습니다. (periodId: ${periodId})`,
+        );
+      }
+
+      const maxScore = evaluationPeriod.자기평가_달성률_최대값();
+
+      if (selfEvaluationScore < 0 || selfEvaluationScore > maxScore) {
+        throw new BadRequestException(
+          `자기평가 점수는 0 ~ ${maxScore} 사이여야 합니다. (입력값: ${selfEvaluationScore})`,
+        );
+      }
+
       // 기존 자기평가 조회
       const existingEvaluations =
         await this.wbsSelfEvaluationService.필터_조회한다({

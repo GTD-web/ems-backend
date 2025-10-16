@@ -23,14 +23,13 @@ export class CreateWbsSelfEvaluationBodyDto {
   selfEvaluationContent: string;
 
   @ApiProperty({
-    description: '자기평가 점수 (1-5)',
-    example: 4,
-    minimum: 1,
-    maximum: 5,
+    description:
+      '자기평가 점수 (달성률 %, 0 ~ 평가기간의 maxSelfEvaluationRate)',
+    example: 100,
+    minimum: 0,
   })
   @IsNumber()
-  @Min(1)
-  @Max(5)
+  @Min(0)
   selfEvaluationScore: number;
 
   @ApiPropertyOptional({
@@ -63,15 +62,14 @@ export class UpdateWbsSelfEvaluationDto {
   selfEvaluationContent?: string;
 
   @ApiPropertyOptional({
-    description: '자기평가 점수 (1-5)',
-    example: 5,
-    minimum: 1,
-    maximum: 5,
+    description:
+      '자기평가 점수 (달성률 %, 0 ~ 평가기간의 maxSelfEvaluationRate)',
+    example: 100,
+    minimum: 0,
   })
   @IsOptional()
   @IsNumber()
-  @Min(1)
-  @Max(5)
+  @Min(0)
   selfEvaluationScore?: number;
 
   @ApiPropertyOptional({

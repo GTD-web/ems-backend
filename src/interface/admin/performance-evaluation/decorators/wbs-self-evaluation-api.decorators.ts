@@ -39,42 +39,80 @@ export function UpsertWbsSelfEvaluation() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: 'WBS 자기평가 저장',
-      description:
-        'WBS 자기평가를 저장합니다. 기존 평가가 있으면 수정하고, 없으면 새로 생성합니다.',
+      description: `**중요**: WBS 자기평가를 저장합니다. 동일한 직원-WBS항목-평가기간 조합으로 기존 평가가 있으면 수정하고, 없으면 새로 생성합니다. Upsert 방식으로 동작하여 중복 생성을 방지하며, 낙관적 잠금(버전 관리)을 통해 동시성을 제어합니다.
+
+**주요 기능:**
+- **Upsert 방식**: 동일 조합(직원+WBS항목+평가기간)으로 평가가 존재하면 업데이트, 없으면 신규 생성
+- **버전 관리**: 매 수정마다 version 필드 자동 증가로 낙관적 잠금 적용
+- **타임스탬프 관리**: createdAt은 최초 생성 시에만 기록되고 이후 변경되지 않음, updatedAt은 매 수정 시 갱신
+- **점수 범위**: selfEvaluationScore는 0 ~ 평가기간의 maxSelfEvaluationRate 사이의 값 (달성률 %)
+- **선택적 필드**: performanceResult와 createdBy는 선택사항
+
+**요청 본문 필드:**
+- \`selfEvaluationContent\` (필수): 자기평가 내용 (문자열)
+- \`selfEvaluationScore\` (필수): 자기평가 점수 (달성률 %, 0 ~ 평가기간의 maxSelfEvaluationRate, 기본 최대값 120)
+- \`performanceResult\` (선택): 성과 실적 (문자열, 빈 문자열도 허용)
+- \`createdBy\` (선택): 생성자 ID (UUID 형식)
+
+**테스트 케이스:**
+- 신규 생성: 동일 조합의 평가가 없으면 신규 생성되며 version=1, isCompleted=false로 초기화
+- 기존 수정: 동일 조합으로 기존 평가가 있으면 동일한 ID로 수정되며 version 증가
+- 점수 범위: 0 ~ 평가기간의 maxSelfEvaluationRate 범위 내 모든 값 저장 가능 (예: 0, 50, 100, 120)
+- 여러 번 수정: 동일 평가를 여러 번 수정할 수 있으며 매번 version과 updatedAt 증가
+- performanceResult 생략: performanceResult 없이도 저장 가능 (null 반환)
+- performanceResult 빈 문자열: 빈 문자열("")도 유효한 값으로 저장됨
+- createdBy 생략: createdBy 없이도 저장 가능
+- DB 저장 검증: 저장된 데이터가 DB에 정확히 기록됨
+- updatedAt 갱신: 수정 시 updatedAt이 자동으로 업데이트됨
+- createdAt 유지: 수정 시 createdAt은 변경되지 않음 (200ms 이내 오차 허용)
+- version 증가: 매 수정마다 version이 1씩 증가
+- isCompleted 초기값: 신규 생성 시 isCompleted=false, completedAt=null
+- 필수 필드 검증: selfEvaluationContent 또는 selfEvaluationScore 누락 시 400 에러
+- 점수 범위 검증: 0 미만 또는 maxSelfEvaluationRate 초과 점수 입력 시 400 에러
+- 점수 타입 검증: 점수가 숫자가 아닐 때 400 에러
+- 내용 타입 검증: selfEvaluationContent가 문자열이 아닐 때 400 에러
+- UUID 형식 검증: employeeId, wbsItemId, periodId, createdBy가 UUID 형식이 아닐 때 400 에러
+- 평가기간 존재 검증: 존재하지 않는 periodId로 요청 시 400 에러
+- 응답 필드 검증: id, periodId, employeeId, wbsItemId, selfEvaluationContent, selfEvaluationScore, isCompleted, evaluationDate, createdAt, updatedAt, version 포함
+- 응답 ID 일치: 응답의 employeeId, wbsItemId, periodId가 요청값과 정확히 일치
+- 날짜 형식 검증: evaluationDate, createdAt, updatedAt이 유효한 날짜 형식`,
     }),
     ApiParam({
       name: 'employeeId',
-      description: '직원 ID',
+      description: '직원 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440000',
     }),
     ApiParam({
       name: 'wbsItemId',
-      description: 'WBS 항목 ID',
+      description: 'WBS 항목 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440001',
     }),
     ApiParam({
       name: 'periodId',
-      description: '평가기간 ID',
+      description: '평가기간 ID (UUID 형식)',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiBody({
       type: CreateWbsSelfEvaluationBodyDto,
-      description: 'WBS 자기평가 생성 정보',
+      description:
+        'WBS 자기평가 저장 정보 (selfEvaluationContent, selfEvaluationScore 필수)',
     }),
     ApiResponse({
       status: HttpStatus.OK,
-      description: 'WBS 자기평가가 성공적으로 저장되었습니다.',
+      description:
+        'WBS 자기평가가 성공적으로 저장되었습니다. 신규 생성 또는 기존 평가 수정 결과를 반환합니다.',
       type: WbsSelfEvaluationResponseDto,
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
-      description: '잘못된 요청 데이터입니다.',
+      description:
+        '잘못된 요청 데이터 (필수 필드 누락, UUID 형식 오류, 점수 범위 초과, 잘못된 타입 등)',
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
@@ -86,7 +124,16 @@ export function UpsertWbsSelfEvaluation() {
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: '직원, WBS 항목 또는 평가기간을 찾을 수 없습니다.',
+      description:
+        '직원, WBS 항목 또는 평가기간을 찾을 수 없습니다. (존재하지 않거나 삭제됨)',
+    }),
+    ApiResponse({
+      status: HttpStatus.CONFLICT,
+      description: '동시성 충돌 (낙관적 잠금 실패, version 불일치)',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
     }),
   );
 }

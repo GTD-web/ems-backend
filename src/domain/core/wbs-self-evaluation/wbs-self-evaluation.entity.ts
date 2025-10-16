@@ -155,9 +155,12 @@ export class WbsSelfEvaluation
 
   /**
    * 자가평가 점수가 유효한 범위인지 확인한다
+   * @param maxScore 최대 점수 (평가기간의 maxSelfEvaluationRate)
    */
-  점수가_유효한가(): boolean {
-    return this.selfEvaluationScore >= 1 && this.selfEvaluationScore <= 5;
+  점수가_유효한가(maxScore: number): boolean {
+    return (
+      this.selfEvaluationScore >= 0 && this.selfEvaluationScore <= maxScore
+    );
   }
 
   /**
