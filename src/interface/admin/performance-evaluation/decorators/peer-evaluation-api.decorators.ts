@@ -263,7 +263,15 @@ export function GetPeerEvaluationDetail() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '동료평가 상세정보 조회',
-      description: '동료평가의 상세정보를 조회합니다.',
+      description: `동료평가의 상세정보를 조회합니다.
+      
+**포함되는 정보:**
+- 동료평가 기본 정보 (ID, 점수, 내용, 상태 등)
+- 평가자 정보 (이름, 사번, 이메일, 부서 등)
+- 평가자 부서 정보 (부서명, 부서 코드)
+- 피평가자 정보 (이름, 사번, 이메일, 부서 등)
+- 피평가자 부서 정보 (부서명, 부서 코드)
+- 메타데이터 (생성일, 수정일, 버전 등)`,
     }),
     ApiParam({
       name: 'id',
@@ -272,7 +280,8 @@ export function GetPeerEvaluationDetail() {
     }),
     ApiResponse({
       status: HttpStatus.OK,
-      description: '동료평가 상세정보가 성공적으로 조회되었습니다.',
+      description:
+        '동료평가 상세정보가 성공적으로 조회되었습니다. 평가자와 피평가자의 직원 정보 및 부서 정보를 포함합니다.',
       type: PeerEvaluationDetailResponseDto,
     }),
     ApiResponse({

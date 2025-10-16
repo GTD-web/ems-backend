@@ -12,6 +12,7 @@ import { PeerEvaluation } from '../../domain/core/peer-evaluation/peer-evaluatio
 import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evaluation.entity';
 import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '../../domain/common/employee/employee.entity';
+import { Department } from '../../domain/common/department/department.entity';
 import { WbsItem } from '../../domain/common/wbs-item/wbs-item.entity';
 
 import { PerformanceEvaluationService } from './performance-evaluation.service';
@@ -33,6 +34,7 @@ import { QueryHandlers } from './handlers/query-handlers';
       FinalEvaluation,
       EvaluationPeriod,
       Employee,
+      Department,
       WbsItem,
     ]),
   ],

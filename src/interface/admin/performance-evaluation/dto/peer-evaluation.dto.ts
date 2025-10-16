@@ -8,7 +8,8 @@ import {
   Min,
   Max,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Type } from 'class-transformer';
+import { ToBoolean } from '@interface/decorators';
 
 /**
  * 동료평가 생성 Body DTO
@@ -140,7 +141,7 @@ export class PeerEvaluationFilterDto {
     default: 1,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   page?: number;
@@ -151,7 +152,7 @@ export class PeerEvaluationFilterDto {
     default: 10,
   })
   @IsOptional()
-  @Transform(({ value }) => parseInt(value))
+  @Type(() => Number)
   @IsNumber()
   @Min(1)
   @Max(100)
@@ -259,6 +260,70 @@ export class PeerEvaluationListResponseDto {
 }
 
 /**
+ * 직원 정보 DTO
+ */
+export class EmployeeInfoDto {
+  @ApiProperty({
+    description: '직원 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '직원 이름',
+    example: '홍길동',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '사번',
+    example: 'EMP001',
+  })
+  employeeNumber: string;
+
+  @ApiProperty({
+    description: '이메일',
+    example: 'hong@example.com',
+  })
+  email: string;
+
+  @ApiProperty({
+    description: '부서 ID',
+    example: 'DEPT001',
+  })
+  departmentId: string;
+
+  @ApiProperty({
+    description: '직원 상태',
+    example: 'ACTIVE',
+  })
+  status: string;
+}
+
+/**
+ * 부서 정보 DTO
+ */
+export class DepartmentInfoDto {
+  @ApiProperty({
+    description: '부서 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '부서명',
+    example: '개발팀',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '부서 코드',
+    example: 'DEPT001',
+  })
+  code: string;
+}
+
+/**
  * 동료평가 상세 응답 DTO
  */
 export class PeerEvaluationDetailResponseDto extends PeerEvaluationBasicDto {
@@ -279,4 +344,52 @@ export class PeerEvaluationDetailResponseDto extends PeerEvaluationBasicDto {
     example: '550e8400-e29b-41d4-a716-446655440004',
   })
   updatedBy?: string;
+
+  @ApiProperty({
+    description: '매핑 일시',
+    example: '2024-01-15T09:00:00Z',
+  })
+  mappedDate: Date;
+
+  @ApiProperty({
+    description: '매핑자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440005',
+  })
+  mappedBy: string;
+
+  @ApiProperty({
+    description: '활성 상태',
+    example: true,
+  })
+  isActive: boolean;
+
+  @ApiProperty({
+    description: '버전',
+    example: 1,
+  })
+  version: number;
+
+  @ApiPropertyOptional({
+    description: '평가자 정보',
+    type: EmployeeInfoDto,
+  })
+  evaluator?: EmployeeInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '평가자 부서 정보',
+    type: DepartmentInfoDto,
+  })
+  evaluatorDepartment?: DepartmentInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '피평가자 정보',
+    type: EmployeeInfoDto,
+  })
+  evaluatee?: EmployeeInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '피평가자 부서 정보',
+    type: DepartmentInfoDto,
+  })
+  evaluateeDepartment?: DepartmentInfoDto | null;
 }

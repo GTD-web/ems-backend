@@ -6,4 +6,5 @@ export {
 export {
   GetPeerEvaluationDetailQuery,
   GetPeerEvaluationDetailHandler,
+  type PeerEvaluationDetailResult,
 } from './get-peer-evaluation-detail.handler';

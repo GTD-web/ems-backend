@@ -7,6 +7,7 @@ import {
   SubmitPeerEvaluationCommand,
   GetPeerEvaluationListQuery,
   GetPeerEvaluationDetailQuery,
+  PeerEvaluationDetailResult,
 } from '@context/performance-evaluation-context/handlers/peer-evaluation';
 
 /**
@@ -293,7 +294,7 @@ export class PeerEvaluationBusinessService {
    */
   async 동료평가_상세정보를_조회한다(params: {
     evaluationId: string;
-  }): Promise<any> {
+  }): Promise<PeerEvaluationDetailResult> {
     this.logger.log('동료평가 상세정보 조회 비즈니스 로직', {
       evaluationId: params.evaluationId,
     });

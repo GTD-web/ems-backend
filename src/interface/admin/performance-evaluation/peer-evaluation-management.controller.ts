@@ -2,6 +2,7 @@ import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
+import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
 import {
   UpsertPeerEvaluation,
   SubmitPeerEvaluation,
@@ -16,7 +17,6 @@ import {
   PeerEvaluationFilterDto,
   PeerEvaluationResponseDto,
   PeerEvaluationListResponseDto,
-  PeerEvaluationDetailResponseDto,
 } from './dto/peer-evaluation.dto';
 
 /**
@@ -102,7 +102,7 @@ export class PeerEvaluationManagementController {
   @GetPeerEvaluationDetail()
   async getPeerEvaluationDetail(
     @Param('id') id: string,
-  ): Promise<PeerEvaluationDetailResponseDto> {
+  ): Promise<PeerEvaluationDetailResult> {
     return await this.peerEvaluationBusinessService.동료평가_상세정보를_조회한다(
       {
         evaluationId: id,
