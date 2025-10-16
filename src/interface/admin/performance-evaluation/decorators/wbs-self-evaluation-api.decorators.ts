@@ -249,7 +249,33 @@ export function GetEmployeeSelfEvaluations() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '직원의 자기평가 목록 조회',
-      description: '특정 직원의 자기평가 목록을 조회합니다.',
+      description: `**중요**: 특정 직원의 WBS 자기평가 목록을 조회합니다. 평가기간, 프로젝트 필터링 및 페이지네이션을 지원합니다.
+
+**조회 정보:**
+- 자기평가 ID, WBS 항목 ID, 평가기간 ID
+- 자기평가 내용 및 점수
+- 제출 상태 및 제출 일시
+- 생성/수정 일시 및 작성자 정보
+
+**필터링 옵션:**
+- periodId: 특정 평가기간의 자기평가만 조회
+- projectId: 특정 프로젝트의 자기평가만 조회
+- 페이지네이션: page, limit 파라미터 지원
+
+**사용 시나리오:**
+- 직원 대시보드: 본인의 자기평가 진행 현황 확인
+- 관리자 모니터링: 특정 직원의 평가 진행 상황 추적
+- 평가 검토: 제출된 자기평가 목록 확인
+
+**테스트 케이스:**
+- 기본 조회: 직원의 자기평가 목록을 조회할 수 있어야 한다
+- 필드 검증: 반환된 각 자기평가 항목은 모든 필수 필드를 포함해야 한다 (id, wbsItemId, periodId, isCompleted, createdAt, updatedAt 등)
+- 필터링: periodId 필터로 특정 평가기간의 자기평가만 조회할 수 있어야 한다
+- 페이지네이션: page, limit 파라미터로 페이지네이션이 정상적으로 작동해야 한다
+- 빈 결과: 자기평가가 없는 경우 빈 배열을 반환해야 한다
+- UUID 검증: 잘못된 UUID 형식의 employeeId로 요청 시 400 에러가 발생해야 한다
+- 데이터 일관성: 목록 조회 결과와 상세 조회 결과가 일치해야 한다
+- 날짜 형식: 모든 날짜 필드는 ISO 8601 형식이어야 한다`,
     }),
     ApiParam({
       name: 'employeeId',
@@ -313,7 +339,36 @@ export function GetWbsSelfEvaluationDetail() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: 'WBS 자기평가 상세정보 조회',
-      description: 'WBS 자기평가의 상세정보를 조회합니다.',
+      description: `**중요**: 특정 WBS 자기평가의 상세정보를 조회합니다. 평가기간, 직원, WBS 항목 정보를 포함하여 반환합니다.
+
+**조회 정보:**
+- 자기평가 기본 정보: ID, 내용, 점수, 제출 상태
+- 평가기간 정보: 평가기간 ID, 이름, 기간, 상태 (evaluationPeriod 객체)
+- 직원 정보: 직원 ID, 이름, 이메일, 부서 (employee 객체)
+- WBS 항목 정보: WBS ID, 코드, 제목, 상태, 진행률 (wbsItem 객체)
+- 메타 정보: 생성/수정 일시, 작성자 정보, 버전
+
+**반환 데이터 특징:**
+- 관련 엔티티 정보를 중첩 객체로 반환 (평가기간, 직원, WBS 항목)
+- 제출된 평가는 completedAt 필드 포함
+- 모든 날짜 필드는 ISO 8601 형식
+
+**사용 시나리오:**
+- 평가 상세 확인: 작성된 자기평가의 전체 정보 확인
+- 평가 검토: 제출된 평가 내용 검토
+- 평가 수정: 기존 평가 내용 확인 후 수정
+
+**테스트 케이스:**
+- 기본 조회: 자기평가 상세정보를 조회할 수 있어야 한다
+- 필수 필드: 반환된 상세정보는 모든 필수 필드를 포함해야 한다 (id, wbsItemId, periodId, employeeId, isCompleted, createdAt, updatedAt 등)
+- 평가기간 정보: evaluationPeriod 객체가 포함되어 있으며 id, name, startDate, endDate, status 등을 포함해야 한다
+- 직원 정보: employee 객체가 포함되어 있으며 id, employeeNumber, name, email 등을 포함해야 한다
+- WBS 항목 정보: wbsItem 객체가 포함되어 있으며 id, wbsCode, title, status, projectId 등을 포함해야 한다
+- 제출 상태: 제출된 자기평가의 경우 isCompleted가 true이고 completedAt이 존재해야 한다
+- UUID 검증: 잘못된 UUID 형식으로 조회 시 400 에러가 발생해야 한다
+- 존재하지 않음: 존재하지 않는 자기평가 ID로 조회 시 404 에러가 발생해야 한다
+- 데이터 일관성: 목록 조회 결과와 상세 조회 결과의 기본 필드가 일치해야 한다
+- 날짜 형식: 모든 날짜 필드는 ISO 8601 형식이어야 한다`,
     }),
     ApiParam({
       name: 'id',
