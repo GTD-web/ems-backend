@@ -47,10 +47,17 @@ export function RequestPeerEvaluation() {
 - 평가 상태는 PENDING으로 생성됨
 - 평가자는 할당된 목록을 조회하여 평가 작성 가능
 
-**사용 시나리오:**
-1. 관리자가 평가 대상자를 지정
-2. 평가자가 할당된 목록 조회
-3. 평가자가 평가 작성 및 제출`,
+**테스트 케이스:**
+- 기본 요청: 평가자, 피평가자, 평가기간을 지정하여 동료평가 요청 생성
+- requestedBy 포함: 요청자 ID를 포함하여 요청 가능
+- requestedBy 생략: 요청자 ID 없이도 요청 가능 (기본값 사용)
+- 중복 요청 방지: 동일한 조건으로 여러 번 요청 시 중복 생성되지 않음 (동일 ID 반환)
+- 응답 구조 검증: 응답에 id와 message 필드 포함
+- 성공 메시지: 응답 메시지에 "성공적으로 요청" 문구 포함
+- 잘못된 evaluatorId: UUID 형식이 아닌 평가자 ID 입력 시 400 에러
+- 잘못된 evaluateeId: UUID 형식이 아닌 피평가자 ID 입력 시 400 에러
+- 잘못된 periodId: UUID 형식이 아닌 평가기간 ID 입력 시 400 에러
+- 필수 필드 누락: evaluatorId, evaluateeId, periodId 중 하나라도 누락 시 400 에러`,
     }),
     ApiBody({
       type: RequestPeerEvaluationDto,
@@ -92,10 +99,21 @@ export function RequestPeerEvaluationToMultipleEvaluators() {
 - 모든 평가 상태는 PENDING으로 생성됨
 - 각 평가자는 자신에게 할당된 평가를 조회 가능
 
-**사용 시나리오:**
-- 360도 평가: 한 명의 직원을 여러 동료가 평가
-- 팀 내 상호 평가: 팀원들이 팀장을 평가
-- 부서 간 협업 평가: 여러 부서원이 한 명을 평가`,
+**테스트 케이스:**
+- 일괄 요청: 한 명의 피평가자를 여러 평가자에게 동시 요청
+- 응답 구조 검증: 응답에 ids 배열, count, message 필드 포함
+- IDs 배열 길이: 생성된 평가 요청 ID 배열이 요청한 평가자 수와 일치
+- 생성 개수 일치: count가 evaluatorIds 배열 길이와 동일
+- 성공 메시지: 응답 메시지에 "성공적으로 생성" 문구 포함
+- requestedBy 포함: 요청자 ID를 포함하여 일괄 요청 가능
+- requestedBy 생략: 요청자 ID 없이도 일괄 요청 가능
+- 단일 평가자: 평가자가 한 명만 포함된 경우에도 정상 처리
+- 많은 평가자: 50명 이상의 평가자에게 요청 가능
+- 자기 평가 제외: 평가자 목록에 피평가자 자신이 포함된 경우 제외됨
+- 빈 evaluatorIds 배열: 평가자 ID 배열이 비어있으면 400 에러
+- 잘못된 UUID 포함: evaluatorIds에 UUID 형식이 아닌 값 포함 시 400 에러
+- 잘못된 evaluateeId: UUID 형식이 아닌 피평가자 ID 입력 시 400 에러
+- 잘못된 periodId: UUID 형식이 아닌 평가기간 ID 입력 시 400 에러`,
     }),
     ApiBody({
       type: RequestPeerEvaluationToMultipleEvaluatorsDto,
@@ -133,10 +151,21 @@ export function RequestMultiplePeerEvaluations() {
 - 모든 평가 상태는 PENDING으로 생성됨
 - 평가자는 자신에게 할당된 모든 평가를 조회 가능
 
-**사용 시나리오:**
-- 팀장이 팀원들을 평가
-- 프로젝트 리더가 프로젝트 멤버들을 평가
-- 선임이 후임들을 평가`,
+**테스트 케이스:**
+- 일괄 요청: 한 명의 평가자가 여러 피평가자를 평가하도록 동시 요청
+- 응답 구조 검증: 응답에 ids 배열, count, message 필드 포함
+- IDs 배열 길이: 생성된 평가 요청 ID 배열이 요청한 피평가자 수와 일치
+- 생성 개수 일치: count가 evaluateeIds 배열 길이와 동일
+- 성공 메시지: 응답 메시지에 "성공적으로 생성" 문구 포함
+- requestedBy 포함: 요청자 ID를 포함하여 일괄 요청 가능
+- requestedBy 생략: 요청자 ID 없이도 일괄 요청 가능
+- 단일 피평가자: 피평가자가 한 명만 포함된 경우에도 정상 처리
+- 많은 피평가자: 50명 이상의 피평가자에 대해 요청 가능
+- 자기 평가 제외: 피평가자 목록에 평가자 자신이 포함된 경우 제외됨
+- 빈 evaluateeIds 배열: 피평가자 ID 배열이 비어있으면 400 에러
+- 잘못된 UUID 포함: evaluateeIds에 UUID 형식이 아닌 값 포함 시 400 에러
+- 잘못된 evaluatorId: UUID 형식이 아닌 평가자 ID 입력 시 400 에러
+- 잘못된 periodId: UUID 형식이 아닌 평가기간 ID 입력 시 400 에러`,
     }),
     ApiBody({
       type: RequestMultiplePeerEvaluationsDto,
@@ -173,12 +202,7 @@ export function UpsertPeerEvaluation() {
 - 관리자가 먼저 평가 요청을 생성해야 함 (PENDING 상태)
 - 평가자가 평가 내용(점수, 코멘트)을 입력
 - 기존 내용이 있으면 수정, 없으면 새로 생성
-- 저장 후에도 여러 번 수정 가능 (제출 전까지)
-
-**사용 시나리오:**
-- 평가자가 할당된 평가 목록을 확인
-- 평가 내용을 작성하고 임시 저장
-- 여러 번 수정 후 최종 제출`,
+- 저장 후에도 여러 번 수정 가능 (제출 전까지)`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -524,11 +548,7 @@ export function CancelPeerEvaluation() {
 **동작:**
 - 평가 상태를 "cancelled"로 변경
 - 작성 중이거나 완료된 평가도 취소 가능
-- 평가자는 더 이상 해당 평가를 볼 수 없음
-
-**사용 시나리오:**
-- 잘못 할당된 평가 요청을 철회
-- 조직 변경으로 인한 평가 요청 무효화`,
+- 평가자는 더 이상 해당 평가를 볼 수 없음`,
     }),
     ApiParam({
       name: 'id',
@@ -572,12 +592,7 @@ export function CancelPeerEvaluationsByPeriod() {
 **동작:**
 - 해당 피평가자에게 할당된 모든 평가 요청을 취소
 - 모든 평가 상태를 "cancelled"로 변경
-- 취소된 평가 개수를 반환
-
-**사용 시나리오:**
-- 피평가자가 퇴사하거나 평가 대상에서 제외된 경우
-- 평가기간이 무효화된 경우
-- 대량 평가 요청을 일괄 철회해야 하는 경우`,
+- 취소된 평가 개수를 반환`,
     }),
     ApiParam({
       name: 'evaluateeId',
