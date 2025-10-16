@@ -14,6 +14,8 @@ import {
   EvaluationPeriodDto,
   EvaluationPeriodStatus,
 } from '../../domain/core/evaluation-period/evaluation-period.types';
+import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationWbsAssignmentDto } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 
 /**
  * 테스트용 컨텍스트 서비스
@@ -31,6 +33,8 @@ export class TestContextService {
     private readonly wbsItemTestService: WbsItemTestService,
     @InjectRepository(EvaluationPeriod)
     private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
+    @InjectRepository(EvaluationWbsAssignment)
+    private readonly evaluationWbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   ) {}
 
   /**
@@ -43,6 +47,7 @@ export class TestContextService {
     projects: ProjectDto[];
     wbsItems: WbsItemDto[];
     periods: EvaluationPeriodDto[];
+    wbsAssignments: EvaluationWbsAssignmentDto[];
   }> {
     // 1. 기존 테스트 데이터 정리
     await this.테스트_데이터를_정리한다();
@@ -70,8 +75,16 @@ export class TestContextService {
     // 6. 평가기간 데이터 생성
     const periods = await this.테스트용_평가기간을_생성한다();
 
+    // 7. WBS 할당 데이터 생성 (진행 중인 평가기간에 대해)
+    const wbsAssignments = await this.테스트용_WBS할당을_생성한다(
+      employees,
+      projects,
+      wbsItems,
+      periods,
+    );
+
     console.log(
-      `부서 ${departments.length}, 직원 ${employees.length}, 프로젝트 ${projects.length}, WBS 항목 ${wbsItems.length}, 평가기간 ${periods.length} 생성 완료`,
+      `부서 ${departments.length}, 직원 ${employees.length}, 프로젝트 ${projects.length}, WBS 항목 ${wbsItems.length}, 평가기간 ${periods.length}, WBS 할당 ${wbsAssignments.length} 생성 완료`,
     );
     return {
       departments,
@@ -79,6 +92,7 @@ export class TestContextService {
       projects,
       wbsItems,
       periods,
+      wbsAssignments,
     };
   }
 
@@ -437,5 +451,66 @@ export class TestContextService {
       await this.employeeTestService.직원_데이터를_확인하고_생성한다(minCount);
     console.log(`준비된 직원 수: ${employees.length}`);
     return employees;
+  }
+
+  /**
+   * 테스트용 WBS 할당 데이터를 생성한다
+   * @param employees 직원 목록
+   * @param projects 프로젝트 목록
+   * @param wbsItems WBS 항목 목록
+   * @param periods 평가기간 목록
+   * @returns 생성된 WBS 할당 목록
+   */
+  async 테스트용_WBS할당을_생성한다(
+    employees: EmployeeDto[],
+    projects: ProjectDto[],
+    wbsItems: WbsItemDto[],
+    periods: EvaluationPeriodDto[],
+  ): Promise<EvaluationWbsAssignmentDto[]> {
+    if (
+      employees.length === 0 ||
+      projects.length === 0 ||
+      wbsItems.length === 0 ||
+      periods.length === 0
+    ) {
+      console.log('WBS 할당 생성을 위한 데이터가 부족합니다.');
+      return [];
+    }
+
+    // 진행 중인 평가기간 찾기
+    const inProgressPeriod = periods.find(
+      (p) => p.status === EvaluationPeriodStatus.IN_PROGRESS,
+    );
+    if (!inProgressPeriod) {
+      console.log('진행 중인 평가기간이 없습니다.');
+      return [];
+    }
+
+    const firstProject = projects[0];
+    const assignedBy = employees[0].id; // 첫 번째 직원을 할당자로 사용
+    const assignments: EvaluationWbsAssignment[] = [];
+
+    // 각 직원에 대해 모든 WBS 항목 할당 생성
+    for (const employee of employees) {
+      for (let i = 0; i < wbsItems.length; i++) {
+        const wbsItem = wbsItems[i];
+        const assignment = this.evaluationWbsAssignmentRepository.create({
+          periodId: inProgressPeriod.id,
+          employeeId: employee.id,
+          projectId: firstProject.id,
+          wbsItemId: wbsItem.id,
+          assignedBy: assignedBy,
+          assignedDate: new Date(),
+          displayOrder: i,
+        });
+        assignments.push(assignment);
+      }
+    }
+
+    const savedAssignments =
+      await this.evaluationWbsAssignmentRepository.save(assignments);
+
+    console.log(`WBS 할당 ${savedAssignments.length}개 생성 완료`);
+    return savedAssignments.map((a) => a.DTO로_변환한다());
   }
 }

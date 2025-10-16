@@ -73,7 +73,7 @@ export class WbsSelfEvaluationManagementController {
    */
   @SubmitWbsSelfEvaluation()
   async submitWbsSelfEvaluation(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
     @Body() submitDto: SubmitWbsSelfEvaluationDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<WbsSelfEvaluationResponseDto> {
@@ -90,8 +90,8 @@ export class WbsSelfEvaluationManagementController {
    */
   @SubmitAllWbsSelfEvaluationsByEmployeePeriod()
   async submitAllWbsSelfEvaluationsByEmployeePeriod(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<SubmitAllWbsSelfEvaluationsResponseDto> {
     const submittedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
@@ -108,7 +108,7 @@ export class WbsSelfEvaluationManagementController {
    */
   @ResetWbsSelfEvaluation()
   async resetWbsSelfEvaluation(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<WbsSelfEvaluationResponseDto> {
     const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
@@ -124,8 +124,8 @@ export class WbsSelfEvaluationManagementController {
    */
   @ResetAllWbsSelfEvaluationsByEmployeePeriod()
   async resetAllWbsSelfEvaluationsByEmployeePeriod(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<ResetAllWbsSelfEvaluationsResponseDto> {
     const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
@@ -142,9 +142,9 @@ export class WbsSelfEvaluationManagementController {
    */
   @SubmitWbsSelfEvaluationsByProject()
   async submitWbsSelfEvaluationsByProject(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
-    @Param('projectId') projectId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<SubmitWbsSelfEvaluationsByProjectResponseDto> {
     const submittedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
@@ -162,9 +162,9 @@ export class WbsSelfEvaluationManagementController {
    */
   @ResetWbsSelfEvaluationsByProject()
   async resetWbsSelfEvaluationsByProject(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
-    @Param('projectId') projectId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<ResetWbsSelfEvaluationsByProjectResponseDto> {
     const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
@@ -215,7 +215,7 @@ export class WbsSelfEvaluationManagementController {
    */
   @ClearWbsSelfEvaluation()
   async clearWbsSelfEvaluation(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
     const clearedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
     return await this.performanceEvaluationService.WBS자기평가_내용을_초기화한다(
@@ -232,8 +232,8 @@ export class WbsSelfEvaluationManagementController {
    */
   @ClearAllWbsSelfEvaluationsByEmployeePeriod()
   async clearAllWbsSelfEvaluationsByEmployeePeriod(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
   ): Promise<ClearAllWbsSelfEvaluationsResponseDto> {
     const clearedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
     return await this.performanceEvaluationService.직원의_전체_WBS자기평가_내용을_초기화한다(
@@ -251,9 +251,9 @@ export class WbsSelfEvaluationManagementController {
    */
   @ClearWbsSelfEvaluationsByProject()
   async clearWbsSelfEvaluationsByProject(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
-    @Param('projectId') projectId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
   ): Promise<ClearWbsSelfEvaluationsByProjectResponseDto> {
     const clearedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
     return await this.performanceEvaluationService.프로젝트별_WBS자기평가_내용을_초기화한다(

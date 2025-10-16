@@ -6,6 +6,7 @@ import { EmployeeTestModule } from '../../domain/common/employee/employee-test.m
 import { ProjectTestModule } from '../../domain/common/project/project-test.module';
 import { WbsItemTestModule } from '../../domain/common/wbs-item/wbs-item-test.module';
 import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 
 /**
  * 테스트용 컨텍스트 모듈
@@ -16,7 +17,7 @@ import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([EvaluationPeriod]),
+    TypeOrmModule.forFeature([EvaluationPeriod, EvaluationWbsAssignment]),
     DepartmentTestModule,
     EmployeeTestModule,
     ProjectTestModule,
