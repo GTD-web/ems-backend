@@ -29,14 +29,27 @@ export interface IPerformanceEvaluationService {
   // ==================== 자기평가(성과입력) 관련 메서드 ====================
 
   /**
+   * WBS 자기평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
+   */
+  WBS자기평가를_저장한다(
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    selfEvaluationContent?: string,
+    selfEvaluationScore?: number,
+    performanceResult?: string,
+    actionBy?: string,
+  ): Promise<WbsSelfEvaluationResponseDto>;
+
+  /**
    * WBS 자기평가를 생성한다
    */
   WBS자기평가를_생성한다(
     periodId: string,
     employeeId: string,
     wbsItemId: string,
-    selfEvaluationContent: string,
-    selfEvaluationScore: number,
+    selfEvaluationContent?: string,
+    selfEvaluationScore?: number,
     performanceResult?: string,
     createdBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto>;

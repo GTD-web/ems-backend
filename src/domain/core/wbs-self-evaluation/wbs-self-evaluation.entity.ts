@@ -79,16 +79,17 @@ export class WbsSelfEvaluation
 
   @Column({
     type: 'text',
+    nullable: true,
     comment: '자가평가 내용',
   })
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
   @Column({
     type: 'integer',
+    nullable: true,
     comment: '자가평가 점수',
-    default: 1,
   })
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   constructor(data?: CreateWbsSelfEvaluationData) {
     super();
@@ -158,6 +159,12 @@ export class WbsSelfEvaluation
    * @param maxScore 최대 점수 (평가기간의 maxSelfEvaluationRate)
    */
   점수가_유효한가(maxScore: number): boolean {
+    if (
+      this.selfEvaluationScore === undefined ||
+      this.selfEvaluationScore === null
+    ) {
+      return true; // 점수가 없으면 유효한 것으로 간주 (선택 사항이므로)
+    }
     return (
       this.selfEvaluationScore >= 0 && this.selfEvaluationScore <= maxScore
     );
@@ -167,14 +174,20 @@ export class WbsSelfEvaluation
    * 자가평가를 수정한다
    */
   자가평가를_수정한다(
-    content: string,
-    score: number,
+    content?: string,
+    score?: number,
     performanceResult?: string,
     updatedBy?: string,
   ): void {
-    this.selfEvaluationContent = content;
-    this.selfEvaluationScore = score;
-    this.performanceResult = performanceResult;
+    if (content !== undefined) {
+      this.selfEvaluationContent = content;
+    }
+    if (score !== undefined) {
+      this.selfEvaluationScore = score;
+    }
+    if (performanceResult !== undefined) {
+      this.performanceResult = performanceResult;
+    }
     this.evaluationDate = new Date();
 
     if (updatedBy) {
@@ -186,9 +199,9 @@ export class WbsSelfEvaluation
    * 자가평가 내용을 초기화한다 (빈 값으로 설정)
    */
   자가평가_내용을_초기화한다(updatedBy?: string): void {
-    this.selfEvaluationContent = '';
-    this.selfEvaluationScore = 1;
-    this.performanceResult = '';
+    this.selfEvaluationContent = undefined;
+    this.selfEvaluationScore = undefined;
+    this.performanceResult = undefined;
     this.isCompleted = false;
     this.completedAt = undefined;
     this.evaluationDate = new Date();

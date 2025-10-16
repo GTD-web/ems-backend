@@ -139,7 +139,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         )
         .send({
           selfEvaluationContent: '이번 분기 목표를 성공적으로 달성했습니다.',
-          selfEvaluationScore: 4,
+          selfEvaluationScore: 100,
           performanceResult:
             'WBS 항목을 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
           createdBy,
@@ -155,7 +155,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       expect(response.body.selfEvaluationContent).toBe(
         '이번 분기 목표를 성공적으로 달성했습니다.',
       );
-      expect(response.body.selfEvaluationScore).toBe(4);
+      expect(response.body.selfEvaluationScore).toBe(100);
       expect(response.body.performanceResult).toBe(
         'WBS 항목을 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
       );
@@ -175,7 +175,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         period.id,
         {
           selfEvaluationContent: '초기 평가 내용',
-          selfEvaluationScore: 3,
+          selfEvaluationScore: 80,
         },
       );
 
@@ -189,7 +189,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         )
         .send({
           selfEvaluationContent: '수정된 평가 내용',
-          selfEvaluationScore: 5,
+          selfEvaluationScore: 110,
           performanceResult: '추가된 성과 입력',
         })
         .expect(200);
@@ -197,7 +197,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       // Then
       expect(response.body.id).toBe(firstSave.id); // 동일한 ID
       expect(response.body.selfEvaluationContent).toBe('수정된 평가 내용');
-      expect(response.body.selfEvaluationScore).toBe(5);
+      expect(response.body.selfEvaluationScore).toBe(110);
       expect(response.body.performanceResult).toBe('추가된 성과 입력');
       expect(response.body.version).toBeGreaterThan(firstSave.version); // 버전 증가
       expect(new Date(response.body.updatedAt).getTime()).toBeGreaterThan(
@@ -218,13 +218,13 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         )
         .send({
           selfEvaluationContent: '평가 내용만 작성',
-          selfEvaluationScore: 3,
+          selfEvaluationScore: 90,
         })
         .expect(200);
 
       // Then
       expect(response.body.selfEvaluationContent).toBe('평가 내용만 작성');
-      expect(response.body.selfEvaluationScore).toBe(3);
+      expect(response.body.selfEvaluationScore).toBe(90);
       // DB에서 null을 반환할 수 있으므로 null 또는 undefined 허용
       expect(response.body.performanceResult == null).toBe(true);
     });
@@ -242,7 +242,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         )
         .send({
           selfEvaluationContent: '평가 내용',
-          selfEvaluationScore: 4,
+          selfEvaluationScore: 95,
         })
         .expect(200);
 
@@ -251,13 +251,14 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       expect(response.body.id).toBeDefined();
     });
 
-    it('자기평가 점수 1-5 범위 내의 모든 값을 저장할 수 있어야 한다', async () => {
+    it('자기평가 점수 0 ~ maxSelfEvaluationRate 범위 내의 모든 값을 저장할 수 있어야 한다', async () => {
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
 
-      // When & Then - 각 점수별로 테스트
-      for (let score = 1; score <= 5; score++) {
+      // When & Then - 각 점수별로 테스트 (0, 50, 100, 120)
+      const testScores = [0, 50, 100, 120];
+      for (const score of testScores) {
         const wbsItem = getRandomWbsItem();
         const response = await request(app.getHttpServer())
           .post(
@@ -286,7 +287,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         period.id,
         {
           selfEvaluationContent: '첫 번째 저장',
-          selfEvaluationScore: 2,
+          selfEvaluationScore: 80,
         },
       );
 
@@ -298,7 +299,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         period.id,
         {
           selfEvaluationContent: '두 번째 저장',
-          selfEvaluationScore: 3,
+          selfEvaluationScore: 100,
         },
       );
 
@@ -310,7 +311,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         period.id,
         {
           selfEvaluationContent: '세 번째 저장',
-          selfEvaluationScore: 5,
+          selfEvaluationScore: 120,
         },
       );
 
@@ -318,7 +319,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       expect(save1.id).toBe(save2.id);
       expect(save2.id).toBe(save3.id);
       expect(save3.selfEvaluationContent).toBe('세 번째 저장');
-      expect(save3.selfEvaluationScore).toBe(5);
+      expect(save3.selfEvaluationScore).toBe(120);
       expect(save3.version).toBeGreaterThan(save2.version);
       expect(save2.version).toBeGreaterThan(save1.version);
     });
@@ -336,7 +337,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         )
         .send({
           selfEvaluationContent: '평가 내용',
-          selfEvaluationScore: 3,
+          selfEvaluationScore: 100,
           performanceResult: '',
         })
         .expect(200);
@@ -344,30 +345,124 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       // Then
       expect(response.body.performanceResult).toBe('');
     });
+
+    it('자기평가 점수 최소값(0)으로 저장할 수 있어야 한다', async () => {
+      // Given
+      const employee = getRandomEmployee();
+      const period = getRandomEvaluationPeriod();
+      const wbsItem = getRandomWbsItem();
+
+      // When
+      const response = await request(app.getHttpServer())
+        .post(
+          `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
+        )
+        .send({
+          selfEvaluationContent: '최소 점수 테스트',
+          selfEvaluationScore: 0,
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body.selfEvaluationScore).toBe(0);
+    });
+
+    it('자기평가 점수 최대값(maxSelfEvaluationRate=120)으로 저장할 수 있어야 한다', async () => {
+      // Given
+      const employee = getRandomEmployee();
+      const period = getRandomEvaluationPeriod();
+      const wbsItem = getRandomWbsItem();
+
+      // When
+      const response = await request(app.getHttpServer())
+        .post(
+          `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
+        )
+        .send({
+          selfEvaluationContent: '최대 점수 테스트',
+          selfEvaluationScore: 120,
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body.selfEvaluationScore).toBe(120);
+    });
+  });
+
+  // ==================== 선택적 필드 시나리오 ====================
+
+  describe('WBS 자기평가 선택적 필드 시나리오', () => {
+    it('모든 필드를 생략하고 저장할 수 있어야 한다 (선택 옵션)', async () => {
+      // Given
+      const employee = getRandomEmployee();
+      const period = getRandomEvaluationPeriod();
+      const wbsItem = getRandomWbsItem();
+
+      // When
+      const response = await request(app.getHttpServer())
+        .post(
+          `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
+        )
+        .send({
+          // 모든 필드 생략
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body).toBeDefined();
+      expect(response.body.id).toBeDefined();
+      expect(response.body.employeeId).toBe(employee.id);
+      expect(response.body.wbsItemId).toBe(wbsItem.id);
+      expect(response.body.periodId).toBe(period.id);
+    });
+
+    it('selfEvaluationContent만 생략하고 저장할 수 있어야 한다', async () => {
+      // Given
+      const employee = getRandomEmployee();
+      const period = getRandomEvaluationPeriod();
+      const wbsItem = getRandomWbsItem();
+
+      // When
+      const response = await request(app.getHttpServer())
+        .post(
+          `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
+        )
+        .send({
+          selfEvaluationScore: 100,
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body).toBeDefined();
+      expect(response.body.selfEvaluationScore).toBe(100);
+    });
+
+    it('selfEvaluationScore만 생략하고 저장할 수 있어야 한다', async () => {
+      // Given
+      const employee = getRandomEmployee();
+      const period = getRandomEvaluationPeriod();
+      const wbsItem = getRandomWbsItem();
+
+      // When
+      const response = await request(app.getHttpServer())
+        .post(
+          `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
+        )
+        .send({
+          selfEvaluationContent: '평가 내용',
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body).toBeDefined();
+      expect(response.body.selfEvaluationContent).toBe('평가 내용');
+    });
   });
 
   // ==================== 실패 시나리오 ====================
 
   describe('WBS 자기평가 저장 실패 시나리오', () => {
-    it('selfEvaluationContent 필드 누락 시 400 에러가 발생해야 한다', async () => {
-      // Given
-      const employee = getRandomEmployee();
-      const period = getRandomEvaluationPeriod();
-      const wbsItem = getRandomWbsItem();
-
-      // When & Then
-      await request(app.getHttpServer())
-        .post(
-          `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
-        )
-        .send({
-          // selfEvaluationContent 누락
-          selfEvaluationScore: 4,
-        })
-        .expect(400);
-    });
-
-    it('selfEvaluationScore 필드 누락 시 400 에러가 발생해야 한다', async () => {
+    it('selfEvaluationScore가 0 미만일 때 400 에러가 발생해야 한다', async () => {
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
@@ -380,43 +475,45 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
         )
         .send({
           selfEvaluationContent: '평가 내용',
-          // selfEvaluationScore 누락
+          selfEvaluationScore: -1,
         })
         .expect(400);
     });
 
-    it('selfEvaluationScore가 1보다 작을 때 400 에러가 발생해야 한다', async () => {
+    it('selfEvaluationScore가 maxSelfEvaluationRate를 초과할 때 400 에러가 발생해야 한다', async () => {
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
       // When & Then
+      // maxSelfEvaluationRate는 기본값 120이므로 150으로 테스트
       await request(app.getHttpServer())
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
         .send({
           selfEvaluationContent: '평가 내용',
-          selfEvaluationScore: 0,
+          selfEvaluationScore: 150,
         })
         .expect(400);
     });
 
-    it('selfEvaluationScore가 5보다 클 때 400 에러가 발생해야 한다', async () => {
+    it('selfEvaluationScore가 maxSelfEvaluationRate + 1일 때 400 에러가 발생해야 한다', async () => {
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
       // When & Then
+      // maxSelfEvaluationRate는 기본값 120이므로 121로 테스트
       await request(app.getHttpServer())
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
         .send({
           selfEvaluationContent: '평가 내용',
-          selfEvaluationScore: 6,
+          selfEvaluationScore: 121,
         })
         .expect(400);
     });

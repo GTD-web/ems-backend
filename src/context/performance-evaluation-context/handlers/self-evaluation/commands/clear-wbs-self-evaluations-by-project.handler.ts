@@ -24,8 +24,8 @@ export class ClearWbsSelfEvaluationsByProjectCommand {
 export interface ClearedWbsSelfEvaluationByProjectDetail {
   id: string;
   wbsItemId: string;
-  selfEvaluationContent: string;
-  selfEvaluationScore: number;
+  selfEvaluationContent?: string;
+  selfEvaluationScore?: number;
   performanceResult?: string;
 }
 

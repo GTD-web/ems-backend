@@ -165,8 +165,8 @@ export class PerformanceEvaluationService
     periodId: string,
     employeeId: string,
     wbsItemId: string,
-    selfEvaluationContent: string,
-    selfEvaluationScore: number,
+    selfEvaluationContent?: string,
+    selfEvaluationScore?: number,
     performanceResult?: string,
     actionBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {

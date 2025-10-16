@@ -97,7 +97,10 @@ export class WbsSelfEvaluationService {
       }
 
       // 유효성 검사
-      if (updateData.selfEvaluationScore !== undefined) {
+      if (
+        updateData.selfEvaluationScore !== undefined &&
+        updateData.selfEvaluationScore !== null
+      ) {
         this.점수_유효성을_검사한다(updateData.selfEvaluationScore);
       }
 
@@ -114,19 +117,16 @@ export class WbsSelfEvaluationService {
         }
       }
 
+      // 자가평가 내용/점수/결과 수정 (선택적)
       if (
-        updateData.selfEvaluationContent ||
-        updateData.selfEvaluationScore ||
+        updateData.selfEvaluationContent !== undefined ||
+        updateData.selfEvaluationScore !== undefined ||
         updateData.performanceResult !== undefined
       ) {
         wbsSelfEvaluation.자가평가를_수정한다(
-          updateData.selfEvaluationContent ||
-            wbsSelfEvaluation.selfEvaluationContent,
-          updateData.selfEvaluationScore ||
-            wbsSelfEvaluation.selfEvaluationScore,
-          updateData.performanceResult !== undefined
-            ? updateData.performanceResult
-            : wbsSelfEvaluation.performanceResult,
+          updateData.selfEvaluationContent,
+          updateData.selfEvaluationScore,
+          updateData.performanceResult,
           updatedBy,
         );
       }
@@ -395,13 +395,14 @@ export class WbsSelfEvaluationService {
       throw new WbsSelfEvaluationValidationException('할당자 ID는 필수입니다.');
     }
 
-    if (!data.selfEvaluationContent?.trim()) {
-      throw new WbsSelfEvaluationValidationException(
-        '자가평가 내용은 필수입니다.',
-      );
+    // selfEvaluationContent와 selfEvaluationScore는 선택사항
+    // 점수가 제공된 경우에만 유효성 검사
+    if (
+      data.selfEvaluationScore !== undefined &&
+      data.selfEvaluationScore !== null
+    ) {
+      this.점수_유효성을_검사한다(data.selfEvaluationScore);
     }
-
-    this.점수_유효성을_검사한다(data.selfEvaluationScore);
   }
 
   /**

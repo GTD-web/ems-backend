@@ -20,8 +20,8 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodCommand {
 export interface ResetWbsSelfEvaluationDetail {
   evaluationId: string;
   wbsItemId: string;
-  selfEvaluationContent: string;
-  selfEvaluationScore: number;
+  selfEvaluationContent?: string;
+  selfEvaluationScore?: number;
   performanceResult?: string;
   wasCompleted: boolean;
 }

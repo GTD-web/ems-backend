@@ -22,8 +22,8 @@ export class ResetWbsSelfEvaluationsByProjectCommand {
 export interface ResetWbsSelfEvaluationByProjectDetail {
   evaluationId: string;
   wbsItemId: string;
-  selfEvaluationContent: string;
-  selfEvaluationScore: number;
+  selfEvaluationContent?: string;
+  selfEvaluationScore?: number;
   performanceResult?: string;
   wasCompleted: boolean;
 }

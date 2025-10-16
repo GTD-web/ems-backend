@@ -21,8 +21,8 @@ export class SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand {
 export interface SubmittedWbsSelfEvaluationDetail {
   evaluationId: string;
   wbsItemId: string;
-  selfEvaluationContent: string;
-  selfEvaluationScore: number;
+  selfEvaluationContent?: string;
+  selfEvaluationScore?: number;
   performanceResult?: string;
   completedAt: Date;
 }

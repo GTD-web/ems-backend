@@ -15,22 +15,24 @@ import type { WbsSelfEvaluationDto } from '../../../../domain/core/wbs-self-eval
  * WBS 자기평가 생성 Body DTO (경로 파라미터 제외)
  */
 export class CreateWbsSelfEvaluationBodyDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',
   })
+  @IsOptional()
   @IsString()
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description:
       '자기평가 점수 (달성률 %, 0 ~ 평가기간의 maxSelfEvaluationRate)',
     example: 100,
     minimum: 0,
   })
+  @IsOptional()
   @IsNumber()
   @Min(0)
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   @ApiPropertyOptional({
     description: '성과 입력 (실제 달성한 성과 및 결과)',
@@ -202,17 +204,17 @@ export class WbsSelfEvaluationBasicDto {
   })
   performanceResult?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',
   })
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
-  @ApiProperty({
-    description: '자기평가 점수 (1-5)',
-    example: 4,
+  @ApiPropertyOptional({
+    description: '자기평가 점수 (0-maxSelfEvaluationRate, 기본값 120)',
+    example: 100,
   })
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   @ApiProperty({
     description: '생성 일시',
@@ -302,17 +304,17 @@ export class WbsSelfEvaluationDetailResponseDto {
   })
   performanceResult?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',
   })
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
-  @ApiProperty({
-    description: '자기평가 점수 (1-5)',
-    example: 4,
+  @ApiPropertyOptional({
+    description: '자기평가 점수 (0-maxSelfEvaluationRate, 기본값 120)',
+    example: 100,
   })
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   @ApiProperty({
     description: '생성 일시',
@@ -486,17 +488,17 @@ export class SubmittedWbsSelfEvaluationDetailDto {
   })
   wbsItemId: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',
   })
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
-  @ApiProperty({
-    description: '자기평가 점수 (1-5)',
-    example: 4,
+  @ApiPropertyOptional({
+    description: '자기평가 점수 (0-maxSelfEvaluationRate, 기본값 120)',
+    example: 100,
   })
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   @ApiPropertyOptional({
     description: '성과 입력 (실제 달성한 성과 및 결과)',
@@ -617,17 +619,17 @@ export class ResetWbsSelfEvaluationDetailDto {
   })
   wbsItemId: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',
   })
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
-  @ApiProperty({
-    description: '자기평가 점수 (1-5)',
-    example: 4,
+  @ApiPropertyOptional({
+    description: '자기평가 점수 (0-maxSelfEvaluationRate, 기본값 120)',
+    example: 100,
   })
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   @ApiPropertyOptional({
     description: '성과 입력 (실제 달성한 성과 및 결과)',
@@ -734,17 +736,17 @@ export class SubmittedWbsSelfEvaluationByProjectDetailDto {
   })
   wbsItemId: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',
   })
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
-  @ApiProperty({
-    description: '자기평가 점수 (1-5)',
-    example: 4,
+  @ApiPropertyOptional({
+    description: '자기평가 점수 (0-maxSelfEvaluationRate, 기본값 120)',
+    example: 100,
   })
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   @ApiPropertyOptional({
     description: '성과 입력 (실제 달성한 성과 및 결과)',
@@ -865,17 +867,17 @@ export class ResetWbsSelfEvaluationByProjectDetailDto {
   })
   wbsItemId: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',
   })
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
-  @ApiProperty({
-    description: '자기평가 점수 (1-5)',
-    example: 4,
+  @ApiPropertyOptional({
+    description: '자기평가 점수 (0-maxSelfEvaluationRate, 기본값 120)',
+    example: 100,
   })
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   @ApiPropertyOptional({
     description: '성과 입력 (실제 달성한 성과 및 결과)',
@@ -982,17 +984,17 @@ export class ClearedWbsSelfEvaluationDetailDto {
   })
   wbsItemId: string;
 
-  @ApiProperty({
-    description: '초기화된 자기평가 내용 (빈 문자열)',
+  @ApiPropertyOptional({
+    description: '초기화된 자기평가 내용',
     example: '',
   })
-  selfEvaluationContent: string;
+  selfEvaluationContent?: string;
 
-  @ApiProperty({
-    description: '초기화된 자기평가 점수 (1점)',
+  @ApiPropertyOptional({
+    description: '초기화된 자기평가 점수',
     example: 1,
   })
-  selfEvaluationScore: number;
+  selfEvaluationScore?: number;
 
   @ApiProperty({
     description: '초기화된 성과 입력 (빈 문자열)',

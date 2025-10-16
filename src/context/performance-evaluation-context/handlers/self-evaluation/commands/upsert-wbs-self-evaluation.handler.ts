@@ -13,8 +13,8 @@ export class UpsertWbsSelfEvaluationCommand {
     public readonly periodId: string,
     public readonly employeeId: string,
     public readonly wbsItemId: string,
-    public readonly selfEvaluationContent: string,
-    public readonly selfEvaluationScore: number,
+    public readonly selfEvaluationContent?: string,
+    public readonly selfEvaluationScore?: number,
     public readonly performanceResult?: string,
     public readonly actionBy: string = '시스템',
   ) {}
@@ -69,10 +69,13 @@ export class UpsertWbsSelfEvaluationHandler
 
       const maxScore = evaluationPeriod.자기평가_달성률_최대값();
 
-      if (selfEvaluationScore < 0 || selfEvaluationScore > maxScore) {
-        throw new BadRequestException(
-          `자기평가 점수는 0 ~ ${maxScore} 사이여야 합니다. (입력값: ${selfEvaluationScore})`,
-        );
+      // 점수가 제공된 경우에만 검증
+      if (selfEvaluationScore !== undefined && selfEvaluationScore !== null) {
+        if (selfEvaluationScore < 0 || selfEvaluationScore > maxScore) {
+          throw new BadRequestException(
+            `자기평가 점수는 0 ~ ${maxScore} 사이여야 합니다. (입력값: ${selfEvaluationScore})`,
+          );
+        }
       }
 
       // 기존 자기평가 조회

@@ -23,8 +23,8 @@ export class SubmitWbsSelfEvaluationsByProjectCommand {
 export interface SubmittedWbsSelfEvaluationByProjectDetail {
   evaluationId: string;
   wbsItemId: string;
-  selfEvaluationContent: string;
-  selfEvaluationScore: number;
+  selfEvaluationContent?: string;
+  selfEvaluationScore?: number;
   performanceResult?: string;
   completedAt: Date;
 }

@@ -22,8 +22,8 @@ export class ClearAllWbsSelfEvaluationsByEmployeePeriodCommand {
 export interface ClearedWbsSelfEvaluationDetail {
   id: string;
   wbsItemId: string;
-  selfEvaluationContent: string;
-  selfEvaluationScore: number;
+  selfEvaluationContent?: string;
+  selfEvaluationScore?: number;
   performanceResult?: string;
 }
 

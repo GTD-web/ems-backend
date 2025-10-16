@@ -46,11 +46,11 @@ export function UpsertWbsSelfEvaluation() {
 - **버전 관리**: 매 수정마다 version 필드 자동 증가로 낙관적 잠금 적용
 - **타임스탬프 관리**: createdAt은 최초 생성 시에만 기록되고 이후 변경되지 않음, updatedAt은 매 수정 시 갱신
 - **점수 범위**: selfEvaluationScore는 0 ~ 평가기간의 maxSelfEvaluationRate 사이의 값 (달성률 %)
-- **선택적 필드**: performanceResult와 createdBy는 선택사항
+- **선택적 필드**: 모든 필드가 선택사항 (selfEvaluationContent, selfEvaluationScore, performanceResult, createdBy)
 
 **요청 본문 필드:**
-- \`selfEvaluationContent\` (필수): 자기평가 내용 (문자열)
-- \`selfEvaluationScore\` (필수): 자기평가 점수 (달성률 %, 0 ~ 평가기간의 maxSelfEvaluationRate, 기본 최대값 120)
+- \`selfEvaluationContent\` (선택): 자기평가 내용 (문자열)
+- \`selfEvaluationScore\` (선택): 자기평가 점수 (달성률 %, 0 ~ 평가기간의 maxSelfEvaluationRate, 기본 최대값 120)
 - \`performanceResult\` (선택): 성과 실적 (문자열, 빈 문자열도 허용)
 - \`createdBy\` (선택): 생성자 ID (UUID 형식)
 
@@ -59,15 +59,13 @@ export function UpsertWbsSelfEvaluation() {
 - 기존 수정: 동일 조합으로 기존 평가가 있으면 동일한 ID로 수정되며 version 증가
 - 점수 범위: 0 ~ 평가기간의 maxSelfEvaluationRate 범위 내 모든 값 저장 가능 (예: 0, 50, 100, 120)
 - 여러 번 수정: 동일 평가를 여러 번 수정할 수 있으며 매번 version과 updatedAt 증가
-- performanceResult 생략: performanceResult 없이도 저장 가능 (null 반환)
+- 선택적 필드: selfEvaluationContent, selfEvaluationScore, performanceResult, createdBy 모두 생략 가능
 - performanceResult 빈 문자열: 빈 문자열("")도 유효한 값으로 저장됨
-- createdBy 생략: createdBy 없이도 저장 가능
 - DB 저장 검증: 저장된 데이터가 DB에 정확히 기록됨
 - updatedAt 갱신: 수정 시 updatedAt이 자동으로 업데이트됨
 - createdAt 유지: 수정 시 createdAt은 변경되지 않음 (200ms 이내 오차 허용)
 - version 증가: 매 수정마다 version이 1씩 증가
 - isCompleted 초기값: 신규 생성 시 isCompleted=false, completedAt=null
-- 필수 필드 검증: selfEvaluationContent 또는 selfEvaluationScore 누락 시 400 에러
 - 점수 범위 검증: 0 미만 또는 maxSelfEvaluationRate 초과 점수 입력 시 400 에러
 - 점수 타입 검증: 점수가 숫자가 아닐 때 400 에러
 - 내용 타입 검증: selfEvaluationContent가 문자열이 아닐 때 400 에러
@@ -100,8 +98,7 @@ export function UpsertWbsSelfEvaluation() {
     }),
     ApiBody({
       type: CreateWbsSelfEvaluationBodyDto,
-      description:
-        'WBS 자기평가 저장 정보 (selfEvaluationContent, selfEvaluationScore 필수)',
+      description: 'WBS 자기평가 저장 정보 (모든 필드 선택사항)',
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -112,7 +109,7 @@ export function UpsertWbsSelfEvaluation() {
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description:
-        '잘못된 요청 데이터 (필수 필드 누락, UUID 형식 오류, 점수 범위 초과, 잘못된 타입 등)',
+        '잘못된 요청 데이터 (UUID 형식 오류, 점수 범위 초과, 잘못된 타입 등)',
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
