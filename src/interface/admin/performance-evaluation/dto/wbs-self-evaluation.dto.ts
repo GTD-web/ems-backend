@@ -34,14 +34,6 @@ export class CreateWbsSelfEvaluationBodyDto {
   selfEvaluationScore: number;
 
   @ApiPropertyOptional({
-    description: '추가 의견',
-    example: '다음 분기에는 더 나은 성과를 위해 노력하겠습니다.',
-  })
-  @IsOptional()
-  @IsString()
-  additionalComments?: string;
-
-  @ApiPropertyOptional({
     description: '생성자 ID',
     example: '550e8400-e29b-41d4-a716-446655440003',
   })
@@ -73,14 +65,6 @@ export class UpdateWbsSelfEvaluationDto {
   @Min(1)
   @Max(5)
   selfEvaluationScore?: number;
-
-  @ApiPropertyOptional({
-    description: '추가 의견',
-    example: '수정된 추가 의견입니다.',
-  })
-  @IsOptional()
-  @IsString()
-  additionalComments?: string;
 }
 
 /**
@@ -210,12 +194,6 @@ export class WbsSelfEvaluationBasicDto {
   })
   selfEvaluationScore: number;
 
-  @ApiPropertyOptional({
-    description: '추가 의견',
-    example: '다음 분기에는 더 나은 성과를 위해 노력하겠습니다.',
-  })
-  additionalComments?: string;
-
   @ApiProperty({
     description: '생성 일시',
     example: '2024-01-15T09:00:00Z',
@@ -309,12 +287,6 @@ export class WbsSelfEvaluationDetailResponseDto {
     example: 4,
   })
   selfEvaluationScore: number;
-
-  @ApiPropertyOptional({
-    description: '추가 의견',
-    example: '다음 분기에는 더 나은 성과를 위해 노력하겠습니다.',
-  })
-  additionalComments?: string;
 
   @ApiProperty({
     description: '생성 일시',
@@ -445,7 +417,6 @@ export class EmployeeSelfEvaluationsResponseDto {
         evaluationDate: '2024-01-15T09:00:00Z',
         selfEvaluationContent: '이번 분기 목표를 성공적으로 달성했습니다.',
         selfEvaluationScore: 4,
-        additionalComments: '다음 분기에는 더 나은 성과를 위해 노력하겠습니다.',
         createdAt: '2024-01-15T09:00:00Z',
         updatedAt: '2024-01-15T10:00:00Z',
         version: 1,

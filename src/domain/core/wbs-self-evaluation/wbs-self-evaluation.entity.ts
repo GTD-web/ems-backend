@@ -90,13 +90,6 @@ export class WbsSelfEvaluation
   })
   selfEvaluationScore: number;
 
-  @Column({
-    type: 'text',
-    nullable: true,
-    comment: '추가 의견',
-  })
-  additionalComments?: string;
-
   constructor(data?: CreateWbsSelfEvaluationData) {
     super();
     if (data) {
@@ -109,7 +102,6 @@ export class WbsSelfEvaluation
       this.performanceResult = data.performanceResult;
       this.selfEvaluationContent = data.selfEvaluationContent;
       this.selfEvaluationScore = data.selfEvaluationScore;
-      this.additionalComments = data.additionalComments;
       this.evaluationDate = new Date();
 
       // 감사 정보 설정
@@ -175,13 +167,11 @@ export class WbsSelfEvaluation
     content: string,
     score: number,
     performanceResult?: string,
-    comments?: string,
     updatedBy?: string,
   ): void {
     this.selfEvaluationContent = content;
     this.selfEvaluationScore = score;
     this.performanceResult = performanceResult;
-    this.additionalComments = comments;
     this.evaluationDate = new Date();
 
     if (updatedBy) {
@@ -213,7 +203,6 @@ export class WbsSelfEvaluation
       performanceResult: this.performanceResult,
       selfEvaluationContent: this.selfEvaluationContent,
       selfEvaluationScore: this.selfEvaluationScore,
-      additionalComments: this.additionalComments,
       createdBy: this.createdBy,
       updatedBy: this.updatedBy,
       createdAt: this.createdAt,

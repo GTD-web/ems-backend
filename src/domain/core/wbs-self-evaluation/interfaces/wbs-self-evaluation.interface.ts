@@ -12,8 +12,6 @@ export interface IWbsSelfEvaluation {
   selfEvaluationContent: string;
   /** 자가평가 점수 (1-5) */
   selfEvaluationScore: number;
-  /** 추가 의견 */
-  additionalComments?: string;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */

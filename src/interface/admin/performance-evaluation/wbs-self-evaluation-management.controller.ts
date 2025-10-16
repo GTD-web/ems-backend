@@ -47,7 +47,6 @@ export class WbsSelfEvaluationManagementController {
       periodId,
       selfEvaluationContent: dto.selfEvaluationContent,
       selfEvaluationScore: dto.selfEvaluationScore,
-      additionalComments: dto.additionalComments,
       actionBy,
     });
   }

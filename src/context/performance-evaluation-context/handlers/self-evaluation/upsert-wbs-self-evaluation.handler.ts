@@ -14,7 +14,6 @@ export class UpsertWbsSelfEvaluationCommand {
     public readonly wbsItemId: string,
     public readonly selfEvaluationContent: string,
     public readonly selfEvaluationScore: number,
-    public readonly additionalComments?: string,
     public readonly actionBy: string = '시스템',
   ) {}
 }
@@ -44,7 +43,6 @@ export class UpsertWbsSelfEvaluationHandler
       wbsItemId,
       selfEvaluationContent,
       selfEvaluationScore,
-      additionalComments,
       actionBy,
     } = command;
 
@@ -77,7 +75,6 @@ export class UpsertWbsSelfEvaluationHandler
           {
             selfEvaluationContent,
             selfEvaluationScore,
-            additionalComments,
           },
           actionBy,
         );
@@ -95,7 +92,6 @@ export class UpsertWbsSelfEvaluationHandler
           assignedBy: actionBy,
           selfEvaluationContent,
           selfEvaluationScore,
-          additionalComments,
           createdBy: actionBy,
         });
       }
