@@ -34,8 +34,41 @@ export function UpsertPrimaryDownwardEvaluation() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '1차 하향평가 저장',
-      description:
-        '1차 하향평가를 저장합니다. 기존 평가가 있으면 수정하고, 없으면 새로 생성합니다.',
+      description: `**중요**: 1차 하향평가를 저장합니다. Upsert 방식으로 동작하여 동일 조건(evaluatorId, evaluateeId, periodId, evaluationType)의 평가가 있으면 수정하고, 없으면 새로 생성합니다.
+
+**평가 점수 규칙:**
+- 양의 정수만 허용 (1 이상)
+- 음수, 0, 소수는 허용되지 않음
+
+**선택적 필드:**
+- evaluatorId: 생략 시 자동 생성 (추후 요청자 ID로 변경 예정)
+- selfEvaluationId: 자기평가 ID 연결 시 제공
+- downwardEvaluationContent: 평가 내용 (선택사항)
+- downwardEvaluationScore: 평가 점수 (선택사항, 양의 정수)
+- createdBy: 생성자 ID (선택사항)
+
+**테스트 케이스:**
+- 신규 생성: 새로운 1차 하향평가를 생성할 수 있어야 함
+- 기존 수정 (Upsert): 동일 조건의 평가가 있으면 내용 업데이트
+- 자기평가 ID 포함: selfEvaluationId를 포함하여 생성 가능
+- 평가 내용 없이: downwardEvaluationContent 없이 생성 가능
+- 다양한 평가 점수: 1, 5, 10, 50, 100, 120 등 양의 정수 저장 가능
+- 여러 번 수정: 동일한 평가를 여러 번 수정 가능 (Upsert)
+- 모든 필드 생략: 선택적 필드를 모두 생략하고 생성 가능
+- 데이터 무결성: 신규 생성 시 isCompleted는 false, evaluationDate 자동 설정
+- 경로 파라미터 저장: evaluateeId, periodId, projectId가 DB에 올바르게 저장됨
+- 중복 방지: 동일 조건의 중복 평가는 Upsert로 처리됨
+- 평가 점수가 문자열: 400 에러 발생
+- 평가 점수가 음수: -10 입력 시 400 에러
+- 평가 점수가 0: 0 입력 시 400 에러
+- 평가 점수가 소수: 3.5 입력 시 400 에러
+- 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 evaluatorId: UUID 형식이 아닌 경우 400 에러
+- 평가 내용 타입 오류: 문자열이 아닌 타입 입력 시 400 에러
+- 응답 구조: 응답에 id와 message 필드 포함
+- 응답 ID 검증: 응답의 id로 DB 조회 가능`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -97,8 +130,33 @@ export function UpsertSecondaryDownwardEvaluation() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '2차 하향평가 저장',
-      description:
-        '2차 하향평가를 저장합니다. 기존 평가가 있으면 수정하고, 없으면 새로 생성합니다.',
+      description: `**중요**: 2차 하향평가를 저장합니다. Upsert 방식으로 동작하여 동일 조건(evaluatorId, evaluateeId, periodId, evaluationType)의 평가가 있으면 수정하고, 없으면 새로 생성합니다. 1차 하향평가와 독립적으로 관리됩니다.
+
+**평가 점수 규칙:**
+- 양의 정수만 허용 (1 이상)
+- 음수, 0, 소수는 허용되지 않음
+
+**선택적 필드:**
+- evaluatorId: 생략 시 자동 생성 (추후 요청자 ID로 변경 예정)
+- selfEvaluationId: 자기평가 ID 연결 시 제공
+- downwardEvaluationContent: 평가 내용 (선택사항)
+- downwardEvaluationScore: 평가 점수 (선택사항, 양의 정수)
+- createdBy: 생성자 ID (선택사항)
+
+**테스트 케이스:**
+- 신규 생성: 새로운 2차 하향평가를 생성할 수 있어야 함
+- 기존 수정 (Upsert): 동일 조건의 평가가 있으면 내용 업데이트
+- 1차/2차 별도 생성: 같은 피평가자에 대해 1차와 2차를 별도로 생성 가능
+- 자기평가 ID 포함: selfEvaluationId를 포함하여 생성 가능
+- 모든 필드 생략: 선택적 필드를 모두 생략하고 생성 가능
+- 데이터 무결성: 신규 생성 시 isCompleted는 false, evaluationDate 자동 설정
+- 경로 파라미터 저장: evaluateeId, periodId, projectId가 DB에 올바르게 저장됨
+- evaluationType 구분: evaluationType이 'secondary'로 올바르게 저장됨
+- 평가 점수가 문자열: 400 에러 발생
+- 평가 점수가 음수: -5 입력 시 400 에러
+- 평가 점수가 0: 0 입력 시 400 에러
+- 평가 점수가 소수: 2.7 입력 시 400 에러
+- 응답 구조: 응답에 id와 message 필드 포함`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -204,8 +262,26 @@ export function SubmitPrimaryDownwardEvaluation() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '1차 하향평가 제출',
-      description:
-        '1차 하향평가를 제출합니다. 제출 후에는 수정이 불가능합니다.',
+      description: `**중요**: 1차 하향평가를 제출합니다. 제출 후에는 평가가 확정되어 수정이 불가능하며, isCompleted 상태가 true로 변경됩니다.
+
+**제출 프로세스:**
+1. 평가자, 피평가자, 평가기간, 프로젝트 정보로 1차 하향평가 조회
+2. 평가 상태를 완료(isCompleted: true)로 변경
+3. 제출 일시 기록
+
+**선택적 필드:**
+- submittedBy: 제출자 ID (선택사항, 추후 요청자 ID로 변경 예정)
+
+**테스트 케이스:**
+- 기본 제출: 저장된 1차 하향평가를 제출할 수 있어야 함
+- isCompleted 변경: 제출 시 isCompleted가 true로 변경됨
+- 제출 일시 기록: 제출 시 submittedAt이 자동으로 기록됨
+- submittedBy 선택: submittedBy 없이도 제출 가능
+- 중복 제출 방지: 이미 제출된 평가는 409 Conflict 에러
+- 평가 없음: 저장되지 않은 평가 제출 시 404 에러
+- 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -270,8 +346,27 @@ export function SubmitSecondaryDownwardEvaluation() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '2차 하향평가 제출',
-      description:
-        '2차 하향평가를 제출합니다. 제출 후에는 수정이 불가능합니다.',
+      description: `**중요**: 2차 하향평가를 제출합니다. 제출 후에는 평가가 확정되어 수정이 불가능하며, isCompleted 상태가 true로 변경됩니다. 1차 하향평가와 독립적으로 제출됩니다.
+
+**제출 프로세스:**
+1. 평가자, 피평가자, 평가기간, 프로젝트 정보로 2차 하향평가 조회
+2. 평가 상태를 완료(isCompleted: true)로 변경
+3. 제출 일시 기록
+
+**선택적 필드:**
+- submittedBy: 제출자 ID (선택사항, 추후 요청자 ID로 변경 예정)
+
+**테스트 케이스:**
+- 기본 제출: 저장된 2차 하향평가를 제출할 수 있어야 함
+- isCompleted 변경: 제출 시 isCompleted가 true로 변경됨
+- 독립적 제출: 1차와 2차 하향평가가 독립적으로 제출됨
+- 제출 일시 기록: 제출 시 submittedAt이 자동으로 기록됨
+- submittedBy 선택: submittedBy 없이도 제출 가능
+- 중복 제출 방지: 이미 제출된 평가는 409 Conflict 에러
+- 평가 없음: 저장되지 않은 평가 제출 시 404 에러
+- 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -334,8 +429,31 @@ export function SubmitDownwardEvaluation() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '하향평가 제출 (ID로 직접)',
-      description:
-        '하향평가 ID를 사용하여 직접 제출합니다. 1차/2차 구분 없이 ID로 제출할 때 사용합니다.',
+      description: `**중요**: 하향평가 ID를 사용하여 직접 제출합니다. 1차/2차 구분 없이 평가 ID만으로 제출할 때 사용하는 간편한 방법입니다. 제출 후에는 평가가 확정되어 수정이 불가능합니다.
+
+**제출 프로세스:**
+1. 하향평가 ID로 평가 조회
+2. 평가 상태를 완료(isCompleted: true)로 변경
+3. 제출 일시 기록
+
+**사용 시나리오:**
+- 평가 상세 조회 후 바로 제출: 평가 ID를 알고 있을 때 간편하게 제출
+- 일괄 제출: 여러 평가를 ID 목록으로 순차 제출
+- API 통합: 평가 타입을 구분하지 않고 통일된 API로 제출
+
+**선택적 필드:**
+- submittedBy: 제출자 ID (선택사항, 추후 요청자 ID로 변경 예정)
+
+**테스트 케이스:**
+- 기본 제출: 하향평가 ID로 제출할 수 있어야 함
+- 1차평가 제출: 1차 하향평가 ID로 제출 가능
+- 2차평가 제출: 2차 하향평가 ID로 제출 가능
+- isCompleted 변경: 제출 시 isCompleted가 true로 변경됨
+- 제출 일시 기록: 제출 시 submittedAt이 자동으로 기록됨
+- submittedBy 선택: submittedBy 없이도 제출 가능
+- 중복 제출 방지: 이미 제출된 평가는 409 Conflict 에러
+- 평가 없음: 존재하지 않는 ID로 제출 시 404 에러
+- 잘못된 ID: UUID 형식이 아닌 경우 400 에러`,
     }),
     ApiParam({
       name: 'id',
@@ -382,7 +500,49 @@ export function GetEvaluatorDownwardEvaluations() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '평가자의 하향평가 목록 조회',
-      description: '특정 평가자의 하향평가 목록을 조회합니다.',
+      description: `**중요**: 특정 평가자가 작성한 하향평가 목록을 조회합니다. 다양한 필터 옵션과 페이지네이션을 지원하여 효율적인 평가 관리가 가능합니다.
+
+**필터 옵션 (Query Parameters):**
+- evaluateeId: 피평가자 ID로 필터링
+- periodId: 평가기간 ID로 필터링
+- projectId: 프로젝트 ID로 필터링
+- evaluationType: 평가 유형 ('primary' 또는 'secondary')으로 필터링
+- isCompleted: 완료 여부 (true/false)로 필터링
+- page: 페이지 번호 (기본값: 1)
+- limit: 페이지 크기 (기본값: 10, 최대: 100)
+
+**사용 시나리오:**
+- 평가자 대시보드: 평가자가 작성한 모든 하향평가 확인
+- 미완료 평가 조회: isCompleted=false로 아직 제출하지 않은 평가 확인
+- 특정 기간 평가: periodId로 특정 평가기간의 평가만 조회
+- 1차/2차 분리 조회: evaluationType으로 1차 또는 2차평가만 조회
+- 프로젝트별 평가: projectId로 특정 프로젝트 관련 평가만 조회
+
+**응답 구조:**
+- data: 하향평가 목록 배열
+- total: 전체 평가 개수
+- page: 현재 페이지 번호
+- limit: 페이지 크기
+- totalPages: 전체 페이지 수
+
+**테스트 케이스:**
+- 기본 조회: 평가자의 모든 하향평가 조회 가능
+- 피평가자 필터: evaluateeId로 특정 피평가자 평가만 조회
+- 평가기간 필터: periodId로 특정 기간 평가만 조회
+- 프로젝트 필터: projectId로 특정 프로젝트 평가만 조회
+- 평가 유형 필터: evaluationType으로 1차 또는 2차평가만 조회
+- 완료 여부 필터: isCompleted로 완료/미완료 평가 구분 조회
+- 페이지네이션: page와 limit으로 페이지별 조회 가능
+- 빈 결과: 조건에 맞는 평가가 없을 때 빈 배열 반환
+- 복합 필터: 여러 필터를 조합하여 조회 가능
+- 정렬: 평가 생성일시 기준 정렬
+- 응답 필드 검증: 각 평가 항목에 필수 필드 포함 (id, employeeId, evaluatorId, periodId 등)
+- 총 개수 정확성: total 필드가 실제 평가 개수와 일치
+- 잘못된 evaluatorId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 필터 UUID: evaluateeId, periodId, projectId가 UUID 형식이 아닌 경우 400 에러
+- 잘못된 evaluationType: primary/secondary 외의 값 입력 시 400 에러
+- 페이지 범위 초과: 존재하지 않는 페이지 번호로 요청 시 빈 배열 반환
+- limit 범위 검증: 1~100 범위 외의 limit 입력 시 400 에러`,
     }),
     ApiParam({
       name: 'evaluatorId',
@@ -466,7 +626,46 @@ export function GetDownwardEvaluationDetail() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '하향평가 상세정보 조회',
-      description: '하향평가의 상세정보를 조회합니다.',
+      description: `**중요**: 하향평가의 상세정보를 조회합니다. 평가 ID를 사용하여 평가 내용, 점수, 제출 상태, 관련 정보 등 모든 세부 정보를 확인할 수 있습니다.
+
+**조회 정보:**
+- 평가 기본 정보: ID, 평가 유형, 평가일, 제출 상태
+- 평가 내용: 하향평가 내용, 평가 점수
+- 관계 정보: 평가자 ID, 피평가자 ID, 평가기간 ID, 프로젝트 ID
+- 참조 정보: 자기평가 ID (있는 경우)
+- 메타 정보: 생성일시, 수정일시, 제출일시, 생성자, 수정자
+
+**사용 시나리오:**
+- 평가 상세 확인: 특정 하향평가의 모든 정보 확인
+- 평가 이력 추적: 생성/수정/제출 일시 확인
+- 평가 검증: 제출 전 평가 내용 최종 확인
+- 평가 연계: 자기평가 ID를 통한 자기평가 연결 확인
+- 감사 로그: 누가(evaluatorId), 언제(createdAt), 무엇을(content, score) 평가했는지 추적
+
+**응답 구조:**
+- 평가 ID, 평가자 ID, 피평가자 ID
+- 평가기간 ID, 프로젝트 ID
+- 평가 유형 (primary/secondary)
+- 평가 내용, 평가 점수
+- 자기평가 ID (선택적)
+- 완료 여부 (isCompleted)
+- 타임스탬프 (evaluationDate, createdAt, updatedAt, submittedAt)
+- 생성자/수정자 정보 (createdBy, updatedBy)
+
+**테스트 케이스:**
+- 기본 조회: 하향평가 ID로 상세정보 조회 가능
+- 1차평가 조회: 1차 하향평가 상세정보 조회 가능
+- 2차평가 조회: 2차 하향평가 상세정보 조회 가능
+- 완료된 평가: 제출된 평가의 isCompleted가 true로 표시됨
+- 미완료 평가: 저장만 된 평가의 isCompleted가 false로 표시됨
+- 자기평가 연결: selfEvaluationId가 있는 경우 포함됨
+- 타임스탬프 정확성: 생성/수정/제출 일시가 올바르게 반환됨
+- 응답 필드 완전성: 모든 필수 필드가 응답에 포함됨
+- 점수 표시: downwardEvaluationScore가 양의 정수로 표시됨
+- 평가 내용 표시: downwardEvaluationContent가 정확히 표시됨
+- 평가 없음: 존재하지 않는 ID로 조회 시 404 에러
+- 잘못된 ID: UUID 형식이 아닌 경우 400 에러
+- 삭제된 평가: 삭제된 평가 조회 시 404 에러`,
     }),
     ApiParam({
       name: 'id',

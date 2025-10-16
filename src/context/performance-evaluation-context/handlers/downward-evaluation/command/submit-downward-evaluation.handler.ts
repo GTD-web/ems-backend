@@ -1,6 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
-import { DownwardEvaluationService } from '../../../../../domain/core/downward-evaluation/downward-evaluation.service';
+import { DownwardEvaluationService } from '@domain/core/downward-evaluation/downward-evaluation.service';
+import {
+  DownwardEvaluationNotFoundException,
+  DownwardEvaluationAlreadyCompletedException,
+  DownwardEvaluationValidationException,
+} from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
@@ -33,17 +38,17 @@ export class SubmitDownwardEvaluationHandler
 
     this.logger.log('하향평가 제출 핸들러 실행', { evaluationId });
 
-    return await this.transactionManager.executeTransaction(async () => {
+    await this.transactionManager.executeTransaction(async () => {
       // 하향평가 조회 검증
       const evaluation =
         await this.downwardEvaluationService.조회한다(evaluationId);
       if (!evaluation) {
-        throw new Error('존재하지 않는 하향평가입니다.');
+        throw new DownwardEvaluationNotFoundException(evaluationId);
       }
 
       // 이미 완료된 평가인지 확인
       if (evaluation.완료되었는가()) {
-        throw new Error('이미 완료된 하향평가입니다.');
+        throw new DownwardEvaluationAlreadyCompletedException(evaluationId);
       }
 
       // 필수 항목 검증
@@ -51,7 +56,9 @@ export class SubmitDownwardEvaluationHandler
         !evaluation.downwardEvaluationContent ||
         !evaluation.downwardEvaluationScore
       ) {
-        throw new Error('평가 내용과 점수는 필수 입력 항목입니다.');
+        throw new DownwardEvaluationValidationException(
+          '평가 내용과 점수는 필수 입력 항목입니다.',
+        );
       }
 
       // 하향평가 완료 처리
@@ -61,7 +68,7 @@ export class SubmitDownwardEvaluationHandler
         submittedBy,
       );
 
-      this.logger.log('?�향?��? ?�출 ?�료', { evaluationId });
+      this.logger.log('하향평가 제출 완료', { evaluationId });
     });
   }
 }

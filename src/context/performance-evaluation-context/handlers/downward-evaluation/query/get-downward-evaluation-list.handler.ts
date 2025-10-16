@@ -80,7 +80,7 @@ export class GetDownwardEvaluationListHandler
     }
 
     if (evaluateeId) {
-      queryBuilder.andWhere('evaluation.evaluateeId = :evaluateeId', {
+      queryBuilder.andWhere('evaluation.employeeId = :evaluateeId', {
         evaluateeId,
       });
     }

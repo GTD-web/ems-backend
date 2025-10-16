@@ -558,7 +558,7 @@ export class EmployeeSyncService {
   /**
    * 스케줄된 자동 동기화 (매시간)
    */
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async scheduledSync(): Promise<void> {
     this.logger.log('스케줄된 직원 동기화를 시작합니다...');
     await this.syncEmployees();

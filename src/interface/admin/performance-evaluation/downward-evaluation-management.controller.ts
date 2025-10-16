@@ -20,6 +20,7 @@ import {
   DownwardEvaluationListResponseDto,
   DownwardEvaluationDetailResponseDto,
 } from './dto/downward-evaluation.dto';
+import { ParseUUID } from '@interface/decorators';
 
 /**
  * 하향평가 관리 컨트롤러
@@ -38,9 +39,9 @@ export class DownwardEvaluationManagementController {
    */
   @UpsertPrimaryDownwardEvaluation()
   async upsertPrimaryDownwardEvaluation(
-    @Param('evaluateeId') evaluateeId: string,
-    @Param('periodId') periodId: string,
-    @Param('projectId') projectId: string,
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
     @Body() dto: CreatePrimaryDownwardEvaluationBodyDto,
   ): Promise<DownwardEvaluationResponseDto> {
     const actionBy = dto.createdBy || uuidv4();
@@ -60,6 +61,7 @@ export class DownwardEvaluationManagementController {
 
     return {
       id: evaluationId,
+      evaluatorId,
       message: '1차 하향평가가 성공적으로 저장되었습니다.',
     };
   }
@@ -69,9 +71,9 @@ export class DownwardEvaluationManagementController {
    */
   @UpsertSecondaryDownwardEvaluation()
   async upsertSecondaryDownwardEvaluation(
-    @Param('evaluateeId') evaluateeId: string,
-    @Param('periodId') periodId: string,
-    @Param('projectId') projectId: string,
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
     @Body() dto: CreateSecondaryDownwardEvaluationBodyDto,
   ): Promise<DownwardEvaluationResponseDto> {
     const actionBy = dto.createdBy || uuidv4();
@@ -91,6 +93,7 @@ export class DownwardEvaluationManagementController {
 
     return {
       id: evaluationId,
+      evaluatorId,
       message: '2차 하향평가가 성공적으로 저장되었습니다.',
     };
   }
@@ -100,17 +103,18 @@ export class DownwardEvaluationManagementController {
    */
   @SubmitPrimaryDownwardEvaluation()
   async submitPrimaryDownwardEvaluation(
-    @Param('evaluateeId') evaluateeId: string,
-    @Param('periodId') periodId: string,
-    @Param('projectId') projectId: string,
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
   ): Promise<void> {
-    const submittedBy = submitDto.submittedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const evaluatorId = submitDto.evaluatorId || uuidv4(); // TODO: 실제 사용자 ID로 변경
+    const submittedBy = submitDto.submittedBy || '시스템'; // TODO: 실제 사용자 ID로 변경
     await this.performanceEvaluationService.일차_하향평가를_제출한다(
       evaluateeId,
       periodId,
       projectId,
-      submitDto.submittedBy || 'admin', // TODO: 추후 요청자 ID로 변경
+      evaluatorId,
       submittedBy,
     );
   }
@@ -120,17 +124,18 @@ export class DownwardEvaluationManagementController {
    */
   @SubmitSecondaryDownwardEvaluation()
   async submitSecondaryDownwardEvaluation(
-    @Param('evaluateeId') evaluateeId: string,
-    @Param('periodId') periodId: string,
-    @Param('projectId') projectId: string,
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
   ): Promise<void> {
-    const submittedBy = submitDto.submittedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const evaluatorId = submitDto.evaluatorId || uuidv4(); // TODO: 실제 사용자 ID로 변경
+    const submittedBy = submitDto.submittedBy || '시스템'; // TODO: 실제 사용자 ID로 변경
     await this.performanceEvaluationService.이차_하향평가를_제출한다(
       evaluateeId,
       periodId,
       projectId,
-      submitDto.submittedBy || 'admin', // TODO: 추후 요청자 ID로 변경
+      evaluatorId,
       submittedBy,
     );
   }
@@ -140,10 +145,10 @@ export class DownwardEvaluationManagementController {
    */
   @SubmitDownwardEvaluation()
   async submitDownwardEvaluation(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
   ): Promise<void> {
-    const submittedBy = submitDto.submittedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const submittedBy = submitDto.submittedBy || '시스템'; // TODO: 실제 사용자 ID로 변경
     await this.performanceEvaluationService.하향평가를_제출한다(
       id,
       submittedBy,
@@ -155,7 +160,7 @@ export class DownwardEvaluationManagementController {
    */
   @GetEvaluatorDownwardEvaluations()
   async getEvaluatorDownwardEvaluations(
-    @Param('evaluatorId') evaluatorId: string,
+    @ParseUUID('evaluatorId') evaluatorId: string,
     @Query() filter: DownwardEvaluationFilterDto,
   ): Promise<DownwardEvaluationListResponseDto> {
     return await this.performanceEvaluationService.하향평가_목록을_조회한다({
@@ -175,7 +180,7 @@ export class DownwardEvaluationManagementController {
    */
   @GetDownwardEvaluationDetail()
   async getDownwardEvaluationDetail(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
   ): Promise<DownwardEvaluationDetailResponseDto> {
     return await this.performanceEvaluationService.하향평가_상세정보를_조회한다(
       {

@@ -79,11 +79,6 @@ export class DownwardEvaluationService {
       throw new DownwardEvaluationNotFoundException(id);
     }
 
-    // 유효성 검사
-    if (updateData.downwardEvaluationScore !== undefined) {
-      this.점수_유효성을_검사한다(updateData.downwardEvaluationScore);
-    }
-
     try {
       downwardEvaluation.하향평가를_수정한다(
         updateData.downwardEvaluationContent,
@@ -445,21 +440,6 @@ export class DownwardEvaluationService {
     if (!data.evaluationType) {
       throw new DownwardEvaluationValidationException(
         '평가 유형은 필수입니다.',
-      );
-    }
-
-    if (data.downwardEvaluationScore !== undefined) {
-      this.점수_유효성을_검사한다(data.downwardEvaluationScore);
-    }
-  }
-
-  /**
-   * 점수 유효성을 검사한다
-   */
-  private 점수_유효성을_검사한다(score: number): void {
-    if (score < 1 || score > 5) {
-      throw new DownwardEvaluationValidationException(
-        '하향평가 점수는 1-5 사이여야 합니다.',
       );
     }
   }

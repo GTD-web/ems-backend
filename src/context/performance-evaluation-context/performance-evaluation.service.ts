@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
+import { DownwardEvaluationNotFoundException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 
 // 자기평가 관련 커맨드 및 쿼리
 import {
@@ -717,7 +718,9 @@ export class PerformanceEvaluationService
 
     const result = await this.queryBus.execute(query);
     if (!result.evaluations || result.evaluations.length === 0) {
-      throw new Error('1차 하향평가를 찾을 수 없습니다.');
+      throw new DownwardEvaluationNotFoundException(
+        `1차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, projectId: ${projectId})`,
+      );
     }
 
     const evaluation = result.evaluations[0];
@@ -764,7 +767,9 @@ export class PerformanceEvaluationService
 
     const result = await this.queryBus.execute(query);
     if (!result.evaluations || result.evaluations.length === 0) {
-      throw new Error('2차 하향평가를 찾을 수 없습니다.');
+      throw new DownwardEvaluationNotFoundException(
+        `2차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, projectId: ${projectId})`,
+      );
     }
 
     const evaluation = result.evaluations[0];

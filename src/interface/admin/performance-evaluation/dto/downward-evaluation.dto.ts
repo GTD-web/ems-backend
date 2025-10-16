@@ -6,6 +6,7 @@ import {
   IsUUID,
   IsEnum,
   IsBoolean,
+  IsInt,
   Min,
   Max,
 } from 'class-validator';
@@ -41,15 +42,13 @@ export class CreatePrimaryDownwardEvaluationBodyDto {
   downwardEvaluationContent?: string;
 
   @ApiPropertyOptional({
-    description: '하향평가 점수 (1-5)',
+    description: '하향평가 점수 (양의 정수만 가능)',
     example: 4,
     minimum: 1,
-    maximum: 5,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(5)
   downwardEvaluationScore?: number;
 
   @ApiPropertyOptional({
@@ -90,15 +89,13 @@ export class CreateSecondaryDownwardEvaluationBodyDto {
   downwardEvaluationContent?: string;
 
   @ApiPropertyOptional({
-    description: '하향평가 점수 (1-5)',
+    description: '하향평가 점수 (양의 정수만 가능)',
     example: 4,
     minimum: 1,
-    maximum: 5,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(5)
   downwardEvaluationScore?: number;
 
   @ApiPropertyOptional({
@@ -123,15 +120,13 @@ export class UpdateDownwardEvaluationDto {
   downwardEvaluationContent?: string;
 
   @ApiPropertyOptional({
-    description: '하향평가 점수 (1-5)',
+    description: '하향평가 점수 (양의 정수만 가능)',
     example: 5,
     minimum: 1,
-    maximum: 5,
   })
   @IsOptional()
-  @IsNumber()
+  @IsInt()
   @Min(1)
-  @Max(5)
   downwardEvaluationScore?: number;
 }
 
@@ -139,6 +134,14 @@ export class UpdateDownwardEvaluationDto {
  * 하향평가 제출 DTO
  */
 export class SubmitDownwardEvaluationDto {
+  @ApiPropertyOptional({
+    description: '평가자 ID (1차/2차 제출 시 필수)',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  @IsOptional()
+  @IsUUID()
+  evaluatorId?: string;
+
   @ApiPropertyOptional({
     description: '제출자 ID',
     example: '550e8400-e29b-41d4-a716-446655440003',
@@ -229,6 +232,36 @@ export class DownwardEvaluationBasicDto {
   id: string;
 
   @ApiProperty({
+    description: '피평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '프로젝트 ID',
+    example: '550e8400-e29b-41d4-a716-446655440003',
+  })
+  projectId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440004',
+  })
+  periodId: string;
+
+  @ApiPropertyOptional({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440005',
+  })
+  selfEvaluationId?: string;
+
+  @ApiProperty({
     description: '평가일',
     example: '2024-01-15T09:00:00Z',
   })
@@ -241,7 +274,7 @@ export class DownwardEvaluationBasicDto {
   downwardEvaluationContent?: string;
 
   @ApiPropertyOptional({
-    description: '하향평가 점수 (1-5)',
+    description: '하향평가 점수 (양의 정수)',
     example: 4,
   })
   downwardEvaluationScore?: number;
@@ -259,6 +292,12 @@ export class DownwardEvaluationBasicDto {
   })
   isCompleted: boolean;
 
+  @ApiPropertyOptional({
+    description: '완료 일시',
+    example: '2024-01-15T11:00:00Z',
+  })
+  completedAt?: Date;
+
   @ApiProperty({
     description: '생성 일시',
     example: '2024-01-15T09:00:00Z',
@@ -270,6 +309,30 @@ export class DownwardEvaluationBasicDto {
     example: '2024-01-15T10:00:00Z',
   })
   updatedAt: Date;
+
+  @ApiPropertyOptional({
+    description: '삭제 일시',
+    example: '2024-01-15T12:00:00Z',
+  })
+  deletedAt?: Date;
+
+  @ApiPropertyOptional({
+    description: '생성자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440006',
+  })
+  createdBy?: string;
+
+  @ApiPropertyOptional({
+    description: '수정자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440007',
+  })
+  updatedBy?: string;
+
+  @ApiProperty({
+    description: '버전 번호',
+    example: 1,
+  })
+  version: number;
 }
 
 /**
@@ -281,6 +344,12 @@ export class DownwardEvaluationResponseDto {
     example: '550e8400-e29b-41d4-a716-446655440000',
   })
   id: string;
+
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  evaluatorId: string;
 
   @ApiProperty({
     description: '결과 메시지',
@@ -320,23 +389,9 @@ export class DownwardEvaluationListResponseDto {
 
 /**
  * 하향평가 상세 응답 DTO
+ * DownwardEvaluationBasicDto의 모든 필드를 포함합니다.
  */
 export class DownwardEvaluationDetailResponseDto extends DownwardEvaluationBasicDto {
-  @ApiPropertyOptional({
-    description: '삭제 일시',
-    example: '2024-01-15T11:00:00Z',
-  })
-  deletedAt?: Date;
-
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
-  createdBy?: string;
-
-  @ApiPropertyOptional({
-    description: '수정자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440004',
-  })
-  updatedBy?: string;
+  // DownwardEvaluationBasicDto에 모든 필드가 포함되어 있으므로
+  // 추가 필드 없이 그대로 사용
 }

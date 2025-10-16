@@ -2,15 +2,17 @@
  * 하향 평가 도메인 예외 클래스들
  */
 
+import { HttpException } from '@nestjs/common';
+
 // 기본 도메인 예외
-export class DownwardEvaluationDomainException extends Error {
+export class DownwardEvaluationDomainException extends HttpException {
   constructor(
     message: string,
     public readonly code?: string,
-    public readonly statusCode: number = 400,
+    statusCode: number = 400,
     public readonly context?: Record<string, any>,
   ) {
-    super(message);
+    super(message, statusCode);
     this.name = 'DownwardEvaluationDomainException';
   }
 }
@@ -130,5 +132,18 @@ export class DownwardEvaluationPeriodExpiredException extends DownwardEvaluation
       { evaluationId, periodId },
     );
     this.name = 'DownwardEvaluationPeriodExpiredException';
+  }
+}
+
+// 이미 완료된 하향평가 예외
+export class DownwardEvaluationAlreadyCompletedException extends DownwardEvaluationDomainException {
+  constructor(evaluationId: string) {
+    super(
+      `이미 완료된 하향평가입니다: ${evaluationId}`,
+      'DOWNWARD_EVALUATION_ALREADY_COMPLETED',
+      409,
+      { evaluationId },
+    );
+    this.name = 'DownwardEvaluationAlreadyCompletedException';
   }
 }
