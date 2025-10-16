@@ -389,9 +389,201 @@ export class DownwardEvaluationListResponseDto {
 
 /**
  * 하향평가 상세 응답 DTO
- * DownwardEvaluationBasicDto의 모든 필드를 포함합니다.
+ * 관련 엔티티 정보를 객체로 포함합니다.
  */
-export class DownwardEvaluationDetailResponseDto extends DownwardEvaluationBasicDto {
-  // DownwardEvaluationBasicDto에 모든 필드가 포함되어 있으므로
-  // 추가 필드 없이 그대로 사용
+export class DownwardEvaluationDetailResponseDto {
+  @ApiProperty({
+    description: '하향평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '평가일',
+    example: '2024-01-15T09:00:00Z',
+  })
+  evaluationDate: Date;
+
+  @ApiPropertyOptional({
+    description: '하향평가 내용',
+    example: '팀원의 업무 수행 능력이 우수합니다.',
+  })
+  downwardEvaluationContent?: string;
+
+  @ApiPropertyOptional({
+    description: '하향평가 점수 (양의 정수)',
+    example: 4,
+  })
+  downwardEvaluationScore?: number;
+
+  @ApiProperty({
+    description: '평가 유형',
+    example: 'primary',
+    enum: ['primary', 'secondary'],
+  })
+  evaluationType: string;
+
+  @ApiProperty({
+    description: '완료 여부',
+    example: false,
+  })
+  isCompleted: boolean;
+
+  @ApiPropertyOptional({
+    description: '완료 일시',
+    example: '2024-01-15T11:00:00Z',
+  })
+  completedAt?: Date;
+
+  @ApiProperty({
+    description: '생성 일시',
+    example: '2024-01-15T09:00:00Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: '수정 일시',
+    example: '2024-01-15T10:00:00Z',
+  })
+  updatedAt: Date;
+
+  @ApiPropertyOptional({
+    description: '삭제 일시',
+    example: '2024-01-15T12:00:00Z',
+  })
+  deletedAt?: Date;
+
+  @ApiPropertyOptional({
+    description: '생성자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440006',
+  })
+  createdBy?: string;
+
+  @ApiPropertyOptional({
+    description: '수정자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440007',
+  })
+  updatedBy?: string;
+
+  @ApiProperty({
+    description: '버전 번호',
+    example: 1,
+  })
+  version: number;
+
+  @ApiPropertyOptional({
+    description: '피평가자 정보',
+    type: 'object',
+    properties: {
+      id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440001' },
+      name: { type: 'string', example: '홍길동' },
+      employeeNumber: { type: 'string', example: 'EMP001' },
+      email: { type: 'string', example: 'hong@example.com' },
+      departmentId: { type: 'string', example: 'DEPT001' },
+      status: { type: 'string', example: 'ACTIVE' },
+    },
+  })
+  employee?: {
+    id: string;
+    name: string;
+    employeeNumber: string;
+    email: string;
+    departmentId: string;
+    status: string;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: '평가자 정보',
+    type: 'object',
+    properties: {
+      id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440002' },
+      name: { type: 'string', example: '김철수' },
+      employeeNumber: { type: 'string', example: 'EMP002' },
+      email: { type: 'string', example: 'kim@example.com' },
+      departmentId: { type: 'string', example: 'DEPT001' },
+      status: { type: 'string', example: 'ACTIVE' },
+    },
+  })
+  evaluator?: {
+    id: string;
+    name: string;
+    employeeNumber: string;
+    email: string;
+    departmentId: string;
+    status: string;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: '프로젝트 정보',
+    type: 'object',
+    properties: {
+      id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440003' },
+      name: { type: 'string', example: 'AI 프로젝트' },
+      code: { type: 'string', example: 'PRJ001' },
+      status: { type: 'string', example: 'IN_PROGRESS' },
+      startDate: { type: 'string', example: '2024-01-01T00:00:00Z' },
+      endDate: { type: 'string', example: '2024-12-31T23:59:59Z' },
+    },
+  })
+  project?: {
+    id: string;
+    name: string;
+    code: string;
+    status: string;
+    startDate: Date;
+    endDate: Date;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: '평가기간 정보',
+    type: 'object',
+    properties: {
+      id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440004' },
+      name: { type: 'string', example: '2024년 상반기 평가' },
+      startDate: { type: 'string', example: '2024-01-01T00:00:00Z' },
+      endDate: { type: 'string', example: '2024-06-30T23:59:59Z' },
+      status: { type: 'string', example: 'IN_PROGRESS' },
+    },
+  })
+  period?: {
+    id: string;
+    name: string;
+    startDate: Date;
+    endDate: Date;
+    status: string;
+  } | null;
+
+  @ApiPropertyOptional({
+    description: '자기평가 정보',
+    type: 'object',
+    properties: {
+      id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440005' },
+      wbsItemId: {
+        type: 'string',
+        example: '550e8400-e29b-41d4-a716-446655440010',
+      },
+      performanceResult: {
+        type: 'string',
+        example: '프로젝트 성공적으로 완료',
+      },
+      selfEvaluationContent: {
+        type: 'string',
+        example: '목표를 초과 달성했습니다.',
+      },
+      selfEvaluationScore: { type: 'number', example: 5 },
+      isCompleted: { type: 'boolean', example: true },
+      completedAt: { type: 'string', example: '2024-01-15T10:00:00Z' },
+      evaluationDate: { type: 'string', example: '2024-01-15T09:00:00Z' },
+    },
+  })
+  selfEvaluation?: {
+    id: string;
+    wbsItemId: string;
+    performanceResult: string | null;
+    selfEvaluationContent: string | null;
+    selfEvaluationScore: number | null;
+    isCompleted: boolean;
+    completedAt: Date | null;
+    evaluationDate: Date;
+  } | null;
 }

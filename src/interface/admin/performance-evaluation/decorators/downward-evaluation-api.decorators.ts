@@ -275,10 +275,14 @@ export function SubmitPrimaryDownwardEvaluation() {
 **테스트 케이스:**
 - 기본 제출: 저장된 1차 하향평가를 제출할 수 있어야 함
 - isCompleted 변경: 제출 시 isCompleted가 true로 변경됨
-- 제출 일시 기록: 제출 시 submittedAt이 자동으로 기록됨
-- submittedBy 선택: submittedBy 없이도 제출 가능
-- 중복 제출 방지: 이미 제출된 평가는 409 Conflict 에러
-- 평가 없음: 저장되지 않은 평가 제출 시 404 에러
+- completedAt 설정: 제출 시 completedAt이 현재 시각으로 자동 설정됨
+- submittedBy 없이 제출: submittedBy 생략 가능 (기본값: '시스템')
+- 트랜잭션 보장: 제출 프로세스가 트랜잭션으로 안전하게 처리됨
+- 제출 후 내용 불변: 제출 후 평가 내용과 점수는 변경되지 않아야 함
+- 제출 후 updatedAt 갱신: 제출 시 updatedAt이 갱신되어야 함
+- 제출 후 createdAt 불변: 제출 후 createdAt은 변경되지 않아야 함
+- 존재하지 않는 평가: 저장되지 않은 평가 제출 시 404 에러
+- 이미 제출된 평가: 재제출 시 409 에러 발생
 - 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
@@ -359,11 +363,12 @@ export function SubmitSecondaryDownwardEvaluation() {
 **테스트 케이스:**
 - 기본 제출: 저장된 2차 하향평가를 제출할 수 있어야 함
 - isCompleted 변경: 제출 시 isCompleted가 true로 변경됨
-- 독립적 제출: 1차와 2차 하향평가가 독립적으로 제출됨
-- 제출 일시 기록: 제출 시 submittedAt이 자동으로 기록됨
-- submittedBy 선택: submittedBy 없이도 제출 가능
-- 중복 제출 방지: 이미 제출된 평가는 409 Conflict 에러
-- 평가 없음: 저장되지 않은 평가 제출 시 404 에러
+- completedAt 설정: 제출 시 completedAt이 현재 시각으로 자동 설정됨
+- 독립적 제출: 1차와 2차 하향평가가 독립적으로 제출됨 (1차 제출 여부와 무관)
+- submittedBy 없이 제출: submittedBy 생략 가능 (기본값: '시스템')
+- 트랜잭션 보장: 제출 프로세스가 트랜잭션으로 안전하게 처리됨
+- 존재하지 않는 2차 평가: 저장되지 않은 2차 평가 제출 시 404 에러
+- 이미 제출된 2차 평가: 재제출 시 409 에러 발생
 - 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
@@ -436,24 +441,23 @@ export function SubmitDownwardEvaluation() {
 2. 평가 상태를 완료(isCompleted: true)로 변경
 3. 제출 일시 기록
 
-**사용 시나리오:**
-- 평가 상세 조회 후 바로 제출: 평가 ID를 알고 있을 때 간편하게 제출
-- 일괄 제출: 여러 평가를 ID 목록으로 순차 제출
-- API 통합: 평가 타입을 구분하지 않고 통일된 API로 제출
-
 **선택적 필드:**
 - submittedBy: 제출자 ID (선택사항, 추후 요청자 ID로 변경 예정)
 
 **테스트 케이스:**
-- 기본 제출: 하향평가 ID로 제출할 수 있어야 함
-- 1차평가 제출: 1차 하향평가 ID로 제출 가능
-- 2차평가 제출: 2차 하향평가 ID로 제출 가능
+- 1차 하향평가 ID로 제출: 1차 하향평가를 ID로 직접 제출 가능
+- 2차 하향평가 ID로 제출: 2차 하향평가를 ID로 직접 제출 가능
+- 평가 타입 무관 제출: 1차/2차 구분 없이 ID만으로 제출 가능
 - isCompleted 변경: 제출 시 isCompleted가 true로 변경됨
-- 제출 일시 기록: 제출 시 submittedAt이 자동으로 기록됨
-- submittedBy 선택: submittedBy 없이도 제출 가능
-- 중복 제출 방지: 이미 제출된 평가는 409 Conflict 에러
-- 평가 없음: 존재하지 않는 ID로 제출 시 404 에러
-- 잘못된 ID: UUID 형식이 아닌 경우 400 에러`,
+- completedAt 설정: 제출 시 completedAt이 현재 시각으로 자동 설정됨
+- submittedBy 없이 제출: submittedBy 생략 가능 (기본값: '시스템')
+- 트랜잭션 보장: 제출 프로세스가 트랜잭션으로 안전하게 처리됨
+- 제출 후 내용 불변: 제출 후 평가 내용과 점수는 변경되지 않아야 함
+- 제출 후 updatedAt 갱신: 제출 시 updatedAt이 갱신되어야 함
+- 제출 후 createdAt 불변: 제출 후 createdAt은 변경되지 않아야 함
+- 존재하지 않는 ID: 존재하지 않는 ID로 제출 시 404 에러
+- 잘못된 UUID 형식: UUID 형식이 아닌 경우 400 에러
+- 이미 제출된 평가: ID로 재제출 시 409 에러 발생`,
     }),
     ApiParam({
       name: 'id',
@@ -502,7 +506,7 @@ export function GetEvaluatorDownwardEvaluations() {
       summary: '평가자의 하향평가 목록 조회',
       description: `**중요**: 특정 평가자가 작성한 하향평가 목록을 조회합니다. 다양한 필터 옵션과 페이지네이션을 지원하여 효율적인 평가 관리가 가능합니다.
 
-**필터 옵션 (Query Parameters):**
+**필터 옵션:**
 - evaluateeId: 피평가자 ID로 필터링
 - periodId: 평가기간 ID로 필터링
 - projectId: 프로젝트 ID로 필터링
@@ -510,20 +514,6 @@ export function GetEvaluatorDownwardEvaluations() {
 - isCompleted: 완료 여부 (true/false)로 필터링
 - page: 페이지 번호 (기본값: 1)
 - limit: 페이지 크기 (기본값: 10, 최대: 100)
-
-**사용 시나리오:**
-- 평가자 대시보드: 평가자가 작성한 모든 하향평가 확인
-- 미완료 평가 조회: isCompleted=false로 아직 제출하지 않은 평가 확인
-- 특정 기간 평가: periodId로 특정 평가기간의 평가만 조회
-- 1차/2차 분리 조회: evaluationType으로 1차 또는 2차평가만 조회
-- 프로젝트별 평가: projectId로 특정 프로젝트 관련 평가만 조회
-
-**응답 구조:**
-- data: 하향평가 목록 배열
-- total: 전체 평가 개수
-- page: 현재 페이지 번호
-- limit: 페이지 크기
-- totalPages: 전체 페이지 수
 
 **테스트 케이스:**
 - 기본 조회: 평가자의 모든 하향평가 조회 가능
@@ -626,31 +616,7 @@ export function GetDownwardEvaluationDetail() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '하향평가 상세정보 조회',
-      description: `**중요**: 하향평가의 상세정보를 조회합니다. 평가 ID를 사용하여 평가 내용, 점수, 제출 상태, 관련 정보 등 모든 세부 정보를 확인할 수 있습니다.
-
-**조회 정보:**
-- 평가 기본 정보: ID, 평가 유형, 평가일, 제출 상태
-- 평가 내용: 하향평가 내용, 평가 점수
-- 관계 정보: 평가자 ID, 피평가자 ID, 평가기간 ID, 프로젝트 ID
-- 참조 정보: 자기평가 ID (있는 경우)
-- 메타 정보: 생성일시, 수정일시, 제출일시, 생성자, 수정자
-
-**사용 시나리오:**
-- 평가 상세 확인: 특정 하향평가의 모든 정보 확인
-- 평가 이력 추적: 생성/수정/제출 일시 확인
-- 평가 검증: 제출 전 평가 내용 최종 확인
-- 평가 연계: 자기평가 ID를 통한 자기평가 연결 확인
-- 감사 로그: 누가(evaluatorId), 언제(createdAt), 무엇을(content, score) 평가했는지 추적
-
-**응답 구조:**
-- 평가 ID, 평가자 ID, 피평가자 ID
-- 평가기간 ID, 프로젝트 ID
-- 평가 유형 (primary/secondary)
-- 평가 내용, 평가 점수
-- 자기평가 ID (선택적)
-- 완료 여부 (isCompleted)
-- 타임스탬프 (evaluationDate, createdAt, updatedAt, submittedAt)
-- 생성자/수정자 정보 (createdBy, updatedBy)
+      description: `**중요**: 하향평가의 상세정보를 조회합니다. 평가 ID를 사용하여 평가 내용, 점수, 제출 상태, 관련 엔티티 정보 등 모든 세부 정보를 확인할 수 있습니다.
 
 **테스트 케이스:**
 - 기본 조회: 하향평가 ID로 상세정보 조회 가능

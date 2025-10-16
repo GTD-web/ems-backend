@@ -3,6 +3,10 @@ import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
 import {
+  GetDownwardEvaluationDetailQuery,
+  GetDownwardEvaluationListQuery,
+} from '../../../context/performance-evaluation-context/handlers/downward-evaluation';
+import {
   UpsertPrimaryDownwardEvaluation,
   UpsertSecondaryDownwardEvaluation,
   SubmitPrimaryDownwardEvaluation,
@@ -163,16 +167,19 @@ export class DownwardEvaluationManagementController {
     @ParseUUID('evaluatorId') evaluatorId: string,
     @Query() filter: DownwardEvaluationFilterDto,
   ): Promise<DownwardEvaluationListResponseDto> {
-    return await this.performanceEvaluationService.하향평가_목록을_조회한다({
+    const query = new GetDownwardEvaluationListQuery(
       evaluatorId,
-      evaluateeId: filter.evaluateeId,
-      periodId: filter.periodId,
-      projectId: filter.projectId,
-      evaluationType: filter.evaluationType,
-      isCompleted: filter.isCompleted,
-      page: filter.page || 1,
-      limit: filter.limit || 10,
-    });
+      filter.evaluateeId,
+      filter.periodId,
+      filter.projectId,
+      filter.evaluationType,
+      filter.isCompleted,
+      filter.page || 1,
+      filter.limit || 10,
+    );
+    return await this.performanceEvaluationService.하향평가_목록을_조회한다(
+      query,
+    );
   }
 
   /**
@@ -182,10 +189,9 @@ export class DownwardEvaluationManagementController {
   async getDownwardEvaluationDetail(
     @ParseUUID('id') id: string,
   ): Promise<DownwardEvaluationDetailResponseDto> {
+    const query = new GetDownwardEvaluationDetailQuery(id);
     return await this.performanceEvaluationService.하향평가_상세정보를_조회한다(
-      {
-        evaluationId: id,
-      },
+      query,
     );
   }
 }
