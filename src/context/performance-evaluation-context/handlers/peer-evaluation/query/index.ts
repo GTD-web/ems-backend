@@ -8,3 +8,9 @@ export {
   GetPeerEvaluationDetailHandler,
   type PeerEvaluationDetailResult,
 } from './get-peer-evaluation-detail.handler';
+
+export {
+  GetEvaluatorAssignedEvaluateesQuery,
+  GetEvaluatorAssignedEvaluateesHandler,
+  type EvaluatorAssignedEvaluatee,
+} from './get-evaluator-assigned-evaluatees.handler';

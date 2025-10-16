@@ -6,6 +6,7 @@ import { GetWbsSelfEvaluationDetailHandler } from './self-evaluation/queries/get
 import {
   GetPeerEvaluationListHandler,
   GetPeerEvaluationDetailHandler,
+  GetEvaluatorAssignedEvaluateesHandler,
 } from './peer-evaluation';
 
 // 하향평가
@@ -29,6 +30,7 @@ export const QueryHandlers = [
   // 동료평가 쿼리 핸들러
   GetPeerEvaluationListHandler,
   GetPeerEvaluationDetailHandler,
+  GetEvaluatorAssignedEvaluateesHandler,
 
   // 하향평가 쿼리 핸들러
   GetDownwardEvaluationListHandler,

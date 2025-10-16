@@ -43,6 +43,7 @@ import {
   CreatePeerEvaluationCommand,
   GetPeerEvaluationDetailQuery,
   GetPeerEvaluationListQuery,
+  GetEvaluatorAssignedEvaluateesQuery,
   SubmitPeerEvaluationCommand,
   UpdatePeerEvaluationCommand,
   UpsertPeerEvaluationCommand,
@@ -426,6 +427,19 @@ export class PerformanceEvaluationService
   ): Promise<any> {
     this.logger.log('동료평가 상세정보 조회', {
       evaluationId: query.evaluationId,
+    });
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 평가자에게 할당된 피평가자 목록을 조회한다
+   */
+  async 평가자에게_할당된_피평가자_목록을_조회한다(
+    query: GetEvaluatorAssignedEvaluateesQuery,
+  ): Promise<any> {
+    this.logger.log('평가자에게 할당된 피평가자 목록 조회', {
+      evaluatorId: query.evaluatorId,
+      periodId: query.periodId,
     });
     return await this.queryBus.execute(query);
   }

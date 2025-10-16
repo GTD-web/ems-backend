@@ -5,11 +5,122 @@ import {
   IsOptional,
   IsUUID,
   IsEnum,
+  IsBoolean,
   Min,
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ToBoolean } from '@interface/decorators';
+
+/**
+ * 동료평가 요청(할당) DTO
+ */
+export class RequestPeerEvaluationDto {
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsUUID()
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '피평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  @IsUUID()
+  evaluateeId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  @IsUUID()
+  periodId: string;
+
+  @ApiPropertyOptional({
+    description: '요청자 ID (관리자)',
+    example: '550e8400-e29b-41d4-a716-446655440003',
+  })
+  @IsOptional()
+  @IsUUID()
+  requestedBy?: string;
+}
+
+/**
+ * 한 명의 피평가자를 여러 평가자에게 요청 DTO
+ */
+export class RequestPeerEvaluationToMultipleEvaluatorsDto {
+  @ApiProperty({
+    description: '평가자 ID 목록',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440000',
+      '550e8400-e29b-41d4-a716-446655440001',
+    ],
+  })
+  @IsUUID('4', { each: true })
+  evaluatorIds: string[];
+
+  @ApiProperty({
+    description: '피평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  @IsUUID()
+  evaluateeId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440003',
+  })
+  @IsUUID()
+  periodId: string;
+
+  @ApiPropertyOptional({
+    description: '요청자 ID (관리자)',
+    example: '550e8400-e29b-41d4-a716-446655440004',
+  })
+  @IsOptional()
+  @IsUUID()
+  requestedBy?: string;
+}
+
+/**
+ * 한 명의 평가자가 여러 피평가자를 평가하도록 요청 DTO
+ */
+export class RequestMultiplePeerEvaluationsDto {
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsUUID()
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '피평가자 ID 목록',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440001',
+      '550e8400-e29b-41d4-a716-446655440002',
+    ],
+  })
+  @IsUUID('4', { each: true })
+  evaluateeIds: string[];
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440003',
+  })
+  @IsUUID()
+  periodId: string;
+
+  @ApiPropertyOptional({
+    description: '요청자 ID (관리자)',
+    example: '550e8400-e29b-41d4-a716-446655440004',
+  })
+  @IsOptional()
+  @IsUUID()
+  requestedBy?: string;
+}
 
 /**
  * 동료평가 생성 Body DTO
@@ -177,6 +288,33 @@ export class PeerEvaluationResponseDto {
 }
 
 /**
+ * 일괄 동료평가 요청 응답 DTO
+ */
+export class BulkPeerEvaluationRequestResponseDto {
+  @ApiProperty({
+    description: '생성된 동료평가 요청 ID 목록',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440000',
+      '550e8400-e29b-41d4-a716-446655440001',
+    ],
+  })
+  ids: string[];
+
+  @ApiProperty({
+    description: '생성된 요청 개수',
+    example: 2,
+  })
+  count: number;
+
+  @ApiProperty({
+    description: '결과 메시지',
+    example: '2건의 동료평가 요청이 성공적으로 생성되었습니다.',
+  })
+  message: string;
+}
+
+/**
  * 동료평가 기본 정보 DTO
  */
 export class PeerEvaluationBasicDto {
@@ -321,6 +459,107 @@ export class DepartmentInfoDto {
     example: 'DEPT001',
   })
   code: string;
+}
+
+/**
+ * 평가자에게 할당된 피평가자 Query DTO
+ */
+export class GetEvaluatorAssignedEvaluateesQueryDto {
+  @ApiPropertyOptional({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  @IsOptional()
+  @IsUUID()
+  periodId?: string;
+
+  @ApiPropertyOptional({
+    description: '완료된 평가 포함 여부',
+    example: false,
+    default: false,
+  })
+  @IsOptional()
+  @ToBoolean(false)
+  @IsBoolean()
+  includeCompleted?: boolean;
+}
+
+/**
+ * 할당된 피평가자 상세 DTO
+ */
+export class AssignedEvaluateeDto {
+  @ApiProperty({
+    description: '평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: '피평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '평가 상태',
+    example: 'pending',
+    enum: ['pending', 'in_progress', 'completed', 'cancelled'],
+  })
+  status: string;
+
+  @ApiProperty({
+    description: '평가 완료 여부',
+    example: false,
+  })
+  isCompleted: boolean;
+
+  @ApiPropertyOptional({
+    description: '완료 일시',
+    example: '2024-01-15T10:00:00Z',
+  })
+  completedAt?: Date;
+
+  @ApiPropertyOptional({
+    description: '평가 점수',
+    example: 4,
+  })
+  score?: number;
+
+  @ApiPropertyOptional({
+    description: '평가 내용',
+    example: '동료로서 협업 능력이 우수합니다.',
+  })
+  evaluationContent?: string;
+
+  @ApiProperty({
+    description: '매핑 일시',
+    example: '2024-01-15T09:00:00Z',
+  })
+  mappedDate: Date;
+
+  @ApiProperty({
+    description: '활성 상태',
+    example: true,
+  })
+  isActive: boolean;
+
+  @ApiProperty({
+    description: '피평가자 정보',
+    type: EmployeeInfoDto,
+  })
+  evaluatee: EmployeeInfoDto | null;
+
+  @ApiProperty({
+    description: '피평가자 부서 정보',
+    type: DepartmentInfoDto,
+  })
+  evaluateeDepartment: DepartmentInfoDto | null;
 }
 
 /**
