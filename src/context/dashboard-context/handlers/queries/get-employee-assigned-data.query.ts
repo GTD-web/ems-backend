@@ -12,6 +12,8 @@ import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/
 import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
+import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 
 /**
  * 사용자 할당 정보 조회 쿼리
@@ -65,6 +67,20 @@ export interface WbsSelfEvaluationInfo {
 }
 
 /**
+ * WBS 하향평가 정보
+ */
+export interface WbsDownwardEvaluationInfo {
+  downwardEvaluationId?: string;
+  evaluatorId?: string;
+  evaluatorName?: string;
+  evaluationContent?: string;
+  score?: number;
+  isCompleted: boolean;
+  isEditable: boolean;
+  submittedAt?: Date;
+}
+
+/**
  * 할당된 WBS 정보 (평가기준, 성과, 자기평가 포함)
  */
 export interface AssignedWbsInfo {
@@ -78,6 +94,8 @@ export interface AssignedWbsInfo {
   criteria: WbsEvaluationCriterion[];
   performance?: WbsPerformance | null;
   selfEvaluation?: WbsSelfEvaluationInfo | null;
+  primaryDownwardEvaluation?: WbsDownwardEvaluationInfo | null;
+  secondaryDownwardEvaluation?: WbsDownwardEvaluationInfo | null;
 }
 
 /**
@@ -157,6 +175,10 @@ export class GetEmployeeAssignedDataHandler
     private readonly criteriaRepository: Repository<WbsEvaluationCriteria>,
     @InjectRepository(WbsSelfEvaluation)
     private readonly selfEvaluationRepository: Repository<WbsSelfEvaluation>,
+    @InjectRepository(DownwardEvaluation)
+    private readonly downwardEvaluationRepository: Repository<DownwardEvaluation>,
+    @InjectRepository(EvaluationLine)
+    private readonly evaluationLineRepository: Repository<EvaluationLine>,
   ) {}
 
   async execute(
@@ -396,6 +418,13 @@ export class GetEmployeeAssignedDataHandler
         wbsItemId,
       );
 
+      // 하향평가 조회 (1차, 2차)
+      const downwardEvaluations = await this.getWbsDownwardEvaluationsByWbsId(
+        evaluationPeriodId,
+        employeeId,
+        wbsItemId,
+      );
+
       wbsInfos.push({
         wbsId: wbsItemId,
         wbsName: row.wbsItem_title || '',
@@ -407,6 +436,8 @@ export class GetEmployeeAssignedDataHandler
         criteria,
         performance: selfEvaluationData?.performance || null,
         selfEvaluation: selfEvaluationData?.selfEvaluation || null,
+        primaryDownwardEvaluation: downwardEvaluations.primary || null,
+        secondaryDownwardEvaluation: downwardEvaluations.secondary || null,
       });
     }
 
@@ -496,6 +527,75 @@ export class GetEmployeeAssignedDataHandler
     return {
       performance,
       selfEvaluation: evaluation,
+    };
+  }
+
+  /**
+   * 특정 WBS의 하향평가 조회 (1차, 2차)
+   *
+   * DownwardEvaluation 엔티티에서 PRIMARY와 SECONDARY 평가자의 하향평가 정보를 조회합니다.
+   */
+  private async getWbsDownwardEvaluationsByWbsId(
+    evaluationPeriodId: string,
+    employeeId: string,
+    wbsItemId: string,
+  ): Promise<{
+    primary: WbsDownwardEvaluationInfo | null;
+    secondary: WbsDownwardEvaluationInfo | null;
+  }> {
+    // 하향평가 조회 (PRIMARY, SECONDARY 구분)
+    const downwardEvaluations = await this.downwardEvaluationRepository
+      .createQueryBuilder('downward')
+      .select([
+        'downward.id AS downward_id',
+        'downward.evaluatorId AS downward_evaluatorId',
+        'downward.evaluatorType AS downward_evaluatorType',
+        'downward.evaluationContent AS downward_evaluationContent',
+        'downward.score AS downward_score',
+        'downward.status AS downward_status',
+        'downward.submittedAt AS downward_submittedAt',
+        'evaluator.name AS evaluator_name',
+      ])
+      .leftJoin(
+        Employee,
+        'evaluator',
+        'evaluator.id = downward.evaluatorId AND evaluator.deletedAt IS NULL',
+      )
+      .where('downward.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
+      .andWhere('downward.evaluateeId = :employeeId', {
+        employeeId: employeeId,
+      })
+      .andWhere('downward.wbsItemId = :wbsItemId', { wbsItemId })
+      .andWhere('downward.deletedAt IS NULL')
+      .getRawMany();
+
+    let primary: WbsDownwardEvaluationInfo | null = null;
+    let secondary: WbsDownwardEvaluationInfo | null = null;
+
+    for (const row of downwardEvaluations) {
+      const evaluationInfo: WbsDownwardEvaluationInfo = {
+        downwardEvaluationId: row.downward_id,
+        evaluatorId: row.downward_evaluatorId,
+        evaluatorName: row.evaluator_name,
+        evaluationContent: row.downward_evaluationContent,
+        score: row.downward_score,
+        isCompleted: row.downward_status === 'completed',
+        isEditable: row.downward_status !== 'completed',
+        submittedAt: row.downward_submittedAt,
+      };
+
+      if (row.downward_evaluatorType === 'PRIMARY') {
+        primary = evaluationInfo;
+      } else if (row.downward_evaluatorType === 'SECONDARY') {
+        secondary = evaluationInfo;
+      }
+    }
+
+    return {
+      primary,
+      secondary,
     };
   }
 }

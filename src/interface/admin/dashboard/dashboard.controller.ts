@@ -7,10 +7,14 @@ import {
   GetAllEmployeesEvaluationPeriodStatus,
   GetMyEvaluationTargetsStatus,
   GetEmployeeAssignedData,
+  GetEvaluatorAssignedEmployeesData,
 } from './decorators/dashboard-api.decorators';
 import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/employee-evaluation-period-status.dto';
 import { MyEvaluationTargetStatusResponseDto } from './dto/my-evaluation-targets-status.dto';
-import { EmployeeAssignedDataResponseDto } from './dto/employee-assigned-data.dto';
+import {
+  EmployeeAssignedDataResponseDto,
+  EvaluatorAssignedEmployeesDataResponseDto,
+} from './dto/employee-assigned-data.dto';
 
 /**
  * 관리자용 대시보드 컨트롤러
@@ -76,6 +80,19 @@ export class DashboardController {
   ): Promise<EmployeeAssignedDataResponseDto> {
     return await this.dashboardService.사용자_할당_정보를_조회한다(
       evaluationPeriodId,
+      employeeId,
+    );
+  }
+
+  @GetEvaluatorAssignedEmployeesData()
+  async getEvaluatorAssignedEmployeesData(
+    @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
+    @ParseUUID('evaluatorId') evaluatorId: string,
+    @ParseUUID('employeeId') employeeId: string,
+  ): Promise<EvaluatorAssignedEmployeesDataResponseDto> {
+    return await this.dashboardService.담당자의_피평가자_할당_정보를_조회한다(
+      evaluationPeriodId,
+      evaluatorId,
       employeeId,
     );
   }

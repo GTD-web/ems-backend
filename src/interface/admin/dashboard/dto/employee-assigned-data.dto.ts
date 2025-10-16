@@ -231,6 +231,67 @@ export class WbsSelfEvaluationDto {
 }
 
 /**
+ * WBS 하향평가 DTO
+ */
+export class WbsDownwardEvaluationDto {
+  @ApiPropertyOptional({
+    description: '하향평가 ID',
+    example: '123e4567-e89b-12d3-a456-426614174014',
+    nullable: true,
+  })
+  downwardEvaluationId?: string;
+
+  @ApiPropertyOptional({
+    description: '평가자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+    nullable: true,
+  })
+  evaluatorId?: string;
+
+  @ApiPropertyOptional({
+    description: '평가자명',
+    example: '김평가',
+    nullable: true,
+  })
+  evaluatorName?: string;
+
+  @ApiPropertyOptional({
+    description: '하향평가 내용',
+    example: '프로젝트를 훌륭하게 수행하였습니다.',
+    nullable: true,
+  })
+  evaluationContent?: string;
+
+  @ApiPropertyOptional({
+    description: '하향평가 점수 (1-5)',
+    example: 5,
+    nullable: true,
+  })
+  score?: number;
+
+  @ApiProperty({
+    description: '평가 완료 여부',
+    example: true,
+  })
+  isCompleted: boolean;
+
+  @ApiProperty({
+    description: '수정 가능 여부',
+    example: false,
+  })
+  isEditable: boolean;
+
+  @ApiPropertyOptional({
+    description: '제출일',
+    type: 'string',
+    format: 'date-time',
+    example: '2024-06-25T14:00:00.000Z',
+    nullable: true,
+  })
+  submittedAt?: Date;
+}
+
+/**
  * 할당된 WBS 정보 DTO (평가기준 포함)
  */
 export class AssignedWbsInfoDto {
@@ -300,6 +361,22 @@ export class AssignedWbsInfoDto {
   })
   @Type(() => WbsSelfEvaluationDto)
   selfEvaluation?: WbsSelfEvaluationDto | null;
+
+  @ApiPropertyOptional({
+    description: 'WBS 1차 하향평가 정보 (PRIMARY 평가자가 작성)',
+    type: WbsDownwardEvaluationDto,
+    nullable: true,
+  })
+  @Type(() => WbsDownwardEvaluationDto)
+  primaryDownwardEvaluation?: WbsDownwardEvaluationDto | null;
+
+  @ApiPropertyOptional({
+    description: 'WBS 2차 하향평가 정보 (SECONDARY 평가자가 작성)',
+    type: WbsDownwardEvaluationDto,
+    nullable: true,
+  })
+  @Type(() => WbsDownwardEvaluationDto)
+  secondaryDownwardEvaluation?: WbsDownwardEvaluationDto | null;
 }
 
 /**
@@ -359,7 +436,8 @@ export class EmployeeAssignedDataResponseDto {
   employee: EmployeeInfoDto;
 
   @ApiProperty({
-    description: '프로젝트별 할당 정보 (WBS, 평가기준, 성과, 자기평가 포함)',
+    description:
+      '프로젝트별 할당 정보 (WBS, 평가기준, 성과, 자기평가, 하향평가 포함)',
     type: [AssignedProjectWithWbsDto],
   })
   @Type(() => AssignedProjectWithWbsDto)
@@ -380,4 +458,65 @@ export class EmployeeAssignedDataResponseDto {
     completedPerformances: number;
     completedSelfEvaluations: number;
   };
+}
+
+/**
+ * 피평가자 할당 정보 (평가기간 제외)
+ */
+export class EvaluateeAssignedDataDto {
+  @ApiProperty({
+    description: '피평가자 정보',
+    type: EmployeeInfoDto,
+  })
+  @Type(() => EmployeeInfoDto)
+  employee: EmployeeInfoDto;
+
+  @ApiProperty({
+    description: '할당된 프로젝트 및 WBS 목록',
+    type: [AssignedProjectWithWbsDto],
+  })
+  @Type(() => AssignedProjectWithWbsDto)
+  projects: AssignedProjectWithWbsDto[];
+
+  @ApiProperty({
+    description: '할당 데이터 요약',
+    example: {
+      totalProjects: 2,
+      totalWbs: 5,
+      completedPerformances: 3,
+      completedSelfEvaluations: 2,
+    },
+  })
+  summary: {
+    totalProjects: number;
+    totalWbs: number;
+    completedPerformances: number;
+    completedSelfEvaluations: number;
+  };
+}
+
+/**
+ * 담당자의 피평가자 할당 정보 조회 응답 DTO
+ */
+export class EvaluatorAssignedEmployeesDataResponseDto {
+  @ApiProperty({
+    description: '평가기간 정보',
+    type: EvaluationPeriodInfoDto,
+  })
+  @Type(() => EvaluationPeriodInfoDto)
+  evaluationPeriod: EvaluationPeriodInfoDto;
+
+  @ApiProperty({
+    description: '평가자 정보',
+    type: EmployeeInfoDto,
+  })
+  @Type(() => EmployeeInfoDto)
+  evaluator: EmployeeInfoDto;
+
+  @ApiProperty({
+    description: '피평가자 할당 정보 (평가기간 제외, 최상위에 이미 존재)',
+    type: EvaluateeAssignedDataDto,
+  })
+  @Type(() => EvaluateeAssignedDataDto)
+  evaluatee: EvaluateeAssignedDataDto;
 }

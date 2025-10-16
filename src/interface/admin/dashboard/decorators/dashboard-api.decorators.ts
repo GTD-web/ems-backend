@@ -8,7 +8,10 @@ import {
 } from '@nestjs/swagger';
 import { EmployeeEvaluationPeriodStatusResponseDto } from '../dto/employee-evaluation-period-status.dto';
 import { MyEvaluationTargetStatusResponseDto } from '../dto/my-evaluation-targets-status.dto';
-import { EmployeeAssignedDataResponseDto } from '../dto/employee-assigned-data.dto';
+import {
+  EmployeeAssignedDataResponseDto,
+  EvaluatorAssignedEmployeesDataResponseDto,
+} from '../dto/employee-assigned-data.dto';
 
 /**
  * 직원의 평가기간 현황 조회 API 데코레이터
@@ -185,6 +188,8 @@ export function GetEmployeeAssignedData() {
     - WBS 평가기준 목록 (평가기준 내용, 생성일)
     - WBS 성과 정보 (성과 내용, 완료 여부, 완료일)
     - WBS 자기평가 정보 (평가 내용, 점수, 완료 여부, 수정 가능 여부, 제출일)
+    - WBS 1차 하향평가 정보 (PRIMARY 평가자가 작성, 평가자명 포함)
+    - WBS 2차 하향평가 정보 (SECONDARY 평가자가 작성, 평가자명 포함)
 
 **데이터 요약 포함:**
 - 총 프로젝트 수
@@ -223,6 +228,87 @@ export function GetEmployeeAssignedData() {
     }),
     ApiNotFoundResponse({
       description: '평가기간에 등록되지 않은 직원',
+    }),
+    ApiBadRequestResponse({
+      description: '잘못된 요청 (UUID 형식 오류 등)',
+    }),
+  );
+}
+
+/**
+ * 담당자의 피평가자 할당 정보 조회 API 데코레이터
+ */
+export function GetEvaluatorAssignedEmployeesData() {
+  return applyDecorators(
+    Get(
+      ':evaluationPeriodId/evaluators/:evaluatorId/employees/:employeeId/assigned-data',
+    ),
+    ApiOperation({
+      summary: '담당자의 피평가자 할당 정보 조회',
+      description: `**중요**: 평가자가 담당하는 특정 피평가자의 평가기간 내 할당된 정보를 조회합니다.
+
+**조회 정보:**
+- 평가기간 정보
+  - 평가기간명, 시작/종료일, 상태, 설명
+  - 설정 허용 여부 (평가 기준, 자기평가, 하향/동료평가)
+  - 자기평가 달성률 최대값
+- 평가자 정보 (평가자명, 직원번호, 이메일, 부서, 상태)
+- 피평가자 할당 정보 (일반 사용자 조회와 동일한 구조)
+  - 피평가자 정보 (피평가자명, 직원번호, 이메일, 부서, 상태)
+  - 프로젝트별 할당 정보
+    - 프로젝트 정보 (프로젝트명, 코드, 배정일)
+    - 해당 프로젝트의 WBS 목록
+      - WBS 정보 (WBS명, 코드, 가중치, 배정일)
+      - WBS 평가기준 목록 (평가기준 내용, 생성일)
+      - WBS 성과 정보 (성과 내용, 완료 여부, 완료일)
+      - WBS 자기평가 정보 (평가 내용, 점수, 완료 여부, 수정 가능 여부, 제출일)
+      - WBS 1차 하향평가 정보 (PRIMARY 평가자가 작성, 평가자명 포함)
+      - WBS 2차 하향평가 정보 (SECONDARY 평가자가 작성, 평가자명 포함)
+  - 데이터 요약
+    - 총 프로젝트 수
+    - 총 WBS 수
+    - 완료된 성과 입력 수
+    - 완료된 자기평가 수
+
+**사용 시나리오:**
+- 평가자가 자신이 담당하는 특정 피평가자의 평가 진행 상황 확인
+- 평가자가 피평가자의 성과와 자기평가를 검토
+- 평가자가 하향평가를 작성하기 위한 정보 확인
+
+**테스트 케이스:**
+- 정상 조회: 평가자가 담당하는 피평가자의 할당 정보를 조회할 수 있어야 함
+- 담당 아님: 평가자가 담당하지 않는 피평가자 조회 시 404 에러
+- 미등록 평가자: 평가기간에 등록되지 않은 평가자 조회 시 404 에러
+- 미등록 피평가자: 평가기간에 등록되지 않은 피평가자 조회 시 404 에러
+- 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
+    }),
+    ApiParam({
+      name: 'evaluationPeriodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    ApiParam({
+      name: 'evaluatorId',
+      description: '평가자 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174001',
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '피평가자 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174002',
+    }),
+    ApiOkResponse({
+      description: '담당자의 피평가자 할당 정보 조회 성공',
+      type: EvaluatorAssignedEmployeesDataResponseDto,
+    }),
+    ApiNotFoundResponse({
+      description: '평가기간 또는 평가자를 찾을 수 없음',
     }),
     ApiBadRequestResponse({
       description: '잘못된 요청 (UUID 형식 오류 등)',

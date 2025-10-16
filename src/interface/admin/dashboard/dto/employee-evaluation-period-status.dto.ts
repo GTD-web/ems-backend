@@ -552,3 +552,4 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
   })
   finalEvaluation: FinalEvaluationInfoDto;
 }
+

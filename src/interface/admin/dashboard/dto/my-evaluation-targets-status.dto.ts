@@ -244,3 +244,4 @@ export class MyEvaluationTargetStatusResponseDto {
   @Type(() => MyDownwardEvaluationStatusDto)
   downwardEvaluation: MyDownwardEvaluationStatusDto;
 }
+
