@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
-import { PeerEvaluationService } from '../../../../domain/core/peer-evaluation/peer-evaluation.service';
+import { PeerEvaluationService } from '../../../../../domain/core/peer-evaluation/peer-evaluation.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
@@ -62,7 +62,3 @@ export class SubmitPeerEvaluationHandler
     });
   }
 }
-
-
-
-

@@ -17,6 +17,7 @@ import { WbsSelfEvaluationManagementController } from './performance-evaluation/
 import { DownwardEvaluationManagementController } from './performance-evaluation/downward-evaluation-management.controller';
 import { PeerEvaluationManagementController } from './performance-evaluation/peer-evaluation-management.controller';
 import { FinalEvaluationManagementController } from './performance-evaluation/final-evaluation-management.controller';
+import { EvaluationEditableStatusManagementController } from './performance-evaluation/evaluation-editable-status-management.controller';
 import { EmployeeManagementController } from './employee-management/employee-management.controller';
 
 /**
@@ -48,6 +49,7 @@ import { EmployeeManagementController } from './employee-management/employee-man
     DownwardEvaluationManagementController, // 하향평가 관리 컨트롤러
     PeerEvaluationManagementController, // 동료평가 관리 컨트롤러
     FinalEvaluationManagementController, // 최종평가 관리 컨트롤러
+    EvaluationEditableStatusManagementController, // 평가 수정 가능 상태 관리 컨트롤러
   ],
   providers: [],
   exports: [],

@@ -1,31 +1,47 @@
-import { CreateWbsSelfEvaluationHandler } from './self-evaluation/create-wbs-self-evaluation.handler';
-import { UpdateWbsSelfEvaluationHandler } from './self-evaluation/update-wbs-self-evaluation.handler';
-import { UpsertWbsSelfEvaluationHandler } from './self-evaluation/upsert-wbs-self-evaluation.handler';
-import { SubmitWbsSelfEvaluationHandler } from './self-evaluation/submit-wbs-self-evaluation.handler';
-import { SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler } from './self-evaluation/submit-all-wbs-self-evaluations.handler';
-import { ResetWbsSelfEvaluationHandler } from './self-evaluation/reset-wbs-self-evaluation.handler';
-import { ResetAllWbsSelfEvaluationsByEmployeePeriodHandler } from './self-evaluation/reset-all-wbs-self-evaluations.handler';
-import { SubmitWbsSelfEvaluationsByProjectHandler } from './self-evaluation/submit-wbs-self-evaluations-by-project.handler';
-import { ResetWbsSelfEvaluationsByProjectHandler } from './self-evaluation/reset-wbs-self-evaluations-by-project.handler';
+// 자기평가
+import { CreateWbsSelfEvaluationHandler } from './self-evaluation/commands/create-wbs-self-evaluation.handler';
+import { UpdateWbsSelfEvaluationHandler } from './self-evaluation/commands/update-wbs-self-evaluation.handler';
+import { UpsertWbsSelfEvaluationHandler } from './self-evaluation/commands/upsert-wbs-self-evaluation.handler';
+import { SubmitWbsSelfEvaluationHandler } from './self-evaluation/commands/submit-wbs-self-evaluation.handler';
+import { SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler } from './self-evaluation/commands/submit-all-wbs-self-evaluations.handler';
+import { ResetWbsSelfEvaluationHandler } from './self-evaluation/commands/reset-wbs-self-evaluation.handler';
+import { ResetAllWbsSelfEvaluationsByEmployeePeriodHandler } from './self-evaluation/commands/reset-all-wbs-self-evaluations.handler';
+import { SubmitWbsSelfEvaluationsByProjectHandler } from './self-evaluation/commands/submit-wbs-self-evaluations-by-project.handler';
+import { ResetWbsSelfEvaluationsByProjectHandler } from './self-evaluation/commands/reset-wbs-self-evaluations-by-project.handler';
 
-import { CreatePeerEvaluationHandler } from './peer-evaluation/create-peer-evaluation.handler';
-import { UpdatePeerEvaluationHandler } from './peer-evaluation/update-peer-evaluation.handler';
-import { UpsertPeerEvaluationHandler } from './peer-evaluation/upsert-peer-evaluation.handler';
-import { SubmitPeerEvaluationHandler } from './peer-evaluation/submit-peer-evaluation.handler';
-import { CancelPeerEvaluationHandler } from './peer-evaluation/cancel-peer-evaluation.handler';
-import { CancelPeerEvaluationsByPeriodHandler } from './peer-evaluation/cancel-peer-evaluations-by-period.handler';
+// 동료평가
+import {
+  CreatePeerEvaluationHandler,
+  UpdatePeerEvaluationHandler,
+  UpsertPeerEvaluationHandler,
+  SubmitPeerEvaluationHandler,
+  CancelPeerEvaluationHandler,
+  CancelPeerEvaluationsByPeriodHandler,
+} from './peer-evaluation';
 
-import { CreateDownwardEvaluationHandler } from './downward-evaluation/create-downward-evaluation.handler';
-import { UpdateDownwardEvaluationHandler } from './downward-evaluation/update-downward-evaluation.handler';
-import { UpsertDownwardEvaluationHandler } from './downward-evaluation/upsert-downward-evaluation.handler';
-import { SubmitDownwardEvaluationHandler } from './downward-evaluation/submit-downward-evaluation.handler';
+// 하향평가
+import {
+  CreateDownwardEvaluationHandler,
+  UpdateDownwardEvaluationHandler,
+  UpsertDownwardEvaluationHandler,
+  SubmitDownwardEvaluationHandler,
+} from './downward-evaluation';
 
-import { CreateFinalEvaluationHandler } from './final-evaluation/create-final-evaluation.handler';
-import { UpdateFinalEvaluationHandler } from './final-evaluation/update-final-evaluation.handler';
-import { UpsertFinalEvaluationHandler } from './final-evaluation/upsert-final-evaluation.handler';
-import { DeleteFinalEvaluationHandler } from './final-evaluation/delete-final-evaluation.handler';
-import { ConfirmFinalEvaluationHandler } from './final-evaluation/confirm-final-evaluation.handler';
-import { CancelConfirmationFinalEvaluationHandler } from './final-evaluation/cancel-confirmation-final-evaluation.handler';
+// 최종평가
+import {
+  CreateFinalEvaluationHandler,
+  UpdateFinalEvaluationHandler,
+  UpsertFinalEvaluationHandler,
+  DeleteFinalEvaluationHandler,
+  ConfirmFinalEvaluationHandler,
+  CancelConfirmationFinalEvaluationHandler,
+} from './final-evaluation';
+
+// 평가 수정 가능 상태
+import {
+  UpdateEvaluationEditableStatusHandler,
+  UpdatePeriodAllEvaluationEditableStatusHandler,
+} from './evaluation-editable-status';
 
 export const CommandHandlers = [
   // 자기평가 커맨드 핸들러
@@ -60,4 +76,8 @@ export const CommandHandlers = [
   DeleteFinalEvaluationHandler,
   ConfirmFinalEvaluationHandler,
   CancelConfirmationFinalEvaluationHandler,
+
+  // 평가 수정 가능 상태 커맨드 핸들러
+  UpdateEvaluationEditableStatusHandler,
+  UpdatePeriodAllEvaluationEditableStatusHandler,
 ];

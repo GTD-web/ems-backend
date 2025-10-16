@@ -2,8 +2,8 @@ import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
-import { WbsSelfEvaluation } from '../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
-import type { WbsSelfEvaluationDto } from '../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import type { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 
 /**
  * 직원 자기평가 목록 조회 쿼리

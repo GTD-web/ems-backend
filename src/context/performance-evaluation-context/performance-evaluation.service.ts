@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
 
 // 자기평가 관련 커맨드 및 쿼리
 import {
@@ -21,6 +22,14 @@ import type {
   SubmitWbsSelfEvaluationsByProjectResponse,
   ResetWbsSelfEvaluationsByProjectResponse,
 } from './handlers/self-evaluation';
+
+// 평가 수정 가능 상태 관련 커맨드
+import {
+  UpdateEvaluationEditableStatusCommand,
+  UpdatePeriodAllEvaluationEditableStatusCommand,
+  EvaluationType,
+} from './handlers/evaluation-editable-status';
+import type { UpdatePeriodAllEvaluationEditableStatusResponse } from './handlers/evaluation-editable-status';
 
 // 동료평가 관련 커맨드 및 쿼리
 import {
@@ -638,5 +647,133 @@ export class PerformanceEvaluationService
       periodId: query.periodId,
     });
     return await this.queryBus.execute(query);
+  }
+
+  // ==================== 평가 수정 가능 상태 관리 ====================
+
+  /**
+   * 평가 수정 가능 상태를 변경한다
+   */
+  async 평가_수정_가능_상태를_변경한다(
+    mappingId: string,
+    evaluationType: EvaluationType,
+    isEditable: boolean,
+    updatedBy?: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    const command = new UpdateEvaluationEditableStatusCommand(
+      mappingId,
+      evaluationType,
+      isEditable,
+      updatedBy,
+    );
+
+    this.logger.log('평가 수정 가능 상태 변경 시작', {
+      mappingId: command.mappingId,
+      evaluationType: command.evaluationType,
+      isEditable: command.isEditable,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('평가 수정 가능 상태 변경 완료', {
+      mappingId: command.mappingId,
+    });
+    return result;
+  }
+
+  /**
+   * 자기평가 수정 가능 상태를 변경한다
+   */
+  async 자기평가_수정_가능_상태를_변경한다(
+    mappingId: string,
+    isEditable: boolean,
+    updatedBy?: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    return await this.평가_수정_가능_상태를_변경한다(
+      mappingId,
+      EvaluationType.SELF,
+      isEditable,
+      updatedBy,
+    );
+  }
+
+  /**
+   * 1차평가 수정 가능 상태를 변경한다
+   */
+  async 일차평가_수정_가능_상태를_변경한다(
+    mappingId: string,
+    isEditable: boolean,
+    updatedBy?: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    return await this.평가_수정_가능_상태를_변경한다(
+      mappingId,
+      EvaluationType.PRIMARY,
+      isEditable,
+      updatedBy,
+    );
+  }
+
+  /**
+   * 2차평가 수정 가능 상태를 변경한다
+   */
+  async 이차평가_수정_가능_상태를_변경한다(
+    mappingId: string,
+    isEditable: boolean,
+    updatedBy?: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    return await this.평가_수정_가능_상태를_변경한다(
+      mappingId,
+      EvaluationType.SECONDARY,
+      isEditable,
+      updatedBy,
+    );
+  }
+
+  /**
+   * 모든 평가의 수정 가능 상태를 일괄 변경한다
+   */
+  async 모든_평가_수정_가능_상태를_변경한다(
+    mappingId: string,
+    isEditable: boolean,
+    updatedBy?: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    return await this.평가_수정_가능_상태를_변경한다(
+      mappingId,
+      EvaluationType.ALL,
+      isEditable,
+      updatedBy,
+    );
+  }
+
+  /**
+   * 평가기간별 모든 평가 대상자의 수정 가능 상태를 일괄 변경한다
+   */
+  async 평가기간별_모든_평가_수정_가능_상태를_변경한다(
+    evaluationPeriodId: string,
+    isSelfEvaluationEditable: boolean,
+    isPrimaryEvaluationEditable: boolean,
+    isSecondaryEvaluationEditable: boolean,
+    updatedBy?: string,
+  ): Promise<UpdatePeriodAllEvaluationEditableStatusResponse> {
+    const command = new UpdatePeriodAllEvaluationEditableStatusCommand(
+      evaluationPeriodId,
+      isSelfEvaluationEditable,
+      isPrimaryEvaluationEditable,
+      isSecondaryEvaluationEditable,
+      updatedBy,
+    );
+
+    this.logger.log('평가기간별 모든 평가 수정 가능 상태 일괄 변경 시작', {
+      evaluationPeriodId: command.evaluationPeriodId,
+      isSelfEvaluationEditable: command.isSelfEvaluationEditable,
+      isPrimaryEvaluationEditable: command.isPrimaryEvaluationEditable,
+      isSecondaryEvaluationEditable: command.isSecondaryEvaluationEditable,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('평가기간별 모든 평가 수정 가능 상태 일괄 변경 완료', {
+      evaluationPeriodId: command.evaluationPeriodId,
+      updatedCount: result.updatedCount,
+    });
+    return result;
   }
 }

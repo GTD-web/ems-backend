@@ -1,15 +1,25 @@
-import { GetEmployeeSelfEvaluationsHandler } from './self-evaluation/get-employee-self-evaluations.handler';
-import { GetWbsSelfEvaluationDetailHandler } from './self-evaluation/get-wbs-self-evaluation-detail.handler';
+// 자기평가
+import { GetEmployeeSelfEvaluationsHandler } from './self-evaluation/queries/get-employee-self-evaluations.handler';
+import { GetWbsSelfEvaluationDetailHandler } from './self-evaluation/queries/get-wbs-self-evaluation-detail.handler';
 
-import { GetPeerEvaluationListHandler } from './peer-evaluation/get-peer-evaluation-list.handler';
-import { GetPeerEvaluationDetailHandler } from './peer-evaluation/get-peer-evaluation-detail.handler';
+// 동료평가
+import {
+  GetPeerEvaluationListHandler,
+  GetPeerEvaluationDetailHandler,
+} from './peer-evaluation';
 
-import { GetDownwardEvaluationListHandler } from './downward-evaluation/get-downward-evaluation-list.handler';
-import { GetDownwardEvaluationDetailHandler } from './downward-evaluation/get-downward-evaluation-detail.handler';
+// 하향평가
+import {
+  GetDownwardEvaluationListHandler,
+  GetDownwardEvaluationDetailHandler,
+} from './downward-evaluation';
 
-import { GetFinalEvaluationHandler } from './final-evaluation/get-final-evaluation.handler';
-import { GetFinalEvaluationListHandler } from './final-evaluation/get-final-evaluation-list.handler';
-import { GetFinalEvaluationByEmployeePeriodHandler } from './final-evaluation/get-final-evaluation-by-employee-period.handler';
+// 최종평가
+import {
+  GetFinalEvaluationHandler,
+  GetFinalEvaluationListHandler,
+  GetFinalEvaluationByEmployeePeriodHandler,
+} from './final-evaluation';
 
 export const QueryHandlers = [
   // 자기평가 쿼리 핸들러

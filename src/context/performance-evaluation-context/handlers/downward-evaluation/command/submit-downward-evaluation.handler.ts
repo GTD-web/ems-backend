@@ -1,6 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
-import { DownwardEvaluationService } from '../../../../domain/core/downward-evaluation/downward-evaluation.service';
+import { DownwardEvaluationService } from '../../../../../domain/core/downward-evaluation/downward-evaluation.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
