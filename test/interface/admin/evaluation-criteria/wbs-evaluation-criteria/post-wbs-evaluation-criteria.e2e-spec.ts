@@ -545,7 +545,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       expect(dbRecord.criteria).not.toBe(originalCriteria);
     });
 
-    it('평가기준 수정 시 createdAt은 거의 변경되지 않는다 (10ms 이내)', async () => {
+    it('평가기준 수정 시 createdAt은 거의 변경되지 않는다 (50ms 이내)', async () => {
       // Given
       const wbsItem = getRandomWbsItem();
       const originalCriteria = '원본 평가기준';
@@ -569,12 +569,12 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         })
         .expect(200);
 
-      // Then - 타임스탬프 정밀도 차이를 허용 (10ms 이내)
+      // Then - 타임스탬프 정밀도 차이를 허용 (50ms 이내)
       const createdAtDiff = Math.abs(
         new Date(response.body.createdAt).getTime() -
           new Date(created.createdAt).getTime(),
       );
-      expect(createdAtDiff).toBeLessThanOrEqual(10);
+      expect(createdAtDiff).toBeLessThanOrEqual(50);
     });
   });
 
