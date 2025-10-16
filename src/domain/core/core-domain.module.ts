@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { DeliverableModule } from './deliverable/deliverable.module';
 import { DeliverableMappingModule } from './deliverable-mapping/deliverable-mapping.module';
 import { DownwardEvaluationModule } from './downward-evaluation/downward-evaluation.module';
-import { EmployeeEvaluationStatusModule } from './employee-evaluation-status/employee-evaluation-status.module';
-import { EmployeeEvaluationStatusMappingModule } from './employee-evaluation-status-mapping/employee-evaluation-status-mapping.module';
 import { EvaluationLineModule } from './evaluation-line/evaluation-line.module';
 import { EvaluationLineMappingModule } from './evaluation-line-mapping/evaluation-line-mapping.module';
 import { EvaluationPeriodModule } from './evaluation-period/evaluation-period.module';
@@ -33,7 +31,6 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
 
     // 평가자 및 상태 관리
     EvaluationLineModule,
-    EmployeeEvaluationStatusModule,
 
     // 평가 데이터 관리
     WbsSelfEvaluationModule,
@@ -46,7 +43,6 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
 
     // 매핑 테이블 관리
     EvaluationLineMappingModule,
-    EmployeeEvaluationStatusMappingModule,
     DeliverableMappingModule,
   ],
   exports: [
@@ -61,7 +57,6 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
 
     // 평가자 및 상태 관리
     EvaluationLineModule,
-    EmployeeEvaluationStatusModule,
 
     // 평가 데이터 관리
     WbsSelfEvaluationModule,
@@ -74,7 +69,6 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
 
     // 매핑 테이블 관리
     EvaluationLineMappingModule,
-    EmployeeEvaluationStatusMappingModule,
     DeliverableMappingModule,
   ],
 })
