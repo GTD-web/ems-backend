@@ -24,6 +24,8 @@ export interface WbsSelfEvaluationDto {
   completedAt?: Date;
   /** 평가일 */
   evaluationDate: Date;
+  /** 성과 입력 (실제 달성한 성과 및 결과) */
+  performanceResult?: string;
   /** 자가평가 내용 */
   selfEvaluationContent: string;
   /** 자가평가 점수 (1-5) */
@@ -66,6 +68,8 @@ export interface WbsSelfEvaluationDetailDto {
   completedAt?: Date;
   /** 평가일 */
   evaluationDate: Date;
+  /** 성과 입력 (실제 달성한 성과 및 결과) */
+  performanceResult?: string;
   /** 자가평가 내용 */
   selfEvaluationContent: string;
   /** 자가평가 점수 (1-5) */
@@ -98,6 +102,8 @@ export interface CreateWbsSelfEvaluationData {
   wbsItemId: string;
   /** 할당자 ID */
   assignedBy: string;
+  /** 성과 입력 (실제 달성한 성과 및 결과) */
+  performanceResult?: string;
   /** 자가평가 내용 */
   selfEvaluationContent: string;
   /** 자가평가 점수 (1-5) */
@@ -116,6 +122,8 @@ export interface UpdateWbsSelfEvaluationData {
   assignedBy?: string;
   /** 자가평가 완료 여부 */
   isCompleted?: boolean;
+  /** 성과 입력 (실제 달성한 성과 및 결과) */
+  performanceResult?: string;
   /** 자가평가 내용 */
   selfEvaluationContent?: string;
   /** 자가평가 점수 (1-5) */

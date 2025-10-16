@@ -3,10 +3,12 @@ import { QueryBus } from '@nestjs/cqrs';
 import {
   IDashboardContext,
   EmployeeEvaluationPeriodStatusDto,
+  MyEvaluationTargetStatusDto,
 } from './interfaces/dashboard-context.interface';
 import {
   GetEmployeeEvaluationPeriodStatusQuery,
   GetAllEmployeesEvaluationPeriodStatusQuery,
+  GetMyEvaluationTargetsStatusQuery,
 } from './handlers/queries';
 
 /**
@@ -41,6 +43,20 @@ export class DashboardService implements IDashboardContext {
   ): Promise<EmployeeEvaluationPeriodStatusDto[]> {
     const query = new GetAllEmployeesEvaluationPeriodStatusQuery(
       evaluationPeriodId,
+    );
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 내가 담당하는 평가 대상자 현황을 조회한다
+   */
+  async 내가_담당하는_평가대상자_현황을_조회한다(
+    evaluationPeriodId: string,
+    evaluatorId: string,
+  ): Promise<MyEvaluationTargetStatusDto[]> {
+    const query = new GetMyEvaluationTargetsStatusQuery(
+      evaluationPeriodId,
+      evaluatorId,
     );
     return await this.queryBus.execute(query);
   }

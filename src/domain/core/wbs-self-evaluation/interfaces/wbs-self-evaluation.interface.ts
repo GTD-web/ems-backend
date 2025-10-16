@@ -6,6 +6,8 @@ export interface IWbsSelfEvaluation {
   id: string;
   /** 평가일 */
   evaluationDate: Date;
+  /** 성과 입력 (실제 달성한 성과 및 결과) */
+  performanceResult?: string;
   /** 자가평가 내용 */
   selfEvaluationContent: string;
   /** 자가평가 점수 (1-5) */

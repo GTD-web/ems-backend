@@ -6,7 +6,10 @@ import {
   ApiBadRequestResponse,
   ApiParam,
 } from '@nestjs/swagger';
-import { EmployeeEvaluationPeriodStatusResponseDto } from '../dto/dashboard.dto';
+import {
+  EmployeeEvaluationPeriodStatusResponseDto,
+  MyEvaluationTargetStatusResponseDto,
+} from '../dto/dashboard.dto';
 
 /**
  * 직원의 평가기간 현황 조회 API 데코레이터
@@ -102,6 +105,57 @@ export function GetAllEmployeesEvaluationPeriodStatus() {
     ApiOkResponse({
       description: '모든 직원의 평가기간 현황 조회 성공',
       type: [EmployeeEvaluationPeriodStatusResponseDto],
+    }),
+    ApiBadRequestResponse({
+      description: '잘못된 요청 (UUID 형식 오류 등)',
+    }),
+  );
+}
+
+/**
+ * 내가 담당하는 평가 대상자 현황 조회 API 데코레이터
+ */
+export function GetMyEvaluationTargetsStatus() {
+  return applyDecorators(
+    Get(':evaluationPeriodId/my-evaluation-targets/:evaluatorId/status'),
+    ApiOperation({
+      summary: '내가 담당하는 평가 대상자 현황 조회',
+      description: `**중요**: 평가자가 담당하는 피평가자들의 평가 현황을 조회합니다.
+
+**조회 정보:**
+- 내가 담당하는 피평가자 목록
+- 각 피평가자에 대한 내 평가자 유형 (PRIMARY/SECONDARY)
+- 내가 담당하는 하향평가 현황 (평가 대상 WBS 수, 완료 수, 평균 점수)
+- 수정 가능 여부
+
+**특징:**
+- 제외된 직원은 결과에서 자동 제외
+- 1차/2차 평가자로 동시에 지정된 경우 모두 표시
+- 내가 담당하는 평가 현황만 제공
+
+**테스트 케이스:**
+- 정상 조회: 평가자가 담당하는 피평가자 현황을 조회할 수 있어야 함
+- 담당 없음: 담당하는 평가 대상자가 없는 경우 빈 배열 반환
+- 복수 역할: 1차/2차 평가자 모두인 경우 두 평가 현황 모두 제공
+- 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
+    }),
+    ApiParam({
+      name: 'evaluationPeriodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    ApiParam({
+      name: 'evaluatorId',
+      description: '평가자 ID (나의 직원 ID)',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174002',
+    }),
+    ApiOkResponse({
+      description: '내가 담당하는 평가 대상자 현황 조회 성공',
+      type: [MyEvaluationTargetStatusResponseDto],
     }),
     ApiBadRequestResponse({
       description: '잘못된 요청 (UUID 형식 오류 등)',

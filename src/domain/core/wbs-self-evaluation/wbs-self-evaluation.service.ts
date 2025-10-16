@@ -117,6 +117,7 @@ export class WbsSelfEvaluationService {
       if (
         updateData.selfEvaluationContent ||
         updateData.selfEvaluationScore ||
+        updateData.performanceResult !== undefined ||
         updateData.additionalComments !== undefined
       ) {
         wbsSelfEvaluation.자가평가를_수정한다(
@@ -124,6 +125,9 @@ export class WbsSelfEvaluationService {
             wbsSelfEvaluation.selfEvaluationContent,
           updateData.selfEvaluationScore ||
             wbsSelfEvaluation.selfEvaluationScore,
+          updateData.performanceResult !== undefined
+            ? updateData.performanceResult
+            : wbsSelfEvaluation.performanceResult,
           updateData.additionalComments,
           updatedBy,
         );

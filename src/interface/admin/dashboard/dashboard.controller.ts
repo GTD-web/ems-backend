@@ -5,8 +5,12 @@ import { ParseUUID } from '../../decorators/parse-uuid.decorator';
 import {
   GetEmployeeEvaluationPeriodStatus,
   GetAllEmployeesEvaluationPeriodStatus,
+  GetMyEvaluationTargetsStatus,
 } from './decorators/dashboard-api.decorators';
-import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/dashboard.dto';
+import {
+  EmployeeEvaluationPeriodStatusResponseDto,
+  MyEvaluationTargetStatusResponseDto,
+} from './dto/dashboard.dto';
 
 /**
  * 관리자용 대시보드 컨트롤러
@@ -31,6 +35,20 @@ export class DashboardController {
   ): Promise<EmployeeEvaluationPeriodStatusResponseDto[]> {
     return await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(
       evaluationPeriodId,
+    );
+  }
+
+  /**
+   * 내가 담당하는 평가 대상자 현황을 조회합니다.
+   */
+  @GetMyEvaluationTargetsStatus()
+  async getMyEvaluationTargetsStatus(
+    @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
+    @ParseUUID('evaluatorId') evaluatorId: string,
+  ): Promise<MyEvaluationTargetStatusResponseDto[]> {
+    return await this.dashboardService.내가_담당하는_평가대상자_현황을_조회한다(
+      evaluationPeriodId,
+      evaluatorId,
     );
   }
 

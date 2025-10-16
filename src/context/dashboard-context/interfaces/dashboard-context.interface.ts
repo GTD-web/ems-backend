@@ -27,6 +27,14 @@ export type WbsCriteriaStatus = 'complete' | 'in_progress' | 'none';
 export type EvaluationLineStatus = 'complete' | 'in_progress' | 'none';
 
 /**
+ * 성과 입력 상태
+ * - complete: 모든 WBS에 성과 입력이 완료됨 (완료)
+ * - in_progress: 일부 WBS에만 성과 입력이 있음 (입력중)
+ * - none: 모든 WBS에 성과 입력이 없음 (미존재)
+ */
+export type PerformanceInputStatus = 'complete' | 'in_progress' | 'none';
+
+/**
  * 자기평가 진행 상태
  * - complete: 모든 WBS 자기평가가 완료됨 (완료)
  * - in_progress: 일부 WBS 자기평가만 완료되거나 진행중 (입력중)
@@ -145,6 +153,16 @@ export interface EmployeeEvaluationPeriodStatusDto {
     hasSecondaryEvaluator: boolean;
   };
 
+  /** 성과 입력 정보 */
+  performanceInput: {
+    /** 성과 입력 상태 */
+    status: PerformanceInputStatus;
+    /** 전체 WBS 수 */
+    totalWbsCount: number;
+    /** 성과가 입력된 WBS 수 */
+    inputCompletedCount: number;
+  };
+
   /** 자기평가 진행 정보 */
   selfEvaluation: {
     /** 자기평가 진행 상태 */
@@ -241,4 +259,148 @@ export interface IDashboardContext {
   평가기간의_모든_피평가자_현황을_조회한다(
     evaluationPeriodId: string,
   ): Promise<EmployeeEvaluationPeriodStatusDto[]>;
+
+  /**
+   * 내가 담당하는 평가 대상자 현황을 조회한다
+   */
+  내가_담당하는_평가대상자_현황을_조회한다(
+    evaluationPeriodId: string,
+    evaluatorId: string,
+  ): Promise<MyEvaluationTargetStatusDto[]>;
+}
+
+// ==================== 평가자 관점의 타입 정의 ====================
+
+/**
+ * 내가 담당하는 하향평가 현황
+ */
+export interface MyDownwardEvaluationStatus {
+  /**
+   * 1차 평가자 여부
+   */
+  isPrimary: boolean;
+
+  /**
+   * 2차 평가자 여부
+   */
+  isSecondary: boolean;
+
+  /**
+   * 1차 평가 현황 (1차 평가자인 경우에만 제공)
+   */
+  primaryStatus: {
+    /**
+     * 평가 대상 WBS 수
+     */
+    assignedWbsCount: number;
+
+    /**
+     * 완료된 평가 수
+     */
+    completedEvaluationCount: number;
+
+    /**
+     * 수정 가능 여부
+     */
+    isEditable: boolean;
+
+    /**
+     * 평균 점수 (1-5점)
+     */
+    averageScore: number | null;
+  } | null;
+
+  /**
+   * 2차 평가 현황 (2차 평가자인 경우에만 제공)
+   */
+  secondaryStatus: {
+    /**
+     * 평가 대상 WBS 수
+     */
+    assignedWbsCount: number;
+
+    /**
+     * 완료된 평가 수
+     */
+    completedEvaluationCount: number;
+
+    /**
+     * 수정 가능 여부
+     */
+    isEditable: boolean;
+
+    /**
+     * 평균 점수 (1-5점)
+     */
+    averageScore: number | null;
+  } | null;
+}
+
+/**
+ * 내가 담당하는 평가 대상자 현황
+ */
+export interface MyEvaluationTargetStatusDto {
+  /**
+   * 피평가자 ID
+   */
+  employeeId: string;
+
+  /**
+   * 평가 대상 여부
+   */
+  isEvaluationTarget: boolean;
+
+  /**
+   * 평가 대상 제외 정보
+   */
+  exclusionInfo: {
+    isExcluded: boolean;
+    excludeReason: string | null;
+    excludedAt: Date | null;
+  };
+
+  /**
+   * 평가항목 설정 정보
+   */
+  evaluationCriteria: {
+    status: EvaluationCriteriaStatus;
+    assignedProjectCount: number;
+    assignedWbsCount: number;
+  };
+
+  /**
+   * WBS 평가기준 설정 정보
+   */
+  wbsCriteria: {
+    status: WbsCriteriaStatus;
+    wbsWithCriteriaCount: number;
+  };
+
+  /**
+   * 평가라인 지정 정보
+   */
+  evaluationLine: {
+    status: EvaluationLineStatus;
+    hasPrimaryEvaluator: boolean;
+    hasSecondaryEvaluator: boolean;
+  };
+
+  /**
+   * 성과 입력 정보
+   */
+  performanceInput: {
+    status: PerformanceInputStatus;
+    totalWbsCount: number;
+    inputCompletedCount: number;
+  };
+
+  /**
+   * 내가 담당하는 평가자 유형 목록
+   */
+  myEvaluatorTypes: string[];
+
+  /**
+   * 내가 담당하는 하향평가 현황
+   */
+  downwardEvaluation: MyDownwardEvaluationStatus;
 }

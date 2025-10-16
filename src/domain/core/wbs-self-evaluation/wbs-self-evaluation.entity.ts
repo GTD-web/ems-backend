@@ -72,6 +72,13 @@ export class WbsSelfEvaluation
 
   @Column({
     type: 'text',
+    nullable: true,
+    comment: '성과 입력 (실제 달성한 성과 및 결과)',
+  })
+  performanceResult?: string;
+
+  @Column({
+    type: 'text',
     comment: '자가평가 내용',
   })
   selfEvaluationContent: string;
@@ -99,6 +106,7 @@ export class WbsSelfEvaluation
       this.assignedBy = data.assignedBy;
       this.assignedDate = new Date();
       this.isCompleted = false;
+      this.performanceResult = data.performanceResult;
       this.selfEvaluationContent = data.selfEvaluationContent;
       this.selfEvaluationScore = data.selfEvaluationScore;
       this.additionalComments = data.additionalComments;
@@ -166,11 +174,13 @@ export class WbsSelfEvaluation
   자가평가를_수정한다(
     content: string,
     score: number,
+    performanceResult?: string,
     comments?: string,
     updatedBy?: string,
   ): void {
     this.selfEvaluationContent = content;
     this.selfEvaluationScore = score;
+    this.performanceResult = performanceResult;
     this.additionalComments = comments;
     this.evaluationDate = new Date();
 
@@ -200,6 +210,7 @@ export class WbsSelfEvaluation
       isCompleted: this.isCompleted,
       completedAt: this.completedAt,
       evaluationDate: this.evaluationDate,
+      performanceResult: this.performanceResult,
       selfEvaluationContent: this.selfEvaluationContent,
       selfEvaluationScore: this.selfEvaluationScore,
       additionalComments: this.additionalComments,
