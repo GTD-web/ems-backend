@@ -24,6 +24,8 @@ export interface CreatePeerEvaluationData {
   evaluationDate?: Date;
   /** 평가 완료 여부 */
   isCompleted?: boolean;
+  /** 요청 마감일 */
+  requestDeadline?: Date;
   /** 매핑일 */
   mappedDate?: Date;
   /** 매핑자 ID */
@@ -66,6 +68,8 @@ export interface PeerEvaluationDto {
   isCompleted: boolean;
   /** 평가 완료일 */
   completedAt?: Date;
+  /** 요청 마감일 */
+  requestDeadline?: Date;
   /** 매핑일 */
   mappedDate: Date;
   /** 매핑자 ID */

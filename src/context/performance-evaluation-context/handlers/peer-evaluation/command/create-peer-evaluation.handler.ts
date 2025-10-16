@@ -13,6 +13,7 @@ export class CreatePeerEvaluationCommand {
     public readonly evaluateeId: string,
     public readonly periodId: string,
     public readonly projectId: string,
+    public readonly requestDeadline?: Date,
     public readonly createdBy: string = '시스템',
   ) {}
 }
@@ -33,14 +34,21 @@ export class CreatePeerEvaluationHandler
   ) {}
 
   async execute(command: CreatePeerEvaluationCommand): Promise<string> {
-    const { evaluatorId, evaluateeId, periodId, projectId, createdBy } =
-      command;
+    const {
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
+      requestDeadline,
+      createdBy,
+    } = command;
 
     this.logger.log('동료평가 생성 핸들러 실행', {
       evaluatorId,
       evaluateeId,
       periodId,
       projectId,
+      requestDeadline,
     });
 
     return await this.transactionManager.executeTransaction(async () => {
@@ -50,6 +58,7 @@ export class CreatePeerEvaluationHandler
         evaluatorId,
         periodId,
         evaluationDate: new Date(),
+        requestDeadline,
         status: PeerEvaluationStatus.PENDING,
         isCompleted: false,
         mappedBy: createdBy,

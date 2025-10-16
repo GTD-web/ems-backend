@@ -38,6 +38,15 @@ export class RequestPeerEvaluationDto {
   periodId: string;
 
   @ApiPropertyOptional({
+    description: '요청 마감일 (ISO 8601 형식)',
+    example: '2024-12-31T23:59:59Z',
+    type: String,
+  })
+  @IsOptional()
+  @Type(() => Date)
+  requestDeadline?: Date;
+
+  @ApiPropertyOptional({
     description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',
     type: [String],
     example: [
@@ -88,6 +97,15 @@ export class RequestPeerEvaluationToMultipleEvaluatorsDto {
   periodId: string;
 
   @ApiPropertyOptional({
+    description: '요청 마감일 (ISO 8601 형식)',
+    example: '2024-12-31T23:59:59Z',
+    type: String,
+  })
+  @IsOptional()
+  @Type(() => Date)
+  requestDeadline?: Date;
+
+  @ApiPropertyOptional({
     description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',
     type: [String],
     example: [
@@ -136,6 +154,15 @@ export class RequestMultiplePeerEvaluationsDto {
   })
   @IsUUID()
   periodId: string;
+
+  @ApiPropertyOptional({
+    description: '요청 마감일 (ISO 8601 형식)',
+    example: '2024-12-31T23:59:59Z',
+    type: String,
+  })
+  @IsOptional()
+  @Type(() => Date)
+  requestDeadline?: Date;
 
   @ApiPropertyOptional({
     description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',

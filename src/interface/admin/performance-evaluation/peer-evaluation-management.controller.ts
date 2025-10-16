@@ -54,6 +54,7 @@ export class PeerEvaluationManagementController {
         evaluatorId: dto.evaluatorId,
         evaluateeId: dto.evaluateeId,
         periodId: dto.periodId,
+        requestDeadline: dto.requestDeadline,
         questionIds: dto.questionIds,
         requestedBy,
       });
@@ -79,6 +80,7 @@ export class PeerEvaluationManagementController {
           evaluatorIds: dto.evaluatorIds,
           evaluateeId: dto.evaluateeId,
           periodId: dto.periodId,
+          requestDeadline: dto.requestDeadline,
           questionIds: dto.questionIds,
           requestedBy,
         },
@@ -106,6 +108,7 @@ export class PeerEvaluationManagementController {
           evaluatorId: dto.evaluatorId,
           evaluateeIds: dto.evaluateeIds,
           periodId: dto.periodId,
+          requestDeadline: dto.requestDeadline,
           questionIds: dto.questionIds,
           requestedBy,
         },

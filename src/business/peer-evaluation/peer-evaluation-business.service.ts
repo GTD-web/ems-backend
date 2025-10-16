@@ -34,6 +34,7 @@ export class PeerEvaluationBusinessService {
     evaluatorId: string;
     evaluateeId: string;
     periodId: string;
+    requestDeadline?: Date;
     questionIds?: string[];
     requestedBy: string;
   }): Promise<string> {
@@ -41,6 +42,7 @@ export class PeerEvaluationBusinessService {
       evaluatorId: params.evaluatorId,
       evaluateeId: params.evaluateeId,
       periodId: params.periodId,
+      requestDeadline: params.requestDeadline,
       questionCount: params.questionIds?.length || 0,
     });
 
@@ -51,6 +53,7 @@ export class PeerEvaluationBusinessService {
         params.evaluateeId,
         params.periodId,
         '', // projectId는 빈 문자열 (요청 시에는 프로젝트 미정)
+        params.requestDeadline,
         undefined, // evaluationContent (작성 전)
         undefined, // score (작성 전)
         params.requestedBy,
@@ -93,6 +96,7 @@ export class PeerEvaluationBusinessService {
     evaluatorIds: string[];
     evaluateeId: string;
     periodId: string;
+    requestDeadline?: Date;
     questionIds?: string[];
     requestedBy: string;
   }): Promise<{ ids: string[]; count: number }> {
@@ -100,6 +104,7 @@ export class PeerEvaluationBusinessService {
       evaluatorCount: params.evaluatorIds.length,
       evaluateeId: params.evaluateeId,
       periodId: params.periodId,
+      requestDeadline: params.requestDeadline,
       questionCount: params.questionIds?.length || 0,
     });
 
@@ -112,6 +117,7 @@ export class PeerEvaluationBusinessService {
           evaluatorId,
           evaluateeId: params.evaluateeId,
           periodId: params.periodId,
+          requestDeadline: params.requestDeadline,
           questionIds: params.questionIds,
           requestedBy: params.requestedBy,
         });
@@ -141,6 +147,7 @@ export class PeerEvaluationBusinessService {
     evaluatorId: string;
     evaluateeIds: string[];
     periodId: string;
+    requestDeadline?: Date;
     questionIds?: string[];
     requestedBy: string;
   }): Promise<{ ids: string[]; count: number }> {
@@ -148,6 +155,7 @@ export class PeerEvaluationBusinessService {
       evaluatorId: params.evaluatorId,
       evaluateeCount: params.evaluateeIds.length,
       periodId: params.periodId,
+      requestDeadline: params.requestDeadline,
       questionCount: params.questionIds?.length || 0,
     });
 
@@ -160,6 +168,7 @@ export class PeerEvaluationBusinessService {
           evaluatorId: params.evaluatorId,
           evaluateeId,
           periodId: params.periodId,
+          requestDeadline: params.requestDeadline,
           questionIds: params.questionIds,
           requestedBy: params.requestedBy,
         });
@@ -208,6 +217,7 @@ export class PeerEvaluationBusinessService {
         params.evaluateeId,
         params.periodId,
         params.projectId,
+        undefined, // requestDeadline
         params.peerEvaluationContent,
         params.peerEvaluationScore,
         params.createdBy,

@@ -97,6 +97,7 @@ export interface IPerformanceEvaluationService {
     evaluateeId: string,
     periodId: string,
     projectId: string,
+    requestDeadline?: Date,
     evaluationContent?: string,
     score?: number,
     createdBy?: string,

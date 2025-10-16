@@ -316,6 +316,7 @@ export class PerformanceEvaluationService
     evaluateeId: string,
     periodId: string,
     projectId: string,
+    requestDeadline?: Date,
     evaluationContent?: string,
     score?: number,
     createdBy?: string,
@@ -325,6 +326,7 @@ export class PerformanceEvaluationService
       evaluateeId,
       periodId,
       projectId,
+      requestDeadline,
       createdBy || '시스템',
     );
 

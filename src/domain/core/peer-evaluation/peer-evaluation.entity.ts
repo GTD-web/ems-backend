@@ -72,6 +72,13 @@ export class PeerEvaluation
 
   @Column({
     type: 'timestamp with time zone',
+    nullable: true,
+    comment: '요청 마감일',
+  })
+  requestDeadline?: Date;
+
+  @Column({
+    type: 'timestamp with time zone',
     default: () => 'CURRENT_TIMESTAMP',
     comment: '매핑일',
   })
@@ -99,6 +106,7 @@ export class PeerEvaluation
       this.status = data.status || PeerEvaluationStatus.PENDING;
       this.evaluationDate = data.evaluationDate || new Date();
       this.isCompleted = data.isCompleted || false;
+      this.requestDeadline = data.requestDeadline;
       this.mappedDate = data.mappedDate || new Date();
       this.mappedBy = data.mappedBy || data.createdBy;
       this.isActive = data.isActive !== undefined ? data.isActive : true;
@@ -127,6 +135,23 @@ export class PeerEvaluation
    */
   대기중인가(): boolean {
     return this.status === PeerEvaluationStatus.PENDING;
+  }
+
+  /**
+   * 요청 마감일이 지났는지 확인한다
+   */
+  마감일이_지났는가(): boolean {
+    if (!this.requestDeadline) {
+      return false;
+    }
+    return new Date() > this.requestDeadline;
+  }
+
+  /**
+   * 요청 마감일이 있는지 확인한다
+   */
+  마감일이_있는가(): boolean {
+    return this.requestDeadline !== null && this.requestDeadline !== undefined;
   }
 
   /**
@@ -238,6 +263,7 @@ export class PeerEvaluation
       status: this.status,
       isCompleted: this.isCompleted,
       completedAt: this.completedAt,
+      requestDeadline: this.requestDeadline,
       mappedDate: this.mappedDate,
       mappedBy: this.mappedBy,
       isActive: this.isActive,
