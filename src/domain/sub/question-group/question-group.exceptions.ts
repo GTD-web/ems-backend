@@ -79,3 +79,11 @@ export class GroupWithQuestionsException extends QuestionGroupDomainException {
     this.name = 'GroupWithQuestionsException';
   }
 }
+
+// 빈 그룹명 예외
+export class EmptyGroupNameException extends QuestionGroupDomainException {
+  constructor() {
+    super('그룹명은 비어있을 수 없습니다', 'EMPTY_GROUP_NAME', 400);
+    this.name = 'EmptyGroupNameException';
+  }
+}

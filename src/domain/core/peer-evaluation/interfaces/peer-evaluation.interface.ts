@@ -12,10 +12,6 @@ export interface IPeerEvaluation {
   evaluatorId: string;
   /** 평가 기간 ID */
   periodId: string;
-  /** 동료평가 내용 */
-  evaluationContent?: string;
-  /** 동료평가 점수 */
-  score?: number;
   /** 평가일 */
   evaluationDate: Date;
   /** 평가 상태 */

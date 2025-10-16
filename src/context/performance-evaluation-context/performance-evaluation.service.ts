@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
 import { DownwardEvaluationNotFoundException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
@@ -48,6 +48,12 @@ import {
   SubmitPeerEvaluationCommand,
   UpdatePeerEvaluationCommand,
   UpsertPeerEvaluationCommand,
+  AddQuestionGroupToPeerEvaluationCommand,
+  AddQuestionToPeerEvaluationCommand,
+  RemoveQuestionFromPeerEvaluationCommand,
+  UpdatePeerEvaluationQuestionOrderCommand,
+  GetPeerEvaluationQuestionsQuery,
+  type PeerEvaluationQuestionDetail,
 } from './handlers/peer-evaluation';
 
 // 하향평가 관련 커맨드 및 쿼리
@@ -89,8 +95,6 @@ import { IPerformanceEvaluationService } from './interfaces/performance-evaluati
 export class PerformanceEvaluationService
   implements IPerformanceEvaluationService
 {
-  private readonly logger = new Logger(PerformanceEvaluationService.name);
-
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -110,11 +114,6 @@ export class PerformanceEvaluationService
     performanceResult?: string,
     createdBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
-    this.logger.log('WBS 자기평가 생성 시작', {
-      employeeId,
-      wbsItemId,
-    });
-
     const command = new CreateWbsSelfEvaluationCommand(
       periodId,
       employeeId,
@@ -126,7 +125,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('WBS 자기평가 생성 완료', { evaluationId: result });
     return result;
   }
 
@@ -140,10 +138,6 @@ export class PerformanceEvaluationService
     performanceResult?: string,
     updatedBy?: string,
   ): Promise<WbsSelfEvaluationBasicDto> {
-    this.logger.log('WBS 자기평가 수정 시작', {
-      evaluationId,
-    });
-
     const command = new UpdateWbsSelfEvaluationCommand(
       evaluationId,
       selfEvaluationContent,
@@ -153,9 +147,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('WBS 자기평가 수정 완료', {
-      evaluationId,
-    });
     return result;
   }
 
@@ -171,11 +162,6 @@ export class PerformanceEvaluationService
     performanceResult?: string,
     actionBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
-    this.logger.log('WBS 자기평가 저장 시작', {
-      employeeId,
-      wbsItemId,
-    });
-
     const command = new UpsertWbsSelfEvaluationCommand(
       periodId,
       employeeId,
@@ -187,7 +173,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('WBS 자기평가 저장 완료');
     return result;
   }
 
@@ -198,19 +183,12 @@ export class PerformanceEvaluationService
     evaluationId: string,
     submittedBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
-    this.logger.log('WBS 자기평가 제출 시작', {
-      evaluationId,
-    });
-
     const command = new SubmitWbsSelfEvaluationCommand(
       evaluationId,
       submittedBy || '시스템',
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('WBS 자기평가 제출 완료', {
-      evaluationId,
-    });
     return result;
   }
 
@@ -223,11 +201,6 @@ export class PerformanceEvaluationService
     periodId: string,
     submittedBy?: string,
   ): Promise<SubmitAllWbsSelfEvaluationsResponse> {
-    this.logger.log('직원의 전체 WBS 자기평가 제출 시작', {
-      employeeId,
-      periodId,
-    });
-
     const command = new SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand(
       employeeId,
       periodId,
@@ -235,12 +208,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('직원의 전체 WBS 자기평가 제출 완료', {
-      employeeId,
-      periodId,
-      submittedCount: result.submittedCount,
-      failedCount: result.failedCount,
-    });
     return result;
   }
 
@@ -251,19 +218,12 @@ export class PerformanceEvaluationService
     evaluationId: string,
     resetBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
-    this.logger.log('WBS 자기평가 초기화 시작', {
-      evaluationId,
-    });
-
     const command = new ResetWbsSelfEvaluationCommand(
       evaluationId,
       resetBy || '시스템',
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('WBS 자기평가 초기화 완료', {
-      evaluationId,
-    });
     return result;
   }
 
@@ -276,11 +236,6 @@ export class PerformanceEvaluationService
     periodId: string,
     resetBy?: string,
   ): Promise<ResetAllWbsSelfEvaluationsResponse> {
-    this.logger.log('직원의 전체 WBS 자기평가 초기화 시작', {
-      employeeId,
-      periodId,
-    });
-
     const command = new ResetAllWbsSelfEvaluationsByEmployeePeriodCommand(
       employeeId,
       periodId,
@@ -288,12 +243,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('직원의 전체 WBS 자기평가 초기화 완료', {
-      employeeId,
-      periodId,
-      resetCount: result.resetCount,
-      failedCount: result.failedCount,
-    });
     return result;
   }
 
@@ -307,12 +256,6 @@ export class PerformanceEvaluationService
     projectId: string,
     submittedBy?: string,
   ): Promise<SubmitWbsSelfEvaluationsByProjectResponse> {
-    this.logger.log('프로젝트별 WBS 자기평가 제출 시작', {
-      employeeId,
-      periodId,
-      projectId,
-    });
-
     const command = new SubmitWbsSelfEvaluationsByProjectCommand(
       employeeId,
       periodId,
@@ -321,13 +264,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('프로젝트별 WBS 자기평가 제출 완료', {
-      employeeId,
-      periodId,
-      projectId,
-      submittedCount: result.submittedCount,
-      failedCount: result.failedCount,
-    });
     return result;
   }
 
@@ -341,12 +277,6 @@ export class PerformanceEvaluationService
     projectId: string,
     resetBy?: string,
   ): Promise<ResetWbsSelfEvaluationsByProjectResponse> {
-    this.logger.log('프로젝트별 WBS 자기평가 초기화 시작', {
-      employeeId,
-      periodId,
-      projectId,
-    });
-
     const command = new ResetWbsSelfEvaluationsByProjectCommand(
       employeeId,
       periodId,
@@ -355,13 +285,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('프로젝트별 WBS 자기평가 초기화 완료', {
-      employeeId,
-      periodId,
-      projectId,
-      resetCount: result.resetCount,
-      failedCount: result.failedCount,
-    });
     return result;
   }
 
@@ -371,9 +294,6 @@ export class PerformanceEvaluationService
   async 직원의_자기평가_목록을_조회한다(
     query: GetEmployeeSelfEvaluationsQuery,
   ): Promise<EmployeeSelfEvaluationsResponseDto> {
-    this.logger.log('직원 자기평가 목록 조회', {
-      employeeId: query.employeeId,
-    });
     return await this.queryBus.execute(query);
   }
 
@@ -383,9 +303,6 @@ export class PerformanceEvaluationService
   async WBS자기평가_상세정보를_조회한다(
     query: GetWbsSelfEvaluationDetailQuery,
   ): Promise<any> {
-    this.logger.log('WBS 자기평가 상세정보 조회', {
-      evaluationId: query.evaluationId,
-    });
     return await this.queryBus.execute(query);
   }
 
@@ -403,23 +320,15 @@ export class PerformanceEvaluationService
     score?: number,
     createdBy?: string,
   ): Promise<string> {
-    this.logger.log('동료평가 생성 시작', {
-      evaluatorId,
-      evaluateeId,
-    });
-
     const command = new CreatePeerEvaluationCommand(
       evaluatorId,
       evaluateeId,
       periodId,
       projectId,
-      evaluationContent,
-      score,
       createdBy || '시스템',
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('동료평가 생성 완료', { evaluationId: result });
     return result;
   }
 
@@ -432,21 +341,12 @@ export class PerformanceEvaluationService
     score?: number,
     updatedBy?: string,
   ): Promise<void> {
-    this.logger.log('동료평가 수정 시작', {
-      evaluationId,
-    });
-
     const command = new UpdatePeerEvaluationCommand(
       evaluationId,
-      evaluationContent,
-      score,
       updatedBy || '시스템',
     );
 
     await this.commandBus.execute(command);
-    this.logger.log('동료평가 수정 완료', {
-      evaluationId,
-    });
   }
 
   /**
@@ -461,25 +361,15 @@ export class PerformanceEvaluationService
     score?: number,
     actionBy?: string,
   ): Promise<string> {
-    this.logger.log('동료평가 저장 시작', {
-      evaluatorId,
-      evaluateeId,
-    });
-
     const command = new UpsertPeerEvaluationCommand(
       evaluatorId,
       evaluateeId,
       periodId,
       projectId,
-      evaluationContent,
-      score,
       actionBy || '시스템',
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('동료평가 저장 완료', {
-      evaluationId: result,
-    });
     return result;
   }
 
@@ -490,16 +380,9 @@ export class PerformanceEvaluationService
     evaluationId: string,
     cancelledBy: string,
   ): Promise<void> {
-    this.logger.log('동료평가 취소 시작', {
-      evaluationId,
-    });
-
     const command = new CancelPeerEvaluationCommand(evaluationId, cancelledBy);
 
     await this.commandBus.execute(command);
-    this.logger.log('동료평가 취소 완료', {
-      evaluationId,
-    });
   }
 
   /**
@@ -510,11 +393,6 @@ export class PerformanceEvaluationService
     periodId: string,
     cancelledBy: string,
   ): Promise<{ cancelledCount: number }> {
-    this.logger.log('피평가자의 동료평가 일괄 취소 시작', {
-      evaluateeId,
-      periodId,
-    });
-
     const command = new CancelPeerEvaluationsByPeriodCommand(
       evaluateeId,
       periodId,
@@ -522,9 +400,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('피평가자의 동료평가 일괄 취소 완료', {
-      cancelledCount: result.cancelledCount,
-    });
     return result;
   }
 
@@ -535,19 +410,12 @@ export class PerformanceEvaluationService
     evaluationId: string,
     submittedBy?: string,
   ): Promise<void> {
-    this.logger.log('동료평가 제출 시작', {
-      evaluationId,
-    });
-
     const command = new SubmitPeerEvaluationCommand(
       evaluationId,
       submittedBy || '시스템',
     );
 
     await this.commandBus.execute(command);
-    this.logger.log('동료평가 제출 완료', {
-      evaluationId,
-    });
   }
 
   /**
@@ -556,7 +424,6 @@ export class PerformanceEvaluationService
   async 동료평가_목록을_조회한다(
     query: GetPeerEvaluationListQuery,
   ): Promise<any> {
-    this.logger.log('동료평가 목록 조회', { evaluatorId: query.evaluatorId });
     return await this.queryBus.execute(query);
   }
 
@@ -566,9 +433,6 @@ export class PerformanceEvaluationService
   async 동료평가_상세정보를_조회한다(
     query: GetPeerEvaluationDetailQuery,
   ): Promise<any> {
-    this.logger.log('동료평가 상세정보 조회', {
-      evaluationId: query.evaluationId,
-    });
     return await this.queryBus.execute(query);
   }
 
@@ -578,10 +442,6 @@ export class PerformanceEvaluationService
   async 평가자에게_할당된_피평가자_목록을_조회한다(
     query: GetEvaluatorAssignedEvaluateesQuery,
   ): Promise<any> {
-    this.logger.log('평가자에게 할당된 피평가자 목록 조회', {
-      evaluatorId: query.evaluatorId,
-      periodId: query.periodId,
-    });
     return await this.queryBus.execute(query);
   }
 
@@ -601,11 +461,6 @@ export class PerformanceEvaluationService
     downwardEvaluationScore?: number,
     createdBy?: string,
   ): Promise<string> {
-    this.logger.log('하향평가 생성 시작', {
-      evaluatorId,
-      evaluateeId,
-    });
-
     const command = new CreateDownwardEvaluationCommand(
       evaluatorId,
       evaluateeId,
@@ -619,7 +474,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('하향평가 생성 완료', { evaluationId: result });
     return result;
   }
 
@@ -632,10 +486,6 @@ export class PerformanceEvaluationService
     downwardEvaluationScore?: number,
     updatedBy?: string,
   ): Promise<void> {
-    this.logger.log('하향평가 수정 시작', {
-      evaluationId,
-    });
-
     const command = new UpdateDownwardEvaluationCommand(
       evaluationId,
       downwardEvaluationContent,
@@ -644,9 +494,6 @@ export class PerformanceEvaluationService
     );
 
     await this.commandBus.execute(command);
-    this.logger.log('하향평가 수정 완료', {
-      evaluationId,
-    });
   }
 
   /**
@@ -663,12 +510,6 @@ export class PerformanceEvaluationService
     downwardEvaluationScore?: number,
     actionBy?: string,
   ): Promise<string> {
-    this.logger.log('하향평가 저장 시작', {
-      evaluatorId,
-      evaluateeId,
-      evaluationType: evaluationType || 'primary',
-    });
-
     const command = new UpsertDownwardEvaluationCommand(
       evaluatorId,
       evaluateeId,
@@ -682,9 +523,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('하향평가 저장 완료', {
-      evaluationId: result,
-    });
     return result;
   }
 
@@ -698,12 +536,6 @@ export class PerformanceEvaluationService
     evaluatorId: string,
     submittedBy: string,
   ): Promise<void> {
-    this.logger.log('1차 하향평가 제출 시작', {
-      evaluateeId,
-      periodId,
-      projectId,
-    });
-
     // 1차 하향평가를 조회
     const query = new GetDownwardEvaluationListQuery(
       evaluatorId,
@@ -732,9 +564,6 @@ export class PerformanceEvaluationService
     );
 
     await this.commandBus.execute(command);
-    this.logger.log('1차 하향평가 제출 완료', {
-      evaluationId: evaluation.id,
-    });
   }
 
   /**
@@ -747,12 +576,6 @@ export class PerformanceEvaluationService
     evaluatorId: string,
     submittedBy: string,
   ): Promise<void> {
-    this.logger.log('2차 하향평가 제출 시작', {
-      evaluateeId,
-      periodId,
-      projectId,
-    });
-
     // 2차 하향평가를 조회
     const query = new GetDownwardEvaluationListQuery(
       evaluatorId,
@@ -781,9 +604,6 @@ export class PerformanceEvaluationService
     );
 
     await this.commandBus.execute(command);
-    this.logger.log('2차 하향평가 제출 완료', {
-      evaluationId: evaluation.id,
-    });
   }
 
   /**
@@ -793,19 +613,12 @@ export class PerformanceEvaluationService
     evaluationId: string,
     submittedBy?: string,
   ): Promise<void> {
-    this.logger.log('하향평가 제출 시작 (ID로 직접)', {
-      evaluationId,
-    });
-
     const command = new SubmitDownwardEvaluationCommand(
       evaluationId,
       submittedBy || '시스템',
     );
 
     await this.commandBus.execute(command);
-    this.logger.log('하향평가 제출 완료', {
-      evaluationId,
-    });
   }
 
   /**
@@ -814,7 +627,6 @@ export class PerformanceEvaluationService
   async 하향평가_목록을_조회한다(
     query: GetDownwardEvaluationListQuery,
   ): Promise<any> {
-    this.logger.log('하향평가 목록 조회', { evaluatorId: query.evaluatorId });
     return await this.queryBus.execute(query);
   }
 
@@ -824,9 +636,6 @@ export class PerformanceEvaluationService
   async 하향평가_상세정보를_조회한다(
     query: GetDownwardEvaluationDetailQuery,
   ): Promise<any> {
-    this.logger.log('하향평가 상세정보 조회', {
-      evaluationId: query.evaluationId,
-    });
     return await this.queryBus.execute(query);
   }
 
@@ -844,11 +653,6 @@ export class PerformanceEvaluationService
     finalComments?: string,
     createdBy?: string,
   ): Promise<string> {
-    this.logger.log('최종평가 생성 시작', {
-      employeeId,
-      periodId,
-    });
-
     const command = new CreateFinalEvaluationCommand(
       employeeId,
       periodId,
@@ -860,7 +664,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('최종평가 생성 완료', { evaluationId: result });
     return result;
   }
 
@@ -875,10 +678,6 @@ export class PerformanceEvaluationService
     finalComments?: string,
     updatedBy?: string,
   ): Promise<void> {
-    this.logger.log('최종평가 수정 시작', {
-      id,
-    });
-
     const command = new UpdateFinalEvaluationCommand(
       id,
       evaluationGrade,
@@ -889,9 +688,6 @@ export class PerformanceEvaluationService
     );
 
     await this.commandBus.execute(command);
-    this.logger.log('최종평가 수정 완료', {
-      id,
-    });
   }
 
   /**
@@ -906,11 +702,6 @@ export class PerformanceEvaluationService
     finalComments?: string,
     actionBy?: string,
   ): Promise<string> {
-    this.logger.log('최종평가 저장 시작', {
-      employeeId,
-      periodId,
-    });
-
     const command = new UpsertFinalEvaluationCommand(
       employeeId,
       periodId,
@@ -922,9 +713,6 @@ export class PerformanceEvaluationService
     );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('최종평가 저장 완료', {
-      evaluationId: result,
-    });
     return result;
   }
 
@@ -932,55 +720,33 @@ export class PerformanceEvaluationService
    * 최종평가를 삭제한다
    */
   async 최종평가를_삭제한다(id: string, deletedBy?: string): Promise<void> {
-    this.logger.log('최종평가 삭제 시작', {
-      id,
-    });
-
     const command = new DeleteFinalEvaluationCommand(id, deletedBy || '시스템');
 
     await this.commandBus.execute(command);
-    this.logger.log('최종평가 삭제 완료', {
-      id,
-    });
   }
 
   /**
    * 최종평가를 확정한다
    */
   async 최종평가를_확정한다(id: string, confirmedBy: string): Promise<void> {
-    this.logger.log('최종평가 확정 시작', {
-      id,
-    });
-
     const command = new ConfirmFinalEvaluationCommand(id, confirmedBy);
 
     await this.commandBus.execute(command);
-    this.logger.log('최종평가 확정 완료', {
-      id,
-    });
   }
 
   /**
    * 최종평가 확정을 취소한다
    */
   async 최종평가_확정을_취소한다(id: string, updatedBy: string): Promise<void> {
-    this.logger.log('최종평가 확정 취소 시작', {
-      id,
-    });
-
     const command = new CancelConfirmationFinalEvaluationCommand(id, updatedBy);
 
     await this.commandBus.execute(command);
-    this.logger.log('최종평가 확정 취소 완료', {
-      id,
-    });
   }
 
   /**
    * 최종평가를 조회한다
    */
   async 최종평가를_조회한다(query: GetFinalEvaluationQuery): Promise<any> {
-    this.logger.log('최종평가 조회', { id: query.id });
     return await this.queryBus.execute(query);
   }
 
@@ -990,10 +756,6 @@ export class PerformanceEvaluationService
   async 최종평가_목록을_조회한다(
     query: GetFinalEvaluationListQuery,
   ): Promise<any> {
-    this.logger.log('최종평가 목록 조회', {
-      employeeId: query.employeeId,
-      periodId: query.periodId,
-    });
     return await this.queryBus.execute(query);
   }
 
@@ -1003,10 +765,6 @@ export class PerformanceEvaluationService
   async 직원_평가기간별_최종평가를_조회한다(
     query: GetFinalEvaluationByEmployeePeriodQuery,
   ): Promise<any> {
-    this.logger.log('직원-평가기간별 최종평가 조회', {
-      employeeId: query.employeeId,
-      periodId: query.periodId,
-    });
     return await this.queryBus.execute(query);
   }
 
@@ -1028,16 +786,7 @@ export class PerformanceEvaluationService
       updatedBy,
     );
 
-    this.logger.log('평가 수정 가능 상태 변경 시작', {
-      mappingId: command.mappingId,
-      evaluationType: command.evaluationType,
-      isEditable: command.isEditable,
-    });
-
     const result = await this.commandBus.execute(command);
-    this.logger.log('평가 수정 가능 상태 변경 완료', {
-      mappingId: command.mappingId,
-    });
     return result;
   }
 
@@ -1123,18 +872,7 @@ export class PerformanceEvaluationService
       updatedBy,
     );
 
-    this.logger.log('평가기간별 모든 평가 수정 가능 상태 일괄 변경 시작', {
-      evaluationPeriodId: command.evaluationPeriodId,
-      isSelfEvaluationEditable: command.isSelfEvaluationEditable,
-      isPrimaryEvaluationEditable: command.isPrimaryEvaluationEditable,
-      isSecondaryEvaluationEditable: command.isSecondaryEvaluationEditable,
-    });
-
     const result = await this.commandBus.execute(command);
-    this.logger.log('평가기간별 모든 평가 수정 가능 상태 일괄 변경 완료', {
-      evaluationPeriodId: command.evaluationPeriodId,
-      updatedCount: result.updatedCount,
-    });
     return result;
   }
 
@@ -1152,12 +890,7 @@ export class PerformanceEvaluationService
       data.clearedBy,
     );
 
-    this.logger.log('WBS 자기평가 내용 초기화 시작', {
-      evaluationId: data.evaluationId,
-    });
-
     const result = await this.commandBus.execute(command);
-    this.logger.log('WBS 자기평가 내용 초기화 완료');
     return result;
   }
 
@@ -1175,15 +908,7 @@ export class PerformanceEvaluationService
       data.clearedBy,
     );
 
-    this.logger.log('직원의 전체 WBS 자기평가 내용 초기화 시작', {
-      employeeId: data.employeeId,
-      periodId: data.periodId,
-    });
-
     const result = await this.commandBus.execute(command);
-    this.logger.log('직원의 전체 WBS 자기평가 내용 초기화 완료', {
-      clearedCount: result.clearedCount,
-    });
     return result;
   }
 
@@ -1203,16 +928,95 @@ export class PerformanceEvaluationService
       data.clearedBy,
     );
 
-    this.logger.log('프로젝트별 WBS 자기평가 내용 초기화 시작', {
-      employeeId: data.employeeId,
-      periodId: data.periodId,
-      projectId: data.projectId,
-    });
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  // ==================== 동료평가 질문 매핑 관련 메서드 ====================
+
+  /**
+   * 동료평가에 질문 그룹을 추가한다
+   */
+  async 동료평가에_질문그룹을_추가한다(
+    peerEvaluationId: string,
+    questionGroupId: string,
+    startDisplayOrder: number,
+    createdBy: string,
+  ): Promise<string[]> {
+    const command = new AddQuestionGroupToPeerEvaluationCommand(
+      peerEvaluationId,
+      questionGroupId,
+      startDisplayOrder,
+      createdBy,
+    );
 
     const result = await this.commandBus.execute(command);
-    this.logger.log('프로젝트별 WBS 자기평가 내용 초기화 완료', {
-      clearedCount: result.clearedCount,
-    });
+    return result;
+  }
+
+  /**
+   * 동료평가에 개별 질문을 추가한다
+   */
+  async 동료평가에_질문을_추가한다(
+    peerEvaluationId: string,
+    questionId: string,
+    displayOrder: number,
+    questionGroupId: string | undefined,
+    createdBy: string,
+  ): Promise<string> {
+    const command = new AddQuestionToPeerEvaluationCommand(
+      peerEvaluationId,
+      questionId,
+      displayOrder,
+      questionGroupId,
+      createdBy,
+    );
+
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  /**
+   * 동료평가에서 질문을 제거한다
+   */
+  async 동료평가에서_질문을_제거한다(
+    mappingId: string,
+    deletedBy: string,
+  ): Promise<void> {
+    const command = new RemoveQuestionFromPeerEvaluationCommand(
+      mappingId,
+      deletedBy,
+    );
+
+    await this.commandBus.execute(command);
+  }
+
+  /**
+   * 동료평가 질문 순서를 변경한다
+   */
+  async 동료평가_질문_순서를_변경한다(
+    mappingId: string,
+    newDisplayOrder: number,
+    updatedBy: string,
+  ): Promise<void> {
+    const command = new UpdatePeerEvaluationQuestionOrderCommand(
+      mappingId,
+      newDisplayOrder,
+      updatedBy,
+    );
+
+    await this.commandBus.execute(command);
+  }
+
+  /**
+   * 동료평가의 질문 목록을 조회한다
+   */
+  async 동료평가의_질문목록을_조회한다(
+    peerEvaluationId: string,
+  ): Promise<PeerEvaluationQuestionDetail[]> {
+    const query = new GetPeerEvaluationQuestionsQuery(peerEvaluationId);
+
+    const result = await this.queryBus.execute(query);
     return result;
   }
 }

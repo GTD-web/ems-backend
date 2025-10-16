@@ -27,3 +27,23 @@ export {
   CancelPeerEvaluationsByPeriodCommand,
   CancelPeerEvaluationsByPeriodHandler,
 } from './cancel-peer-evaluations-by-period.handler';
+
+export {
+  AddQuestionGroupToPeerEvaluationCommand,
+  AddQuestionGroupToPeerEvaluationHandler,
+} from './add-question-group-to-peer-evaluation.handler';
+
+export {
+  AddQuestionToPeerEvaluationCommand,
+  AddQuestionToPeerEvaluationHandler,
+} from './add-question-to-peer-evaluation.handler';
+
+export {
+  RemoveQuestionFromPeerEvaluationCommand,
+  RemoveQuestionFromPeerEvaluationHandler,
+} from './remove-question-from-peer-evaluation.handler';
+
+export {
+  UpdatePeerEvaluationQuestionOrderCommand,
+  UpdatePeerEvaluationQuestionOrderHandler,
+} from './update-peer-evaluation-question-order.handler';

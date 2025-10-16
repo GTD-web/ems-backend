@@ -14,3 +14,9 @@ export {
   GetEvaluatorAssignedEvaluateesHandler,
   type EvaluatorAssignedEvaluatee,
 } from './get-evaluator-assigned-evaluatees.handler';
+
+export {
+  GetPeerEvaluationQuestionsQuery,
+  GetPeerEvaluationQuestionsHandler,
+  type PeerEvaluationQuestionDetail,
+} from './get-peer-evaluation-questions.handler';

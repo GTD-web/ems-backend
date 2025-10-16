@@ -1,0 +1,36 @@
+export * from './question-group';
+export * from './evaluation-question';
+export * from './question-group-mapping';
+export * from './evaluation-response';
+
+import {
+  QUESTION_GROUP_COMMAND_HANDLERS,
+  QUESTION_GROUP_QUERY_HANDLERS,
+} from './question-group';
+import {
+  EVALUATION_QUESTION_COMMAND_HANDLERS,
+  EVALUATION_QUESTION_QUERY_HANDLERS,
+} from './evaluation-question';
+import {
+  QUESTION_GROUP_MAPPING_COMMAND_HANDLERS,
+  QUESTION_GROUP_MAPPING_QUERY_HANDLERS,
+} from './question-group-mapping';
+import {
+  EVALUATION_RESPONSE_COMMAND_HANDLERS,
+  EVALUATION_RESPONSE_QUERY_HANDLERS,
+} from './evaluation-response';
+
+export const COMMAND_HANDLERS = [
+  ...QUESTION_GROUP_COMMAND_HANDLERS,
+  ...EVALUATION_QUESTION_COMMAND_HANDLERS,
+  ...QUESTION_GROUP_MAPPING_COMMAND_HANDLERS,
+  ...EVALUATION_RESPONSE_COMMAND_HANDLERS,
+];
+
+export const QUERY_HANDLERS = [
+  ...QUESTION_GROUP_QUERY_HANDLERS,
+  ...EVALUATION_QUESTION_QUERY_HANDLERS,
+  ...QUESTION_GROUP_MAPPING_QUERY_HANDLERS,
+  ...EVALUATION_RESPONSE_QUERY_HANDLERS,
+];
+

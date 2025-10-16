@@ -5,6 +5,7 @@ import { EvaluationCriteriaManagementContextModule } from '../../context/evaluat
 import { PerformanceEvaluationContextModule } from '../../context/performance-evaluation-context/performance-evaluation-context.module';
 import { OrganizationManagementContextModule } from '../../context/organization-management-context/organization-management-context.module';
 import { DashboardContextModule } from '../../context/dashboard-context/dashboard-context.module';
+import { EvaluationQuestionManagementContextModule } from '../../context/evaluation-question-management-context/evaluation-question-management-context.module';
 import { BusinessModule } from '../../business/business.module';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
@@ -18,6 +19,7 @@ import { DownwardEvaluationManagementController } from './performance-evaluation
 import { PeerEvaluationManagementController } from './performance-evaluation/peer-evaluation-management.controller';
 import { FinalEvaluationManagementController } from './performance-evaluation/final-evaluation-management.controller';
 import { EvaluationEditableStatusManagementController } from './performance-evaluation/evaluation-editable-status-management.controller';
+import { EvaluationQuestionManagementController } from './performance-evaluation/evaluation-question-management.controller';
 import { EmployeeManagementController } from './employee-management/employee-management.controller';
 
 /**
@@ -34,6 +36,7 @@ import { EmployeeManagementController } from './employee-management/employee-man
     PerformanceEvaluationContextModule, // 성과평가 컨텍스트 모듈 주입
     OrganizationManagementContextModule, // 조직 관리 컨텍스트 모듈 주입
     DashboardContextModule, // 대시보드 컨텍스트 모듈 주입
+    EvaluationQuestionManagementContextModule, // 평가 질문 관리 컨텍스트 모듈 주입
     BusinessModule, // 비즈니스 레이어 모듈 주입
   ],
   controllers: [
@@ -50,6 +53,7 @@ import { EmployeeManagementController } from './employee-management/employee-man
     PeerEvaluationManagementController, // 동료평가 관리 컨트롤러
     FinalEvaluationManagementController, // 최종평가 관리 컨트롤러
     EvaluationEditableStatusManagementController, // 평가 수정 가능 상태 관리 컨트롤러
+    EvaluationQuestionManagementController, // 평가 질문 관리 컨트롤러
   ],
   providers: [],
   exports: [],

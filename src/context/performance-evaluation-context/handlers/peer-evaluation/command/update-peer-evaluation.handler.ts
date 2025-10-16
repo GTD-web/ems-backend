@@ -9,8 +9,6 @@ import { TransactionManagerService } from '@libs/database/transaction-manager.se
 export class UpdatePeerEvaluationCommand {
   constructor(
     public readonly evaluationId: string,
-    public readonly evaluationContent?: string,
-    public readonly score?: number,
     public readonly updatedBy: string = '시스템',
   ) {}
 }
@@ -31,20 +29,13 @@ export class UpdatePeerEvaluationHandler
   ) {}
 
   async execute(command: UpdatePeerEvaluationCommand): Promise<void> {
-    const { evaluationId, evaluationContent, score, updatedBy } = command;
+    const { evaluationId, updatedBy } = command;
 
     this.logger.log('동료평가 수정 핸들러 실행', { evaluationId });
 
     return await this.transactionManager.executeTransaction(async () => {
       // 동료평가 수정
-      await this.peerEvaluationService.수정한다(
-        evaluationId,
-        {
-          evaluationContent,
-          score,
-        },
-        updatedBy,
-      );
+      await this.peerEvaluationService.수정한다(evaluationId, {}, updatedBy);
 
       this.logger.log('동료평가 수정 완료', { evaluationId });
     });

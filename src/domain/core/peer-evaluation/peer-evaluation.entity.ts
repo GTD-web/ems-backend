@@ -15,7 +15,6 @@ import type {
 @Entity('peer_evaluation')
 @Index(['status'])
 @Index(['evaluationDate'])
-@Index(['score'])
 @Index(['employeeId'])
 @Index(['evaluatorId'])
 @Index(['periodId'])
@@ -41,20 +40,6 @@ export class PeerEvaluation
     comment: '평가 기간 ID',
   })
   periodId: string;
-
-  @Column({
-    type: 'text',
-    nullable: true,
-    comment: '동료평가 내용',
-  })
-  evaluationContent?: string;
-
-  @Column({
-    type: 'int',
-    nullable: true,
-    comment: '동료평가 점수 (1-5)',
-  })
-  score?: number;
 
   @Column({
     type: 'timestamp with time zone',
@@ -111,8 +96,6 @@ export class PeerEvaluation
       this.employeeId = data.employeeId;
       this.evaluatorId = data.evaluatorId;
       this.periodId = data.periodId;
-      this.evaluationContent = data.evaluationContent;
-      this.score = data.score;
       this.status = data.status || PeerEvaluationStatus.PENDING;
       this.evaluationDate = data.evaluationDate || new Date();
       this.isCompleted = data.isCompleted || false;
@@ -147,13 +130,6 @@ export class PeerEvaluation
   }
 
   /**
-   * 동료평가 점수가 유효한지 확인한다
-   */
-  점수가_유효한가(): boolean {
-    return this.score !== undefined && this.score >= 1 && this.score <= 5;
-  }
-
-  /**
    * 동료평가를 완료한다
    */
   평가를_완료한다(completedBy?: string): void {
@@ -173,26 +149,6 @@ export class PeerEvaluation
     this.status = PeerEvaluationStatus.IN_PROGRESS;
     this.isCompleted = false;
     this.completedAt = undefined;
-
-    if (updatedBy) {
-      this.메타데이터를_업데이트한다(updatedBy);
-    }
-  }
-
-  /**
-   * 동료평가를 수정한다
-   */
-  동료평가를_수정한다(
-    content?: string,
-    score?: number,
-    updatedBy?: string,
-  ): void {
-    if (content !== undefined) {
-      this.evaluationContent = content;
-    }
-    if (score !== undefined) {
-      this.score = score;
-    }
 
     if (updatedBy) {
       this.메타데이터를_업데이트한다(updatedBy);
@@ -278,8 +234,6 @@ export class PeerEvaluation
       employeeId: this.employeeId,
       evaluatorId: this.evaluatorId,
       periodId: this.periodId,
-      evaluationContent: this.evaluationContent,
-      score: this.score,
       evaluationDate: this.evaluationDate,
       status: this.status,
       isCompleted: this.isCompleted,

@@ -20,6 +20,10 @@ import {
   SubmitPeerEvaluationHandler,
   CancelPeerEvaluationHandler,
   CancelPeerEvaluationsByPeriodHandler,
+  AddQuestionGroupToPeerEvaluationHandler,
+  AddQuestionToPeerEvaluationHandler,
+  RemoveQuestionFromPeerEvaluationHandler,
+  UpdatePeerEvaluationQuestionOrderHandler,
 } from './peer-evaluation';
 
 // 하향평가
@@ -68,6 +72,10 @@ export const CommandHandlers = [
   SubmitPeerEvaluationHandler,
   CancelPeerEvaluationHandler,
   CancelPeerEvaluationsByPeriodHandler,
+  AddQuestionGroupToPeerEvaluationHandler,
+  AddQuestionToPeerEvaluationHandler,
+  RemoveQuestionFromPeerEvaluationHandler,
+  UpdatePeerEvaluationQuestionOrderHandler,
 
   // 하향평가 커맨드 핸들러
   CreateDownwardEvaluationHandler,

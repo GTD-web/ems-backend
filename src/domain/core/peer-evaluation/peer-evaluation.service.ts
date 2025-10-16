@@ -83,18 +83,7 @@ export class PeerEvaluationService {
       throw new PeerEvaluationNotFoundException(id);
     }
 
-    // 유효성 검사
-    if (updateData.score !== undefined) {
-      this.점수_유효성을_검사한다(updateData.score);
-    }
-
     try {
-      peerEvaluation.동료평가를_수정한다(
-        updateData.evaluationContent,
-        updateData.score,
-        updatedBy,
-      );
-
       // 상태 변경 처리
       if (updateData.status !== undefined) {
         if (updateData.status === 'completed') {
@@ -310,18 +299,6 @@ export class PeerEvaluationService {
       if (filter.inactiveOnly) {
         queryBuilder.andWhere('evaluation.isActive = :isActive', {
           isActive: false,
-        });
-      }
-
-      if (filter.scoreFrom !== undefined) {
-        queryBuilder.andWhere('evaluation.score >= :scoreFrom', {
-          scoreFrom: filter.scoreFrom,
-        });
-      }
-
-      if (filter.scoreTo !== undefined) {
-        queryBuilder.andWhere('evaluation.score <= :scoreTo', {
-          scoreTo: filter.scoreTo,
         });
       }
 
@@ -578,21 +555,6 @@ export class PeerEvaluationService {
 
     if (!data.periodId) {
       throw new PeerEvaluationValidationException('평가 기간 ID는 필수입니다.');
-    }
-
-    if (data.score !== undefined) {
-      this.점수_유효성을_검사한다(data.score);
-    }
-  }
-
-  /**
-   * 점수 유효성을 검사한다
-   */
-  private 점수_유효성을_검사한다(score: number): void {
-    if (score < 1 || score > 5) {
-      throw new PeerEvaluationValidationException(
-        '동료평가 점수는 1-5 사이여야 합니다.',
-      );
     }
   }
 }

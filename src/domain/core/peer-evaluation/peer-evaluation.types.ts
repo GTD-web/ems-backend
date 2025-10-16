@@ -18,10 +18,6 @@ export interface CreatePeerEvaluationData {
   evaluatorId: string;
   /** 평가 기간 ID */
   periodId: string;
-  /** 동료평가 내용 */
-  evaluationContent?: string;
-  /** 동료평가 점수 */
-  score?: number;
   /** 평가 상태 */
   status?: PeerEvaluationStatus;
   /** 평가일 */
@@ -42,10 +38,6 @@ export interface CreatePeerEvaluationData {
  * 동료평가 수정 데이터
  */
 export interface UpdatePeerEvaluationData {
-  /** 동료평가 내용 */
-  evaluationContent?: string;
-  /** 동료평가 점수 */
-  score?: number;
   /** 평가 상태 */
   status?: PeerEvaluationStatus;
   /** 평가 완료 여부 */
@@ -66,10 +58,6 @@ export interface PeerEvaluationDto {
   evaluatorId: string;
   /** 평가 기간 ID */
   periodId: string;
-  /** 동료평가 내용 */
-  evaluationContent?: string;
-  /** 동료평가 점수 */
-  score?: number;
   /** 평가일 */
   evaluationDate: Date;
   /** 평가 상태 */
@@ -124,10 +112,6 @@ export interface PeerEvaluationFilter {
   activeOnly?: boolean;
   /** 비활성 평가만 조회 */
   inactiveOnly?: boolean;
-  /** 점수 범위 필터 - 최소 */
-  scoreFrom?: number;
-  /** 점수 범위 필터 - 최대 */
-  scoreTo?: number;
   /** 평가일 범위 - 시작 */
   evaluationDateFrom?: Date;
   /** 평가일 범위 - 종료 */
@@ -156,10 +140,4 @@ export interface PeerEvaluationStatistics {
   statusCounts: Record<PeerEvaluationStatus, number>;
   /** 완료된 평가 수 */
   completedEvaluations: number;
-  /** 평균 점수 */
-  averageScore: number;
-  /** 최고 점수 */
-  maxScore: number;
-  /** 최저 점수 */
-  minScore: number;
 }

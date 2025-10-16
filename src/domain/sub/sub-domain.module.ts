@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { QuestionGroupModule } from './question-group/question-group.module';
 import { EvaluationQuestionModule } from './evaluation-question/evaluation-question.module';
+import { QuestionGroupMappingModule } from './question-group-mapping/question-group-mapping.module';
 import { EvaluationResponseModule } from './evaluation-response/evaluation-response.module';
 
 /**
@@ -13,11 +14,13 @@ import { EvaluationResponseModule } from './evaluation-response/evaluation-respo
   imports: [
     QuestionGroupModule,
     EvaluationQuestionModule,
+    QuestionGroupMappingModule,
     EvaluationResponseModule,
   ],
   exports: [
     QuestionGroupModule,
     EvaluationQuestionModule,
+    QuestionGroupMappingModule,
     EvaluationResponseModule,
   ],
 })

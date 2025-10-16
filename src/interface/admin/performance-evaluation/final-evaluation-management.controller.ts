@@ -30,7 +30,7 @@ import {
  *
  * 최종평가의 저장(생성/수정), 확정, 조회 기능을 제공합니다.
  */
-@ApiTags('C-4. 관리자 - 성과평가 - 최종평가')
+@ApiTags('C-5. 관리자 - 성과평가 - 최종평가')
 @Controller('admin/performance-evaluation/final-evaluations')
 export class FinalEvaluationManagementController {
   constructor(

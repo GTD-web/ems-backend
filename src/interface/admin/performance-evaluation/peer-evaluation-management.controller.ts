@@ -34,7 +34,7 @@ import {
  *
  * 동료평가의 저장(생성/수정), 제출, 조회 기능을 제공합니다.
  */
-@ApiTags('C-3. 관리자 - 성과평가 - 동료평가')
+@ApiTags('C-4. 관리자 - 성과평가 - 동료평가')
 @Controller('admin/performance-evaluation/peer-evaluations')
 export class PeerEvaluationManagementController {
   constructor(

@@ -4,7 +4,7 @@ import { PeerEvaluationService } from '../../../../../domain/core/peer-evaluatio
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
- * ?�료?��? ?�출 커맨??
+ * 동료평가 제출 커맨드
  */
 export class SubmitPeerEvaluationCommand {
   constructor(
@@ -14,7 +14,7 @@ export class SubmitPeerEvaluationCommand {
 }
 
 /**
- * ?�료?��? ?�출 ?�들??
+ * 동료평가 제출 핸들러
  */
 @Injectable()
 @CommandHandler(SubmitPeerEvaluationCommand)
@@ -46,11 +46,6 @@ export class SubmitPeerEvaluationHandler
         throw new Error('이미 완료된 동료평가입니다.');
       }
 
-      // 필수 항목 검증
-      if (!evaluation.evaluationContent || !evaluation.score) {
-        throw new Error('평가 내용과 점수는 필수 입력 항목입니다.');
-      }
-
       // 동료평가 완료 처리
       await this.peerEvaluationService.수정한다(
         evaluationId,
@@ -58,7 +53,7 @@ export class SubmitPeerEvaluationHandler
         submittedBy,
       );
 
-      this.logger.log('?�료?��? ?�출 ?�료', { evaluationId });
+      this.logger.log('동료평가 제출 완료', { evaluationId });
     });
   }
 }

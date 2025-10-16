@@ -13,8 +13,6 @@ export class CreatePeerEvaluationCommand {
     public readonly evaluateeId: string,
     public readonly periodId: string,
     public readonly projectId: string,
-    public readonly evaluationContent?: string,
-    public readonly score?: number,
     public readonly createdBy: string = '시스템',
   ) {}
 }
@@ -35,15 +33,8 @@ export class CreatePeerEvaluationHandler
   ) {}
 
   async execute(command: CreatePeerEvaluationCommand): Promise<string> {
-    const {
-      evaluatorId,
-      evaluateeId,
-      periodId,
-      projectId,
-      evaluationContent,
-      score,
-      createdBy,
-    } = command;
+    const { evaluatorId, evaluateeId, periodId, projectId, createdBy } =
+      command;
 
     this.logger.log('동료평가 생성 핸들러 실행', {
       evaluatorId,
@@ -58,8 +49,6 @@ export class CreatePeerEvaluationHandler
         employeeId: evaluateeId,
         evaluatorId,
         periodId,
-        evaluationContent,
-        score,
         evaluationDate: new Date(),
         status: PeerEvaluationStatus.PENDING,
         isCompleted: false,

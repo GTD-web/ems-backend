@@ -14,8 +14,6 @@ export class UpsertPeerEvaluationCommand {
     public readonly evaluateeId: string,
     public readonly periodId: string,
     public readonly projectId: string,
-    public readonly evaluationContent?: string,
-    public readonly score?: number,
     public readonly actionBy: string = '시스템',
   ) {}
 }
@@ -37,15 +35,7 @@ export class UpsertPeerEvaluationHandler
   ) {}
 
   async execute(command: UpsertPeerEvaluationCommand): Promise<string> {
-    const {
-      evaluatorId,
-      evaluateeId,
-      periodId,
-      projectId,
-      evaluationContent,
-      score,
-      actionBy,
-    } = command;
+    const { evaluatorId, evaluateeId, periodId, projectId, actionBy } = command;
 
     this.logger.log('동료평가 Upsert 핸들러 실행', {
       evaluatorId,
@@ -76,10 +66,7 @@ export class UpsertPeerEvaluationHandler
 
         await this.peerEvaluationService.수정한다(
           existingEvaluation.id,
-          {
-            evaluationContent,
-            score,
-          },
+          {},
           actionBy,
         );
 
@@ -95,8 +82,6 @@ export class UpsertPeerEvaluationHandler
           employeeId: evaluateeId,
           evaluatorId,
           periodId,
-          evaluationContent,
-          score,
           evaluationDate: new Date(),
           status: PeerEvaluationStatus.PENDING,
           isCompleted: false,

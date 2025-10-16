@@ -7,6 +7,7 @@ import { EvaluationLineMappingModule } from './evaluation-line-mapping/evaluatio
 import { EvaluationPeriodModule } from './evaluation-period/evaluation-period.module';
 import { EvaluationPeriodEmployeeMappingModule } from './evaluation-period-employee-mapping/evaluation-period-employee-mapping.module';
 import { PeerEvaluationModule } from './peer-evaluation/peer-evaluation.module';
+import { PeerEvaluationQuestionMappingModule } from './peer-evaluation-question-mapping/peer-evaluation-question-mapping.module';
 import { FinalEvaluationModule } from './final-evaluation/final-evaluation.module';
 import { WbsEvaluationCriteriaModule } from './wbs-evaluation-criteria/wbs-evaluation-criteria.module';
 import { WbsSelfEvaluationModule } from './wbs-self-evaluation/wbs-self-evaluation.module';
@@ -44,6 +45,7 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     // 매핑 테이블 관리
     EvaluationLineMappingModule,
     DeliverableMappingModule,
+    PeerEvaluationQuestionMappingModule,
   ],
   exports: [
     // 평가 기간 및 설정 관리
@@ -70,6 +72,7 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     // 매핑 테이블 관리
     EvaluationLineMappingModule,
     DeliverableMappingModule,
+    PeerEvaluationQuestionMappingModule,
   ],
 })
 export class CoreDomainModule {}

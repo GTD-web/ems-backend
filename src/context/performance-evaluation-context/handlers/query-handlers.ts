@@ -7,6 +7,7 @@ import {
   GetPeerEvaluationListHandler,
   GetPeerEvaluationDetailHandler,
   GetEvaluatorAssignedEvaluateesHandler,
+  GetPeerEvaluationQuestionsHandler,
 } from './peer-evaluation';
 
 // 하향평가
@@ -31,6 +32,7 @@ export const QueryHandlers = [
   GetPeerEvaluationListHandler,
   GetPeerEvaluationDetailHandler,
   GetEvaluatorAssignedEvaluateesHandler,
+  GetPeerEvaluationQuestionsHandler,
 
   // 하향평가 쿼리 핸들러
   GetDownwardEvaluationListHandler,

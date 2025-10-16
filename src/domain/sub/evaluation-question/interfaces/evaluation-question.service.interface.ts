@@ -4,7 +4,6 @@ import type {
   CreateEvaluationQuestionDto,
   UpdateEvaluationQuestionDto,
   EvaluationQuestionFilter,
-  EvaluationQuestionType,
 } from '../evaluation-question.types';
 
 /**
@@ -20,42 +19,12 @@ export interface IEvaluationQuestionService {
   ): Promise<IEvaluationQuestion | null>;
 
   /**
-   * 그룹별 평가 질문을 조회한다
+   * 질문 내용으로 평가 질문을 조회한다
    */
-  그룹별조회한다(
-    groupId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationQuestion[]>;
-
-  /**
-   * 그룹과 질문 내용으로 평가 질문을 조회한다
-   */
-  그룹질문내용별조회한다(
-    groupId: string,
+  질문내용으로조회한다(
     text: string,
     manager?: EntityManager,
   ): Promise<IEvaluationQuestion | null>;
-
-  /**
-   * 질문 유형별로 평가 질문을 조회한다
-   */
-  유형별조회한다(
-    type: EvaluationQuestionType,
-    manager?: EntityManager,
-  ): Promise<IEvaluationQuestion[]>;
-
-  /**
-   * 신규 질문들을 조회한다
-   */
-  신규질문조회한다(manager?: EntityManager): Promise<IEvaluationQuestion[]>;
-
-  /**
-   * 그룹에 포함된 질문들을 조회한다
-   */
-  그룹포함질문조회한다(
-    groupId: string,
-    manager?: EntityManager,
-  ): Promise<IEvaluationQuestion[]>;
 
   /**
    * 모든 평가 질문을 조회한다
@@ -99,29 +68,18 @@ export interface IEvaluationQuestionService {
   ): Promise<void>;
 
   /**
-   * 그룹의 모든 질문을 삭제한다
-   */
-  그룹질문전체삭제한다(
-    groupId: string,
-    deletedBy: string,
-    manager?: EntityManager,
-  ): Promise<void>;
-
-  /**
    * 평가 질문을 복사한다
    */
   복사한다(
     id: string,
-    newGroupId: string,
     copiedBy: string,
     manager?: EntityManager,
   ): Promise<IEvaluationQuestion>;
 
   /**
-   * 그룹 내 질문 내용 중복을 확인한다
+   * 질문 내용 중복을 확인한다
    */
   질문내용중복확인한다(
-    groupId: string,
     text: string,
     excludeId?: string,
     manager?: EntityManager,
@@ -140,22 +98,6 @@ export interface IEvaluationQuestionService {
    */
   질문응답개수조회한다(
     questionId: string,
-    manager?: EntityManager,
-  ): Promise<number>;
-
-  /**
-   * 그룹의 질문 개수를 조회한다
-   */
-  그룹질문개수조회한다(
-    groupId: string,
-    manager?: EntityManager,
-  ): Promise<number>;
-
-  /**
-   * 질문 유형별 개수를 조회한다
-   */
-  유형별개수조회한다(
-    type: EvaluationQuestionType,
     manager?: EntityManager,
   ): Promise<number>;
 }

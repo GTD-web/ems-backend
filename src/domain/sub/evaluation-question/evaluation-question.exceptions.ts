@@ -30,27 +30,14 @@ export class EvaluationQuestionNotFoundException extends EvaluationQuestionDomai
 
 // 중복 평가 질문 예외
 export class DuplicateEvaluationQuestionException extends EvaluationQuestionDomainException {
-  constructor(groupId: string, text: string) {
+  constructor(text: string) {
     super(
-      `이미 존재하는 평가 질문입니다: 그룹 ${groupId}, 질문 "${text}"`,
+      `이미 존재하는 평가 질문입니다: "${text}"`,
       'DUPLICATE_EVALUATION_QUESTION',
       409,
-      { groupId, text },
+      { text },
     );
     this.name = 'DuplicateEvaluationQuestionException';
-  }
-}
-
-// 유효하지 않은 질문 그룹 참조 예외
-export class InvalidQuestionGroupReferenceException extends EvaluationQuestionDomainException {
-  constructor(groupId: string) {
-    super(
-      `유효하지 않은 질문 그룹 참조입니다: ${groupId}`,
-      'INVALID_QUESTION_GROUP_REFERENCE',
-      400,
-      { groupId },
-    );
-    this.name = 'InvalidQuestionGroupReferenceException';
   }
 }
 
@@ -67,15 +54,12 @@ export class InvalidScoreRangeException extends EvaluationQuestionDomainExceptio
   }
 }
 
-// 점수형 질문에 점수 범위 누락 예외
+// 점수 범위 누락 예외
 export class ScoreRangeRequiredException extends EvaluationQuestionDomainException {
-  constructor(questionType: string) {
-    super(
-      `${questionType} 유형의 질문에는 점수 범위가 필요합니다`,
-      'SCORE_RANGE_REQUIRED',
-      400,
-      { questionType },
-    );
+  constructor(questionId?: string) {
+    super(`점수 범위가 필요합니다`, 'SCORE_RANGE_REQUIRED', 400, {
+      questionId,
+    });
     this.name = 'ScoreRangeRequiredException';
   }
 }
