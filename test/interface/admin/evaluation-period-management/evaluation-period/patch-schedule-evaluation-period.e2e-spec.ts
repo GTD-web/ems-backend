@@ -673,7 +673,7 @@ describe('PATCH /admin/evaluation-periods/:id/schedule', () => {
       // When & Then: 잘못된 데이터 타입으로 400 에러 발생
       const invalidDataTypes = [
         { startDate: 123 }, // 숫자
-        { endDate: true }, // 불린
+        { peerEvaluationDeadline: true }, // 불린
         { evaluationSetupDeadline: [] }, // 배열
         { performanceDeadline: {} }, // 객체
       ];

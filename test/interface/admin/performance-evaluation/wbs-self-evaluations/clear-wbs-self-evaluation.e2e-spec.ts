@@ -248,11 +248,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         // Given - 여러 자기평가 생성
         const employee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
-        const wbsItems = [
-          getRandomWbsItem(),
-          getRandomWbsItem(),
-          getRandomWbsItem(),
-        ];
+        // 고유한 WBS 항목 3개 선택
+        const wbsItems = testData.wbsItems.slice(0, 3);
 
         // 실제로 생성된 개수를 추적
         let createdCount = 0;
@@ -284,10 +281,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         // Then - 실제 생성된 개수와 초기화된 개수가 일치
         expect(response.body.employeeId).toBe(employee.id);
         expect(response.body.periodId).toBe(period.id);
-        expect(response.body.clearedCount).toBeGreaterThanOrEqual(1);
-        expect(response.body.clearedEvaluations).toHaveLength(
-          response.body.clearedCount,
-        );
+        expect(response.body.clearedCount).toBe(createdCount);
+        expect(response.body.clearedEvaluations).toHaveLength(createdCount);
         expect(response.body.clearedEvaluations).toBeDefined();
         expect(Array.isArray(response.body.clearedEvaluations)).toBe(true);
       });
@@ -296,7 +291,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         // Given - 제출된 자기평가들
         const employee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
-        const wbsItems = [getRandomWbsItem(), getRandomWbsItem()];
+        // 고유한 WBS 항목 2개 선택
+        const wbsItems = testData.wbsItems.slice(0, 2);
 
         for (const wbsItem of wbsItems) {
           const createResponse = await request(app.getHttpServer())
@@ -327,12 +323,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
           .expect(200);
 
         // Then
-        expect(response.body.clearedCount).toBeGreaterThanOrEqual(
-          wbsItems.length,
-        );
-        expect(response.body.clearedEvaluations).toHaveLength(
-          response.body.clearedCount,
-        );
+        expect(response.body.clearedCount).toBe(wbsItems.length);
+        expect(response.body.clearedEvaluations).toHaveLength(wbsItems.length);
       });
 
       it('자기평가가 없는 경우 빈 결과를 반환해야 한다', async () => {

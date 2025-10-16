@@ -39,6 +39,17 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
     const { departments, employees, projects, periods } =
       await testContextService.완전한_테스트환경을_생성한다();
 
+    // WBS 할당, 프로젝트 배정, 평가라인 맵핑 등 정리 (각 테스트에서 개별 생성하기 위해)
+    await dataSource.manager.query(
+      `DELETE FROM evaluation_wbs_assignment WHERE "deletedAt" IS NULL`,
+    );
+    await dataSource.manager.query(
+      `DELETE FROM evaluation_project_assignment WHERE "deletedAt" IS NULL`,
+    );
+    await dataSource.manager.query(
+      `DELETE FROM evaluation_line_mappings WHERE "deletedAt" IS NULL`,
+    );
+
     // 첫 번째 평가기간 사용
     const evaluationPeriodId = periods[0].id;
 

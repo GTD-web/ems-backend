@@ -315,11 +315,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         // Given - 여러 자기평가 생성
         const employee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
-        const wbsItems = [
-          getRandomWbsItem(),
-          getRandomWbsItem(),
-          getRandomWbsItem(),
-        ];
+        // 서로 다른 WBS 항목 3개 선택
+        const wbsItems = testData.wbsItems.slice(0, 3);
 
         for (const wbsItem of wbsItems) {
           await request(app.getHttpServer())
@@ -356,13 +353,13 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         // Given - 일부만 작성
         const employee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
-        const wbsItem1 = getRandomWbsItem();
-        const wbsItem2 = getRandomWbsItem();
+        // 서로 다른 WBS 항목 2개 선택
+        const wbsItems = testData.wbsItems.slice(0, 2);
 
         // 하나는 작성
         await request(app.getHttpServer())
           .post(
-            `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem1.id}/period/${period.id}`,
+            `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItems[0].id}/period/${period.id}`,
           )
           .send({
             selfEvaluationContent: '작성 완료',
@@ -373,7 +370,7 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         // 하나는 미작성 (내용/점수 없음)
         await request(app.getHttpServer())
           .post(
-            `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem2.id}/period/${period.id}`,
+            `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItems[1].id}/period/${period.id}`,
           )
           .send({})
           .expect(200);
@@ -431,7 +428,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         // Given - 여러 자기평가 생성 및 제출
         const employee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
-        const wbsItems = [getRandomWbsItem(), getRandomWbsItem()];
+        // 서로 다른 WBS 항목 2개 선택
+        const wbsItems = testData.wbsItems.slice(0, 2);
 
         for (const wbsItem of wbsItems) {
           const createResponse = await request(app.getHttpServer())

@@ -38,6 +38,11 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
     const { departments, employees, projects } =
       await testContextService.완전한_테스트환경을_생성한다();
 
+    // WBS 할당 정리 (각 테스트에서 개별 생성하기 위해)
+    await dataSource.manager.query(
+      `DELETE FROM evaluation_wbs_assignment WHERE "deletedAt" IS NULL`,
+    );
+
     // 활성 프로젝트의 WBS 항목 조회
     const activeProject = projects.find((p) => p.isActive) || projects[0];
     const wbsItems = await getWbsItemsFromProject(activeProject.id);

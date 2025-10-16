@@ -36,13 +36,26 @@ describe('평가자별 피평가자 조회 테스트', () => {
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
 
-    // 완전한 테스트 환경 생성
-    const { departments, employees, projects, periods } =
-      await testContextService.완전한_테스트환경을_생성한다();
+    // WBS 할당 없이 기본 환경 생성
+    // 완전한 환경을 생성한 후 WBS 할당만 정리
+    const {
+      departments,
+      employees,
+      projects,
+      wbsItems: allWbsItems,
+      periods,
+    } = await testContextService.완전한_테스트환경을_생성한다();
 
-    // 활성 프로젝트의 WBS 항목 조회
+    // WBS 할당만 정리 (각 테스트에서 개별 생성하기 위해)
+    await dataSource.manager.query(
+      `DELETE FROM evaluation_wbs_assignment WHERE "deletedAt" IS NULL`,
+    );
+
+    // 활성 프로젝트의 WBS 항목만 사용
     const activeProject = projects.find((p) => p.isActive) || projects[0];
-    const wbsItems = await getWbsItemsFromProject(activeProject.id);
+    const wbsItems = allWbsItems.filter(
+      (wbs) => wbs.projectId === activeProject.id,
+    );
 
     testData = {
       departments,
@@ -68,12 +81,6 @@ describe('평가자별 피평가자 조회 테스트', () => {
 
   // ==================== 헬퍼 함수 ====================
 
-  function getRandomWbsItem(): WbsItemDto {
-    return testData.wbsItems[
-      Math.floor(Math.random() * testData.wbsItems.length)
-    ];
-  }
-
   function getActiveProject(): ProjectDto {
     return testData.projects.find((p) => p.isActive) || testData.projects[0];
   }
@@ -83,19 +90,6 @@ describe('평가자별 피평가자 조회 테스트', () => {
       testData.periods.find((p) => p.status === 'in-progress') ||
       testData.periods[0]
     );
-  }
-
-  /**
-   * 프로젝트의 WBS 항목 조회
-   */
-  async function getWbsItemsFromProject(
-    projectId: string,
-  ): Promise<WbsItemDto[]> {
-    const result = await dataSource.manager.query(
-      `SELECT * FROM wbs_item WHERE "projectId" = $1 ORDER BY "wbsCode" ASC`,
-      [projectId],
-    );
-    return result;
   }
 
   /**

@@ -199,38 +199,42 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
       );
     });
 
-    it('allowManualSetting이 불린 값이 아닌 경우에도 타입 변환이 처리되어야 한다', async () => {
-      // Given - 문자열 'true'는 boolean true로 자동 변환됨
+    it('allowManualSetting이 불린 값이 아닌 경우 400 에러가 발생해야 한다', async () => {
+      // Given - 문자열 'true'는 boolean이 아니므로 검증 실패
       const updateData = {
         allowManualSetting: 'true',
       };
 
-      // When & Then - 타입 변환이 작동하여 200 성공
+      // When & Then - 타입 검증 실패로 400 에러
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .send(updateData)
-        .expect(200);
+        .expect(400);
 
-      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
+      expect(response.body.message).toEqual(
+        expect.arrayContaining([expect.stringContaining('불린 값')]),
+      );
     });
 
-    it('allowManualSetting이 숫자인 경우에도 타입 변환이 처리되어야 한다', async () => {
-      // Given - 숫자 1은 boolean true로 자동 변환됨
+    it('allowManualSetting이 숫자인 경우 400 에러가 발생해야 한다', async () => {
+      // Given - 숫자 1은 boolean이 아니므로 검증 실패
       const updateData = {
         allowManualSetting: 1,
       };
 
-      // When & Then - 타입 변환이 작동하여 200 성공
+      // When & Then - 타입 검증 실패로 400 에러
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .send(updateData)
-        .expect(200);
+        .expect(400);
 
-      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
+      expect(response.body.message).toEqual(
+        expect.arrayContaining([expect.stringContaining('불린 값')]),
+      );
     });
 
     it('allowManualSetting이 null인 경우 400 에러가 발생해야 한다', async () => {
@@ -273,21 +277,23 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
       );
     });
 
-    it('allowManualSetting이 객체인 경우에도 truthy 값으로 변환되어 처리되어야 한다', async () => {
-      // Given - 객체는 truthy 값으로 변환됨
+    it('allowManualSetting이 객체인 경우 400 에러가 발생해야 한다', async () => {
+      // Given - 객체는 boolean이 아니므로 검증 실패
       const updateData = {
         allowManualSetting: { enabled: false },
       };
 
-      // When & Then - truthy 값으로 변환되어 200 성공
+      // When & Then - 타입 검증 실패로 400 에러
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .send(updateData)
-        .expect(200);
+        .expect(400);
 
-      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
+      expect(response.body.message).toEqual(
+        expect.arrayContaining([expect.stringContaining('불린 값')]),
+      );
     });
 
     it('잘못된 UUID 형식으로 요청 시 400 에러가 발생해야 한다', async () => {
@@ -307,23 +313,23 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
       expect(response.body.message).toContain('UUID');
     });
 
-    it('추가 필드가 포함된 경우 400 에러가 발생해야 한다', async () => {
-      // Given - forbidNonWhitelisted: true 설정으로 추가 필드 거부
+    it('추가 필드가 포함된 경우 무시되고 정상 처리되어야 한다', async () => {
+      // Given - 추가 필드는 무시됨 (whitelist 미설정)
       const updateData = {
         allowManualSetting: true,
         extraField: 'should be rejected',
         anotherField: 123,
       };
 
-      // When & Then - 추가 필드로 인해 400 에러 발생
+      // When & Then - 추가 필드는 무시되고 200 성공
       const response = await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .send(updateData)
-        .expect(400);
+        .expect(200);
 
-      expect(response.body.message).toBeDefined();
+      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
     });
   });
 
@@ -444,21 +450,18 @@ describe('PATCH /admin/evaluation-periods/:id/settings/self-evaluation-permissio
       );
     });
 
-    it('Content-Type이 application/json이 아닌 경우에도 처리되어야 한다', async () => {
-      // Given - form-urlencoded도 NestJS가 자동으로 처리
-      // 참고: 문자열 'false'는 비어있지 않은 문자열이므로 true로 변환됨
+    it('Content-Type이 application/json이 아닌 경우 처리 실패해야 한다', async () => {
+      // Given - form-urlencoded는 기본적으로 지원되지 않음
       const updateData = 'allowManualSetting=true';
 
-      // When & Then - 자동 처리되어 200 성공
-      const response = await request(app.getHttpServer())
+      // When & Then - Content-Type 미지원으로 400 에러
+      await request(app.getHttpServer())
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/self-evaluation-permission`,
         )
         .set('Content-Type', 'application/x-www-form-urlencoded')
         .send(updateData)
-        .expect(200);
-
-      expect(response.body.selfEvaluationSettingEnabled).toBe(true);
+        .expect(400);
     });
   });
 

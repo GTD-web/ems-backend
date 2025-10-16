@@ -4,6 +4,7 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsBoolean,
+  IsDate,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -219,6 +220,7 @@ export class UpdateEvaluationPeriodScheduleApiDto {
   })
   @IsOptional()
   @OptionalDateToUTC()
+  @IsDate()
   startDate?: string;
 
   @ApiPropertyOptional({
@@ -227,6 +229,7 @@ export class UpdateEvaluationPeriodScheduleApiDto {
   })
   @IsOptional()
   @OptionalDateToUTC()
+  @IsDate()
   evaluationSetupDeadline?: string;
 
   @ApiPropertyOptional({
@@ -235,6 +238,7 @@ export class UpdateEvaluationPeriodScheduleApiDto {
   })
   @IsOptional()
   @OptionalDateToUTC()
+  @IsDate()
   performanceDeadline?: string;
 
   @ApiPropertyOptional({
@@ -243,6 +247,7 @@ export class UpdateEvaluationPeriodScheduleApiDto {
   })
   @IsOptional()
   @OptionalDateToUTC()
+  @IsDate()
   selfEvaluationDeadline?: string;
 
   @ApiPropertyOptional({
@@ -251,6 +256,7 @@ export class UpdateEvaluationPeriodScheduleApiDto {
   })
   @IsOptional()
   @OptionalDateToUTC()
+  @IsDate()
   peerEvaluationDeadline?: string;
 }
 
