@@ -13,6 +13,9 @@ import {
   ResetAllWbsSelfEvaluationsByEmployeePeriodCommand,
   SubmitWbsSelfEvaluationsByProjectCommand,
   ResetWbsSelfEvaluationsByProjectCommand,
+  ClearWbsSelfEvaluationCommand,
+  ClearAllWbsSelfEvaluationsByEmployeePeriodCommand,
+  ClearWbsSelfEvaluationsByProjectCommand,
   UpdateWbsSelfEvaluationCommand,
   UpsertWbsSelfEvaluationCommand,
 } from './handlers/self-evaluation';
@@ -21,6 +24,8 @@ import type {
   ResetAllWbsSelfEvaluationsResponse,
   SubmitWbsSelfEvaluationsByProjectResponse,
   ResetWbsSelfEvaluationsByProjectResponse,
+  ClearAllWbsSelfEvaluationsResponse,
+  ClearWbsSelfEvaluationsByProjectResponse,
 } from './handlers/self-evaluation';
 
 // 평가 수정 가능 상태 관련 커맨드
@@ -71,6 +76,7 @@ import {
   WbsSelfEvaluationBasicDto,
   WbsSelfEvaluationResponseDto,
 } from '@interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
+import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import { IPerformanceEvaluationService } from './interfaces/performance-evaluation.interface';
 
 /**
@@ -773,6 +779,84 @@ export class PerformanceEvaluationService
     this.logger.log('평가기간별 모든 평가 수정 가능 상태 일괄 변경 완료', {
       evaluationPeriodId: command.evaluationPeriodId,
       updatedCount: result.updatedCount,
+    });
+    return result;
+  }
+
+  // ==================== WBS 자기평가 내용 초기화 ====================
+
+  /**
+   * WBS 자기평가 내용을 초기화한다 (단일)
+   */
+  async WBS자기평가_내용을_초기화한다(data: {
+    evaluationId: string;
+    clearedBy?: string;
+  }): Promise<WbsSelfEvaluationDto> {
+    const command = new ClearWbsSelfEvaluationCommand(
+      data.evaluationId,
+      data.clearedBy,
+    );
+
+    this.logger.log('WBS 자기평가 내용 초기화 시작', {
+      evaluationId: data.evaluationId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('WBS 자기평가 내용 초기화 완료');
+    return result;
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가 내용을 초기화한다
+   */
+  async 직원의_전체_WBS자기평가_내용을_초기화한다(data: {
+    employeeId: string;
+    periodId: string;
+    clearedBy?: string;
+  }): Promise<ClearAllWbsSelfEvaluationsResponse> {
+    const command = new ClearAllWbsSelfEvaluationsByEmployeePeriodCommand(
+      data.employeeId,
+      data.periodId,
+      data.clearedBy,
+    );
+
+    this.logger.log('직원의 전체 WBS 자기평가 내용 초기화 시작', {
+      employeeId: data.employeeId,
+      periodId: data.periodId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('직원의 전체 WBS 자기평가 내용 초기화 완료', {
+      clearedCount: result.clearedCount,
+    });
+    return result;
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가 내용을 초기화한다
+   */
+  async 프로젝트별_WBS자기평가_내용을_초기화한다(data: {
+    employeeId: string;
+    periodId: string;
+    projectId: string;
+    clearedBy?: string;
+  }): Promise<ClearWbsSelfEvaluationsByProjectResponse> {
+    const command = new ClearWbsSelfEvaluationsByProjectCommand(
+      data.employeeId,
+      data.periodId,
+      data.projectId,
+      data.clearedBy,
+    );
+
+    this.logger.log('프로젝트별 WBS 자기평가 내용 초기화 시작', {
+      employeeId: data.employeeId,
+      periodId: data.periodId,
+      projectId: data.projectId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('프로젝트별 WBS 자기평가 내용 초기화 완료', {
+      clearedCount: result.clearedCount,
     });
     return result;
   }

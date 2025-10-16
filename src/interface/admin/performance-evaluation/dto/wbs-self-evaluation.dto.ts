@@ -967,3 +967,120 @@ export class ResetWbsSelfEvaluationsByProjectResponseDto {
   })
   failedResets: FailedResetWbsSelfEvaluationByProjectDto[];
 }
+
+/**
+ * WBS 자기평가 내용 초기화된 상세 정보
+ */
+export class ClearedWbsSelfEvaluationDetailDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440010',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '초기화된 자기평가 내용 (빈 문자열)',
+    example: '',
+  })
+  selfEvaluationContent: string;
+
+  @ApiProperty({
+    description: '초기화된 자기평가 점수 (1점)',
+    example: 1,
+  })
+  selfEvaluationScore: number;
+
+  @ApiProperty({
+    description: '초기화된 성과 입력 (빈 문자열)',
+    example: '',
+  })
+  performanceResult?: string;
+}
+
+/**
+ * 직원의 전체 WBS 자기평가 내용 초기화 응답 DTO
+ */
+export class ClearAllWbsSelfEvaluationsResponseDto {
+  @ApiProperty({
+    description: '직원 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '내용이 초기화된 평가 개수',
+    example: 5,
+  })
+  clearedCount: number;
+
+  @ApiProperty({
+    description: '초기화된 평가 상세 정보',
+    type: [ClearedWbsSelfEvaluationDetailDto],
+    example: [
+      {
+        id: '550e8400-e29b-41d4-a716-446655440001',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440010',
+        selfEvaluationContent: '',
+        selfEvaluationScore: 1,
+        performanceResult: '',
+      },
+    ],
+  })
+  clearedEvaluations: ClearedWbsSelfEvaluationDetailDto[];
+}
+
+/**
+ * 프로젝트별 WBS 자기평가 내용 초기화 응답 DTO
+ */
+export class ClearWbsSelfEvaluationsByProjectResponseDto {
+  @ApiProperty({
+    description: '직원 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '프로젝트 ID',
+    example: '550e8400-e29b-41d4-a716-446655440003',
+  })
+  projectId: string;
+
+  @ApiProperty({
+    description: '내용이 초기화된 평가 개수',
+    example: 3,
+  })
+  clearedCount: number;
+
+  @ApiProperty({
+    description: '초기화된 평가 상세 정보',
+    type: [ClearedWbsSelfEvaluationDetailDto],
+    example: [
+      {
+        id: '550e8400-e29b-41d4-a716-446655440001',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440010',
+        selfEvaluationContent: '',
+        selfEvaluationScore: 1,
+        performanceResult: '',
+      },
+    ],
+  })
+  clearedEvaluations: ClearedWbsSelfEvaluationDetailDto[];
+}

@@ -180,6 +180,22 @@ export class WbsSelfEvaluation
   }
 
   /**
+   * 자가평가 내용을 초기화한다 (빈 값으로 설정)
+   */
+  자가평가_내용을_초기화한다(updatedBy?: string): void {
+    this.selfEvaluationContent = '';
+    this.selfEvaluationScore = 1;
+    this.performanceResult = '';
+    this.isCompleted = false;
+    this.completedAt = undefined;
+    this.evaluationDate = new Date();
+
+    if (updatedBy) {
+      this.메타데이터를_업데이트한다(updatedBy);
+    }
+  }
+
+  /**
    * 자가평가를 삭제한다
    */
   삭제한다(): void {

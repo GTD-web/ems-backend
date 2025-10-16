@@ -64,6 +64,29 @@ export type {
   FailedResetWbsSelfEvaluationByProject,
 } from './commands/reset-wbs-self-evaluations-by-project.handler';
 
+export {
+  ClearWbsSelfEvaluationCommand,
+  ClearWbsSelfEvaluationHandler,
+} from './commands/clear-wbs-self-evaluation.handler';
+
+export {
+  ClearAllWbsSelfEvaluationsByEmployeePeriodCommand,
+  ClearAllWbsSelfEvaluationsByEmployeePeriodHandler,
+} from './commands/clear-all-wbs-self-evaluations.handler';
+export type {
+  ClearAllWbsSelfEvaluationsResponse,
+  ClearedWbsSelfEvaluationDetail,
+} from './commands/clear-all-wbs-self-evaluations.handler';
+
+export {
+  ClearWbsSelfEvaluationsByProjectCommand,
+  ClearWbsSelfEvaluationsByProjectHandler,
+} from './commands/clear-wbs-self-evaluations-by-project.handler';
+export type {
+  ClearWbsSelfEvaluationsByProjectResponse,
+  ClearedWbsSelfEvaluationByProjectDetail,
+} from './commands/clear-wbs-self-evaluations-by-project.handler';
+
 // Queries
 export {
   GetEmployeeSelfEvaluationsQuery,

@@ -10,6 +10,9 @@ import {
   ResetAllWbsSelfEvaluationsByEmployeePeriod,
   SubmitWbsSelfEvaluationsByProject,
   ResetWbsSelfEvaluationsByProject,
+  ClearWbsSelfEvaluation,
+  ClearAllWbsSelfEvaluationsByEmployeePeriod,
+  ClearWbsSelfEvaluationsByProject,
   GetEmployeeSelfEvaluations,
   GetWbsSelfEvaluationDetail,
 } from './decorators/wbs-self-evaluation-api.decorators';
@@ -24,6 +27,8 @@ import {
   ResetAllWbsSelfEvaluationsResponseDto,
   SubmitWbsSelfEvaluationsByProjectResponseDto,
   ResetWbsSelfEvaluationsByProjectResponseDto,
+  ClearAllWbsSelfEvaluationsResponseDto,
+  ClearWbsSelfEvaluationsByProjectResponseDto,
 } from './dto/wbs-self-evaluation.dto';
 
 /**
@@ -98,8 +103,8 @@ export class WbsSelfEvaluationManagementController {
   }
 
   /**
-   * WBS 자기평가 초기화 (단일)
-   * 특정 WBS 자기평가의 완료 상태를 초기화합니다.
+   * WBS 자기평가 미제출 상태로 변경 (단일)
+   * 특정 WBS 자기평가를 미제출 상태로 변경합니다.
    */
   @ResetWbsSelfEvaluation()
   async resetWbsSelfEvaluation(
@@ -114,8 +119,8 @@ export class WbsSelfEvaluationManagementController {
   }
 
   /**
-   * 직원의 전체 WBS 자기평가 초기화
-   * 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+   * 직원의 전체 WBS 자기평가 미제출 상태로 변경
+   * 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 미제출 상태로 변경합니다.
    */
   @ResetAllWbsSelfEvaluationsByEmployeePeriod()
   async resetAllWbsSelfEvaluationsByEmployeePeriod(
@@ -156,8 +161,8 @@ export class WbsSelfEvaluationManagementController {
   }
 
   /**
-   * 프로젝트별 WBS 자기평가 초기화
-   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+   * 프로젝트별 WBS 자기평가 미제출 상태로 변경
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 완료된 WBS 자기평가를 미제출 상태로 변경합니다.
    */
   @ResetWbsSelfEvaluationsByProject()
   async resetWbsSelfEvaluationsByProject(
@@ -206,6 +211,63 @@ export class WbsSelfEvaluationManagementController {
     return await this.performanceEvaluationService.WBS자기평가_상세정보를_조회한다(
       {
         evaluationId: id,
+      },
+    );
+  }
+
+  /**
+   * WBS 자기평가 내용 초기화 (단일)
+   * 특정 WBS 자기평가의 내용(selfEvaluationContent, selfEvaluationScore, performanceResult)을 초기화합니다.
+   */
+  @ClearWbsSelfEvaluation()
+  async clearWbsSelfEvaluation(
+    @Param('id') id: string,
+  ): Promise<WbsSelfEvaluationResponseDto> {
+    const clearedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.performanceEvaluationService.WBS자기평가_내용을_초기화한다(
+      {
+        evaluationId: id,
+        clearedBy,
+      },
+    );
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가 내용 초기화
+   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가 내용을 초기화합니다.
+   */
+  @ClearAllWbsSelfEvaluationsByEmployeePeriod()
+  async clearAllWbsSelfEvaluationsByEmployeePeriod(
+    @Param('employeeId') employeeId: string,
+    @Param('periodId') periodId: string,
+  ): Promise<ClearAllWbsSelfEvaluationsResponseDto> {
+    const clearedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.performanceEvaluationService.직원의_전체_WBS자기평가_내용을_초기화한다(
+      {
+        employeeId,
+        periodId,
+        clearedBy,
+      },
+    );
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가 내용 초기화
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가 내용을 초기화합니다.
+   */
+  @ClearWbsSelfEvaluationsByProject()
+  async clearWbsSelfEvaluationsByProject(
+    @Param('employeeId') employeeId: string,
+    @Param('periodId') periodId: string,
+    @Param('projectId') projectId: string,
+  ): Promise<ClearWbsSelfEvaluationsByProjectResponseDto> {
+    const clearedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.performanceEvaluationService.프로젝트별_WBS자기평가_내용을_초기화한다(
+      {
+        employeeId,
+        periodId,
+        projectId,
+        clearedBy,
       },
     );
   }

@@ -26,6 +26,8 @@ import {
   WbsSelfEvaluationResponseDto,
   SubmitWbsSelfEvaluationsByProjectResponseDto,
   ResetWbsSelfEvaluationsByProjectResponseDto,
+  ClearAllWbsSelfEvaluationsResponseDto,
+  ClearWbsSelfEvaluationsByProjectResponseDto,
 } from '../dto/wbs-self-evaluation.dto';
 
 /**
@@ -138,7 +140,7 @@ export function UpdateWbsSelfEvaluation() {
  */
 export function SubmitWbsSelfEvaluation() {
   return applyDecorators(
-    Post(':id/submit'),
+    Patch(':id/submit'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: 'WBS 자기평가 제출',
@@ -290,7 +292,7 @@ export function GetWbsSelfEvaluationDetail() {
  */
 export function SubmitAllWbsSelfEvaluationsByEmployeePeriod() {
   return applyDecorators(
-    Post('employee/:employeeId/period/:periodId/submit-all'),
+    Patch('employee/:employeeId/period/:periodId/submit-all'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '직원의 전체 WBS 자기평가 제출',
@@ -338,7 +340,7 @@ export function SubmitAllWbsSelfEvaluationsByEmployeePeriod() {
 }
 
 /**
- * WBS 자기평가 초기화 API 데코레이터 (단일)
+ * WBS 자기평가 미제출 상태로 변경 API 데코레이터 (단일)
  */
 export function ResetWbsSelfEvaluation() {
   return applyDecorators(
@@ -346,16 +348,16 @@ export function ResetWbsSelfEvaluation() {
     HttpCode(HttpStatus.OK),
     ApiParam({
       name: 'id',
-      description: '초기화할 WBS 자기평가 ID',
+      description: '미제출 상태로 변경할 WBS 자기평가 ID',
       type: 'string',
       format: 'uuid',
     }),
     ApiOperation({
-      summary: 'WBS 자기평가 초기화',
-      description: `**중요**: 특정 WBS 자기평가의 완료 상태를 초기화합니다.
+      summary: 'WBS 자기평가 미제출 상태로 변경',
+      description: `**중요**: 특정 WBS 자기평가를 미제출 상태로 변경합니다.
 
 **테스트 케이스:**
-- 기본 초기화: 완료된 평가를 미완료 상태로 변경할 수 있어야 함
+- 기본 변경: 완료된 평가를 미완료 상태로 변경할 수 있어야 함
 - 이미 미완료 상태: 이미 미완료 상태인 평가는 에러 반환
 - 존재하지 않는 평가: 존재하지 않는 평가 ID로 요청 시 400 에러
 - 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
@@ -363,7 +365,7 @@ export function ResetWbsSelfEvaluation() {
     ApiResponse({
       status: HttpStatus.OK,
       description:
-        'WBS 자기평가가 성공적으로 초기화되었습니다. 초기화된 평가 정보를 반환합니다.',
+        'WBS 자기평가가 성공적으로 미제출 상태로 변경되었습니다. 변경된 평가 정보를 반환합니다.',
       type: WbsSelfEvaluationResponseDto,
     }),
     ApiResponse({
@@ -387,7 +389,7 @@ export function ResetWbsSelfEvaluation() {
 }
 
 /**
- * 직원의 전체 WBS 자기평가 초기화 API 데코레이터
+ * 직원의 전체 WBS 자기평가 미제출 상태로 변경 API 데코레이터
  */
 export function ResetAllWbsSelfEvaluationsByEmployeePeriod() {
   return applyDecorators(
@@ -406,13 +408,13 @@ export function ResetAllWbsSelfEvaluationsByEmployeePeriod() {
       format: 'uuid',
     }),
     ApiOperation({
-      summary: '직원의 전체 WBS 자기평가 초기화',
-      description: `**중요**: 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+      summary: '직원의 전체 WBS 자기평가 미제출 상태로 변경',
+      description: `**중요**: 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 미제출 상태로 변경합니다.
 
 **테스트 케이스:**
-- 기본 초기화: 완료된 모든 평가를 미완료 상태로 변경할 수 있어야 함
-- 일부 미완료 상태: 이미 미완료 상태인 평가는 스킵하고 완료된 평가만 초기화
-- 초기화 실패: 일부 평가 초기화 실패 시 상세 실패 정보 반환
+- 기본 변경: 완료된 모든 평가를 미완료 상태로 변경할 수 있어야 함
+- 일부 미완료 상태: 이미 미완료 상태인 평가는 스킵하고 완료된 평가만 변경
+- 변경 실패: 일부 평가 변경 실패 시 상세 실패 정보 반환
 - 모두 미완료 상태: 모든 평가가 이미 미완료 상태인 경우 빈 결과 반환
 - 빈 결과: 평가가 없는 경우 400 에러
 - 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
@@ -420,13 +422,13 @@ export function ResetAllWbsSelfEvaluationsByEmployeePeriod() {
     ApiResponse({
       status: HttpStatus.OK,
       description:
-        '직원의 전체 WBS 자기평가가 성공적으로 초기화되었습니다. 초기화된 평가 개수와 실패한 평가 정보를 반환합니다.',
+        '직원의 전체 WBS 자기평가가 성공적으로 미제출 상태로 변경되었습니다. 변경된 평가 개수와 실패한 평가 정보를 반환합니다.',
       type: ResetAllWbsSelfEvaluationsResponseDto,
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description:
-        '잘못된 요청 데이터이거나 초기화할 자기평가가 존재하지 않습니다.',
+        '잘못된 요청 데이터이거나 미제출 상태로 변경할 자기평가가 존재하지 않습니다.',
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
@@ -448,7 +450,7 @@ export function ResetAllWbsSelfEvaluationsByEmployeePeriod() {
  */
 export function SubmitWbsSelfEvaluationsByProject() {
   return applyDecorators(
-    Post('employee/:employeeId/period/:periodId/project/:projectId/submit'),
+    Patch('employee/:employeeId/period/:periodId/project/:projectId/submit'),
     HttpCode(HttpStatus.OK),
     ApiParam({
       name: 'employeeId',
@@ -507,7 +509,7 @@ export function SubmitWbsSelfEvaluationsByProject() {
 }
 
 /**
- * 프로젝트별 WBS 자기평가 초기화 API 데코레이터
+ * 프로젝트별 WBS 자기평가 미제출 상태로 변경 API 데코레이터
  */
 export function ResetWbsSelfEvaluationsByProject() {
   return applyDecorators(
@@ -532,13 +534,13 @@ export function ResetWbsSelfEvaluationsByProject() {
       format: 'uuid',
     }),
     ApiOperation({
-      summary: '프로젝트별 WBS 자기평가 초기화',
-      description: `**중요**: 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+      summary: '프로젝트별 WBS 자기평가 미제출 상태로 변경',
+      description: `**중요**: 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 완료된 WBS 자기평가를 미제출 상태로 변경합니다.
 
 **테스트 케이스:**
-- 기본 초기화: 프로젝트의 완료된 모든 평가를 미완료 상태로 변경할 수 있어야 함
-- 일부 미완료 상태: 이미 미완료 상태인 평가는 스킵하고 완료된 평가만 초기화
-- 초기화 실패: 일부 평가 초기화 실패 시 상세 실패 정보 반환
+- 기본 변경: 프로젝트의 완료된 모든 평가를 미완료 상태로 변경할 수 있어야 함
+- 일부 미완료 상태: 이미 미완료 상태인 평가는 스킵하고 완료된 평가만 변경
+- 변경 실패: 일부 평가 변경 실패 시 상세 실패 정보 반환
 - 모두 미완료 상태: 모든 평가가 이미 미완료 상태인 경우 빈 결과 반환
 - 빈 결과: 프로젝트에 평가가 없는 경우 400 에러
 - 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
@@ -546,13 +548,13 @@ export function ResetWbsSelfEvaluationsByProject() {
     ApiResponse({
       status: HttpStatus.OK,
       description:
-        '프로젝트의 WBS 자기평가가 성공적으로 초기화되었습니다. 초기화된 평가 개수와 실패한 평가 정보를 반환합니다.',
+        '프로젝트의 WBS 자기평가가 성공적으로 미제출 상태로 변경되었습니다. 변경된 평가 개수와 실패한 평가 정보를 반환합니다.',
       type: ResetWbsSelfEvaluationsByProjectResponseDto,
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description:
-        '잘못된 요청 데이터이거나 초기화할 자기평가가 존재하지 않습니다.',
+        '잘못된 요청 데이터이거나 미제출 상태로 변경할 자기평가가 존재하지 않습니다.',
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
@@ -565,6 +567,106 @@ export function ResetWbsSelfEvaluationsByProject() {
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
       description: '직원, 평가기간 또는 프로젝트를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * WBS 자기평가 내용 초기화 API 데코레이터 (단일)
+ */
+export function ClearWbsSelfEvaluation() {
+  return applyDecorators(
+    Patch(':id/clear'),
+    HttpCode(HttpStatus.OK),
+    ApiParam({
+      name: 'id',
+      description: '자기평가 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiOperation({
+      summary: 'WBS 자기평가 내용 초기화',
+      description:
+        '특정 WBS 자기평가의 내용(selfEvaluationContent, selfEvaluationScore, performanceResult)을 초기화합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: 'WBS 자기평가 내용이 성공적으로 초기화되었습니다.',
+      type: WbsSelfEvaluationResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '자기평가를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 직원의 전체 WBS 자기평가 내용 초기화 API 데코레이터
+ */
+export function ClearAllWbsSelfEvaluationsByEmployeePeriod() {
+  return applyDecorators(
+    Patch('employee/:employeeId/period/:periodId/clear'),
+    HttpCode(HttpStatus.OK),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiOperation({
+      summary: '직원의 전체 WBS 자기평가 내용 초기화',
+      description:
+        '특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가 내용을 초기화합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '성공적으로 초기화되었습니다.',
+      type: ClearAllWbsSelfEvaluationsResponseDto,
+    }),
+  );
+}
+
+/**
+ * 프로젝트별 WBS 자기평가 내용 초기화 API 데코레이터
+ */
+export function ClearWbsSelfEvaluationsByProject() {
+  return applyDecorators(
+    Patch('employee/:employeeId/period/:periodId/project/:projectId/clear'),
+    HttpCode(HttpStatus.OK),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiOperation({
+      summary: '프로젝트별 WBS 자기평가 내용 초기화',
+      description:
+        '특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가 내용을 초기화합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '성공적으로 초기화되었습니다.',
+      type: ClearWbsSelfEvaluationsByProjectResponseDto,
     }),
   );
 }

@@ -414,4 +414,36 @@ export class WbsSelfEvaluationService {
       );
     }
   }
+
+  /**
+   * WBS 자가평가 내용을 초기화한다 (단일)
+   */
+  async 내용을_초기화한다(
+    evaluationId: string,
+    updatedBy?: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluation> {
+    return this.executeSafeDomainOperation(async () => {
+      this.logger.log(`WBS 자가평가 내용 초기화 시작: ${evaluationId}`);
+
+      const repository = manager
+        ? manager.getRepository(WbsSelfEvaluation)
+        : this.wbsSelfEvaluationRepository;
+
+      const evaluation = await repository.findOne({
+        where: { id: evaluationId },
+      });
+
+      if (!evaluation) {
+        throw new WbsSelfEvaluationNotFoundException(evaluationId);
+      }
+
+      evaluation.자가평가_내용을_초기화한다(updatedBy);
+
+      const saved = await repository.save(evaluation);
+
+      this.logger.log(`WBS 자가평가 내용 초기화 완료: ${evaluationId}`);
+      return saved;
+    }, 'WBS 자가평가 내용 초기화');
+  }
 }
