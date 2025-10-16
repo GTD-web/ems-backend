@@ -14,6 +14,7 @@ export class CreateWbsSelfEvaluationCommand {
     public readonly wbsItemId: string,
     public readonly selfEvaluationContent: string,
     public readonly selfEvaluationScore: number,
+    public readonly performanceResult?: string,
     public readonly createdBy: string = '시스템',
   ) {}
 }
@@ -42,6 +43,7 @@ export class CreateWbsSelfEvaluationHandler
       wbsItemId,
       selfEvaluationContent,
       selfEvaluationScore,
+      performanceResult,
       createdBy,
     } = command;
 
@@ -60,6 +62,7 @@ export class CreateWbsSelfEvaluationHandler
         assignedBy: createdBy,
         selfEvaluationContent,
         selfEvaluationScore,
+        performanceResult,
         createdBy,
       });
 

@@ -12,6 +12,7 @@ export class UpdateWbsSelfEvaluationCommand {
     public readonly evaluationId: string,
     public readonly selfEvaluationContent?: string,
     public readonly selfEvaluationScore?: number,
+    public readonly performanceResult?: string,
     public readonly updatedBy: string = '시스템',
   ) {}
 }
@@ -38,6 +39,7 @@ export class UpdateWbsSelfEvaluationHandler
       evaluationId,
       selfEvaluationContent,
       selfEvaluationScore,
+      performanceResult,
       updatedBy,
     } = command;
 
@@ -50,6 +52,7 @@ export class UpdateWbsSelfEvaluationHandler
         {
           selfEvaluationContent,
           selfEvaluationScore,
+          performanceResult,
         },
         updatedBy,
       );

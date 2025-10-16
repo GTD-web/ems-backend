@@ -7,8 +7,19 @@ import {
   GetEmployeeSelfEvaluationsQuery,
   GetWbsSelfEvaluationDetailQuery,
   SubmitWbsSelfEvaluationCommand,
+  SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand,
+  ResetWbsSelfEvaluationCommand,
+  ResetAllWbsSelfEvaluationsByEmployeePeriodCommand,
+  SubmitWbsSelfEvaluationsByProjectCommand,
+  ResetWbsSelfEvaluationsByProjectCommand,
   UpdateWbsSelfEvaluationCommand,
   UpsertWbsSelfEvaluationCommand,
+} from './handlers/self-evaluation';
+import type {
+  SubmitAllWbsSelfEvaluationsResponse,
+  ResetAllWbsSelfEvaluationsResponse,
+  SubmitWbsSelfEvaluationsByProjectResponse,
+  ResetWbsSelfEvaluationsByProjectResponse,
 } from './handlers/self-evaluation';
 
 // 동료평가 관련 커맨드 및 쿼리
@@ -132,6 +143,115 @@ export class PerformanceEvaluationService
     const result = await this.commandBus.execute(command);
     this.logger.log('WBS 자기평가 제출 완료', {
       evaluationId: command.evaluationId,
+    });
+    return result;
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가를 제출한다
+   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 완료 처리합니다.
+   */
+  async 직원의_전체_WBS자기평가를_제출한다(
+    command: SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand,
+  ): Promise<SubmitAllWbsSelfEvaluationsResponse> {
+    this.logger.log('직원의 전체 WBS 자기평가 제출 시작', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('직원의 전체 WBS 자기평가 제출 완료', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+      submittedCount: result.submittedCount,
+      failedCount: result.failedCount,
+    });
+    return result;
+  }
+
+  /**
+   * WBS 자기평가를 초기화한다 (단일)
+   */
+  async WBS자기평가를_초기화한다(
+    command: ResetWbsSelfEvaluationCommand,
+  ): Promise<WbsSelfEvaluationResponseDto> {
+    this.logger.log('WBS 자기평가 초기화 시작', {
+      evaluationId: command.evaluationId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('WBS 자기평가 초기화 완료', {
+      evaluationId: command.evaluationId,
+    });
+    return result;
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가를 초기화한다
+   * 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+   */
+  async 직원의_전체_WBS자기평가를_초기화한다(
+    command: ResetAllWbsSelfEvaluationsByEmployeePeriodCommand,
+  ): Promise<ResetAllWbsSelfEvaluationsResponse> {
+    this.logger.log('직원의 전체 WBS 자기평가 초기화 시작', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('직원의 전체 WBS 자기평가 초기화 완료', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+      resetCount: result.resetCount,
+      failedCount: result.failedCount,
+    });
+    return result;
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가를 제출한다
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 완료 처리합니다.
+   */
+  async 프로젝트별_WBS자기평가를_제출한다(
+    command: SubmitWbsSelfEvaluationsByProjectCommand,
+  ): Promise<SubmitWbsSelfEvaluationsByProjectResponse> {
+    this.logger.log('프로젝트별 WBS 자기평가 제출 시작', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+      projectId: command.projectId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('프로젝트별 WBS 자기평가 제출 완료', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+      projectId: command.projectId,
+      submittedCount: result.submittedCount,
+      failedCount: result.failedCount,
+    });
+    return result;
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가를 초기화한다
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+   */
+  async 프로젝트별_WBS자기평가를_초기화한다(
+    command: ResetWbsSelfEvaluationsByProjectCommand,
+  ): Promise<ResetWbsSelfEvaluationsByProjectResponse> {
+    this.logger.log('프로젝트별 WBS 자기평가 초기화 시작', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+      projectId: command.projectId,
+    });
+
+    const result = await this.commandBus.execute(command);
+    this.logger.log('프로젝트별 WBS 자기평가 초기화 완료', {
+      employeeId: command.employeeId,
+      periodId: command.periodId,
+      projectId: command.projectId,
+      resetCount: result.resetCount,
+      failedCount: result.failedCount,
     });
     return result;
   }

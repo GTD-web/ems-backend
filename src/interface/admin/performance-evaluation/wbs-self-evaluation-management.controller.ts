@@ -1,10 +1,15 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
-import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
+import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import {
   UpsertWbsSelfEvaluation,
   SubmitWbsSelfEvaluation,
+  SubmitAllWbsSelfEvaluationsByEmployeePeriod,
+  ResetWbsSelfEvaluation,
+  ResetAllWbsSelfEvaluationsByEmployeePeriod,
+  SubmitWbsSelfEvaluationsByProject,
+  ResetWbsSelfEvaluationsByProject,
   GetEmployeeSelfEvaluations,
   GetWbsSelfEvaluationDetail,
 } from './decorators/wbs-self-evaluation-api.decorators';
@@ -15,6 +20,10 @@ import {
   WbsSelfEvaluationResponseDto,
   WbsSelfEvaluationDetailResponseDto,
   EmployeeSelfEvaluationsResponseDto,
+  SubmitAllWbsSelfEvaluationsResponseDto,
+  ResetAllWbsSelfEvaluationsResponseDto,
+  SubmitWbsSelfEvaluationsByProjectResponseDto,
+  ResetWbsSelfEvaluationsByProjectResponseDto,
 } from './dto/wbs-self-evaluation.dto';
 
 /**
@@ -47,6 +56,7 @@ export class WbsSelfEvaluationManagementController {
       periodId,
       selfEvaluationContent: dto.selfEvaluationContent,
       selfEvaluationScore: dto.selfEvaluationScore,
+      performanceResult: dto.performanceResult,
       actionBy,
     });
   }
@@ -65,6 +75,106 @@ export class WbsSelfEvaluationManagementController {
       evaluationId: id,
       submittedBy,
     });
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가 제출
+   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 한 번에 제출합니다.
+   */
+  @SubmitAllWbsSelfEvaluationsByEmployeePeriod()
+  async submitAllWbsSelfEvaluationsByEmployeePeriod(
+    @Param('employeeId') employeeId: string,
+    @Param('periodId') periodId: string,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+  ): Promise<SubmitAllWbsSelfEvaluationsResponseDto> {
+    const submittedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.performanceEvaluationService.직원의_전체_WBS자기평가를_제출한다(
+      {
+        employeeId,
+        periodId,
+        submittedBy,
+      },
+    );
+  }
+
+  /**
+   * WBS 자기평가 초기화 (단일)
+   * 특정 WBS 자기평가의 완료 상태를 초기화합니다.
+   */
+  @ResetWbsSelfEvaluation()
+  async resetWbsSelfEvaluation(
+    @Param('id') id: string,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+  ): Promise<WbsSelfEvaluationResponseDto> {
+    const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.performanceEvaluationService.WBS자기평가를_초기화한다({
+      evaluationId: id,
+      resetBy,
+    });
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가 초기화
+   * 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+   */
+  @ResetAllWbsSelfEvaluationsByEmployeePeriod()
+  async resetAllWbsSelfEvaluationsByEmployeePeriod(
+    @Param('employeeId') employeeId: string,
+    @Param('periodId') periodId: string,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+  ): Promise<ResetAllWbsSelfEvaluationsResponseDto> {
+    const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.performanceEvaluationService.직원의_전체_WBS자기평가를_초기화한다(
+      {
+        employeeId,
+        periodId,
+        resetBy,
+      },
+    );
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가 제출
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 한 번에 제출합니다.
+   */
+  @SubmitWbsSelfEvaluationsByProject()
+  async submitWbsSelfEvaluationsByProject(
+    @Param('employeeId') employeeId: string,
+    @Param('periodId') periodId: string,
+    @Param('projectId') projectId: string,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+  ): Promise<SubmitWbsSelfEvaluationsByProjectResponseDto> {
+    const submittedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.performanceEvaluationService.프로젝트별_WBS자기평가를_제출한다(
+      {
+        employeeId,
+        periodId,
+        projectId,
+        submittedBy,
+      },
+    );
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가 초기화
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+   */
+  @ResetWbsSelfEvaluationsByProject()
+  async resetWbsSelfEvaluationsByProject(
+    @Param('employeeId') employeeId: string,
+    @Param('periodId') periodId: string,
+    @Param('projectId') projectId: string,
+    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+  ): Promise<ResetWbsSelfEvaluationsByProjectResponseDto> {
+    const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    return await this.performanceEvaluationService.프로젝트별_WBS자기평가를_초기화한다(
+      {
+        employeeId,
+        periodId,
+        projectId,
+        resetBy,
+      },
+    );
   }
 
   /**

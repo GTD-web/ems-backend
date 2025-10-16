@@ -2,6 +2,11 @@ import { CreateWbsSelfEvaluationHandler } from './self-evaluation/create-wbs-sel
 import { UpdateWbsSelfEvaluationHandler } from './self-evaluation/update-wbs-self-evaluation.handler';
 import { UpsertWbsSelfEvaluationHandler } from './self-evaluation/upsert-wbs-self-evaluation.handler';
 import { SubmitWbsSelfEvaluationHandler } from './self-evaluation/submit-wbs-self-evaluation.handler';
+import { SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler } from './self-evaluation/submit-all-wbs-self-evaluations.handler';
+import { ResetWbsSelfEvaluationHandler } from './self-evaluation/reset-wbs-self-evaluation.handler';
+import { ResetAllWbsSelfEvaluationsByEmployeePeriodHandler } from './self-evaluation/reset-all-wbs-self-evaluations.handler';
+import { SubmitWbsSelfEvaluationsByProjectHandler } from './self-evaluation/submit-wbs-self-evaluations-by-project.handler';
+import { ResetWbsSelfEvaluationsByProjectHandler } from './self-evaluation/reset-wbs-self-evaluations-by-project.handler';
 
 import { CreatePeerEvaluationHandler } from './peer-evaluation/create-peer-evaluation.handler';
 import { UpdatePeerEvaluationHandler } from './peer-evaluation/update-peer-evaluation.handler';
@@ -28,6 +33,11 @@ export const CommandHandlers = [
   UpdateWbsSelfEvaluationHandler,
   UpsertWbsSelfEvaluationHandler,
   SubmitWbsSelfEvaluationHandler,
+  SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler,
+  ResetWbsSelfEvaluationHandler,
+  ResetAllWbsSelfEvaluationsByEmployeePeriodHandler,
+  SubmitWbsSelfEvaluationsByProjectHandler,
+  ResetWbsSelfEvaluationsByProjectHandler,
 
   // 동료평가 커맨드 핸들러
   CreatePeerEvaluationHandler,

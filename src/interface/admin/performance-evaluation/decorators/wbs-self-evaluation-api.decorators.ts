@@ -1,27 +1,31 @@
 import {
   applyDecorators,
-  Post,
   Get,
-  Put,
   HttpCode,
   HttpStatus,
+  Patch,
+  Post,
+  Put,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBody,
+  ApiResponse,
 } from '@nestjs/swagger';
 import {
   CreateWbsSelfEvaluationBodyDto,
-  UpdateWbsSelfEvaluationDto,
-  SubmitWbsSelfEvaluationDto,
-  WbsSelfEvaluationFilterDto,
-  WbsSelfEvaluationResponseDto,
-  WbsSelfEvaluationDetailResponseDto,
   EmployeeSelfEvaluationsResponseDto,
+  ResetAllWbsSelfEvaluationsResponseDto,
+  SubmitAllWbsSelfEvaluationsResponseDto,
+  SubmitWbsSelfEvaluationDto,
+  UpdateWbsSelfEvaluationDto,
   WbsSelfEvaluationBasicDto,
+  WbsSelfEvaluationDetailResponseDto,
+  WbsSelfEvaluationResponseDto,
+  SubmitWbsSelfEvaluationsByProjectResponseDto,
+  ResetWbsSelfEvaluationsByProjectResponseDto,
 } from '../dto/wbs-self-evaluation.dto';
 
 /**
@@ -277,6 +281,290 @@ export function GetWbsSelfEvaluationDetail() {
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
       description: '자기평가를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 직원의 전체 WBS 자기평가 제출 API 데코레이터
+ */
+export function SubmitAllWbsSelfEvaluationsByEmployeePeriod() {
+  return applyDecorators(
+    Post('employee/:employeeId/period/:periodId/submit-all'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '직원의 전체 WBS 자기평가 제출',
+      description:
+        '특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 한 번에 제출하고 완료 상태로 변경합니다.',
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        '직원의 전체 WBS 자기평가가 성공적으로 제출되었습니다. 제출된 평가 개수와 실패한 평가 정보를 반환합니다.',
+      type: SubmitAllWbsSelfEvaluationsResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 데이터이거나 제출할 자기평가가 존재하지 않습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '직원 또는 평가기간을 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * WBS 자기평가 초기화 API 데코레이터 (단일)
+ */
+export function ResetWbsSelfEvaluation() {
+  return applyDecorators(
+    Patch(':id/reset'),
+    HttpCode(HttpStatus.OK),
+    ApiParam({
+      name: 'id',
+      description: '초기화할 WBS 자기평가 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiOperation({
+      summary: 'WBS 자기평가 초기화',
+      description: `**중요**: 특정 WBS 자기평가의 완료 상태를 초기화합니다.
+
+**테스트 케이스:**
+- 기본 초기화: 완료된 평가를 미완료 상태로 변경할 수 있어야 함
+- 이미 미완료 상태: 이미 미완료 상태인 평가는 에러 반환
+- 존재하지 않는 평가: 존재하지 않는 평가 ID로 요청 시 400 에러
+- 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        'WBS 자기평가가 성공적으로 초기화되었습니다. 초기화된 평가 정보를 반환합니다.',
+      type: WbsSelfEvaluationResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 데이터이거나 이미 미완료 상태인 자기평가입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '자기평가를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 직원의 전체 WBS 자기평가 초기화 API 데코레이터
+ */
+export function ResetAllWbsSelfEvaluationsByEmployeePeriod() {
+  return applyDecorators(
+    Patch('employee/:employeeId/period/:periodId/reset'),
+    HttpCode(HttpStatus.OK),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiOperation({
+      summary: '직원의 전체 WBS 자기평가 초기화',
+      description: `**중요**: 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+
+**테스트 케이스:**
+- 기본 초기화: 완료된 모든 평가를 미완료 상태로 변경할 수 있어야 함
+- 일부 미완료 상태: 이미 미완료 상태인 평가는 스킵하고 완료된 평가만 초기화
+- 초기화 실패: 일부 평가 초기화 실패 시 상세 실패 정보 반환
+- 모두 미완료 상태: 모든 평가가 이미 미완료 상태인 경우 빈 결과 반환
+- 빈 결과: 평가가 없는 경우 400 에러
+- 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        '직원의 전체 WBS 자기평가가 성공적으로 초기화되었습니다. 초기화된 평가 개수와 실패한 평가 정보를 반환합니다.',
+      type: ResetAllWbsSelfEvaluationsResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 데이터이거나 초기화할 자기평가가 존재하지 않습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '직원 또는 평가기간을 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 프로젝트별 WBS 자기평가 제출 API 데코레이터
+ */
+export function SubmitWbsSelfEvaluationsByProject() {
+  return applyDecorators(
+    Post('employee/:employeeId/period/:periodId/project/:projectId/submit'),
+    HttpCode(HttpStatus.OK),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiOperation({
+      summary: '프로젝트별 WBS 자기평가 제출',
+      description: `**중요**: 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 제출합니다.
+
+**테스트 케이스:**
+- 기본 제출: 프로젝트의 모든 평가를 완료 상태로 변경할 수 있어야 함
+- 일부 성공: 일부 평가는 성공하고 일부는 실패할 수 있음
+- 이미 완료된 평가: 이미 완료된 평가는 스킵하고 결과에 포함
+- 검증 실패: 내용이나 점수가 없는 평가는 실패 정보 반환
+- 빈 결과: 프로젝트에 평가가 없는 경우 400 에러
+- 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        '프로젝트의 WBS 자기평가가 성공적으로 제출되었습니다. 제출된 평가 개수와 실패한 평가 정보를 반환합니다.',
+      type: SubmitWbsSelfEvaluationsByProjectResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 데이터이거나 제출할 자기평가가 존재하지 않습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '직원, 평가기간 또는 프로젝트를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 프로젝트별 WBS 자기평가 초기화 API 데코레이터
+ */
+export function ResetWbsSelfEvaluationsByProject() {
+  return applyDecorators(
+    Patch('employee/:employeeId/period/:periodId/project/:projectId/reset'),
+    HttpCode(HttpStatus.OK),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiOperation({
+      summary: '프로젝트별 WBS 자기평가 초기화',
+      description: `**중요**: 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+
+**테스트 케이스:**
+- 기본 초기화: 프로젝트의 완료된 모든 평가를 미완료 상태로 변경할 수 있어야 함
+- 일부 미완료 상태: 이미 미완료 상태인 평가는 스킵하고 완료된 평가만 초기화
+- 초기화 실패: 일부 평가 초기화 실패 시 상세 실패 정보 반환
+- 모두 미완료 상태: 모든 평가가 이미 미완료 상태인 경우 빈 결과 반환
+- 빈 결과: 프로젝트에 평가가 없는 경우 400 에러
+- 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러`,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        '프로젝트의 WBS 자기평가가 성공적으로 초기화되었습니다. 초기화된 평가 개수와 실패한 평가 정보를 반환합니다.',
+      type: ResetWbsSelfEvaluationsByProjectResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 데이터이거나 초기화할 자기평가가 존재하지 않습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '직원, 평가기간 또는 프로젝트를 찾을 수 없습니다.',
     }),
   );
 }

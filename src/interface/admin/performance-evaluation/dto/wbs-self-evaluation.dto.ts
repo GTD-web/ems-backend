@@ -34,6 +34,14 @@ export class CreateWbsSelfEvaluationBodyDto {
   selfEvaluationScore: number;
 
   @ApiPropertyOptional({
+    description: '성과 입력 (실제 달성한 성과 및 결과)',
+    example: 'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+  })
+  @IsOptional()
+  @IsString()
+  performanceResult?: string;
+
+  @ApiPropertyOptional({
     description: '생성자 ID',
     example: '550e8400-e29b-41d4-a716-446655440003',
   })
@@ -65,6 +73,14 @@ export class UpdateWbsSelfEvaluationDto {
   @Min(1)
   @Max(5)
   selfEvaluationScore?: number;
+
+  @ApiPropertyOptional({
+    description: '성과 입력 (실제 달성한 성과 및 결과)',
+    example: 'WBS 항목 B를 완료하였으며, 목표 대비 120% 달성했습니다.',
+  })
+  @IsOptional()
+  @IsString()
+  performanceResult?: string;
 }
 
 /**
@@ -182,6 +198,12 @@ export class WbsSelfEvaluationBasicDto {
   })
   evaluationDate: Date;
 
+  @ApiPropertyOptional({
+    description: '성과 입력 (실제 달성한 성과 및 결과)',
+    example: 'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+  })
+  performanceResult?: string;
+
   @ApiProperty({
     description: '자기평가 내용',
     example: '이번 분기 목표를 성공적으로 달성했습니다.',
@@ -275,6 +297,12 @@ export class WbsSelfEvaluationDetailResponseDto {
     example: '2024-01-15T09:00:00Z',
   })
   evaluationDate: Date;
+
+  @ApiPropertyOptional({
+    description: '성과 입력 (실제 달성한 성과 및 결과)',
+    example: 'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+  })
+  performanceResult?: string;
 
   @ApiProperty({
     description: '자기평가 내용',
@@ -442,4 +470,500 @@ export class EmployeeSelfEvaluationsResponseDto {
     example: 10,
   })
   limit: number;
+}
+
+/**
+ * 제출된 WBS 자기평가 상세 정보
+ */
+export class SubmittedWbsSelfEvaluationDetailDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440010',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '자기평가 내용',
+    example: '이번 분기 목표를 성공적으로 달성했습니다.',
+  })
+  selfEvaluationContent: string;
+
+  @ApiProperty({
+    description: '자기평가 점수 (1-5)',
+    example: 4,
+  })
+  selfEvaluationScore: number;
+
+  @ApiPropertyOptional({
+    description: '성과 입력 (실제 달성한 성과 및 결과)',
+    example: 'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+  })
+  performanceResult?: string;
+
+  @ApiProperty({
+    description: '완료 일시',
+    example: '2024-01-15T15:00:00Z',
+  })
+  completedAt: Date;
+}
+
+/**
+ * 제출 실패한 WBS 자기평가 정보
+ */
+export class FailedWbsSelfEvaluationDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440005',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440015',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '실패 이유',
+    example: '평가 내용과 점수가 입력되지 않았습니다.',
+  })
+  reason: string;
+
+  @ApiPropertyOptional({
+    description: '자기평가 내용',
+    example: '',
+  })
+  selfEvaluationContent?: string;
+
+  @ApiPropertyOptional({
+    description: '자기평가 점수 (1-5)',
+    example: null,
+  })
+  selfEvaluationScore?: number;
+}
+
+/**
+ * 전체 WBS 자기평가 제출 응답 DTO
+ */
+export class SubmitAllWbsSelfEvaluationsResponseDto {
+  @ApiProperty({
+    description: '제출된 평가 개수',
+    example: 5,
+  })
+  submittedCount: number;
+
+  @ApiProperty({
+    description: '제출 실패한 평가 개수',
+    example: 0,
+  })
+  failedCount: number;
+
+  @ApiProperty({
+    description: '총 평가 개수',
+    example: 5,
+  })
+  totalCount: number;
+
+  @ApiProperty({
+    description: '완료된 평가 상세 정보',
+    type: [SubmittedWbsSelfEvaluationDetailDto],
+    example: [
+      {
+        evaluationId: '550e8400-e29b-41d4-a716-446655440001',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440010',
+        selfEvaluationContent: '이번 분기 목표를 성공적으로 달성했습니다.',
+        selfEvaluationScore: 4,
+        performanceResult:
+          'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+        completedAt: '2024-01-15T15:00:00Z',
+      },
+    ],
+  })
+  completedEvaluations: SubmittedWbsSelfEvaluationDetailDto[];
+
+  @ApiProperty({
+    description: '실패한 평가 상세 정보 (비어있으면 모든 평가가 성공)',
+    type: [FailedWbsSelfEvaluationDto],
+    example: [
+      {
+        evaluationId: '550e8400-e29b-41d4-a716-446655440005',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440015',
+        reason: '평가 내용과 점수가 입력되지 않았습니다.',
+        selfEvaluationContent: '',
+        selfEvaluationScore: null,
+      },
+    ],
+  })
+  failedEvaluations: FailedWbsSelfEvaluationDto[];
+}
+
+/**
+ * 초기화된 WBS 자기평가 상세 정보
+ */
+export class ResetWbsSelfEvaluationDetailDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440010',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '자기평가 내용',
+    example: '이번 분기 목표를 성공적으로 달성했습니다.',
+  })
+  selfEvaluationContent: string;
+
+  @ApiProperty({
+    description: '자기평가 점수 (1-5)',
+    example: 4,
+  })
+  selfEvaluationScore: number;
+
+  @ApiPropertyOptional({
+    description: '성과 입력 (실제 달성한 성과 및 결과)',
+    example: 'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+  })
+  performanceResult?: string;
+
+  @ApiProperty({
+    description: '초기화 전 완료 상태였는지 여부',
+    example: true,
+  })
+  wasCompleted: boolean;
+}
+
+/**
+ * 초기화 실패한 WBS 자기평가 정보
+ */
+export class FailedResetWbsSelfEvaluationDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440005',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440015',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '실패 이유',
+    example: '알 수 없는 오류가 발생했습니다.',
+  })
+  reason: string;
+}
+
+/**
+ * 전체 WBS 자기평가 초기화 응답 DTO
+ */
+export class ResetAllWbsSelfEvaluationsResponseDto {
+  @ApiProperty({
+    description: '초기화된 평가 개수',
+    example: 2,
+  })
+  resetCount: number;
+
+  @ApiProperty({
+    description: '초기화 실패한 평가 개수',
+    example: 1,
+  })
+  failedCount: number;
+
+  @ApiProperty({
+    description: '총 평가 개수',
+    example: 5,
+  })
+  totalCount: number;
+
+  @ApiProperty({
+    description: '초기화된 평가 상세 정보',
+    type: [ResetWbsSelfEvaluationDetailDto],
+    example: [
+      {
+        evaluationId: '550e8400-e29b-41d4-a716-446655440001',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440010',
+        selfEvaluationContent: '이번 분기 목표를 성공적으로 달성했습니다.',
+        selfEvaluationScore: 4,
+        performanceResult:
+          'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+        wasCompleted: true,
+      },
+    ],
+  })
+  resetEvaluations: ResetWbsSelfEvaluationDetailDto[];
+
+  @ApiProperty({
+    description: '초기화 실패한 평가 정보 (비어있으면 모든 초기화 성공)',
+    type: [FailedResetWbsSelfEvaluationDto],
+    example: [
+      {
+        evaluationId: '550e8400-e29b-41d4-a716-446655440005',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440015',
+        reason: '데이터베이스 제약 조건 위반으로 초기화에 실패했습니다.',
+      },
+    ],
+  })
+  failedResets: FailedResetWbsSelfEvaluationDto[];
+}
+
+/**
+ * 프로젝트별 제출된 WBS 자기평가 상세 정보
+ */
+export class SubmittedWbsSelfEvaluationByProjectDetailDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440010',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '자기평가 내용',
+    example: '이번 분기 목표를 성공적으로 달성했습니다.',
+  })
+  selfEvaluationContent: string;
+
+  @ApiProperty({
+    description: '자기평가 점수 (1-5)',
+    example: 4,
+  })
+  selfEvaluationScore: number;
+
+  @ApiPropertyOptional({
+    description: '성과 입력 (실제 달성한 성과 및 결과)',
+    example: 'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+  })
+  performanceResult?: string;
+
+  @ApiProperty({
+    description: '완료일',
+    example: '2024-01-15T09:30:00Z',
+  })
+  completedAt: Date;
+}
+
+/**
+ * 프로젝트별 실패한 WBS 자기평가 정보
+ */
+export class FailedWbsSelfEvaluationByProjectDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440005',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440015',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '실패 이유',
+    example: '평가 내용과 점수가 입력되지 않았습니다.',
+  })
+  reason: string;
+
+  @ApiPropertyOptional({
+    description: '자기평가 내용 (입력된 경우)',
+    example: '',
+  })
+  selfEvaluationContent?: string;
+
+  @ApiPropertyOptional({
+    description: '자기평가 점수 (입력된 경우)',
+    example: null,
+  })
+  selfEvaluationScore?: number;
+}
+
+/**
+ * 프로젝트별 WBS 자기평가 제출 응답 DTO
+ */
+export class SubmitWbsSelfEvaluationsByProjectResponseDto {
+  @ApiProperty({
+    description: '제출된 평가 개수',
+    example: 2,
+  })
+  submittedCount: number;
+
+  @ApiProperty({
+    description: '제출 실패한 평가 개수',
+    example: 1,
+  })
+  failedCount: number;
+
+  @ApiProperty({
+    description: '총 평가 개수',
+    example: 3,
+  })
+  totalCount: number;
+
+  @ApiProperty({
+    description: '제출된 평가 상세 정보',
+    type: [SubmittedWbsSelfEvaluationByProjectDetailDto],
+    example: [
+      {
+        evaluationId: '550e8400-e29b-41d4-a716-446655440001',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440010',
+        selfEvaluationContent: '이번 분기 목표를 성공적으로 달성했습니다.',
+        selfEvaluationScore: 4,
+        performanceResult:
+          'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+        completedAt: '2024-01-15T09:30:00Z',
+      },
+    ],
+  })
+  completedEvaluations: SubmittedWbsSelfEvaluationByProjectDetailDto[];
+
+  @ApiProperty({
+    description: '제출 실패한 평가 상세 정보 (비어있으면 모든 평가가 성공)',
+    type: [FailedWbsSelfEvaluationByProjectDto],
+    example: [
+      {
+        evaluationId: '550e8400-e29b-41d4-a716-446655440005',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440015',
+        reason: '평가 내용과 점수가 입력되지 않았습니다.',
+        selfEvaluationContent: '',
+        selfEvaluationScore: null,
+      },
+    ],
+  })
+  failedEvaluations: FailedWbsSelfEvaluationByProjectDto[];
+}
+
+/**
+ * 프로젝트별 초기화된 WBS 자기평가 상세 정보
+ */
+export class ResetWbsSelfEvaluationByProjectDetailDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440010',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '자기평가 내용',
+    example: '이번 분기 목표를 성공적으로 달성했습니다.',
+  })
+  selfEvaluationContent: string;
+
+  @ApiProperty({
+    description: '자기평가 점수 (1-5)',
+    example: 4,
+  })
+  selfEvaluationScore: number;
+
+  @ApiPropertyOptional({
+    description: '성과 입력 (실제 달성한 성과 및 결과)',
+    example: 'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+  })
+  performanceResult?: string;
+
+  @ApiProperty({
+    description: '초기화 전 완료 상태였는지 여부',
+    example: true,
+  })
+  wasCompleted: boolean;
+}
+
+/**
+ * 프로젝트별 초기화 실패한 WBS 자기평가 정보
+ */
+export class FailedResetWbsSelfEvaluationByProjectDto {
+  @ApiProperty({
+    description: '자기평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440005',
+  })
+  evaluationId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: '550e8400-e29b-41d4-a716-446655440015',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '실패 이유',
+    example: '데이터베이스 제약 조건 위반으로 초기화에 실패했습니다.',
+  })
+  reason: string;
+}
+
+/**
+ * 프로젝트별 WBS 자기평가 초기화 응답 DTO
+ */
+export class ResetWbsSelfEvaluationsByProjectResponseDto {
+  @ApiProperty({
+    description: '초기화된 평가 개수',
+    example: 2,
+  })
+  resetCount: number;
+
+  @ApiProperty({
+    description: '초기화 실패한 평가 개수',
+    example: 1,
+  })
+  failedCount: number;
+
+  @ApiProperty({
+    description: '총 평가 개수',
+    example: 3,
+  })
+  totalCount: number;
+
+  @ApiProperty({
+    description: '초기화된 평가 상세 정보',
+    type: [ResetWbsSelfEvaluationByProjectDetailDto],
+    example: [
+      {
+        evaluationId: '550e8400-e29b-41d4-a716-446655440001',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440010',
+        selfEvaluationContent: '이번 분기 목표를 성공적으로 달성했습니다.',
+        selfEvaluationScore: 4,
+        performanceResult:
+          'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+        wasCompleted: true,
+      },
+    ],
+  })
+  resetEvaluations: ResetWbsSelfEvaluationByProjectDetailDto[];
+
+  @ApiProperty({
+    description: '초기화 실패한 평가 정보 (비어있으면 모든 초기화 성공)',
+    type: [FailedResetWbsSelfEvaluationByProjectDto],
+    example: [
+      {
+        evaluationId: '550e8400-e29b-41d4-a716-446655440005',
+        wbsItemId: '550e8400-e29b-41d4-a716-446655440015',
+        reason: '데이터베이스 제약 조건 위반으로 초기화에 실패했습니다.',
+      },
+    ],
+  })
+  failedResets: FailedResetWbsSelfEvaluationByProjectDto[];
 }
