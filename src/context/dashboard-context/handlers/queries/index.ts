@@ -14,13 +14,23 @@ export {
   GetMyEvaluationTargetsStatusHandler,
 } from './get-my-evaluation-targets-status.query';
 
+export {
+  GetEmployeeAssignedDataQuery,
+  GetEmployeeAssignedDataHandler,
+  type EmployeeAssignedDataResult,
+  type EvaluationPeriodInfo,
+  type EmployeeInfo,
+} from './get-employee-assigned-data.query';
+
 // Handler 배열 export (Module에서 사용)
 import { GetEmployeeEvaluationPeriodStatusHandler } from './get-employee-evaluation-period-status.query';
 import { GetAllEmployeesEvaluationPeriodStatusHandler } from './get-all-employees-evaluation-period-status.query';
 import { GetMyEvaluationTargetsStatusHandler } from './get-my-evaluation-targets-status.query';
+import { GetEmployeeAssignedDataHandler } from './get-employee-assigned-data.query';
 
 export const QUERY_HANDLERS = [
   GetEmployeeEvaluationPeriodStatusHandler,
   GetAllEmployeesEvaluationPeriodStatusHandler,
   GetMyEvaluationTargetsStatusHandler,
+  GetEmployeeAssignedDataHandler,
 ];

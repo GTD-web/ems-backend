@@ -6,11 +6,11 @@ import {
   GetEmployeeEvaluationPeriodStatus,
   GetAllEmployeesEvaluationPeriodStatus,
   GetMyEvaluationTargetsStatus,
+  GetEmployeeAssignedData,
 } from './decorators/dashboard-api.decorators';
-import {
-  EmployeeEvaluationPeriodStatusResponseDto,
-  MyEvaluationTargetStatusResponseDto,
-} from './dto/dashboard.dto';
+import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/employee-evaluation-period-status.dto';
+import { MyEvaluationTargetStatusResponseDto } from './dto/my-evaluation-targets-status.dto';
+import { EmployeeAssignedDataResponseDto } from './dto/employee-assigned-data.dto';
 
 /**
  * 관리자용 대시보드 컨트롤러
@@ -61,6 +61,20 @@ export class DashboardController {
     @ParseUUID('employeeId') employeeId: string,
   ): Promise<EmployeeEvaluationPeriodStatusResponseDto | null> {
     return await this.dashboardService.직원의_평가기간_현황을_조회한다(
+      evaluationPeriodId,
+      employeeId,
+    );
+  }
+
+  /**
+   * 사용자의 할당된 프로젝트, WBS, 평가기준, 성과, 자기평가 정보를 조회합니다.
+   */
+  @GetEmployeeAssignedData()
+  async getEmployeeAssignedData(
+    @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
+    @ParseUUID('employeeId') employeeId: string,
+  ): Promise<EmployeeAssignedDataResponseDto> {
+    return await this.dashboardService.사용자_할당_정보를_조회한다(
       evaluationPeriodId,
       employeeId,
     );

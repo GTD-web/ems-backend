@@ -9,6 +9,8 @@ import {
   GetEmployeeEvaluationPeriodStatusQuery,
   GetAllEmployeesEvaluationPeriodStatusQuery,
   GetMyEvaluationTargetsStatusQuery,
+  GetEmployeeAssignedDataQuery,
+  EmployeeAssignedDataResult,
 } from './handlers/queries';
 
 /**
@@ -57,6 +59,22 @@ export class DashboardService implements IDashboardContext {
     const query = new GetMyEvaluationTargetsStatusQuery(
       evaluationPeriodId,
       evaluatorId,
+    );
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 사용자 할당 정보를 조회한다
+   *
+   * 특정 직원의 평가기간 내 할당된 프로젝트, WBS, 평가기준, 성과, 자기평가 정보를 조회합니다.
+   */
+  async 사용자_할당_정보를_조회한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+  ): Promise<EmployeeAssignedDataResult> {
+    const query = new GetEmployeeAssignedDataQuery(
+      evaluationPeriodId,
+      employeeId,
     );
     return await this.queryBus.execute(query);
   }

@@ -5,6 +5,9 @@ import { DashboardService } from './dashboard.service';
 import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationPeriodEmployeeMapping } from '../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { Employee } from '../../domain/common/employee/employee.entity';
+import { Department } from '../../domain/common/department/department.entity';
+import { Project } from '../../domain/common/project/project.entity';
+import { WbsItem } from '../../domain/common/wbs-item/wbs-item.entity';
 import { EvaluationProjectAssignment } from '../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsEvaluationCriteria } from '../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
@@ -29,6 +32,9 @@ import { QUERY_HANDLERS } from './handlers/queries';
       EvaluationPeriod,
       EvaluationPeriodEmployeeMapping,
       Employee,
+      Department,
+      Project,
+      WbsItem,
       EvaluationProjectAssignment,
       EvaluationWbsAssignment,
       WbsEvaluationCriteria,
