@@ -20,9 +20,6 @@ import {
   FinalEvaluationListResponseDto,
 } from './dto/final-evaluation.dto';
 import {
-  UpsertFinalEvaluationCommand,
-  ConfirmFinalEvaluationCommand,
-  CancelConfirmationFinalEvaluationCommand,
   GetFinalEvaluationQuery,
   GetFinalEvaluationListQuery,
   GetFinalEvaluationByEmployeePeriodQuery,
@@ -51,18 +48,16 @@ export class FinalEvaluationManagementController {
   ): Promise<FinalEvaluationResponseDto> {
     const actionBy = dto.actionBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
 
-    const command = new UpsertFinalEvaluationCommand(
-      employeeId,
-      periodId,
-      dto.evaluationGrade,
-      dto.jobGrade,
-      dto.jobDetailedGrade,
-      dto.finalComments,
-      actionBy,
-    );
-
     const evaluationId =
-      await this.performanceEvaluationService.최종평가를_저장한다(command);
+      await this.performanceEvaluationService.최종평가를_저장한다(
+        employeeId,
+        periodId,
+        dto.evaluationGrade,
+        dto.jobGrade,
+        dto.jobDetailedGrade,
+        dto.finalComments,
+        actionBy,
+      );
 
     return {
       id: evaluationId,
@@ -78,9 +73,10 @@ export class FinalEvaluationManagementController {
     @Param('id') id: string,
     @Body() dto: ConfirmFinalEvaluationBodyDto,
   ): Promise<{ message: string }> {
-    const command = new ConfirmFinalEvaluationCommand(id, dto.confirmedBy);
-
-    await this.performanceEvaluationService.최종평가를_확정한다(command);
+    await this.performanceEvaluationService.최종평가를_확정한다(
+      id,
+      dto.confirmedBy,
+    );
 
     return {
       message: '최종평가가 성공적으로 확정되었습니다.',
@@ -95,12 +91,10 @@ export class FinalEvaluationManagementController {
     @Param('id') id: string,
     @Body() dto: CancelConfirmationBodyDto,
   ): Promise<{ message: string }> {
-    const command = new CancelConfirmationFinalEvaluationCommand(
+    await this.performanceEvaluationService.최종평가_확정을_취소한다(
       id,
       dto.updatedBy,
     );
-
-    await this.performanceEvaluationService.최종평가_확정을_취소한다(command);
 
     return {
       message: '최종평가 확정이 성공적으로 취소되었습니다.',

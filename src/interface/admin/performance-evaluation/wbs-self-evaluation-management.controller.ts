@@ -2,6 +2,7 @@ import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
+import { ParseUUID } from '@interface/decorators';
 import {
   UpsertWbsSelfEvaluation,
   SubmitWbsSelfEvaluation,
@@ -48,22 +49,23 @@ export class WbsSelfEvaluationManagementController {
    */
   @UpsertWbsSelfEvaluation()
   async upsertWbsSelfEvaluation(
-    @Param('employeeId') employeeId: string,
-    @Param('wbsItemId') wbsItemId: string,
-    @Param('periodId') periodId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('wbsItemId') wbsItemId: string,
+    @ParseUUID('periodId') periodId: string,
     @Body() dto: CreateWbsSelfEvaluationBodyDto,
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<WbsSelfEvaluationResponseDto> {
     const actionBy = dto.createdBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
-    return await this.performanceEvaluationService.WBS자기평가를_저장한다({
+
+    return await this.performanceEvaluationService.WBS자기평가를_저장한다(
+      periodId,
       employeeId,
       wbsItemId,
-      periodId,
-      selfEvaluationContent: dto.selfEvaluationContent,
-      selfEvaluationScore: dto.selfEvaluationScore,
-      performanceResult: dto.performanceResult,
+      dto.selfEvaluationContent,
+      dto.selfEvaluationScore,
+      dto.performanceResult,
       actionBy,
-    });
+    );
   }
 
   /**
@@ -76,10 +78,10 @@ export class WbsSelfEvaluationManagementController {
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<WbsSelfEvaluationResponseDto> {
     const submittedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.performanceEvaluationService.WBS자기평가를_제출한다({
-      evaluationId: id,
+    return await this.performanceEvaluationService.WBS자기평가를_제출한다(
+      id,
       submittedBy,
-    });
+    );
   }
 
   /**
@@ -94,11 +96,9 @@ export class WbsSelfEvaluationManagementController {
   ): Promise<SubmitAllWbsSelfEvaluationsResponseDto> {
     const submittedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
     return await this.performanceEvaluationService.직원의_전체_WBS자기평가를_제출한다(
-      {
-        employeeId,
-        periodId,
-        submittedBy,
-      },
+      employeeId,
+      periodId,
+      submittedBy,
     );
   }
 
@@ -112,10 +112,10 @@ export class WbsSelfEvaluationManagementController {
     // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
   ): Promise<WbsSelfEvaluationResponseDto> {
     const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
-    return await this.performanceEvaluationService.WBS자기평가를_초기화한다({
-      evaluationId: id,
+    return await this.performanceEvaluationService.WBS자기평가를_초기화한다(
+      id,
       resetBy,
-    });
+    );
   }
 
   /**
@@ -130,11 +130,9 @@ export class WbsSelfEvaluationManagementController {
   ): Promise<ResetAllWbsSelfEvaluationsResponseDto> {
     const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
     return await this.performanceEvaluationService.직원의_전체_WBS자기평가를_초기화한다(
-      {
-        employeeId,
-        periodId,
-        resetBy,
-      },
+      employeeId,
+      periodId,
+      resetBy,
     );
   }
 
@@ -151,12 +149,10 @@ export class WbsSelfEvaluationManagementController {
   ): Promise<SubmitWbsSelfEvaluationsByProjectResponseDto> {
     const submittedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
     return await this.performanceEvaluationService.프로젝트별_WBS자기평가를_제출한다(
-      {
-        employeeId,
-        periodId,
-        projectId,
-        submittedBy,
-      },
+      employeeId,
+      periodId,
+      projectId,
+      submittedBy,
     );
   }
 
@@ -173,12 +169,10 @@ export class WbsSelfEvaluationManagementController {
   ): Promise<ResetWbsSelfEvaluationsByProjectResponseDto> {
     const resetBy = 'admin'; // TODO: 실제 사용자 ID로 변경
     return await this.performanceEvaluationService.프로젝트별_WBS자기평가를_초기화한다(
-      {
-        employeeId,
-        periodId,
-        projectId,
-        resetBy,
-      },
+      employeeId,
+      periodId,
+      projectId,
+      resetBy,
     );
   }
 

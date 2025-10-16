@@ -5,36 +5,21 @@ import {
   WbsSelfEvaluationResponseDto,
 } from '@interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
 import {
-  CreateDownwardEvaluationCommand,
   GetDownwardEvaluationDetailQuery,
   GetDownwardEvaluationListQuery,
-  SubmitDownwardEvaluationCommand,
-  UpdateDownwardEvaluationCommand,
 } from '../handlers/downward-evaluation';
 import {
-  CancelConfirmationFinalEvaluationCommand,
-  ConfirmFinalEvaluationCommand,
-  CreateFinalEvaluationCommand,
-  DeleteFinalEvaluationCommand,
   GetFinalEvaluationByEmployeePeriodQuery,
   GetFinalEvaluationListQuery,
   GetFinalEvaluationQuery,
-  UpdateFinalEvaluationCommand,
-  UpsertFinalEvaluationCommand,
 } from '../handlers/final-evaluation';
 import {
-  CreatePeerEvaluationCommand,
   GetPeerEvaluationDetailQuery,
   GetPeerEvaluationListQuery,
-  SubmitPeerEvaluationCommand,
-  UpdatePeerEvaluationCommand,
 } from '../handlers/peer-evaluation';
 import {
-  CreateWbsSelfEvaluationCommand,
   GetEmployeeSelfEvaluationsQuery,
   GetWbsSelfEvaluationDetailQuery,
-  SubmitWbsSelfEvaluationCommand,
-  UpdateWbsSelfEvaluationCommand,
 } from '../handlers/self-evaluation';
 
 /**
@@ -47,21 +32,32 @@ export interface IPerformanceEvaluationService {
    * WBS 자기평가를 생성한다
    */
   WBS자기평가를_생성한다(
-    command: CreateWbsSelfEvaluationCommand,
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    selfEvaluationContent: string,
+    selfEvaluationScore: number,
+    performanceResult?: string,
+    createdBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto>;
 
   /**
    * WBS 자기평가를 수정한다
    */
   WBS자기평가를_수정한다(
-    command: UpdateWbsSelfEvaluationCommand,
+    evaluationId: string,
+    selfEvaluationContent?: string,
+    selfEvaluationScore?: number,
+    performanceResult?: string,
+    updatedBy?: string,
   ): Promise<WbsSelfEvaluationBasicDto>;
 
   /**
    * WBS 자기평가를 제출한다
    */
   WBS자기평가를_제출한다(
-    command: SubmitWbsSelfEvaluationCommand,
+    evaluationId: string,
+    submittedBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto>;
 
   /**
@@ -83,17 +79,33 @@ export interface IPerformanceEvaluationService {
   /**
    * 동료평가를 생성한다
    */
-  동료평가를_생성한다(command: CreatePeerEvaluationCommand): Promise<string>;
+  동료평가를_생성한다(
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluationContent?: string,
+    score?: number,
+    createdBy?: string,
+  ): Promise<string>;
 
   /**
-   * 동료평가를 수정한다
+   * 동료평가를_수정한다
    */
-  동료평가를_수정한다(command: UpdatePeerEvaluationCommand): Promise<void>;
+  동료평가를_수정한다(
+    evaluationId: string,
+    evaluationContent?: string,
+    score?: number,
+    updatedBy?: string,
+  ): Promise<void>;
 
   /**
    * 동료평가를 제출한다
    */
-  동료평가를_제출한다(command: SubmitPeerEvaluationCommand): Promise<void>;
+  동료평가를_제출한다(
+    evaluationId: string,
+    submittedBy?: string,
+  ): Promise<void>;
 
   /**
    * 동료평가 목록을 조회한다
@@ -113,18 +125,56 @@ export interface IPerformanceEvaluationService {
    * 하향평가를 생성한다
    */
   하향평가를_생성한다(
-    command: CreateDownwardEvaluationCommand,
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    selfEvaluationId?: string,
+    evaluationType?: string,
+    downwardEvaluationContent?: string,
+    downwardEvaluationScore?: number,
+    createdBy?: string,
   ): Promise<string>;
 
   /**
    * 하향평가를 수정한다
    */
-  하향평가를_수정한다(command: UpdateDownwardEvaluationCommand): Promise<void>;
+  하향평가를_수정한다(
+    evaluationId: string,
+    downwardEvaluationContent?: string,
+    downwardEvaluationScore?: number,
+    updatedBy?: string,
+  ): Promise<void>;
 
   /**
    * 하향평가를 제출한다
    */
-  하향평가를_제출한다(command: SubmitDownwardEvaluationCommand): Promise<void>;
+  하향평가를_제출한다(
+    evaluationId: string,
+    submittedBy?: string,
+  ): Promise<void>;
+
+  /**
+   * 1차 하향평가를 제출한다
+   */
+  일차_하향평가를_제출한다(
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluatorId: string,
+    submittedBy: string,
+  ): Promise<void>;
+
+  /**
+   * 2차 하향평가를 제출한다
+   */
+  이차_하향평가를_제출한다(
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluatorId: string,
+    submittedBy: string,
+  ): Promise<void>;
 
   /**
    * 하향평가 목록을 조회한다
@@ -143,34 +193,55 @@ export interface IPerformanceEvaluationService {
   /**
    * 최종평가를 생성한다
    */
-  최종평가를_생성한다(command: CreateFinalEvaluationCommand): Promise<string>;
+  최종평가를_생성한다(
+    employeeId: string,
+    periodId: string,
+    evaluationGrade: string,
+    jobGrade: any,
+    jobDetailedGrade: any,
+    finalComments?: string,
+    createdBy?: string,
+  ): Promise<string>;
 
   /**
    * 최종평가를 수정한다
    */
-  최종평가를_수정한다(command: UpdateFinalEvaluationCommand): Promise<void>;
+  최종평가를_수정한다(
+    id: string,
+    evaluationGrade?: string,
+    jobGrade?: any,
+    jobDetailedGrade?: any,
+    finalComments?: string,
+    updatedBy?: string,
+  ): Promise<void>;
 
   /**
    * 최종평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
    */
-  최종평가를_저장한다(command: UpsertFinalEvaluationCommand): Promise<string>;
+  최종평가를_저장한다(
+    employeeId: string,
+    periodId: string,
+    evaluationGrade: string,
+    jobGrade: any,
+    jobDetailedGrade: any,
+    finalComments?: string,
+    actionBy?: string,
+  ): Promise<string>;
 
   /**
    * 최종평가를 삭제한다
    */
-  최종평가를_삭제한다(command: DeleteFinalEvaluationCommand): Promise<void>;
+  최종평가를_삭제한다(id: string, deletedBy?: string): Promise<void>;
 
   /**
    * 최종평가를 확정한다
    */
-  최종평가를_확정한다(command: ConfirmFinalEvaluationCommand): Promise<void>;
+  최종평가를_확정한다(id: string, confirmedBy: string): Promise<void>;
 
   /**
    * 최종평가 확정을 취소한다
    */
-  최종평가_확정을_취소한다(
-    command: CancelConfirmationFinalEvaluationCommand,
-  ): Promise<void>;
+  최종평가_확정을_취소한다(id: string, updatedBy: string): Promise<void>;
 
   /**
    * 최종평가를 조회한다

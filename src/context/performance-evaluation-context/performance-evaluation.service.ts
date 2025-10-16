@@ -101,12 +101,28 @@ export class PerformanceEvaluationService
    * WBS 자기평가를 생성한다
    */
   async WBS자기평가를_생성한다(
-    command: CreateWbsSelfEvaluationCommand,
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    selfEvaluationContent: string,
+    selfEvaluationScore: number,
+    performanceResult?: string,
+    createdBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
     this.logger.log('WBS 자기평가 생성 시작', {
-      employeeId: command.employeeId,
-      wbsItemId: command.wbsItemId,
+      employeeId,
+      wbsItemId,
     });
+
+    const command = new CreateWbsSelfEvaluationCommand(
+      periodId,
+      employeeId,
+      wbsItemId,
+      selfEvaluationContent,
+      selfEvaluationScore,
+      performanceResult,
+      createdBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('WBS 자기평가 생성 완료', { evaluationId: result });
@@ -117,15 +133,27 @@ export class PerformanceEvaluationService
    * WBS 자기평가를 수정한다
    */
   async WBS자기평가를_수정한다(
-    command: UpdateWbsSelfEvaluationCommand,
+    evaluationId: string,
+    selfEvaluationContent?: string,
+    selfEvaluationScore?: number,
+    performanceResult?: string,
+    updatedBy?: string,
   ): Promise<WbsSelfEvaluationBasicDto> {
     this.logger.log('WBS 자기평가 수정 시작', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
+
+    const command = new UpdateWbsSelfEvaluationCommand(
+      evaluationId,
+      selfEvaluationContent,
+      selfEvaluationScore,
+      performanceResult,
+      updatedBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('WBS 자기평가 수정 완료', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
     return result;
   }
@@ -134,12 +162,28 @@ export class PerformanceEvaluationService
    * WBS 자기평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
    */
   async WBS자기평가를_저장한다(
-    command: UpsertWbsSelfEvaluationCommand,
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    selfEvaluationContent: string,
+    selfEvaluationScore: number,
+    performanceResult?: string,
+    actionBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
     this.logger.log('WBS 자기평가 저장 시작', {
-      employeeId: command.employeeId,
-      wbsItemId: command.wbsItemId,
+      employeeId,
+      wbsItemId,
     });
+
+    const command = new UpsertWbsSelfEvaluationCommand(
+      periodId,
+      employeeId,
+      wbsItemId,
+      selfEvaluationContent,
+      selfEvaluationScore,
+      performanceResult,
+      actionBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('WBS 자기평가 저장 완료');
@@ -150,15 +194,21 @@ export class PerformanceEvaluationService
    * WBS 자기평가를 제출한다
    */
   async WBS자기평가를_제출한다(
-    command: SubmitWbsSelfEvaluationCommand,
+    evaluationId: string,
+    submittedBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
     this.logger.log('WBS 자기평가 제출 시작', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
+
+    const command = new SubmitWbsSelfEvaluationCommand(
+      evaluationId,
+      submittedBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('WBS 자기평가 제출 완료', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
     return result;
   }
@@ -168,17 +218,25 @@ export class PerformanceEvaluationService
    * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 완료 처리합니다.
    */
   async 직원의_전체_WBS자기평가를_제출한다(
-    command: SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand,
+    employeeId: string,
+    periodId: string,
+    submittedBy?: string,
   ): Promise<SubmitAllWbsSelfEvaluationsResponse> {
     this.logger.log('직원의 전체 WBS 자기평가 제출 시작', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
+      employeeId,
+      periodId,
     });
+
+    const command = new SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand(
+      employeeId,
+      periodId,
+      submittedBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('직원의 전체 WBS 자기평가 제출 완료', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
+      employeeId,
+      periodId,
       submittedCount: result.submittedCount,
       failedCount: result.failedCount,
     });
@@ -189,15 +247,21 @@ export class PerformanceEvaluationService
    * WBS 자기평가를 초기화한다 (단일)
    */
   async WBS자기평가를_초기화한다(
-    command: ResetWbsSelfEvaluationCommand,
+    evaluationId: string,
+    resetBy?: string,
   ): Promise<WbsSelfEvaluationResponseDto> {
     this.logger.log('WBS 자기평가 초기화 시작', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
+
+    const command = new ResetWbsSelfEvaluationCommand(
+      evaluationId,
+      resetBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('WBS 자기평가 초기화 완료', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
     return result;
   }
@@ -207,17 +271,25 @@ export class PerformanceEvaluationService
    * 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
    */
   async 직원의_전체_WBS자기평가를_초기화한다(
-    command: ResetAllWbsSelfEvaluationsByEmployeePeriodCommand,
+    employeeId: string,
+    periodId: string,
+    resetBy?: string,
   ): Promise<ResetAllWbsSelfEvaluationsResponse> {
     this.logger.log('직원의 전체 WBS 자기평가 초기화 시작', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
+      employeeId,
+      periodId,
     });
+
+    const command = new ResetAllWbsSelfEvaluationsByEmployeePeriodCommand(
+      employeeId,
+      periodId,
+      resetBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('직원의 전체 WBS 자기평가 초기화 완료', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
+      employeeId,
+      periodId,
       resetCount: result.resetCount,
       failedCount: result.failedCount,
     });
@@ -229,19 +301,29 @@ export class PerformanceEvaluationService
    * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 완료 처리합니다.
    */
   async 프로젝트별_WBS자기평가를_제출한다(
-    command: SubmitWbsSelfEvaluationsByProjectCommand,
+    employeeId: string,
+    periodId: string,
+    projectId: string,
+    submittedBy?: string,
   ): Promise<SubmitWbsSelfEvaluationsByProjectResponse> {
     this.logger.log('프로젝트별 WBS 자기평가 제출 시작', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
-      projectId: command.projectId,
+      employeeId,
+      periodId,
+      projectId,
     });
+
+    const command = new SubmitWbsSelfEvaluationsByProjectCommand(
+      employeeId,
+      periodId,
+      projectId,
+      submittedBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('프로젝트별 WBS 자기평가 제출 완료', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
-      projectId: command.projectId,
+      employeeId,
+      periodId,
+      projectId,
       submittedCount: result.submittedCount,
       failedCount: result.failedCount,
     });
@@ -253,19 +335,29 @@ export class PerformanceEvaluationService
    * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
    */
   async 프로젝트별_WBS자기평가를_초기화한다(
-    command: ResetWbsSelfEvaluationsByProjectCommand,
+    employeeId: string,
+    periodId: string,
+    projectId: string,
+    resetBy?: string,
   ): Promise<ResetWbsSelfEvaluationsByProjectResponse> {
     this.logger.log('프로젝트별 WBS 자기평가 초기화 시작', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
-      projectId: command.projectId,
+      employeeId,
+      periodId,
+      projectId,
     });
+
+    const command = new ResetWbsSelfEvaluationsByProjectCommand(
+      employeeId,
+      periodId,
+      projectId,
+      resetBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('프로젝트별 WBS 자기평가 초기화 완료', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
-      projectId: command.projectId,
+      employeeId,
+      periodId,
+      projectId,
       resetCount: result.resetCount,
       failedCount: result.failedCount,
     });
@@ -302,12 +394,28 @@ export class PerformanceEvaluationService
    * 동료평가를 생성한다
    */
   async 동료평가를_생성한다(
-    command: CreatePeerEvaluationCommand,
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluationContent?: string,
+    score?: number,
+    createdBy?: string,
   ): Promise<string> {
     this.logger.log('동료평가 생성 시작', {
-      evaluatorId: command.evaluatorId,
-      evaluateeId: command.evaluateeId,
+      evaluatorId,
+      evaluateeId,
     });
+
+    const command = new CreatePeerEvaluationCommand(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
+      evaluationContent,
+      score,
+      createdBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('동료평가 생성 완료', { evaluationId: result });
@@ -318,15 +426,25 @@ export class PerformanceEvaluationService
    * 동료평가를 수정한다
    */
   async 동료평가를_수정한다(
-    command: UpdatePeerEvaluationCommand,
+    evaluationId: string,
+    evaluationContent?: string,
+    score?: number,
+    updatedBy?: string,
   ): Promise<void> {
     this.logger.log('동료평가 수정 시작', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
+
+    const command = new UpdatePeerEvaluationCommand(
+      evaluationId,
+      evaluationContent,
+      score,
+      updatedBy || '시스템',
+    );
 
     await this.commandBus.execute(command);
     this.logger.log('동료평가 수정 완료', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
   }
 
@@ -334,12 +452,28 @@ export class PerformanceEvaluationService
    * 동료평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
    */
   async 동료평가를_저장한다(
-    command: UpsertPeerEvaluationCommand,
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluationContent?: string,
+    score?: number,
+    actionBy?: string,
   ): Promise<string> {
     this.logger.log('동료평가 저장 시작', {
-      evaluatorId: command.evaluatorId,
-      evaluateeId: command.evaluateeId,
+      evaluatorId,
+      evaluateeId,
     });
+
+    const command = new UpsertPeerEvaluationCommand(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
+      evaluationContent,
+      score,
+      actionBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('동료평가 저장 완료', {
@@ -397,15 +531,21 @@ export class PerformanceEvaluationService
    * 동료평가를 제출한다
    */
   async 동료평가를_제출한다(
-    command: SubmitPeerEvaluationCommand,
+    evaluationId: string,
+    submittedBy?: string,
   ): Promise<void> {
     this.logger.log('동료평가 제출 시작', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
+
+    const command = new SubmitPeerEvaluationCommand(
+      evaluationId,
+      submittedBy || '시스템',
+    );
 
     await this.commandBus.execute(command);
     this.logger.log('동료평가 제출 완료', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
   }
 
@@ -450,12 +590,32 @@ export class PerformanceEvaluationService
    * 하향평가를 생성한다
    */
   async 하향평가를_생성한다(
-    command: CreateDownwardEvaluationCommand,
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    selfEvaluationId?: string,
+    evaluationType?: string,
+    downwardEvaluationContent?: string,
+    downwardEvaluationScore?: number,
+    createdBy?: string,
   ): Promise<string> {
     this.logger.log('하향평가 생성 시작', {
-      evaluatorId: command.evaluatorId,
-      evaluateeId: command.evaluateeId,
+      evaluatorId,
+      evaluateeId,
     });
+
+    const command = new CreateDownwardEvaluationCommand(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
+      selfEvaluationId,
+      evaluationType || 'primary',
+      downwardEvaluationContent,
+      downwardEvaluationScore,
+      createdBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('하향평가 생성 완료', { evaluationId: result });
@@ -466,15 +626,25 @@ export class PerformanceEvaluationService
    * 하향평가를 수정한다
    */
   async 하향평가를_수정한다(
-    command: UpdateDownwardEvaluationCommand,
+    evaluationId: string,
+    downwardEvaluationContent?: string,
+    downwardEvaluationScore?: number,
+    updatedBy?: string,
   ): Promise<void> {
     this.logger.log('하향평가 수정 시작', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
+
+    const command = new UpdateDownwardEvaluationCommand(
+      evaluationId,
+      downwardEvaluationContent,
+      downwardEvaluationScore,
+      updatedBy || '시스템',
+    );
 
     await this.commandBus.execute(command);
     this.logger.log('하향평가 수정 완료', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
   }
 
@@ -482,13 +652,33 @@ export class PerformanceEvaluationService
    * 하향평가를 Upsert한다 (있으면 수정, 없으면 생성)
    */
   async 하향평가를_저장한다(
-    command: UpsertDownwardEvaluationCommand,
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    selfEvaluationId?: string,
+    evaluationType?: string,
+    downwardEvaluationContent?: string,
+    downwardEvaluationScore?: number,
+    actionBy?: string,
   ): Promise<string> {
     this.logger.log('하향평가 저장 시작', {
-      evaluatorId: command.evaluatorId,
-      evaluateeId: command.evaluateeId,
-      evaluationType: command.evaluationType,
+      evaluatorId,
+      evaluateeId,
+      evaluationType: evaluationType || 'primary',
     });
+
+    const command = new UpsertDownwardEvaluationCommand(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
+      selfEvaluationId,
+      evaluationType || 'primary',
+      downwardEvaluationContent,
+      downwardEvaluationScore,
+      actionBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('하향평가 저장 완료', {
@@ -500,25 +690,25 @@ export class PerformanceEvaluationService
   /**
    * 1차 하향평가를 제출한다
    */
-  async 일차_하향평가를_제출한다(params: {
-    evaluateeId: string;
-    periodId: string;
-    projectId: string;
-    evaluatorId: string;
-    submittedBy: string;
-  }): Promise<void> {
+  async 일차_하향평가를_제출한다(
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluatorId: string,
+    submittedBy: string,
+  ): Promise<void> {
     this.logger.log('1차 하향평가 제출 시작', {
-      evaluateeId: params.evaluateeId,
-      periodId: params.periodId,
-      projectId: params.projectId,
+      evaluateeId,
+      periodId,
+      projectId,
     });
 
     // 1차 하향평가를 조회
     const query = new GetDownwardEvaluationListQuery(
-      params.evaluatorId,
-      params.evaluateeId,
-      params.periodId,
-      params.projectId,
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
       'primary',
       undefined,
       1,
@@ -535,7 +725,7 @@ export class PerformanceEvaluationService
     // 제출 커맨드 실행
     const command = new SubmitDownwardEvaluationCommand(
       evaluation.id,
-      params.submittedBy,
+      submittedBy,
     );
 
     await this.commandBus.execute(command);
@@ -547,25 +737,25 @@ export class PerformanceEvaluationService
   /**
    * 2차 하향평가를 제출한다
    */
-  async 이차_하향평가를_제출한다(params: {
-    evaluateeId: string;
-    periodId: string;
-    projectId: string;
-    evaluatorId: string;
-    submittedBy: string;
-  }): Promise<void> {
+  async 이차_하향평가를_제출한다(
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluatorId: string,
+    submittedBy: string,
+  ): Promise<void> {
     this.logger.log('2차 하향평가 제출 시작', {
-      evaluateeId: params.evaluateeId,
-      periodId: params.periodId,
-      projectId: params.projectId,
+      evaluateeId,
+      periodId,
+      projectId,
     });
 
     // 2차 하향평가를 조회
     const query = new GetDownwardEvaluationListQuery(
-      params.evaluatorId,
-      params.evaluateeId,
-      params.periodId,
-      params.projectId,
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
       'secondary',
       undefined,
       1,
@@ -582,7 +772,7 @@ export class PerformanceEvaluationService
     // 제출 커맨드 실행
     const command = new SubmitDownwardEvaluationCommand(
       evaluation.id,
-      params.submittedBy,
+      submittedBy,
     );
 
     await this.commandBus.execute(command);
@@ -595,15 +785,21 @@ export class PerformanceEvaluationService
    * 하향평가를 제출한다 (ID로 직접)
    */
   async 하향평가를_제출한다(
-    command: SubmitDownwardEvaluationCommand,
+    evaluationId: string,
+    submittedBy?: string,
   ): Promise<void> {
     this.logger.log('하향평가 제출 시작 (ID로 직접)', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
+
+    const command = new SubmitDownwardEvaluationCommand(
+      evaluationId,
+      submittedBy || '시스템',
+    );
 
     await this.commandBus.execute(command);
     this.logger.log('하향평가 제출 완료', {
-      evaluationId: command.evaluationId,
+      evaluationId,
     });
   }
 
@@ -635,12 +831,28 @@ export class PerformanceEvaluationService
    * 최종평가를 생성한다
    */
   async 최종평가를_생성한다(
-    command: CreateFinalEvaluationCommand,
+    employeeId: string,
+    periodId: string,
+    evaluationGrade: string,
+    jobGrade: any,
+    jobDetailedGrade: any,
+    finalComments?: string,
+    createdBy?: string,
   ): Promise<string> {
     this.logger.log('최종평가 생성 시작', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
+      employeeId,
+      periodId,
     });
+
+    const command = new CreateFinalEvaluationCommand(
+      employeeId,
+      periodId,
+      evaluationGrade,
+      jobGrade,
+      jobDetailedGrade,
+      finalComments,
+      createdBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('최종평가 생성 완료', { evaluationId: result });
@@ -651,15 +863,29 @@ export class PerformanceEvaluationService
    * 최종평가를 수정한다
    */
   async 최종평가를_수정한다(
-    command: UpdateFinalEvaluationCommand,
+    id: string,
+    evaluationGrade?: string,
+    jobGrade?: any,
+    jobDetailedGrade?: any,
+    finalComments?: string,
+    updatedBy?: string,
   ): Promise<void> {
     this.logger.log('최종평가 수정 시작', {
-      id: command.id,
+      id,
     });
+
+    const command = new UpdateFinalEvaluationCommand(
+      id,
+      evaluationGrade,
+      jobGrade,
+      jobDetailedGrade,
+      finalComments,
+      updatedBy || '시스템',
+    );
 
     await this.commandBus.execute(command);
     this.logger.log('최종평가 수정 완료', {
-      id: command.id,
+      id,
     });
   }
 
@@ -667,12 +893,28 @@ export class PerformanceEvaluationService
    * 최종평가를 저장한다 (Upsert: 있으면 수정, 없으면 생성)
    */
   async 최종평가를_저장한다(
-    command: UpsertFinalEvaluationCommand,
+    employeeId: string,
+    periodId: string,
+    evaluationGrade: string,
+    jobGrade: any,
+    jobDetailedGrade: any,
+    finalComments?: string,
+    actionBy?: string,
   ): Promise<string> {
     this.logger.log('최종평가 저장 시작', {
-      employeeId: command.employeeId,
-      periodId: command.periodId,
+      employeeId,
+      periodId,
     });
+
+    const command = new UpsertFinalEvaluationCommand(
+      employeeId,
+      periodId,
+      evaluationGrade,
+      jobGrade,
+      jobDetailedGrade,
+      finalComments,
+      actionBy || '시스템',
+    );
 
     const result = await this.commandBus.execute(command);
     this.logger.log('최종평가 저장 완료', {
@@ -684,48 +926,48 @@ export class PerformanceEvaluationService
   /**
    * 최종평가를 삭제한다
    */
-  async 최종평가를_삭제한다(
-    command: DeleteFinalEvaluationCommand,
-  ): Promise<void> {
+  async 최종평가를_삭제한다(id: string, deletedBy?: string): Promise<void> {
     this.logger.log('최종평가 삭제 시작', {
-      id: command.id,
+      id,
     });
+
+    const command = new DeleteFinalEvaluationCommand(id, deletedBy || '시스템');
 
     await this.commandBus.execute(command);
     this.logger.log('최종평가 삭제 완료', {
-      id: command.id,
+      id,
     });
   }
 
   /**
    * 최종평가를 확정한다
    */
-  async 최종평가를_확정한다(
-    command: ConfirmFinalEvaluationCommand,
-  ): Promise<void> {
+  async 최종평가를_확정한다(id: string, confirmedBy: string): Promise<void> {
     this.logger.log('최종평가 확정 시작', {
-      id: command.id,
+      id,
     });
+
+    const command = new ConfirmFinalEvaluationCommand(id, confirmedBy);
 
     await this.commandBus.execute(command);
     this.logger.log('최종평가 확정 완료', {
-      id: command.id,
+      id,
     });
   }
 
   /**
    * 최종평가 확정을 취소한다
    */
-  async 최종평가_확정을_취소한다(
-    command: CancelConfirmationFinalEvaluationCommand,
-  ): Promise<void> {
+  async 최종평가_확정을_취소한다(id: string, updatedBy: string): Promise<void> {
     this.logger.log('최종평가 확정 취소 시작', {
-      id: command.id,
+      id,
     });
+
+    const command = new CancelConfirmationFinalEvaluationCommand(id, updatedBy);
 
     await this.commandBus.execute(command);
     this.logger.log('최종평가 확정 취소 완료', {
-      id: command.id,
+      id,
     });
   }
 

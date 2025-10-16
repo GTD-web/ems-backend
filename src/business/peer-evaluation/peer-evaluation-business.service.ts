@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import {
-  CreatePeerEvaluationCommand,
-  UpdatePeerEvaluationCommand,
-  UpsertPeerEvaluationCommand,
-  SubmitPeerEvaluationCommand,
   GetPeerEvaluationListQuery,
   GetPeerEvaluationDetailQuery,
   GetEvaluatorAssignedEvaluateesQuery,
@@ -47,18 +43,16 @@ export class PeerEvaluationBusinessService {
     });
 
     // 1. 동료평가 요청 (PENDING 상태로 생성)
-    const command = new CreatePeerEvaluationCommand(
-      params.evaluatorId,
-      params.evaluateeId,
-      params.periodId,
-      '', // projectId는 빈 문자열 (요청 시에는 프로젝트 미정)
-      undefined, // evaluationContent (작성 전)
-      undefined, // score (작성 전)
-      params.requestedBy,
-    );
-
     const evaluationId =
-      await this.performanceEvaluationService.동료평가를_생성한다(command);
+      await this.performanceEvaluationService.동료평가를_생성한다(
+        params.evaluatorId,
+        params.evaluateeId,
+        params.periodId,
+        '', // projectId는 빈 문자열 (요청 시에는 프로젝트 미정)
+        undefined, // evaluationContent (작성 전)
+        undefined, // score (작성 전)
+        params.requestedBy,
+      );
 
     // 2. 알림 발송 (추후 구현)
     // TODO: 동료평가 요청 알림 발송
@@ -188,18 +182,16 @@ export class PeerEvaluationBusinessService {
     });
 
     // 1. 동료평가 생성 (컨텍스트 호출)
-    const command = new CreatePeerEvaluationCommand(
-      params.evaluatorId,
-      params.evaluateeId,
-      params.periodId,
-      params.projectId,
-      params.peerEvaluationContent,
-      params.peerEvaluationScore,
-      params.createdBy,
-    );
-
     const evaluationId =
-      await this.performanceEvaluationService.동료평가를_생성한다(command);
+      await this.performanceEvaluationService.동료평가를_생성한다(
+        params.evaluatorId,
+        params.evaluateeId,
+        params.periodId,
+        params.projectId,
+        params.peerEvaluationContent,
+        params.peerEvaluationScore,
+        params.createdBy,
+      );
 
     // 2. 알림 발송 (추후 구현)
     // TODO: 동료평가 생성 알림 발송
@@ -230,14 +222,12 @@ export class PeerEvaluationBusinessService {
       evaluationId: params.evaluationId,
     });
 
-    const command = new UpdatePeerEvaluationCommand(
+    await this.performanceEvaluationService.동료평가를_수정한다(
       params.evaluationId,
       params.peerEvaluationContent,
       params.peerEvaluationScore,
       params.updatedBy,
     );
-
-    await this.performanceEvaluationService.동료평가를_수정한다(command);
 
     this.logger.log('동료평가 수정 완료', {
       evaluationId: params.evaluationId,
@@ -263,18 +253,16 @@ export class PeerEvaluationBusinessService {
     });
 
     // 1. 동료평가 내용 저장 (컨텍스트 호출 - upsert)
-    const command = new UpsertPeerEvaluationCommand(
-      params.evaluatorId,
-      params.evaluateeId,
-      params.periodId,
-      params.projectId,
-      params.peerEvaluationContent,
-      params.peerEvaluationScore,
-      params.actionBy,
-    );
-
     const evaluationId =
-      await this.performanceEvaluationService.동료평가를_저장한다(command);
+      await this.performanceEvaluationService.동료평가를_저장한다(
+        params.evaluatorId,
+        params.evaluateeId,
+        params.periodId,
+        params.projectId,
+        params.peerEvaluationContent,
+        params.peerEvaluationScore,
+        params.actionBy,
+      );
 
     // 2. 알림 발송 (추후 구현)
     // TODO: 동료평가 내용 저장 알림 발송
@@ -377,12 +365,10 @@ export class PeerEvaluationBusinessService {
     });
 
     // 1. 동료평가 제출 (컨텍스트 호출)
-    const command = new SubmitPeerEvaluationCommand(
+    await this.performanceEvaluationService.동료평가를_제출한다(
       params.evaluationId,
       params.submittedBy,
     );
-
-    await this.performanceEvaluationService.동료평가를_제출한다(command);
 
     // 2. 알림 발송 (추후 구현)
     // TODO: 동료평가 제출 알림 발송
