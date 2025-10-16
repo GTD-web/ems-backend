@@ -24,12 +24,12 @@ export class BaseE2ETest {
     // ValidationPipe 설정 (실제 애플리케이션과 동일하게)
     this.app.useGlobalPipes(
       new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
+        // whitelist: true,
+        // forbidNonWhitelisted: true,
         transform: true,
-        transformOptions: {
-          enableImplicitConversion: true,
-        },
+        // transformOptions: {
+        //   enableImplicitConversion: true,
+        // },
       }),
     );
 

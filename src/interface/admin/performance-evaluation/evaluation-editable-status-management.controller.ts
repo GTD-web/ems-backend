@@ -26,7 +26,7 @@ export class EvaluationEditableStatusManagementController {
    * 특정 직원의 평가 수정 가능 상태를 변경합니다.
    *
    * @param mappingId - 평가기간-직원 맵핑 ID
-   * @param query - 평가 타입 쿼리 파라미터
+   * @param query - 평가 수정 가능 상태 변경 쿼리 파라미터
    * @param body - 평가 수정 가능 상태 변경 요청 DTO
    * @returns 변경된 맵핑 정보
    */
@@ -40,7 +40,7 @@ export class EvaluationEditableStatusManagementController {
       await this.performanceEvaluationService.평가_수정_가능_상태를_변경한다(
         mappingId,
         query.evaluationType,
-        body.isEditable,
+        query.isEditable,
         body.updatedBy,
       );
 
