@@ -2,6 +2,10 @@ import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
+import {
+  GetEmployeeSelfEvaluationsQuery,
+  GetWbsSelfEvaluationDetailQuery,
+} from '@context/performance-evaluation-context/handlers/self-evaluation';
 import { ParseUUID } from '@interface/decorators';
 import {
   UpsertWbsSelfEvaluation,
@@ -181,17 +185,18 @@ export class WbsSelfEvaluationManagementController {
    */
   @GetEmployeeSelfEvaluations()
   async getEmployeeSelfEvaluations(
-    @Param('employeeId') employeeId: string,
+    @ParseUUID('employeeId') employeeId: string,
     @Query() filter: WbsSelfEvaluationFilterDto,
   ): Promise<EmployeeSelfEvaluationsResponseDto> {
+    const query = new GetEmployeeSelfEvaluationsQuery(
+      employeeId,
+      filter.periodId,
+      filter.projectId,
+      filter.page || 1,
+      filter.limit || 10,
+    );
     return await this.performanceEvaluationService.직원의_자기평가_목록을_조회한다(
-      {
-        employeeId,
-        periodId: filter.periodId,
-        projectId: filter.projectId,
-        page: filter.page || 1,
-        limit: filter.limit || 10,
-      },
+      query,
     );
   }
 
@@ -200,12 +205,11 @@ export class WbsSelfEvaluationManagementController {
    */
   @GetWbsSelfEvaluationDetail()
   async getWbsSelfEvaluationDetail(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
   ): Promise<WbsSelfEvaluationDetailResponseDto> {
+    const query = new GetWbsSelfEvaluationDetailQuery(id);
     return await this.performanceEvaluationService.WBS자기평가_상세정보를_조회한다(
-      {
-        evaluationId: id,
-      },
+      query,
     );
   }
 

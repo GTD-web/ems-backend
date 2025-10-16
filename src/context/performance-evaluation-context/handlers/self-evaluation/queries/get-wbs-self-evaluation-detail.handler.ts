@@ -1,5 +1,5 @@
 import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
@@ -49,8 +49,8 @@ export class GetWbsSelfEvaluationDetailHandler
       )
       .leftJoin(
         WbsItem,
-        'wbsItem',
-        'wbsItem.id = evaluation.wbsItemId AND wbsItem.deletedAt IS NULL',
+        'wbsitem',
+        'wbsitem.id = evaluation.wbsItemId AND wbsitem.deletedAt IS NULL',
       )
       .select([
         // 자기평가 정보
@@ -63,6 +63,7 @@ export class GetWbsSelfEvaluationDetailHandler
         'evaluation.isCompleted AS evaluation_iscompleted',
         'evaluation.completedAt AS evaluation_completedat',
         'evaluation.evaluationDate AS evaluation_evaluationdate',
+        'evaluation.performanceResult AS evaluation_performanceresult',
         'evaluation.selfEvaluationContent AS evaluation_selfevaluationcontent',
         'evaluation.selfEvaluationScore AS evaluation_selfevaluationscore',
         'evaluation.createdAt AS evaluation_createdat',
@@ -85,20 +86,21 @@ export class GetWbsSelfEvaluationDetailHandler
         'employee.email AS employee_email',
         'employee.departmentId AS employee_departmentid',
         // WBS 항목 정보
-        'wbsItem.id AS wbsitem_id',
-        'wbsItem.name AS wbsitem_name',
-        'wbsItem.description AS wbsitem_description',
-        'wbsItem.plannedHours AS wbsitem_plannedhours',
-        'wbsItem.startDate AS wbsitem_startdate',
-        'wbsItem.endDate AS wbsitem_enddate',
-        'wbsItem.status AS wbsitem_status',
+        'wbsitem.id AS wbsitem_id',
+        'wbsitem.wbsCode AS wbsitem_wbscode',
+        'wbsitem.title AS wbsitem_title',
+        'wbsitem.startDate AS wbsitem_startdate',
+        'wbsitem.endDate AS wbsitem_enddate',
+        'wbsitem.status AS wbsitem_status',
+        'wbsitem.progressPercentage AS wbsitem_progresspercentage',
+        'wbsitem.projectId AS wbsitem_projectid',
       ])
       .where('evaluation.id = :evaluationId', { evaluationId })
       .andWhere('evaluation.deletedAt IS NULL')
       .getRawOne();
 
     if (!result || !result.evaluation_id) {
-      throw new BadRequestException('존재하지 않는 자기평가입니다.');
+      throw new NotFoundException('존재하지 않는 자기평가입니다.');
     }
 
     this.logger.log('WBS 자기평가 상세정보 조회 완료', { evaluationId });
@@ -115,6 +117,7 @@ export class GetWbsSelfEvaluationDetailHandler
       isCompleted: result.evaluation_iscompleted,
       completedAt: result.evaluation_completedat,
       evaluationDate: result.evaluation_evaluationdate,
+      performanceResult: result.evaluation_performanceresult,
       selfEvaluationContent: result.evaluation_selfevaluationcontent,
       selfEvaluationScore: result.evaluation_selfevaluationscore,
       createdAt: result.evaluation_createdat,
@@ -146,12 +149,13 @@ export class GetWbsSelfEvaluationDetailHandler
       wbsItem: result.wbsitem_id
         ? {
             id: result.wbsitem_id,
-            name: result.wbsitem_name,
-            description: result.wbsitem_description,
-            plannedHours: result.wbsitem_plannedhours,
+            wbsCode: result.wbsitem_wbscode,
+            title: result.wbsitem_title,
             startDate: result.wbsitem_startdate,
             endDate: result.wbsitem_enddate,
             status: result.wbsitem_status,
+            progressPercentage: result.wbsitem_progresspercentage,
+            projectId: result.wbsitem_projectid,
           }
         : null,
     };

@@ -61,19 +61,22 @@ export class GetEmployeeSelfEvaluationsHandler
       });
     }
 
+    queryBuilder.orderBy('evaluation.evaluationDate', 'DESC');
+
+    // 전체 개수 조회
+    const total = await queryBuilder.getCount();
+
     // 페이지네이션 적용
     if (page && limit) {
       const offset = (page - 1) * limit;
       queryBuilder.skip(offset).take(limit);
     }
 
-    queryBuilder.orderBy('evaluation.evaluationDate', 'DESC');
-
     const evaluations = await queryBuilder.getMany();
 
     const result = {
       evaluations: evaluations.map((evaluation) => evaluation.DTO로_변환한다()),
-      total: evaluations.length,
+      total,
       page,
       limit,
     };
