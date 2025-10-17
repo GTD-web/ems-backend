@@ -432,12 +432,22 @@ export class GetEmployeeAssignedDataHandler
         wbsItemId,
       );
 
-      // 하향평가 조회 (1차, 2차)
-      const downwardEvaluations = await this.getWbsDownwardEvaluationsByWbsId(
-        evaluationPeriodId,
-        employeeId,
-        wbsItemId,
-      );
+      // 하향평가 조회 (1차, 2차) - 프로젝트 단위
+      let downwardEvaluations = {
+        primary: null,
+        secondary: null,
+      };
+
+      const projectId = row.assignment_projectId;
+      if (projectId) {
+        downwardEvaluations = await this.getWbsDownwardEvaluationsByWbsId(
+          evaluationPeriodId,
+          employeeId,
+          projectId,
+        );
+      } else {
+        this.logger.warn(`ProjectId가 없는 WBS: ${wbsItemId}`);
+      }
 
       wbsInfos.push({
         wbsId: wbsItemId,
@@ -552,37 +562,38 @@ export class GetEmployeeAssignedDataHandler
   private async getWbsDownwardEvaluationsByWbsId(
     evaluationPeriodId: string,
     employeeId: string,
-    wbsItemId: string,
+    projectId: string, // wbsItemId 대신 projectId 사용 (하향평가는 프로젝트 단위)
   ): Promise<{
     primary: WbsDownwardEvaluationInfo | null;
     secondary: WbsDownwardEvaluationInfo | null;
   }> {
     // 하향평가 조회 (PRIMARY, SECONDARY 구분)
+    // 하향평가는 WBS 단위가 아니라 프로젝트 단위로 이루어짐
     const downwardEvaluations = await this.downwardEvaluationRepository
       .createQueryBuilder('downward')
       .select([
-        'downward.id AS downward_id',
-        'downward.evaluatorId AS downward_evaluatorId',
-        'downward.evaluationType AS downward_evaluatorType',
-        'downward.evaluationContent AS downward_evaluationContent',
-        'downward.score AS downward_score',
-        'downward.status AS downward_status',
-        'downward.submittedAt AS downward_submittedAt',
-        'evaluator.name AS evaluator_name',
+        '"downward"."id" AS downward_id',
+        '"downward"."evaluatorId" AS downward_evaluatorId',
+        '"downward"."evaluationType" AS downward_evaluatorType',
+        '"downward"."downwardEvaluationContent" AS downward_evaluationContent',
+        '"downward"."downwardEvaluationScore" AS downward_score',
+        '"downward"."isCompleted" AS downward_isCompleted',
+        '"downward"."completedAt" AS downward_completedAt',
+        '"evaluator"."name" AS evaluator_name',
       ])
       .leftJoin(
         Employee,
         'evaluator',
-        'evaluator.id = downward.evaluatorId AND evaluator.deletedAt IS NULL',
+        '"evaluator"."id" = "downward"."evaluatorId" AND "evaluator"."deletedAt" IS NULL',
       )
-      .where('downward.evaluationPeriodId = :evaluationPeriodId', {
+      .where('"downward"."periodId" = :evaluationPeriodId', {
         evaluationPeriodId,
       })
-      .andWhere('downward.evaluateeId = :employeeId', {
+      .andWhere('"downward"."employeeId" = :employeeId', {
         employeeId: employeeId,
       })
-      .andWhere('downward.wbsItemId = :wbsItemId', { wbsItemId })
-      .andWhere('downward.deletedAt IS NULL')
+      .andWhere('"downward"."projectId" = :projectId', { projectId })
+      .andWhere('"downward"."deletedAt" IS NULL')
       .getRawMany();
 
     let primary: WbsDownwardEvaluationInfo | null = null;
@@ -595,14 +606,14 @@ export class GetEmployeeAssignedDataHandler
         evaluatorName: row.evaluator_name,
         evaluationContent: row.downward_evaluationContent,
         score: row.downward_score,
-        isCompleted: row.downward_status === 'completed',
-        isEditable: row.downward_status !== 'completed',
-        submittedAt: row.downward_submittedAt,
+        isCompleted: row.downward_isCompleted === true,
+        isEditable: row.downward_isCompleted !== true,
+        submittedAt: row.downward_completedAt,
       };
 
-      if (row.downward_evaluatorType === 'PRIMARY') {
+      if (row.downward_evaluatorType === 'primary') {
         primary = evaluationInfo;
-      } else if (row.downward_evaluatorType === 'SECONDARY') {
+      } else if (row.downward_evaluatorType === 'secondary') {
         secondary = evaluationInfo;
       }
     }
