@@ -13,6 +13,10 @@ import {
   EmployeeAssignedDataResult,
   GetEvaluatorAssignedEmployeesDataQuery,
   EvaluatorAssignedEmployeesDataResult,
+  GetFinalEvaluationsByPeriodQuery,
+  FinalEvaluationByPeriodResult,
+  GetFinalEvaluationsByEmployeeQuery,
+  FinalEvaluationByEmployeeResult,
 } from './handlers/queries';
 
 /**
@@ -95,6 +99,38 @@ export class DashboardService implements IDashboardContext {
       evaluationPeriodId,
       evaluatorId,
       employeeId,
+    );
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 평가기간별 최종평가 목록을 조회한다
+   *
+   * 특정 평가기간에 등록된 모든 직원의 최종평가를 조회합니다.
+   * 제외된 직원은 결과에서 제외됩니다.
+   */
+  async 평가기간별_최종평가_목록을_조회한다(
+    evaluationPeriodId: string,
+  ): Promise<FinalEvaluationByPeriodResult[]> {
+    const query = new GetFinalEvaluationsByPeriodQuery(evaluationPeriodId);
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 직원별 최종평가 목록을 조회한다
+   *
+   * 특정 직원의 모든 평가기간에 대한 최종평가를 조회합니다.
+   * 날짜 범위를 지정하여 특정 기간의 평가만 조회할 수 있습니다.
+   */
+  async 직원별_최종평가_목록을_조회한다(
+    employeeId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<FinalEvaluationByEmployeeResult[]> {
+    const query = new GetFinalEvaluationsByEmployeeQuery(
+      employeeId,
+      startDate,
+      endDate,
     );
     return await this.queryBus.execute(query);
   }

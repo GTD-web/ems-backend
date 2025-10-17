@@ -7,6 +7,8 @@ import { OrganizationManagementContextModule } from '../../context/organization-
 import { DashboardContextModule } from '../../context/dashboard-context/dashboard-context.module';
 import { EvaluationQuestionManagementContextModule } from '../../context/evaluation-question-management-context/evaluation-question-management-context.module';
 import { BusinessModule } from '../../business/business.module';
+import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
+import { EmployeeModule } from '../../domain/common/employee/employee.module';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
 import { EvaluationTargetController } from './evaluation-period/evaluation-target.controller';
@@ -38,6 +40,8 @@ import { EmployeeManagementController } from './employee-management/employee-man
     DashboardContextModule, // 대시보드 컨텍스트 모듈 주입
     EvaluationQuestionManagementContextModule, // 평가 질문 관리 컨텍스트 모듈 주입
     BusinessModule, // 비즈니스 레이어 모듈 주입
+    EvaluationPeriodModule, // 평가 기간 모듈 주입
+    EmployeeModule, // 직원 모듈 주입
   ],
   controllers: [
     DashboardController, // 대시보드 컨트롤러

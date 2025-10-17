@@ -28,12 +28,26 @@ export {
   type EvaluatorAssignedEmployeesDataResult,
 } from './get-evaluator-assigned-employees-data.query';
 
+export {
+  GetFinalEvaluationsByPeriodQuery,
+  GetFinalEvaluationsByPeriodHandler,
+  type FinalEvaluationByPeriodResult,
+} from './get-final-evaluations-by-period.query';
+
+export {
+  GetFinalEvaluationsByEmployeeQuery,
+  GetFinalEvaluationsByEmployeeHandler,
+  type FinalEvaluationByEmployeeResult,
+} from './get-final-evaluations-by-employee.query';
+
 // Handler 배열 export (Module에서 사용)
 import { GetEmployeeEvaluationPeriodStatusHandler } from './get-employee-evaluation-period-status.query';
 import { GetAllEmployeesEvaluationPeriodStatusHandler } from './get-all-employees-evaluation-period-status.query';
 import { GetMyEvaluationTargetsStatusHandler } from './get-my-evaluation-targets-status.query';
 import { GetEmployeeAssignedDataHandler } from './get-employee-assigned-data.query';
 import { GetEvaluatorAssignedEmployeesDataHandler } from './get-evaluator-assigned-employees-data.query';
+import { GetFinalEvaluationsByPeriodHandler } from './get-final-evaluations-by-period.query';
+import { GetFinalEvaluationsByEmployeeHandler } from './get-final-evaluations-by-employee.query';
 
 export const QUERY_HANDLERS = [
   GetEmployeeEvaluationPeriodStatusHandler,
@@ -41,4 +55,6 @@ export const QUERY_HANDLERS = [
   GetMyEvaluationTargetsStatusHandler,
   GetEmployeeAssignedDataHandler,
   GetEvaluatorAssignedEmployeesDataHandler,
+  GetFinalEvaluationsByPeriodHandler,
+  GetFinalEvaluationsByEmployeeHandler,
 ];

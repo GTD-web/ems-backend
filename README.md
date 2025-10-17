@@ -1,98 +1,291 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+"clientId": "cef8c785-d013-4f47-8780-84b3dac494f9",
+"clientSecret": "72970ccc55d3fd612ed78c667d1c94882281f64a4ae4be7cc0ac85149f90208b",
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# 루미르 평가 관리 시스템 (Lumir Evaluation Management System)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> NestJS 기반의 엔터프라이즈급 인사평가 관리 시스템
 
-## Description
+## 📋 프로젝트 소개
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+루미르 평가 관리 시스템은 조직의 성과 평가 프로세스를 체계적으로 관리하는 시스템입니다. Domain-Driven Design과 CQRS 패턴을 적용하여 확장 가능하고 유지보수가 용이한 구조로 설계되었습니다.
 
-## Project setup
+### 주요 기능
 
-```bash
-$ npm install
+- 평가 기간 및 평가 대상 관리
+- 프로젝트/WBS 기반 평가 기준 설정
+- 자기평가, 동료평가, 하향평가, 최종평가 지원
+- 평가자 라인 및 평가 권한 관리
+- 대시보드 및 평가 현황 조회
+
+## 🏗️ 아키텍처
+
+### 레이어드 아키텍처
+
+```mermaid
+graph TB
+    subgraph "Interface Layer"
+        API[REST API Controllers]
+        DTO[DTOs & Decorators]
+    end
+
+    subgraph "Business Layer"
+        BIZ[Business Services]
+    end
+
+    subgraph "Context Layer (CQRS)"
+        CTX[Context Services]
+        CMD[Command Handlers]
+        QRY[Query Handlers]
+    end
+
+    subgraph "Domain Layer"
+        COMMON[Common Domain<br/>외부 연동 엔티티]
+        CORE[Core Domain<br/>핵심 비즈니스]
+        SUB[Sub Domain<br/>부가 기능]
+    end
+
+    subgraph "Infrastructure Layer"
+        DB[(Database<br/>PostgreSQL)]
+        LIBS[Libs<br/>Database, Config]
+    end
+
+    API --> BIZ
+    API --> CTX
+    BIZ --> CTX
+    CTX --> CMD
+    CTX --> QRY
+    CMD --> CORE
+    CMD --> COMMON
+    CMD --> SUB
+    QRY --> CORE
+    QRY --> COMMON
+    QRY --> SUB
+    CORE --> COMMON
+    SUB --> CORE
+    SUB --> COMMON
+    CORE --> LIBS
+    COMMON --> LIBS
+    SUB --> LIBS
+    LIBS --> DB
+
+    style API fill:#e1f5ff
+    style BIZ fill:#fff3e0
+    style CTX fill:#f3e5f5
+    style COMMON fill:#e8f5e9
+    style CORE fill:#fff9c4
+    style SUB fill:#ffe0b2
+    style LIBS fill:#f5f5f5
 ```
 
-## Compile and run the project
+### 의존성 규칙
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```
+Interface → Business → Context → Domain → Infrastructure
+    ↓          ↓          ↓          ↓
+   DTO      조합 로직   CQRS      엔티티      Database
 ```
 
-## Run tests
+**도메인 간 의존성:**
 
-```bash
-# unit tests
-$ npm run test
+- ✅ Core Domain → Common Domain
+- ✅ Sub Domain → Core Domain, Common Domain
+- ❌ Common Domain → Core/Sub Domain
 
-# e2e tests
-$ npm run test:e2e
+## 📁 폴더 구조
 
-# test coverage
-$ npm run test:cov
+```
+lumir-evaluation-management-system/
+├── libs/                           # 공통 라이브러리
+│   ├── config/                    # Swagger 설정
+│   └── database/                  # Database 설정, 트랜잭션 관리
+│
+├── src/
+│   ├── domain/                    # 도메인 엔티티 (DDD)
+│   │   ├── common/               # 외부 시스템 연동 엔티티
+│   │   │   ├── department/       # 부서
+│   │   │   ├── employee/         # 직원
+│   │   │   ├── project/          # 프로젝트
+│   │   │   └── wbs-item/         # WBS 항목
+│   │   ├── core/                 # 핵심 비즈니스 엔티티
+│   │   │   ├── evaluation-period/                # 평가 기간
+│   │   │   ├── evaluation-period-employee-mapping/ # 평가 대상
+│   │   │   ├── evaluation-project-assignment/     # 프로젝트 배정
+│   │   │   ├── evaluation-wbs-assignment/         # WBS 배정
+│   │   │   ├── wbs-evaluation-criteria/           # WBS 평가 기준
+│   │   │   ├── evaluation-line/                   # 평가자 라인
+│   │   │   ├── wbs-self-evaluation/               # 자기평가
+│   │   │   ├── peer-evaluation/                   # 동료평가
+│   │   │   ├── downward-evaluation/               # 하향평가
+│   │   │   └── final-evaluation/                  # 최종평가
+│   │   └── sub/                  # 부가 기능 엔티티
+│   │       ├── evaluation-question/   # 평가 질문
+│   │       ├── evaluation-response/   # 평가 응답
+│   │       ├── question-group/        # 질문 그룹
+│   │       └── question-group-mapping/
+│   │
+│   ├── context/                   # CQRS 패턴 비즈니스 로직
+│   │   ├── dashboard-context/                      # 대시보드
+│   │   ├── organization-management-context/        # 조직 관리
+│   │   ├── evaluation-period-management-context/   # 평가 기간 관리
+│   │   ├── evaluation-criteria-management-context/ # 평가 기준 관리
+│   │   ├── evaluation-question-management-context/ # 평가 질문 관리
+│   │   ├── performance-evaluation-context/         # 성과 평가
+│   │   └── test-context/                          # 테스트 환경
+│   │
+│   ├── business/                  # 복잡한 비즈니스 로직 조합
+│   │   ├── peer-evaluation/      # 동료평가 비즈니스 로직
+│   │   └── wbs-assignment/       # WBS 배정 비즈니스 로직
+│   │
+│   ├── interface/                 # REST API 컨트롤러
+│   │   └── admin/                # 관리자 API
+│   │       ├── dashboard/               # 대시보드
+│   │       ├── employee-management/     # 직원 관리
+│   │       ├── evaluation-period/       # 평가 기간 관리
+│   │       ├── evaluation-criteria/     # 평가 기준 관리
+│   │       └── performance-evaluation/  # 성과 평가
+│   │
+│   └── main.ts                    # 애플리케이션 진입점
+│
+├── test/                          # E2E 테스트
+│   └── interface/admin/          # API 테스트
+│
+└── docs/                          # 문서
+    ├── domain-classification-guide.md     # 도메인 분류 가이드
+    ├── database-tables-specification.md   # DB 테이블 명세
+    └── evaluation-system-erd.md          # ERD 문서
 ```
 
-## Deployment
+## 🛠️ 주요 기술 스택
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+- **Framework**: NestJS 11.x
+- **Language**: TypeScript 5.x
+- **Database**: PostgreSQL (TypeORM 0.3.x)
+- **Architecture Pattern**: CQRS, DDD, Clean Architecture
+- **Testing**: Jest, Supertest (E2E)
+- **API Documentation**: Swagger (OpenAPI 3.0)
+- **Container**: Docker, Testcontainers
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 🎯 주요 아키텍처 패턴
+
+### 1. Domain-Driven Design (DDD)
+
+도메인을 Common, Core, Sub로 분류하여 관리합니다.
+
+- **Common Domain**: 외부 시스템 연동 (부서, 직원, 프로젝트 등)
+- **Core Domain**: 핵심 평가 비즈니스 로직
+- **Sub Domain**: 부가 기능 (평가 질문, 응답 등)
+
+### 2. CQRS (Command Query Responsibility Segregation)
+
+읽기(Query)와 쓰기(Command)를 분리하여 관리합니다.
+
+- **Command Handler**: 데이터 생성/수정/삭제
+- **Query Handler**: 데이터 조회 (복잡한 조인 쿼리 최적화)
+
+### 3. 레이어드 아키텍처
+
+각 레이어는 명확한 책임을 가지며 단방향 의존성을 유지합니다.
+
+- **Interface**: API 엔드포인트, DTO 변환
+- **Business**: 복잡한 비즈니스 로직 조합
+- **Context**: CQRS 패턴 적용
+- **Domain**: 엔티티 및 도메인 로직
+- **Infrastructure**: 데이터베이스, 외부 연동
+
+## 🚀 프로젝트 설정 및 실행
+
+### 설치
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 실행
 
-## Resources
+```bash
+# 개발 모드
+npm run start:dev
 
-Check out a few resources that may come in handy when working with NestJS:
+# 프로덕션 모드
+npm run start:prod
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 테스트
 
-## Support
+```bash
+# 단위 테스트
+npm run test
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# E2E 테스트
+npm run test:e2e
 
-## Stay in touch
+# E2E 테스트 (빠른 실행)
+npm run test:e2e:fast
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+# 테스트 커버리지
+npm run test:cov
+```
 
-## License
+### API 문서
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+애플리케이션 실행 후 Swagger 문서를 확인할 수 있습니다:
+
+```
+http://localhost:3000/api
+```
+
+## 📚 참고 문서
+
+### 개발 가이드
+
+- [Context 레이어 개발 가이드](src/context/AGENTS.md) - CQRS 패턴, QueryBuilder 베스트 프랙티스
+- [Interface 레이어 개발 가이드](src/interface/AGENTS.md) - API 컨트롤러, DTO 작성 규칙
+- [Interface README](src/interface/README.md) - 컨트롤러 작성 패턴, Swagger 문서화
+
+### 아키텍처 문서
+
+- [도메인 분류 가이드](docs/domain-classification-guide.md) - DDD 도메인 구조 및 의존성 규칙
+- [데이터베이스 에러 처리](libs/database/README-error-handling.md) - 트랜잭션 관리, 에러 처리
+
+### 데이터베이스 문서
+
+- [데이터베이스 테이블 명세](docs/database-tables-specification.md)
+- [평가 시스템 ERD](docs/evaluation-system-erd.md)
+
+## 🔑 핵심 컨벤션
+
+### 1. Context 서비스 메서드명
+
+한글로 작성하며 '~한다' 형태로 끝냅니다.
+
+```typescript
+async 평가기간을_생성한다(data: CreateEvaluationPeriodDto)
+async 평가대상을_조회한다(periodId: string)
+```
+
+### 2. TypeORM QueryBuilder
+
+모든 쿼리에 Soft Delete 조건을 포함합니다.
+
+```typescript
+.where('entity.id = :id', { id })
+.andWhere('entity.deletedAt IS NULL')
+```
+
+### 3. API 컨트롤러
+
+단순성을 유지하며, DTO 변환만 수행합니다.
+
+```typescript
+async createEvaluation(@Body() dto: CreateDto) {
+  return await this.service.평가를_생성한다(dto);
+}
+```
+
+## 📝 라이선스
+
+UNLICENSED - 사유 프로젝트
+
+## 👥 개발팀
+
+루미르 개발팀
