@@ -216,8 +216,16 @@ export class GetEmployeeAssignedDataHandler
     // 3. 부서명 조회
     let departmentName: string | undefined;
     if (employee.departmentId) {
+      // departmentId가 UUID인지 확인하고 code로 조회 시도
+      const isUUID =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          employee.departmentId,
+        );
+
       const department = await this.departmentRepository.findOne({
-        where: { id: employee.departmentId },
+        where: isUUID
+          ? { id: employee.departmentId }
+          : { code: employee.departmentId },
       });
       departmentName = department?.name;
     }
@@ -338,14 +346,21 @@ export class GetEmployeeAssignedDataHandler
     const projectsWithWbs: AssignedProjectWithWbs[] = [];
 
     for (const row of projectAssignments) {
+      const projectId = row.assignment_projectId || row.project_id;
+
+      if (!projectId) {
+        this.logger.warn('프로젝트 ID가 없는 할당 발견', { row });
+        continue;
+      }
+
       const wbsList = await this.getWbsListByProject(
         evaluationPeriodId,
         employeeId,
-        row.assignment_projectId,
+        projectId,
       );
 
       projectsWithWbs.push({
-        projectId: row.assignment_projectId,
+        projectId,
         projectName: row.project_name || '',
         projectCode: row.project_projectCode || '',
         assignedAt: row.assignment_assignedDate,
@@ -385,7 +400,6 @@ export class GetEmployeeAssignedDataHandler
         'assignment.id AS assignment_id',
         'assignment.wbsItemId AS assignment_wbsItemId',
         'assignment.projectId AS assignment_projectId',
-        'assignment.weight AS assignment_weight',
         'assignment.assignedDate AS assignment_assignedDate',
         'assignment.displayOrder AS assignment_displayOrder',
         'wbsItem.id AS wbsItem_id',
@@ -431,7 +445,7 @@ export class GetEmployeeAssignedDataHandler
         wbsCode: row.wbsItem_wbsCode || '',
         projectId,
         projectName: '', // 프로젝트명은 이미 상위에서 제공됨
-        weight: parseFloat(row.assignment_weight) || 0,
+        weight: 0, // weight 컬럼이 엔티티에 없으므로 기본값 0 사용
         assignedAt: row.assignment_assignedDate,
         criteria,
         performance: selfEvaluationData?.performance || null,
@@ -549,7 +563,7 @@ export class GetEmployeeAssignedDataHandler
       .select([
         'downward.id AS downward_id',
         'downward.evaluatorId AS downward_evaluatorId',
-        'downward.evaluatorType AS downward_evaluatorType',
+        'downward.evaluationType AS downward_evaluatorType',
         'downward.evaluationContent AS downward_evaluationContent',
         'downward.score AS downward_score',
         'downward.status AS downward_status',

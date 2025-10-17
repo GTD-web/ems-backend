@@ -74,8 +74,13 @@ export class GetMyEvaluationTargetsStatusHandler
       // 1. 내가 평가자로 지정된 매핑 조회 (평가라인 정보 포함)
       const myTargetMappings = await this.lineMappingRepository
         .createQueryBuilder('mapping')
-        .innerJoinAndSelect('mapping.evaluationLineId', 'line')
+        .leftJoin(
+          EvaluationLine,
+          'line',
+          'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+        )
         .where('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+        .andWhere('mapping.deletedAt IS NULL')
         .getMany();
 
       if (myTargetMappings.length === 0) {
@@ -100,14 +105,13 @@ export class GetMyEvaluationTargetsStatusHandler
         ...new Set(myTargetMappings.map((m) => m.employeeId)),
       ];
 
-      // 2. 피평가자들의 평가기간 매핑 정보 조회 (해당 평가기간에 속하고 제외되지 않은 직원만)
+      // 2. 피평가자들의 평가기간 매핑 정보 조회 (해당 평가기간에 속한 직원, 제외된 직원 포함)
       const employeeMappings = await this.mappingRepository
         .createQueryBuilder('mapping')
         .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
           evaluationPeriodId,
         })
         .andWhere('mapping.employeeId IN (:...employeeIds)', { employeeIds })
-        .andWhere('mapping.isExcluded = false')
         .getMany();
 
       if (employeeMappings.length === 0) {

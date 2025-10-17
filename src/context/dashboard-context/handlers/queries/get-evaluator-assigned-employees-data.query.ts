@@ -5,7 +5,8 @@ import { Repository } from 'typeorm';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
-import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import {
   GetEmployeeAssignedDataHandler,
   EmployeeAssignedDataResult,
@@ -59,8 +60,10 @@ export class GetEvaluatorAssignedEmployeesDataHandler
     private readonly employeeRepository: Repository<Employee>,
     @InjectRepository(Department)
     private readonly departmentRepository: Repository<Department>,
-    @InjectRepository(EvaluationLine)
-    private readonly evaluationLineRepository: Repository<EvaluationLine>,
+    @InjectRepository(EvaluationLineMapping)
+    private readonly lineMappingRepository: Repository<EvaluationLineMapping>,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly periodEmployeeMappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
     private readonly employeeAssignedDataHandler: GetEmployeeAssignedDataHandler,
   ) {}
 
@@ -100,38 +103,55 @@ export class GetEvaluatorAssignedEmployeesDataHandler
     // 3. 평가자 부서명 조회
     let evaluatorDepartmentName: string | undefined;
     if (evaluator.departmentId) {
+      // departmentId가 UUID인지 확인하고 code로 조회 시도
+      const isUUID =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          evaluator.departmentId,
+        );
+
       const department = await this.departmentRepository.findOne({
-        where: { id: evaluator.departmentId },
+        where: isUUID
+          ? { id: evaluator.departmentId }
+          : { code: evaluator.departmentId },
       });
       evaluatorDepartmentName = department?.name;
     }
 
-    // 4. 평가자-피평가자 관계 확인
-    const evaluationLine = await this.evaluationLineRepository
-      .createQueryBuilder('line')
-      .select([
-        'line.employeeId AS line_employeeId',
-        'line.primaryEvaluatorId AS line_primaryEvaluatorId',
-        'line.secondaryEvaluatorId AS line_secondaryEvaluatorId',
-      ])
-      .where('line.evaluationPeriodId = :evaluationPeriodId', {
+    // 4. 평가기간에 피평가자가 등록되어 있는지 확인
+    const employeeMapping = await this.periodEmployeeMappingRepository.findOne({
+      where: {
         evaluationPeriodId,
-      })
-      .andWhere('line.employeeId = :employeeId', { employeeId })
-      .andWhere(
-        '(line.primaryEvaluatorId = :evaluatorId OR line.secondaryEvaluatorId = :evaluatorId)',
-        { evaluatorId },
-      )
-      .andWhere('line.deletedAt IS NULL')
-      .getRawOne();
+        employeeId,
+      },
+    });
 
-    if (!evaluationLine) {
+    if (!employeeMapping) {
+      throw new NotFoundException(
+        `평가기간에 등록되지 않은 직원입니다. (employeeId: ${employeeId})`,
+      );
+    }
+
+    // 5. 평가자-피평가자 관계 확인 (EvaluationLineMapping에서 조회)
+    const hasEvaluationRelation = await this.lineMappingRepository
+      .createQueryBuilder('mapping')
+      .where('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('mapping.deletedAt IS NULL')
+      .getCount();
+
+    if (hasEvaluationRelation === 0) {
       throw new NotFoundException(
         `평가자가 해당 피평가자를 담당하지 않습니다. (evaluatorId: ${evaluatorId}, employeeId: ${employeeId})`,
       );
     }
 
-    // 5. 피평가자의 할당 정보 조회 (일반 사용자 조회 핸들러 재사용)
+    this.logger.log('평가자-피평가자 관계 확인 완료', {
+      evaluatorId,
+      employeeId,
+      mappingCount: hasEvaluationRelation,
+    });
+
+    // 6. 피평가자의 할당 정보 조회 (일반 사용자 조회 핸들러 재사용)
     const evaluateeData = await this.employeeAssignedDataHandler.execute({
       evaluationPeriodId,
       employeeId,
