@@ -12,6 +12,7 @@ import {
   GetEvaluatorAssignedEmployeesData,
   GetFinalEvaluationsByPeriod,
   GetFinalEvaluationsByEmployee,
+  GetAllEmployeesFinalEvaluations,
 } from './decorators/dashboard-api.decorators';
 import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/employee-evaluation-period-status.dto';
 import { MyEvaluationTargetStatusResponseDto } from './dto/my-evaluation-targets-status.dto';
@@ -19,11 +20,15 @@ import {
   EmployeeAssignedDataResponseDto,
   EvaluatorAssignedEmployeesDataResponseDto,
 } from './dto/employee-assigned-data.dto';
-import { FinalEvaluationListResponseDto } from './dto/final-evaluation-list.dto';
+import { DashboardFinalEvaluationsByPeriodResponseDto } from './dto/final-evaluation-list.dto';
 import {
   EmployeeFinalEvaluationListResponseDto,
   GetEmployeeFinalEvaluationsQueryDto,
 } from './dto/employee-final-evaluation-list.dto';
+import {
+  AllEmployeesFinalEvaluationsResponseDto,
+  GetAllEmployeesFinalEvaluationsQueryDto,
+} from './dto/all-employees-final-evaluations.dto';
 
 /**
  * 관리자용 대시보드 컨트롤러
@@ -116,7 +121,7 @@ export class DashboardController {
   @GetFinalEvaluationsByPeriod()
   async getFinalEvaluationsByPeriod(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
-  ): Promise<FinalEvaluationListResponseDto> {
+  ): Promise<DashboardFinalEvaluationsByPeriodResponseDto> {
     // 평가기간 존재 여부 확인
     const period =
       await this.evaluationPeriodService.ID로_조회한다(evaluationPeriodId);
@@ -180,6 +185,126 @@ export class DashboardController {
     return {
       period: periodInfo,
       evaluations,
+    };
+  }
+
+  /**
+   * 전체 직원별 최종평가 목록을 조회합니다.
+   * (주의: 이 메서드는 getFinalEvaluationsByEmployee보다 먼저 정의되어야 합니다)
+   */
+  @GetAllEmployeesFinalEvaluations()
+  async getAllEmployeesFinalEvaluations(
+    @Query() queryDto: GetAllEmployeesFinalEvaluationsQueryDto,
+  ): Promise<AllEmployeesFinalEvaluationsResponseDto> {
+    const results =
+      await this.dashboardService.전체_직원별_최종평가_목록을_조회한다(
+        queryDto.startDate,
+        queryDto.endDate,
+      );
+
+    // 1. 평가기간 추출 및 중복 제거 (시작일 내림차순)
+    const periodMap = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        startDate: Date;
+        endDate: Date | null;
+      }
+    >();
+
+    for (const result of results) {
+      if (!periodMap.has(result.periodId)) {
+        periodMap.set(result.periodId, {
+          id: result.periodId,
+          name: result.periodName,
+          startDate: result.periodStartDate,
+          endDate: result.periodEndDate,
+        });
+      }
+    }
+
+    const evaluationPeriods = Array.from(periodMap.values()).sort(
+      (a, b) => b.startDate.getTime() - a.startDate.getTime(),
+    );
+
+    // 2. 직원별로 그룹화
+    const employeeMap = new Map<
+      string,
+      {
+        employee: {
+          id: string;
+          name: string;
+          employeeNumber: string;
+          email: string;
+          departmentName: string | null;
+          rankName: string | null;
+        };
+        finalEvaluationsByPeriod: Map<
+          string,
+          {
+            id: string;
+            evaluationGrade: string;
+            jobGrade: string;
+            jobDetailedGrade: string;
+            finalComments: string | null;
+            isConfirmed: boolean;
+            confirmedAt: Date | null;
+            confirmedBy: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+          }
+        >;
+      }
+    >();
+
+    for (const result of results) {
+      if (!employeeMap.has(result.employeeId)) {
+        employeeMap.set(result.employeeId, {
+          employee: {
+            id: result.employeeId,
+            name: result.employeeName,
+            employeeNumber: result.employeeNumber,
+            email: result.employeeEmail,
+            departmentName: result.departmentName,
+            rankName: result.rankName,
+          },
+          finalEvaluationsByPeriod: new Map(),
+        });
+      }
+
+      employeeMap
+        .get(result.employeeId)!
+        .finalEvaluationsByPeriod.set(result.periodId, {
+          id: result.id,
+          evaluationGrade: result.evaluationGrade,
+          jobGrade: result.jobGrade,
+          jobDetailedGrade: result.jobDetailedGrade,
+          finalComments: result.finalComments,
+          isConfirmed: result.isConfirmed,
+          confirmedAt: result.confirmedAt,
+          confirmedBy: result.confirmedBy,
+          createdAt: result.createdAt,
+          updatedAt: result.updatedAt,
+        });
+    }
+
+    // 3. 직원별 최종평가 배열 생성 (평가기간 순서에 맞춰서)
+    const employees = Array.from(employeeMap.values())
+      .map((data) => ({
+        employee: data.employee,
+        finalEvaluations: evaluationPeriods.map((period) => {
+          const evaluation = data.finalEvaluationsByPeriod.get(period.id);
+          return evaluation || null;
+        }),
+      }))
+      .sort((a, b) =>
+        a.employee.employeeNumber.localeCompare(b.employee.employeeNumber),
+      );
+
+    return {
+      evaluationPeriods,
+      employees,
     };
   }
 

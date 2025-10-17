@@ -13,8 +13,9 @@ import {
   EmployeeAssignedDataResponseDto,
   EvaluatorAssignedEmployeesDataResponseDto,
 } from '../dto/employee-assigned-data.dto';
-import { FinalEvaluationListResponseDto } from '../dto/final-evaluation-list.dto';
+import { DashboardFinalEvaluationsByPeriodResponseDto } from '../dto/final-evaluation-list.dto';
 import { EmployeeFinalEvaluationListResponseDto } from '../dto/employee-final-evaluation-list.dto';
+import { AllEmployeesFinalEvaluationsResponseDto } from '../dto/all-employees-final-evaluations.dto';
 
 /**
  * 직원의 평가기간 현황 조회 API 데코레이터
@@ -329,26 +330,10 @@ export function GetFinalEvaluationsByPeriod() {
       summary: '평가기간별 최종평가 목록 조회',
       description: `특정 평가기간에 등록된 모든 직원의 최종평가를 조회합니다.
 
-**조회 정보:**
-- 평가기간 정보 (평가기간명, 시작일, 종료일)
-- 각 직원별 평가 정보
-  - 직원 기본 정보 (직원명, 사번, 이메일, 부서, 직책)
-  - 최종평가 정보
-    - 평가등급 (S, A, B, C, D 등)
-    - 직무등급 (T1, T2, T3)
-    - 직무 상세등급 (u, n, a)
-    - 최종 평가 의견
-    - 확정 여부 및 확정일시
-    - 생성/수정 일시
-
-**응답 구조:**
-- 평가기간 정보는 한 번만 제공 (최상위)
-- 직원별 평가 정보는 배열로 제공
-
-**정렬:**
-- 직원 사번 오름차순
-
-**필터링:**
+**동작:**
+- 평가기간 정보를 최상단에 한 번만 제공
+- 각 직원별 최종평가 정보를 배열로 제공
+- 직원 사번 오름차순으로 정렬
 - 제외된 직원(isExcluded=true)은 결과에서 자동 제외
 - 삭제된 최종평가는 조회되지 않음
 
@@ -370,7 +355,7 @@ export function GetFinalEvaluationsByPeriod() {
     }),
     ApiOkResponse({
       description: '평가기간별 최종평가 목록 조회 성공',
-      type: FinalEvaluationListResponseDto,
+      type: DashboardFinalEvaluationsByPeriodResponseDto,
     }),
     ApiBadRequestResponse({
       description: '잘못된 요청 (UUID 형식 오류 등)',
@@ -391,34 +376,12 @@ export function GetFinalEvaluationsByEmployee() {
       summary: '직원별 최종평가 목록 조회',
       description: `특정 직원의 모든 평가기간에 대한 최종평가를 조회합니다.
 
-**조회 정보:**
-- 직원 기본 정보 (직원명, 사번, 이메일, 부서, 직책) - 최상위에 한 번만 제공
-- 각 평가기간별 최종평가 정보
-  - 평가기간 정보 (평가기간명, 시작일, 종료일)
-  - 최종평가 정보
-    - 평가등급 (S, A, B, C, D 등)
-    - 직무등급 (T1, T2, T3)
-    - 직무 상세등급 (u, n, a)
-    - 최종 평가 의견
-    - 확정 여부 및 확정일시
-    - 생성/수정 일시
-
-**응답 구조:**
-- 직원 정보는 한 번만 제공 (최상위)
-- 평가기간별 최종평가 목록은 배열로 제공
-
-**정렬:**
-- 평가기간 시작일 내림차순 (최신순)
-
-**날짜 범위 필터링:**
-- startDate: 조회 시작일 (평가기간 시작일 기준, 선택)
-- endDate: 조회 종료일 (평가기간 시작일 기준, 선택)
+**동작:**
+- 직원 정보를 최상단에 한 번만 제공
+- 각 평가기간별 최종평가 정보를 배열로 제공 (평가기간 정보 포함)
+- 평가기간 시작일 내림차순으로 정렬 (최신순)
+- startDate, endDate로 날짜 범위 필터링 가능 (평가기간 시작일 기준)
 - 날짜 범위를 지정하지 않으면 모든 평가기간의 최종평가 조회
-
-**사용 시나리오:**
-- 직원의 평가 이력 조회
-- 직원의 성장 추이 분석
-- 연도별/분기별 평가 결과 비교
 
 **테스트 케이스:**
 - 직원의 모든 최종평가를 조회할 수 있어야 함
@@ -459,6 +422,57 @@ export function GetFinalEvaluationsByEmployee() {
     }),
     ApiNotFoundResponse({
       description: '직원을 찾을 수 없음',
+    }),
+  );
+}
+
+/**
+ * 전체 직원별 최종평가 목록 조회 API 데코레이터
+ */
+export function GetAllEmployeesFinalEvaluations() {
+  return applyDecorators(
+    Get('final-evaluations'),
+    ApiOperation({
+      summary: '전체 직원별 최종평가 목록 조회',
+      description: `지정한 날짜 범위 내 평가기간의 모든 직원 최종평가를 조회합니다.
+
+**동작:**
+- 날짜 범위로 필터링된 평가기간 목록을 최상단에 제공 (시작일 내림차순)
+- 각 직원별로 평가기간 순서에 맞는 최종평가 배열 제공 (사번 오름차순)
+- 평가기간 배열과 최종평가 배열의 인덱스가 일치 (특정 평가기간에 평가 없으면 null)
+- 제외된 직원(isExcluded=true)은 결과에서 자동 제외
+- 삭제된 최종평가는 조회되지 않음
+
+**테스트 케이스:**
+- 기본 조회: 모든 직원의 최종평가를 조회할 수 있어야 함
+- 날짜 범위 필터링: startDate, endDate로 특정 기간의 평가만 조회
+- 빈 결과: 최종평가가 없는 경우 빈 배열 반환
+- 제외된 직원: isExcluded=true인 직원의 최종평가는 조회되지 않음
+- 정렬 확인: 평가기간 시작일 내림차순, 직원 사번 오름차순 정렬
+- 배열 길이 일치: 각 직원의 finalEvaluations 배열 길이가 evaluationPeriods 배열 길이와 같음
+- 잘못된 날짜 형식: 잘못된 날짜 형식으로 요청 시 400 에러
+- 응답 구조 검증: 응답에 evaluationPeriods와 employees 필드 포함`,
+    }),
+    ApiQuery({
+      name: 'startDate',
+      required: false,
+      description: '조회 시작일 (평가기간 시작일 기준, YYYY-MM-DD 형식)',
+      type: String,
+      example: '2024-01-01',
+    }),
+    ApiQuery({
+      name: 'endDate',
+      required: false,
+      description: '조회 종료일 (평가기간 시작일 기준, YYYY-MM-DD 형식)',
+      type: String,
+      example: '2024-12-31',
+    }),
+    ApiOkResponse({
+      description: '전체 직원별 최종평가 목록 조회 성공',
+      type: AllEmployeesFinalEvaluationsResponseDto,
+    }),
+    ApiBadRequestResponse({
+      description: '잘못된 요청 (날짜 형식 오류 등)',
     }),
   );
 }

@@ -17,6 +17,8 @@ import {
   FinalEvaluationByPeriodResult,
   GetFinalEvaluationsByEmployeeQuery,
   FinalEvaluationByEmployeeResult,
+  GetAllEmployeesFinalEvaluationsQuery,
+  AllEmployeesFinalEvaluationResult,
 } from './handlers/queries';
 
 /**
@@ -132,6 +134,21 @@ export class DashboardService implements IDashboardContext {
       startDate,
       endDate,
     );
+    return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 전체_직원별_최종평가_목록을_조회한다
+   *
+   * 모든 직원의 최종평가를 조회합니다.
+   * 날짜 범위를 지정하여 특정 기간의 평가만 조회할 수 있습니다.
+   * 제외된 직원은 결과에서 자동으로 제외됩니다.
+   */
+  async 전체_직원별_최종평가_목록을_조회한다(
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<AllEmployeesFinalEvaluationResult[]> {
+    const query = new GetAllEmployeesFinalEvaluationsQuery(startDate, endDate);
     return await this.queryBus.execute(query);
   }
 }
