@@ -118,18 +118,6 @@ export class EvaluationQuestionManagementController {
   }
 
   /**
-   * 질문 그룹 조회
-   */
-  @GetQuestionGroup()
-  async getQuestionGroup(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<QuestionGroupResponseDto> {
-    return await this.evaluationQuestionManagementService.질문그룹을_조회한다(
-      id,
-    );
-  }
-
-  /**
    * 질문 그룹 목록 조회
    */
   @GetQuestionGroups()
@@ -143,6 +131,18 @@ export class EvaluationQuestionManagementController {
   @GetDefaultQuestionGroup()
   async getDefaultQuestionGroup(): Promise<QuestionGroupResponseDto> {
     return await this.evaluationQuestionManagementService.기본질문그룹을_조회한다();
+  }
+
+  /**
+   * 질문 그룹 조회
+   */
+  @GetQuestionGroup()
+  async getQuestionGroup(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<QuestionGroupResponseDto> {
+    return await this.evaluationQuestionManagementService.질문그룹을_조회한다(
+      id,
+    );
   }
 
   // ==================== 평가 질문 관리 ====================

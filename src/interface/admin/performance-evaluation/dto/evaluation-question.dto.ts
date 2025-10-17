@@ -127,21 +127,21 @@ export class CreateEvaluationQuestionDto {
   @ApiPropertyOptional({
     description: '최소 점수',
     example: 1,
-    minimum: 1,
+    minimum: 0,
   })
   @IsOptional()
   @IsInt()
-  @Min(1)
+  @Min(0)
   minScore?: number;
 
   @ApiPropertyOptional({
     description: '최대 점수',
     example: 5,
-    maximum: 10,
+    maximum: 100,
   })
   @IsOptional()
   @IsInt()
-  @Max(10)
+  @Max(100)
   maxScore?: number;
 
   @ApiPropertyOptional({
@@ -187,21 +187,21 @@ export class UpdateEvaluationQuestionDto {
   @ApiPropertyOptional({
     description: '최소 점수',
     example: 1,
-    minimum: 1,
+    minimum: 0,
   })
   @IsOptional()
   @IsInt()
-  @Min(1)
+  @Min(0)
   minScore?: number;
 
   @ApiPropertyOptional({
     description: '최대 점수',
     example: 5,
-    maximum: 10,
+    maximum: 100,
   })
   @IsOptional()
   @IsInt()
-  @Max(10)
+  @Max(100)
   maxScore?: number;
 
   @ApiPropertyOptional({

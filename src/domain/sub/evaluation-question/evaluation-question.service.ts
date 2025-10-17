@@ -139,17 +139,22 @@ export class EvaluationQuestionService implements IEvaluationQuestionService {
     }
 
     try {
-      if (updateDto.text) {
+      if (updateDto.text !== undefined) {
         evaluationQuestion.질문내용업데이트한다(updateDto.text, updatedBy);
       }
 
+      // 점수 범위는 하나라도 제공되면 업데이트
       if (
-        updateDto.minScore !== undefined &&
+        updateDto.minScore !== undefined ||
         updateDto.maxScore !== undefined
       ) {
         evaluationQuestion.점수범위설정한다(
-          updateDto.minScore,
-          updateDto.maxScore,
+          updateDto.minScore !== undefined
+            ? updateDto.minScore
+            : evaluationQuestion.minScore,
+          updateDto.maxScore !== undefined
+            ? updateDto.maxScore
+            : evaluationQuestion.maxScore,
           updatedBy,
         );
       }

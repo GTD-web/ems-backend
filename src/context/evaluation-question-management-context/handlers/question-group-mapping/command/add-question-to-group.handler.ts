@@ -1,9 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { QuestionGroupMappingService } from '../../../../../domain/sub/question-group-mapping/question-group-mapping.service';
 import { QuestionGroupMapping } from '../../../../../domain/sub/question-group-mapping/question-group-mapping.entity';
+import { QuestionGroup } from '../../../../../domain/sub/question-group/question-group.entity';
+import { EvaluationQuestion } from '../../../../../domain/sub/evaluation-question/evaluation-question.entity';
 import type { CreateQuestionGroupMappingDto } from '../../../../../domain/sub/question-group-mapping/question-group-mapping.types';
 
 /**
@@ -32,6 +34,10 @@ export class AddQuestionToGroupHandler
     private readonly questionGroupMappingService: QuestionGroupMappingService,
     @InjectRepository(QuestionGroupMapping)
     private readonly questionGroupMappingRepository: Repository<QuestionGroupMapping>,
+    @InjectRepository(QuestionGroup)
+    private readonly questionGroupRepository: Repository<QuestionGroup>,
+    @InjectRepository(EvaluationQuestion)
+    private readonly evaluationQuestionRepository: Repository<EvaluationQuestion>,
   ) {}
 
   async execute(command: AddQuestionToGroupCommand): Promise<string> {
@@ -39,7 +45,33 @@ export class AddQuestionToGroupHandler
 
     const { data, createdBy } = command;
 
-    // displayOrder가 제공되지 않은 경우, 그룹의 마지막 순서로 자동 설정
+    // 1. 그룹 존재 확인
+    const group = await this.questionGroupRepository
+      .createQueryBuilder('group')
+      .where('group.id = :groupId', { groupId: data.groupId })
+      .andWhere('group.deletedAt IS NULL')
+      .getOne();
+
+    if (!group) {
+      throw new NotFoundException(
+        `질문 그룹을 찾을 수 없습니다. (id: ${data.groupId})`,
+      );
+    }
+
+    // 2. 질문 존재 확인
+    const question = await this.evaluationQuestionRepository
+      .createQueryBuilder('question')
+      .where('question.id = :questionId', { questionId: data.questionId })
+      .andWhere('question.deletedAt IS NULL')
+      .getOne();
+
+    if (!question) {
+      throw new NotFoundException(
+        `평가 질문을 찾을 수 없습니다. (id: ${data.questionId})`,
+      );
+    }
+
+    // 3. displayOrder가 제공되지 않은 경우, 그룹의 마지막 순서로 자동 설정
     let displayOrder = data.displayOrder ?? 0;
 
     if (data.displayOrder === undefined || data.displayOrder === null) {
@@ -59,6 +91,7 @@ export class AddQuestionToGroupHandler
       );
     }
 
+    // 4. 매핑 생성
     const mapping = await this.questionGroupMappingService.생성한다(
       {
         ...data,

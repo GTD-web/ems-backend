@@ -48,8 +48,13 @@ export class EvaluationQuestion
         throw new EmptyQuestionTextException();
       }
 
-      // 점수 범위 검증
-      if (data.minScore !== undefined && data.maxScore !== undefined) {
+      // 점수 범위 검증 (둘 다 설정되어 있고 null이 아닐 때만)
+      if (
+        data.minScore !== undefined &&
+        data.minScore !== null &&
+        data.maxScore !== undefined &&
+        data.maxScore !== null
+      ) {
         if (data.minScore >= data.maxScore) {
           throw new InvalidScoreRangeException(data.minScore, data.maxScore);
         }
@@ -80,16 +85,24 @@ export class EvaluationQuestion
    * 점수 범위를 설정한다
    */
   점수범위설정한다(
-    minScore: number,
-    maxScore: number,
+    minScore: number | null | undefined,
+    maxScore: number | null | undefined,
     updatedBy: string,
   ): void {
-    if (minScore >= maxScore) {
-      throw new InvalidScoreRangeException(minScore, maxScore);
+    // 둘 다 유효한 숫자일 때만 범위 검증
+    if (
+      minScore !== null &&
+      minScore !== undefined &&
+      maxScore !== null &&
+      maxScore !== undefined
+    ) {
+      if (minScore >= maxScore) {
+        throw new InvalidScoreRangeException(minScore, maxScore);
+      }
     }
 
-    this.minScore = minScore;
-    this.maxScore = maxScore;
+    this.minScore = minScore ?? undefined;
+    this.maxScore = maxScore ?? undefined;
     this.메타데이터를_업데이트한다(updatedBy);
   }
 
@@ -124,4 +137,3 @@ export class EvaluationQuestion
     };
   }
 }
-

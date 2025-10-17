@@ -168,11 +168,21 @@ export class QuestionGroupService implements IQuestionGroupService {
     }
 
     try {
-      if (updateDto.name) {
+      // 그룹명 변경 (빈 문자열도 검증하기 위해 !== undefined 사용)
+      if (updateDto.name !== undefined) {
         questionGroup.그룹명업데이트한다(updateDto.name, updatedBy);
       }
 
+      // 기본 그룹 설정 변경 (기존 기본 그룹 해제 로직 필요)
       if (updateDto.isDefault !== undefined) {
+        // isDefault를 true로 설정하는 경우, 기존 기본 그룹 해제
+        if (updateDto.isDefault === true) {
+          const currentDefault = await this.기본그룹조회한다();
+          if (currentDefault && currentDefault.id !== id) {
+            currentDefault.기본그룹설정한다(false, updatedBy);
+            await this.questionGroupRepository.save(currentDefault);
+          }
+        }
         questionGroup.기본그룹설정한다(updateDto.isDefault, updatedBy);
       }
 
