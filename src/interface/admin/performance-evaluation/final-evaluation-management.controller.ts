@@ -2,6 +2,7 @@ import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
+import { ParseUUID } from '@interface/decorators/parse-uuid.decorator';
 import {
   UpsertFinalEvaluation,
   ConfirmFinalEvaluation,
@@ -42,8 +43,8 @@ export class FinalEvaluationManagementController {
    */
   @UpsertFinalEvaluation()
   async upsertFinalEvaluation(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
     @Body() dto: UpsertFinalEvaluationBodyDto,
   ): Promise<FinalEvaluationResponseDto> {
     const actionBy = dto.actionBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
@@ -70,7 +71,7 @@ export class FinalEvaluationManagementController {
    */
   @ConfirmFinalEvaluation()
   async confirmFinalEvaluation(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
     @Body() dto: ConfirmFinalEvaluationBodyDto,
   ): Promise<{ message: string }> {
     await this.performanceEvaluationService.최종평가를_확정한다(
@@ -88,7 +89,7 @@ export class FinalEvaluationManagementController {
    */
   @CancelConfirmationFinalEvaluation()
   async cancelConfirmationFinalEvaluation(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
     @Body() dto: CancelConfirmationBodyDto,
   ): Promise<{ message: string }> {
     await this.performanceEvaluationService.최종평가_확정을_취소한다(
@@ -106,7 +107,7 @@ export class FinalEvaluationManagementController {
    */
   @GetFinalEvaluation()
   async getFinalEvaluation(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
   ): Promise<FinalEvaluationDetailDto> {
     const query = new GetFinalEvaluationQuery(id);
     return await this.performanceEvaluationService.최종평가를_조회한다(query);
@@ -140,8 +141,8 @@ export class FinalEvaluationManagementController {
    */
   @GetFinalEvaluationByEmployeePeriod()
   async getFinalEvaluationByEmployeePeriod(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
   ): Promise<FinalEvaluationDetailDto | null> {
     const query = new GetFinalEvaluationByEmployeePeriodQuery(
       employeeId,

@@ -41,29 +41,9 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
       projects,
     };
 
-    // 평가기간 생성 - 유니크한 이름과 짧은 기간 사용하여 기존 데이터와 충돌 방지
-    const timestamp = Date.now();
-    const randomSuffix = Math.floor(Math.random() * 10000);
-    // 2026년도의 짧은 기간 (하루) 사용
-    const dayOfYear = Math.floor(Math.random() * 365) + 1;
-    const startDate = new Date(2026, 0, dayOfYear);
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + 1); // 하루 뒤
-
-    const evaluationPeriodData = {
-      name: `목록조회테스트_${timestamp}_${randomSuffix}`,
-      startDate: startDate.toISOString().split('T')[0],
-      peerEvaluationDeadline: endDate.toISOString().split('T')[0],
-      description: `목록 조회 테스트용 평가기간 ${timestamp}`,
-      maxSelfEvaluationRate: 120,
-    };
-
-    const evaluationPeriodResponse = await request(app.getHttpServer())
-      .post('/admin/evaluation-periods')
-      .send(evaluationPeriodData)
-      .expect(201);
-
-    evaluationPeriodId = evaluationPeriodResponse.body.id;
+    // 평가기간 생성 - TestContextService 사용
+    const periods = await testContextService.테스트용_평가기간을_생성한다();
+    evaluationPeriodId = periods[0].id; // 첫 번째 평가기간 사용 (진행중 상태)
 
     // 테스트용 할당 데이터 생성
     await createTestAssignments();

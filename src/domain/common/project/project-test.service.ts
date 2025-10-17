@@ -25,9 +25,6 @@ export class ProjectTestService {
    * @returns 생성된 프로젝트 목록
    */
   async 테스트용_목데이터를_생성한다(): Promise<ProjectDto[]> {
-    // 기존 테스트 데이터 정리
-    await this.테스트_데이터를_정리한다();
-
     const testProjects = [
       // 활성 프로젝트들
       {
@@ -258,21 +255,8 @@ export class ProjectTestService {
    * @returns 삭제된 프로젝트 수
    */
   async 테스트_데이터를_정리한다(): Promise<number> {
-    // 테스트용 프로젝트들을 삭제 (projectCode가 TEST로 시작하거나 특정 패턴을 가진 것들)
-    const result = await this.projectRepository
-      .createQueryBuilder()
-      .delete()
-      .where(
-        'projectCode LIKE :pattern1 OR projectCode LIKE :pattern2 OR name LIKE :pattern3',
-        {
-          pattern1: 'TEST%',
-          pattern2: 'LUMIR-%',
-          pattern3: '테스트%',
-        },
-      )
-      .execute();
-
-    return result.affected || 0;
+    // E2E 테스트는 독립적으로 실행되므로 모든 프로젝트 데이터를 삭제
+    return await this.모든_테스트데이터를_삭제한다();
   }
 
   /**

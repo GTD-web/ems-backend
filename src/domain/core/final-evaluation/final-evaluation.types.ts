@@ -78,9 +78,9 @@ export interface FinalEvaluationDto {
   /** 확정 여부 */
   isConfirmed: boolean;
   /** 확정일시 */
-  confirmedAt?: Date;
+  confirmedAt?: Date | null;
   /** 확정자 ID */
-  confirmedBy?: string;
+  confirmedBy?: string | null;
   /** 생성일시 */
   createdAt: Date;
   /** 수정일시 */

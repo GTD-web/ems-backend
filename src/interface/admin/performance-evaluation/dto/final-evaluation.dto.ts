@@ -7,6 +7,8 @@ import {
   IsNumber,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
+import { ToBoolean } from '@interface/decorators';
 import {
   JobGrade,
   JobDetailedGrade,
@@ -177,6 +179,7 @@ export class FinalEvaluationFilterDto {
     description: '확정된 평가만 조회',
     example: true,
   })
+  @ToBoolean()
   @IsBoolean()
   @IsOptional()
   confirmedOnly?: boolean;
@@ -186,6 +189,7 @@ export class FinalEvaluationFilterDto {
     example: 1,
     default: 1,
   })
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   @Min(1)
@@ -196,6 +200,7 @@ export class FinalEvaluationFilterDto {
     example: 10,
     default: 10,
   })
+  @Type(() => Number)
   @IsNumber()
   @IsOptional()
   @Min(1)
@@ -299,9 +304,148 @@ export class FinalEvaluationBasicDto {
 }
 
 /**
+ * 직원 정보 DTO (최종평가용)
+ */
+export class EmployeeBasicInfoDto {
+  @ApiProperty({
+    description: '직원 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '직원 이름',
+    example: '홍길동',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '사번',
+    example: 'EMP001',
+  })
+  employeeNumber: string;
+
+  @ApiPropertyOptional({
+    description: '이메일',
+    example: 'employee@example.com',
+  })
+  email?: string;
+}
+
+/**
+ * 평가기간 정보 DTO (최종평가용)
+ */
+export class PeriodBasicInfoDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '234e5678-e89b-12d3-a456-426614174001',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '평가기간명',
+    example: '2024년 상반기 평가',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '시작일',
+    example: '2024-01-01T00:00:00Z',
+  })
+  startDate: Date;
+
+  @ApiProperty({
+    description: '종료일',
+    example: '2024-06-30T23:59:59Z',
+  })
+  endDate: Date;
+
+  @ApiProperty({
+    description: '상태',
+    example: 'in_progress',
+    enum: ['scheduled', 'in_progress', 'completed', 'cancelled'],
+  })
+  status: string;
+}
+
+/**
  * 최종평가 상세 정보 DTO
  */
-export class FinalEvaluationDetailDto extends FinalEvaluationBasicDto {
+export class FinalEvaluationDetailDto {
+  @ApiProperty({
+    description: '최종평가 ID',
+    example: '345e6789-e89b-12d3-a456-426614174002',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '직원 정보',
+    type: EmployeeBasicInfoDto,
+  })
+  employee: EmployeeBasicInfoDto;
+
+  @ApiProperty({
+    description: '평가기간 정보',
+    type: PeriodBasicInfoDto,
+  })
+  period: PeriodBasicInfoDto;
+
+  @ApiProperty({
+    description: '평가등급',
+    example: 'A',
+  })
+  evaluationGrade: string;
+
+  @ApiProperty({
+    description: '직무등급',
+    enum: JobGrade,
+    example: JobGrade.T2,
+  })
+  jobGrade: JobGrade;
+
+  @ApiProperty({
+    description: '직무 상세등급',
+    enum: JobDetailedGrade,
+    example: JobDetailedGrade.N,
+  })
+  jobDetailedGrade: JobDetailedGrade;
+
+  @ApiPropertyOptional({
+    description: '최종 평가 의견',
+    example: '전반적으로 우수한 성과를 보였습니다.',
+  })
+  finalComments?: string;
+
+  @ApiProperty({
+    description: '확정 여부',
+    example: true,
+  })
+  isConfirmed: boolean;
+
+  @ApiPropertyOptional({
+    description: '확정일시',
+    example: '2024-01-15T09:00:00Z',
+  })
+  confirmedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    description: '확정자 ID',
+    example: '660e8400-e29b-41d4-a716-446655440001',
+  })
+  confirmedBy?: string | null;
+
+  @ApiProperty({
+    description: '생성일시',
+    example: '2024-01-10T09:00:00Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: '수정일시',
+    example: '2024-01-12T14:30:00Z',
+  })
+  updatedAt: Date;
+
   @ApiPropertyOptional({
     description: '생성자 ID',
     example: '550e8400-e29b-41d4-a716-446655440000',
@@ -322,30 +466,93 @@ export class FinalEvaluationDetailDto extends FinalEvaluationBasicDto {
 }
 
 /**
+ * 최종평가 목록 항목 DTO
+ */
+export class FinalEvaluationListItemDto {
+  @ApiProperty({
+    description: '최종평가 ID',
+    example: '345e6789-e89b-12d3-a456-426614174002',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '직원 정보',
+    type: EmployeeBasicInfoDto,
+  })
+  employee: EmployeeBasicInfoDto;
+
+  @ApiProperty({
+    description: '평가기간 정보',
+    type: PeriodBasicInfoDto,
+  })
+  period: PeriodBasicInfoDto;
+
+  @ApiProperty({
+    description: '평가등급',
+    example: 'A',
+  })
+  evaluationGrade: string;
+
+  @ApiProperty({
+    description: '직무등급',
+    enum: JobGrade,
+    example: JobGrade.T2,
+  })
+  jobGrade: JobGrade;
+
+  @ApiProperty({
+    description: '직무 상세등급',
+    enum: JobDetailedGrade,
+    example: JobDetailedGrade.N,
+  })
+  jobDetailedGrade: JobDetailedGrade;
+
+  @ApiPropertyOptional({
+    description: '최종 평가 의견',
+    example: '전반적으로 우수한 성과를 보였습니다.',
+  })
+  finalComments?: string;
+
+  @ApiProperty({
+    description: '확정 여부',
+    example: true,
+  })
+  isConfirmed: boolean;
+
+  @ApiPropertyOptional({
+    description: '확정일시',
+    example: '2024-01-15T09:00:00Z',
+  })
+  confirmedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    description: '확정자 ID',
+    example: '660e8400-e29b-41d4-a716-446655440001',
+  })
+  confirmedBy?: string | null;
+
+  @ApiProperty({
+    description: '생성일시',
+    example: '2024-01-10T09:00:00Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: '수정일시',
+    example: '2024-01-12T14:30:00Z',
+  })
+  updatedAt: Date;
+}
+
+/**
  * 최종평가 목록 응답 DTO
  */
 export class FinalEvaluationListResponseDto {
   @ApiProperty({
     description: '최종평가 목록',
-    type: [FinalEvaluationBasicDto],
-    example: [
-      {
-        id: '345e6789-e89b-12d3-a456-426614174002',
-        employeeId: '123e4567-e89b-12d3-a456-426614174000',
-        periodId: '234e5678-e89b-12d3-a456-426614174001',
-        evaluationGrade: 'A',
-        jobGrade: 'T2',
-        jobDetailedGrade: 'n',
-        finalComments: '전반적으로 우수한 성과를 보였습니다.',
-        isConfirmed: true,
-        confirmedAt: '2024-01-15T09:00:00Z',
-        confirmedBy: '660e8400-e29b-41d4-a716-446655440001',
-        createdAt: '2024-01-10T09:00:00Z',
-        updatedAt: '2024-01-12T14:30:00Z',
-      },
-    ],
+    type: [FinalEvaluationListItemDto],
   })
-  evaluations: FinalEvaluationBasicDto[];
+  evaluations: FinalEvaluationListItemDto[];
 
   @ApiProperty({
     description: '전체 개수',

@@ -6,6 +6,10 @@ import {
   JobGrade,
   JobDetailedGrade,
 } from './final-evaluation.types';
+import {
+  AlreadyConfirmedEvaluationException,
+  NotConfirmedEvaluationException,
+} from './final-evaluation.exceptions';
 
 /**
  * 최종평가 엔티티
@@ -98,7 +102,7 @@ export class FinalEvaluation
     nullable: true,
     comment: '확정일시',
   })
-  confirmedAt?: Date;
+  confirmedAt?: Date | null;
 
   /**
    * 확정자 ID
@@ -109,7 +113,7 @@ export class FinalEvaluation
     nullable: true,
     comment: '확정자 ID',
   })
-  confirmedBy?: string;
+  confirmedBy?: string | null;
 
   /**
    * DTO로 변환
@@ -187,7 +191,7 @@ export class FinalEvaluation
    */
   평가를_확정한다(confirmedBy: string): void {
     if (this.isConfirmed) {
-      throw new Error('이미 확정된 평가입니다.');
+      throw new AlreadyConfirmedEvaluationException(this.id);
     }
     this.isConfirmed = true;
     this.confirmedAt = new Date();
@@ -200,11 +204,11 @@ export class FinalEvaluation
    */
   평가_확정을_취소한다(updatedBy: string): void {
     if (!this.isConfirmed) {
-      throw new Error('확정되지 않은 평가입니다.');
+      throw new NotConfirmedEvaluationException(this.id, '확정 취소');
     }
     this.isConfirmed = false;
-    this.confirmedAt = undefined;
-    this.confirmedBy = undefined;
+    this.confirmedAt = null;
+    this.confirmedBy = null;
     this.메타데이터를_업데이트한다(updatedBy);
   }
 

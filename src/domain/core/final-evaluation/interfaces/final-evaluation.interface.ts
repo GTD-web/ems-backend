@@ -38,10 +38,10 @@ export interface IFinalEvaluation extends IBaseEntity {
   isConfirmed: boolean;
 
   /** 확정일시 */
-  confirmedAt?: Date;
+  confirmedAt?: Date | null;
 
   /** 확정자 ID */
-  confirmedBy?: string;
+  confirmedBy?: string | null;
 
   /**
    * DTO로 변환
