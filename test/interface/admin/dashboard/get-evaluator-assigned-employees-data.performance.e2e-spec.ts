@@ -12,6 +12,7 @@ import { TestContextService } from '@context/test-context/test-context.service';
 describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/employees/:employeeId/assigned-data - 성능 테스트', () => {
   let testSuite: BaseE2ETest;
   let app: INestApplication;
+  let dataSource: any;
   let testContextService: TestContextService;
 
   let evaluationPeriodId: string;
@@ -27,6 +28,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
     testSuite = new BaseE2ETest();
     await testSuite.initializeApp();
     app = testSuite.app;
+    dataSource = (testSuite as any).dataSource;
     testContextService = app.get(TestContextService);
 
     await 테스트_데이터를_생성한다();
@@ -53,17 +55,125 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
     console.log(`✅ 기본 환경 생성 완료`);
     console.log(`   - 직원: ${allEmployees.length}명`);
 
-    // 2. 평가자로 첫 번째 직원 선택
-    evaluatorId = allEmployees[0].id;
-    // 평가자를 제외한 나머지 직원들이 피평가자
-    employeeIds = allEmployees.slice(1).map((emp: any) => emp.id);
+    // 2. 이미 평가기간에 등록된 직원들 사용
+    // 완전한_테스트환경에서 반환된 직원들은 이미 평가기간에 등록되어 있음
+    evaluatorId = allEmployees[0].id; // 첫 번째 직원이 평가자
+    employeeIds = allEmployees.slice(1).map((emp: any) => emp.id); // 나머지가 피평가자
+
+    // 실제로 평가기간에 등록되어 있는지 확인
+    const registeredEmployees = await dataSource.manager.query(
+      `SELECT "employeeId" FROM evaluation_period_employee_mapping 
+       WHERE "evaluationPeriodId" = $1 
+         AND "deletedAt" IS NULL`,
+      [evaluationPeriodId],
+    );
+    const registeredEmployeeIds = registeredEmployees.map(
+      (r: any) => r.employeeId,
+    );
+
+    console.log(`\n📋 평가기간 등록 확인:`);
+    console.log(`   - 평가기간: ${evaluationPeriodId}`);
+    console.log(`   - 등록된 직원 수: ${registeredEmployeeIds.length}`);
+    console.log(
+      `   - 평가자가 등록되어 있음: ${registeredEmployeeIds.includes(evaluatorId)}`,
+    );
+    console.log(
+      `   - 모든 피평가자가 등록되어 있음: ${employeeIds.every((id) => registeredEmployeeIds.includes(id))}`,
+    );
+
+    // 등록되지 않은 피평가자가 있다면 등록
+    const unregisteredEmployees = employeeIds.filter(
+      (id) => !registeredEmployeeIds.includes(id),
+    );
+    if (unregisteredEmployees.length > 0) {
+      console.log(
+        `\n⚠️ 등록되지 않은 피평가자 발견: ${unregisteredEmployees.length}명`,
+      );
+      for (const empId of unregisteredEmployees) {
+        await dataSource.manager.query(
+          `INSERT INTO evaluation_period_employee_mapping (id, "evaluationPeriodId", "employeeId", "isExcluded", version, "createdAt", "updatedAt")
+           VALUES (gen_random_uuid(), $1, $2, false, 1, NOW(), NOW())`,
+          [evaluationPeriodId, empId],
+        );
+      }
+      console.log(`✅ 피평가자 등록 완료`);
+    }
+
+    console.log(`\n📊 평가라인 설정 중...`);
+    console.log(`   평가자: ${evaluatorId}`);
+    console.log(`   피평가자: ${employeeIds.length}명`);
+
+    // 3. 각 피평가자에 대해 평가라인 설정
+    let mappingCount = 0;
+    for (const employeeId of employeeIds) {
+      // 해당 직원의 할당된 WBS 목록 조회
+      const wbsAssignments = await dataSource.manager.query(
+        `SELECT DISTINCT "wbsItemId" 
+         FROM evaluation_wbs_assignment 
+         WHERE "periodId" = $1 
+           AND "employeeId" = $2 
+           AND "deletedAt" IS NULL`,
+        [evaluationPeriodId, employeeId],
+      );
+
+      // 각 WBS에 대해 1차 평가자로 설정
+      for (const assignment of wbsAssignments) {
+        try {
+          await request(app.getHttpServer())
+            .post(
+              `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${assignment.wbsItemId}/period/${evaluationPeriodId}/primary-evaluator`,
+            )
+            .send({ evaluatorId })
+            .expect((res) => {
+              // 201 (생성) 허용
+              if (res.status !== 201) {
+                throw new Error(`Expected 201, got ${res.status}`);
+              }
+            });
+
+          mappingCount++;
+
+          // 진행 상황 표시
+          if (mappingCount % 5 === 0) {
+            process.stdout.write(`\r   진행: ${mappingCount}건`);
+          }
+        } catch (error) {
+          console.warn(
+            `\n   경고: 평가라인 설정 실패 (employeeId: ${employeeId}, wbsItemId: ${assignment.wbsItemId}):`,
+            (error as any).message,
+          );
+        }
+      }
+    }
 
     const totalTime = Date.now() - startTime;
+    console.log(`\n✅ 평가라인 설정 완료: ${mappingCount}건`);
+
+    // 4. 매핑이 제대로 저장되었는지 확인
+    const savedMappings = await dataSource.manager.query(
+      `SELECT * FROM evaluation_line_mappings 
+       WHERE "evaluatorId" = $1 
+         AND "employeeId" = ANY($2::uuid[]) 
+         AND "deletedAt" IS NULL
+       LIMIT 1`,
+      [evaluatorId, employeeIds],
+    );
+    console.log(
+      `\n🔍 저장된 평가라인 매핑: ${savedMappings.length > 0 ? '존재' : '없음'}`,
+    );
+
+    if (savedMappings.length > 0) {
+      console.log(`   - 샘플 매핑 (평가자: ${evaluatorId}):`, {
+        employeeId: savedMappings[0].employeeId,
+        wbsItemId: savedMappings[0].wbsItemId,
+      });
+    }
+
     console.log(`\n🎉 데이터 생성 완료!`);
     console.log(`   총 소요 시간: ${(totalTime / 1000).toFixed(2)}초`);
-    console.log(`   - 평가자: 1명 (${evaluatorId})`);
+    console.log(`   - 평가자: 1명`);
     console.log(`   - 피평가자: ${employeeIds.length}명`);
-    console.log('\n📝 참고: 완전한_테스트환경에서 기본 평가라인이 자동 설정됨');
+    console.log(`   - 평가라인 매핑: ${mappingCount}건`);
   }
 
   describe('성능 측정', () => {
@@ -72,6 +182,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
       console.log(
         `   목표: ${PERFORMANCE_CONFIG.ACCEPTABLE_RESPONSE_TIME_MS}ms 이내 응답`,
       );
+      console.log(`   평가자: ${evaluatorId}`);
+      console.log(`   피평가자: ${employeeIds.join(', ')}`);
 
       const responseTimes: number[] = [];
 
@@ -79,11 +191,18 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
       for (const employeeId of employeeIds) {
         const startTime = Date.now();
 
-        const response = await request(app.getHttpServer())
-          .get(
-            `/admin/dashboard/${evaluationPeriodId}/evaluators/${evaluatorId}/employees/${employeeId}/assigned-data`,
-          )
-          .expect(200);
+        const response = await request(app.getHttpServer()).get(
+          `/admin/dashboard/${evaluationPeriodId}/evaluators/${evaluatorId}/employees/${employeeId}/assigned-data`,
+        );
+
+        if (response.status !== 200) {
+          console.error(`\n❌ 조회 실패 (employeeId: ${employeeId}):`, {
+            status: response.status,
+            body: response.body,
+          });
+        }
+
+        expect(response.status).toBe(200);
 
         const responseTime = Date.now() - startTime;
         responseTimes.push(responseTime);
@@ -215,10 +334,11 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
       expect(evaluator.id).toBe(evaluatorId);
 
       // 피평가자 정보 검증
-      expect(evaluatee).toHaveProperty('id');
-      expect(evaluatee).toHaveProperty('name');
+      expect(evaluatee).toHaveProperty('employee');
+      expect(evaluatee.employee).toHaveProperty('id');
+      expect(evaluatee.employee).toHaveProperty('name');
       expect(evaluatee).toHaveProperty('projects');
-      expect(evaluatee.id).toBe(testEmployeeId);
+      expect(evaluatee.employee.id).toBe(testEmployeeId);
 
       let totalProjectCount = 0;
       let totalWbsCount = 0;

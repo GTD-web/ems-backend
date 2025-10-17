@@ -433,7 +433,10 @@ export class GetEmployeeAssignedDataHandler
       );
 
       // 하향평가 조회 (1차, 2차) - 프로젝트 단위
-      let downwardEvaluations = {
+      let downwardEvaluations: {
+        primary: WbsDownwardEvaluationInfo | null;
+        secondary: WbsDownwardEvaluationInfo | null;
+      } = {
         primary: null,
         secondary: null,
       };
