@@ -28,8 +28,7 @@ export interface EvaluatorAssignedEvaluatee {
   status: string;
   isCompleted: boolean;
   completedAt?: Date;
-  score?: number;
-  evaluationContent?: string;
+  requestDeadline?: Date;
   mappedDate: Date;
   isActive: boolean;
 
@@ -99,8 +98,7 @@ export class GetEvaluatorAssignedEvaluateesHandler
         'evaluation.status AS evaluation_status',
         'evaluation.isCompleted AS evaluation_iscompleted',
         'evaluation.completedAt AS evaluation_completedat',
-        'evaluation.score AS evaluation_score',
-        'evaluation.evaluationContent AS evaluation_evaluationcontent',
+        'evaluation.requestDeadline AS evaluation_requestdeadline',
         'evaluation.mappedDate AS evaluation_mappeddate',
         'evaluation.isActive AS evaluation_isactive',
         // 피평가자 정보
@@ -149,8 +147,7 @@ export class GetEvaluatorAssignedEvaluateesHandler
       status: result.evaluation_status,
       isCompleted: result.evaluation_iscompleted,
       completedAt: result.evaluation_completedat,
-      score: result.evaluation_score,
-      evaluationContent: result.evaluation_evaluationcontent,
+      requestDeadline: result.evaluation_requestdeadline,
       mappedDate: result.evaluation_mappeddate,
       isActive: result.evaluation_isactive,
 

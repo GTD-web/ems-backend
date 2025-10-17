@@ -99,19 +99,40 @@ export class PeerEvaluationBusinessService {
     requestDeadline?: Date;
     questionIds?: string[];
     requestedBy: string;
-  }): Promise<{ ids: string[]; count: number }> {
+  }): Promise<{
+    results: Array<{
+      evaluatorId: string;
+      evaluateeId: string;
+      success: boolean;
+      evaluationId?: string;
+      error?: { code: string; message: string };
+    }>;
+    summary: { total: number; success: number; failed: number };
+  }> {
+    // 자기 자신 평가 방지: evaluatorIds에서 evaluateeId 제거
+    const filteredEvaluatorIds = params.evaluatorIds.filter(
+      (evaluatorId) => evaluatorId !== params.evaluateeId,
+    );
+
     this.logger.log('여러 평가자에게 동료평가 요청 비즈니스 로직 시작', {
-      evaluatorCount: params.evaluatorIds.length,
+      originalEvaluatorCount: params.evaluatorIds.length,
+      filteredEvaluatorCount: filteredEvaluatorIds.length,
       evaluateeId: params.evaluateeId,
       periodId: params.periodId,
       requestDeadline: params.requestDeadline,
       questionCount: params.questionIds?.length || 0,
     });
 
-    const evaluationIds: string[] = [];
+    const results: Array<{
+      evaluatorId: string;
+      evaluateeId: string;
+      success: boolean;
+      evaluationId?: string;
+      error?: { code: string; message: string };
+    }> = [];
 
     // 각 평가자에게 평가 요청 생성
-    for (const evaluatorId of params.evaluatorIds) {
+    for (const evaluatorId of filteredEvaluatorIds) {
       try {
         const evaluationId = await this.동료평가를_요청한다({
           evaluatorId,
@@ -121,21 +142,44 @@ export class PeerEvaluationBusinessService {
           questionIds: params.questionIds,
           requestedBy: params.requestedBy,
         });
-        evaluationIds.push(evaluationId);
+
+        results.push({
+          evaluatorId,
+          evaluateeId: params.evaluateeId,
+          success: true,
+          evaluationId,
+        });
       } catch (error) {
         this.logger.error(`평가자 ${evaluatorId}에 대한 요청 생성 실패`, error);
-        // 일부 실패해도 계속 진행
+
+        results.push({
+          evaluatorId,
+          evaluateeId: params.evaluateeId,
+          success: false,
+          error: {
+            code: error.name || 'UNKNOWN_ERROR',
+            message: error.message || '알 수 없는 오류가 발생했습니다.',
+          },
+        });
       }
     }
 
+    const successCount = results.filter((r) => r.success).length;
+    const failedCount = results.filter((r) => !r.success).length;
+
     this.logger.log('여러 평가자에게 동료평가 요청 완료', {
-      totalRequested: params.evaluatorIds.length,
-      successCount: evaluationIds.length,
+      totalRequested: filteredEvaluatorIds.length,
+      successCount,
+      failedCount,
     });
 
     return {
-      ids: evaluationIds,
-      count: evaluationIds.length,
+      results,
+      summary: {
+        total: results.length,
+        success: successCount,
+        failed: failedCount,
+      },
     };
   }
 
@@ -150,19 +194,40 @@ export class PeerEvaluationBusinessService {
     requestDeadline?: Date;
     questionIds?: string[];
     requestedBy: string;
-  }): Promise<{ ids: string[]; count: number }> {
+  }): Promise<{
+    results: Array<{
+      evaluatorId: string;
+      evaluateeId: string;
+      success: boolean;
+      evaluationId?: string;
+      error?: { code: string; message: string };
+    }>;
+    summary: { total: number; success: number; failed: number };
+  }> {
+    // 자기 자신 평가 방지: evaluateeIds에서 evaluatorId 제거
+    const filteredEvaluateeIds = params.evaluateeIds.filter(
+      (evaluateeId) => evaluateeId !== params.evaluatorId,
+    );
+
     this.logger.log('여러 피평가자에 대한 동료평가 요청 비즈니스 로직 시작', {
       evaluatorId: params.evaluatorId,
-      evaluateeCount: params.evaluateeIds.length,
+      originalEvaluateeCount: params.evaluateeIds.length,
+      filteredEvaluateeCount: filteredEvaluateeIds.length,
       periodId: params.periodId,
       requestDeadline: params.requestDeadline,
       questionCount: params.questionIds?.length || 0,
     });
 
-    const evaluationIds: string[] = [];
+    const results: Array<{
+      evaluatorId: string;
+      evaluateeId: string;
+      success: boolean;
+      evaluationId?: string;
+      error?: { code: string; message: string };
+    }> = [];
 
     // 각 피평가자에 대한 평가 요청 생성
-    for (const evaluateeId of params.evaluateeIds) {
+    for (const evaluateeId of filteredEvaluateeIds) {
       try {
         const evaluationId = await this.동료평가를_요청한다({
           evaluatorId: params.evaluatorId,
@@ -172,24 +237,47 @@ export class PeerEvaluationBusinessService {
           questionIds: params.questionIds,
           requestedBy: params.requestedBy,
         });
-        evaluationIds.push(evaluationId);
+
+        results.push({
+          evaluatorId: params.evaluatorId,
+          evaluateeId,
+          success: true,
+          evaluationId,
+        });
       } catch (error) {
         this.logger.error(
           `피평가자 ${evaluateeId}에 대한 요청 생성 실패`,
           error,
         );
-        // 일부 실패해도 계속 진행
+
+        results.push({
+          evaluatorId: params.evaluatorId,
+          evaluateeId,
+          success: false,
+          error: {
+            code: error.name || 'UNKNOWN_ERROR',
+            message: error.message || '알 수 없는 오류가 발생했습니다.',
+          },
+        });
       }
     }
 
+    const successCount = results.filter((r) => r.success).length;
+    const failedCount = results.filter((r) => !r.success).length;
+
     this.logger.log('여러 피평가자에 대한 동료평가 요청 완료', {
-      totalRequested: params.evaluateeIds.length,
-      successCount: evaluationIds.length,
+      totalRequested: filteredEvaluateeIds.length,
+      successCount,
+      failedCount,
     });
 
     return {
-      ids: evaluationIds,
-      count: evaluationIds.length,
+      results,
+      summary: {
+        total: results.length,
+        success: successCount,
+        failed: failedCount,
+      },
     };
   }
 

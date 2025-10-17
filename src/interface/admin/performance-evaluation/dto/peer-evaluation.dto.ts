@@ -6,6 +6,7 @@ import {
   IsUUID,
   IsEnum,
   IsBoolean,
+  ArrayNotEmpty,
   Min,
   Max,
 } from 'class-validator';
@@ -79,6 +80,7 @@ export class RequestPeerEvaluationToMultipleEvaluatorsDto {
       '550e8400-e29b-41d4-a716-446655440001',
     ],
   })
+  @ArrayNotEmpty()
   @IsUUID('4', { each: true })
   evaluatorIds: string[];
 
@@ -145,6 +147,7 @@ export class RequestMultiplePeerEvaluationsDto {
       '550e8400-e29b-41d4-a716-446655440002',
     ],
   })
+  @ArrayNotEmpty()
   @IsUUID('4', { each: true })
   evaluateeIds: string[];
 
@@ -351,30 +354,104 @@ export class PeerEvaluationResponseDto {
 }
 
 /**
+ * 개별 동료평가 요청 결과 DTO
+ */
+export class PeerEvaluationRequestResult {
+  @ApiPropertyOptional({
+    description: '평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  evaluatorId?: string;
+
+  @ApiPropertyOptional({
+    description: '피평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  evaluateeId?: string;
+
+  @ApiProperty({
+    description: '요청 성공 여부',
+    example: true,
+  })
+  success: boolean;
+
+  @ApiPropertyOptional({
+    description: '생성된 동료평가 ID (성공 시)',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  evaluationId?: string;
+
+  @ApiPropertyOptional({
+    description: '에러 정보 (실패 시)',
+    example: {
+      code: 'RESOURCE_NOT_FOUND',
+      message: '평가자를 찾을 수 없습니다.',
+    },
+  })
+  error?: {
+    code: string;
+    message: string;
+  };
+}
+
+/**
+ * 일괄 요청 요약 정보 DTO
+ */
+export class BulkRequestSummary {
+  @ApiProperty({
+    description: '전체 요청 개수',
+    example: 5,
+  })
+  total: number;
+
+  @ApiProperty({
+    description: '성공한 요청 개수',
+    example: 3,
+  })
+  success: number;
+
+  @ApiProperty({
+    description: '실패한 요청 개수',
+    example: 2,
+  })
+  failed: number;
+}
+
+/**
  * 일괄 동료평가 요청 응답 DTO
  */
 export class BulkPeerEvaluationRequestResponseDto {
   @ApiProperty({
-    description: '생성된 동료평가 요청 ID 목록',
-    type: [String],
-    example: [
-      '550e8400-e29b-41d4-a716-446655440000',
-      '550e8400-e29b-41d4-a716-446655440001',
-    ],
+    description: '개별 요청 결과 목록',
+    type: [PeerEvaluationRequestResult],
   })
-  ids: string[];
+  results: PeerEvaluationRequestResult[];
 
   @ApiProperty({
-    description: '생성된 요청 개수',
-    example: 2,
+    description: '요청 처리 요약',
+    type: BulkRequestSummary,
   })
-  count: number;
+  summary: BulkRequestSummary;
 
   @ApiProperty({
     description: '결과 메시지',
-    example: '2건의 동료평가 요청이 성공적으로 생성되었습니다.',
+    example: '5건 중 3건의 동료평가 요청이 성공적으로 생성되었습니다.',
   })
   message: string;
+
+  // 하위 호환성을 위한 필드 (deprecated 예정)
+  @ApiPropertyOptional({
+    description: '생성된 동료평가 요청 ID 목록 (deprecated: results 사용 권장)',
+    type: [String],
+    deprecated: true,
+  })
+  ids?: string[];
+
+  @ApiPropertyOptional({
+    description: '생성된 요청 개수 (deprecated: summary.success 사용 권장)',
+    deprecated: true,
+  })
+  count?: number;
 }
 
 /**
@@ -399,24 +476,42 @@ export class PeerEvaluationBasicDto {
   })
   evaluateeId: string;
 
-  @ApiPropertyOptional({
-    description: '동료평가 내용',
-    example: '동료로서 협업 능력이 우수합니다.',
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440003',
   })
-  peerEvaluationContent?: string;
+  periodId: string;
 
-  @ApiPropertyOptional({
-    description: '동료평가 점수 (1-5)',
-    example: 4,
+  @ApiProperty({
+    description: '평가일',
+    example: '2024-01-15T09:00:00Z',
   })
-  peerEvaluationScore?: number;
+  evaluationDate: Date;
 
   @ApiProperty({
     description: '평가 상태',
-    example: 'DRAFT',
-    enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
+    example: 'pending',
+    enum: ['pending', 'in_progress', 'completed', 'cancelled'],
   })
   status: string;
+
+  @ApiProperty({
+    description: '평가 완료 여부',
+    example: false,
+  })
+  isCompleted: boolean;
+
+  @ApiPropertyOptional({
+    description: '평가 완료일',
+    example: '2024-01-15T10:00:00Z',
+  })
+  completedAt?: Date;
+
+  @ApiPropertyOptional({
+    description: '요청 마감일',
+    example: '2024-01-20T23:59:59Z',
+  })
+  requestDeadline?: Date;
 
   @ApiProperty({
     description: '생성 일시',
@@ -589,16 +684,10 @@ export class AssignedEvaluateeDto {
   completedAt?: Date;
 
   @ApiPropertyOptional({
-    description: '평가 점수',
-    example: 4,
+    description: '요청 마감일',
+    example: '2024-01-20T23:59:59Z',
   })
-  score?: number;
-
-  @ApiPropertyOptional({
-    description: '평가 내용',
-    example: '동료로서 협업 능력이 우수합니다.',
-  })
-  evaluationContent?: string;
+  requestDeadline?: Date;
 
   @ApiProperty({
     description: '매핑 일시',
@@ -626,26 +715,116 @@ export class AssignedEvaluateeDto {
 }
 
 /**
+ * 상세 조회 시 평가질문 정보 DTO
+ */
+export class EvaluationQuestionInDetailDto {
+  @ApiProperty({
+    description: '질문 ID',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '질문 내용',
+    example: '프로젝트 수행 능력은 어떠한가요?',
+  })
+  text: string;
+
+  @ApiPropertyOptional({
+    description: '최소 점수',
+    example: 1,
+  })
+  minScore?: number;
+
+  @ApiPropertyOptional({
+    description: '최대 점수',
+    example: 5,
+  })
+  maxScore?: number;
+
+  @ApiProperty({
+    description: '표시 순서',
+    example: 1,
+  })
+  displayOrder: number;
+}
+
+/**
+ * 평가기간 정보 DTO
+ */
+export class EvaluationPeriodInfoDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '평가기간명',
+    example: '2024년 상반기 평가',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '시작일',
+    example: '2024-01-01T00:00:00Z',
+  })
+  startDate: Date;
+
+  @ApiProperty({
+    description: '종료일',
+    example: '2024-06-30T23:59:59Z',
+  })
+  endDate: Date;
+
+  @ApiProperty({
+    description: '상태',
+    example: 'in_progress',
+    enum: ['scheduled', 'in_progress', 'completed', 'cancelled'],
+  })
+  status: string;
+}
+
+/**
  * 동료평가 상세 응답 DTO
  */
-export class PeerEvaluationDetailResponseDto extends PeerEvaluationBasicDto {
-  @ApiPropertyOptional({
-    description: '삭제 일시',
-    example: '2024-01-15T11:00:00Z',
+export class PeerEvaluationDetailResponseDto {
+  @ApiProperty({
+    description: '동료평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
   })
-  deletedAt?: Date;
+  id: string;
+
+  @ApiProperty({
+    description: '평가일',
+    example: '2024-01-15T09:00:00Z',
+  })
+  evaluationDate: Date;
+
+  @ApiProperty({
+    description: '평가 상태',
+    example: 'pending',
+    enum: ['pending', 'in_progress', 'completed', 'cancelled'],
+  })
+  status: string;
+
+  @ApiProperty({
+    description: '평가 완료 여부',
+    example: false,
+  })
+  isCompleted: boolean;
 
   @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
+    description: '평가 완료일',
+    example: '2024-01-15T10:00:00Z',
   })
-  createdBy?: string;
+  completedAt?: Date;
 
   @ApiPropertyOptional({
-    description: '수정자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440004',
+    description: '요청 마감일',
+    example: '2024-01-20T23:59:59Z',
   })
-  updatedBy?: string;
+  requestDeadline?: Date;
 
   @ApiProperty({
     description: '매핑 일시',
@@ -654,22 +833,40 @@ export class PeerEvaluationDetailResponseDto extends PeerEvaluationBasicDto {
   mappedDate: Date;
 
   @ApiProperty({
-    description: '매핑자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440005',
-  })
-  mappedBy: string;
-
-  @ApiProperty({
     description: '활성 상태',
     example: true,
   })
   isActive: boolean;
 
   @ApiProperty({
+    description: '생성 일시',
+    example: '2024-01-15T09:00:00Z',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    description: '수정 일시',
+    example: '2024-01-15T10:00:00Z',
+  })
+  updatedAt: Date;
+
+  @ApiPropertyOptional({
+    description: '삭제 일시',
+    example: '2024-01-15T11:00:00Z',
+  })
+  deletedAt?: Date;
+
+  @ApiProperty({
     description: '버전',
     example: 1,
   })
   version: number;
+
+  @ApiPropertyOptional({
+    description: '평가기간 정보',
+    type: EvaluationPeriodInfoDto,
+  })
+  period?: EvaluationPeriodInfoDto | null;
 
   @ApiPropertyOptional({
     description: '평가자 정보',
@@ -694,4 +891,28 @@ export class PeerEvaluationDetailResponseDto extends PeerEvaluationBasicDto {
     type: DepartmentInfoDto,
   })
   evaluateeDepartment?: DepartmentInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '매핑자 정보',
+    type: EmployeeInfoDto,
+  })
+  mappedBy?: EmployeeInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '생성자 정보',
+    type: EmployeeInfoDto,
+  })
+  createdBy?: EmployeeInfoDto | null;
+
+  @ApiPropertyOptional({
+    description: '수정자 정보',
+    type: EmployeeInfoDto,
+  })
+  updatedBy?: EmployeeInfoDto | null;
+
+  @ApiProperty({
+    description: '평가질문 목록',
+    type: [EvaluationQuestionInDetailDto],
+  })
+  questions: EvaluationQuestionInDetailDto[];
 }

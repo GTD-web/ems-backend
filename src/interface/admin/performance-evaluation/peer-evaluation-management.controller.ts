@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
 import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
+import { ParseUUID } from '@interface/decorators/parse-uuid.decorator';
 import {
   RequestPeerEvaluation,
   RequestPeerEvaluationToMultipleEvaluators,
@@ -87,9 +88,15 @@ export class PeerEvaluationManagementController {
       );
 
     return {
-      ids: result.ids,
-      count: result.count,
-      message: `${result.count}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+      results: result.results,
+      summary: result.summary,
+      message:
+        result.summary.failed > 0
+          ? `${result.summary.total}건 중 ${result.summary.success}건의 동료평가 요청이 생성되었습니다. (실패: ${result.summary.failed}건)`
+          : `${result.summary.success}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+      // 하위 호환성을 위한 필드
+      ids: result.results.filter((r) => r.success).map((r) => r.evaluationId!),
+      count: result.summary.success,
     };
   }
 
@@ -115,9 +122,15 @@ export class PeerEvaluationManagementController {
       );
 
     return {
-      ids: result.ids,
-      count: result.count,
-      message: `${result.count}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+      results: result.results,
+      summary: result.summary,
+      message:
+        result.summary.failed > 0
+          ? `${result.summary.total}건 중 ${result.summary.success}건의 동료평가 요청이 생성되었습니다. (실패: ${result.summary.failed}건)`
+          : `${result.summary.success}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+      // 하위 호환성을 위한 필드
+      ids: result.results.filter((r) => r.success).map((r) => r.evaluationId!),
+      count: result.summary.success,
     };
   }
 
@@ -126,7 +139,7 @@ export class PeerEvaluationManagementController {
    */
   @SubmitPeerEvaluation()
   async submitPeerEvaluation(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
     @Body() submitDto: SubmitPeerEvaluationDto,
   ): Promise<void> {
     const submittedBy = submitDto.submittedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
@@ -142,7 +155,7 @@ export class PeerEvaluationManagementController {
    */
   @GetEvaluatorPeerEvaluations()
   async getEvaluatorPeerEvaluations(
-    @Param('evaluatorId') evaluatorId: string,
+    @ParseUUID('evaluatorId') evaluatorId: string,
     @Query() filter: PeerEvaluationFilterDto,
   ): Promise<PeerEvaluationListResponseDto> {
     return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
@@ -161,7 +174,7 @@ export class PeerEvaluationManagementController {
    */
   @GetPeerEvaluationDetail()
   async getPeerEvaluationDetail(
-    @Param('id') id: string,
+    @ParseUUID('id') id: string,
   ): Promise<PeerEvaluationDetailResult> {
     return await this.peerEvaluationBusinessService.동료평가_상세정보를_조회한다(
       {
@@ -175,7 +188,7 @@ export class PeerEvaluationManagementController {
    */
   @GetEvaluatorAssignedEvaluatees()
   async getEvaluatorAssignedEvaluatees(
-    @Param('evaluatorId') evaluatorId: string,
+    @ParseUUID('evaluatorId') evaluatorId: string,
     @Query() query: GetEvaluatorAssignedEvaluateesQueryDto,
   ): Promise<AssignedEvaluateeDto[]> {
     return await this.peerEvaluationBusinessService.평가자에게_할당된_피평가자_목록을_조회한다(
@@ -205,8 +218,8 @@ export class PeerEvaluationManagementController {
    */
   @CancelPeerEvaluationsByPeriod()
   async cancelPeerEvaluationsByPeriod(
-    @Param('evaluateeId') evaluateeId: string,
-    @Param('periodId') periodId: string,
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
   ): Promise<{ message: string; cancelledCount: number }> {
     const cancelledBy = uuidv4(); // TODO: 추후 요청자 ID로 변경
 
