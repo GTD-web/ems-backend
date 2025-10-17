@@ -15,10 +15,10 @@ import type {
 @Entity('peer_evaluation')
 @Index(['status'])
 @Index(['evaluationDate'])
-@Index(['employeeId'])
+@Index(['evaluateeId'])
 @Index(['evaluatorId'])
 @Index(['periodId'])
-@Index(['employeeId', 'evaluatorId', 'periodId'])
+@Index(['evaluateeId', 'evaluatorId', 'periodId'])
 export class PeerEvaluation
   extends BaseEntity<PeerEvaluationDto>
   implements IPeerEvaluation
@@ -27,7 +27,7 @@ export class PeerEvaluation
     type: 'uuid',
     comment: '피평가자 ID',
   })
-  employeeId: string;
+  evaluateeId: string;
 
   @Column({
     type: 'uuid',
@@ -100,7 +100,7 @@ export class PeerEvaluation
   constructor(data?: CreatePeerEvaluationData) {
     super();
     if (data) {
-      this.employeeId = data.employeeId;
+      this.evaluateeId = data.evaluateeId;
       this.evaluatorId = data.evaluatorId;
       this.periodId = data.periodId;
       this.status = data.status || PeerEvaluationStatus.PENDING;
@@ -203,8 +203,8 @@ export class PeerEvaluation
   /**
    * 특정 피평가자의 평가인지 확인한다
    */
-  해당_피평가자의_평가인가(employeeId: string): boolean {
-    return this.employeeId === employeeId;
+  해당_피평가자의_평가인가(evaluateeId: string): boolean {
+    return this.evaluateeId === evaluateeId;
   }
 
   /**
@@ -225,7 +225,7 @@ export class PeerEvaluation
    * 자기 자신을 평가하는지 확인한다
    */
   자기_자신을_평가하는가(): boolean {
-    return this.employeeId === this.evaluatorId;
+    return this.evaluateeId === this.evaluatorId;
   }
 
   /**
@@ -256,7 +256,7 @@ export class PeerEvaluation
   DTO로_변환한다(): PeerEvaluationDto {
     return {
       id: this.id,
-      employeeId: this.employeeId,
+      evaluateeId: this.evaluateeId,
       evaluatorId: this.evaluatorId,
       periodId: this.periodId,
       evaluationDate: this.evaluationDate,

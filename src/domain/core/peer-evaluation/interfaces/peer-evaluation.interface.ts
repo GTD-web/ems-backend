@@ -7,7 +7,7 @@ export interface IPeerEvaluation {
   /** 고유 식별자 (UUID) */
   id: string;
   /** 피평가자 ID */
-  employeeId: string;
+  evaluateeId: string;
   /** 평가자 ID */
   evaluatorId: string;
   /** 평가 기간 ID */

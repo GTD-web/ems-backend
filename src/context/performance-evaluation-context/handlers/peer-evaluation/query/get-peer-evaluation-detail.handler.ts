@@ -19,7 +19,7 @@ export class GetPeerEvaluationDetailQuery {
 export interface PeerEvaluationDetailResult {
   // 평가 기본 정보
   id: string;
-  employeeId: string;
+  evaluateeId: string;
   evaluatorId: string;
   periodId: string;
   evaluationContent?: string;
@@ -110,7 +110,7 @@ export class GetPeerEvaluationDetailHandler
       .leftJoin(
         Employee,
         'evaluatee',
-        'evaluatee.id = evaluation.employeeId AND evaluatee.deletedAt IS NULL',
+        'evaluatee.id = evaluation.evaluateeId AND evaluatee.deletedAt IS NULL',
       )
       .leftJoin(
         Department,
@@ -120,7 +120,7 @@ export class GetPeerEvaluationDetailHandler
       .select([
         // 평가 정보
         'evaluation.id AS evaluation_id',
-        'evaluation.employeeId AS evaluation_employeeid',
+        'evaluation.evaluateeId AS evaluation_evaluateeid',
         'evaluation.evaluatorId AS evaluation_evaluatorid',
         'evaluation.periodId AS evaluation_periodid',
         'evaluation.evaluationContent AS evaluation_evaluationcontent',
@@ -173,7 +173,7 @@ export class GetPeerEvaluationDetailHandler
 
     return {
       id: result.evaluation_id,
-      employeeId: result.evaluation_employeeid,
+      evaluateeId: result.evaluation_evaluateeid,
       evaluatorId: result.evaluation_evaluatorid,
       periodId: result.evaluation_periodid,
       evaluationContent: result.evaluation_evaluationcontent,

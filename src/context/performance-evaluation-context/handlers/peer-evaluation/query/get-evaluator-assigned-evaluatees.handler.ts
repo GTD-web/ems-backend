@@ -23,7 +23,7 @@ export class GetEvaluatorAssignedEvaluateesQuery {
 export interface EvaluatorAssignedEvaluatee {
   // 평가 기본 정보
   evaluationId: string;
-  employeeId: string;
+  evaluateeId: string;
   periodId: string;
   status: string;
   isCompleted: boolean;
@@ -84,7 +84,7 @@ export class GetEvaluatorAssignedEvaluateesHandler
       .leftJoin(
         Employee,
         'evaluatee',
-        'evaluatee.id = evaluation.employeeId AND evaluatee.deletedAt IS NULL',
+        'evaluatee.id = evaluation.evaluateeId AND evaluatee.deletedAt IS NULL',
       )
       .leftJoin(
         Department,
@@ -94,7 +94,7 @@ export class GetEvaluatorAssignedEvaluateesHandler
       .select([
         // 평가 정보
         'evaluation.id AS evaluation_id',
-        'evaluation.employeeId AS evaluation_employeeid',
+        'evaluation.evaluateeId AS evaluation_evaluateeid',
         'evaluation.periodId AS evaluation_periodid',
         'evaluation.status AS evaluation_status',
         'evaluation.isCompleted AS evaluation_iscompleted',
@@ -144,7 +144,7 @@ export class GetEvaluatorAssignedEvaluateesHandler
 
     return results.map((result) => ({
       evaluationId: result.evaluation_id,
-      employeeId: result.evaluation_employeeid,
+      evaluateeId: result.evaluation_evaluateeid,
       periodId: result.evaluation_periodid,
       status: result.evaluation_status,
       isCompleted: result.evaluation_iscompleted,

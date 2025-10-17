@@ -985,7 +985,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     const totalRequestCount = await this.peerEvaluationRepository.count({
       where: {
         periodId: evaluationPeriodId,
-        employeeId: employeeId,
+        evaluateeId: employeeId,
         isActive: true,
         deletedAt: IsNull(),
       },
@@ -995,7 +995,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     const completedRequestCount = await this.peerEvaluationRepository.count({
       where: {
         periodId: evaluationPeriodId,
-        employeeId: employeeId,
+        evaluateeId: employeeId,
         isActive: true,
         isCompleted: true,
         deletedAt: IsNull(),

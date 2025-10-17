@@ -35,7 +35,7 @@ export class CancelPeerEvaluationsByPeriodHandler
 
     // 1. 해당 피평가자의 평가기간 내 모든 동료평가 조회
     const evaluations = await this.peerEvaluationService.필터_조회한다({
-      employeeId: command.evaluateeId,
+      evaluateeId: command.evaluateeId,
       periodId: command.periodId,
     });
 

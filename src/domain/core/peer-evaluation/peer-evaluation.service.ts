@@ -34,18 +34,18 @@ export class PeerEvaluationService {
     createData: CreatePeerEvaluationData,
   ): Promise<PeerEvaluation> {
     this.logger.log(
-      `동료평가 생성 시작 - 피평가자: ${createData.employeeId}, 평가자: ${createData.evaluatorId}`,
+      `동료평가 생성 시작 - 피평가자: ${createData.evaluateeId}, 평가자: ${createData.evaluatorId}`,
     );
 
     // 자기 자신 평가 방지
     this.자기_자신_평가_방지_검사(
-      createData.employeeId,
+      createData.evaluateeId,
       createData.evaluatorId,
     );
 
     // 중복 검사
     await this.중복_검사를_수행한다(
-      createData.employeeId,
+      createData.evaluateeId,
       createData.evaluatorId,
       createData.periodId,
     );
@@ -61,7 +61,7 @@ export class PeerEvaluationService {
       return saved;
     } catch (error) {
       this.logger.error(
-        `동료평가 생성 실패 - 피평가자: ${createData.employeeId}, 평가자: ${createData.evaluatorId}`,
+        `동료평가 생성 실패 - 피평가자: ${createData.evaluateeId}, 평가자: ${createData.evaluatorId}`,
         error.stack,
       );
       throw error;
@@ -236,9 +236,9 @@ export class PeerEvaluationService {
         this.peerEvaluationRepository.createQueryBuilder('evaluation');
 
       // 필터 적용
-      if (filter.employeeId) {
-        queryBuilder.andWhere('evaluation.employeeId = :employeeId', {
-          employeeId: filter.employeeId,
+      if (filter.evaluateeId) {
+        queryBuilder.andWhere('evaluation.evaluateeId = :evaluateeId', {
+          evaluateeId: filter.evaluateeId,
         });
       }
 
@@ -407,14 +407,14 @@ export class PeerEvaluationService {
   /**
    * 특정 피평가자의 동료평가를 조회한다
    */
-  async 피평가자별_조회한다(employeeId: string): Promise<PeerEvaluation[]> {
-    this.logger.debug(`피평가자별 동료평가 조회 - 피평가자: ${employeeId}`);
+  async 피평가자별_조회한다(evaluateeId: string): Promise<PeerEvaluation[]> {
+    this.logger.debug(`피평가자별 동료평가 조회 - 피평가자: ${evaluateeId}`);
 
     try {
-      return await this.필터_조회한다({ employeeId });
+      return await this.필터_조회한다({ evaluateeId });
     } catch (error) {
       this.logger.error(
-        `피평가자별 동료평가 조회 실패 - 피평가자: ${employeeId}`,
+        `피평가자별 동료평가 조회 실패 - 피평가자: ${evaluateeId}`,
         error.stack,
       );
       throw error;
@@ -508,11 +508,11 @@ export class PeerEvaluationService {
    * 자기 자신 평가 방지 검사
    */
   private 자기_자신_평가_방지_검사(
-    employeeId: string,
+    evaluateeId: string,
     evaluatorId: string,
   ): void {
-    if (employeeId === evaluatorId) {
-      throw new SelfPeerEvaluationException(employeeId);
+    if (evaluateeId === evaluatorId) {
+      throw new SelfPeerEvaluationException(evaluateeId);
     }
   }
 
@@ -520,13 +520,13 @@ export class PeerEvaluationService {
    * 중복 검사를 수행한다
    */
   private async 중복_검사를_수행한다(
-    employeeId: string,
+    evaluateeId: string,
     evaluatorId: string,
     periodId: string,
   ): Promise<void> {
     const existing = await this.peerEvaluationRepository.findOne({
       where: {
-        employeeId,
+        evaluateeId,
         evaluatorId,
         periodId,
       },
@@ -535,7 +535,7 @@ export class PeerEvaluationService {
     if (existing) {
       throw new PeerEvaluationDuplicateException(
         evaluatorId,
-        employeeId,
+        evaluateeId,
         periodId,
       );
     }
@@ -545,7 +545,7 @@ export class PeerEvaluationService {
    * 유효성을 검사한다
    */
   private 유효성을_검사한다(data: CreatePeerEvaluationData): void {
-    if (!data.employeeId) {
+    if (!data.evaluateeId) {
       throw new PeerEvaluationValidationException('피평가자 ID는 필수입니다.');
     }
 

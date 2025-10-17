@@ -50,19 +50,29 @@ export function RequestPeerEvaluation() {
 - 평가자는 할당된 목록을 조회하여 평가 작성 가능
 
 **테스트 케이스:**
-- 기본 요청: 평가자, 피평가자, 평가기간을 지정하여 동료평가 요청 생성
-- 질문 포함 요청: questionIds를 포함하여 특정 질문에 대한 평가 요청
-- 질문 생략 요청: questionIds 없이 요청만 생성
-- requestedBy 포함: 요청자 ID를 포함하여 요청 가능
-- requestedBy 생략: 요청자 ID 없이도 요청 가능 (기본값 사용)
-- 중복 요청 방지: 동일한 조건으로 여러 번 요청 시 중복 생성되지 않음 (동일 ID 반환)
-- 응답 구조 검증: 응답에 id와 message 필드 포함
-- 성공 메시지: 응답 메시지에 "성공적으로 요청" 문구 포함
-- 잘못된 evaluatorId: UUID 형식이 아닌 평가자 ID 입력 시 400 에러
-- 잘못된 evaluateeId: UUID 형식이 아닌 피평가자 ID 입력 시 400 에러
-- 잘못된 periodId: UUID 형식이 아닌 평가기간 ID 입력 시 400 에러
-- 잘못된 questionIds: UUID 형식이 아닌 질문 ID 포함 시 400 에러
-- 필수 필드 누락: evaluatorId, evaluateeId, periodId 중 하나라도 누락 시 400 에러`,
+- 기본 동료평가 요청을 생성할 수 있어야 한다
+- 요청 마감일을 포함하여 동료평가 요청을 생성할 수 있어야 한다
+- 질문 ID 목록을 포함하여 동료평가 요청을 생성할 수 있어야 한다
+- requestedBy를 포함하여 동료평가 요청을 생성할 수 있어야 한다
+- requestedBy 없이 동료평가 요청을 생성할 수 있어야 한다
+- 동일한 평가자가 여러 피평가자에게 평가 요청을 받을 수 있어야 한다
+- 한 피평가자를 여러 평가자가 평가하도록 요청할 수 있어야 한다
+- 잘못된 형식의 evaluatorId로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 evaluateeId로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 periodId로 요청 시 400 에러가 발생해야 한다
+- evaluatorId 누락 시 400 에러가 발생해야 한다
+- evaluateeId 누락 시 400 에러가 발생해야 한다
+- periodId 누락 시 400 에러가 발생해야 한다
+- 잘못된 형식의 requestedBy로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 questionIds로 요청 시 400 에러가 발생해야 한다
+- 존재하지 않는 evaluatorId로 요청 시 404 에러가 발생해야 한다
+- 존재하지 않는 evaluateeId로 요청 시 404 에러가 발생해야 한다
+- 존재하지 않는 periodId로 요청 시 404 에러가 발생해야 한다
+- 응답에 필수 필드가 모두 포함되어야 한다
+- 응답의 ID가 유효한 UUID 형식이어야 한다
+- 생성된 동료평가가 DB에 올바르게 저장되어야 한다
+- 생성된 동료평가의 상태가 올바르게 설정되어야 한다
+- 생성 시 createdAt과 updatedAt이 설정되어야 한다`,
     }),
     ApiBody({
       type: RequestPeerEvaluationDto,

@@ -13,7 +13,7 @@ export enum PeerEvaluationStatus {
  */
 export interface CreatePeerEvaluationData {
   /** 피평가자 ID */
-  employeeId: string;
+  evaluateeId: string;
   /** 평가자 ID */
   evaluatorId: string;
   /** 평가 기간 ID */
@@ -55,7 +55,7 @@ export interface PeerEvaluationDto {
   /** 동료평가 고유 식별자 */
   id: string;
   /** 피평가자 ID */
-  employeeId: string;
+  evaluateeId: string;
   /** 평가자 ID */
   evaluatorId: string;
   /** 평가 기간 ID */
@@ -95,7 +95,7 @@ export interface PeerEvaluationDto {
  */
 export interface PeerEvaluationFilter {
   /** 피평가자 ID */
-  employeeId?: string;
+  evaluateeId?: string;
   /** 평가자 ID */
   evaluatorId?: string;
   /** 평가 기간 ID */

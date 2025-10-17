@@ -35,12 +35,12 @@ export class InvalidPeerEvaluationScoreException extends PeerEvaluationDomainExc
 
 // 중복 동료 평가 예외
 export class DuplicatePeerEvaluationException extends PeerEvaluationDomainException {
-  constructor(employeeId: string, evaluatorId: string, periodId: string) {
+  constructor(evaluateeId: string, evaluatorId: string, periodId: string) {
     super(
-      `이미 존재하는 동료 평가입니다: 직원 ${employeeId}, 평가자 ${evaluatorId}, 평가기간 ${periodId}`,
+      `이미 존재하는 동료 평가입니다: 피평가자 ${evaluateeId}, 평가자 ${evaluatorId}, 평가기간 ${periodId}`,
       'DUPLICATE_PEER_EVALUATION',
       409,
-      { employeeId, evaluatorId, periodId },
+      { evaluateeId, evaluatorId, periodId },
     );
     this.name = 'DuplicatePeerEvaluationException';
   }
@@ -61,12 +61,12 @@ export class PeerEvaluationNotFoundException extends PeerEvaluationDomainExcepti
 
 // 자기 자신 동료 평가 예외
 export class SelfPeerEvaluationException extends PeerEvaluationDomainException {
-  constructor(employeeId: string) {
+  constructor(evaluateeId: string) {
     super(
-      `자기 자신을 동료 평가할 수 없습니다: ${employeeId}`,
+      `자기 자신을 동료 평가할 수 없습니다: ${evaluateeId}`,
       'SELF_PEER_EVALUATION',
       400,
-      { employeeId },
+      { evaluateeId },
     );
     this.name = 'SelfPeerEvaluationException';
   }
@@ -87,12 +87,12 @@ export class PeerEvaluationValidationException extends PeerEvaluationDomainExcep
 
 // 동료평가 중복 예외 (새로운 이름)
 export class PeerEvaluationDuplicateException extends PeerEvaluationDomainException {
-  constructor(evaluatorId: string, employeeId: string, periodId: string) {
+  constructor(evaluatorId: string, evaluateeId: string, periodId: string) {
     super(
-      `이미 존재하는 동료평가입니다: 평가자 ${evaluatorId}, 피평가자 ${employeeId}, 기간 ${periodId}`,
+      `이미 존재하는 동료평가입니다: 평가자 ${evaluatorId}, 피평가자 ${evaluateeId}, 기간 ${periodId}`,
       'PEER_EVALUATION_DUPLICATE',
       409,
-      { evaluatorId, employeeId, periodId },
+      { evaluatorId, evaluateeId, periodId },
     );
     this.name = 'PeerEvaluationDuplicateException';
   }
