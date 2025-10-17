@@ -707,6 +707,14 @@ describe('질문-그룹 매핑 관리 API', () => {
         expect(mapping).toHaveProperty('questionId', testQuestion1Id);
         expect(mapping).toHaveProperty('displayOrder');
         expect(typeof mapping.displayOrder).toBe('number');
+
+        // 질문 정보 검증
+        expect(mapping).toHaveProperty('question');
+        expect(mapping.question).toBeDefined();
+        expect(mapping.question).toHaveProperty('id', testQuestion1Id);
+        expect(mapping.question).toHaveProperty('text');
+        expect(typeof mapping.question.text).toBe('string');
+        expect(mapping.question.text.length).toBeGreaterThan(0);
       });
 
       it('순서 정렬: displayOrder 오름차순으로 정렬되어야 한다', async () => {
@@ -1154,6 +1162,14 @@ describe('질문-그룹 매핑 관리 API', () => {
         expect(mapping).toHaveProperty('questionId', testQuestion1Id);
         expect(mapping).toHaveProperty('displayOrder');
         expect(typeof mapping.displayOrder).toBe('number');
+
+        // 그룹 정보 검증
+        expect(mapping).toHaveProperty('group');
+        expect(mapping.group).toBeDefined();
+        expect(mapping.group).toHaveProperty('id');
+        expect(mapping.group).toHaveProperty('name');
+        expect(typeof mapping.group.name).toBe('string');
+        expect(mapping.group.name.length).toBeGreaterThan(0);
       });
 
       it('존재하지 않는 질문: 잘못된 ID로 요청 시 빈 배열을 반환해야 한다', async () => {

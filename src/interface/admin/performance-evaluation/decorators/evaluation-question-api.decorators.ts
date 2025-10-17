@@ -730,12 +730,13 @@ export function GetGroupQuestions() {
 
 **동작:**
 - 그룹에 매핑된 모든 질문 조회
+- 질문 정보(text, minScore, maxScore 등)도 함께 반환
 - 표시 순서(displayOrder) 오름차순으로 정렬
 
 **테스트 케이스:**
 - 정상 조회: 유효한 groupId로 질문 목록을 조회할 수 있어야 한다
 - 빈 배열 반환: 질문이 없는 그룹의 경우 빈 배열을 반환해야 한다
-- 응답 구조 검증: 각 매핑 정보에 id, groupId, questionId, displayOrder가 포함되어야 한다
+- 응답 구조 검증: 각 매핑 정보에 id, groupId, questionId, displayOrder와 질문 정보(question)가 포함되어야 한다
 - 순서 정렬: displayOrder 오름차순으로 정렬되어야 한다
 - 존재하지 않는 그룹: 잘못된 ID로 요청 시 빈 배열을 반환해야 한다`,
     }),
@@ -766,12 +767,13 @@ export function GetQuestionGroupsByQuestion() {
 
 **동작:**
 - 질문에 매핑된 모든 그룹 조회
+- 그룹 정보(name, isDefault, isDeletable 등)도 함께 반환
 - 한 질문이 여러 그룹에 속할 수 있음
 
 **테스트 케이스:**
 - 정상 조회: 유효한 questionId로 그룹 목록을 조회할 수 있어야 한다
 - 빈 배열 반환: 어떤 그룹에도 속하지 않은 질문의 경우 빈 배열을 반환해야 한다
-- 응답 구조 검증: 각 매핑 정보에 id, groupId, questionId, displayOrder가 포함되어야 한다
+- 응답 구조 검증: 각 매핑 정보에 id, groupId, questionId, displayOrder와 그룹 정보(group)가 포함되어야 한다
 - 존재하지 않는 질문: 잘못된 ID로 요청 시 빈 배열을 반환해야 한다`,
     }),
     ApiParam({

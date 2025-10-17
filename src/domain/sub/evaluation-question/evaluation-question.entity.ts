@@ -130,8 +130,8 @@ export class EvaluationQuestion
     return {
       id: this.id,
       text: this.text,
-      minScore: this.minScore,
-      maxScore: this.maxScore,
+      minScore: this.minScore ?? undefined,
+      maxScore: this.maxScore ?? undefined,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };

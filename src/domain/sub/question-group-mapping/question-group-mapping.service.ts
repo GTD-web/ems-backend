@@ -39,25 +39,33 @@ export class QuestionGroupMappingService
   }
 
   /**
-   * 그룹 ID로 질문 그룹 매핑들을 조회한다
+   * 그룹 ID로 질문 그룹 매핑들을 조회한다 (질문 정보 포함)
    */
   async 그룹ID로조회한다(groupId: string): Promise<QuestionGroupMapping[]> {
     this.logger.log(`질문 그룹 매핑 조회 - 그룹 ID: ${groupId}`);
-    return await this.mappingRepository.find({
-      where: { groupId, deletedAt: IsNull() },
-      order: { displayOrder: 'ASC' },
-    });
+    return await this.mappingRepository
+      .createQueryBuilder('mapping')
+      .leftJoinAndSelect('mapping.question', 'question')
+      .where('mapping.groupId = :groupId', { groupId })
+      .andWhere('mapping.deletedAt IS NULL')
+      .andWhere('question.deletedAt IS NULL')
+      .orderBy('mapping.displayOrder', 'ASC')
+      .getMany();
   }
 
   /**
-   * 질문 ID로 질문 그룹 매핑들을 조회한다
+   * 질문 ID로 질문 그룹 매핑들을 조회한다 (그룹 정보 포함)
    */
   async 질문ID로조회한다(questionId: string): Promise<QuestionGroupMapping[]> {
     this.logger.log(`질문 그룹 매핑 조회 - 질문 ID: ${questionId}`);
-    return await this.mappingRepository.find({
-      where: { questionId, deletedAt: IsNull() },
-      order: { displayOrder: 'ASC' },
-    });
+    return await this.mappingRepository
+      .createQueryBuilder('mapping')
+      .leftJoinAndSelect('mapping.group', 'group')
+      .where('mapping.questionId = :questionId', { questionId })
+      .andWhere('mapping.deletedAt IS NULL')
+      .andWhere('group.deletedAt IS NULL')
+      .orderBy('mapping.displayOrder', 'ASC')
+      .getMany();
   }
 
   /**

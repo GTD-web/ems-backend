@@ -403,6 +403,18 @@ export class QuestionGroupMappingResponseDto {
   })
   displayOrder: number;
 
+  @ApiPropertyOptional({
+    description: '그룹 정보',
+    type: QuestionGroupResponseDto,
+  })
+  group?: QuestionGroupResponseDto;
+
+  @ApiPropertyOptional({
+    description: '질문 정보',
+    type: EvaluationQuestionResponseDto,
+  })
+  question?: EvaluationQuestionResponseDto;
+
   @ApiProperty({
     description: '생성일시',
     example: '2024-01-01T00:00:00.000Z',

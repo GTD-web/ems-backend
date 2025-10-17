@@ -1,10 +1,12 @@
-import { Entity, Column, Index } from 'typeorm';
+import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
 import { IQuestionGroupMapping } from './interfaces/question-group-mapping.interface';
 import type {
   QuestionGroupMappingDto,
   CreateQuestionGroupMappingDto,
 } from './question-group-mapping.types';
+import { EvaluationQuestion } from '../evaluation-question/evaluation-question.entity';
+import { QuestionGroup } from '../question-group/question-group.entity';
 
 /**
  * 질문 그룹 매핑 엔티티
@@ -26,11 +28,19 @@ export class QuestionGroupMapping
   })
   groupId: string;
 
+  @ManyToOne(() => QuestionGroup, { nullable: false })
+  @JoinColumn({ name: 'groupId' })
+  group?: QuestionGroup;
+
   @Column({
     type: 'uuid',
     comment: '평가 질문 ID',
   })
   questionId: string;
+
+  @ManyToOne(() => EvaluationQuestion, { nullable: false })
+  @JoinColumn({ name: 'questionId' })
+  question?: EvaluationQuestion;
 
   @Column({
     type: 'int',
@@ -89,9 +99,10 @@ export class QuestionGroupMapping
       groupId: this.groupId,
       questionId: this.questionId,
       displayOrder: this.displayOrder,
+      group: this.group ? this.group.DTO로_변환한다() : undefined,
+      question: this.question ? this.question.DTO로_변환한다() : undefined,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
   }
 }
-

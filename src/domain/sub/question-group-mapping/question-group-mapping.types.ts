@@ -30,6 +30,24 @@ export interface QuestionGroupMappingDto {
   questionId: string;
   /** 표시 순서 */
   displayOrder: number;
+  /** 그룹 정보 */
+  group?: {
+    id: string;
+    name: string;
+    isDefault: boolean;
+    isDeletable: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+  /** 질문 정보 */
+  question?: {
+    id: string;
+    text: string;
+    minScore?: number;
+    maxScore?: number;
+    createdAt: Date;
+    updatedAt: Date;
+  };
   /** 생성일시 */
   createdAt: Date;
   /** 수정일시 */
@@ -45,4 +63,3 @@ export interface QuestionGroupMappingFilter {
   /** 평가 질문 ID */
   questionId?: string;
 }
-
