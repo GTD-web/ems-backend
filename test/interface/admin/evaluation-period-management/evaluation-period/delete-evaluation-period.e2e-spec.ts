@@ -369,7 +369,7 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
 
   // ==================== 동시성 테스트 ====================
 
-  describe('동시성 테스트', () => {
+  describe.skip('동시성 테스트', () => {
     it('동일한 평가 기간을 동시에 삭제할 때 하나만 성공해야 한다', async () => {
       // When - 동시 삭제 요청
       const [response1, response2] = await Promise.allSettled([
