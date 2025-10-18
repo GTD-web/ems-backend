@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsString,
   IsUUID,
@@ -271,10 +275,7 @@ export class ConfigurePrimaryEvaluatorDto {
   @IsUUID()
   evaluatorId: string;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsString()
   @IsUUID()
@@ -293,10 +294,7 @@ export class ConfigureSecondaryEvaluatorDto {
   @IsUUID()
   evaluatorId: string;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsString()
   @IsUUID()

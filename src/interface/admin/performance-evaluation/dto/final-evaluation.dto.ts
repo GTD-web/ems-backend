@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsString,
   IsEnum,
@@ -49,10 +53,7 @@ export class UpsertFinalEvaluationBodyDto {
   @IsOptional()
   finalComments?: string;
 
-  @ApiPropertyOptional({
-    description: '작업자 ID (생성자 또는 수정자)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsString()
   @IsOptional()
   actionBy?: string;
@@ -96,10 +97,7 @@ export class UpdateFinalEvaluationBodyDto {
   @IsOptional()
   finalComments?: string;
 
-  @ApiPropertyOptional({
-    description: '수정자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsString()
   @IsOptional()
   updatedBy?: string;
@@ -109,10 +107,7 @@ export class UpdateFinalEvaluationBodyDto {
  * 최종평가 확정 Body DTO
  */
 export class ConfirmFinalEvaluationBodyDto {
-  @ApiProperty({
-    description: '확정자 ID',
-    example: '660e8400-e29b-41d4-a716-446655440001',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsString()
   confirmedBy: string;
 }
@@ -121,10 +116,7 @@ export class ConfirmFinalEvaluationBodyDto {
  * 최종평가 확정 취소 Body DTO
  */
 export class CancelConfirmationBodyDto {
-  @ApiProperty({
-    description: '취소 작업자 ID',
-    example: '660e8400-e29b-41d4-a716-446655440001',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsString()
   updatedBy: string;
 }

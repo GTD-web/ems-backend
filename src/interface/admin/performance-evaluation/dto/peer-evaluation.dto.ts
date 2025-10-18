@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsString,
   IsNumber,
@@ -59,10 +63,7 @@ export class RequestPeerEvaluationDto {
   @IsUUID('4', { each: true })
   questionIds?: string[];
 
-  @ApiPropertyOptional({
-    description: '요청자 ID (관리자)',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   requestedBy?: string;
@@ -119,10 +120,7 @@ export class RequestPeerEvaluationToMultipleEvaluatorsDto {
   @IsUUID('4', { each: true })
   questionIds?: string[];
 
-  @ApiPropertyOptional({
-    description: '요청자 ID (관리자)',
-    example: '550e8400-e29b-41d4-a716-446655440004',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   requestedBy?: string;
@@ -179,10 +177,7 @@ export class RequestMultiplePeerEvaluationsDto {
   @IsUUID('4', { each: true })
   questionIds?: string[];
 
-  @ApiPropertyOptional({
-    description: '요청자 ID (관리자)',
-    example: '550e8400-e29b-41d4-a716-446655440004',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   requestedBy?: string;
@@ -220,10 +215,7 @@ export class CreatePeerEvaluationBodyDto {
   @Max(5)
   peerEvaluationScore?: number;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   createdBy?: string;
@@ -258,10 +250,7 @@ export class UpdatePeerEvaluationDto {
  * 동료평가 제출 DTO
  */
 export class SubmitPeerEvaluationDto {
-  @ApiPropertyOptional({
-    description: '제출자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   submittedBy?: string;

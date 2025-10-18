@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsString,
   IsNotEmpty,
@@ -32,10 +36,7 @@ export class CreateQuestionGroupDto {
   @IsOptional()
   isDefault?: boolean;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   createdBy?: string;
@@ -60,10 +61,7 @@ export class UpdateQuestionGroupDto {
   @IsOptional()
   isDefault?: boolean;
 
-  @ApiPropertyOptional({
-    description: '수정자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   updatedBy?: string;
@@ -163,10 +161,7 @@ export class CreateEvaluationQuestionDto {
   @Min(0)
   displayOrder?: number;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   createdBy?: string;
@@ -204,10 +199,7 @@ export class UpdateEvaluationQuestionDto {
   @Max(100)
   maxScore?: number;
 
-  @ApiPropertyOptional({
-    description: '수정자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   updatedBy?: string;
@@ -288,10 +280,7 @@ export class AddQuestionToGroupDto {
   @Min(0)
   displayOrder?: number;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   createdBy?: string;
@@ -332,10 +321,7 @@ export class AddMultipleQuestionsToGroupDto {
   @Min(0)
   startDisplayOrder?: number;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   createdBy?: string;
@@ -366,10 +352,7 @@ export class ReorderGroupQuestionsDto {
   @IsNotEmpty()
   questionIds: string[];
 
-  @ApiPropertyOptional({
-    description: '수정자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   updatedBy?: string;

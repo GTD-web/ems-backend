@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsString,
   IsNumber,
@@ -17,10 +21,7 @@ import { ToBoolean } from '@interface/decorators';
  * 1차 하향평가 생성 Body DTO (경로 파라미터 제외)
  */
 export class CreatePrimaryDownwardEvaluationBodyDto {
-  @ApiPropertyOptional({
-    description: '평가자 ID (추후 요청자 ID로 자동 입력)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   evaluatorId?: string;
@@ -51,10 +52,7 @@ export class CreatePrimaryDownwardEvaluationBodyDto {
   @Min(1)
   downwardEvaluationScore?: number;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   createdBy?: string;
@@ -64,10 +62,7 @@ export class CreatePrimaryDownwardEvaluationBodyDto {
  * 2차 하향평가 생성 Body DTO (경로 파라미터 제외)
  */
 export class CreateSecondaryDownwardEvaluationBodyDto {
-  @ApiPropertyOptional({
-    description: '평가자 ID (추후 요청자 ID로 자동 입력)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   evaluatorId?: string;
@@ -98,10 +93,7 @@ export class CreateSecondaryDownwardEvaluationBodyDto {
   @Min(1)
   downwardEvaluationScore?: number;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   createdBy?: string;
@@ -134,18 +126,12 @@ export class UpdateDownwardEvaluationDto {
  * 하향평가 제출 DTO
  */
 export class SubmitDownwardEvaluationDto {
-  @ApiPropertyOptional({
-    description: '평가자 ID (1차/2차 제출 시 필수)',
-    example: '550e8400-e29b-41d4-a716-446655440002',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   evaluatorId?: string;
 
-  @ApiPropertyOptional({
-    description: '제출자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   submittedBy?: string;

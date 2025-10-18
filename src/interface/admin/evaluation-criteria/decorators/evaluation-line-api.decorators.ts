@@ -7,6 +7,10 @@ import {
   ApiBody,
   ApiTags,
 } from '@nestjs/swagger';
+import {
+  ConfigurePrimaryEvaluatorDto,
+  ConfigureSecondaryEvaluatorDto,
+} from '../dto/evaluation-line.dto';
 
 /**
  * 평가자별 피평가자 조회 API 데코레이터
@@ -371,25 +375,8 @@ export const ConfigurePrimaryEvaluator = () =>
       example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiBody({
+      type: ConfigurePrimaryEvaluatorDto,
       description: '1차 평가자 구성 데이터',
-      schema: {
-        type: 'object',
-        properties: {
-          evaluatorId: {
-            type: 'string',
-            format: 'uuid',
-            description: '1차 평가자 ID',
-            example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
-          },
-          createdBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '생성자 ID (선택)',
-            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-          },
-        },
-        required: ['evaluatorId'],
-      },
     }),
     ApiResponse({
       status: 201,
@@ -469,25 +456,8 @@ export const ConfigureSecondaryEvaluator = () =>
       example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiBody({
+      type: ConfigureSecondaryEvaluatorDto,
       description: '2차 평가자 구성 데이터',
-      schema: {
-        type: 'object',
-        properties: {
-          evaluatorId: {
-            type: 'string',
-            format: 'uuid',
-            description: '2차 평가자 ID',
-            example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
-          },
-          createdBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '생성자 ID (선택)',
-            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-          },
-        },
-        required: ['evaluatorId'],
-      },
     }),
     ApiResponse({
       status: 201,

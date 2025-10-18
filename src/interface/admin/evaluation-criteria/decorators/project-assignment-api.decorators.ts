@@ -593,20 +593,6 @@ export function ChangeProjectAssignmentOrder() {
       required: true,
       example: 'up',
     }),
-    ApiBody({
-      schema: {
-        type: 'object',
-        properties: {
-          updatedBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '변경 수행자 ID (UUID 형식)',
-            example: '123e4567-e89b-12d3-a456-426614174003',
-          },
-        },
-      },
-      required: false,
-    }),
     ApiResponse({
       status: 200,
       description: '프로젝트 할당 순서가 성공적으로 변경되었습니다.',

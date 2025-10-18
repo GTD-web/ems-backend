@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { IsString, IsUUID, IsOptional } from 'class-validator';
 
 /**
@@ -35,10 +39,7 @@ export class UpsertWbsEvaluationCriteriaBodyDto {
   @IsString()
   criteria: string;
 
-  @ApiPropertyOptional({
-    description: '생성/수정자 ID (선택사항)',
-    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   actionBy?: string;

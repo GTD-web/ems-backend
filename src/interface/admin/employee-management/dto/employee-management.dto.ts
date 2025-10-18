@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
@@ -23,10 +27,7 @@ export class ExcludeEmployeeFromListDto {
   @MaxLength(500)
   excludeReason!: string;
 
-  @ApiProperty({
-    description: '제외 처리자 ID',
-    example: 'admin-user-id',
-  })
+  @ApiHideProperty()
   @IsNotEmpty()
   @IsString()
   excludedBy!: string;
@@ -36,10 +37,7 @@ export class ExcludeEmployeeFromListDto {
  * 직원 조회 포함 요청 DTO
  */
 export class IncludeEmployeeInListDto {
-  @ApiProperty({
-    description: '포함 처리자 ID',
-    example: 'admin-user-id',
-  })
+  @ApiHideProperty()
   @IsNotEmpty()
   @IsString()
   updatedBy!: string;

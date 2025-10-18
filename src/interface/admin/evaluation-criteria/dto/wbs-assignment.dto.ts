@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsString,
   IsOptional,
@@ -49,10 +53,7 @@ export class CreateWbsAssignmentDto {
   @IsUUID()
   periodId: string;
 
-  @ApiPropertyOptional({
-    description: '할당자 ID',
-    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsString()
   @IsUUID()
@@ -437,13 +438,11 @@ export class WbsAssignmentDetailResponseDto {
  * WBS 할당 초기화 DTO
  */
 export class ResetWbsAssignmentsDto {
-  @ApiProperty({
-    description: '초기화자 ID',
-    example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
+  @ApiHideProperty()
   @IsString()
   @IsUUID()
-  resetBy: string;
+  resetBy?: string;
 }
 
 /**
@@ -464,11 +463,9 @@ export class ChangeWbsAssignmentOrderQueryDto {
  * WBS 할당 순서 변경 Body DTO
  */
 export class ChangeWbsAssignmentOrderBodyDto {
-  @ApiPropertyOptional({
-    description: '변경 수행자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174003',
-  })
-  @IsOptional()
-  @IsUUID()
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
+  // @ApiHideProperty()
+  // @IsOptional()
+  // @IsUUID()
   updatedBy?: string;
 }

@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsOptional,
   IsString,
@@ -37,10 +41,7 @@ export class CreateProjectAssignmentDto {
   @IsUUID()
   periodId: string;
 
-  @ApiPropertyOptional({
-    description: '할당자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174003',
-  })
+  @ApiHideProperty()
   @IsOptional()
   @IsUUID()
   assignedBy?: string;
@@ -79,10 +80,7 @@ export class ChangeProjectAssignmentOrderQueryDto {
  * 프로젝트 할당 순서 변경 Body DTO
  */
 export class ChangeProjectAssignmentOrderBodyDto {
-  @ApiPropertyOptional({
-    description: '변경 수행자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   updatedBy?: string;

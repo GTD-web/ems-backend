@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsBoolean,
   IsEnum,
@@ -13,10 +17,7 @@ import { ToBooleanStrict } from '@interface/decorators';
  * 평가 수정 가능 상태 변경 요청 DTO (Body)
  */
 export class UpdateEvaluationEditableStatusBodyDto {
-  @ApiPropertyOptional({
-    description: '수정자 ID (자동 설정되므로 선택 사항)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   updatedBy?: string;
@@ -75,10 +76,7 @@ export class UpdatePeriodAllEvaluationEditableStatusDto {
   @IsBoolean()
   isSecondaryEvaluationEditable: boolean;
 
-  @ApiPropertyOptional({
-    description: '수정자 ID (자동 설정되므로 선택 사항)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   updatedBy?: string;

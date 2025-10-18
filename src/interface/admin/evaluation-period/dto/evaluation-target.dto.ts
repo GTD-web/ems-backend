@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -64,10 +68,7 @@ export class EmployeeBasicInfoDto {
  * 평가 대상자 등록 요청 DTO
  */
 export class RegisterEvaluationTargetDto {
-  @ApiProperty({
-    description: '생성자 ID',
-    example: 'admin-user-id',
-  })
+  @ApiHideProperty()
   @IsNotEmpty()
   @IsString()
   createdBy!: string;
@@ -90,10 +91,7 @@ export class RegisterBulkEvaluationTargetsDto {
   @IsUUID('4', { each: true })
   employeeIds!: string[];
 
-  @ApiProperty({
-    description: '생성자 ID',
-    example: 'admin-user-id',
-  })
+  @ApiHideProperty()
   @IsNotEmpty()
   @IsString()
   createdBy!: string;
@@ -113,10 +111,7 @@ export class ExcludeEvaluationTargetDto {
   @MaxLength(500)
   excludeReason!: string;
 
-  @ApiProperty({
-    description: '제외 처리자 ID',
-    example: 'admin-user-id',
-  })
+  @ApiHideProperty()
   @IsNotEmpty()
   @IsString()
   excludedBy!: string;
@@ -126,10 +121,7 @@ export class ExcludeEvaluationTargetDto {
  * 평가 대상 포함 요청 DTO
  */
 export class IncludeEvaluationTargetDto {
-  @ApiProperty({
-    description: '포함 처리자 ID',
-    example: 'admin-user-id',
-  })
+  @ApiHideProperty()
   @IsNotEmpty()
   @IsString()
   updatedBy!: string;

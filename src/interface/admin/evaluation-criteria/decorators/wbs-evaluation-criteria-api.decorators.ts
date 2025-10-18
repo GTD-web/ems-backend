@@ -18,6 +18,7 @@ import {
   ApiBody,
   ApiTags,
 } from '@nestjs/swagger';
+import { UpsertWbsEvaluationCriteriaBodyDto } from '../dto/wbs-evaluation-criteria.dto';
 
 /**
  * WBS 평가기준 목록 조회 API 데코레이터
@@ -335,25 +336,9 @@ export const UpsertWbsEvaluationCriteria = () =>
       example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiBody({
+      type: UpsertWbsEvaluationCriteriaBodyDto,
       description:
         'WBS 평가기준 저장 데이터 (wbsItemId를 기준으로 자동 생성/수정)',
-      schema: {
-        type: 'object',
-        properties: {
-          criteria: {
-            type: 'string',
-            description: '평가기준 내용',
-            example: '코드 품질 및 성능 최적화',
-          },
-          actionBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '생성/수정자 ID (선택사항)',
-            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-          },
-        },
-        required: ['criteria'],
-      },
     }),
     ApiResponse({
       status: 200,

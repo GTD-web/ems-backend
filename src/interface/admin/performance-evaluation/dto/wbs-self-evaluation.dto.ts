@@ -1,4 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  ApiHideProperty,
+  ApiProperty,
+  ApiPropertyOptional,
+} from '@nestjs/swagger';
 import {
   IsString,
   IsNumber,
@@ -42,10 +46,7 @@ export class CreateWbsSelfEvaluationBodyDto {
   @IsString()
   performanceResult?: string;
 
-  @ApiPropertyOptional({
-    description: '생성자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   createdBy?: string;
@@ -87,10 +88,7 @@ export class UpdateWbsSelfEvaluationDto {
  * WBS 자기평가 제출 DTO
  */
 export class SubmitWbsSelfEvaluationDto {
-  @ApiPropertyOptional({
-    description: '제출자 ID',
-    example: '550e8400-e29b-41d4-a716-446655440003',
-  })
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
   submittedBy?: string;

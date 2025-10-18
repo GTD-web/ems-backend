@@ -16,6 +16,10 @@ import {
   ApiBody,
   ApiTags,
 } from '@nestjs/swagger';
+import {
+  CreateWbsAssignmentDto,
+  BulkCreateWbsAssignmentDto,
+} from '../dto/wbs-assignment.dto';
 
 /**
  * WBS 할당 생성 API 데코레이터
@@ -56,43 +60,8 @@ export const CreateWbsAssignment = () =>
 - 감사 정보: 생성일시, 수정일시, 생성자, 수정자 정보 자동 기록`,
     }),
     ApiBody({
+      type: CreateWbsAssignmentDto,
       description: 'WBS 할당 생성 데이터',
-      schema: {
-        type: 'object',
-        properties: {
-          employeeId: {
-            type: 'string',
-            format: 'uuid',
-            description: '직원 ID',
-            example: '123e4567-e89b-12d3-a456-426614174000',
-          },
-          wbsItemId: {
-            type: 'string',
-            format: 'uuid',
-            description: 'WBS 항목 ID',
-            example: '123e4567-e89b-12d3-a456-426614174001',
-          },
-          projectId: {
-            type: 'string',
-            format: 'uuid',
-            description: '프로젝트 ID',
-            example: '123e4567-e89b-12d3-a456-426614174002',
-          },
-          periodId: {
-            type: 'string',
-            format: 'uuid',
-            description: '평가기간 ID',
-            example: '123e4567-e89b-12d3-a456-426614174003',
-          },
-          assignedBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '할당자 ID (선택사항)',
-            example: '123e4567-e89b-12d3-a456-426614174004',
-          },
-        },
-        required: ['employeeId', 'wbsItemId', 'projectId', 'periodId'],
-      },
     }),
     ApiResponse({
       status: 201,
@@ -1220,54 +1189,8 @@ export const BulkCreateWbsAssignments = () =>
 - 최소 1개 검증: 할당 목록은 최소 1개 이상 필수`,
     }),
     ApiBody({
+      type: BulkCreateWbsAssignmentDto,
       description: 'WBS 대량 할당 데이터',
-      schema: {
-        type: 'object',
-        properties: {
-          assignments: {
-            type: 'array',
-            description: 'WBS 할당 목록 (최소 1개 이상)',
-            minItems: 1,
-            items: {
-              type: 'object',
-              properties: {
-                employeeId: {
-                  type: 'string',
-                  format: 'uuid',
-                  description: '직원 ID',
-                  example: '123e4567-e89b-12d3-a456-426614174000',
-                },
-                wbsItemId: {
-                  type: 'string',
-                  format: 'uuid',
-                  description: 'WBS 항목 ID',
-                  example: '123e4567-e89b-12d3-a456-426614174001',
-                },
-                projectId: {
-                  type: 'string',
-                  format: 'uuid',
-                  description: '프로젝트 ID',
-                  example: '123e4567-e89b-12d3-a456-426614174002',
-                },
-                periodId: {
-                  type: 'string',
-                  format: 'uuid',
-                  description: '평가기간 ID',
-                  example: '123e4567-e89b-12d3-a456-426614174003',
-                },
-                assignedBy: {
-                  type: 'string',
-                  format: 'uuid',
-                  description: '할당자 ID (선택사항)',
-                  example: '123e4567-e89b-12d3-a456-426614174004',
-                },
-              },
-              required: ['employeeId', 'wbsItemId', 'projectId', 'periodId'],
-            },
-          },
-        },
-        required: ['assignments'],
-      },
     }),
     ApiResponse({
       status: 201,
@@ -1351,21 +1274,6 @@ export const ResetPeriodWbsAssignments = () =>
       format: 'uuid',
       example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
-    ApiBody({
-      description: '초기화 데이터',
-      schema: {
-        type: 'object',
-        properties: {
-          resetBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '초기화자 ID',
-            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-          },
-        },
-        required: ['resetBy'],
-      },
-    }),
     ApiResponse({
       status: 200,
       description: '평가기간 WBS 할당이 성공적으로 초기화되었습니다.',
@@ -1425,21 +1333,6 @@ export const ResetProjectWbsAssignments = () =>
       type: 'string',
       format: 'uuid',
       example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
-    }),
-    ApiBody({
-      description: '초기화 데이터',
-      schema: {
-        type: 'object',
-        properties: {
-          resetBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '초기화자 ID',
-            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-          },
-        },
-        required: ['resetBy'],
-      },
     }),
     ApiResponse({
       status: 200,
@@ -1502,21 +1395,6 @@ export const ResetEmployeeWbsAssignments = () =>
       format: 'uuid',
       example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
-    ApiBody({
-      description: '초기화 데이터',
-      schema: {
-        type: 'object',
-        properties: {
-          resetBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '초기화자 ID',
-            example: 'e5f6a7b8-c9d0-4e1f-2a3b-4c5d6e7f8a9b',
-          },
-        },
-        required: ['resetBy'],
-      },
-    }),
     ApiResponse({
       status: 200,
       description: '직원 WBS 할당이 성공적으로 초기화되었습니다.',
@@ -1570,20 +1448,6 @@ export const ChangeWbsAssignmentOrder = () =>
       enum: ['up', 'down'],
       required: true,
       example: 'up',
-    }),
-    ApiBody({
-      schema: {
-        type: 'object',
-        properties: {
-          updatedBy: {
-            type: 'string',
-            format: 'uuid',
-            description: '변경 수행자 ID (UUID 형식)',
-            example: '123e4567-e89b-12d3-a456-426614174003',
-          },
-        },
-      },
-      required: false,
     }),
     ApiResponse({
       status: 200,
