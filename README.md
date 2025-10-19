@@ -231,7 +231,58 @@ npm run test:cov
 애플리케이션 실행 후 Swagger 문서를 확인할 수 있습니다:
 
 ```
-http://localhost:3000/api
+http://localhost:4000/admin/api-docs  # 관리자용 Swagger
+http://localhost:4000/user/api-docs   # 사용자용 Swagger
+http://localhost:4000/evaluator/api-docs  # 평가자용 Swagger
+```
+
+### 외부 공개 API 문서
+
+프론트엔드 개발자를 위한 마크다운 형식의 API 참조 문서를 제공합니다:
+
+```
+http://localhost:4000/api-docs/index.md  # API 문서 인덱스
+
+# 대시보드 & 조직 관리
+http://localhost:4000/api-docs/admin-dashboard.md
+http://localhost:4000/api-docs/admin-employee-management.md
+
+# 평가기간 관리
+http://localhost:4000/api-docs/admin-evaluation-period.md
+http://localhost:4000/api-docs/admin-evaluation-target.md
+
+# 평가기준 관리
+http://localhost:4000/api-docs/admin-evaluation-line.md
+http://localhost:4000/api-docs/admin-project-assignment.md
+http://localhost:4000/api-docs/admin-wbs-assignment.md
+http://localhost:4000/api-docs/admin-wbs-evaluation-criteria.md
+
+# 성과평가 관리
+http://localhost:4000/api-docs/admin-evaluation-editable-status.md
+http://localhost:4000/api-docs/admin-final-evaluation.md
+http://localhost:4000/api-docs/admin-downward-evaluation.md
+http://localhost:4000/api-docs/admin-peer-evaluation.md
+http://localhost:4000/api-docs/admin-wbs-self-evaluation.md
+http://localhost:4000/api-docs/admin-evaluation-question.md
+```
+
+**특징:**
+
+- 마크다운 형식으로 프론트엔드에서 직접 읽기 가능
+- 각 컨트롤러별 엔드포인트, 파라미터, 응답 타입 문서화
+- Swagger보다 간결하고 읽기 쉬운 포맷
+- `fetch()` 또는 직접 다운로드로 접근 가능
+
+**사용 예시:**
+
+```javascript
+// React/Vue에서 API 문서 가져오기
+fetch('http://localhost:4000/api-docs/admin-dashboard.md')
+  .then((response) => response.text())
+  .then((markdown) => {
+    // 마크다운 렌더러로 표시
+    console.log(markdown);
+  });
 ```
 
 ## 📚 참고 문서
