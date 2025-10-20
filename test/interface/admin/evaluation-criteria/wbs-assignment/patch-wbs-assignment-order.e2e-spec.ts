@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -116,7 +115,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -147,7 +147,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
     // assignedBy는 실제 직원 ID를 사용 (UUID 형식이어야 함)
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         periodId,
@@ -169,7 +170,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
     periodId: string,
     employeeId: string,
   ): Promise<any[]> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .get('/admin/evaluation-criteria/wbs-assignments')
       .query({
         periodId,
@@ -213,7 +215,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
 
       // When: 두 번째 할당을 위로 이동
       const updatedBy = employee.id; // UUID 형식이어야 함
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment2.id}/order`,
         )
@@ -271,7 +274,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When: 두 번째 할당을 아래로 이동
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment2.id}/order`,
         )
@@ -329,7 +333,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When: 첫 번째 할당을 위로 이동 시도
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment1.id}/order`,
         )
@@ -379,7 +384,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When: 마지막 할당을 아래로 이동 시도
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment3.id}/order`,
         )
@@ -436,7 +442,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
 
       // When: 여러 번 순서 변경
       // 1. assignment4를 위로 이동 (4->3)
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment4.id}/order`,
         )
@@ -445,7 +452,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
         .expect(200);
 
       // 2. assignment4를 위로 이동 (3->2)
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment4.id}/order`,
         )
@@ -454,7 +462,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
         .expect(200);
 
       // 3. assignment1을 아래로 이동 (1->2)
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment1.id}/order`,
         )
@@ -486,7 +495,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       const fakeId = '123e4567-e89b-12d3-a456-426614174000';
 
       // When & Then: 도메인 예외가 NotFoundException(404)로 변환됨
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-criteria/wbs-assignments/${fakeId}/order`)
         .query({ direction: 'up' })
         .send({ updatedBy: testData.employees[0].id })
@@ -510,7 +520,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When & Then: 잘못된 direction 값
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment.id}/order`,
         )
@@ -543,7 +554,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When & Then: 완료된 평가기간의 순서 변경 시도
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment.id}/order`,
         )
@@ -559,7 +571,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       const invalidId = 'not-a-uuid';
 
       // When & Then: UUID 검증 실패로 400 에러 발생 (ParseUUIDPipe)
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-criteria/wbs-assignments/${invalidId}/order`)
         .query({ direction: 'up' })
         .send({ updatedBy: testData.employees[0].id })
@@ -581,7 +594,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When & Then: direction 필드 누락
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${assignment.id}/order`,
         )
@@ -630,7 +644,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When: 직원1의 두 번째 할당을 위로 이동
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${emp1Assignment2.id}/order`,
         )
@@ -694,7 +709,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When: 평가기간1의 두 번째 할당을 위로 이동
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${p1Assignment2.id}/order`,
         )
@@ -765,7 +781,8 @@ describe('PATCH /admin/evaluation-criteria/wbs-assignments/:id/order', () => {
       );
 
       // When: 프로젝트1의 두 번째 할당을 위로 이동
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-criteria/wbs-assignments/${proj1Assignment2.id}/order`,
         )

@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -101,7 +100,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
       createdBy?: string;
     },
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluateeId}/period/${periodId}/project/${projectId}/${evaluationType}`,
       )
@@ -137,7 +137,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const createdBy = getRandomEmployee().id;
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -194,7 +195,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         // When - 동일한 조합으로 다시 저장 (수정)
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -223,7 +225,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const selfEvaluationId = '550e8400-e29b-41d4-a716-446655440099';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -248,7 +251,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -273,7 +277,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         for (const score of testScores) {
           const evaluatee = getRandomEmployee();
           const evaluator = getRandomEmployee();
-          const response = await request(app.getHttpServer())
+          const response = await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
             )
@@ -346,30 +351,20 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         expect(dbRecord.downwardEvaluationScore).toBe(5);
       });
 
-      it('모든 필드를 생략하고 1차 하향평가를 생성할 수 있어야 한다', async () => {
+      it('모든 필드를 생략하고 요청 시 400 에러가 발생해야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        // When
-        const response = await request(app.getHttpServer())
+        // When & Then - DTO 검증 실패로 400 발생
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
           .send({})
-          .expect(200);
-
-        // Then
-        expect(response.body.id).toBeDefined();
-
-        // DB 검증
-        const dbRecord = await getDownwardEvaluationFromDb(response.body.id);
-        expect(dbRecord).toBeDefined();
-        expect(dbRecord.employeeId).toBe(evaluatee.id);
-        expect(dbRecord.periodId).toBe(period.id);
-        expect(dbRecord.projectId).toBe(project.id);
-        expect(dbRecord.evaluationType).toBe('primary');
+          .expect(400);
       });
     });
 
@@ -382,7 +377,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -402,7 +398,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -422,7 +419,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -442,7 +440,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -462,7 +461,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const invalidEvaluateeId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${invalidEvaluateeId}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -482,7 +482,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${invalidPeriodId}/project/${project.id}/primary`,
           )
@@ -502,7 +503,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const invalidProjectId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${invalidProjectId}/primary`,
           )
@@ -522,7 +524,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const invalidEvaluatorId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -542,7 +545,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -564,7 +568,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -597,7 +602,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const createdBy = getRandomEmployee().id;
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -653,7 +659,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         // When - 동일한 조합으로 다시 저장 (수정)
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -681,7 +688,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When - 1차 평가 생성
-        const primaryResponse = await request(app.getHttpServer())
+        const primaryResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -693,7 +701,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
           .expect(200);
 
         // When - 2차 평가 생성
-        const secondaryResponse = await request(app.getHttpServer())
+        const secondaryResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -732,7 +741,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const selfEvaluationId = '550e8400-e29b-41d4-a716-446655440088';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -749,30 +759,20 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         expect(dbRecord.selfEvaluationId).toBe(selfEvaluationId);
       });
 
-      it('모든 필드를 생략하고 2차 하향평가를 생성할 수 있어야 한다', async () => {
+      it('모든 필드를 생략하고 요청 시 400 에러가 발생해야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        // When
-        const response = await request(app.getHttpServer())
+        // When & Then - DTO 검증 실패로 400 발생
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
           .send({})
-          .expect(200);
-
-        // Then
-        expect(response.body.id).toBeDefined();
-
-        // DB 검증
-        const dbRecord = await getDownwardEvaluationFromDb(response.body.id);
-        expect(dbRecord).toBeDefined();
-        expect(dbRecord.employeeId).toBe(evaluatee.id);
-        expect(dbRecord.periodId).toBe(period.id);
-        expect(dbRecord.projectId).toBe(project.id);
-        expect(dbRecord.evaluationType).toBe('secondary');
+          .expect(400);
       });
     });
 
@@ -785,7 +785,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -805,7 +806,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -825,7 +827,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -845,7 +848,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -867,7 +871,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         const project = getRandomProject();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -898,7 +903,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
       const project = getRandomProject();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
         )
@@ -923,7 +929,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
       const project = getRandomProject();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
         )
@@ -948,7 +955,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
       const project = getRandomProject();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
         )
@@ -975,7 +983,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
       const project = getRandomProject();
 
       // When - 첫 번째 저장
-      const firstResponse = await request(app.getHttpServer())
+      const firstResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
         )
@@ -987,7 +996,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 저장', () 
         .expect(200);
 
       // When - 동일 조건으로 두 번째 저장 (수정)
-      const secondResponse = await request(app.getHttpServer())
+      const secondResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
         )

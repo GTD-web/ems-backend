@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -108,7 +107,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -133,7 +133,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
   ): Promise<any> {
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         periodId,
@@ -154,7 +155,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
   ): Promise<any> {
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         periodId,
@@ -184,7 +186,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       await createWbsAssignment(periodId, employee.id, project.id, wbsItem1.id);
 
       // When: 미할당 WBS 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId })
         .expect(200);
@@ -222,7 +225,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       }
 
       // When: 미할당 WBS 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId })
         .expect(200);
@@ -237,7 +241,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       const project = getActiveProject();
 
       // When: 미할당 WBS 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId })
         .expect(200);
@@ -275,7 +280,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       );
 
       // When: employee1에게 할당되지 않은 WBS 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId, employeeId: employee1.id })
         .expect(200);
@@ -299,7 +305,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       await createWbsAssignment(periodId, employee2.id, project.id, wbsItem.id);
 
       // When: employee1에게 할당되지 않은 WBS 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId, employeeId: employee1.id })
         .expect(200);
@@ -327,12 +334,14 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       );
 
       // 할당 취소
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment.id}`)
         .expect(200);
 
       // When: 미할당 WBS 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId })
         .expect(200);
@@ -356,7 +365,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       await createWbsAssignment(period1Id, employee.id, project.id, wbsItem.id);
 
       // When: period2의 미할당 WBS 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId: period2Id })
         .expect(200);
@@ -374,7 +384,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       const periodId = await createEvaluationPeriod();
 
       // When & Then: projectId 없이 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ periodId })
         .expect(400);
@@ -385,7 +396,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       const project = getActiveProject();
 
       // When & Then: periodId 없이 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id })
         .expect(400);
@@ -396,7 +408,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       const periodId = await createEvaluationPeriod();
 
       // When & Then: 잘못된 UUID 형식으로 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: 'invalid-uuid', periodId })
         .expect(400);
@@ -407,7 +420,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       const project = getActiveProject();
 
       // When & Then: 잘못된 UUID 형식으로 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId: 'invalid-uuid' })
         .expect(400);
@@ -419,7 +433,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       const nonExistentProjectId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then: 존재하지 않는 프로젝트로 조회
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: nonExistentProjectId, periodId })
         .expect(400);
@@ -431,7 +446,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then: 존재하지 않는 평가기간으로 조회
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId: nonExistentPeriodId })
         .expect(400);
@@ -444,7 +460,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       const nonExistentEmployeeId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then: 존재하지 않는 직원으로 조회
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({
           projectId: project.id,
@@ -479,7 +496,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/unassigned', () => {
       }
 
       // When: 미할당 WBS 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
         .query({ projectId: project.id, periodId })
         .expect(200);

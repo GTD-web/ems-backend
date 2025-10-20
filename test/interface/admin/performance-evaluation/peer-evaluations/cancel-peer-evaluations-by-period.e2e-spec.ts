@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -74,7 +73,8 @@ describe('DELETE /admin/performance-evaluation/peer-evaluations/evaluatee/:evalu
     evaluateeId: string;
     periodId: string;
   }): Promise<string> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/performance-evaluation/peer-evaluations/requests')
       .send(data)
       .expect(201);
@@ -89,9 +89,11 @@ describe('DELETE /admin/performance-evaluation/peer-evaluations/evaluatee/:evalu
     evaluateeId: string,
     periodId: string,
   ) {
-    return request(app.getHttpServer()).delete(
-      `/admin/performance-evaluation/peer-evaluations/evaluatee/${evaluateeId}/period/${periodId}/cancel-all`,
-    );
+    return testSuite
+      .request()
+      .delete(
+        `/admin/performance-evaluation/peer-evaluations/evaluatee/${evaluateeId}/period/${periodId}/cancel-all`,
+      );
   }
 
   /**
@@ -227,7 +229,8 @@ describe('DELETE /admin/performance-evaluation/peer-evaluations/evaluatee/:evalu
       const period = getRandomEvaluationPeriod();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(
           `/admin/performance-evaluation/peer-evaluations/evaluatee/${invalidEvaluateeId}/period/${period.id}/cancel-all`,
         )
@@ -240,7 +243,8 @@ describe('DELETE /admin/performance-evaluation/peer-evaluations/evaluatee/:evalu
       const invalidPeriodId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(
           `/admin/performance-evaluation/peer-evaluations/evaluatee/${evaluatee.id}/period/${invalidPeriodId}/cancel-all`,
         )

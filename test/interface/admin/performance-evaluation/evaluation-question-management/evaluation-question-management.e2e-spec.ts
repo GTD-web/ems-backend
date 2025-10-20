@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 /**
@@ -36,7 +35,8 @@ describe('평가 질문 관리 API', () => {
     await testSuite.cleanupBeforeTest();
 
     // 테스트용 질문 그룹 생성
-    const groupResponse = await request(app.getHttpServer())
+    const groupResponse = await testSuite
+      .request()
       .post(`${BASE_URL}/question-groups`)
       .send({ name: '테스트 질문 그룹' })
       .expect(201);
@@ -57,7 +57,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(201);
@@ -82,7 +83,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(201);
@@ -92,7 +94,8 @@ describe('평가 질문 관리 API', () => {
         expect(response.body).toHaveProperty('message');
 
         // 생성된 질문 조회하여 점수 범위 확인
-        const getResponse = await request(app.getHttpServer())
+        const getResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${response.body.id}`)
           .expect(200);
 
@@ -111,7 +114,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(201);
@@ -120,7 +124,8 @@ describe('평가 질문 관리 API', () => {
         expect(response.body).toHaveProperty('id');
 
         // 그룹의 질문 목록 조회하여 확인
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -139,7 +144,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(201);
@@ -159,13 +165,15 @@ describe('평가 질문 관리 API', () => {
           text: '중복 테스트 질문',
         };
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(201);
 
         // When & Then - 동일한 내용으로 다시 생성 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(409);
@@ -176,7 +184,8 @@ describe('평가 질문 관리 API', () => {
         const createDto = {};
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(400);
@@ -189,7 +198,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(400);
@@ -202,7 +212,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto)
           .expect(400);
@@ -217,7 +228,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto1)
           .expect(400);
@@ -230,7 +242,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send(createDto2)
           .expect(400);
@@ -242,7 +255,8 @@ describe('평가 질문 관리 API', () => {
     describe('성공 케이스', () => {
       it('질문 내용 수정: text 필드로 질문 내용을 변경할 수 있어야 한다', async () => {
         // Given - 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '수정 전 질문 내용' })
           .expect(201);
@@ -254,7 +268,8 @@ describe('평가 질문 관리 API', () => {
           text: '수정 후 질문 내용',
         };
 
-        const updateResponse = await request(app.getHttpServer())
+        const updateResponse = await testSuite
+          .request()
           .patch(`${BASE_URL}/evaluation-questions/${questionId}`)
           .send(updateDto)
           .expect(200);
@@ -267,7 +282,8 @@ describe('평가 질문 관리 API', () => {
         );
 
         // 변경 확인
-        const getResponse = await request(app.getHttpServer())
+        const getResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${questionId}`)
           .expect(200);
 
@@ -276,7 +292,8 @@ describe('평가 질문 관리 API', () => {
 
       it('점수 범위 수정: minScore, maxScore를 변경할 수 있어야 한다', async () => {
         // Given - 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({
             text: '점수 범위 수정 테스트',
@@ -293,13 +310,15 @@ describe('평가 질문 관리 API', () => {
           maxScore: 10,
         };
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/evaluation-questions/${questionId}`)
           .send(updateDto)
           .expect(200);
 
         // Then - 변경 확인
-        const getResponse = await request(app.getHttpServer())
+        const getResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${questionId}`)
           .expect(200);
 
@@ -309,7 +328,8 @@ describe('평가 질문 관리 API', () => {
 
       it('부분 수정: 일부 필드만 포함하여 수정할 수 있어야 한다', async () => {
         // Given - 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({
             text: '부분 수정 테스트',
@@ -325,13 +345,15 @@ describe('평가 질문 관리 API', () => {
           text: '부분 수정 완료',
         };
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/evaluation-questions/${questionId}`)
           .send(updateDto)
           .expect(200);
 
         // Then
-        const getResponse = await request(app.getHttpServer())
+        const getResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${questionId}`)
           .expect(200);
 
@@ -350,7 +372,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/evaluation-questions/${nonExistentId}`)
           .send(updateDto)
           .expect(404);
@@ -358,18 +381,21 @@ describe('평가 질문 관리 API', () => {
 
       it('질문 내용 중복: 다른 질문과 중복되는 내용으로 변경 시 409 에러가 발생해야 한다', async () => {
         // Given - 두 개의 질문 생성
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '기존 질문 A' })
           .expect(201);
 
-        const createResponseB = await request(app.getHttpServer())
+        const createResponseB = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '기존 질문 B' })
           .expect(201);
 
         // When & Then - 질문 B를 질문 A와 동일한 내용으로 변경 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/evaluation-questions/${createResponseB.body.id}`)
           .send({ text: '기존 질문 A' })
           .expect(409);
@@ -377,13 +403,15 @@ describe('평가 질문 관리 API', () => {
 
       it('잘못된 점수 범위: minScore >= maxScore인 경우 400 에러가 발생해야 한다', async () => {
         // Given - 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '점수 범위 수정 테스트', minScore: 1, maxScore: 5 })
           .expect(201);
 
         // When & Then - 잘못된 점수 범위로 수정 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/evaluation-questions/${createResponse.body.id}`)
           .send({ minScore: 5, maxScore: 5 })
           .expect(400);
@@ -397,7 +425,8 @@ describe('평가 질문 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/evaluation-questions/${invalidId}`)
           .send(updateDto)
           .expect(400);
@@ -409,7 +438,8 @@ describe('평가 질문 관리 API', () => {
     describe('성공 케이스', () => {
       it('정상 삭제: 응답이 없는 질문을 삭제할 수 있어야 한다', async () => {
         // Given - 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '삭제 가능 질문' })
           .expect(201);
@@ -417,12 +447,14 @@ describe('평가 질문 관리 API', () => {
         const questionId = createResponse.body.id;
 
         // When - 질문 삭제
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/evaluation-questions/${questionId}`)
           .expect(204);
 
         // Then - 삭제된 질문 조회 시 404 에러
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${questionId}`)
           .expect(404);
       });
@@ -434,7 +466,8 @@ describe('평가 질문 관리 API', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/evaluation-questions/${nonExistentId}`)
           .expect(404);
       });
@@ -444,7 +477,8 @@ describe('평가 질문 관리 API', () => {
         const invalidId = 'invalid-uuid-format';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/evaluation-questions/${invalidId}`)
           .expect(400);
       });
@@ -455,7 +489,8 @@ describe('평가 질문 관리 API', () => {
     describe('성공 케이스', () => {
       it('정상 조회: 유효한 ID로 질문 정보를 조회할 수 있어야 한다', async () => {
         // Given - 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({
             text: '조회 테스트 질문',
@@ -467,7 +502,8 @@ describe('평가 질문 관리 API', () => {
         const questionId = createResponse.body.id;
 
         // When - 질문 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${questionId}`)
           .expect(200);
 
@@ -482,13 +518,15 @@ describe('평가 질문 관리 API', () => {
 
       it('응답 구조 검증: 응답에 id, text, minScore, maxScore 등의 필드가 포함되어야 한다', async () => {
         // Given - 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '응답 구조 검증 질문' })
           .expect(201);
 
         // When - 질문 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${createResponse.body.id}`)
           .expect(200);
 
@@ -510,7 +548,8 @@ describe('평가 질문 관리 API', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${nonExistentId}`)
           .expect(404);
       });
@@ -520,7 +559,8 @@ describe('평가 질문 관리 API', () => {
         const invalidId = 'invalid-uuid-format';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${invalidId}`)
           .expect(400);
       });
@@ -531,23 +571,27 @@ describe('평가 질문 관리 API', () => {
     describe('성공 케이스', () => {
       it('목록 조회: 모든 평가 질문을 조회할 수 있어야 한다', async () => {
         // Given - 여러 질문 생성
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '질문 1' })
           .expect(201);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '질문 2' })
           .expect(201);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '질문 3' })
           .expect(201);
 
         // When - 목록 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions`)
           .expect(200);
 
@@ -563,7 +607,8 @@ describe('평가 질문 관리 API', () => {
         // Given - 질문이 없는 상태
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions`)
           .expect(200);
 
@@ -574,13 +619,15 @@ describe('평가 질문 관리 API', () => {
 
       it('응답 구조 검증: 각 질문 항목에 필수 필드가 포함되어야 한다', async () => {
         // Given - 질문 생성
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '테스트 질문' })
           .expect(201);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions`)
           .expect(200);
 
@@ -597,7 +644,8 @@ describe('평가 질문 관리 API', () => {
     describe('성공 케이스', () => {
       it('정상 복사: 유효한 ID로 질문을 복사할 수 있어야 한다', async () => {
         // Given - 원본 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({
             text: '원본 질문',
@@ -609,7 +657,8 @@ describe('평가 질문 관리 API', () => {
         const originalId = createResponse.body.id;
 
         // When - 질문 복사
-        const copyResponse = await request(app.getHttpServer())
+        const copyResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions/${originalId}/copy`)
           .send({})
           .expect(201);
@@ -623,7 +672,8 @@ describe('평가 질문 관리 API', () => {
         expect(copyResponse.body.id).not.toBe(originalId); // 새로운 ID
 
         // 복사된 질문 조회
-        const copiedQuestion = await request(app.getHttpServer())
+        const copiedQuestion = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${copyResponse.body.id}`)
           .expect(200);
 
@@ -635,13 +685,15 @@ describe('평가 질문 관리 API', () => {
 
       it('복사본 표시: 복사된 질문 내용에 "(복사본)"이 포함되어야 한다', async () => {
         // Given - 원본 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '복사 테스트 질문' })
           .expect(201);
 
         // When - 질문 복사
-        const copyResponse = await request(app.getHttpServer())
+        const copyResponse = await testSuite
+          .request()
           .post(
             `${BASE_URL}/evaluation-questions/${createResponse.body.id}/copy`,
           )
@@ -649,7 +701,8 @@ describe('평가 질문 관리 API', () => {
           .expect(201);
 
         // Then - 복사본 확인
-        const copiedQuestion = await request(app.getHttpServer())
+        const copiedQuestion = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${copyResponse.body.id}`)
           .expect(200);
 
@@ -658,13 +711,15 @@ describe('평가 질문 관리 API', () => {
 
       it('응답 구조 검증: 응답에 새로운 질문의 id가 포함되어야 한다', async () => {
         // Given - 원본 질문 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '응답 구조 검증 질문' })
           .expect(201);
 
         // When - 질문 복사
-        const copyResponse = await request(app.getHttpServer())
+        const copyResponse = await testSuite
+          .request()
           .post(
             `${BASE_URL}/evaluation-questions/${createResponse.body.id}/copy`,
           )
@@ -687,7 +742,8 @@ describe('평가 질문 관리 API', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions/${nonExistentId}/copy`)
           .send({})
           .expect(404);
@@ -698,7 +754,8 @@ describe('평가 질문 관리 API', () => {
         const invalidId = 'invalid-uuid-format';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions/${invalidId}/copy`)
           .send({})
           .expect(400);
@@ -709,7 +766,8 @@ describe('평가 질문 관리 API', () => {
   describe('데이터 무결성 테스트', () => {
     it('Soft Delete: 삭제된 질문은 목록 조회에서 제외되어야 한다', async () => {
       // Given - 질문 생성
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/evaluation-questions`)
         .send({ text: 'Soft Delete 테스트 질문' })
         .expect(201);
@@ -717,19 +775,22 @@ describe('평가 질문 관리 API', () => {
       const questionId = createResponse.body.id;
 
       // 생성 직후 목록 조회
-      const beforeDeleteResponse = await request(app.getHttpServer())
+      const beforeDeleteResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/evaluation-questions`)
         .expect(200);
 
       const beforeCount = beforeDeleteResponse.body.length;
 
       // When - 질문 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`${BASE_URL}/evaluation-questions/${questionId}`)
         .expect(204);
 
       // Then - 삭제 후 목록 조회
-      const afterDeleteResponse = await request(app.getHttpServer())
+      const afterDeleteResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/evaluation-questions`)
         .expect(200);
 
@@ -741,7 +802,8 @@ describe('평가 질문 관리 API', () => {
 
     it('생성 후 조회: 생성된 질문이 즉시 조회 가능해야 한다', async () => {
       // Given & When - 질문 생성
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/evaluation-questions`)
         .send({ text: '생성 후 조회 테스트' })
         .expect(201);
@@ -749,7 +811,8 @@ describe('평가 질문 관리 API', () => {
       const questionId = createResponse.body.id;
 
       // Then - 즉시 조회 가능
-      const getResponse = await request(app.getHttpServer())
+      const getResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/evaluation-questions/${questionId}`)
         .expect(200);
 
@@ -759,7 +822,8 @@ describe('평가 질문 관리 API', () => {
 
     it('수정 후 조회: 수정된 내용이 즉시 반영되어야 한다', async () => {
       // Given - 질문 생성
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/evaluation-questions`)
         .send({ text: '수정 전' })
         .expect(201);
@@ -767,13 +831,15 @@ describe('평가 질문 관리 API', () => {
       const questionId = createResponse.body.id;
 
       // When - 질문 수정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`${BASE_URL}/evaluation-questions/${questionId}`)
         .send({ text: '수정 후' })
         .expect(200);
 
       // Then - 수정 내용 즉시 반영 확인
-      const getResponse = await request(app.getHttpServer())
+      const getResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/evaluation-questions/${questionId}`)
         .expect(200);
 
@@ -781,4 +847,3 @@ describe('평가 질문 관리 API', () => {
     });
   });
 });
-

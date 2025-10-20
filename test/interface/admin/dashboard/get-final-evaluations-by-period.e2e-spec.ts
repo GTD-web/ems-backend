@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -116,9 +115,9 @@ describe('GET /admin/dashboard/:evaluationPeriodId/final-evaluations', () => {
   }
 
   function getFinalEvaluations(evaluationPeriodId: string) {
-    return request(app.getHttpServer()).get(
-      `/admin/dashboard/${evaluationPeriodId}/final-evaluations`,
-    );
+    return testSuite
+      .request()
+      .get(`/admin/dashboard/${evaluationPeriodId}/final-evaluations`);
   }
 
   // ==================== Test Cases ====================
@@ -305,7 +304,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/final-evaluations', () => {
       const invalidId = 'invalid-uuid';
 
       // When & Then: 400 에러
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(`/admin/dashboard/${invalidId}/final-evaluations`)
         .expect(400);
     });
@@ -315,7 +315,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/final-evaluations', () => {
       const nonExistentId = '123e4567-e89b-12d3-a456-426614174999';
 
       // When & Then: 404 에러
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(`/admin/dashboard/${nonExistentId}/final-evaluations`)
         .expect(404);
     });

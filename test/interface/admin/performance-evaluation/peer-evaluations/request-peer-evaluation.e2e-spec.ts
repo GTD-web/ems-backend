@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -103,7 +102,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
     questionIds?: string[];
     requestedBy?: string;
   }): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/performance-evaluation/peer-evaluations/requests')
       .send(data)
       .expect(201);
@@ -132,7 +132,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const period = getRandomEvaluationPeriod();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -327,7 +328,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const invalidEvaluatorId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: invalidEvaluatorId,
@@ -344,7 +346,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const invalidEvaluateeId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -361,7 +364,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const invalidPeriodId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -377,7 +381,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const period = getRandomEvaluationPeriod();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluateeId: evaluatee.id,
@@ -392,7 +397,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const period = getRandomEvaluationPeriod();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -407,7 +413,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const evaluatee = getRandomEmployee();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -424,7 +431,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const invalidRequestedBy = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -443,7 +451,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const invalidQuestionIds = ['invalid-uuid-1', 'invalid-uuid-2'];
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -461,7 +470,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const period = getRandomEvaluationPeriod();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: nonExistentEvaluatorId,
@@ -478,7 +488,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const period = getRandomEvaluationPeriod();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -495,7 +506,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const nonExistentPeriodId = uuidv4();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -516,7 +528,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const period = getRandomEvaluationPeriod();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -537,7 +550,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const period = getRandomEvaluationPeriod();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,
@@ -563,7 +577,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests', () => {
       const period = getRandomEvaluationPeriod();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/performance-evaluation/peer-evaluations/requests')
         .send({
           evaluatorId: evaluator.id,

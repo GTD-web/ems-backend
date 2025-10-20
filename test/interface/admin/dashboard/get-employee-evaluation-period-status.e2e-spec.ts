@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -119,7 +118,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}`,
       )
@@ -137,7 +137,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
     employeeId: string,
     projectId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         employeeId,
@@ -157,7 +158,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
     wbsItemId: string,
   ): Promise<void> {
     const wbsItem = testData.wbsItems.find((w) => w.id === wbsItemId);
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -176,7 +178,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
     wbsItemId: string,
     criteria: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItemId}`,
       )
@@ -191,7 +194,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
    * WBS 평가기준 삭제 헬퍼
    */
   async function deleteWbsEvaluationCriteria(wbsItemId: string): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .delete(
         `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItemId}`,
       )
@@ -207,7 +211,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
     periodId: string,
     evaluatorId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/primary-evaluator`,
       )
@@ -227,7 +232,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
     periodId: string,
     evaluatorId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/secondary-evaluator`,
       )
@@ -246,7 +252,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
     employeeId: string,
     reason: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .patch(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}/exclude`,
       )
@@ -269,7 +276,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -293,7 +301,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -321,7 +330,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -348,7 +358,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -373,7 +384,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -395,7 +407,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -422,7 +435,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -449,7 +463,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -482,7 +497,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -503,7 +519,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -532,7 +549,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       await deleteWbsEvaluationCriteria(wbsItem.id);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -576,7 +594,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       await deleteWbsEvaluationCriteria(wbsItem3.id);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -604,7 +623,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       await createWbsEvaluationCriteria(wbsItem.id, '테스트 평가기준');
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -624,7 +644,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -659,7 +680,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${evaluatee.id}/status`,
         )
@@ -701,7 +723,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${evaluatee.id}/status`,
         )
@@ -727,7 +750,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -751,7 +775,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       const nonExistentEmployeeId = '00000000-0000-0000-0000-000000000000';
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${nonExistentEmployeeId}/status`,
         )
@@ -767,7 +792,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       const employee = getRandomEmployee();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${nonExistentPeriodId}/employees/${employee.id}/status`,
         )
@@ -782,7 +808,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       const employee = getRandomEmployee();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(`/admin/dashboard/invalid-uuid/employees/${employee.id}/status`)
         .expect((res) => {
           expect([400, 500]).toContain(res.status);
@@ -791,7 +818,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
 
     it('잘못된 직원 UUID 형식으로 요청 시 에러가 발생해야 한다', async () => {
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/invalid-uuid/status`,
         )
@@ -816,7 +844,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // 2. 현황 조회 (배정 전)
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -833,7 +862,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // 4. 현황 재조회 (배정 후)
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -882,7 +912,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When - 최종 현황 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${evaluatee.id}/status`,
         )
@@ -904,7 +935,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // 1. 제외 전 조회
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -921,7 +953,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // 3. 제외 후 조회
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -931,7 +964,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       expect(response2.body.exclusionInfo.isExcluded).toBe(true);
 
       // 4. 제외 복원
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${testData.evaluationPeriodId}/targets/${employee.id}/include`,
         )
@@ -941,7 +975,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
         .expect(200);
 
       // 5. 복원 후 조회
-      const response3 = await request(app.getHttpServer())
+      const response3 = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -983,19 +1018,22 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee1.id}/status`,
         )
         .expect(200);
 
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee2.id}/status`,
         )
         .expect(200);
 
-      const response3 = await request(app.getHttpServer())
+      const response3 = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee3.id}/status`,
         )
@@ -1058,7 +1096,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       // WBS 배정 시 자동으로 평가기준이 생성되므로 별도 설정 불필요
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )
@@ -1080,7 +1119,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${employee.id}/status`,
         )

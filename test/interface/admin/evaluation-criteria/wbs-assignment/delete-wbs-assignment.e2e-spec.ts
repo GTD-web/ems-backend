@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
@@ -100,7 +99,8 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -128,7 +128,8 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
     projectId: string,
     periodId: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -153,7 +154,8 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
       );
 
       // When: 할당 취소
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment.id}`)
         .send();
 
@@ -182,7 +184,8 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
       expect(criteriaBeforeDelete.length).toBeGreaterThan(0);
 
       // When: 할당 취소 (마지막 할당)
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment.id}`)
         .send();
 
@@ -222,7 +225,8 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
       expect(criteriaBeforeDelete.length).toBeGreaterThan(0);
 
       // When: 첫 번째 할당만 취소
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment1.id}`)
         .send();
 
@@ -264,12 +268,14 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
       );
 
       // When & Then: 각 할당을 순차적으로 취소
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment1.id}`)
         .send();
       expect(response1.status).toBe(200);
 
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment2.id}`)
         .send();
       expect(response2.status).toBe(200);
@@ -290,7 +296,8 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
       const invalidId = 'invalid-uuid-format';
 
       // When: 잘못된 UUID로 취소 시도
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${invalidId}`)
         .send();
 
@@ -305,7 +312,8 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
       // When: 존재하지 않는 할당 취소 시도
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${nonExistentId}`)
         .send();
 
@@ -323,13 +331,15 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
         periodId,
       );
 
-      const firstResponse = await request(app.getHttpServer())
+      const firstResponse = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment.id}`)
         .send();
       expect(firstResponse.status).toBe(200);
 
       // When: 이미 취소된 할당을 다시 취소 시도
-      const secondResponse = await request(app.getHttpServer())
+      const secondResponse = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment.id}`)
         .send();
 
@@ -357,13 +367,15 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
       );
 
       // When: 첫 번째 할당 취소
-      const deleteResponse = await request(app.getHttpServer())
+      const deleteResponse = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment1.id}`)
         .send();
       expect(deleteResponse.status).toBe(200);
 
       // Then: 목록 조회 시 취소된 할당은 제외
-      const listResponse = await request(app.getHttpServer())
+      const listResponse = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({
           periodId: periodId,
@@ -408,7 +420,8 @@ describe('[DELETE] /admin/evaluation-criteria/wbs-assignments/:id - WBS 할당 �
 
       // When: 모든 할당을 순차적으로 취소
       for (const assignment of assignments) {
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment.id}`)
           .send();
         expect(response.status).toBe(200);

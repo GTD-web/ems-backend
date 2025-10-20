@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
@@ -105,7 +104,8 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
     criteria: string,
     actionBy?: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItemId}`,
       )
@@ -158,7 +158,8 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
           )
@@ -182,7 +183,8 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         );
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
           )
@@ -207,14 +209,16 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         );
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
           )
           .expect(200);
 
         // Then - WBS 항목의 평가기준 목록 조회
-        const listResponse = await request(app.getHttpServer())
+        const listResponse = await testSuite
+          .request()
           .get('/admin/evaluation-criteria/wbs-evaluation-criteria')
           .query({ wbsItemId: wbsItem.id });
 
@@ -240,14 +244,16 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         );
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
           )
           .expect(200);
 
         // Then
-        const detailResponse = await request(app.getHttpServer())
+        const detailResponse = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
           )
@@ -273,16 +279,19 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         );
 
         // When - 첫 번째 삭제
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
           )
           .expect(200);
 
         // Then - 두 번째 삭제 시도
-        const response = await request(app.getHttpServer()).delete(
-          `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
-        );
+        const response = await testSuite
+          .request()
+          .delete(
+            `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
+          );
 
         // 이미 삭제된 항목이므로 404 또는 200 반환 가능
         expect([200, 404]).toContain(response.status);
@@ -295,9 +304,11 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        const response = await request(app.getHttpServer()).delete(
-          `/admin/evaluation-criteria/wbs-evaluation-criteria/${nonExistentId}`,
-        );
+        const response = await testSuite
+          .request()
+          .delete(
+            `/admin/evaluation-criteria/wbs-evaluation-criteria/${nonExistentId}`,
+          );
 
         expect([404, 500]).toContain(response.status);
       });
@@ -307,9 +318,11 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        const response = await request(app.getHttpServer()).delete(
-          `/admin/evaluation-criteria/wbs-evaluation-criteria/${invalidId}`,
-        );
+        const response = await testSuite
+          .request()
+          .delete(
+            `/admin/evaluation-criteria/wbs-evaluation-criteria/${invalidId}`,
+          );
 
         expect([400, 500]).toContain(response.status);
       });
@@ -329,7 +342,8 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
           )
@@ -349,7 +363,8 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
           )
@@ -371,14 +386,16 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
           )
           .expect(200);
 
         // Then
-        const listResponse = await request(app.getHttpServer())
+        const listResponse = await testSuite
+          .request()
           .get('/admin/evaluation-criteria/wbs-evaluation-criteria')
           .query({ wbsItemId: wbsItem.id })
           .expect(200);
@@ -392,9 +409,11 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const wbsItem = getRandomWbsItem();
 
         // When & Then - 평가기준이 없는 WBS 항목 삭제
-        const response = await request(app.getHttpServer()).delete(
-          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
-        );
+        const response = await testSuite
+          .request()
+          .delete(
+            `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+          );
 
         expect([200, 404]).toContain(response.status);
       });
@@ -408,16 +427,19 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
 
         // When - 첫 번째 삭제
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
           )
           .expect(200);
 
         // Then - 두 번째 삭제 시도
-        const response = await request(app.getHttpServer()).delete(
-          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
-        );
+        const response = await testSuite
+          .request()
+          .delete(
+            `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+          );
 
         expect([200, 404]).toContain(response.status);
       });
@@ -440,7 +462,8 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         );
 
         // When - WBS 1의 평가기준만 삭제
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem1.id}`,
           )
@@ -467,9 +490,11 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        const response = await request(app.getHttpServer()).delete(
-          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${nonExistentId}`,
-        );
+        const response = await testSuite
+          .request()
+          .delete(
+            `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${nonExistentId}`,
+          );
 
         expect([200, 404]).toContain(response.status);
       });
@@ -479,9 +504,11 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        const response = await request(app.getHttpServer()).delete(
-          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${invalidId}`,
-        );
+        const response = await testSuite
+          .request()
+          .delete(
+            `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${invalidId}`,
+          );
 
         expect([400, 500]).toContain(response.status);
       });
@@ -505,7 +532,8 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
       expect(created.criteria).toBe('첫 번째 평가기준');
 
       // 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
         )
@@ -534,7 +562,8 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
       );
 
       // WBS 항목 평가기준 전체 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )

@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -69,7 +68,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
     employeeId: string,
     createdBy: string = 'admin-user-id',
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}`,
       )
@@ -127,7 +127,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}`,
           )
@@ -145,7 +146,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // When - 등록 해제
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}`,
           )
@@ -167,7 +169,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}`,
           )
@@ -189,7 +192,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         const period = getActivePeriod();
         await registerEvaluationTarget(period.id, employee.id);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
@@ -200,7 +204,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
           .expect(200);
 
         // When - 등록 해제
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}`,
           )
@@ -218,7 +223,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}`,
           )
@@ -231,14 +237,16 @@ describe('평가 대상자 등록 해제 테스트', () => {
         const period = getActivePeriod();
         await registerEvaluationTarget(period.id, employee.id);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}`,
           )
           .expect(200);
 
         // When & Then - 재해제 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}`,
           )
@@ -251,7 +259,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${invalidPeriodId}/targets/${employee.id}`,
           )
@@ -264,7 +273,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         const invalidEmployeeId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${invalidEmployeeId}`,
           )
@@ -287,7 +297,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         }
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -306,7 +317,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         }
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -326,7 +338,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         const period = getActivePeriod();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -344,7 +357,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         }
 
         // 일부 제외 처리
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employees[0].id}/exclude`,
           )
@@ -354,7 +368,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
           })
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employees[1].id}/exclude`,
           )
@@ -365,7 +380,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
           .expect(200);
 
         // When - 모두 해제
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -383,20 +399,23 @@ describe('평가 대상자 등록 해제 테스트', () => {
         }
 
         // 일부 미리 해제
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employees[0].id}`,
           )
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(
             `/admin/evaluation-periods/${period.id}/targets/${employees[1].id}`,
           )
           .expect(200);
 
         // When - 모두 해제
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -417,7 +436,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         }
 
         // When - period1의 대상자만 해제
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(`/admin/evaluation-periods/${period1.id}/targets`)
           .expect(200);
 
@@ -439,7 +459,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(`/admin/evaluation-periods/${nonExistentPeriodId}/targets`)
           .expect(200);
 
@@ -452,7 +473,8 @@ describe('평가 대상자 등록 해제 테스트', () => {
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`/admin/evaluation-periods/${invalidPeriodId}/targets`)
           .expect(400);
       });

@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
+import { SSOService } from '../src/domain/common/sso/sso.service';
+import { AuthService } from '../src/context/auth-context/auth.service';
+import request from 'supertest';
 
 /**
  * E2E 테스트 베이스 클래스
@@ -12,12 +15,108 @@ export class BaseE2ETest {
   protected dataSource: DataSource;
 
   /**
+   * 모든 E2E 테스트에서 사용할 수 있는 테스트용 인증 토큰
+   * 사용법: .set('Authorization', testSuite.TEST_TOKEN)
+   */
+  public readonly TEST_TOKEN = 'Bearer test-token';
+
+  /**
+   * 인증 토큰이 자동으로 포함된 supertest request 반환
+   * 사용법: testSuite.request().get('/api/endpoint')
+   */
+  request() {
+    return {
+      get: (url: string) =>
+        request(this.app.getHttpServer())
+          .get(url)
+          .set('Authorization', this.TEST_TOKEN),
+      post: (url: string) =>
+        request(this.app.getHttpServer())
+          .post(url)
+          .set('Authorization', this.TEST_TOKEN),
+      put: (url: string) =>
+        request(this.app.getHttpServer())
+          .put(url)
+          .set('Authorization', this.TEST_TOKEN),
+      patch: (url: string) =>
+        request(this.app.getHttpServer())
+          .patch(url)
+          .set('Authorization', this.TEST_TOKEN),
+      delete: (url: string) =>
+        request(this.app.getHttpServer())
+          .delete(url)
+          .set('Authorization', this.TEST_TOKEN),
+    };
+  }
+
+  /**
    * 테스트 애플리케이션 초기화
    */
   async initializeApp(): Promise<void> {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      // AuthService를 mock으로 대체 - 항상 성공하는 인증 반환
+      .overrideProvider(AuthService)
+      .useValue({
+        토큰검증및사용자동기화: jest.fn().mockResolvedValue({
+          user: {
+            id: '00000000-0000-0000-0000-000000000001',
+            email: 'test@example.com',
+            name: '테스트 사용자',
+            employeeNumber: 'TEST001',
+            roles: ['admin', 'user'],
+          },
+          isSynced: false,
+        }),
+        역할포함사용자조회: jest.fn().mockResolvedValue({
+          user: {
+            id: '00000000-0000-0000-0000-000000000001',
+            email: 'test@example.com',
+            name: '테스트 사용자',
+            employeeNumber: 'TEST001',
+            roles: ['admin', 'user'],
+          },
+        }),
+      })
+      .overrideProvider('SSO_CONFIG')
+      .useValue({
+        baseUrl: 'http://localhost:3000',
+        clientId: 'test-client-id',
+        clientSecret: 'test-client-secret',
+      })
+      .overrideProvider('SSO_CLIENT')
+      .useValue({
+        auth: {
+          로그인한다: jest.fn(),
+          토큰을검증한다: jest.fn(),
+          토큰을갱신한다: jest.fn(),
+        },
+        organization: {
+          직원정보를조회한다: jest.fn(),
+          직원목록을조회한다: jest.fn(),
+          부서정보를조회한다: jest.fn(),
+          부서목록을조회한다: jest.fn(),
+          부서트리를조회한다: jest.fn(),
+        },
+        fcm: {
+          FCM토큰을등록한다: jest.fn(),
+          FCM알림을전송한다: jest.fn(),
+        },
+      })
+      .overrideProvider(SSOService)
+      .useValue({
+        로그인한다: jest.fn(),
+        토큰을검증한다: jest.fn(),
+        토큰을갱신한다: jest.fn(),
+        직원정보를조회한다: jest.fn(),
+        직원목록을조회한다: jest.fn(),
+        부서정보를조회한다: jest.fn(),
+        부서목록을조회한다: jest.fn(),
+        FCM토큰을등록한다: jest.fn(),
+        FCM알림을전송한다: jest.fn(),
+      })
+      .compile();
 
     this.app = moduleFixture.createNestApplication();
 

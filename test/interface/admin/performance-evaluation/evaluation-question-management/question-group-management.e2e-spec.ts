@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 /**
@@ -45,7 +44,8 @@ describe('평가 질문 그룹 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(201);
@@ -69,7 +69,8 @@ describe('평가 질문 그룹 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(201);
@@ -79,7 +80,8 @@ describe('평가 질문 그룹 관리 API', () => {
         expect(response.body).toHaveProperty('message');
 
         // 생성된 그룹 조회하여 isDefault 확인
-        const getResponse = await request(app.getHttpServer())
+        const getResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${response.body.id}`)
           .expect(200);
 
@@ -94,7 +96,8 @@ describe('평가 질문 그룹 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(201);
@@ -111,7 +114,8 @@ describe('평가 질문 그룹 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(201);
@@ -131,13 +135,15 @@ describe('평가 질문 그룹 관리 API', () => {
           name: '중복 테스트 그룹',
         };
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(201);
 
         // When & Then - 동일한 이름으로 다시 생성 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(409);
@@ -148,7 +154,8 @@ describe('평가 질문 그룹 관리 API', () => {
         const createDto = {};
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(400);
@@ -161,7 +168,8 @@ describe('평가 질문 그룹 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(400);
@@ -174,7 +182,8 @@ describe('평가 질문 그룹 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send(createDto)
           .expect(400);
@@ -186,7 +195,8 @@ describe('평가 질문 그룹 관리 API', () => {
     describe('성공 케이스', () => {
       it('그룹명 수정: name 필드로 그룹명을 변경할 수 있어야 한다', async () => {
         // Given - 그룹 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '수정 전 그룹명' })
           .expect(201);
@@ -198,7 +208,8 @@ describe('평가 질문 그룹 관리 API', () => {
           name: '수정 후 그룹명',
         };
 
-        const updateResponse = await request(app.getHttpServer())
+        const updateResponse = await testSuite
+          .request()
           .patch(`${BASE_URL}/question-groups/${groupId}`)
           .send(updateDto)
           .expect(200);
@@ -211,7 +222,8 @@ describe('평가 질문 그룹 관리 API', () => {
         );
 
         // 변경 확인
-        const getResponse = await request(app.getHttpServer())
+        const getResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${groupId}`)
           .expect(200);
 
@@ -220,7 +232,8 @@ describe('평가 질문 그룹 관리 API', () => {
 
       it('기본 그룹 설정: isDefault를 true로 변경하여 기본 그룹으로 설정할 수 있어야 한다', async () => {
         // Given - 일반 그룹 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '일반 그룹', isDefault: false })
           .expect(201);
@@ -232,13 +245,15 @@ describe('평가 질문 그룹 관리 API', () => {
           isDefault: true,
         };
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-groups/${groupId}`)
           .send(updateDto)
           .expect(200);
 
         // Then - 기본 그룹 설정 확인
-        const getResponse = await request(app.getHttpServer())
+        const getResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${groupId}`)
           .expect(200);
 
@@ -247,7 +262,8 @@ describe('평가 질문 그룹 관리 API', () => {
 
       it('부분 수정: 일부 필드만 포함하여 수정할 수 있어야 한다', async () => {
         // Given - 그룹 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '부분 수정 테스트 그룹', isDefault: false })
           .expect(201);
@@ -259,13 +275,15 @@ describe('평가 질문 그룹 관리 API', () => {
           name: '부분 수정 완료',
         };
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-groups/${groupId}`)
           .send(updateDto)
           .expect(200);
 
         // Then
-        const getResponse = await request(app.getHttpServer())
+        const getResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${groupId}`)
           .expect(200);
 
@@ -283,7 +301,8 @@ describe('평가 질문 그룹 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-groups/${nonExistentId}`)
           .send(updateDto)
           .expect(404);
@@ -291,18 +310,21 @@ describe('평가 질문 그룹 관리 API', () => {
 
       it('그룹명 중복: 다른 그룹과 중복되는 이름으로 변경 시 409 에러가 발생해야 한다', async () => {
         // Given - 두 개의 그룹 생성
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '기존 그룹 A' })
           .expect(201);
 
-        const createResponseB = await request(app.getHttpServer())
+        const createResponseB = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '기존 그룹 B' })
           .expect(201);
 
         // When & Then - 그룹 B를 그룹 A와 동일한 이름으로 변경 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-groups/${createResponseB.body.id}`)
           .send({ name: '기존 그룹 A' })
           .expect(409);
@@ -316,7 +338,8 @@ describe('평가 질문 그룹 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-groups/${invalidId}`)
           .send(updateDto)
           .expect(400);
@@ -324,13 +347,15 @@ describe('평가 질문 그룹 관리 API', () => {
 
       it('빈 그룹명으로 수정: 빈 문자열로 수정 시 400 에러가 발생해야 한다', async () => {
         // Given - 그룹 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '정상 그룹명' })
           .expect(201);
 
         // When & Then - 빈 문자열로 수정 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-groups/${createResponse.body.id}`)
           .send({ name: '' })
           .expect(400);
@@ -342,7 +367,8 @@ describe('평가 질문 그룹 관리 API', () => {
     describe('성공 케이스', () => {
       it('정상 삭제: 삭제 가능한 그룹을 삭제할 수 있어야 한다', async () => {
         // Given - 삭제 가능한 그룹 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '삭제 가능 그룹' })
           .expect(201);
@@ -350,12 +376,14 @@ describe('평가 질문 그룹 관리 API', () => {
         const groupId = createResponse.body.id;
 
         // When - 그룹 삭제
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/question-groups/${groupId}`)
           .expect(204);
 
         // Then - 삭제된 그룹 조회 시 404 에러
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${groupId}`)
           .expect(404);
       });
@@ -364,7 +392,8 @@ describe('평가 질문 그룹 관리 API', () => {
     describe('실패 케이스', () => {
       it('기본 그룹 삭제 시도: isDefault가 true인 그룹 삭제 시 403 에러가 발생해야 한다', async () => {
         // Given - 기본 그룹 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '기본 그룹', isDefault: true })
           .expect(201);
@@ -372,7 +401,8 @@ describe('평가 질문 그룹 관리 API', () => {
         const groupId = createResponse.body.id;
 
         // When & Then - 기본 그룹 삭제 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/question-groups/${groupId}`)
           .expect(403);
       });
@@ -382,7 +412,8 @@ describe('평가 질문 그룹 관리 API', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/question-groups/${nonExistentId}`)
           .expect(404);
       });
@@ -392,7 +423,8 @@ describe('평가 질문 그룹 관리 API', () => {
         const invalidId = 'invalid-uuid-format';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/question-groups/${invalidId}`)
           .expect(400);
       });
@@ -403,7 +435,8 @@ describe('평가 질문 그룹 관리 API', () => {
     describe('성공 케이스', () => {
       it('정상 조회: 유효한 ID로 그룹 정보를 조회할 수 있어야 한다', async () => {
         // Given - 그룹 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '조회 테스트 그룹', isDefault: false })
           .expect(201);
@@ -411,7 +444,8 @@ describe('평가 질문 그룹 관리 API', () => {
         const groupId = createResponse.body.id;
 
         // When - 그룹 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${groupId}`)
           .expect(200);
 
@@ -426,13 +460,15 @@ describe('평가 질문 그룹 관리 API', () => {
 
       it('응답 구조 검증: 응답에 id, name, isDefault, isDeletable 등의 필드가 포함되어야 한다', async () => {
         // Given - 그룹 생성
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '응답 구조 검증 그룹' })
           .expect(201);
 
         // When - 그룹 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${createResponse.body.id}`)
           .expect(200);
 
@@ -458,7 +494,8 @@ describe('평가 질문 그룹 관리 API', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${nonExistentId}`)
           .expect(404);
       });
@@ -468,7 +505,8 @@ describe('평가 질문 그룹 관리 API', () => {
         const invalidId = 'invalid-uuid-format';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${invalidId}`)
           .expect(400);
       });
@@ -479,23 +517,27 @@ describe('평가 질문 그룹 관리 API', () => {
     describe('성공 케이스', () => {
       it('목록 조회: 모든 질문 그룹을 조회할 수 있어야 한다', async () => {
         // Given - 여러 그룹 생성
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '그룹 1' })
           .expect(201);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '그룹 2' })
           .expect(201);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '그룹 3' })
           .expect(201);
 
         // When - 목록 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups`)
           .expect(200);
 
@@ -517,7 +559,8 @@ describe('평가 질문 그룹 관리 API', () => {
         // Given - 그룹이 없는 상태
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups`)
           .expect(200);
 
@@ -528,13 +571,15 @@ describe('평가 질문 그룹 관리 API', () => {
 
       it('응답 구조 검증: 각 그룹 항목에 필수 필드가 포함되어야 한다', async () => {
         // Given - 그룹 생성
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '테스트 그룹' })
           .expect(201);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups`)
           .expect(200);
 
@@ -552,7 +597,8 @@ describe('평가 질문 그룹 관리 API', () => {
   describe('데이터 무결성 테스트', () => {
     it('Soft Delete: 삭제된 그룹은 목록 조회에서 제외되어야 한다', async () => {
       // Given - 그룹 생성
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/question-groups`)
         .send({ name: 'Soft Delete 테스트 그룹' })
         .expect(201);
@@ -560,19 +606,22 @@ describe('평가 질문 그룹 관리 API', () => {
       const groupId = createResponse.body.id;
 
       // 생성 직후 목록 조회
-      const beforeDeleteResponse = await request(app.getHttpServer())
+      const beforeDeleteResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups`)
         .expect(200);
 
       const beforeCount = beforeDeleteResponse.body.length;
 
       // When - 그룹 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`${BASE_URL}/question-groups/${groupId}`)
         .expect(204);
 
       // Then - 삭제 후 목록 조회
-      const afterDeleteResponse = await request(app.getHttpServer())
+      const afterDeleteResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups`)
         .expect(200);
 
@@ -584,7 +633,8 @@ describe('평가 질문 그룹 관리 API', () => {
 
     it('생성 후 조회: 생성된 그룹이 즉시 조회 가능해야 한다', async () => {
       // Given & When - 그룹 생성
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/question-groups`)
         .send({ name: '생성 후 조회 테스트' })
         .expect(201);
@@ -592,7 +642,8 @@ describe('평가 질문 그룹 관리 API', () => {
       const groupId = createResponse.body.id;
 
       // Then - 즉시 조회 가능
-      const getResponse = await request(app.getHttpServer())
+      const getResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups/${groupId}`)
         .expect(200);
 
@@ -602,7 +653,8 @@ describe('평가 질문 그룹 관리 API', () => {
 
     it('수정 후 조회: 수정된 내용이 즉시 반영되어야 한다', async () => {
       // Given - 그룹 생성
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/question-groups`)
         .send({ name: '수정 전' })
         .expect(201);
@@ -610,13 +662,15 @@ describe('평가 질문 그룹 관리 API', () => {
       const groupId = createResponse.body.id;
 
       // When - 그룹 수정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`${BASE_URL}/question-groups/${groupId}`)
         .send({ name: '수정 후' })
         .expect(200);
 
       // Then - 수정 내용 즉시 반영 확인
-      const getResponse = await request(app.getHttpServer())
+      const getResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups/${groupId}`)
         .expect(200);
 
@@ -625,7 +679,8 @@ describe('평가 질문 그룹 관리 API', () => {
 
     it('기본 그룹 전환: 새로운 기본 그룹 설정 시 기존 기본 그룹은 해제되어야 한다', async () => {
       // Given - 첫 번째 기본 그룹 생성
-      const firstGroupResponse = await request(app.getHttpServer())
+      const firstGroupResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/question-groups`)
         .send({ name: '첫 번째 기본 그룹', isDefault: true })
         .expect(201);
@@ -633,7 +688,8 @@ describe('평가 질문 그룹 관리 API', () => {
       const firstGroupId = firstGroupResponse.body.id;
 
       // 두 번째 일반 그룹 생성
-      const secondGroupResponse = await request(app.getHttpServer())
+      const secondGroupResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/question-groups`)
         .send({ name: '두 번째 그룹', isDefault: false })
         .expect(201);
@@ -641,20 +697,23 @@ describe('평가 질문 그룹 관리 API', () => {
       const secondGroupId = secondGroupResponse.body.id;
 
       // When - 두 번째 그룹을 기본 그룹으로 설정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`${BASE_URL}/question-groups/${secondGroupId}`)
         .send({ isDefault: true })
         .expect(200);
 
       // Then - 첫 번째 그룹은 기본 그룹이 아니어야 함
-      const firstGroupGet = await request(app.getHttpServer())
+      const firstGroupGet = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups/${firstGroupId}`)
         .expect(200);
 
       expect(firstGroupGet.body.isDefault).toBe(false);
 
       // 두 번째 그룹은 기본 그룹이어야 함
-      const secondGroupGet = await request(app.getHttpServer())
+      const secondGroupGet = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups/${secondGroupId}`)
         .expect(200);
 
@@ -666,7 +725,8 @@ describe('평가 질문 그룹 관리 API', () => {
     describe('성공 케이스', () => {
       it('기본 그룹 조회: isDefault가 true인 그룹을 조회할 수 있어야 한다', async () => {
         // Given - 기본 그룹 생성
-        const groupResponse = await request(app.getHttpServer())
+        const groupResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '기본 그룹', isDefault: true })
           .expect(201);
@@ -674,7 +734,8 @@ describe('평가 질문 그룹 관리 API', () => {
         const groupId = groupResponse.body.id;
 
         // When - 기본 그룹 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/default`)
           .expect(200);
 
@@ -686,13 +747,15 @@ describe('평가 질문 그룹 관리 API', () => {
 
       it('응답 구조 검증: 응답에 id, name, isDefault, isDeletable 등의 필드가 포함되어야 한다', async () => {
         // Given - 기본 그룹 생성
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '기본 그룹', isDefault: true })
           .expect(201);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/default`)
           .expect(200);
 
@@ -713,13 +776,15 @@ describe('평가 질문 그룹 관리 API', () => {
     describe('실패 케이스', () => {
       it('기본 그룹 없음: 기본 그룹이 설정되지 않은 경우 404 에러가 발생해야 한다', async () => {
         // Given - 일반 그룹만 생성 (isDefault: false)
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-groups`)
           .send({ name: '일반 그룹', isDefault: false })
           .expect(201);
 
         // When & Then - 기본 그룹이 없으므로 404 에러
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/default`)
           .expect(404);
       });

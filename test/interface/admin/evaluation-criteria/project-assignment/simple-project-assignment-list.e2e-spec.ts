@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -79,7 +78,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
     ];
 
     for (const assignment of assignments) {
-      await request(app.getHttpServer())
+      await testSuite.request()
         .post('/admin/evaluation-criteria/project-assignments')
         .send(assignment)
         .expect(201);
@@ -91,7 +90,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
   describe('API 기본 동작', () => {
     it('프로젝트 할당 목록 조회 API가 존재해야 한다', async () => {
       // When: API 엔드포인트 호출
-      const response = await request(app.getHttpServer()).get(
+      const response = await testSuite.request().get(
         '/admin/evaluation-criteria/project-assignments',
       );
 
@@ -103,7 +102,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('잘못된 경로로 요청 시 404 에러가 발생해야 한다', async () => {
       // When: 존재하지 않는 엔드포인트 호출
-      const response = await request(app.getHttpServer()).get(
+      const response = await testSuite.request().get(
         '/admin/evaluation-criteria/non-existent-endpoint',
       );
 
@@ -117,7 +116,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
   describe('쿼리 파라미터', () => {
     it('페이지 파라미터를 받을 수 있어야 한다', async () => {
       // When: 페이지 파라미터와 함께 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ page: 1 });
 
@@ -128,7 +127,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('리미트 파라미터를 받을 수 있어야 한다', async () => {
       // When: 리미트 파라미터와 함께 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ limit: 10 });
 
@@ -139,7 +138,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('실제 데이터로 필터 파라미터를 받을 수 있어야 한다', async () => {
       // When: 실제 테스트 데이터로 필터 파라미터와 함께 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({
           employeeId: testData.employees[0].id,
@@ -167,7 +166,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('평가기간 ID로 필터링할 수 있어야 한다', async () => {
       // When: 평가기간 ID로 필터링
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({
           periodId: evaluationPeriodId,
@@ -190,7 +189,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
   describe('페이지네이션', () => {
     it('기본 페이지네이션 파라미터를 처리해야 한다', async () => {
       // When: 기본 요청
-      const response = await request(app.getHttpServer()).get(
+      const response = await testSuite.request().get(
         '/admin/evaluation-criteria/project-assignments',
       );
 
@@ -207,7 +206,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('유효한 페이지 번호를 처리해야 한다', async () => {
       // When: 유효한 페이지 번호로 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ page: 1 });
 
@@ -218,7 +217,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('유효한 페이지 크기를 처리해야 한다', async () => {
       // When: 유효한 페이지 크기로 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ limit: 10 });
 
@@ -229,7 +228,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('페이지와 크기를 동시에 지정할 수 있어야 한다', async () => {
       // When: 페이지와 크기를 동시에 지정
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ page: 1, limit: 5 });
 
@@ -246,7 +245,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('큰 페이지 번호를 처리해야 한다', async () => {
       // When: 매우 큰 페이지 번호로 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ page: 999999, limit: 10 });
 
@@ -263,7 +262,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('정렬과 페이지네이션 조합을 처리해야 한다', async () => {
       // When: 정렬과 페이지네이션을 동시에 사용
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({
           page: 1,
@@ -278,7 +277,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('실제 데이터로 필터링과 페이지네이션 조합을 처리해야 한다', async () => {
       // When: 실제 데이터로 필터링과 페이지네이션을 동시에 사용
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({
           page: 1,
@@ -311,7 +310,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
   describe('HTTP 메서드', () => {
     it('GET 메서드만 허용해야 한다', async () => {
       // When: POST 메서드로 요청
-      const postResponse = await request(app.getHttpServer()).post(
+      const postResponse = await testSuite.request().post(
         '/admin/evaluation-criteria/project-assignments',
       );
 
@@ -321,7 +320,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('PUT 메서드는 허용하지 않아야 한다', async () => {
       // When: PUT 메서드로 요청
-      const putResponse = await request(app.getHttpServer()).put(
+      const putResponse = await testSuite.request().put(
         '/admin/evaluation-criteria/project-assignments',
       );
 
@@ -331,7 +330,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('DELETE 메서드는 허용하지 않아야 한다', async () => {
       // When: DELETE 메서드로 요청
-      const deleteResponse = await request(app.getHttpServer()).delete(
+      const deleteResponse = await testSuite.request().delete(
         '/admin/evaluation-criteria/project-assignments',
       );
 
@@ -345,7 +344,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
   describe('에러 처리', () => {
     it('잘못된 UUID 형식을 처리해야 한다', async () => {
       // When: 잘못된 UUID로 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ employeeId: 'invalid-uuid' });
 
@@ -355,7 +354,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('음수 페이지 번호를 처리해야 한다', async () => {
       // When: 음수 페이지로 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ page: -1 });
 
@@ -365,7 +364,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('0 페이지 크기를 처리해야 한다', async () => {
       // When: 0 리미트로 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ limit: 0 });
 
@@ -375,7 +374,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('존재하지 않는 직원 ID로 필터링할 수 있어야 한다', async () => {
       // When: 존재하지 않는 직원 ID로 필터링
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({
           employeeId: '00000000-0000-0000-0000-000000000000',
@@ -395,7 +394,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
 
     it('존재하지 않는 프로젝트 ID로 필터링할 수 있어야 한다', async () => {
       // When: 존재하지 않는 프로젝트 ID로 필터링
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({
           projectId: '00000000-0000-0000-0000-000000000000',
@@ -421,7 +420,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
       // When: API 호출 시간 측정
       const startTime = Date.now();
 
-      const response = await request(app.getHttpServer()).get(
+      const response = await testSuite.request().get(
         '/admin/evaluation-criteria/project-assignments',
       );
 
@@ -437,7 +436,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
       // When: 필터링된 요청 시간 측정
       const startTime = Date.now();
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({
           periodId: evaluationPeriodId,
@@ -464,7 +463,7 @@ describe('GET /admin/evaluation-criteria/project-assignments (Simple)', () => {
       // When: 페이지네이션과 함께 대량 데이터 조회
       const startTime = Date.now();
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({
           periodId: evaluationPeriodId,

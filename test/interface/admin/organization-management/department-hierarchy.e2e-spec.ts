@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -50,7 +49,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
         // Given: 테스트 데이터가 생성되어 있음
 
         // When: 부서 하이라키 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -62,7 +62,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('각 부서는 필수 필드를 포함해야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -82,7 +83,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('루트 부서들의 level은 0이어야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -95,7 +97,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('하위 부서(subDepartments)의 level은 상위 부서보다 1 커야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -113,7 +116,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('childrenCount는 직계 하위 부서 개수와 일치해야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -131,7 +135,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('하위 부서가 없는 경우 depth는 0이어야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -151,7 +156,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('totalDescendants는 모든 하위 부서 개수의 합이어야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -177,7 +183,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('하위 부서가 있는 경우 depth는 최대 하위 레벨 깊이여야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -204,7 +211,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('parentDepartmentId가 없는 부서는 루트 레벨에 있어야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -216,7 +224,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('계층 구조가 올바르게 형성되어야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
@@ -241,7 +250,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
         // Given: 테스트 데이터가 생성되어 있음
 
         // When: 직원 포함 부서 하이라키 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -253,7 +263,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('각 부서는 직원 관련 필드를 포함해야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -267,7 +278,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('employeeCount는 employees 배열 길이와 일치해야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -285,7 +297,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('직원이 있는 부서는 직원 목록이 비어있지 않아야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -307,7 +320,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('직원 정보는 필수 필드를 포함해야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -339,7 +353,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('직원의 isActive 필드는 boolean이어야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -359,7 +374,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('부서별 직원 수의 합은 전체 직원 수 이하여야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -382,7 +398,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('계층 정보(level, depth 등)도 함께 제공되어야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -397,7 +414,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('빈 부서(직원이 없는 부서)는 빈 배열을 반환해야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -417,7 +435,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('하위 부서와 직원 정보를 동시에 제공해야 함', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -438,12 +457,14 @@ describe('부서 하이라키 구조 조회 테스트', () => {
 
       it('전체 부서 수는 일반 하이라키 조회와 동일해야 함', async () => {
         // Given: 일반 하이라키 조회
-        const hierarchyResponse = await request(app.getHttpServer())
+        const hierarchyResponse = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy')
           .expect(200);
 
         // When: 직원 포함 하이라키 조회
-        const withEmployeesResponse = await request(app.getHttpServer())
+        const withEmployeesResponse = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 
@@ -470,7 +491,8 @@ describe('부서 하이라키 구조 조회 테스트', () => {
           .execute();
 
         // When: 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/departments/hierarchy-with-employees')
           .expect(200);
 

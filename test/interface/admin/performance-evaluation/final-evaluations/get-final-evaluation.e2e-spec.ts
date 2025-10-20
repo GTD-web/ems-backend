@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -74,7 +73,8 @@ describe('GET /admin/performance-evaluation/final-evaluations/:id', () => {
       finalComments?: string;
     },
   ): Promise<string> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/final-evaluations/employee/${employeeId}/period/${periodId}`,
       )
@@ -85,9 +85,9 @@ describe('GET /admin/performance-evaluation/final-evaluations/:id', () => {
   }
 
   function getFinalEvaluation(evaluationId: string) {
-    return request(app.getHttpServer()).get(
-      `/admin/performance-evaluation/final-evaluations/${evaluationId}`,
-    );
+    return testSuite
+      .request()
+      .get(`/admin/performance-evaluation/final-evaluations/${evaluationId}`);
   }
 
   async function getFinalEvaluationFromDb(evaluationId: string) {
@@ -208,7 +208,7 @@ describe('GET /admin/performance-evaluation/final-evaluations/:id', () => {
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
-      const confirmedBy = uuidv4();
+      const testUserId = '00000000-0000-0000-0000-000000000001';
 
       const evaluationId = await createFinalEvaluation(employee.id, period.id, {
         evaluationGrade: 'A',
@@ -216,12 +216,13 @@ describe('GET /admin/performance-evaluation/final-evaluations/:id', () => {
         jobDetailedGrade: JobDetailedGrade.N,
       });
 
-      // 확정 처리
-      await request(app.getHttpServer())
+      // 확정 처리 (confirmedBy는 @CurrentUser()로 자동 설정됨)
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/final-evaluations/${evaluationId}/confirm`,
         )
-        .send({ confirmedBy })
+        .send({})
         .expect(200);
 
       // When
@@ -229,7 +230,7 @@ describe('GET /admin/performance-evaluation/final-evaluations/:id', () => {
 
       // Then
       expect(response.body.isConfirmed).toBe(true);
-      expect(response.body.confirmedBy).toBe(confirmedBy);
+      expect(response.body.confirmedBy).toBe(testUserId);
       expect(response.body.confirmedAt).toBeDefined();
     });
 
@@ -474,7 +475,8 @@ describe('GET /admin/performance-evaluation/final-evaluations/:id', () => {
       });
 
       // 확정 처리
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/final-evaluations/${evaluationId}/confirm`,
         )
@@ -482,7 +484,8 @@ describe('GET /admin/performance-evaluation/final-evaluations/:id', () => {
         .expect(200);
 
       // 확정 취소
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/final-evaluations/${evaluationId}/cancel-confirmation`,
         )

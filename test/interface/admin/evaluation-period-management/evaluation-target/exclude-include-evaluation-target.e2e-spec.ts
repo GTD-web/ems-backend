@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -31,8 +30,23 @@ describe('평가 대상자 제외/포함 테스트', () => {
     await testSuite.cleanupBeforeTest();
 
     // 완전한 테스트 환경 생성
-    const { employees, periods } =
+    const { departments, employees, periods } =
       await testContextService.완전한_테스트환경을_생성한다();
+
+    // 테스트용 인증 사용자 생성 (testSuite에서 사용하는 기본 사용자 ID)
+    const testUserId = '00000000-0000-0000-0000-000000000001';
+    const existingUser = await dataSource.manager.query(
+      `SELECT id FROM employee WHERE id = $1`,
+      [testUserId],
+    );
+
+    if (existingUser.length === 0) {
+      await dataSource.manager.query(
+        `INSERT INTO employee (id, "employeeNumber", name, email, "departmentId", status, "externalId", "externalCreatedAt", "externalUpdatedAt", version, "createdAt", "updatedAt")
+         VALUES ($1, 'TEST-USER', '테스트 관리자', 'test@example.com', $2, '재직중', 'test-user-001', NOW(), NOW(), 1, NOW(), NOW())`,
+        [testUserId, departments[0].id],
+      );
+    }
 
     testData = {
       employees,
@@ -63,17 +77,21 @@ describe('평가 대상자 제외/포함 테스트', () => {
 
   /**
    * 평가 대상자를 먼저 등록
+   *
+   * Note: createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
    */
   async function registerEvaluationTarget(
     evaluationPeriodId: string,
     employeeId: string,
-    createdBy: string = 'admin-user-id',
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}`,
       )
-      .send({ createdBy })
+      .send({
+        // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
+      })
       .expect(201);
 
     return response.body;
@@ -101,20 +119,20 @@ describe('평가 대상자 제외/포함 테스트', () => {
         // Given - 먼저 평가 대상자 등록
         const employee = testData.employees[0];
         const period = getActivePeriod();
-        const createdBy = 'admin-user-id';
-        await registerEvaluationTarget(period.id, employee.id, createdBy);
+        const testUserId = '00000000-0000-0000-0000-000000000001';
+        await registerEvaluationTarget(period.id, employee.id);
 
         const excludeReason = '퇴사 예정';
-        const excludedBy = 'manager-user-id';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason,
-            excludedBy,
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
@@ -122,7 +140,7 @@ describe('평가 대상자 제외/포함 테스트', () => {
         expect(response.body).toBeDefined();
         expect(response.body.isExcluded).toBe(true);
         expect(response.body.excludeReason).toBe(excludeReason);
-        expect(response.body.excludedBy).toBe(excludedBy);
+        expect(response.body.excludedBy).toBe(testUserId); // 인증된 사용자가 제외 처리자로 설정됨
         expect(response.body.excludedAt).toBeDefined();
       });
 
@@ -133,13 +151,14 @@ describe('평가 대상자 제외/포함 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '장기 휴직',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
@@ -151,19 +170,20 @@ describe('평가 대상자 제외/포함 테스트', () => {
         // Given
         const employee = testData.employees[2];
         const period = getActivePeriod();
+        const testUserId = '00000000-0000-0000-0000-000000000001';
         await registerEvaluationTarget(period.id, employee.id);
 
         const excludeReason = '프로젝트 미참여';
-        const excludedBy = 'hr-manager';
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason,
-            excludedBy,
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
@@ -174,7 +194,7 @@ describe('평가 대상자 제외/포함 테스트', () => {
         );
         expect(dbMapping.isExcluded).toBe(true);
         expect(dbMapping.excludeReason).toBe(excludeReason);
-        expect(dbMapping.excludedBy).toBe(excludedBy);
+        expect(dbMapping.excludedBy).toBe(testUserId); // 인증된 사용자가 제외 처리자로 설정됨
         expect(dbMapping.excludedAt).toBeDefined();
       });
 
@@ -187,13 +207,14 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const beforeExclude = new Date();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '임시 제외',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
@@ -218,13 +239,14 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '제외 사유',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(404);
       });
@@ -235,24 +257,26 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const period = getActivePeriod();
         await registerEvaluationTarget(period.id, employee.id);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '첫 번째 제외',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
         // When & Then - 재제외 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '두 번째 제외',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(409);
       });
@@ -264,34 +288,20 @@ describe('평가 대상자 제외/포함 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // When & Then - excludeReason 누락
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             // excludeReason 누락
           })
           .expect(400);
       });
 
-      it('제외 처리자가 누락된 경우 400 에러가 발생해야 한다', async () => {
-        // Given
-        const employee = testData.employees[3];
-        const period = getActivePeriod();
-        await registerEvaluationTarget(period.id, employee.id);
-
-        // When & Then - excludedBy 누락
-        await request(app.getHttpServer())
-          .patch(
-            `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
-          )
-          .send({
-            excludeReason: '제외 사유',
-            // excludedBy 누락
-          })
-          .expect(400);
-      });
+      // Note: excludedBy는 이제 @CurrentUser()를 통해 컨트롤러에서 자동으로 설정되므로
+      // DTO에서 excludedBy를 전달받지 않습니다. 따라서 이 테스트는 더 이상 유효하지 않습니다.
 
       it('잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러가 발생해야 한다', async () => {
         // Given
@@ -299,13 +309,14 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${invalidPeriodId}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '제외 사유',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
       });
@@ -316,13 +327,14 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const invalidEmployeeId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${invalidEmployeeId}/exclude`,
           )
           .send({
             excludeReason: '제외 사유',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
       });
@@ -339,23 +351,25 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const period = getActivePeriod();
         await registerEvaluationTarget(period.id, employee.id);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '임시 제외',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
         // When - 다시 포함
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'manager-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
@@ -373,23 +387,25 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const period = getActivePeriod();
         await registerEvaluationTarget(period.id, employee.id);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '제외',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
@@ -403,23 +419,25 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const period = getActivePeriod();
         await registerEvaluationTarget(period.id, employee.id);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '프로젝트 미참여',
-            excludedBy: 'hr-manager',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
@@ -441,34 +459,37 @@ describe('평가 대상자 제외/포함 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // 첫 번째 제외
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '첫 번째 제외',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
         // 포함
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
         // When - 두 번째 제외
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '두 번째 제외',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
@@ -485,12 +506,13 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(404);
       });
@@ -502,12 +524,13 @@ describe('평가 대상자 제외/포함 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // When & Then - 제외되지 않은 상태에서 포함 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(409);
       });
@@ -518,62 +541,41 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const period = getActivePeriod();
         await registerEvaluationTarget(period.id, employee.id);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
           )
           .send({
             excludeReason: '제외',
-            excludedBy: 'admin-user-id',
+            // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(200);
 
         // When & Then - 재포함 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(409);
       });
 
-      it('필수 필드 누락 시 400 에러가 발생해야 한다', async () => {
-        // Given
-        const employee = testData.employees[3];
-        const period = getActivePeriod();
-        await registerEvaluationTarget(period.id, employee.id);
-
-        await request(app.getHttpServer())
-          .patch(
-            `/admin/evaluation-periods/${period.id}/targets/${employee.id}/exclude`,
-          )
-          .send({
-            excludeReason: '제외',
-            excludedBy: 'admin-user-id',
-          })
-          .expect(200);
-
-        // When & Then - updatedBy 누락
-        await request(app.getHttpServer())
-          .patch(
-            `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
-          )
-          .send({
-            // updatedBy 누락
-          })
-          .expect(400);
-      });
+      // Note: updatedBy는 이제 @CurrentUser()를 통해 컨트롤러에서 자동으로 설정되므로
+      // DTO에서 updatedBy를 전달받지 않습니다. 따라서 이 테스트는 더 이상 유효하지 않습니다.
 
       it('잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러가 발생해야 한다', async () => {
         // Given
@@ -581,12 +583,13 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${invalidPeriodId}/targets/${employee.id}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
       });
@@ -597,12 +600,13 @@ describe('평가 대상자 제외/포함 테스트', () => {
         const invalidEmployeeId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${invalidEmployeeId}/include`,
           )
           .send({
-            updatedBy: 'admin-user-id',
+            // updatedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
       });

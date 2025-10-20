@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', () => {
@@ -24,7 +23,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
 
   describe('GET /admin/evaluation-periods', () => {
     it('빈 목록을 페이징으로 조회해야 한다', async () => {
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 10 })
         .expect(200);
@@ -131,7 +131,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       // 평가 기간들을 순차적으로 생성
       const createdPeriods: any[] = [];
       for (const period of periods) {
-        const createResponse = await request(testSuite.app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
@@ -139,7 +140,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       }
 
       // When & Then: 첫 번째 페이지 (3개 항목)
-      const firstPageResponse = await request(testSuite.app.getHttpServer())
+      const firstPageResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 3 })
         .expect(200);
@@ -152,7 +154,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       expect(firstPageResponse.body.items).toHaveLength(3);
 
       // 두 번째 페이지 (3개 항목)
-      const secondPageResponse = await request(testSuite.app.getHttpServer())
+      const secondPageResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 2, limit: 3 })
         .expect(200);
@@ -165,7 +168,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       expect(secondPageResponse.body.items).toHaveLength(3);
 
       // 세 번째 페이지 (1개 항목)
-      const thirdPageResponse = await request(testSuite.app.getHttpServer())
+      const thirdPageResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 3, limit: 3 })
         .expect(200);
@@ -193,7 +197,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       expect(uniqueIds.size).toBe(7); // 모든 ID가 고유해야 함
 
       // 큰 페이지 크기로 전체 조회
-      const allItemsResponse = await request(testSuite.app.getHttpServer())
+      const allItemsResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 10 })
         .expect(200);
@@ -232,14 +237,16 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       ];
 
       for (const period of periods) {
-        await request(testSuite.app.getHttpServer())
+        await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
       }
 
       // When & Then: 존재하지 않는 페이지 요청
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 5, limit: 10 })
         .expect(200);
@@ -264,7 +271,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       }));
 
       for (const period of periods) {
-        await request(testSuite.app.getHttpServer())
+        await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
@@ -272,7 +280,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
 
       // When & Then: 다양한 페이지 크기로 조회
       // 페이지 크기 1
-      const size1Response = await request(testSuite.app.getHttpServer())
+      const size1Response = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 1 })
         .expect(200);
@@ -281,7 +290,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       expect(size1Response.body.total).toBe(5);
 
       // 페이지 크기 2
-      const size2Response = await request(testSuite.app.getHttpServer())
+      const size2Response = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 2 })
         .expect(200);
@@ -290,7 +300,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       expect(size2Response.body.total).toBe(5);
 
       // 페이지 크기 10 (전체보다 큰 크기)
-      const size10Response = await request(testSuite.app.getHttpServer())
+      const size10Response = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 10 })
         .expect(200);
@@ -310,13 +321,15 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
 
       // When & Then: 음수 페이지 번호
-      const negativePageResponse = await request(testSuite.app.getHttpServer())
+      const negativePageResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: -1, limit: 10 });
 
@@ -324,7 +337,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       expect([200, 400]).toContain(negativePageResponse.status);
 
       // 0 페이지 번호
-      const zeroPageResponse = await request(testSuite.app.getHttpServer())
+      const zeroPageResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 0, limit: 10 });
 
@@ -342,27 +356,31 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
 
       // When & Then: 음수 limit
-      const negativeLimitResponse = await request(testSuite.app.getHttpServer())
+      const negativeLimitResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: -5 });
 
       expect([200, 400]).toContain(negativeLimitResponse.status);
 
       // 0 limit
-      const zeroLimitResponse = await request(testSuite.app.getHttpServer())
+      const zeroLimitResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 0 });
 
       expect([200, 400]).toContain(zeroLimitResponse.status);
 
       // 매우 큰 limit (1000)
-      const largeLimitResponse = await request(testSuite.app.getHttpServer())
+      const largeLimitResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 1000 });
 
@@ -371,21 +389,24 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
 
     it('문자열 페이지 파라미터로 조회 시 적절한 응답을 반환해야 한다', async () => {
       // When & Then: 문자열 페이지 번호
-      const stringPageResponse = await request(testSuite.app.getHttpServer())
+      const stringPageResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 'abc', limit: 10 });
 
       expect([200, 400]).toContain(stringPageResponse.status);
 
       // 문자열 limit
-      const stringLimitResponse = await request(testSuite.app.getHttpServer())
+      const stringLimitResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 'xyz' });
 
       expect([200, 400]).toContain(stringLimitResponse.status);
 
       // 소수점 페이지 번호
-      const floatPageResponse = await request(testSuite.app.getHttpServer())
+      const floatPageResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1.5, limit: 10 });
 
@@ -403,13 +424,15 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
 
       // When & Then: 쿼리 파라미터 없이 조회
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .expect(200);
 
@@ -446,7 +469,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
 
       const createdPeriods: any[] = [];
       for (const period of periods) {
-        const createResponse = await request(testSuite.app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
@@ -454,7 +478,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       }
 
       // 생성 후 목록 확인 (2개)
-      const beforeDeleteResponse = await request(testSuite.app.getHttpServer())
+      const beforeDeleteResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 10 })
         .expect(200);
@@ -463,12 +488,14 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       expect(beforeDeleteResponse.body.items).toHaveLength(2);
 
       // When: 첫 번째 평가 기간 삭제
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${createdPeriods[0].id}`)
         .expect(200);
 
       // Then: 삭제 후 목록 확인 (1개)
-      const afterDeleteResponse = await request(testSuite.app.getHttpServer())
+      const afterDeleteResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 10 })
         .expect(200);
@@ -516,7 +543,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
 
       const createdPeriods: any[] = [];
       for (const period of periods) {
-        const createResponse = await request(testSuite.app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
@@ -524,21 +552,25 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       }
 
       // 두 번째 평가 기간 시작 (진행 중 상태로 변경)
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${createdPeriods[1].id}/start`)
         .expect(200);
 
       // 세 번째 평가 기간 시작 후 완료
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${createdPeriods[2].id}/start`)
         .expect(200);
 
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${createdPeriods[2].id}/complete`)
         .expect(200);
 
       // When & Then: 모든 상태의 평가 기간이 목록에 포함되는지 확인
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 10 })
         .expect(200);
@@ -586,7 +618,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       });
 
       for (const period of periods) {
-        await request(testSuite.app.getHttpServer())
+        await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
@@ -596,7 +629,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       // 페이지 크기 5로 3페이지 조회
       const responses: any[] = [];
       for (let page = 1; page <= 3; page++) {
-        const response = await request(testSuite.app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/evaluation-periods')
           .query({ page, limit: 5 })
           .expect(200);
@@ -616,7 +650,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       expect(uniqueIds.size).toBe(15);
 
       // 마지막 페이지 (4페이지) 확인
-      const lastPageResponse = await request(testSuite.app.getHttpServer())
+      const lastPageResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 4, limit: 5 })
         .expect(200);
@@ -655,14 +690,16 @@ describe('EvaluationPeriodManagement GET /evaluation-periods Endpoint (e2e)', ()
       ];
 
       for (const period of periods) {
-        await request(testSuite.app.getHttpServer())
+        await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
       }
 
       // When & Then: 특수 이름들이 모두 정상 조회되는지 확인
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .query({ page: 1, limit: 10 })
         .expect(200);

@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -35,6 +34,24 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
     const employees =
       await testContextService.직원_데이터를_확인하고_준비한다(5);
     const periods = await testContextService.테스트용_평가기간을_생성한다();
+
+    // 테스트용 인증 사용자 확인 및 생성
+    const testUserId = '00000000-0000-0000-0000-000000000001';
+    const existingUser = await dataSource.manager.query(
+      `SELECT id FROM employee WHERE id = $1`,
+      [testUserId],
+    );
+
+    if (existingUser.length === 0) {
+      const departments = await dataSource.manager.query(
+        `SELECT id FROM department LIMIT 1`,
+      );
+      await dataSource.manager.query(
+        `INSERT INTO employee (id, "employeeNumber", name, email, "departmentId", status, "externalId", "externalCreatedAt", "externalUpdatedAt", version, "createdAt", "updatedAt")
+         VALUES ($1, 'TEST-USER', '테스트 관리자', 'test@example.com', $2, '재직중', 'test-user-001', NOW(), NOW(), 1, NOW(), NOW())`,
+        [testUserId, departments[0]?.id || employees[0].departmentId],
+      );
+    }
 
     testData = {
       employees,
@@ -74,7 +91,8 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
       finalComments?: string;
     },
   ): Promise<string> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/final-evaluations/employee/${employeeId}/period/${periodId}`,
       )
@@ -85,7 +103,8 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
   }
 
   function confirmFinalEvaluation(evaluationId: string, confirmedBy: string) {
-    return request(app.getHttpServer())
+    return testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/final-evaluations/${evaluationId}/confirm`,
       )
@@ -110,7 +129,7 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
-      const confirmedBy = uuidv4();
+      const testUserId = '00000000-0000-0000-0000-000000000001';
 
       const evaluationId = await createFinalEvaluation(employee.id, period.id, {
         evaluationGrade: 'A',
@@ -118,10 +137,10 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
         jobDetailedGrade: JobDetailedGrade.N,
       });
 
-      // When
+      // When (confirmedBy는 @CurrentUser()로 자동 설정됨)
       const response = await confirmFinalEvaluation(
         evaluationId,
-        confirmedBy,
+        testUserId,
       ).expect(200);
 
       // Then
@@ -130,7 +149,7 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
 
       const dbRecord = await getFinalEvaluationFromDb(evaluationId);
       expect(dbRecord.isConfirmed).toBe(true);
-      expect(dbRecord.confirmedBy).toBe(confirmedBy);
+      expect(dbRecord.confirmedBy).toBe(testUserId);
       expect(dbRecord.confirmedAt).toBeDefined();
     });
 
@@ -138,7 +157,7 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
-      const confirmedBy = uuidv4();
+      const testUserId = '00000000-0000-0000-0000-000000000001';
 
       const evaluationId = await createFinalEvaluation(employee.id, period.id, {
         evaluationGrade: 'S',
@@ -146,12 +165,12 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
         jobDetailedGrade: JobDetailedGrade.A,
       });
 
-      // When
-      await confirmFinalEvaluation(evaluationId, confirmedBy).expect(200);
+      // When (confirmedBy는 @CurrentUser()로 자동 설정됨)
+      await confirmFinalEvaluation(evaluationId, testUserId).expect(200);
 
       // Then
       const dbRecord = await getFinalEvaluationFromDb(evaluationId);
-      expect(dbRecord.confirmedBy).toBe(confirmedBy);
+      expect(dbRecord.confirmedBy).toBe(testUserId);
     });
 
     it('확정 후 isConfirmed가 true로 변경되어야 한다', async () => {
@@ -252,25 +271,27 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
       await confirmFinalEvaluation(nonExistentId, confirmedBy).expect(404);
     });
 
-    it('confirmedBy 누락 시 400 에러가 발생해야 한다', async () => {
-      // Given
-      const employee = getRandomEmployee();
-      const period = getRandomEvaluationPeriod();
+    // confirmedBy는 @CurrentUser() 데코레이터를 통해 자동 설정되므로,
+    // 이 필드의 누락 검증 테스트는 필요하지 않음
+    // it('confirmedBy 누락 시 400 에러가 발생해야 한다', async () => {
+    //   // Given
+    //   const employee = getRandomEmployee();
+    //   const period = getRandomEvaluationPeriod();
 
-      const evaluationId = await createFinalEvaluation(employee.id, period.id, {
-        evaluationGrade: 'A',
-        jobGrade: JobGrade.T2,
-        jobDetailedGrade: JobDetailedGrade.N,
-      });
+    //   const evaluationId = await createFinalEvaluation(employee.id, period.id, {
+    //     evaluationGrade: 'A',
+    //     jobGrade: JobGrade.T2,
+    //     jobDetailedGrade: JobDetailedGrade.N,
+    //   });
 
-      // When & Then
-      await request(app.getHttpServer())
-        .post(
-          `/admin/performance-evaluation/final-evaluations/${evaluationId}/confirm`,
-        )
-        .send({})
-        .expect(400);
-    });
+    //   // When & Then
+    //   await testSuite.request()
+    //     .post(
+    //       `/admin/performance-evaluation/final-evaluations/${evaluationId}/confirm`,
+    //     )
+    //     .send({})
+    //     .expect(400);
+    // });
 
     it('이미 확정된 평가를 다시 확정 시 409 에러가 발생해야 한다', async () => {
       // Given
@@ -349,7 +370,7 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
-      const confirmedBy = uuidv4();
+      const testUserId = '00000000-0000-0000-0000-000000000001';
 
       const evaluationId = await createFinalEvaluation(employee.id, period.id, {
         evaluationGrade: 'A',
@@ -357,13 +378,13 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/confirm', () 
         jobDetailedGrade: JobDetailedGrade.N,
       });
 
-      // When
-      await confirmFinalEvaluation(evaluationId, confirmedBy).expect(200);
+      // When (confirmedBy는 @CurrentUser()로 자동 설정됨)
+      await confirmFinalEvaluation(evaluationId, testUserId).expect(200);
 
       // Then
       const dbRecord = await getFinalEvaluationFromDb(evaluationId);
       expect(dbRecord.isConfirmed).toBe(true);
-      expect(dbRecord.confirmedBy).toBe(confirmedBy);
+      expect(dbRecord.confirmedBy).toBe(testUserId);
       expect(dbRecord.confirmedAt).toBeDefined();
     });
 

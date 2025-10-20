@@ -43,7 +43,6 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException('인증 토큰이 필요합니다.');
     }
-    
 
     try {
       // Auth Context를 통해 토큰 검증 및 Employee 동기화

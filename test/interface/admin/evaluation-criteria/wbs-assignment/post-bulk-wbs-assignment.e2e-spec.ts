@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -132,7 +131,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -173,7 +173,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(201);
@@ -208,7 +209,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(201);
@@ -257,7 +259,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(201);
@@ -290,7 +293,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(201);
@@ -328,7 +332,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(201);
@@ -357,7 +362,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(201);
@@ -372,7 +378,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
   describe('WBS 대량 할당 실패 시나리오', () => {
     it('assignments 필드가 누락되면 400 에러가 발생해야 한다', async () => {
       // Given & When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send({})
         .expect(400);
@@ -380,7 +387,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
 
     it('assignments가 배열이 아니면 400 에러가 발생해야 한다', async () => {
       // Given & When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send({
           assignments: 'not-an-array',
@@ -408,7 +416,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData);
 
@@ -435,7 +444,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(400);
@@ -461,7 +471,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(400);
@@ -487,7 +498,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(400);
@@ -514,7 +526,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(201);
@@ -540,7 +553,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(400);
@@ -559,7 +573,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       const assignedBy = testData.employees[0].id;
 
       // 먼저 하나의 할당 생성
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -592,7 +607,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData);
 
@@ -634,7 +650,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments/bulk', () => {
 
       // When
       const startTime = Date.now();
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments/bulk')
         .send(bulkAssignmentData)
         .expect(201);

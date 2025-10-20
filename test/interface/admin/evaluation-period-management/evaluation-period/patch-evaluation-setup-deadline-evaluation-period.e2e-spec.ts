@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => {
@@ -33,7 +32,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -45,7 +45,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2024-02-15',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -74,7 +75,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -86,7 +88,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2024-01-31',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -109,7 +112,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -121,7 +125,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2024-02-29', // 윤년
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -146,7 +151,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       };
 
       // When & Then: 404 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${nonExistentId}/evaluation-setup-deadline`,
         )
@@ -162,7 +168,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       };
 
       // When & Then: 400 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${invalidId}/evaluation-setup-deadline`,
         )
@@ -180,7 +187,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -196,7 +204,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       ];
 
       for (const updateData of invalidDateFormats) {
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
           )
@@ -217,7 +226,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -233,7 +243,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       ];
 
       for (const updateData of invalidDataTypes) {
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
           )
@@ -254,7 +265,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -262,7 +274,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       const evaluationPeriodId = createResponse.body.id;
 
       // When & Then: 빈 요청 데이터로 400 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -284,7 +297,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -296,7 +310,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2023-12-31', // 시작일(2024-01-01)보다 이전
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -316,7 +331,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -328,7 +344,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2024-12-31', // 종료일(2024-06-30)보다 늦음
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -348,7 +365,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -356,7 +374,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       const evaluationPeriodId = createResponse.body.id;
 
       // 먼저 다른 마감일들을 설정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/schedule`)
         .send({
           performanceDeadline: '2024-06-30',
@@ -369,7 +388,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2024-07-01', // 업무수행 마감일(2024-06-30)보다 늦음
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -389,7 +409,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -397,12 +418,14 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       const evaluationPeriodId = createResponse.body.id;
 
       // 평가 기간 시작
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
       // 평가 기간 완료
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/complete`)
         .expect(200);
 
@@ -411,7 +434,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2024-02-15',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -435,7 +459,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 150,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -448,7 +473,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2024-02-15',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -480,7 +506,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -492,12 +519,14 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       const updateData2 = { evaluationSetupDeadline: '2024-02-01' };
 
       const [response1, response2] = await Promise.all([
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
           )
           .send(updateData1),
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
           )
@@ -509,7 +538,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       expect(response2.status).toBe(200);
 
       // 최종 상태 확인
-      const finalResponse = await request(app.getHttpServer())
+      const finalResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 
@@ -538,7 +568,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -555,7 +586,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       for (const evaluationSetupDeadline of timezoneFormats) {
         const updateData = { evaluationSetupDeadline };
 
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
           )
@@ -579,7 +611,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -591,7 +624,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         evaluationSetupDeadline: '2030-01-01',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
         )
@@ -614,7 +648,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -632,7 +667,8 @@ describe('PATCH /admin/evaluation-periods/:id/evaluation-setup-deadline', () => 
       for (const evaluationSetupDeadline of monthEndDates) {
         const updateData = { evaluationSetupDeadline };
 
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${evaluationPeriodId}/evaluation-setup-deadline`,
           )

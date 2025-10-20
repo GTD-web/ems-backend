@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -81,7 +80,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
       maxSelfEvaluationRate: 120,
     };
 
-    const evaluationPeriodResponse = await request(app.getHttpServer())
+    const evaluationPeriodResponse = await testSuite.request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -98,7 +97,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
       assignedBy: testData.employees[0].id, // 현재 테스트에서 생성된 직원 ID 사용
     };
 
-    const assignmentResponse = await request(app.getHttpServer())
+    const assignmentResponse = await testSuite.request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send(assignmentData)
       .expect(201);
@@ -152,7 +151,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
 
       try {
         // When: 상세 조회 API 엔드포인트 호출
-        const response = await request(app.getHttpServer()).get(
+        const response = await testSuite.request().get(
           `/admin/evaluation-criteria/project-assignments/${createdAssignmentId}`,
         );
 
@@ -167,7 +166,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
 
     it('잘못된 경로로 요청 시 404 에러가 발생해야 한다', async () => {
       // When: 존재하지 않는 엔드포인트 호출
-      const response = await request(app.getHttpServer()).get(
+      const response = await testSuite.request().get(
         '/admin/evaluation-criteria/project-assignments/invalid-path/detail',
       );
 
@@ -185,7 +184,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
         await createIndependentTestData();
 
       try {
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/${createdAssignmentId}`,
           )
@@ -403,7 +402,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
       const { createdAssignmentId } = await createIndependentTestData();
 
       try {
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/${createdAssignmentId}`,
           )
@@ -514,7 +513,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
     it('존재하지 않는 ID로 조회 시 404 에러가 발생해야 한다', async () => {
       // When: 존재하지 않는 UUID로 조회
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
-      const response = await request(app.getHttpServer()).get(
+      const response = await testSuite.request().get(
         `/admin/evaluation-criteria/project-assignments/${nonExistentId}`,
       );
 
@@ -546,7 +545,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
     it('잘못된 UUID 형식으로 조회 시 400 또는 500 에러가 발생해야 한다', async () => {
       // When: 잘못된 UUID 형식으로 조회
       const invalidId = 'invalid-uuid-format';
-      const response = await request(app.getHttpServer()).get(
+      const response = await testSuite.request().get(
         `/admin/evaluation-criteria/project-assignments/${invalidId}`,
       );
 
@@ -565,7 +564,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (Detail)', () =
       try {
         // When: API 호출 시간 측정
         const startTime = Date.now();
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/${createdAssignmentId}`,
           )

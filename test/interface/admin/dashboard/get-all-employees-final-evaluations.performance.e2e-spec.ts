@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -205,7 +204,7 @@ describe('GET /admin/dashboard/final-evaluations - 성능 테스트', () => {
       url += `?${params.join('&')}`;
     }
 
-    return request(app.getHttpServer()).get(url);
+    return testSuite.request().get(url);
   }
 
   // ==================== 성능 테스트 ====================

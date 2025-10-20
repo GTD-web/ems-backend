@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 
@@ -98,7 +97,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const wbsItem1 = getRandomWbsItem();
         const wbsItem2 = getRandomWbsItem();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem1.id}/period/${period.id}`,
           )
@@ -108,7 +108,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           })
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem2.id}/period/${period.id}`,
           )
@@ -119,7 +120,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           .expect(200);
 
         // When - 목록 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}`,
           )
@@ -145,7 +147,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -157,7 +160,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}`,
           )
@@ -201,7 +205,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -212,7 +217,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}`,
           )
@@ -237,7 +243,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         ];
 
         for (const wbsItem of wbsItems) {
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -249,7 +256,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         }
 
         // When - 페이지 크기 2로 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}`,
           )
@@ -268,7 +276,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const employee = getRandomEmployee();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}`,
           )
@@ -288,7 +297,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${invalidId}`,
           )
@@ -305,7 +315,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -319,7 +330,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const evaluationId = createResponse.body.id;
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}`,
           )
@@ -338,7 +350,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -350,7 +363,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}`,
           )
@@ -400,7 +414,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -411,7 +426,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}`,
           )
@@ -438,7 +454,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -449,7 +466,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}`,
           )
@@ -478,7 +496,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -489,7 +508,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}`,
           )
@@ -518,7 +538,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -528,7 +549,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           })
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/submit`,
           )
@@ -536,7 +558,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}`,
           )
@@ -557,7 +580,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/${invalidId}`,
           )
@@ -569,7 +593,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/wbs-self-evaluations/${nonExistentId}`,
           )
@@ -585,7 +610,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -599,13 +625,15 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
       const evaluationId = createResponse.body.id;
 
       // When - 목록 조회와 상세 조회
-      const listResponse = await request(app.getHttpServer())
+      const listResponse = await testSuite
+        .request()
         .get(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}`,
         )
         .expect(200);
 
-      const detailResponse = await request(app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(
           `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}`,
         )
@@ -632,7 +660,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -643,7 +672,8 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         .expect(200);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}`,
         )

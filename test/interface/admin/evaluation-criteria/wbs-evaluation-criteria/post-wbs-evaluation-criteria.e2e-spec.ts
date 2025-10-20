@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -97,7 +96,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
     criteria: string,
     actionBy?: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItemId}`,
       )
@@ -131,7 +131,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -156,7 +157,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const criteria = '테스트 커버리지 향상';
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -185,7 +187,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       // When
       const responses = await Promise.all(
         criteriaList.map((criteria) =>
-          request(app.getHttpServer())
+          testSuite
+            .request()
             .post(
               `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
             )
@@ -214,7 +217,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -236,14 +240,16 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem1.id}`,
         )
         .send({ criteria, actionBy })
         .expect(200);
 
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem2.id}`,
         )
@@ -275,7 +281,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       );
 
       // When - 동일한 wbsItemId로 다시 요청하면 자동으로 수정됨
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -308,7 +315,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When - 동일한 wbsItemId로 다시 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -337,7 +345,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       );
 
       // When - 동일한 wbsItemId와 동일한 내용으로 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -362,7 +371,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -379,7 +389,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -400,7 +411,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${nonExistentWbsItemId}`,
         )
@@ -420,7 +432,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${invalidWbsItemId}`,
         )
@@ -433,20 +446,18 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       expect([400, 500]).toContain(response.status);
     });
 
-    it('잘못된 형식의 actionBy로 요청 시 400 에러가 발생해야 한다', async () => {
+    it('필수 필드(criteria) 누락 시 400 에러가 발생해야 한다', async () => {
       // Given
       const wbsItem = getRandomWbsItem();
-      const criteria = '테스트 평가기준';
-      const invalidActionBy = 'invalid-uuid';
 
-      // When & Then
-      await request(app.getHttpServer())
+      // When & Then - criteria 필드를 보내지 않음
+      await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
         .send({
-          criteria,
-          actionBy: invalidActionBy,
+          // criteria 필드 누락
         })
         .expect(400);
     });
@@ -467,7 +478,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       );
 
       // When - WBS 항목 2에 평가기준 생성
-      const created2 = await request(app.getHttpServer())
+      const created2 = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem2.id}`,
         )
@@ -496,7 +508,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -528,7 +541,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       );
 
       // When - 동일한 wbsItemId로 다시 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -559,7 +573,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       );
 
       // When - 동일한 wbsItemId로 다시 요청
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -589,7 +604,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -611,7 +627,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -632,7 +649,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
@@ -653,7 +671,8 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const actionBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )

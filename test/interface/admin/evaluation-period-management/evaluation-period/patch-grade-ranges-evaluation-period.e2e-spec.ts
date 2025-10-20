@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationPeriodStatus } from '@domain/core/evaluation-period/evaluation-period.types';
@@ -101,7 +100,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
@@ -128,7 +128,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
@@ -159,7 +160,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
@@ -182,7 +184,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect([200, 422]); // 도메인 정책에 따라 422가 발생할 수 있음
@@ -214,7 +217,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
@@ -237,7 +241,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       const updateData = {};
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -254,7 +259,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -271,7 +277,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -288,7 +295,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -305,7 +313,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -322,7 +331,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -335,7 +345,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -348,7 +359,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -361,7 +373,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -374,7 +387,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -387,7 +401,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(400);
@@ -400,7 +415,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch('/admin/evaluation-periods/invalid-uuid/grade-ranges')
         .send(updateData)
         .expect(400);
@@ -420,7 +436,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${nonExistentId}/grade-ranges`)
         .send(updateData)
         .expect(404);
@@ -442,7 +459,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(422);
@@ -457,7 +475,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(422);
@@ -474,7 +493,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(422);
@@ -494,7 +514,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(422);
@@ -512,7 +533,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(422);
@@ -531,7 +553,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${completedEvaluationPeriodId}/grade-ranges`,
         )
@@ -566,7 +589,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       const updateData = { gradeRanges };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
@@ -587,7 +611,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
@@ -612,7 +637,8 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
@@ -632,13 +658,15 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
       };
 
       // When - 첫 번째 수정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
 
       // When - 두 번째 수정 (동일한 데이터)
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
         .send(updateData)
         .expect(200);
@@ -675,10 +703,12 @@ describe('PATCH /admin/evaluation-periods/:id/grade-ranges (E2E)', () => {
 
       // When - 동시 요청
       const [response1, response2] = await Promise.allSettled([
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
           .send(updateData1),
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .patch(`/admin/evaluation-periods/${evaluationPeriodId}/grade-ranges`)
           .send(updateData2),
       ]);

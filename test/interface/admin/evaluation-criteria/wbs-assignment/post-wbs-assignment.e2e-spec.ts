@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -128,7 +127,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -167,7 +167,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send(wbsAssignmentData)
         .expect(201);
@@ -197,7 +198,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       // When
       const responses = await Promise.all(
         employees.map((employee) =>
-          request(app.getHttpServer())
+          testSuite
+            .request()
             .post('/admin/evaluation-criteria/wbs-assignments')
             .send({
               employeeId: employee.id,
@@ -233,7 +235,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       // When
       const responses = await Promise.all(
         wbsItems.map((wbsItem) =>
-          request(app.getHttpServer())
+          testSuite
+            .request()
             .post('/admin/evaluation-criteria/wbs-assignments')
             .send({
               employeeId: employee.id,
@@ -263,7 +266,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -293,7 +297,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee!.id,
@@ -328,7 +333,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           // employeeId 누락
@@ -348,7 +354,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -368,7 +375,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -388,7 +396,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -409,7 +418,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const nonExistentEmployeeId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: nonExistentEmployeeId,
@@ -430,7 +440,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const nonExistentWbsItemId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -451,7 +462,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const nonExistentProjectId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -472,7 +484,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -492,7 +505,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: 'invalid-uuid',
@@ -525,13 +539,15 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       };
 
       // 첫 번째 할당 성공
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send(wbsAssignmentData)
         .expect(201);
 
       // When & Then - 동일한 조합으로 두 번째 할당 시도
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send(wbsAssignmentData)
         .expect(409);
@@ -550,7 +566,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,
@@ -571,7 +588,8 @@ describe('POST /admin/evaluation-criteria/wbs-assignments', () => {
       const assignedBy = testData.employees[0].id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-criteria/wbs-assignments')
         .send({
           employeeId: employee.id,

@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 
@@ -266,9 +265,11 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       for (const employeeId of testEmployeeIds) {
         const startTime = Date.now();
 
-        const response = await request(app.getHttpServer()).get(
-          `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
-        );
+        const response = await testSuite
+          .request()
+          .get(
+            `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
+          );
 
         if (response.status !== 200) {
           console.error(`\n❌ 조회 실패 (employeeId: ${employeeId}):`, {
@@ -320,7 +321,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       for (let i = 0; i < iterations; i++) {
         const startTime = Date.now();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/dashboard/${evaluationPeriodId}/employees/${testEmployeeId}/assigned-data`,
           )
@@ -351,7 +353,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       const startTime = Date.now();
 
       const promises = testEmployees.map((employeeId) =>
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .get(
             `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
           )
@@ -387,7 +390,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
 
       const testEmployeeId = testEmployeeIds[0];
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${evaluationPeriodId}/employees/${testEmployeeId}/assigned-data`,
         )
@@ -456,7 +460,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
 
       const testEmployeeId = testEmployeeIds[0];
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${evaluationPeriodId}/employees/${testEmployeeId}/assigned-data`,
         )
@@ -502,7 +507,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       for (let i = 0; i < iterations; i++) {
         const employeeId = testEmployeeIds[i % testEmployeeIds.length];
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
           )

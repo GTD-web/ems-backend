@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -111,7 +110,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
     projectId: string,
     periodId: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         employeeId,
@@ -133,7 +133,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
     projectId: string,
     periodId: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -156,7 +157,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
     periodId: string,
     evaluatorId: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/primary-evaluator`,
       )
@@ -200,7 +202,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${period.id}/settings`,
           )
@@ -274,7 +277,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         await createProjectAssignment(employee.id, activeProject.id, period.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${period.id}/settings`,
           )
@@ -306,7 +310,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${period.id}/settings`,
           )
@@ -327,7 +332,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         const period = getActivePeriod();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${period.id}/settings`,
           )
@@ -367,7 +373,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${period.id}/settings`,
           )
@@ -396,7 +403,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         await createProjectAssignment(employee.id, activeProject.id, period.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${period.id}/settings`,
           )
@@ -425,7 +433,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         const period = getActivePeriod();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${nonExistentEmployeeId}/period/${period.id}/settings`,
           )
@@ -445,7 +454,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         const nonExistentPeriodId = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${nonExistentPeriodId}/settings`,
           )
@@ -464,7 +474,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${invalidUuid}/period/${period.id}/settings`,
           )
@@ -479,7 +490,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         const invalidUuid = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${invalidUuid}/settings`,
           )
@@ -493,7 +505,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/ /period/${period.id}/settings`,
           )
@@ -520,7 +533,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${period.id}/settings`,
           )
@@ -570,7 +584,8 @@ describe('직원 평가설정 통합 조회 테스트', () => {
         await createProjectAssignment(employee.id, activeProject.id, period.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/period/${period.id}/settings`,
           )

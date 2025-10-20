@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -74,7 +73,8 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id', () => {
     evaluateeId: string;
     periodId: string;
   }): Promise<string> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/performance-evaluation/peer-evaluations/requests')
       .send(data)
       .expect(201);
@@ -86,9 +86,9 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id', () => {
    * 동료평가 상세 조회 헬퍼
    */
   function getPeerEvaluationDetail(evaluationId: string) {
-    return request(app.getHttpServer()).get(
-      `/admin/performance-evaluation/peer-evaluations/${evaluationId}`,
-    );
+    return testSuite
+      .request()
+      .get(`/admin/performance-evaluation/peer-evaluations/${evaluationId}`);
   }
 
   // ==================== 성공 시나리오 ====================
@@ -207,7 +207,8 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id', () => {
       const invalidEvaluationId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/performance-evaluation/peer-evaluations/${invalidEvaluationId}`,
         )

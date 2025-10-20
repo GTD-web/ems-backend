@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -101,7 +100,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}`,
       )
@@ -119,7 +119,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
     employeeId: string,
     projectId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         employeeId,
@@ -139,7 +140,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
     wbsItemId: string,
   ): Promise<void> {
     const wbsItem = testData.wbsItems.find((w) => w.id === wbsItemId);
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -160,7 +162,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
     periodId: string,
     evaluatorId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/primary-evaluator`,
       )
@@ -180,7 +183,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
     periodId: string,
     evaluatorId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/secondary-evaluator`,
       )
@@ -199,7 +203,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
     employeeId: string,
     reason: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .patch(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}/exclude`,
       )
@@ -217,9 +222,11 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
     evaluationPeriodId: string,
     evaluatorId: string,
   ) {
-    return request(app.getHttpServer()).get(
-      `/admin/dashboard/${evaluationPeriodId}/my-evaluation-targets/${evaluatorId}/status`,
-    );
+    return testSuite
+      .request()
+      .get(
+        `/admin/dashboard/${evaluationPeriodId}/my-evaluation-targets/${evaluatorId}/status`,
+      );
   }
 
   // ==================== 성공 시나리오 ====================
@@ -601,7 +608,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
       const evaluator = testData.employees[0];
 
       // When: 내 평가 대상자 현황 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${nonExistentPeriodId}/my-evaluation-targets/${evaluator.id}/status`,
         )
@@ -618,7 +626,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
       const nonExistentEvaluatorId = '00000000-0000-0000-0000-000000000000';
 
       // When: 내 평가 대상자 현황 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/my-evaluation-targets/${nonExistentEvaluatorId}/status`,
         )
@@ -636,7 +645,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
       const evaluator = testData.employees[0];
 
       // When & Then: 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/dashboard/${invalidUuid}/my-evaluation-targets/${evaluator.id}/status`,
         )
@@ -650,7 +660,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
       const invalidUuid = 'invalid-uuid';
 
       // When & Then: 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/my-evaluation-targets/${invalidUuid}/status`,
         )

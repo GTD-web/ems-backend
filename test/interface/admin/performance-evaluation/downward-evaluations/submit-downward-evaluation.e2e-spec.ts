@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -102,7 +101,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       createdBy?: string;
     } = {},
   ): Promise<{ id: string; evaluatorId: string }> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluateeId}/period/${periodId}/project/${projectId}/${evaluationType}`,
       )
@@ -151,7 +151,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
           );
 
         // When - 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
           )
@@ -192,7 +193,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         expect(beforeSubmit.isCompleted).toBe(false);
 
         // When - 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
           )
@@ -224,7 +226,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         );
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
           )
@@ -239,13 +242,15 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         const evaluatee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const evaluator = getRandomEmployee();
 
         // When & Then - 저장하지 않고 바로 제출 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
           )
-          .send({})
+          .send({ evaluatorId: evaluator.id })
           .expect(404);
       });
 
@@ -269,7 +274,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         );
 
         // 첫 번째 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
           )
@@ -277,7 +283,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
           .expect(200);
 
         // When & Then - 두 번째 제출 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
           )
@@ -292,7 +299,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         const invalidEvaluateeId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${invalidEvaluateeId}/period/${period.id}/project/${project.id}/primary/submit`,
           )
@@ -307,7 +315,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${invalidPeriodId}/project/${project.id}/primary/submit`,
           )
@@ -322,7 +331,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         const invalidProjectId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${invalidProjectId}/primary/submit`,
           )
@@ -357,7 +367,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
           );
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/submit`,
           )
@@ -403,7 +414,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
           );
 
         // When - 1차만 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
           )
@@ -418,7 +430,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         expect(secondaryRecord.isCompleted).toBe(false);
 
         // When - 2차 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/submit`,
           )
@@ -438,13 +451,15 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         const evaluatee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const evaluator = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/submit`,
           )
-          .send({})
+          .send({ evaluatorId: evaluator.id })
           .expect(404);
       });
 
@@ -468,7 +483,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         );
 
         // 첫 번째 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/submit`,
           )
@@ -476,7 +492,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
           .expect(200);
 
         // When & Then - 두 번째 제출 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/submit`,
           )
@@ -510,7 +527,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         );
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/${evaluationId}/submit`,
           )
@@ -542,7 +560,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         );
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/${evaluationId}/submit`,
           )
@@ -587,14 +606,16 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         );
 
         // When - ID로 직접 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/${primaryId}/submit`,
           )
           .send({})
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/${secondaryId}/submit`,
           )
@@ -616,7 +637,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         const nonExistentId = '550e8400-e29b-41d4-a716-446655440999';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/${nonExistentId}/submit`,
           )
@@ -629,7 +651,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         const invalidId = 'invalid-uuid-format';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/${invalidId}/submit`,
           )
@@ -657,7 +680,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
         );
 
         // 첫 번째 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/${evaluationId}/submit`,
           )
@@ -665,7 +689,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
           .expect(200);
 
         // When & Then - 두 번째 제출 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/${evaluationId}/submit`,
           )
@@ -701,7 +726,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       );
 
       // When - 제출
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/downward-evaluations/${evaluationId}/submit`,
         )
@@ -741,7 +767,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When - 제출
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/downward-evaluations/${evaluationId}/submit`,
         )
@@ -780,7 +807,8 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       const createdAtBefore = new Date(beforeSubmit.createdAt).getTime();
 
       // When - 제출
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/downward-evaluations/${evaluationId}/submit`,
         )

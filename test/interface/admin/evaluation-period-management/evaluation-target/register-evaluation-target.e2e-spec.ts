@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -31,8 +30,23 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
     await testSuite.cleanupBeforeTest();
 
     // 완전한 테스트 환경 생성
-    const { employees, periods } =
+    const { departments, employees, periods } =
       await testContextService.완전한_테스트환경을_생성한다();
+
+    // 테스트용 인증 사용자 생성 (testSuite에서 사용하는 기본 사용자 ID)
+    const testUserId = '00000000-0000-0000-0000-000000000001';
+    const existingUser = await dataSource.manager.query(
+      `SELECT id FROM employee WHERE id = $1`,
+      [testUserId],
+    );
+
+    if (existingUser.length === 0) {
+      await dataSource.manager.query(
+        `INSERT INTO employee (id, "employeeNumber", name, email, "departmentId", status, "externalId", "externalCreatedAt", "externalUpdatedAt", version, "createdAt", "updatedAt")
+         VALUES ($1, 'TEST-USER', '테스트 관리자', 'test@example.com', $2, '재직중', 'test-user-001', NOW(), NOW(), 1, NOW(), NOW())`,
+        [testUserId, departments[0].id],
+      );
+    }
 
     testData = {
       employees,
@@ -109,13 +123,14 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const employee = testData.employees[0];
         const period = getActivePeriod();
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/${employee.id}`)
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           });
 
         expect(response.status).toBe(201);
@@ -129,20 +144,21 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         expect(response.body.excludeReason).toBeNull();
         expect(response.body.excludedBy).toBeNull();
         expect(response.body.excludedAt).toBeNull();
-        expect(response.body.createdBy).toBe(createdBy);
+        expect(response.body.createdBy).toBe(testUserId); // 인증된 사용자가 생성자로 설정됨
       });
 
       it('등록된 평가 대상자의 상태가 올바르게 반환되어야 한다 (isExcluded: false)', async () => {
         // Given
         const employee = testData.employees[1];
         const period = getActivePeriod();
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/${employee.id}`)
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -157,13 +173,14 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const employee = testData.employees[2];
         const period = getWaitingPeriod();
-        const createdBy = 'test-admin';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/${employee.id}`)
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -176,7 +193,7 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         expect(dbMapping.evaluationPeriodId).toBe(period.id);
         expect(dbMapping.employeeId).toBe(employee.id);
         expect(dbMapping.isExcluded).toBe(false);
-        expect(dbMapping.createdBy).toBe(createdBy);
+        expect(dbMapping.createdBy).toBe(testUserId); // 인증된 사용자가 생성자로 설정됨
       });
 
       it('여러 평가기간에 동일한 직원을 등록할 수 있어야 한다', async () => {
@@ -184,24 +201,26 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         const employee = testData.employees[0];
         const period1 = testData.periods[0];
         const period2 = testData.periods[1];
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response1 = await request(app.getHttpServer())
+        const response1 = await testSuite
+          .request()
           .post(
             `/admin/evaluation-periods/${period1.id}/targets/${employee.id}`,
           )
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
-        const response2 = await request(app.getHttpServer())
+        const response2 = await testSuite
+          .request()
           .post(
             `/admin/evaluation-periods/${period2.id}/targets/${employee.id}`,
           )
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -219,15 +238,16 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const employee = testData.employees[0];
         const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When & Then
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/evaluation-periods/${nonExistentPeriodId}/targets/${employee.id}`,
           )
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(404);
 
@@ -238,15 +258,16 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const period = getActivePeriod();
         const nonExistentEmployeeId = '00000000-0000-0000-0000-000000000000';
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When & Then
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/evaluation-periods/${period.id}/targets/${nonExistentEmployeeId}`,
           )
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(404);
 
@@ -257,20 +278,22 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given - 먼저 등록
         const employee = testData.employees[3];
         const period = getActivePeriod();
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/${employee.id}`)
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
         // When & Then - 동일한 대상자 재등록 시도
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/${employee.id}`)
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(409);
 
@@ -281,15 +304,16 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const employee = testData.employees[0];
         const invalidPeriodId = 'invalid-uuid';
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/evaluation-periods/${invalidPeriodId}/targets/${employee.id}`,
           )
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
       });
@@ -298,32 +322,22 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const period = getActivePeriod();
         const invalidEmployeeId = 'invalid-uuid';
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/evaluation-periods/${period.id}/targets/${invalidEmployeeId}`,
           )
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
       });
 
-      it('필수 필드 누락 시 400 에러가 발생해야 한다', async () => {
-        // Given
-        const employee = testData.employees[0];
-        const period = getActivePeriod();
-
-        // When & Then - createdBy 누락
-        await request(app.getHttpServer())
-          .post(`/admin/evaluation-periods/${period.id}/targets/${employee.id}`)
-          .send({
-            // createdBy 누락
-          })
-          .expect(400);
-      });
+      // Note: createdBy는 이제 @CurrentUser()를 통해 컨트롤러에서 자동으로 설정되므로
+      // DTO에서 createdBy를 전달받지 않습니다. 따라서 이 테스트는 더 이상 유효하지 않습니다.
     });
   });
 
@@ -335,14 +349,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const period = getActivePeriod();
         const employeeIds = testData.employees.slice(0, 5).map((e) => e.id);
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds,
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -356,7 +371,7 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
           expect(mapping.evaluationPeriodId).toBe(period.id);
           expect(employeeIds).toContain(mapping.employeeId);
           expect(mapping.isExcluded).toBe(false);
-          expect(mapping.createdBy).toBe(createdBy);
+          expect(mapping.createdBy).toBe(testUserId); // 인증된 사용자가 생성자로 설정됨
         });
       });
 
@@ -366,24 +381,26 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         const employee1 = testData.employees[0];
         const employee2 = testData.employees[1];
         const employee3 = testData.employees[2];
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // 먼저 employee1 등록
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/evaluation-periods/${period.id}/targets/${employee1.id}`,
           )
           .send({
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
         // When - employee1, employee2, employee3 대량 등록 시도
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds: [employee1.id, employee2.id, employee3.id],
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -399,14 +416,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const period = getWaitingPeriod();
         const allEmployeeIds = testData.employees.map((e) => e.id);
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds: allEmployeeIds,
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -422,14 +440,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const period = getActivePeriod();
         const employeeIds = testData.employees.slice(0, 3).map((e) => e.id);
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds,
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -446,14 +465,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const period = getActivePeriod();
         const employeeIds = [testData.employees[0].id];
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds,
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -467,14 +487,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
       it('빈 배열로 요청 시 400 에러가 발생해야 한다', async () => {
         // Given
         const period = getActivePeriod();
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When & Then
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds: [],
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
 
@@ -489,14 +510,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
           'invalid-uuid',
           testData.employees[1].id,
         ];
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds,
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
       });
@@ -505,40 +527,34 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
         const employeeIds = testData.employees.slice(0, 3).map((e) => e.id);
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When & Then
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${nonExistentPeriodId}/targets/bulk`)
           .send({
             employeeIds,
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(404);
 
         expect(response.body.message).toBeDefined();
       });
 
-      it('필수 필드 누락 시 400 에러가 발생해야 한다', async () => {
+      // Note: createdBy는 이제 @CurrentUser()를 통해 컨트롤러에서 자동으로 설정되므로
+      // DTO에서 createdBy를 전달받지 않습니다.
+
+      it('employeeIds 누락 시 400 에러가 발생해야 한다', async () => {
         // Given
         const period = getActivePeriod();
-        const employeeIds = testData.employees.slice(0, 3).map((e) => e.id);
-
-        // When & Then - createdBy 누락
-        await request(app.getHttpServer())
-          .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
-          .send({
-            employeeIds,
-            // createdBy 누락
-          })
-          .expect(400);
 
         // When & Then - employeeIds 누락
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             // employeeIds 누락
-            createdBy: 'admin-user-id',
           })
           .expect(400);
       });
@@ -546,14 +562,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
       it('employeeIds가 배열이 아닌 경우 400 에러가 발생해야 한다', async () => {
         // Given
         const period = getActivePeriod();
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds: 'not-an-array',
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(400);
       });
@@ -565,21 +582,23 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         const period = getActivePeriod();
         const batch1 = testData.employees.slice(0, 3).map((e) => e.id);
         const batch2 = testData.employees.slice(3).map((e) => e.id); // 나머지 모든 직원
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When - 동시 요청
         const [response1, response2] = await Promise.all([
-          request(app.getHttpServer())
+          testSuite
+            .request()
             .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
             .send({
               employeeIds: batch1,
-              createdBy,
+              // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             }),
-          request(app.getHttpServer())
+          testSuite
+            .request()
             .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
             .send({
               employeeIds: batch2,
-              createdBy,
+              // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             }),
         ]);
 
@@ -596,14 +615,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
         // Given
         const period = getActivePeriod();
         const allEmployeeIds = testData.employees.map((e) => e.id);
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds: allEmployeeIds,
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 
@@ -622,14 +642,15 @@ describe('평가 대상자 등록 테스트 - 단일 등록 및 대량 등록', 
           employee1.id, // 중복
           employee2.id, // 중복
         ];
-        const createdBy = 'admin-user-id';
+        const testUserId = '00000000-0000-0000-0000-000000000001';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/targets/bulk`)
           .send({
             employeeIds,
-            createdBy,
+            // createdBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           })
           .expect(201);
 

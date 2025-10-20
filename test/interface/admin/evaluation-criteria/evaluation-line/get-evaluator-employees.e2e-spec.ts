@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -102,7 +101,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
     periodId: string,
     assignedBy?: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -125,7 +125,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
     periodId: string,
     evaluatorId: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/primary-evaluator`,
       )
@@ -146,7 +147,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
     periodId: string,
     evaluatorId: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/secondary-evaluator`,
       )
@@ -200,7 +202,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${evaluator.id}/employees`,
           )
@@ -251,7 +254,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${evaluator.id}/employees`,
           )
@@ -309,7 +313,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${evaluator.id}/employees`,
           )
@@ -329,7 +334,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         const nonEvaluator = testData.employees[4];
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${nonEvaluator.id}/employees`,
           )
@@ -365,7 +371,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${evaluator.id}/employees`,
           )
@@ -387,7 +394,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         const nonExistentEvaluatorId = 'f0f13879-9a95-4320-a753-3e304d203e4e';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${nonExistentEvaluatorId}/employees`,
           )
@@ -404,7 +412,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         const invalidUuid = 'invalid-uuid';
 
         // When & Then
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${invalidUuid}/employees`,
           )
@@ -415,7 +424,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
 
       it('빈 문자열 평가자 ID로 조회 시 에러가 발생해야 한다', async () => {
         // When & Then
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/ /employees`,
           )
@@ -448,7 +458,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${evaluator.id}/employees`,
           )
@@ -501,7 +512,8 @@ describe('평가자별 피평가자 조회 테스트', () => {
         );
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-criteria/evaluation-lines/evaluator/${evaluator.id}/employees`,
           )

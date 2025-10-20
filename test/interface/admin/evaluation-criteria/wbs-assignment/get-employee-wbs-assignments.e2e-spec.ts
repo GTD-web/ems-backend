@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -116,7 +115,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -145,7 +145,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
   ): Promise<any> {
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         periodId,
@@ -169,7 +170,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
   ): Promise<any> {
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         periodId,
@@ -201,7 +203,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       await createWbsAssignment(periodId, employee.id, project.id, wbsItem2.id);
 
       // When: 직원의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/${periodId}`,
         )
@@ -228,7 +231,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       const employee = getRandomEmployee();
 
       // When: 직원의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/${periodId}`,
         )
@@ -260,7 +264,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       }
 
       // When: 직원의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/${periodId}`,
         )
@@ -292,12 +297,14 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       await createWbsAssignment(periodId, employee.id, project.id, wbsItem2.id);
 
       // 첫 번째 할당 취소
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment1.id}`)
         .expect(200);
 
       // When: 직원의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/${periodId}`,
         )
@@ -337,7 +344,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       );
 
       // When: employee1의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee1.id}/period/${periodId}`,
         )
@@ -376,7 +384,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       );
 
       // When: period1의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/${period1Id}`,
         )
@@ -395,7 +404,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       const periodId = await createEvaluationPeriod();
 
       // When & Then: 잘못된 UUID 형식으로 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/invalid-uuid/period/${periodId}`,
         )
@@ -407,7 +417,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       const employee = getRandomEmployee();
 
       // When & Then: 잘못된 UUID 형식으로 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/invalid-uuid`,
         )
@@ -420,7 +431,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       const nonExistentEmployeeId = '00000000-0000-0000-0000-000000000000';
 
       // When: 존재하지 않는 직원으로 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${nonExistentEmployeeId}/period/${periodId}`,
         )
@@ -436,7 +448,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
 
       // When: 존재하지 않는 평가기간으로 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/${nonExistentPeriodId}`,
         )
@@ -460,7 +473,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       await createWbsAssignment(periodId, employee.id, project.id, wbsItem.id);
 
       // When: 직원의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/${periodId}`,
         )
@@ -504,7 +518,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/pe
       }
 
       // When: 직원의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/employee/${employee.id}/period/${periodId}`,
         )

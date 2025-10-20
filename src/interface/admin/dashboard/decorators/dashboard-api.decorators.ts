@@ -158,13 +158,13 @@ export function GetAllEmployeesEvaluationPeriodStatus() {
  */
 export function GetMyEvaluationTargetsStatus() {
   return applyDecorators(
-    Get(':evaluationPeriodId/my-evaluation-targets/status'),
+    Get(':evaluationPeriodId/my-evaluation-targets/:evaluatorId/status'),
     ApiOperation({
       summary: '내가 담당하는 평가 대상자 현황 조회',
-      description: `로그인한 평가자가 자신이 담당하는 피평가자들의 평가 현황을 배열로 조회합니다.
+      description: `지정한 평가자가 담당하는 피평가자들의 평가 현황을 배열로 조회합니다.
 
 **동작:**
-- 로그인한 사용자 정보(CurrentUser)에서 평가자 ID를 자동으로 가져옴
+- 지정한 평가자 ID로 담당하는 피평가자 목록 조회
 - 내가 PRIMARY 또는 SECONDARY 평가자로 지정된 피평가자 목록 반환
 - 각 피평가자에 대한 내 평가자 유형 제공 (PRIMARY/SECONDARY)
 - 내가 담당하는 하향평가 현황 제공 (평가 대상 WBS 수, 완료 수, 평균 점수, 수정 가능 여부)
@@ -189,7 +189,9 @@ export function GetMyEvaluationTargetsStatus() {
 - 기능 테스트: 여러 피평가자를 담당하는 경우 모두 조회되어야 한다
 - 기능 테스트: 성과 입력 상태가 정확해야 한다
 - 실패 케이스: 존재하지 않는 평가기간 조회 시 빈 배열을 반환해야 한다
+- 실패 케이스: 존재하지 않는 평가자 조회 시 빈 배열을 반환해야 한다
 - 실패 케이스: 잘못된 평가기간 UUID 형식으로 요청 시 에러가 발생해야 한다
+- 실패 케이스: 잘못된 평가자 UUID 형식으로 요청 시 에러가 발생해야 한다
 - 정합성 테스트: 여러 피평가자의 데이터가 섞이지 않아야 한다
 - 정합성 테스트: 상태 값이 예상된 enum 값 중 하나여야 한다
 - 성능 테스트 (소규모): 4명 피평가자 환경에서 60ms 평균 응답 시간
@@ -206,6 +208,13 @@ export function GetMyEvaluationTargetsStatus() {
       type: 'string',
       format: 'uuid',
       example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    ApiParam({
+      name: 'evaluatorId',
+      description: '평가자 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174001',
     }),
     ApiOkResponse({
       description: '내가 담당하는 평가 대상자 현황 조회 성공',

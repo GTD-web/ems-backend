@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -81,7 +80,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
       maxSelfEvaluationRate: 120,
     };
 
-    const evaluationPeriodResponse = await request(app.getHttpServer())
+    const evaluationPeriodResponse = await testSuite.request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -102,7 +101,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
       assignedBy: assignedBy,
     };
 
-    const assignment1Response = await request(app.getHttpServer())
+    const assignment1Response = await testSuite.request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send(assignment1Data)
       .expect(201);
@@ -118,7 +117,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         assignedBy: assignedBy,
       };
 
-      const assignment2Response = await request(app.getHttpServer())
+      const assignment2Response = await testSuite.request()
         .post('/admin/evaluation-criteria/project-assignments')
         .send(assignment2Data)
         .expect(201);
@@ -174,7 +173,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
 
       try {
         // When: 직원 프로젝트 할당 목록 조회 API 엔드포인트 호출
-        const response = await request(app.getHttpServer()).get(
+        const response = await testSuite.request().get(
           `/admin/evaluation-criteria/project-assignments/employees/${testData.employees[0].id}/periods/${evaluationPeriodId}`,
         );
 
@@ -190,7 +189,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
 
     it('잘못된 경로로 요청 시 404 에러가 발생해야 한다', async () => {
       // When: 존재하지 않는 엔드포인트 호출
-      const response = await request(app.getHttpServer()).get(
+      const response = await testSuite.request().get(
         '/admin/evaluation-criteria/project-assignments/employees/invalid-path',
       );
 
@@ -208,7 +207,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         await createIndependentTestData();
 
       try {
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/employees/${testData.employees[0].id}/periods/${evaluationPeriodId}`,
           )
@@ -288,7 +287,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         await createIndependentTestData();
 
       try {
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/employees/${testData.employees[0].id}/periods/${evaluationPeriodId}`,
           )
@@ -323,7 +322,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         // 할당되지 않은 다른 직원 사용 (두 번째 직원)
         const unassignedEmployee = testData.employees[1];
 
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/employees/${unassignedEmployee.id}/periods/${evaluationPeriodId}`,
           )
@@ -351,7 +350,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         await createIndependentTestData();
 
       try {
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/employees/${testData.employees[0].id}/periods/${evaluationPeriodId}`,
           )
@@ -417,7 +416,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
       try {
         // When: 존재하지 않는 직원 UUID로 조회
         const nonExistentEmployeeId = '00000000-0000-0000-0000-000000000000';
-        const response = await request(app.getHttpServer()).get(
+        const response = await testSuite.request().get(
           `/admin/evaluation-criteria/project-assignments/employees/${nonExistentEmployeeId}/periods/${evaluationPeriodId}`,
         );
 
@@ -460,7 +459,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
       try {
         // When: 존재하지 않는 평가기간 UUID로 조회
         const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
-        const response = await request(app.getHttpServer()).get(
+        const response = await testSuite.request().get(
           `/admin/evaluation-criteria/project-assignments/employees/${testData.employees[0].id}/periods/${nonExistentPeriodId}`,
         );
 
@@ -500,7 +499,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
       try {
         // When: 잘못된 UUID 형식으로 조회
         const invalidEmployeeId = 'invalid-uuid-format';
-        const response = await request(app.getHttpServer()).get(
+        const response = await testSuite.request().get(
           `/admin/evaluation-criteria/project-assignments/employees/${invalidEmployeeId}/periods/${evaluationPeriodId}`,
         );
 
@@ -523,7 +522,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
       try {
         // When: API 호출 시간 측정
         const startTime = Date.now();
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/employees/${testData.employees[0].id}/periods/${evaluationPeriodId}`,
           )
@@ -560,7 +559,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
             assignedBy: assignedBy,
           };
 
-          await request(app.getHttpServer())
+          await testSuite.request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(assignmentData)
             .expect(201);
@@ -568,7 +567,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
 
         // When: API 호출 시간 측정
         const startTime = Date.now();
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .get(
             `/admin/evaluation-criteria/project-assignments/employees/${targetEmployee.id}/periods/${evaluationPeriodId}`,
           )

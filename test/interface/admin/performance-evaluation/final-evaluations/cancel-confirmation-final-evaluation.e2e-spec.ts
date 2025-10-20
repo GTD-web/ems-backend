@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -74,7 +73,8 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
       finalComments?: string;
     },
   ): Promise<string> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/final-evaluations/employee/${employeeId}/period/${periodId}`,
       )
@@ -88,7 +88,8 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
     evaluationId: string,
     confirmedBy: string,
   ) {
-    return request(app.getHttpServer())
+    return testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/final-evaluations/${evaluationId}/confirm`,
       )
@@ -97,7 +98,8 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
   }
 
   function cancelConfirmation(evaluationId: string, updatedBy: string) {
-    return request(app.getHttpServer())
+    return testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/final-evaluations/${evaluationId}/cancel-confirmation`,
       )
@@ -153,7 +155,7 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
       const confirmedBy = uuidv4();
-      const updatedBy = uuidv4();
+      const testUserId = '00000000-0000-0000-0000-000000000001';
 
       const evaluationId = await createFinalEvaluation(employee.id, period.id, {
         evaluationGrade: 'S',
@@ -163,12 +165,12 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
 
       await confirmFinalEvaluation(evaluationId, confirmedBy);
 
-      // When
-      await cancelConfirmation(evaluationId, updatedBy).expect(200);
+      // When (updatedBy는 @CurrentUser()로 자동 설정됨)
+      await cancelConfirmation(evaluationId, testUserId).expect(200);
 
       // Then
       const dbRecord = await getFinalEvaluationFromDb(evaluationId);
-      expect(dbRecord.updatedBy).toBe(updatedBy);
+      expect(dbRecord.updatedBy).toBe(testUserId);
     });
 
     it('확정 취소 후 isConfirmed가 false로 변경되어야 한다', async () => {
@@ -294,12 +296,15 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
       await confirmFinalEvaluation(evaluationId, confirmedBy);
 
       // When & Then
-      await request(app.getHttpServer())
+      // updatedBy는 @CurrentUser() 데코레이터를 통해 자동 설정되므로,
+      // 이 필드의 누락 검증 테스트는 필요하지 않음
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/final-evaluations/${evaluationId}/cancel-confirmation`,
         )
         .send({})
-        .expect(400);
+        .expect(200);
     });
 
     it('확정되지 않은 평가의 확정 취소 시 422 에러가 발생해야 한다', async () => {
@@ -383,7 +388,7 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
       const confirmedBy = uuidv4();
-      const updatedBy = uuidv4();
+      const testUserId = '00000000-0000-0000-0000-000000000001';
 
       const evaluationId = await createFinalEvaluation(employee.id, period.id, {
         evaluationGrade: 'A',
@@ -393,15 +398,15 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
 
       await confirmFinalEvaluation(evaluationId, confirmedBy);
 
-      // When
-      await cancelConfirmation(evaluationId, updatedBy).expect(200);
+      // When (updatedBy는 @CurrentUser()로 자동 설정됨)
+      await cancelConfirmation(evaluationId, testUserId).expect(200);
 
       // Then
       const dbRecord = await getFinalEvaluationFromDb(evaluationId);
       expect(dbRecord.isConfirmed).toBe(false);
       expect(dbRecord.confirmedBy).toBeNull();
       expect(dbRecord.confirmedAt).toBeNull();
-      expect(dbRecord.updatedBy).toBe(updatedBy);
+      expect(dbRecord.updatedBy).toBe(testUserId);
     });
 
     it('확정 취소 후에도 평가 등급 데이터는 유지되어야 한다', async () => {
@@ -511,7 +516,8 @@ describe('POST /admin/performance-evaluation/final-evaluations/:id/cancel-confir
       await cancelConfirmation(evaluationId, updatedBy).expect(200);
 
       // When - 취소 후 다시 수정 시도
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/final-evaluations/employee/${employee.id}/period/${period.id}`,
         )

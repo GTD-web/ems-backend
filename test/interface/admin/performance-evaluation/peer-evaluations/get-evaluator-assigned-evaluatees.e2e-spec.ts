@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -98,7 +97,7 @@ describe('GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluato
       url += `?${params.join('&')}`;
     }
 
-    return request(app.getHttpServer()).get(url);
+    return testSuite.request().get(url);
   }
 
   // ==================== 성공 시나리오 ====================

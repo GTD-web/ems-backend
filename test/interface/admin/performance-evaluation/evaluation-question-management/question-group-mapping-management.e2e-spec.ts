@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 /**
@@ -38,7 +37,8 @@ describe('질문-그룹 매핑 관리 API', () => {
     await testSuite.cleanupBeforeTest();
 
     // 테스트용 질문 그룹 생성
-    const groupResponse = await request(app.getHttpServer())
+    const groupResponse = await testSuite
+      .request()
       .post(`${BASE_URL}/question-groups`)
       .send({ name: '테스트 질문 그룹' })
       .expect(201);
@@ -46,21 +46,24 @@ describe('질문-그룹 매핑 관리 API', () => {
     testGroupId = groupResponse.body.id;
 
     // 테스트용 질문 3개 생성
-    const question1Response = await request(app.getHttpServer())
+    const question1Response = await testSuite
+      .request()
       .post(`${BASE_URL}/evaluation-questions`)
       .send({ text: '테스트 질문 1' })
       .expect(201);
 
     testQuestion1Id = question1Response.body.id;
 
-    const question2Response = await request(app.getHttpServer())
+    const question2Response = await testSuite
+      .request()
       .post(`${BASE_URL}/evaluation-questions`)
       .send({ text: '테스트 질문 2' })
       .expect(201);
 
     testQuestion2Id = question2Response.body.id;
 
-    const question3Response = await request(app.getHttpServer())
+    const question3Response = await testSuite
+      .request()
       .post(`${BASE_URL}/evaluation-questions`)
       .send({ text: '테스트 질문 3' })
       .expect(201);
@@ -82,7 +85,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(201);
@@ -95,7 +99,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         );
 
         // 그룹의 질문 목록 조회하여 확인
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -112,7 +117,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(201);
@@ -121,7 +127,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         expect(response.body).toHaveProperty('id');
 
         // displayOrder 확인
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -130,7 +137,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
       it('자동 순서 배치: displayOrder 생략 시 마지막 순서로 자동 배치되어야 한다', async () => {
         // Given - 첫 번째 질문 추가
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send({
             groupId: testGroupId,
@@ -140,7 +148,8 @@ describe('질문-그룹 매핑 관리 API', () => {
           .expect(201);
 
         // When - displayOrder 없이 두 번째 질문 추가
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send({
             groupId: testGroupId,
@@ -149,7 +158,8 @@ describe('질문-그룹 매핑 관리 API', () => {
           .expect(201);
 
         // Then - 자동으로 마지막 순서(1)로 배치되어야 함
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -165,7 +175,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(201);
@@ -188,13 +199,15 @@ describe('질문-그룹 매핑 관리 API', () => {
           questionId: testQuestion1Id,
         };
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(201);
 
         // When & Then - 동일한 질문 다시 추가 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(409);
@@ -208,7 +221,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(404);
@@ -222,7 +236,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(404);
@@ -235,7 +250,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(400);
@@ -248,7 +264,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send(addDto)
           .expect(400);
@@ -266,7 +283,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send(batchAddDto)
           .expect(201);
@@ -280,7 +298,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         expect(response.body.totalCount).toBe(3);
 
         // 그룹의 질문 목록 조회하여 확인
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -296,13 +315,15 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send(batchAddDto)
           .expect(201);
 
         // Then - displayOrder가 5, 6, 7로 할당되어야 함
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -320,7 +341,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send(batchAddDto)
           .expect(201);
@@ -337,7 +359,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
       it('중복 건너뛰기: 이미 추가된 질문은 건너뛰고 나머지만 추가해야 한다', async () => {
         // Given - 첫 번째 질문 미리 추가
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send({
             groupId: testGroupId,
@@ -351,7 +374,8 @@ describe('질문-그룹 매핑 관리 API', () => {
           questionIds: [testQuestion1Id, testQuestion2Id, testQuestion3Id],
         };
 
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send(batchAddDto)
           .expect(201);
@@ -360,7 +384,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         expect(response.body.successCount).toBe(2);
         expect(response.body.totalCount).toBe(3);
 
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -377,7 +402,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send(batchAddDto)
           .expect(404);
@@ -394,7 +420,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send(batchAddDto)
           .expect(404);
@@ -407,7 +434,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send(batchAddDto)
           .expect(400);
@@ -420,7 +448,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send(batchAddDto)
           .expect(400);
@@ -431,7 +460,8 @@ describe('질문-그룹 매핑 관리 API', () => {
   describe('PUT /question-group-mappings/reorder - 그룹 내 질문 순서 재정의', () => {
     beforeEach(async () => {
       // 테스트용 질문 3개를 그룹에 추가
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings/batch`)
         .send({
           groupId: testGroupId,
@@ -449,7 +479,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .put(`${BASE_URL}/question-group-mappings/reorder`)
           .send(reorderDto)
           .expect(200);
@@ -462,7 +493,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         );
 
         // 순서 확인
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -479,13 +511,15 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .put(`${BASE_URL}/question-group-mappings/reorder`)
           .send(reorderDto)
           .expect(200);
 
         // Then - displayOrder가 0, 1, 2로 할당
-        const groupQuestionsResponse = await request(app.getHttpServer())
+        const groupQuestionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -502,7 +536,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .put(`${BASE_URL}/question-group-mappings/reorder`)
           .send(reorderDto)
           .expect(200);
@@ -524,7 +559,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .put(`${BASE_URL}/question-group-mappings/reorder`)
           .send(reorderDto)
           .expect(400);
@@ -532,7 +568,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
       it('추가 질문 포함: 그룹에 없는 질문 ID 포함 시 400 에러가 발생해야 한다', async () => {
         // Given - 그룹에 없는 질문 포함
-        const newQuestionResponse = await request(app.getHttpServer())
+        const newQuestionResponse = await testSuite
+          .request()
           .post(`${BASE_URL}/evaluation-questions`)
           .send({ text: '그룹에 없는 질문' })
           .expect(201);
@@ -548,7 +585,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .put(`${BASE_URL}/question-group-mappings/reorder`)
           .send(reorderDto)
           .expect(400);
@@ -562,7 +600,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .put(`${BASE_URL}/question-group-mappings/reorder`)
           .send(reorderDto)
           .expect(400);
@@ -576,7 +615,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         };
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .put(`${BASE_URL}/question-group-mappings/reorder`)
           .send(reorderDto)
           .expect(404);
@@ -589,7 +629,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
     beforeEach(async () => {
       // 테스트용 매핑 생성
-      const mappingResponse = await request(app.getHttpServer())
+      const mappingResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -603,19 +644,22 @@ describe('질문-그룹 매핑 관리 API', () => {
     describe('성공 케이스', () => {
       it('정상 제거: 유효한 매핑 ID로 제거할 수 있어야 한다', async () => {
         // Given - 제거 전 확인
-        const beforeResponse = await request(app.getHttpServer())
+        const beforeResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
         expect(beforeResponse.body.length).toBe(1);
 
         // When - 매핑 제거
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/question-group-mappings/${testMappingId}`)
           .expect(204);
 
         // Then - 제거 후 확인
-        const afterResponse = await request(app.getHttpServer())
+        const afterResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -629,7 +673,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/question-group-mappings/${nonExistentId}`)
           .expect(404);
       });
@@ -639,7 +684,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         const invalidId = 'invalid-uuid-format';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .delete(`${BASE_URL}/question-group-mappings/${invalidId}`)
           .expect(400);
       });
@@ -650,7 +696,8 @@ describe('질문-그룹 매핑 관리 API', () => {
     describe('성공 케이스', () => {
       it('정상 조회: 유효한 groupId로 질문 목록을 조회할 수 있어야 한다', async () => {
         // Given - 질문 3개 추가
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings/batch`)
           .send({
             groupId: testGroupId,
@@ -659,7 +706,8 @@ describe('질문-그룹 매핑 관리 API', () => {
           .expect(201);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -675,7 +723,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 질문이 없는 그룹
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -686,7 +735,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
       it('응답 구조 검증: 각 매핑 정보에 id, groupId, questionId, displayOrder가 포함되어야 한다', async () => {
         // Given - 질문 1개 추가
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send({
             groupId: testGroupId,
@@ -695,7 +745,8 @@ describe('질문-그룹 매핑 관리 API', () => {
           .expect(201);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -719,7 +770,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
       it('순서 정렬: displayOrder 오름차순으로 정렬되어야 한다', async () => {
         // Given - 역순으로 질문 추가
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send({
             groupId: testGroupId,
@@ -728,7 +780,8 @@ describe('질문-그룹 매핑 관리 API', () => {
           })
           .expect(201);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send({
             groupId: testGroupId,
@@ -737,7 +790,8 @@ describe('질문-그룹 매핑 관리 API', () => {
           })
           .expect(201);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(`${BASE_URL}/question-group-mappings`)
           .send({
             groupId: testGroupId,
@@ -747,7 +801,8 @@ describe('질문-그룹 매핑 관리 API', () => {
           .expect(201);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -765,7 +820,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         const nonExistentGroupId = '00000000-0000-0000-0000-000000000000';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${nonExistentGroupId}/questions`)
           .expect(200);
 
@@ -779,7 +835,8 @@ describe('질문-그룹 매핑 관리 API', () => {
   describe('데이터 무결성 테스트', () => {
     it('Soft Delete: 제거된 매핑은 목록 조회에서 제외되어야 한다', async () => {
       // Given - 질문 추가
-      const mappingResponse = await request(app.getHttpServer())
+      const mappingResponse = await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -790,19 +847,22 @@ describe('질문-그룹 매핑 관리 API', () => {
       const mappingId = mappingResponse.body.id;
 
       // 추가 확인
-      const beforeResponse = await request(app.getHttpServer())
+      const beforeResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
         .expect(200);
 
       expect(beforeResponse.body.length).toBe(1);
 
       // When - 매핑 제거
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`${BASE_URL}/question-group-mappings/${mappingId}`)
         .expect(204);
 
       // Then - 제거된 매핑은 조회에서 제외
-      const afterResponse = await request(app.getHttpServer())
+      const afterResponse = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
         .expect(200);
 
@@ -811,7 +871,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
     it('질문 삭제와 매핑: 질문이 삭제되어도 매핑은 유지되어야 한다', async () => {
       // Given - 질문 추가
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -820,12 +881,14 @@ describe('질문-그룹 매핑 관리 API', () => {
         .expect(201);
 
       // When - 질문 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`${BASE_URL}/evaluation-questions/${testQuestion1Id}`)
         .expect(204);
 
       // Then - 매핑은 유지 (실제로는 비즈니스 로직에 따라 다를 수 있음)
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
         .expect(200);
 
@@ -835,7 +898,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
     it('재정렬 후 순서 유지: 재정렬 후 조회 시 새로운 순서가 유지되어야 한다', async () => {
       // Given - 질문 3개 추가
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings/batch`)
         .send({
           groupId: testGroupId,
@@ -844,7 +908,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         .expect(201);
 
       // When - 순서 재정렬
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .put(`${BASE_URL}/question-group-mappings/reorder`)
         .send({
           groupId: testGroupId,
@@ -853,7 +918,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         .expect(200);
 
       // Then - 새로운 순서 유지 확인
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
         .expect(200);
 
@@ -870,7 +936,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
     beforeEach(async () => {
       // 테스트용 질문 3개를 그룹에 추가
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -880,7 +947,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         .expect(201);
       mapping1Id = response1.body.id;
 
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -890,7 +958,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         .expect(201);
       mapping2Id = response2.body.id;
 
-      const response3 = await request(app.getHttpServer())
+      const response3 = await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -906,7 +975,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 초기 순서: 질문1(0), 질문2(1), 질문3(2)
 
         // When - 질문2를 위로 이동 (1 -> 0)
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${mapping2Id}/move-up`)
           .expect(200);
 
@@ -915,7 +985,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         expect(response.body).toHaveProperty('message');
 
         // 순서 확인: 질문2(0), 질문1(1), 질문3(2)
-        const questionsResponse = await request(app.getHttpServer())
+        const questionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -928,7 +999,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 질문3 선택
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${mapping3Id}/move-up`)
           .expect(200);
 
@@ -945,7 +1017,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 질문1이 첫 번째 위치
 
         // When & Then - 첫 번째 질문을 위로 이동 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${mapping1Id}/move-up`)
           .expect(400);
       });
@@ -955,7 +1028,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${nonExistentId}/move-up`)
           .expect(404);
       });
@@ -965,7 +1039,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${invalidId}/move-up`)
           .expect(400);
       });
@@ -979,7 +1054,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
     beforeEach(async () => {
       // 테스트용 질문 3개를 그룹에 추가
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -989,7 +1065,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         .expect(201);
       mapping1Id = response1.body.id;
 
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -999,7 +1076,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         .expect(201);
       mapping2Id = response2.body.id;
 
-      const response3 = await request(app.getHttpServer())
+      const response3 = await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -1015,7 +1093,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 초기 순서: 질문1(0), 질문2(1), 질문3(2)
 
         // When - 질문2를 아래로 이동 (1 -> 2)
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${mapping2Id}/move-down`)
           .expect(200);
 
@@ -1024,7 +1103,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         expect(response.body).toHaveProperty('message');
 
         // 순서 확인: 질문1(0), 질문3(1), 질문2(2)
-        const questionsResponse = await request(app.getHttpServer())
+        const questionsResponse = await testSuite
+          .request()
           .get(`${BASE_URL}/question-groups/${testGroupId}/questions`)
           .expect(200);
 
@@ -1037,7 +1117,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 질문1 선택
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${mapping1Id}/move-down`)
           .expect(200);
 
@@ -1054,7 +1135,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 질문3이 마지막 위치
 
         // When & Then - 마지막 질문을 아래로 이동 시도
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${mapping3Id}/move-down`)
           .expect(400);
       });
@@ -1064,7 +1146,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `${BASE_URL}/question-group-mappings/${nonExistentId}/move-down`,
           )
@@ -1076,7 +1159,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`${BASE_URL}/question-group-mappings/${invalidId}/move-down`)
           .expect(400);
       });
@@ -1088,7 +1172,8 @@ describe('질문-그룹 매핑 관리 API', () => {
 
     beforeEach(async () => {
       // 두 번째 그룹 생성
-      const group2Response = await request(app.getHttpServer())
+      const group2Response = await testSuite
+        .request()
         .post(`${BASE_URL}/question-groups`)
         .send({ name: '두 번째 테스트 그룹' })
         .expect(201);
@@ -1096,7 +1181,8 @@ describe('질문-그룹 매핑 관리 API', () => {
       testGroup2Id = group2Response.body.id;
 
       // 질문1을 두 그룹에 모두 추가
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroupId,
@@ -1105,7 +1191,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         })
         .expect(201);
 
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`${BASE_URL}/question-group-mappings`)
         .send({
           groupId: testGroup2Id,
@@ -1120,7 +1207,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 질문1이 두 그룹에 속함
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${testQuestion1Id}/groups`)
           .expect(200);
 
@@ -1137,7 +1225,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 질문2는 어떤 그룹에도 속하지 않음
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${testQuestion2Id}/groups`)
           .expect(200);
 
@@ -1150,7 +1239,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         // Given - 질문1이 그룹에 속함
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`${BASE_URL}/evaluation-questions/${testQuestion1Id}/groups`)
           .expect(200);
 
@@ -1177,7 +1267,8 @@ describe('질문-그룹 매핑 관리 API', () => {
         const nonExistentQuestionId = '00000000-0000-0000-0000-000000000000';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `${BASE_URL}/evaluation-questions/${nonExistentQuestionId}/groups`,
           )

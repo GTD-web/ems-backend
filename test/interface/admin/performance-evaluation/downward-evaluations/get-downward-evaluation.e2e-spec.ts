@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -81,7 +80,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const project = getRandomProject();
 
         // 1차 하향평가 저장
-        const primaryResponse = await request(app.getHttpServer())
+        const primaryResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -93,7 +93,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // 2차 하향평가 저장
-        const secondaryResponse = await request(app.getHttpServer())
+        const secondaryResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -105,7 +106,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When - 평가자의 하향평가 목록 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -154,7 +156,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee1.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -165,7 +168,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           })
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -177,7 +181,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When - evaluateeId로 필터링
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -198,7 +203,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -210,7 +216,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When - periodId로 필터링
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -231,7 +238,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -243,7 +251,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When - projectId로 필터링
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -264,7 +273,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -275,7 +285,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           })
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -287,7 +298,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When - primary만 조회
-        const primaryResponse = await request(app.getHttpServer())
+        const primaryResponse = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -303,7 +315,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         });
 
         // When - secondary만 조회
-        const secondaryResponse = await request(app.getHttpServer())
+        const secondaryResponse = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -327,7 +340,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const project = getRandomProject();
 
         // 미완료 평가
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -340,7 +354,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
 
         // 완료 평가
         const evaluatee2 = getRandomEmployee();
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -352,7 +367,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/project/${project.id}/secondary/submit`,
           )
@@ -360,7 +376,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When - 미완료 평가만 조회
-        const incompleteResponse = await request(app.getHttpServer())
+        const incompleteResponse = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -376,7 +393,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         });
 
         // When - 완료 평가만 조회
-        const completedResponse = await request(app.getHttpServer())
+        const completedResponse = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -406,7 +424,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
 
         for (const employee of evaluatees) {
           // 1차 평가
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/downward-evaluations/evaluatee/${employee.id}/period/${period.id}/project/${project.id}/primary`,
             )
@@ -418,7 +437,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
             .expect(200);
 
           // 2차 평가
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/downward-evaluations/evaluatee/${employee.id}/period/${period.id}/project/${project.id}/secondary`,
             )
@@ -431,7 +451,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         }
 
         // When - 첫 페이지 조회 (limit=3)
-        const page1Response = await request(app.getHttpServer())
+        const page1Response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -450,7 +471,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         expect(page1Response.body.evaluations.length).toBeLessThanOrEqual(3);
 
         // When - 두 번째 페이지 조회
-        const page2Response = await request(app.getHttpServer())
+        const page2Response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -470,7 +492,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -482,7 +505,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When - 여러 필터 조합
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -511,7 +535,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
 
         // When - 평가가 없는 평가자로 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -528,7 +553,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
     describe('실패 시나리오', () => {
       it('잘못된 evaluatorId 형식으로 요청 시 400 에러가 발생해야 한다', async () => {
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             '/admin/performance-evaluation/downward-evaluations/evaluator/invalid-uuid',
           )
@@ -540,7 +566,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -553,7 +580,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -566,7 +594,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -579,7 +608,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -592,7 +622,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -605,7 +636,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
@@ -627,7 +659,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -641,7 +674,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluationId = createResponse.body.id;
 
         // When - 상세정보 조회
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/${evaluationId}`,
           )
@@ -721,7 +755,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -733,7 +768,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/${createResponse.body.id}`,
           )
@@ -751,7 +787,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
           )
@@ -763,7 +800,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/${createResponse.body.id}`,
           )
@@ -781,7 +819,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -793,7 +832,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
           )
@@ -801,7 +841,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/${createResponse.body.id}`,
           )
@@ -820,7 +861,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -832,7 +874,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/${createResponse.body.id}`,
           )
@@ -851,7 +894,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const project = getRandomProject();
         const selfEvaluationId = '550e8400-e29b-41d4-a716-446655440099';
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -864,7 +908,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/${createResponse.body.id}`,
           )
@@ -898,7 +943,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
           )
@@ -910,7 +956,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/${createResponse.body.id}`,
           )
@@ -940,7 +987,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const nonExistentId = '550e8400-e29b-41d4-a716-446655440000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/${nonExistentId}`,
           )
@@ -949,7 +997,8 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
 
       it('잘못된 UUID 형식으로 조회 시 400 에러가 발생해야 한다', async () => {
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             '/admin/performance-evaluation/downward-evaluations/invalid-uuid',
           )

@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationPeriodStatus } from '@domain/core/evaluation-period/evaluation-period.types';
@@ -108,7 +107,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
   describe('성공 케이스', () => {
     it('대기 중인 평가 기간 삭제 시 200 응답과 true를 반환해야 한다', async () => {
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`)
         .expect(200);
 
@@ -125,7 +125,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
 
     it('완료된 평가 기간 삭제 시 200 응답과 true를 반환해야 한다', async () => {
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${completedEvaluationPeriodId}`)
         .expect(200);
 
@@ -142,18 +143,21 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
 
     it('삭제 후 목록 조회 시 삭제된 평가 기간이 제외되어야 한다', async () => {
       // Given - 삭제 전 목록 확인
-      const beforeResponse = await request(app.getHttpServer())
+      const beforeResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .expect(200);
       expect(beforeResponse.body.items).toHaveLength(3);
 
       // When - 평가 기간 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`)
         .expect(200);
 
       // Then - 삭제 후 목록 확인
-      const afterResponse = await request(app.getHttpServer())
+      const afterResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods')
         .expect(200);
       expect(afterResponse.body.items).toHaveLength(2);
@@ -166,18 +170,21 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
 
     it('삭제 후 상세 조회 시 null을 반환해야 한다', async () => {
       // Given - 삭제 전 상세 조회 확인
-      const beforeResponse = await request(app.getHttpServer())
+      const beforeResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`)
         .expect(200);
       expect(beforeResponse.body).not.toBeNull();
 
       // When - 평가 기간 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`)
         .expect(200);
 
       // Then - 삭제 후 상세 조회
-      const afterResponse = await request(app.getHttpServer())
+      const afterResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`)
         .expect(200);
       // 삭제된 항목에 대해 null 또는 빈 객체 반환 (구현에 따라 다를 수 있음)
@@ -190,7 +197,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
   describe('실패 케이스 - 요청 데이터 검증', () => {
     it('잘못된 UUID 형식으로 요청 시 400 에러가 발생해야 한다', async () => {
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete('/admin/evaluation-periods/invalid-uuid')
         .expect(400);
 
@@ -199,14 +207,16 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
 
     it('빈 문자열 ID로 요청 시 404 에러가 발생해야 한다', async () => {
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete('/admin/evaluation-periods/')
         .expect(404);
     });
 
     it('특수 문자가 포함된 ID로 요청 시 400 에러가 발생해야 한다', async () => {
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete('/admin/evaluation-periods/123-456-789-abc!@#')
         .expect(400);
 
@@ -222,7 +232,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
       const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${nonExistentId}`)
         .expect(404);
 
@@ -231,12 +242,14 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
 
     it('이미 삭제된 평가 기간을 다시 삭제 시 404 에러가 발생해야 한다', async () => {
       // Given - 먼저 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`)
         .expect(200);
 
       // When & Then - 다시 삭제 시도
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`)
         .expect(404);
 
@@ -257,7 +270,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
       expect(activePeriod!.활성화된_상태인가()).toBe(true);
 
       // When & Then - 422 에러만 허용
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${activeEvaluationPeriodId}`)
         .expect(422);
 
@@ -298,7 +312,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
       const savedComplexPeriod = await dataSource.manager.save(complexPeriod);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${savedComplexPeriod.id}`)
         .expect(200);
 
@@ -327,7 +342,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
       const savedMinimalPeriod = await dataSource.manager.save(minimalPeriod);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${savedMinimalPeriod.id}`)
         .expect(200);
 
@@ -357,7 +373,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
         await dataSource.manager.save(specialNamePeriod);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${savedSpecialPeriod.id}`)
         .expect(200);
 
@@ -373,12 +390,12 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
     it('동일한 평가 기간을 동시에 삭제할 때 하나만 성공해야 한다', async () => {
       // When - 동시 삭제 요청
       const [response1, response2] = await Promise.allSettled([
-        request(app.getHttpServer()).delete(
-          `/admin/evaluation-periods/${waitingEvaluationPeriodId}`,
-        ),
-        request(app.getHttpServer()).delete(
-          `/admin/evaluation-periods/${waitingEvaluationPeriodId}`,
-        ),
+        testSuite
+          .request()
+          .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`),
+        testSuite
+          .request()
+          .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`),
       ]);
 
       // Then - 하나는 성공(200), 하나는 실패(404)해야 함
@@ -399,12 +416,12 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
     it('서로 다른 평가 기간을 동시에 삭제할 수 있어야 한다', async () => {
       // When - 서로 다른 평가 기간 동시 삭제
       const [response1, response2] = await Promise.allSettled([
-        request(app.getHttpServer()).delete(
-          `/admin/evaluation-periods/${waitingEvaluationPeriodId}`,
-        ),
-        request(app.getHttpServer()).delete(
-          `/admin/evaluation-periods/${completedEvaluationPeriodId}`,
-        ),
+        testSuite
+          .request()
+          .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`),
+        testSuite
+          .request()
+          .delete(`/admin/evaluation-periods/${completedEvaluationPeriodId}`),
       ]);
 
       // Then - 둘 다 성공해야 함
@@ -444,7 +461,7 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
       // When - 연속 삭제
       const startTime = Date.now();
       const deletePromises = additionalPeriods.map((id) =>
-        request(app.getHttpServer()).delete(`/admin/evaluation-periods/${id}`),
+        testSuite.request().delete(`/admin/evaluation-periods/${id}`),
       );
       const responses = await Promise.all(deletePromises);
       const endTime = Date.now();
@@ -471,7 +488,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
       expect(beforePeriod).not.toBeNull();
 
       // When - 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${waitingEvaluationPeriodId}`)
         .expect(200);
 
@@ -490,7 +508,8 @@ describe('DELETE /admin/evaluation-periods/:id (E2E)', () => {
       const nonExistentId = '123e4567-e89b-12d3-a456-426614174000';
 
       // When - 삭제 실패
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${nonExistentId}`)
         .expect(404);
 

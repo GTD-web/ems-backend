@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -109,7 +108,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
     questionIds?: string[];
     requestedBy?: string;
   }) {
-    return request(app.getHttpServer())
+    return testSuite
+      .request()
       .post(
         '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
       )
@@ -287,7 +287,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const invalidEvaluatorId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -306,7 +307,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const invalidEvaluateeIds = ['invalid-uuid', uuidv4()];
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -325,7 +327,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const invalidPeriodId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -343,7 +346,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const period = getRandomEvaluationPeriod();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -361,7 +365,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const period = getRandomEvaluationPeriod();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -378,7 +383,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const period = getRandomEvaluationPeriod();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -395,7 +401,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const evaluatees = [testData.employees[1], testData.employees[2]];
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -414,7 +421,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const invalidRequestedBy = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -435,7 +443,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const invalidQuestionIds = ['invalid-uuid', uuidv4()];
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -455,7 +464,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const period = getRandomEvaluationPeriod();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -479,7 +489,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const period = getRandomEvaluationPeriod();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
@@ -502,7 +513,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-
       const nonExistentPeriodId = uuidv4();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           '/admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees',
         )
