@@ -1,14 +1,17 @@
 import { Module } from '@nestjs/common';
 import { DomainContextModule } from '../../context/domain-context.module';
+import { AuthContextModule } from '../../context/auth-context/auth-context.module';
 import { EvaluationPeriodManagementContextModule } from '../../context/evaluation-period-management-context/evaluation-period-management-context.module';
 import { EvaluationCriteriaManagementContextModule } from '../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { PerformanceEvaluationContextModule } from '../../context/performance-evaluation-context/performance-evaluation-context.module';
 import { OrganizationManagementContextModule } from '../../context/organization-management-context/organization-management-context.module';
 import { DashboardContextModule } from '../../context/dashboard-context/dashboard-context.module';
 import { EvaluationQuestionManagementContextModule } from '../../context/evaluation-question-management-context/evaluation-question-management-context.module';
+import { SeedDataContextModule } from '../../context/seed-data-context/seed-data-context.module';
 import { BusinessModule } from '../../business/business.module';
 import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
 import { EmployeeModule } from '../../domain/common/employee/employee.module';
+import { AuthController } from './auth/auth.controller';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
 import { EvaluationTargetController } from './evaluation-period/evaluation-target.controller';
@@ -23,6 +26,7 @@ import { FinalEvaluationManagementController } from './performance-evaluation/fi
 import { EvaluationEditableStatusManagementController } from './performance-evaluation/evaluation-editable-status-management.controller';
 import { EvaluationQuestionManagementController } from './performance-evaluation/evaluation-question-management.controller';
 import { EmployeeManagementController } from './employee-management/employee-management.controller';
+import { SeedDataController } from './seed-data/seed-data.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -33,17 +37,20 @@ import { EmployeeManagementController } from './employee-management/employee-man
 @Module({
   imports: [
     DomainContextModule, // 도메인 컨텍스트 모듈 주입
+    AuthContextModule, // 인증 컨텍스트 모듈 주입
     EvaluationPeriodManagementContextModule, // 평가 기간 관리 컨텍스트 모듈 주입
     EvaluationCriteriaManagementContextModule, // 평가기준 관리 컨텍스트 모듈 주입
     PerformanceEvaluationContextModule, // 성과평가 컨텍스트 모듈 주입
     OrganizationManagementContextModule, // 조직 관리 컨텍스트 모듈 주입
     DashboardContextModule, // 대시보드 컨텍스트 모듈 주입
     EvaluationQuestionManagementContextModule, // 평가 질문 관리 컨텍스트 모듈 주입
+    SeedDataContextModule, // 시드 데이터 컨텍스트 모듈 주입
     BusinessModule, // 비즈니스 레이어 모듈 주입
     EvaluationPeriodModule, // 평가 기간 모듈 주입
     EmployeeModule, // 직원 모듈 주입
   ],
   controllers: [
+    AuthController, // 인증 컨트롤러
     DashboardController, // 대시보드 컨트롤러
     EvaluationPeriodManagementController, // 평가 기간 관리 컨트롤러
     EvaluationTargetController, // 평가 대상 관리 컨트롤러
@@ -58,6 +65,7 @@ import { EmployeeManagementController } from './employee-management/employee-man
     FinalEvaluationManagementController, // 최종평가 관리 컨트롤러
     EvaluationEditableStatusManagementController, // 평가 수정 가능 상태 관리 컨트롤러
     EvaluationQuestionManagementController, // 평가 질문 관리 컨트롤러
+    SeedDataController, // 시드 데이터 컨트롤러
   ],
   providers: [],
   exports: [],

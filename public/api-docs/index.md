@@ -148,6 +148,14 @@ Chrome 확장 프로그램 [Markdown Viewer](https://chromewebstore.google.com/d
   - 그룹에 질문 추가/제거
   - 질문 순서 관리
 
+### 시드 데이터 관리
+
+- **[Seed Data API Reference](./admin-seed-data.md)**
+  - 시나리오별 시드 데이터 생성
+  - 시드 데이터 삭제
+  - 시드 데이터 상태 조회
+  - 데이터 규모 및 상태 분포 커스터마이징
+
 ## Swagger 문서
 
 더 상세한 정보와 인터랙티브한 API 테스트를 원하신다면 Swagger UI를 사용하세요:

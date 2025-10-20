@@ -7,6 +7,7 @@ import { PerformanceEvaluationContextModule } from './performance-evaluation-con
 import { TestContextModule } from './test-context/test-context.module';
 import { DashboardContextModule } from './dashboard-context/dashboard-context.module';
 import { EvaluationQuestionManagementContextModule } from './evaluation-question-management-context/evaluation-question-management-context.module';
+import { SeedDataContextModule } from './seed-data-context/seed-data-context.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EvaluationQuestionManagementContextModule } from './evaluation-question
     TestContextModule,
     DashboardContextModule,
     EvaluationQuestionManagementContextModule,
+    SeedDataContextModule,
   ],
   providers: [],
   exports: [
@@ -29,6 +31,7 @@ import { EvaluationQuestionManagementContextModule } from './evaluation-question
     TestContextModule,
     DashboardContextModule,
     EvaluationQuestionManagementContextModule,
+    SeedDataContextModule,
   ],
 })
 export class DomainContextModule {}

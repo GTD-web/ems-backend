@@ -120,24 +120,29 @@ export class LoginHandler {
         this.logger.log(`새 Employee 생성: ${employee.employeeNumber}`);
       } catch (error) {
         // 중복 키 에러인 경우 다시 조회 (race condition 처리)
-        if (error?.code === '23505' || error?.message?.includes('duplicate key')) {
+        if (
+          error?.code === '23505' ||
+          error?.message?.includes('duplicate key')
+        ) {
           this.logger.warn(
             `Employee 생성 중 중복 키 에러 발생, 재조회: ${loginResult.employeeNumber}`,
           );
           employee = await this.employeeService.findByEmployeeNumber(
             loginResult.employeeNumber,
           );
-          
+
           // 재조회 후에도 없으면 예외 발생
           if (!employee) {
             throw new InternalServerErrorException(
               'Employee 동기화에 실패했습니다.',
             );
           }
-          
+
           // 재조회된 경우 업데이트 시도
           await this.employeeService.update(employee.id, employeeData as any);
-          this.logger.debug(`Employee 정보 업데이트 (재조회 후): ${employee.employeeNumber}`);
+          this.logger.debug(
+            `Employee 정보 업데이트 (재조회 후): ${employee.employeeNumber}`,
+          );
         } else {
           // 다른 에러는 그대로 전파
           throw error;

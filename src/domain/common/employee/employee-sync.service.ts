@@ -518,12 +518,55 @@ export class EmployeeSyncService {
         }
       }
 
-      // 4. 일괄 저장
+      // 4. 일괄 저장 (중복 키 에러 처리)
       if (employeesToSave.length > 0) {
-        await this.employeeRepository.saveMany(employeesToSave);
-        this.logger.log(
-          `${employeesToSave.length}개의 직원 데이터를 저장했습니다.`,
-        );
+        try {
+          await this.employeeRepository.saveMany(employeesToSave);
+          this.logger.log(
+            `${employeesToSave.length}개의 직원 데이터를 저장했습니다.`,
+          );
+        } catch (saveError) {
+          // 중복 키 에러인 경우 개별 저장 시도
+          if (
+            saveError?.code === '23505' ||
+            saveError?.message?.includes('duplicate key')
+          ) {
+            this.logger.warn(
+              '일괄 저장 중 중복 키 에러 발생, 개별 저장으로 재시도합니다.',
+            );
+
+            let savedCount = 0;
+            let skippedCount = 0;
+
+            // 개별 저장
+            for (const employee of employeesToSave) {
+              try {
+                await this.employeeRepository.save(employee);
+                savedCount++;
+              } catch (individualError) {
+                if (
+                  individualError?.code === '23505' ||
+                  individualError?.message?.includes('duplicate key')
+                ) {
+                  this.logger.debug(
+                    `직원 ${employee.name} (${employee.employeeNumber}) 중복으로 건너뜀`,
+                  );
+                  skippedCount++;
+                } else {
+                  const errorMsg = `직원 ${employee.name} 저장 실패: ${individualError.message}`;
+                  this.logger.error(errorMsg);
+                  errors.push(errorMsg);
+                }
+              }
+            }
+
+            this.logger.log(
+              `개별 저장 완료: ${savedCount}개 저장, ${skippedCount}개 건너뜀`,
+            );
+          } else {
+            throw saveError;
+          }
+        }
       }
 
       const result: EmployeeSyncResult = {

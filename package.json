@@ -27,6 +27,7 @@
     "test:jwt": "ts-node -r tsconfig-paths/register scripts/test-jwt-verify.ts"
   },
   "dependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@lumir-company/sso-sdk": "^0.1.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
