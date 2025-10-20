@@ -52,6 +52,8 @@ export interface IEmployee {
   readonly externalUpdatedAt: Date;
   /** 마지막 동기화 시간 */
   readonly lastSyncAt?: Date;
+  /** EMS-PROD 시스템 역할 목록 */
+  readonly roles?: string[];
   /** 목록 조회 제외 여부 */
   readonly isExcludedFromList: boolean;
   /** 조회 제외 사유 */

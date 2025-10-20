@@ -402,4 +402,72 @@ export class EmployeeService {
 
     return employee ? employee.isExcludedFromList : false;
   }
+
+  // ======================================
+  // Auth Context를 위한 메서드들
+  // ======================================
+
+  /**
+   * ID로 직원 엔티티를 조회한다
+   * @param id 직원 ID
+   * @returns 직원 엔티티 (없으면 null)
+   */
+  async findById(id: string): Promise<Employee | null> {
+    return this.employeeRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+  }
+
+  /**
+   * 직원 번호로 직원 엔티티를 조회한다
+   * @param employeeNumber 직원 번호
+   * @returns 직원 엔티티 (없으면 null)
+   */
+  async findByEmployeeNumber(employeeNumber: string): Promise<Employee | null> {
+    return this.employeeRepository.findOne({
+      where: { employeeNumber, deletedAt: IsNull() },
+    });
+  }
+
+  /**
+   * 새 직원을 생성한다
+   * @param data 직원 데이터
+   * @returns 생성된 직원 엔티티
+   */
+  async create(data: Partial<Employee>): Promise<Employee> {
+    const employee = this.employeeRepository.create(data);
+    return this.employeeRepository.save(employee);
+  }
+
+  /**
+   * 직원 정보를 업데이트한다
+   * @param id 직원 ID
+   * @param data 업데이트할 데이터
+   * @returns 업데이트된 직원 엔티티
+   */
+  async update(id: string, data: Partial<Employee>): Promise<Employee | null> {
+    const employee = await this.findById(id);
+    if (!employee) {
+      return null;
+    }
+
+    Object.assign(employee, data);
+    return this.employeeRepository.save(employee);
+  }
+
+  /**
+   * 직원의 역할 정보를 업데이트한다
+   * @param id 직원 ID
+   * @param roles 역할 배열
+   * @returns 업데이트된 직원 엔티티
+   */
+  async updateRoles(id: string, roles: string[]): Promise<Employee | null> {
+    const employee = await this.findById(id);
+    if (!employee) {
+      return null;
+    }
+
+    employee.roles = roles;
+    return this.employeeRepository.save(employee);
+  }
 }

@@ -176,6 +176,13 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
   lastSyncAt?: Date;
 
   @Column({
+    type: 'jsonb',
+    nullable: true,
+    comment: 'EMS-PROD 시스템 역할 목록',
+  })
+  roles?: string[];
+
+  @Column({
     type: 'boolean',
     default: false,
     comment: '목록 조회 제외 여부',
@@ -246,8 +253,9 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
     if (rankName) this.rankName = rankName;
     if (rankCode) this.rankCode = rankCode;
     if (rankLevel !== undefined) this.rankLevel = rankLevel;
-    if (externalCreatedAt) this.externalCreatedAt = externalCreatedAt;
-    if (externalUpdatedAt) this.externalUpdatedAt = externalUpdatedAt;
+    // externalCreatedAt과 externalUpdatedAt은 기본값 설정
+    this.externalCreatedAt = externalCreatedAt || new Date();
+    this.externalUpdatedAt = externalUpdatedAt || new Date();
     this.status = status || '재직중';
     this.isExcludedFromList = false; // 기본값: 조회 제외 안 함
   }

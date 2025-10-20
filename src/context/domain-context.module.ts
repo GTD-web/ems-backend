@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AuthContextModule } from './auth-context/auth-context.module';
 import { EvaluationPeriodManagementContextModule } from './evaluation-period-management-context/evaluation-period-management-context.module';
 import { OrganizationManagementContextModule } from './organization-management-context/organization-management-context.module';
 import { EvaluationCriteriaManagementContextModule } from './evaluation-criteria-management-context/evaluation-criteria-management-context.module';
@@ -9,6 +10,7 @@ import { EvaluationQuestionManagementContextModule } from './evaluation-question
 
 @Module({
   imports: [
+    AuthContextModule,
     EvaluationPeriodManagementContextModule,
     OrganizationManagementContextModule,
     EvaluationCriteriaManagementContextModule,
@@ -19,6 +21,7 @@ import { EvaluationQuestionManagementContextModule } from './evaluation-question
   ],
   providers: [],
   exports: [
+    AuthContextModule,
     EvaluationPeriodManagementContextModule,
     OrganizationManagementContextModule,
     EvaluationCriteriaManagementContextModule,
