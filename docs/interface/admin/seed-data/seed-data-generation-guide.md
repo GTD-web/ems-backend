@@ -154,14 +154,48 @@ graph TD
 
 **세부 로직**:
 
-1. **Department 생성**
-   - 최상위 부서 생성 (전체의 40%)
-   - 자식 부서를 2-3단계 계층으로 생성
-   - 각 부서에 코드, 순서 자동 할당
+1. **Department 계층 생성 (3단계 고정 피라미드 구조)**
+
+   부서는 **회사 → 본부 → 파트** 3단계 고정 구조로 생성됩니다.
+   - **1단계: 회사 (최상위)**
+     - **고정 1개** 생성
+     - `parentDepartmentId`는 `null`
+     - 코드: `COMP-001`
+     - 예시: "ABC 회사"
+   - **2단계: 본부 (중간)**
+     - 나머지 부서의 약 30%
+     - 회사 아래에 균등 분배
+     - `parentDepartmentId`에 상위 회사 externalId 설정
+     - 코드: `HQ-001`, `HQ-002`, ...
+     - 예시: "영업 본부", "개발 본부", "관리 본부"
+   - **3단계: 파트 (최하위)**
+     - 나머지 약 70%
+     - 각 본부마다 균등 분배
+     - `parentDepartmentId`에 상위 본부 externalId 설정
+     - 코드: `PART-001`, `PART-002`, ...
+     - 예시: "서울영업 파트", "백엔드개발 파트"
+
+   **생성 구조 예시 (departmentCount=20):**
+
+   ```
+   [회사] ABC 회사 (parentDepartmentId: null)
+     ├─ [본부] 영업 본부 (parentDepartmentId: ABC회사.id)
+     │   ├─ [파트] 서울영업 파트 (parentDepartmentId: 영업본부.id)
+     │   ├─ [파트] 부산영업 파트 (parentDepartmentId: 영업본부.id)
+     │   └─ [파트] 대전영업 파트 (parentDepartmentId: 영업본부.id)
+     └─ [본부] 개발 본부 (parentDepartmentId: ABC회사.id)
+         ├─ [파트] 프론트엔드 파트 (parentDepartmentId: 개발본부.id)
+         └─ [파트] 백엔드 파트 (parentDepartmentId: 개발본부.id)
+   ```
+
+   **계산 예시 (departmentCount=20):**
+   - 회사: 1개 (고정)
+   - 본부: 6개 ((20-1) × 0.3 ≈ 6)
+   - 파트: 13개 (20 - 1 - 6 = 13)
 
 2. **Employee 생성**
-   - 부서에 랜덤 할당
-   - 다양한 상태 (재직중 70%, 휴직중 20%, 퇴사 10%)
+   - 생성된 부서(모든 계층)에 랜덤 할당
+   - 다양한 상태 (재직중 85%, 휴직중 5%, 퇴사 10%)
    - 고유 employeeNumber (타임스탬프 기반)
 
 3. **Project 생성**
@@ -350,16 +384,17 @@ graph TD
     completed: 0.2,   // 20%
   },
 
-  // 계층 구조
-  departmentHierarchy: {
-    rootDepartmentRatio: 0.4,  // 최상위 40%
-    maxDepth: 3,
-    childrenPerParent: { min: 1, max: 3 },
-  },
+  // ⚠️ 부서는 자동으로 3단계 고정 구조로 생성 (회사 → 본부 → 파트)
+  // 계층 구조:
+  //   - 회사: 1개 (고정)
+  //   - 본부: 나머지의 30%
+  //   - 파트: 나머지의 70%
+  // 예: departmentCount=20 → 회사 1개, 본부 6개, 파트 13개
 
+  // WBS 계층 구조
   wbsHierarchy: {
     maxDepth: 3,
-    childrenPerParent: { min: 1, max: 4 },
+    childrenPerParent: { min: 0, max: 4 },
   },
 
   // 할당 비율

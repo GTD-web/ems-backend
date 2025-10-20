@@ -8,15 +8,25 @@ export const ApiGenerateSeedData = () =>
   applyDecorators(
     ApiOperation({
       summary: '시드 데이터 생성',
-      description:
-        '시나리오에 따라 시드 데이터를 생성합니다. clearExisting이 true인 경우 기존 데이터를 삭제한 후 생성합니다.',
+      description: `시나리오에 따라 시드 데이터를 생성합니다.
+
+**주요 기능:**
+- clearExisting이 true인 경우 기존 데이터를 삭제한 후 생성합니다.
+- 부서는 자동으로 **회사 → 본부 → 파트** 3단계 고정 구조로 생성됩니다.
+
+**부서 계층 생성 규칙 (고정):**
+- 회사: 1개 (고정)
+- 본부: 나머지의 30%
+- 파트: 나머지의 70%
+- 예: departmentCount=20 → 회사 1개, 본부 6개, 파트 13개`,
     }),
     ApiBody({
       type: SeedDataConfigDto,
       examples: {
         minimal: {
           summary: 'MINIMAL 시나리오',
-          description: '기본 조직 데이터만 생성',
+          description:
+            '기본 조직 데이터만 생성 (부서는 회사→본부→파트 3단계 고정 구조로 생성)',
           value: {
             scenario: 'minimal',
             clearExisting: true,
@@ -30,7 +40,8 @@ export const ApiGenerateSeedData = () =>
         },
         withPeriod: {
           summary: 'WITH_PERIOD 시나리오',
-          description: '조직 데이터 + 평가기간',
+          description:
+            '조직 데이터 + 평가기간 (부서는 회사→본부→파트 3단계 고정 구조로 생성)',
           value: {
             scenario: 'with_period',
             clearExisting: true,
@@ -44,7 +55,8 @@ export const ApiGenerateSeedData = () =>
         },
         full: {
           summary: 'FULL 시나리오',
-          description: '전체 평가 사이클 데이터 생성',
+          description:
+            '전체 평가 사이클 데이터 생성 (부서는 회사→본부→파트 3단계 고정 구조로 생성)',
           value: {
             scenario: 'full',
             clearExisting: true,

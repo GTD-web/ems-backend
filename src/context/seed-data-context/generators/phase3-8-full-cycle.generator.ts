@@ -242,10 +242,10 @@ export class Phase3To8FullCycleGenerator {
         assignment.periodId = periodId;
         assignment.employeeId = employeeId;
         assignment.projectId = selectedProjects[i];
-        assignment.assignedBy = assignerId;
+        assignment.assignedBy = assignerId; // UUID (직원 ID)
         assignment.assignedDate = new Date();
         assignment.displayOrder = i;
-        assignment.createdBy = assignerId;
+        assignment.createdBy = CREATED_BY; // 문자열
         assignments.push(assignment);
       }
     }
@@ -285,10 +285,10 @@ export class Phase3To8FullCycleGenerator {
           assignment.employeeId = employeeId;
           assignment.projectId = projectId;
           assignment.wbsItemId = selectedWbs[i];
-          assignment.assignedBy = assignerId;
+          assignment.assignedBy = assignerId; // UUID (직원 ID)
           assignment.assignedDate = new Date();
           assignment.displayOrder = i;
-          assignment.createdBy = assignerId;
+          assignment.createdBy = CREATED_BY; // 문자열
           assignments.push(assignment);
         }
       }
@@ -584,10 +584,10 @@ export class Phase3To8FullCycleGenerator {
         mapping.employeeId = randomEmployee;
         mapping.wbsItemId = wbsId;
         mapping.deliverableId = deliverable.id;
-        mapping.mappedBy = CREATED_BY;
+        mapping.mappedBy = employeeIds[0]; // UUID (관리자 직원 ID)
         mapping.mappedDate = new Date();
         mapping.isActive = true;
-        mapping.createdBy = CREATED_BY;
+        mapping.createdBy = CREATED_BY; // 문자열
         mappings.push(mapping);
       }
     }
@@ -830,7 +830,7 @@ export class Phase3To8FullCycleGenerator {
         evaluation.employeeId = employeeId;
         evaluation.periodId = periodId;
         evaluation.wbsItemId = dummyWbsId;
-        evaluation.assignedBy = CREATED_BY;
+        evaluation.assignedBy = employeeIds[0]; // UUID (관리자 직원 ID)
         evaluation.assignedDate = new Date();
         evaluation.evaluationDate = new Date();
 
@@ -850,7 +850,7 @@ export class Phase3To8FullCycleGenerator {
         );
         evaluation.selfEvaluationContent = faker.lorem.paragraph();
         evaluation.performanceResult = faker.lorem.paragraph();
-        evaluation.createdBy = employeeId;
+        evaluation.createdBy = CREATED_BY; // 문자열
         evaluations.push(evaluation);
       }
     }
@@ -926,7 +926,7 @@ export class Phase3To8FullCycleGenerator {
       evaluation.evaluatorId = employeeIds[(i + 1) % employeeIds.length];
       evaluation.periodId = periodId;
       evaluation.evaluationDate = new Date();
-      evaluation.mappedBy = CREATED_BY;
+      evaluation.mappedBy = employeeIds[0]; // UUID (관리자 직원 ID)
       evaluation.mappedDate = new Date();
       evaluation.isActive = true;
 
@@ -945,7 +945,7 @@ export class Phase3To8FullCycleGenerator {
         evaluation.completedAt = new Date();
       }
 
-      evaluation.createdBy = employeeIds[(i + 1) % employeeIds.length];
+      evaluation.createdBy = CREATED_BY; // 문자열
       evaluations.push(evaluation);
     }
 
@@ -962,7 +962,6 @@ export class Phase3To8FullCycleGenerator {
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
   ): Promise<FinalEvaluation[]> {
     const evaluations: FinalEvaluation[] = [];
-    const periodId = periodIds[0];
 
     const evaluationGrades = ['S', 'A', 'B', 'C', 'D'];
     const jobGrades = [JobGrade.T1, JobGrade.T2, JobGrade.T3];
@@ -972,31 +971,35 @@ export class Phase3To8FullCycleGenerator {
       JobDetailedGrade.A,
     ];
 
-    // 간소화: 일부 직원에 대해서만 최종평가 생성
-    for (let i = 0; i < Math.min(5, employeeIds.length); i++) {
-      const evaluation = new FinalEvaluation();
-      evaluation.employeeId = employeeIds[i];
-      evaluation.periodId = periodId;
+    // 모든 직원의 모든 평가기간에 대해 최종평가 생성
+    for (const employeeId of employeeIds) {
+      for (const periodId of periodIds) {
+        const evaluation = new FinalEvaluation();
+        evaluation.employeeId = employeeId;
+        evaluation.periodId = periodId;
 
-      evaluation.evaluationGrade =
-        evaluationGrades[Math.floor(Math.random() * evaluationGrades.length)];
-      evaluation.jobGrade =
-        jobGrades[Math.floor(Math.random() * jobGrades.length)];
-      evaluation.jobDetailedGrade =
-        jobDetailedGrades[Math.floor(Math.random() * jobDetailedGrades.length)];
+        evaluation.evaluationGrade =
+          evaluationGrades[Math.floor(Math.random() * evaluationGrades.length)];
+        evaluation.jobGrade =
+          jobGrades[Math.floor(Math.random() * jobGrades.length)];
+        evaluation.jobDetailedGrade =
+          jobDetailedGrades[
+            Math.floor(Math.random() * jobDetailedGrades.length)
+          ];
 
-      const statusChoice = ProbabilityUtil.selectByProbability(
-        dist.finalEvaluationProgress,
-      );
-      evaluation.isConfirmed = statusChoice === 'completed';
-      if (evaluation.isConfirmed) {
-        evaluation.confirmedAt = new Date();
-        evaluation.confirmedBy = CREATED_BY;
+        const statusChoice = ProbabilityUtil.selectByProbability(
+          dist.finalEvaluationProgress,
+        );
+        evaluation.isConfirmed = statusChoice === 'completed';
+        if (evaluation.isConfirmed) {
+          evaluation.confirmedAt = new Date();
+          evaluation.confirmedBy = employeeIds[0]; // UUID (관리자 직원 ID)
+        }
+
+        evaluation.finalComments = faker.lorem.paragraph();
+        evaluation.createdBy = CREATED_BY; // 문자열
+        evaluations.push(evaluation);
       }
-
-      evaluation.finalComments = faker.lorem.paragraph();
-      evaluation.createdBy = CREATED_BY;
-      evaluations.push(evaluation);
     }
 
     return await this.배치로_저장한다(

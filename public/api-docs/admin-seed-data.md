@@ -316,6 +316,14 @@
     "periodCount": 1
   },
   "stateDistribution": {
+    "departmentHierarchy": {
+      "maxDepth": 3,
+      "childrenPerParent": {
+        "min": 0,
+        "max": 3
+      },
+      "rootDepartmentRatio": 0.2
+    },
     "selfEvaluationProgress": { "completed": 1.0 },
     "downwardEvaluationProgress": { "completed": 1.0 },
     "peerEvaluationProgress": { "completed": 1.0 },
@@ -340,6 +348,14 @@
     "periodCount": 1
   },
   "stateDistribution": {
+    "departmentHierarchy": {
+      "maxDepth": 3,
+      "childrenPerParent": {
+        "min": 0,
+        "max": 3
+      },
+      "rootDepartmentRatio": 0.2
+    },
     "selfEvaluationProgress": { "completed": 1.0 },
     "downwardEvaluationProgress": { "completed": 1.0 },
     "peerEvaluationProgress": { "completed": 1.0 },
@@ -360,6 +376,12 @@
 {
   stateDistribution?: {
     // === Phase 1: 조직 데이터 ===
+
+    // ⚠️ 부서는 자동으로 3단계 고정 구조로 생성됩니다 (회사 → 본부 → 파트)
+    //    - 회사: 1개 (고정)
+    //    - 본부: 나머지의 30%
+    //    - 파트: 나머지의 70%
+    //    - parentDepartmentId로 자동 계층 관계 설정
 
     // 직원 상태 분포 (합계 1.0)
     employeeStatus?: {
@@ -616,6 +638,94 @@
     }
   }
 }
+```
+
+### 예시 5: 부서 계층 구조 (3단계 고정) 🏢
+
+⚠️ 부서는 자동으로 **회사 → 본부 → 파트** 3단계 고정 구조로 생성됩니다.
+
+#### 소규모 조직 (departmentCount=15)
+
+```json
+{
+  "scenario": "minimal",
+  "clearExisting": true,
+  "dataScale": {
+    "departmentCount": 15,
+    "employeeCount": 50,
+    "projectCount": 5,
+    "wbsPerProject": 8
+  }
+}
+```
+
+**생성 결과**:
+
+- 회사: 1개 (고정)
+- 본부: 4개 ((15-1) × 0.3 ≈ 4)
+- 파트: 10개 (15 - 1 - 4 = 10)
+
+**생성 구조 예시**:
+
+```
+[회사] ABC 회사 (parentDepartmentId: null)
+  ├─ [본부] 개발 본부 (parentDepartmentId: ABC회사.id)
+  │   ├─ [파트] 프론트엔드 파트 (parentDepartmentId: 개발본부.id)
+  │   ├─ [파트] 백엔드 파트 (parentDepartmentId: 개발본부.id)
+  │   └─ [파트] DevOps 파트 (parentDepartmentId: 개발본부.id)
+  └─ [본부] 영업 본부 (parentDepartmentId: ABC회사.id)
+      ├─ [파트] 서울영업 파트 (parentDepartmentId: 영업본부.id)
+      └─ [파트] 부산영업 파트 (parentDepartmentId: 영업본부.id)
+```
+
+#### 대규모 조직 (departmentCount=50)
+
+```json
+{
+  "scenario": "minimal",
+  "clearExisting": true,
+  "dataScale": {
+    "departmentCount": 50,
+    "employeeCount": 200,
+    "projectCount": 10,
+    "wbsPerProject": 10
+  }
+}
+```
+
+**생성 결과**:
+
+- 회사: 1개 (고정)
+- 본부: 15개 ((50-1) × 0.3 ≈ 15)
+- 파트: 34개 (50 - 1 - 15 = 34)
+
+**계층 분포**:
+
+- 1개 회사 아래 15개 본부
+- 각 본부당 약 2~3개 파트
+- 균형잡힌 피라미드 구조
+
+**데이터 확인 방법**:
+
+부서 계층 구조는 `Department` 테이블의 `parentDepartmentId` 컬럼으로 확인할 수 있습니다:
+
+```sql
+-- 최상위 부서 조회
+SELECT * FROM department WHERE parent_department_id IS NULL;
+
+-- 특정 부서의 하위 부서 조회
+SELECT * FROM department WHERE parent_department_id = '부서ID';
+
+-- 계층별 부서 개수
+SELECT
+  CASE
+    WHEN parent_department_id IS NULL THEN '본부'
+    WHEN id IN (SELECT DISTINCT parent_department_id FROM department WHERE parent_department_id IS NOT NULL) THEN '부/팀'
+    ELSE '팀/파트'
+  END AS level,
+  COUNT(*) as count
+FROM department
+GROUP BY level;
 ```
 
 ---

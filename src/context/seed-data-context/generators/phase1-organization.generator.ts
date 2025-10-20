@@ -1,20 +1,19 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { faker } from '@faker-js/faker';
 import { Department } from '@domain/common/department/department.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Project } from '@domain/common/project/project.entity';
-import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
-import {
-  SeedDataConfig,
-  GeneratorResult,
-  DEFAULT_STATE_DISTRIBUTION,
-} from '../types';
-import { ProbabilityUtil, DateGeneratorUtil } from '../utils';
 import { ProjectStatus } from '@domain/common/project/project.types';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
-import { EmployeeStatus } from '@domain/common/employee/employee.types';
+import { faker } from '@faker-js/faker';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  DEFAULT_STATE_DISTRIBUTION,
+  GeneratorResult,
+  SeedDataConfig,
+} from '../types';
+import { DateGeneratorUtil, ProbabilityUtil } from '../utils';
 
 const BATCH_SIZE = 500;
 const CREATED_BY = 'seed-generator';
@@ -52,10 +51,11 @@ export class Phase1OrganizationGenerator {
     );
     this.logger.log(`생성 완료: Department ${departmentIds.length}개`);
 
-    // 2. Employee 생성
+    // 2. Employee 생성 (부서 전체 정보를 전달)
+    const allDepartments = await this.departmentRepository.find();
     const employeeIds = await this.생성_Employee들(
       config.dataScale.employeeCount,
-      departmentIds,
+      allDepartments,
       dist,
     );
     this.logger.log(`생성 완료: Employee ${employeeIds.length}개`);
@@ -103,15 +103,22 @@ export class Phase1OrganizationGenerator {
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
   ): Promise<string[]> {
     const hierarchy = dist.departmentHierarchy;
-    const rootCount = Math.ceil(count * hierarchy.rootDepartmentRatio);
     const departments: Department[] = [];
 
-    // 1. 최상위 Department 생성
-    for (let i = 0; i < rootCount; i++) {
+    // 3단계 고정 구조: 회사 → 본부 → 파트
+    // 계층별 부서 수 계산 (피라미드 구조)
+    const companyCount = 1; // 회사는 무조건 1개
+    const headquarterCount = Math.ceil((count - companyCount) * 0.3); // 30% - 본부
+    const partCount = count - companyCount - headquarterCount; // 나머지 70% - 파트
+
+    let deptCounter = 0;
+
+    // 1단계: 회사 생성 (최상위)
+    for (let i = 0; i < companyCount; i++) {
       const dept = new Department();
-      dept.name = `${faker.commerce.department()} 본부`;
-      dept.code = `DEPT-${String(i + 1).padStart(3, '0')}`;
-      dept.order = i;
+      dept.name = `${faker.company.name()} 회사`;
+      dept.code = `COMP-${String(i + 1).padStart(3, '0')}`;
+      dept.order = deptCounter++;
       dept.externalId = faker.string.uuid();
       dept.externalCreatedAt = new Date();
       dept.externalUpdatedAt = new Date();
@@ -119,52 +126,67 @@ export class Phase1OrganizationGenerator {
       departments.push(dept);
     }
 
-    // 최상위 부서 저장
-    const savedRoots = await this.부서를_배치로_저장한다(departments);
+    // 회사 저장
+    const savedCompanies = await this.부서를_배치로_저장한다(departments);
 
-    // 2. 하위 Department 계층 생성
-    let currentLevel = savedRoots;
-    let nextId = rootCount;
-    let currentDepth = 1;
+    // 2단계: 본부 생성
+    const headquarterDepts: Department[] = [];
+    const hqPerCompany = Math.ceil(headquarterCount / savedCompanies.length);
 
-    while (departments.length < count && currentDepth < hierarchy.maxDepth) {
-      const nextLevel: Department[] = [];
-
-      for (const parent of currentLevel) {
-        const childCount = ProbabilityUtil.randomInt(
-          hierarchy.childrenPerParent.min,
-          hierarchy.childrenPerParent.max,
-        );
-
-        for (let i = 0; i < childCount && departments.length < count; i++) {
-          const dept = new Department();
-          dept.name = `${faker.commerce.department()} ${currentDepth === 1 ? '부' : '팀'}`;
-          dept.code = `DEPT-${String(nextId + 1).padStart(3, '0')}`;
-          dept.order = nextId;
-          dept.parentDepartmentId = parent.id;
-          dept.externalId = faker.string.uuid();
-          dept.externalCreatedAt = new Date();
-          dept.externalUpdatedAt = new Date();
-          dept.createdBy = CREATED_BY;
-          nextLevel.push(dept);
-          departments.push(dept);
-          nextId++;
-        }
+    for (const company of savedCompanies) {
+      const hqCount = Math.min(
+        hqPerCompany,
+        headquarterCount - headquarterDepts.length,
+      );
+      for (let i = 0; i < hqCount; i++) {
+        const dept = new Department();
+        dept.name = `${faker.commerce.department()} 본부`;
+        dept.code = `HQ-${String(deptCounter + 1).padStart(3, '0')}`;
+        dept.order = deptCounter++;
+        dept.parentDepartmentId = company.externalId; // externalId로 매칭
+        dept.externalId = faker.string.uuid();
+        dept.externalCreatedAt = new Date();
+        dept.externalUpdatedAt = new Date();
+        dept.createdBy = CREATED_BY;
+        headquarterDepts.push(dept);
+        departments.push(dept);
       }
-
-      if (nextLevel.length > 0) {
-        const saved = await this.부서를_배치로_저장한다(nextLevel);
-        currentLevel = saved;
-      }
-      currentDepth++;
     }
+
+    // 본부 저장
+    const savedHeadquarters =
+      await this.부서를_배치로_저장한다(headquarterDepts);
+
+    // 3단계: 파트 생성
+    const partDepts: Department[] = [];
+    const partPerHq = Math.ceil(partCount / savedHeadquarters.length);
+
+    for (const hq of savedHeadquarters) {
+      const pCount = Math.min(partPerHq, partCount - partDepts.length);
+      for (let i = 0; i < pCount; i++) {
+        const dept = new Department();
+        dept.name = `${faker.commerce.productAdjective()} 파트`;
+        dept.code = `PART-${String(deptCounter + 1).padStart(3, '0')}`;
+        dept.order = deptCounter++;
+        dept.parentDepartmentId = hq.externalId; // externalId로 매칭
+        dept.externalId = faker.string.uuid();
+        dept.externalCreatedAt = new Date();
+        dept.externalUpdatedAt = new Date();
+        dept.createdBy = CREATED_BY;
+        partDepts.push(dept);
+        departments.push(dept);
+      }
+    }
+
+    // 파트 저장
+    await this.부서를_배치로_저장한다(partDepts);
 
     return departments.map((d) => d.id);
   }
 
   private async 생성_Employee들(
     count: number,
-    departmentIds: string[],
+    departments: Department[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
   ): Promise<string[]> {
     const employees: Employee[] = [];
@@ -193,9 +215,10 @@ export class Phase1OrganizationGenerator {
             ? '휴직중'
             : '퇴사';
 
-      // 랜덤 부서 할당
-      emp.departmentId =
-        departmentIds[Math.floor(Math.random() * departmentIds.length)];
+      // 랜덤 부서 할당 (externalId 사용)
+      const randomDept =
+        departments[Math.floor(Math.random() * departments.length)];
+      emp.departmentId = randomDept.externalId; // externalId로 매칭
       emp.externalId = faker.string.uuid();
       emp.externalCreatedAt = new Date();
       emp.externalUpdatedAt = new Date();
