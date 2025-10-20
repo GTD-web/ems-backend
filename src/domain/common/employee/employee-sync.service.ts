@@ -381,9 +381,18 @@ export class EmployeeSyncService {
 
       for (const externalEmp of externalEmployees) {
         try {
-          // 기존 직원 확인
-          const existingEmployee =
-            await this.employeeRepository.findByExternalId(externalEmp._id);
+          // 기존 직원 확인 (employeeNumber 우선)
+          let existingEmployee =
+            await this.employeeRepository.findByEmployeeNumber(
+              externalEmp.employee_number,
+            );
+
+          // employeeNumber로 못 찾으면 externalId로 조회
+          if (!existingEmployee) {
+            existingEmployee = await this.employeeRepository.findByExternalId(
+              externalEmp._id,
+            );
+          }
 
           const mappedData = await this.mapExternalDataToEmployee(externalEmp);
 
@@ -448,7 +457,11 @@ export class EmployeeSyncService {
             ) {
               needsUpdate = true;
               this.logger.debug(
-                `직원 ${existingEmployee.name}의 부서 정보가 변경되어 업데이트합니다.`,
+                `직원 ${existingEmployee.name}의 부서 정보가 변경되어 업데이트합니다.\n` +
+                  `  기존: departmentId="${existingEmployee.departmentId}", ` +
+                  `name="${existingEmployee.departmentName}", code="${existingEmployee.departmentCode}"\n` +
+                  `  신규: departmentId="${mappedData.departmentId}", ` +
+                  `name="${mappedData.departmentName}", code="${mappedData.departmentCode}"`,
               );
             }
 
@@ -548,10 +561,98 @@ export class EmployeeSyncService {
                   individualError?.code === '23505' ||
                   individualError?.message?.includes('duplicate key')
                 ) {
+                  // 중복 키 에러 발생 시 기존 데이터를 찾아서 업데이트
                   this.logger.debug(
-                    `직원 ${employee.name} (${employee.employeeNumber}) 중복으로 건너뜀`,
+                    `직원 ${employee.name} (${employee.employeeNumber}) 중복 발생, 재조회 후 업데이트 시도`,
                   );
-                  skippedCount++;
+
+                  try {
+                    // 중복 키가 어떤 필드인지 확인하고 해당 필드로 재조회
+                    let existingEmployee: Employee | null = null;
+
+                    // 1. employeeNumber로 재조회 시도 (가장 신뢰할 수 있는 식별자)
+                    existingEmployee =
+                      await this.employeeRepository.findByEmployeeNumber(
+                        employee.employeeNumber,
+                      );
+
+                    if (existingEmployee) {
+                      this.logger.debug(
+                        `직원 ${employee.name}을 employeeNumber로 찾음`,
+                      );
+                    }
+
+                    // 2. employeeNumber로 못 찾으면 email로 재조회
+                    if (!existingEmployee) {
+                      existingEmployee =
+                        await this.employeeRepository.findByEmail(
+                          employee.email,
+                        );
+                      if (existingEmployee) {
+                        this.logger.debug(
+                          `직원 ${employee.name}을 email로 찾음`,
+                        );
+                      }
+                    }
+
+                    // 3. email로도 못 찾으면 externalId로 재조회
+                    if (!existingEmployee) {
+                      existingEmployee =
+                        await this.employeeRepository.findByExternalId(
+                          employee.externalId,
+                        );
+                      if (existingEmployee) {
+                        this.logger.debug(
+                          `직원 ${employee.name}을 externalId로 찾음`,
+                        );
+                      }
+                    }
+
+                    if (existingEmployee) {
+                      // 기존 엔티티에 새 데이터 덮어쓰기 (모든 필드 업데이트)
+                      Object.assign(existingEmployee, {
+                        employeeNumber: employee.employeeNumber,
+                        name: employee.name,
+                        email: employee.email,
+                        phoneNumber: employee.phoneNumber,
+                        dateOfBirth: employee.dateOfBirth,
+                        gender: employee.gender,
+                        hireDate: employee.hireDate,
+                        managerId: employee.managerId,
+                        status: employee.status,
+                        departmentId: employee.departmentId,
+                        departmentName: employee.departmentName,
+                        departmentCode: employee.departmentCode,
+                        positionId: employee.positionId,
+                        rankId: employee.rankId,
+                        rankName: employee.rankName,
+                        rankCode: employee.rankCode,
+                        rankLevel: employee.rankLevel,
+                        externalId: employee.externalId, // externalId도 업데이트
+                        externalCreatedAt: employee.externalCreatedAt,
+                        externalUpdatedAt: employee.externalUpdatedAt,
+                        lastSyncAt: employee.lastSyncAt,
+                        updatedBy: this.systemUserId,
+                      });
+
+                      await this.employeeRepository.save(existingEmployee);
+                      savedCount++;
+                      this.logger.debug(
+                        `직원 ${employee.name} (${employee.employeeNumber}) 업데이트 완료`,
+                      );
+                    } else {
+                      this.logger.warn(
+                        `직원 ${employee.name} (${employee.employeeNumber}) 재조회 실패, 건너뜀. ` +
+                          `externalId=${employee.externalId}, employeeNumber=${employee.employeeNumber}, email=${employee.email}`,
+                      );
+                      skippedCount++;
+                    }
+                  } catch (retryError) {
+                    const errorMsg = `직원 ${employee.name} 재조회/업데이트 실패: ${retryError.message}`;
+                    this.logger.error(errorMsg);
+                    errors.push(errorMsg);
+                    skippedCount++;
+                  }
                 } else {
                   const errorMsg = `직원 ${employee.name} 저장 실패: ${individualError.message}`;
                   this.logger.error(errorMsg);

@@ -8,12 +8,34 @@ import { Employee } from '@domain/common/employee/employee.entity';
 import { Project } from '@domain/common/project/project.entity';
 import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 
-// Core Domain Entities
+// Core Domain Entities - Phase 2-3
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
-// TODO: Phase 4-8 entities 추가
+
+// Core Domain Entities - Phase 4
+import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
+import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+
+// Core Domain Entities - Phase 5
+import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
+import { DeliverableMapping } from '@domain/core/deliverable-mapping/deliverable-mapping.entity';
+
+// Sub Domain Entities - Phase 6
+import { QuestionGroup } from '@domain/sub/question-group/question-group.entity';
+import { EvaluationQuestion } from '@domain/sub/evaluation-question/evaluation-question.entity';
+import { QuestionGroupMapping } from '@domain/sub/question-group-mapping/question-group-mapping.entity';
+
+// Core Domain Entities - Phase 7
+import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
+import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.entity';
+import { FinalEvaluation } from '@domain/core/final-evaluation/final-evaluation.entity';
+
+// Sub Domain Entities - Phase 8
+import { EvaluationResponse } from '@domain/sub/evaluation-response/evaluation-response.entity';
 
 // Generators
 import {
@@ -32,17 +54,40 @@ import { SeedDataService } from './seed-data.service';
   imports: [
     CqrsModule,
     TypeOrmModule.forFeature([
-      // Common
+      // Common (Phase 1)
       Department,
       Employee,
       Project,
       WbsItem,
-      // Core
+
+      // Core (Phase 2-3)
       EvaluationPeriod,
       EvaluationPeriodEmployeeMapping,
       EvaluationProjectAssignment,
       EvaluationWbsAssignment,
-      // TODO: Phase 4-8 entities 추가
+
+      // Core (Phase 4)
+      WbsEvaluationCriteria,
+      EvaluationLine,
+      EvaluationLineMapping,
+
+      // Core (Phase 5)
+      Deliverable,
+      DeliverableMapping,
+
+      // Sub (Phase 6)
+      QuestionGroup,
+      EvaluationQuestion,
+      QuestionGroupMapping,
+
+      // Core (Phase 7)
+      WbsSelfEvaluation,
+      DownwardEvaluation,
+      PeerEvaluation,
+      FinalEvaluation,
+
+      // Sub (Phase 8)
+      EvaluationResponse,
     ]),
   ],
   providers: [

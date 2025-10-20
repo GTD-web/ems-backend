@@ -103,11 +103,18 @@ export class LoginHandler {
       rankId: ssoEmployeeInfo.jobTitle?.id,
       rankName: ssoEmployeeInfo.jobTitle?.jobTitleName,
       rankLevel: ssoEmployeeInfo.jobTitle?.jobTitleLevel,
-      externalId: loginResult.id,
+      externalId: ssoEmployeeInfo.id, // SSO 직원 ID (조직 정보)
       externalCreatedAt: new Date(),
       externalUpdatedAt: new Date(),
       lastSyncAt: new Date(),
     };
+
+    // 부서 정보 로그 (디버깅용)
+    this.logger.debug(
+      `[로그인] SSO 부서 정보: departmentId="${employeeData.departmentId}", ` +
+        `departmentName="${employeeData.departmentName}", ` +
+        `departmentCode="${employeeData.departmentCode}"`,
+    );
 
     if (employee) {
       // 업데이트

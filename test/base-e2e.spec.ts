@@ -78,6 +78,19 @@ export class BaseE2ETest {
             roles: ['admin', 'user'],
           },
         }),
+        로그인한다: jest.fn().mockResolvedValue({
+          user: {
+            id: '00000000-0000-0000-0000-000000000001',
+            externalId: 'external-001',
+            email: 'test@example.com',
+            name: '테스트 사용자',
+            employeeNumber: 'TEST001',
+            roles: ['admin', 'user'],
+            status: '재직중',
+          },
+          accessToken: 'mock-access-token',
+          refreshToken: 'mock-refresh-token',
+        }),
       })
       .overrideProvider('SSO_CONFIG')
       .useValue({

@@ -9,7 +9,7 @@ import { LoginDto, LoginResponseDto } from './dto';
  *
  * 로그인, 토큰 갱신 등 인증 관련 API를 제공합니다.
  */
-@ApiTags('인증')
+@ApiTags('A-0-0. 인증')
 @Controller('admin/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

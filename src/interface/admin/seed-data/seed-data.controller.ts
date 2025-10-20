@@ -18,7 +18,7 @@ import {
   ApiGetSeedDataStatus,
 } from './decorators/seed-data.decorators';
 
-@ApiTags('Seed Data')
+@ApiTags('A-0-1. Seed Data')
 @ApiBearerAuth('Bearer')
 @Controller('admin/seed')
 export class SeedDataController {

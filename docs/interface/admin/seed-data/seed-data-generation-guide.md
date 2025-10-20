@@ -106,25 +106,26 @@ Repository Layer (영속화)
 - 프로젝트/WBS 할당 기능 테스트
 - 할당 기반 평가 준비 테스트
 
-### 4. WITH_SETUP (평가 설정 포함)
+### 4. WITH_SETUP (평가 설정 포함) ✅
 
-**목적**: 평가 기준 및 질문까지 생성 (TODO)
+**목적**: 평가 기준 및 질문까지 생성
 
 **생성 데이터**:
 
 - Phase 1-3: 조직 + 평가기간 + 할당
-- Phase 4: WbsEvaluationCriteria, EvaluationLine
-- Phase 5: Deliverable
-- Phase 6: QuestionGroup, EvaluationQuestion
+- Phase 4: WbsEvaluationCriteria, EvaluationLine, EvaluationLineMapping
+- Phase 5: Deliverable, DeliverableMapping
+- Phase 6: QuestionGroup, EvaluationQuestion, QuestionGroupMapping
 
 **사용 사례**:
 
 - 평가 기준 설정 테스트
 - 질문 관리 기능 테스트
+- 평가 라인 관리 테스트
 
-### 5. FULL (전체 사이클)
+### 5. FULL (전체 사이클) ✅
 
-**목적**: 평가 실행 및 응답까지 전체 생성 (TODO)
+**목적**: 평가 실행 및 응답까지 전체 생성
 
 **생성 데이터**:
 
@@ -136,6 +137,7 @@ Repository Layer (영속화)
 
 - 전체 평가 프로세스 E2E 테스트
 - 대시보드 및 리포트 테스트
+- 평가 완료 데이터 분석
 
 ---
 
@@ -208,6 +210,117 @@ graph TD
    - 직원당 2-5개 WBS 항목 할당
    - 프로젝트별로 분산
 
+### Phase 4: 평가 기준 및 라인
+
+```mermaid
+graph TD
+    A[WBS 평가 기준 생성] --> B[평가 라인 생성]
+    B --> C[평가 라인 매핑]
+```
+
+**세부 로직**:
+
+1. **WBS 평가 기준 생성**
+   - WBS당 3-5개 평가 기준 생성
+   - 각 기준별 가중치 자동 할당 (합계 100%)
+   - 평가 항목: 업무 완성도, 품질, 일정 준수 등
+
+2. **평가 라인 생성**
+   - Primary/Secondary 라인 타입
+   - 평가자 타입 (MANAGER, DIRECTOR 등)
+
+3. **평가 라인 매핑**
+   - 직원별로 1차/2차 평가자 매핑
+   - 직원 계층에 따라 평가자 자동 할당
+
+### Phase 5: 산출물
+
+```mermaid
+graph TD
+    A[Deliverable 생성] --> B[DeliverableMapping 생성]
+```
+
+**세부 로직**:
+
+1. **Deliverable 생성**
+   - WBS당 평균 2-4개 산출물 생성
+   - 다양한 타입 (DOCUMENT, CODE, REPORT 등)
+   - 다양한 상태 (PENDING, IN_PROGRESS, COMPLETED)
+
+2. **DeliverableMapping**
+   - 산출물을 WBS 및 담당자에 매핑
+   - 담당자는 WBS 할당자 중에서 선택
+
+### Phase 6: 질문 그룹 및 질문
+
+```mermaid
+graph TD
+    A[QuestionGroup 생성] --> B[EvaluationQuestion 생성]
+    B --> C[QuestionGroupMapping]
+```
+
+**세부 로직**:
+
+1. **QuestionGroup 생성**
+   - 기본 그룹 (역량 평가, 동료 평가 등)
+   - 커스텀 그룹
+
+2. **EvaluationQuestion 생성**
+   - 그룹당 5-10개 질문
+   - 다양한 질문 타입 (객관식, 주관식)
+   - 일부는 점수 범위 설정
+
+3. **QuestionGroupMapping**
+   - 질문을 그룹에 매핑
+   - 순서 자동 할당
+
+### Phase 7: 평가 실행
+
+```mermaid
+graph TD
+    A[WBS 자기평가] --> B[하향평가]
+    B --> C[동료평가]
+    C --> D[최종평가]
+```
+
+**세부 로직**:
+
+1. **WBS 자기평가**
+   - 할당된 WBS별로 자기평가 생성
+   - 다양한 진행 상태 (NOT_STARTED 30%, IN_PROGRESS 40%, COMPLETED 30%)
+   - 평가 점수 및 코멘트 생성
+
+2. **하향평가**
+   - 평가 라인에 따라 1차/2차 평가 생성
+   - 다양한 상태 분포
+   - 평가 유형 (REGULAR, PROMOTION_REVIEW 등)
+
+3. **동료평가**
+   - 직원당 3-5명의 동료 평가자 지정
+   - 상태 분포 (PENDING 40%, IN_PROGRESS 30%, COMPLETED 30%)
+
+4. **최종평가**
+   - 모든 평가를 종합한 최종 평가
+   - 등급 및 직급별 등급 할당
+   - 확정 상태 분포 (PENDING 40%, CONFIRMED 60%)
+
+### Phase 8: 평가 응답
+
+```mermaid
+graph TD
+    A[응답 대상 선정] --> B[응답 생성]
+```
+
+**세부 로직**:
+
+1. **응답 대상 선정**
+   - 질문의 20% 샘플링
+   - 진행중/완료된 평가에만 응답 생성
+
+2. **응답 생성**
+   - 점수형/텍스트형 응답
+   - 현실적인 점수 분포 (정규 분포)
+
 ---
 
 ## 상태 분포 설정
@@ -252,6 +365,56 @@ graph TD
   // 할당 비율
   projectManagerAssignmentRatio: 0.8,  // 80%
   wbsAssignmentRatio: 0.7,             // 70%
+
+  // Phase 4-8 상태 분포
+  wbsSelfEvaluationProgress: {
+    notStarted: 0.3,    // 30%
+    inProgress: 0.4,    // 40%
+    completed: 0.3,     // 30%
+  },
+
+  downwardEvaluationProgress: {
+    notStarted: 0.3,    // 30%
+    inProgress: 0.4,    // 40%
+    completed: 0.3,     // 30%
+  },
+
+  downwardEvaluationType: {
+    regular: 0.8,               // 80%
+    promotionReview: 0.15,      // 15%
+    probationReview: 0.05,      // 5%
+  },
+
+  peerEvaluationStatus: {
+    pending: 0.4,       // 40%
+    inProgress: 0.3,    // 30%
+    completed: 0.3,     // 30%
+  },
+
+  finalEvaluationConfirmation: {
+    pending: 0.4,       // 40%
+    confirmed: 0.6,     // 60%
+  },
+
+  // 산출물 타입 및 상태
+  deliverableType: {
+    document: 0.4,      // 40%
+    code: 0.3,          // 30%
+    report: 0.2,        // 20%
+    presentation: 0.1,  // 10%
+  },
+
+  deliverableStatus: {
+    pending: 0.3,       // 30%
+    inProgress: 0.4,    // 40%
+    completed: 0.25,    // 25%
+    rejected: 0.05,     // 5%
+  },
+
+  // 질문 그룹 설정
+  questionGroupCount: 3,
+  questionsPerGroup: { min: 5, max: 10 },
+  questionScoreEnabled: 0.6,  // 60% 점수형 질문
 }
 ```
 
@@ -320,12 +483,17 @@ for (let i = 0; i < items.length; i += BATCH_SIZE) {
 
 ### 생성 속도
 
-| Phase                  | 데이터 수                       | 소요 시간  |
-| ---------------------- | ------------------------------- | ---------- |
-| Phase 1 (조직 10개)    | Dept 10, Emp 10, Proj 3, WBS 15 | ~70ms      |
-| Phase 2 (평가기간 1개) | Period 1, Mapping 10            | ~15ms      |
-| Phase 3 (할당)         | ProjAssign 10, WbsAssign 30     | ~20ms      |
-| **전체**               | **~70개 엔티티**                | **~150ms** |
+| Phase                  | 데이터 수                           | 소요 시간  |
+| ---------------------- | ----------------------------------- | ---------- |
+| Phase 1 (조직 10개)    | Dept 10, Emp 10, Proj 3, WBS 15     | ~40ms      |
+| Phase 2 (평가기간 1개) | Period 1, Mapping 10                | ~8ms       |
+| Phase 3 (할당)         | ProjAssign 8, WbsAssign 35          | ~12ms      |
+| Phase 4 (평가 기준)    | Criteria 45, Line 20, Mapping 10    | ~20ms      |
+| Phase 5 (산출물)       | Deliverable 40, Mapping 40          | ~15ms      |
+| Phase 6 (질문)         | Group 3, Question 24, Mapping 24    | ~10ms      |
+| Phase 7 (평가)         | Self 35, Down 10, Peer 15, Final 10 | ~25ms      |
+| Phase 8 (응답)         | Response 5                          | ~5ms       |
+| **전체 (FULL)**        | **~300개 엔티티**                   | **~135ms** |
 
 ### 대용량 데이터
 

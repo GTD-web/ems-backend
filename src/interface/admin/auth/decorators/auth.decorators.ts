@@ -1,4 +1,4 @@
-import { applyDecorators, HttpStatus, Post } from '@nestjs/common';
+import { applyDecorators, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
   ApiOperation,
   ApiBody,
@@ -17,6 +17,7 @@ export function Login() {
   return applyDecorators(
     Public(), // JWT 인증 우회
     Post('login'),
+    HttpCode(HttpStatus.OK), // 로그인은 200 OK 반환
     ApiOperation({
       summary: '이메일/패스워드로 로그인',
       description: `이메일과 패스워드로 SSO 서버에 로그인합니다.
