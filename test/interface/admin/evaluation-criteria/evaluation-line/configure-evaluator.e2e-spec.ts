@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -125,7 +124,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
     periodId: string,
     assignedBy?: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -174,7 +174,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         );
 
         // When - 1차 평가자를 새로운 평가자로 업데이트
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/primary-evaluator`,
           )
@@ -209,7 +210,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         );
 
         // When - 1차 평가자 업데이트
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/primary-evaluator`,
           )
@@ -253,7 +255,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         );
 
         // When - 첫 번째 직원 1차 평가자 업데이트
-        const response1 = await request(app.getHttpServer())
+        const response1 = await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee1.id}/wbs/${wbsItem1.id}/period/${period.id}/primary-evaluator`,
           )
@@ -263,7 +266,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
           .expect(201);
 
         // When - 두 번째 직원 1차 평가자 업데이트
-        const response2 = await request(app.getHttpServer())
+        const response2 = await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee2.id}/wbs/${wbsItem2.id}/period/${period.id}/primary-evaluator`,
           )
@@ -288,7 +292,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/primary-evaluator`,
           )
@@ -305,7 +310,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/primary-evaluator`,
           )
@@ -336,7 +342,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         );
 
         // When - 2차 평가자를 새로운 평가자로 업데이트
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/secondary-evaluator`,
           )
@@ -371,7 +378,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         );
 
         // When - 2차 평가자 업데이트
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/secondary-evaluator`,
           )
@@ -404,7 +412,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         );
 
         // When - 1차 평가자 업데이트
-        const response1 = await request(app.getHttpServer())
+        const response1 = await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/primary-evaluator`,
           )
@@ -414,7 +423,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
           .expect(201);
 
         // When - 2차 평가자 업데이트
-        const response2 = await request(app.getHttpServer())
+        const response2 = await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/secondary-evaluator`,
           )
@@ -437,7 +447,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/secondary-evaluator`,
           )
@@ -454,7 +465,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         const period = getActivePeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/secondary-evaluator`,
           )
@@ -485,7 +497,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
       );
 
       // 2. 1차 평가자 업데이트
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/primary-evaluator`,
         )
@@ -495,7 +508,8 @@ describe('평가자 구성 테스트 - 1차/2차 평가자 구성', () => {
         .expect(201);
 
       // 3. 2차 평가자 업데이트
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .post(
           `/admin/evaluation-criteria/evaluation-lines/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}/secondary-evaluator`,
         )

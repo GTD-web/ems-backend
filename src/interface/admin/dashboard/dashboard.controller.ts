@@ -69,11 +69,11 @@ export class DashboardController {
   @GetMyEvaluationTargetsStatus()
   async getMyEvaluationTargetsStatus(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
-    @CurrentUser() user: AuthenticatedUser,
+    @ParseUUID('evaluatorId') evaluatorId: string,
   ): Promise<MyEvaluationTargetStatusResponseDto[]> {
     return await this.dashboardService.내가_담당하는_평가대상자_현황을_조회한다(
       evaluationPeriodId,
-      user.id,
+      evaluatorId,
     );
   }
 

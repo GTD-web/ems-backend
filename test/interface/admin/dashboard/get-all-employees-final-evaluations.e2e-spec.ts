@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -148,7 +147,7 @@ describe('GET /admin/dashboard/final-evaluations', () => {
       url += `?${params.join('&')}`;
     }
 
-    return request(app.getHttpServer()).get(url);
+    return testSuite.request().get(url);
   }
 
   // ==================== Test Cases ====================
@@ -481,7 +480,8 @@ describe('GET /admin/dashboard/final-evaluations', () => {
       const invalidDate = 'invalid-date';
 
       // When & Then: 400 에러
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(`/admin/dashboard/final-evaluations?startDate=${invalidDate}`)
         .expect(400);
     });

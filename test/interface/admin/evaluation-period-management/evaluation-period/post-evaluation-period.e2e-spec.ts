@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', () => {
@@ -40,7 +39,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -100,7 +100,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(minimalData)
         .expect(201);
@@ -138,7 +139,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(complexGradeData)
         .expect(201);
@@ -179,7 +181,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(specialCharData)
         .expect(201);
@@ -200,7 +203,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(longTextData)
         .expect(201);
@@ -219,7 +223,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(missingNameData)
         .expect(400);
@@ -235,7 +240,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(missingStartDateData)
         .expect(400);
@@ -251,7 +257,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(missingDeadlineData)
         .expect(400);
@@ -267,7 +274,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(missingGradeRangesData)
         .expect(201);
@@ -287,7 +295,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(emptyGradeRangesData)
         .expect(201);
@@ -307,7 +316,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 날짜 변환 에러로 400 발생
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(invalidDateData)
         .expect(400);
@@ -325,7 +335,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(negativeRateData)
         .expect(400);
@@ -344,7 +355,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 도메인 검증 에러로 422 발생
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(invalidRangeData)
         .expect(422);
@@ -360,7 +372,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(firstData)
         .expect(201);
@@ -375,7 +388,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(duplicateData)
         .expect(409);
@@ -391,7 +405,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(firstPeriodData)
         .expect(201);
@@ -406,7 +421,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(overlappingData)
         .expect(409);
@@ -423,7 +439,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(emptyStringData)
         .expect(400);
@@ -440,7 +457,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(nullValueData)
         .expect(400);
@@ -458,7 +476,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(wrongTypeData)
         .expect(400);
@@ -476,7 +495,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(largeRateData)
         .expect(400);
@@ -496,7 +516,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(invalidGradeStructureData)
         .expect(400);
@@ -504,7 +525,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
 
     it('Content-Type이 없는 경우 적절한 에러가 발생해야 한다', async () => {
       // When & Then: Content-Type 헤더 없이 요청
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send('invalid json string');
 
@@ -514,7 +536,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
 
     it('잘못된 JSON 형식인 경우 400 에러가 발생해야 한다', async () => {
       // When & Then: 잘못된 JSON 형식
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .set('Content-Type', 'application/json')
         .send('{ invalid json }');
@@ -524,7 +547,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
 
     it('빈 요청 본문인 경우 400 에러가 발생해야 한다', async () => {
       // When & Then: 빈 요청 본문
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send({})
         .expect(400);
@@ -544,7 +568,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 0은 최소값 검증에 실패하므로 400 에러
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(minRateData)
         .expect(400);
@@ -562,7 +587,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 1000은 최대값 검증에 실패하므로 400 에러
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(maxRateData)
         .expect(400);
@@ -582,7 +608,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 동일한 값은 도메인 검증에 실패하므로 422 에러
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(sameRangeData)
         .expect(422);
@@ -599,7 +626,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 전체 범위는 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(fullRangeData)
         .expect(201);
@@ -622,7 +650,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 같은 날짜도 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(sameDateData)
         .expect(201);
@@ -641,7 +670,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 1자 이름도 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(shortNameData)
         .expect(201);
@@ -660,7 +690,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 1자 설명도 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(shortDescData)
         .expect(201);
@@ -681,7 +712,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 공백 문자도 유효한 이름으로 처리됨
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(whitespaceNameData)
         .expect(201);
@@ -700,7 +732,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 공백 문자도 유효한 설명으로 처리됨
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(whitespaceDescData)
         .expect(201);
@@ -721,7 +754,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(emptyGradeData)
         .expect(400);
@@ -740,7 +774,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 공백 문자도 유효한 등급명으로 처리됨
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(whitespaceGradeData)
         .expect(201);
@@ -761,7 +796,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(negativeRangeData)
         .expect(400);
@@ -780,7 +816,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(overRangeData)
         .expect(400);
@@ -800,7 +837,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 소수점도 유효한 값이므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(decimalRangeData)
         .expect(201);
@@ -826,7 +864,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 도메인 검증 에러로 422 발생
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(duplicateGradeData)
         .expect(422);
@@ -846,7 +885,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 도메인 검증 에러로 422 발생
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(overlappingRangeData)
         .expect(422);
@@ -863,7 +903,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 날짜 순서 검증이 없으므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(invalidDateOrderData)
         .expect(201);
@@ -882,7 +923,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 과거 날짜도 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(pastDateData)
         .expect(201);
@@ -901,7 +943,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 미래 날짜도 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(futureDateData)
         .expect(201);
@@ -920,7 +963,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 윤년 날짜도 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(leapYearData)
         .expect(201);
@@ -939,7 +983,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 유효하지 않은 날짜로 400 에러 발생
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(invalidLeapYearData)
         .expect(400);
@@ -960,7 +1005,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 많은 등급 구간도 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(manyGradesData)
         .expect(201);
@@ -990,7 +1036,8 @@ describe('EvaluationPeriodManagement POST /evaluation-periods Endpoint (e2e)', (
       };
 
       // When & Then: 긴 등급명도 유효하므로 201 성공
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(longGradeNameData)
         .expect(201);

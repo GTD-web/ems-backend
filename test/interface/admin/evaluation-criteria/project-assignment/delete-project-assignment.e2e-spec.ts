@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -113,7 +112,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         maxSelfEvaluationRate: 120,
       };
 
-      const evaluationPeriodResponse = await request(app.getHttpServer())
+      const evaluationPeriodResponse = await testSuite.request()
         .post('/admin/evaluation-periods')
         .send(evaluationPeriodData)
         .expect(201);
@@ -131,7 +130,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         assignedBy: employee.id,
       };
 
-      const assignmentResponse = await request(app.getHttpServer())
+      const assignmentResponse = await testSuite.request()
         .post('/admin/evaluation-criteria/project-assignments')
         .send(assignmentData)
         .expect(201);
@@ -142,7 +141,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
     describe('성공 케이스', () => {
       it('유효한 할당 ID로 할당을 취소할 수 있어야 한다', async () => {
         // When: 할당 취소 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
@@ -154,14 +153,14 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
 
       it('취소된 할당은 목록에서 조회되지 않아야 한다', async () => {
         // Given: 할당 취소
-        await request(app.getHttpServer())
+        await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
           .expect(200);
 
         // When: 할당 목록 조회
-        const listResponse = await request(app.getHttpServer())
+        const listResponse = await testSuite.request()
           .get('/admin/evaluation-criteria/project-assignments')
           .query({ periodId: evaluationPeriodId });
 
@@ -187,14 +186,14 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
 
       it('취소된 할당은 상세 조회 시 404 에러가 발생해야 한다', async () => {
         // Given: 할당 취소
-        await request(app.getHttpServer())
+        await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
           .expect(200);
 
         // When: 취소된 할당 상세 조회
-        const response = await request(app.getHttpServer()).get(
+        const response = await testSuite.request().get(
           `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
         );
 
@@ -209,7 +208,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When: 존재하지 않는 할당 ID로 취소 시도
-        const response = await request(app.getHttpServer()).delete(
+        const response = await testSuite.request().delete(
           `/admin/evaluation-criteria/project-assignments/${nonExistentId}`,
         );
 
@@ -225,7 +224,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         const invalidId = 'invalid-uuid';
 
         // When: 잘못된 UUID 형식으로 취소 시도
-        const response = await request(app.getHttpServer()).delete(
+        const response = await testSuite.request().delete(
           `/admin/evaluation-criteria/project-assignments/${invalidId}`,
         );
 
@@ -235,14 +234,14 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
 
       it('이미 취소된 할당을 다시 취소 시 404 에러가 발생해야 한다', async () => {
         // Given: 할당을 먼저 취소
-        await request(app.getHttpServer())
+        await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
           .expect(200);
 
         // When: 이미 취소된 할당을 다시 취소 시도
-        const response = await request(app.getHttpServer()).delete(
+        const response = await testSuite.request().delete(
           `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
         );
 
@@ -264,7 +263,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         );
 
         // When: 완료된 평가기간의 할당 취소 시도
-        const response = await request(app.getHttpServer()).delete(
+        const response = await testSuite.request().delete(
           `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
         );
 
@@ -284,7 +283,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         );
 
         // When: 진행 중인 평가기간의 할당 취소
-        const response = await request(app.getHttpServer()).delete(
+        const response = await testSuite.request().delete(
           `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
         );
 
@@ -296,7 +295,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
     describe('감사 정보 검증', () => {
       it('할당 취소 시 취소자 정보가 올바르게 설정되어야 한다', async () => {
         // When: 할당 취소
-        await request(app.getHttpServer())
+        await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
@@ -321,7 +320,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         const beforeCancel = new Date();
 
         // When: 할당 취소
-        await request(app.getHttpServer())
+        await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
@@ -355,14 +354,14 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         // 이 테스트는 향후 평가라인 기능이 완전히 구현되면 활성화
 
         // When: 할당 취소
-        await request(app.getHttpServer())
+        await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
           .expect(200);
 
         // Then: 성공적으로 취소되어야 함 (현재는 기본 검증만)
-        const response = await request(app.getHttpServer()).get(
+        const response = await testSuite.request().get(
           `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
         );
 
@@ -375,7 +374,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
       it('동일한 할당에 대한 동시 취소 요청을 처리할 수 있어야 한다', async () => {
         // When: 동시에 여러 취소 요청
         const cancelPromises = Array.from({ length: 3 }, () =>
-          request(app.getHttpServer()).delete(
+          testSuite.request().delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           ),
         );
@@ -417,7 +416,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
           maxSelfEvaluationRate: 120,
         };
 
-        const newPeriodResponse = await request(app.getHttpServer())
+        const newPeriodResponse = await testSuite.request()
           .post('/admin/evaluation-periods')
           .send(newEvaluationPeriodData)
           .expect(201);
@@ -437,7 +436,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
             assignedBy: employees[i].id,
           };
 
-          const response = await request(app.getHttpServer())
+          const response = await testSuite.request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(assignmentData)
             .expect(201);
@@ -448,7 +447,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         // When: 모든 할당을 동시에 취소
         const allAssignmentIds = [assignmentId, ...additionalAssignments];
         const cancelPromises = allAssignmentIds.map((id) =>
-          request(app.getHttpServer()).delete(
+          testSuite.request().delete(
             `/admin/evaluation-criteria/project-assignments/${id}`,
           ),
         );
@@ -468,7 +467,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         // 향후 인증 시스템 구현 시 이 테스트를 확장
 
         // When: 할당 취소 (현재는 admin 권한으로 고정)
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
@@ -506,7 +505,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
         maxSelfEvaluationRate: 120,
       };
 
-      const periodResponse = await request(app.getHttpServer())
+      const periodResponse = await testSuite.request()
         .post('/admin/evaluation-periods')
         .send(evaluationPeriodData)
         .expect(201);
@@ -526,7 +525,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
           assignedBy: employees[i].id,
         };
 
-        const response = await request(app.getHttpServer())
+        const response = await testSuite.request()
           .post('/admin/evaluation-criteria/project-assignments')
           .send(assignmentData)
           .expect(201);
@@ -536,7 +535,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
 
       // When: 모든 할당을 순차적으로 취소
       for (const assignmentId of assignmentIds) {
-        await request(app.getHttpServer())
+        await testSuite.request()
           .delete(
             `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
           )
@@ -544,7 +543,7 @@ describe('DELETE /admin/evaluation-criteria/project-assignments/:id', () => {
       }
 
       // Then: 해당 평가기간의 할당 목록이 비어있어야 함
-      const listResponse = await request(app.getHttpServer())
+      const listResponse = await testSuite.request()
         .get('/admin/evaluation-criteria/project-assignments')
         .query({ periodId: periodId });
 

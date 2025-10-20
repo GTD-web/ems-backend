@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -75,7 +74,8 @@ describe('POST /admin/performance-evaluation/final-evaluations/employee/:employe
       actionBy?: string;
     },
   ) {
-    return request(app.getHttpServer())
+    return testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/final-evaluations/employee/${employeeId}/period/${periodId}`,
       )
@@ -168,12 +168,12 @@ describe('POST /admin/performance-evaluation/final-evaluations/employee/:employe
       // Given
       const employee = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
-      const actionBy = uuidv4();
+      const testUserId = '00000000-0000-0000-0000-000000000001';
       const payload = {
         evaluationGrade: 'B',
         jobGrade: JobGrade.T2,
         jobDetailedGrade: JobDetailedGrade.U,
-        actionBy,
+        // actionBy는 @CurrentUser()로 자동 설정됨
       };
 
       // When
@@ -185,7 +185,7 @@ describe('POST /admin/performance-evaluation/final-evaluations/employee/:employe
 
       // Then
       const dbRecord = await getFinalEvaluationFromDb(response.body.id);
-      expect(dbRecord.createdBy).toBe(actionBy);
+      expect(dbRecord.createdBy).toBe(testUserId);
     });
 
     it('actionBy 없이도 저장할 수 있어야 한다 (기본값 사용)', async () => {

@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
@@ -27,7 +26,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       // Given: 빈 상태
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 
@@ -99,7 +99,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
 
       // 모든 평가 기간 생성
       for (const period of periods) {
-        const createResponse = await request(testSuite.app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
@@ -115,14 +116,16 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
 
       for (const index of periodsToActivate) {
         const period = createdPeriods[index];
-        await request(testSuite.app.getHttpServer())
+        await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${period.id}/start`)
           .expect(200);
         activatedPeriods.push(period);
       }
 
       // When & Then: 활성 평가 기간 조회
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 
@@ -165,7 +168,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -173,12 +177,14 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       const periodId = createResponse.body.id;
 
       // 평가 기간 활성화
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/start`)
         .expect(200);
 
       // 활성 목록에 포함되는지 확인
-      const activeResponse1 = await request(testSuite.app.getHttpServer())
+      const activeResponse1 = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 
@@ -191,7 +197,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       expect(activeResponse1.body[0].name).toBe('임시 활성 평가');
 
       // 활성 평가 기간의 상태가 'in-progress'인지 확인
-      const detailResponse = await request(testSuite.app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
@@ -209,7 +216,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -217,12 +225,14 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       const periodId = createResponse.body.id;
 
       // 평가 기간 활성화
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/start`)
         .expect(200);
 
       // 활성 목록에 포함되는지 확인
-      const activeBeforeComplete = await request(testSuite.app.getHttpServer())
+      const activeBeforeComplete = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 
@@ -230,19 +240,22 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       expect(activeBeforeComplete.body[0].name).toBe('완료 테스트 평가');
 
       // When: 평가 기간 완료 (단계 제약 없이)
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/complete`)
         .expect(200);
 
       // Then: 완료 후 활성 목록에서 제외되는지 확인
-      const activeAfterComplete = await request(testSuite.app.getHttpServer())
+      const activeAfterComplete = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 
       expect(activeAfterComplete.body).toHaveLength(0);
 
       // 완료된 상태 확인
-      const detailResponse = await request(testSuite.app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
@@ -274,32 +287,37 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
 
       const createdPeriods: any[] = [];
       for (const period of periods) {
-        const createResponse = await request(testSuite.app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
         createdPeriods.push(createResponse.body);
 
         // 각 평가 기간 활성화
-        await request(testSuite.app.getHttpServer())
+        await testSuite
+          .request()
           .post(`/admin/evaluation-periods/${createResponse.body.id}/start`)
           .expect(200);
       }
 
       // 2개 모두 활성 상태인지 확인
-      const activeBefore = await request(testSuite.app.getHttpServer())
+      const activeBefore = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 
       expect(activeBefore.body).toHaveLength(2);
 
       // When: 첫 번째 평가 기간만 완료
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${createdPeriods[0].id}/complete`)
         .expect(200);
 
       // Then: 두 번째 평가 기간만 활성 목록에 남아있어야 함
-      const activeAfter = await request(testSuite.app.getHttpServer())
+      const activeAfter = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 
@@ -312,7 +330,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then: 존재하지 않는 ID로 완료 시도
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${nonExistentId}/complete`)
         .expect(404);
     });
@@ -328,7 +347,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -336,17 +356,20 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       const periodId = createResponse.body.id;
 
       // 평가 기간 시작
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/start`)
         .expect(200);
 
       // 첫 번째 완료
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/complete`)
         .expect(200);
 
       // When & Then: 이미 완료된 평가 기간을 다시 완료 시도
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/complete`)
         .expect(422); // Unprocessable Entity
     });
@@ -355,7 +378,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
       // When & Then: 존재하지 않는 ID로 시작 시도
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${nonExistentId}/start`)
         .expect(404);
     });
@@ -371,7 +395,8 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -379,12 +404,14 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       const periodId = createResponse.body.id;
 
       // 첫 번째 시작
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/start`)
         .expect(200);
 
       // When & Then: 이미 시작된 평가 기간을 다시 시작 시도
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/start`)
         .expect(422); // Unprocessable Entity
     });
@@ -393,9 +420,9 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       const invalidId = 'invalid-uuid-format';
 
       // When & Then: 잘못된 UUID 형식으로 완료 시도
-      const response = await request(testSuite.app.getHttpServer()).post(
-        `/admin/evaluation-periods/${invalidId}/complete`,
-      );
+      const response = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${invalidId}/complete`);
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);
@@ -405,9 +432,9 @@ describe('EvaluationPeriodManagement GET /active Endpoint (e2e)', () => {
       const invalidId = 'invalid-uuid-format';
 
       // When & Then: 잘못된 UUID 형식으로 시작 시도
-      const response = await request(testSuite.app.getHttpServer()).post(
-        `/admin/evaluation-periods/${invalidId}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${invalidId}/start`);
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);

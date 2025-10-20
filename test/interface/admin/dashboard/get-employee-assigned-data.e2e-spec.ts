@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -144,7 +143,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<void> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}`,
       )
@@ -164,7 +164,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
     employeeId: string,
     projectId: string,
   ): Promise<void> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         employeeId,
@@ -186,7 +187,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
     wbsItemId: string,
   ): Promise<void> {
     const wbsItem = testData.wbsItems.find((w) => w.id === wbsItemId);
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -207,7 +209,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
     wbsItemId: string,
     criteria: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItemId}`,
       )
@@ -225,9 +228,11 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
     evaluationPeriodId: string,
     employeeId: string,
   ) {
-    return request(app.getHttpServer()).get(
-      `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
-    );
+    return testSuite
+      .request()
+      .get(
+        `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
+      );
   }
 
   // ==================== 성공 시나리오 ====================
@@ -433,7 +438,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       const employee = testData.employees[0];
 
       // When & Then: 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/dashboard/${invalidUuid}/employees/${employee.id}/assigned-data`,
         )
@@ -447,7 +453,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       const invalidUuid = 'invalid-uuid';
 
       // When & Then: 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/dashboard/${testData.evaluationPeriodId}/employees/${invalidUuid}/assigned-data`,
         )

@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -101,7 +100,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}`,
       )
@@ -119,7 +119,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
     employeeId: string,
     projectId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         employeeId,
@@ -139,7 +140,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
     wbsItemId: string,
   ): Promise<void> {
     const wbsItem = testData.wbsItems.find((w) => w.id === wbsItemId);
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -160,7 +162,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
     periodId: string,
     evaluatorId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/primary-evaluator`,
       )
@@ -180,7 +183,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
     periodId: string,
     evaluatorId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/secondary-evaluator`,
       )
@@ -199,7 +203,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
     employeeId: string,
     reason: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .patch(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}/exclude`,
       )
@@ -214,9 +219,9 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
    * 전체 직원 현황 조회 헬퍼
    */
   function getAllEmployeesStatus(evaluationPeriodId: string) {
-    return request(app.getHttpServer()).get(
-      `/admin/dashboard/${evaluationPeriodId}/employees/status`,
-    );
+    return testSuite
+      .request()
+      .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`);
   }
 
   // ==================== 성공 시나리오 ====================
@@ -574,7 +579,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
       const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
 
       // When: 전체 직원 현황 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/dashboard/${nonExistentPeriodId}/employees/status`)
         .expect(200);
 
@@ -589,7 +595,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 평가기�
       const invalidUuid = 'invalid-uuid';
 
       // When & Then: 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(`/admin/dashboard/${invalidUuid}/employees/status`)
         .expect((res) => {
           expect([400, 500]).toContain(res.status);

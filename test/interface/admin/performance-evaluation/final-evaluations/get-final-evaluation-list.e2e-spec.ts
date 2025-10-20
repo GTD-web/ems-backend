@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -74,7 +73,8 @@ describe('GET /admin/performance-evaluation/final-evaluations', () => {
       finalComments?: string;
     },
   ): Promise<string> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/final-evaluations/employee/${employeeId}/period/${periodId}`,
       )
@@ -85,7 +85,8 @@ describe('GET /admin/performance-evaluation/final-evaluations', () => {
   }
 
   function getFinalEvaluationList(params: any = {}) {
-    return request(app.getHttpServer())
+    return testSuite
+      .request()
       .get('/admin/performance-evaluation/final-evaluations')
       .query(params);
   }
@@ -314,7 +315,8 @@ describe('GET /admin/performance-evaluation/final-evaluations', () => {
       });
 
       // 첫 번째 평가만 확정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/final-evaluations/${eval1Id}/confirm`,
         )

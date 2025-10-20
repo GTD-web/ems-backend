@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationPeriodStatus } from '@domain/core/evaluation-period/evaluation-period.types';
@@ -98,7 +97,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -114,7 +114,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
 
     it('모든 설정을 false로 변경 시 200 응답을 반환해야 한다', async () => {
       // Given - 먼저 모든 설정을 true로 설정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -132,7 +133,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -155,7 +157,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -175,7 +178,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -197,7 +201,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When - 첫 번째 수정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -205,7 +210,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
         .expect(200);
 
       // When - 두 번째 수정 (동일한 값)
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -227,7 +233,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -252,7 +259,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When & Then - 타입 검증 실패로 400 에러
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -269,7 +277,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When & Then - 타입 검증 실패로 400 에러
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -286,7 +295,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -305,7 +315,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When & Then - 올바른 타입으로 200 성공
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -324,7 +335,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           '/admin/evaluation-periods/invalid-uuid/settings/manual-permissions',
         )
@@ -344,7 +356,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When & Then - 추가 필드는 무시되고 200 성공
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -367,7 +380,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${nonExistentId}/settings/manual-permissions`,
         )
@@ -390,7 +404,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When & Then
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${completedEvaluationPeriodId}/settings/manual-permissions`,
         )
@@ -413,7 +428,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       const updateData = {};
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -435,7 +451,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -457,7 +474,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       };
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -476,7 +494,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
         'allowCriteriaManualSetting=true&allowSelfEvaluationManualSetting=true';
 
       // When & Then - Content-Type 미지원으로 400 에러
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
         )
@@ -501,12 +520,14 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
 
       // When - 동시 요청
       const [response1, response2] = await Promise.allSettled([
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
           )
           .send(updateData1),
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${evaluationPeriodId}/settings/manual-permissions`,
           )
@@ -521,7 +542,8 @@ describe('PATCH /admin/evaluation-periods/:id/settings/manual-permissions (E2E)'
       expect(successfulResponses.length).toBeGreaterThanOrEqual(1);
 
       // 마지막 응답의 값이 최종 상태가 되어야 함
-      const finalResponse = await request(app.getHttpServer())
+      const finalResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 

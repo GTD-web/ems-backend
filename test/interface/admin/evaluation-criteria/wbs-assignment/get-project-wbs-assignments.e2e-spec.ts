@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -108,7 +107,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -133,7 +133,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
   ): Promise<any> {
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         periodId,
@@ -154,7 +155,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
   ): Promise<any> {
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         periodId,
@@ -198,7 +200,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       );
 
       // When: 프로젝트의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project.id}/period/${periodId}`,
         )
@@ -224,7 +227,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       const project = getActiveProject();
 
       // When: 프로젝트의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project.id}/period/${periodId}`,
         )
@@ -260,7 +264,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       }
 
       // When: 프로젝트의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project.id}/period/${periodId}`,
         )
@@ -299,12 +304,14 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       );
 
       // 첫 번째 할당 취소
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/${assignment1.id}`)
         .expect(200);
 
       // When: 프로젝트의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project.id}/period/${periodId}`,
         )
@@ -354,7 +361,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       );
 
       // When: project1의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project1.id}/period/${periodId}`,
         )
@@ -392,7 +400,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       );
 
       // When: period1의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project.id}/period/${period1Id}`,
         )
@@ -410,7 +419,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       const periodId = await createEvaluationPeriod();
 
       // When & Then: 잘못된 UUID 형식으로 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/invalid-uuid/period/${periodId}`,
         )
@@ -422,7 +432,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       const project = getActiveProject();
 
       // When & Then: 잘못된 UUID 형식으로 요청
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project.id}/period/invalid-uuid`,
         )
@@ -435,7 +446,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       const nonExistentProjectId = '00000000-0000-0000-0000-000000000000';
 
       // When: 존재하지 않는 프로젝트로 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${nonExistentProjectId}/period/${periodId}`,
         )
@@ -451,7 +463,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
 
       // When: 존재하지 않는 평가기간으로 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project.id}/period/${nonExistentPeriodId}`,
         )
@@ -474,7 +487,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/peri
       await createWbsAssignment(periodId, employee.id, project.id, wbsItem.id);
 
       // When: 프로젝트의 WBS 할당 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-assignments/project/${project.id}/period/${periodId}`,
         )

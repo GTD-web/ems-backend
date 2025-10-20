@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -97,7 +96,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
     criteria: string,
     actionBy?: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItemId}`,
       )
@@ -147,7 +147,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -172,7 +173,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -204,7 +206,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const dbWbsItem = await getWbsItemFromDb(wbsItem.id);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -233,7 +236,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -268,7 +272,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -310,7 +315,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // When & Then - 첫 번째 평가기준 조회
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/${created1.id}`,
         )
@@ -321,7 +327,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       expect(response1.body.wbsItem.id).toBe(wbsItem1.id);
 
       // When & Then - 두 번째 평가기준 조회
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/${created2.id}`,
         )
@@ -332,7 +339,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       expect(response2.body.wbsItem.id).toBe(wbsItem2.id);
 
       // When & Then - 세 번째 평가기준 조회
-      const response3 = await request(app.getHttpServer())
+      const response3 = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/${created3.id}`,
         )
@@ -359,7 +367,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       await deleteWbsItemInDb(wbsItem.id);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -378,7 +387,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const nonExistentId = 'f0f13879-9a95-4320-a753-3e304d203e4e';
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/${nonExistentId}`,
         )
@@ -390,7 +400,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
 
     it('잘못된 UUID 형식의 ID로 조회 시 에러가 발생해야 한다', async () => {
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-evaluation-criteria/invalid-uuid')
         .expect((res) => {
           expect([400, 500]).toContain(res.status);
@@ -410,14 +421,16 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // 평가기준 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
         )
         .expect(200);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -430,7 +443,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
     it('빈 문자열 ID로 조회 시 목록조회 엔드포인트로 라우팅된다', async () => {
       // When & Then
       // 빈 문자열 ID는 목록 조회 엔드포인트로 라우팅됨
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-evaluation-criteria/')
         .expect(200);
 
@@ -454,7 +468,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // 2. 상세 조회
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -469,7 +484,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // 4. 다시 상세 조회
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -492,21 +508,24 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // 2. 상세 조회
-      const response1 = await request(app.getHttpServer())
+      const response1 = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
       expect(response1.body.criteria).toBe('평가기준');
 
       // 3. 삭제
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .delete(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`,
         )
         .expect(200);
 
       // 4. 다시 상세 조회
-      const response2 = await request(app.getHttpServer())
+      const response2 = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -525,7 +544,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
 
       // 1. 목록 조회
-      const listResponse = await request(app.getHttpServer())
+      const listResponse = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-evaluation-criteria')
         .query({ wbsItemId: wbsItem.id })
         .expect(200);
@@ -534,7 +554,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const firstItem = listResponse.body[0];
 
       // 2. 목록에서 얻은 ID로 상세 조회
-      const detailResponse = await request(app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/${firstItem.id}`,
         )
@@ -564,7 +585,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 
@@ -594,7 +616,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const dbWbsItem = await getWbsItemFromDb(wbsItem.id);
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-criteria/wbs-evaluation-criteria/${created.id}`)
         .expect(200);
 

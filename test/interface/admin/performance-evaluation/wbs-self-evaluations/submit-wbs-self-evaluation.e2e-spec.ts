@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 
@@ -105,7 +104,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -118,7 +118,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const evaluationId = createResponse.body.id;
 
         // When - 제출
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/submit`,
           )
@@ -141,7 +142,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -154,7 +156,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const evaluationId = createResponse.body.id;
 
         // 첫 번째 제출
-        const firstSubmitResponse = await request(app.getHttpServer())
+        const firstSubmitResponse = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/submit`,
           )
@@ -164,7 +167,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const firstCompletedAt = firstSubmitResponse.body.completedAt;
 
         // When - 다시 제출 (멱등성 테스트)
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/submit`,
           )
@@ -184,7 +188,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${invalidId}/submit`,
           )
@@ -197,7 +202,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${nonExistentId}/submit`,
           )
@@ -215,7 +221,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -227,7 +234,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
 
         const evaluationId = createResponse.body.id;
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/submit`,
           )
@@ -235,7 +243,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
           .expect(200);
 
         // When - 미제출로 변경
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/reset`,
           )
@@ -258,7 +267,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -271,7 +281,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const evaluationId = createResponse.body.id;
 
         // When & Then - 미제출 상태를 다시 미제출로 변경 시도 (이미 미완료 상태이므로 400 에러)
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/reset`,
           )
@@ -286,7 +297,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${invalidId}/reset`,
           )
@@ -299,7 +311,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${nonExistentId}/reset`,
           )
@@ -319,7 +332,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const wbsItems = testData.wbsItems.slice(0, 3);
 
         for (const wbsItem of wbsItems) {
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -331,7 +345,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         }
 
         // When - 전체 제출
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/submit-all`,
           )
@@ -357,7 +372,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const wbsItems = testData.wbsItems.slice(0, 2);
 
         // 하나는 작성
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItems[0].id}/period/${period.id}`,
           )
@@ -368,7 +384,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
           .expect(200);
 
         // 하나는 미작성 (내용/점수 없음)
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItems[1].id}/period/${period.id}`,
           )
@@ -376,7 +393,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
           .expect(200);
 
         // When - 전체 제출 시도
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/submit-all`,
           )
@@ -399,7 +417,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const period = getRandomEvaluationPeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/submit-all`,
           )
@@ -412,7 +431,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const period = getRandomEvaluationPeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/invalid-uuid/period/${period.id}/submit-all`,
           )
@@ -432,7 +452,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const wbsItems = testData.wbsItems.slice(0, 2);
 
         for (const wbsItem of wbsItems) {
-          const createResponse = await request(app.getHttpServer())
+          const createResponse = await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -442,7 +463,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
             })
             .expect(200);
 
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .patch(
               `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/submit`,
             )
@@ -451,7 +473,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         }
 
         // When - 전체 미제출로 변경
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/reset`,
           )
@@ -477,7 +500,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -488,7 +512,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
           .expect(200);
 
         // When - 전체 미제출로 변경
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/reset`,
           )
@@ -515,7 +540,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
 
         // 각 WBS 항목에 대한 자기평가 생성
         for (const wbsItem of projectWbsItems) {
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -527,7 +553,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         }
 
         // When - 프로젝트별 제출
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/project/${project.id}/submit`,
           )
@@ -556,7 +583,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const project = testData.projects[1] || testData.projects[0]; // 두 번째 프로젝트 (WBS 없음)
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/project/${project.id}/submit`,
           )
@@ -577,7 +605,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
 
         // 각 WBS 항목에 대한 자기평가 생성 및 제출
         for (const wbsItem of projectWbsItems) {
-          const createResponse = await request(app.getHttpServer())
+          const createResponse = await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -588,7 +617,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
             .expect(200);
 
           // 제출
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .patch(
               `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/submit`,
             )
@@ -597,7 +627,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         }
 
         // When - 프로젝트별 미제출로 변경
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/project/${project.id}/reset`,
           )
@@ -626,7 +657,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         const project = testData.projects[1] || testData.projects[0]; // 두 번째 프로젝트 (WBS 없음)
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/project/${project.id}/reset`,
           )
@@ -643,7 +675,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -654,7 +687,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         .expect(200);
 
       // When
-      const submitResponse = await request(app.getHttpServer())
+      const submitResponse = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/submit`,
         )
@@ -674,7 +708,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -684,7 +719,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         })
         .expect(200);
 
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/submit`,
         )
@@ -692,7 +728,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
         .expect(200);
 
       // When - 미제출로 변경
-      const resetResponse = await request(app.getHttpServer())
+      const resetResponse = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/reset`,
         )
@@ -709,7 +746,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -725,7 +763,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When - 제출
-      const submitResponse = await request(app.getHttpServer())
+      const submitResponse = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/submit`,
         )
@@ -742,7 +781,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations - 제출/미�
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When - 미제출로 변경
-      const resetResponse = await request(app.getHttpServer())
+      const resetResponse = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/reset`,
         )

@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -36,6 +35,21 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
     console.log('완전한 테스트 환경 생성 중...');
     const testEnvironment =
       await testContextService.완전한_테스트환경을_생성한다();
+
+    // 테스트용 인증 사용자 생성 (testSuite에서 사용하는 기본 사용자 ID)
+    const testUserId = '00000000-0000-0000-0000-000000000001';
+    const existingUser = await dataSource.manager.query(
+      `SELECT id FROM employee WHERE id = $1`,
+      [testUserId],
+    );
+
+    if (existingUser.length === 0) {
+      await dataSource.manager.query(
+        `INSERT INTO employee (id, "employeeNumber", name, email, "departmentId", status, "externalId", "externalCreatedAt", "externalUpdatedAt", version, "createdAt", "updatedAt")
+         VALUES ($1, 'TEST-USER', '테스트 관리자', 'test@example.com', $2, '재직중', 'test-user-001', NOW(), NOW(), 1, NOW(), NOW())`,
+        [testUserId, testEnvironment.departments[0].id],
+      );
+    }
 
     testData = {
       departments: testEnvironment.departments,
@@ -109,7 +123,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
       maxSelfEvaluationRate: 120,
     };
 
-    const evaluationPeriodResponse = await request(app.getHttpServer())
+    const evaluationPeriodResponse = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -174,11 +189,12 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
           employeeId: employee.id,
           projectId: project.id,
           periodId: evaluationPeriodId,
-          assignedBy: employee.id, // 실제 직원 ID 사용
+          // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
         };
 
         // When: 프로젝트 할당 생성
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments')
           .send(createData)
           .expect(201);
@@ -188,7 +204,9 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
         expect(response.body.employeeId).toBe(employee.id);
         expect(response.body.projectId).toBe(project.id);
         expect(response.body.periodId).toBe(evaluationPeriodId);
-        expect(response.body.assignedBy).toBe(employee.id);
+        expect(response.body.assignedBy).toBe(
+          '00000000-0000-0000-0000-000000000001',
+        ); // 인증된 사용자가 할당자로 설정됨
         expect(response.body).toHaveProperty('assignedDate');
       } finally {
         // 테스트 후 데이터 정리
@@ -209,7 +227,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
         // When: 여러 직원을 동일한 프로젝트에 할당
         const responses = await Promise.all(
           employees.map((employee) =>
-            request(app.getHttpServer())
+            testSuite
+              .request()
               .post('/admin/evaluation-criteria/project-assignments')
               .send({
                 employeeId: employee.id,
@@ -243,7 +262,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
         // When: 동일한 직원을 여러 프로젝트에 할당
         const responses = await Promise.all(
           projects.map((project) =>
-            request(app.getHttpServer())
+            testSuite
+              .request()
               .post('/admin/evaluation-criteria/project-assignments')
               .send({
                 employeeId: employee.id,
@@ -287,7 +307,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
 
         for (const invalidData of invalidDataSets) {
           // When & Then: 400 에러 발생
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(invalidData)
             .expect(400);
@@ -313,7 +334,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
         };
 
         // When & Then: 400 에러 발생
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments')
           .send(createData)
           .expect(400);
@@ -342,7 +364,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
         };
 
         // When & Then: 400 에러 발생
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments')
           .send(createData)
           .expect(400);
@@ -367,7 +390,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
         };
 
         // When & Then: 400 에러 발생
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments')
           .send(createData)
           .expect(400);
@@ -396,17 +420,19 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
           // When: 첫 번째 할당 생성
-          const firstResponse = await request(app.getHttpServer())
+          const firstResponse = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData)
             .expect(201);
 
           // When: 동일한 조합으로 재할당 시도
-          const secondResponse = await request(app.getHttpServer())
+          const secondResponse = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData);
 
@@ -436,7 +462,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
           };
 
           // When: 첫 번째 프로젝트 할당
-          const firstResponse = await request(app.getHttpServer())
+          const firstResponse = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(firstAssignment)
             .expect(201);
@@ -448,7 +475,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             periodId: evaluationPeriodId,
           };
 
-          const secondResponse = await request(app.getHttpServer())
+          const secondResponse = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(secondAssignment)
             .expect(201);
@@ -480,7 +508,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
           };
 
           // When: 첫 번째 직원 할당
-          const firstResponse = await request(app.getHttpServer())
+          const firstResponse = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(firstAssignment)
             .expect(201);
@@ -492,7 +521,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             periodId: evaluationPeriodId,
           };
 
-          const secondResponse = await request(app.getHttpServer())
+          const secondResponse = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(secondAssignment)
             .expect(201);
@@ -532,10 +562,11 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
-          const response = await request(app.getHttpServer())
+          const response = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData);
 
@@ -561,11 +592,12 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
           // When & Then: 할당 생성 시도
-          const response = await request(app.getHttpServer())
+          const response = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData)
             .expect(201);
@@ -602,11 +634,12 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
           // When & Then: 할당 생성 시도
-          const response = await request(app.getHttpServer())
+          const response = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData)
             .expect(201);
@@ -637,11 +670,12 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
           // When: 할당 생성
-          const response = await request(app.getHttpServer())
+          const response = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData)
             .expect(201);
@@ -676,19 +710,26 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
           // When: 할당 생성
-          const response = await request(app.getHttpServer())
+          const response = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData)
             .expect(201);
 
           // Then: 할당자가 'admin'으로 설정되어야 함
-          expect(response.body.assignedBy).toBe(employee.id);
-          expect(response.body.createdBy).toBe(employee.id);
-          expect(response.body.updatedBy).toBe(employee.id);
+          expect(response.body.assignedBy).toBe(
+            '00000000-0000-0000-0000-000000000001',
+          ); // 인증된 사용자가 할당자로 설정됨
+          expect(response.body.createdBy).toBe(
+            '00000000-0000-0000-0000-000000000001',
+          ); // 인증된 사용자가 생성자로 설정됨
+          expect(response.body.updatedBy).toBe(
+            '00000000-0000-0000-0000-000000000001',
+          ); // 인증된 사용자가 수정자로 설정됨
         } finally {
           // 테스트 후 데이터 정리
           await testContextService.테스트_데이터를_정리한다();
@@ -709,18 +750,23 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
           // When: 할당 생성
-          const response = await request(app.getHttpServer())
+          const response = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData)
             .expect(201);
 
           // Then: 감사 정보가 올바르게 설정되어야 함
-          expect(response.body.createdBy).toBe(employee.id);
-          expect(response.body.updatedBy).toBe(employee.id);
+          expect(response.body.createdBy).toBe(
+            '00000000-0000-0000-0000-000000000001',
+          ); // 인증된 사용자가 생성자로 설정됨
+          expect(response.body.updatedBy).toBe(
+            '00000000-0000-0000-0000-000000000001',
+          ); // 인증된 사용자가 수정자로 설정됨
           expect(response.body.createdAt).toBeDefined();
           expect(response.body.updatedAt).toBeDefined();
           expect(response.body.version).toBeDefined();
@@ -747,11 +793,12 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
           // When: 프로젝트 할당 생성
-          const response = await request(app.getHttpServer())
+          const response = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData)
             .expect(201);
@@ -762,7 +809,9 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
           expect(response.body.employeeId).toBe(createData.employeeId);
           expect(response.body.projectId).toBe(createData.projectId);
           expect(response.body.periodId).toBe(createData.periodId);
-          expect(response.body.assignedBy).toBe(employee.id);
+          expect(response.body.assignedBy).toBe(
+            '00000000-0000-0000-0000-000000000001',
+          ); // 인증된 사용자가 할당자로 설정됨
           expect(response.body).toHaveProperty('assignedDate');
           expect(response.body).toHaveProperty('createdAt');
           expect(response.body).toHaveProperty('updatedAt');
@@ -790,20 +839,21 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
               employeeId: employees[0].id,
               projectId: projects[0].id,
               periodId: evaluationPeriodId,
-              assignedBy: employees[0].id,
+              // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             },
             {
               employeeId: employees[1].id,
               projectId: projects[1].id,
               periodId: evaluationPeriodId,
-              assignedBy: employees[1].id,
+              // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             },
           ];
 
           // When: 동시에 여러 할당 생성
           const responses = await Promise.all(
             createDataList.map((data) =>
-              request(app.getHttpServer())
+              testSuite
+                .request()
                 .post('/admin/evaluation-criteria/project-assignments')
                 .send(data),
             ),
@@ -819,8 +869,8 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
               createDataList[index].projectId,
             );
             expect(response.body.assignedBy).toBe(
-              createDataList[index].assignedBy,
-            );
+              '00000000-0000-0000-0000-000000000001',
+            ); // 인증된 사용자가 할당자로 설정됨
           });
         } finally {
           // 테스트 후 데이터 정리
@@ -844,11 +894,12 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
             employeeId: employee.id,
             projectId: project.id,
             periodId: evaluationPeriodId,
-            assignedBy: employee.id,
+            // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
           };
 
           // When: 할당 생성
-          const createResponse = await request(app.getHttpServer())
+          const createResponse = await testSuite
+            .request()
             .post('/admin/evaluation-criteria/project-assignments')
             .send(createData)
             .expect(201);
@@ -856,9 +907,11 @@ describe('POST /admin/evaluation-criteria/project-assignments', () => {
           const assignmentId = createResponse.body.id;
 
           // When: 할당 상세 조회
-          const detailResponse = await request(app.getHttpServer()).get(
-            `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
-          );
+          const detailResponse = await testSuite
+            .request()
+            .get(
+              `/admin/evaluation-criteria/project-assignments/${assignmentId}`,
+            );
 
           // Then: 상세 조회 성공 또는 적절한 에러
           expect([200, 404]).toContain(detailResponse.status);

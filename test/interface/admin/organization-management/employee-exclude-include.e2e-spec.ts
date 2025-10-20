@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -73,14 +72,13 @@ describe('직원 조회 제외/포함 테스트', () => {
         // Given
         const employee = testData.employees[0];
         const excludeReason = '퇴사 예정';
-        const excludedBy = 'admin-user-id';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
           .send({
             excludeReason,
-            excludedBy,
           })
           .expect(200);
 
@@ -89,7 +87,9 @@ describe('직원 조회 제외/포함 테스트', () => {
         expect(response.body.id).toBe(employee.id);
         expect(response.body.isExcludedFromList).toBe(true);
         expect(response.body.excludeReason).toBe(excludeReason);
-        expect(response.body.excludedBy).toBe(excludedBy);
+        expect(response.body.excludedBy).toBe(
+          '00000000-0000-0000-0000-000000000001',
+        ); // CurrentUser에서 주입된 테스트 사용자 ID
         expect(response.body.excludedAt).toBeDefined();
       });
 
@@ -97,14 +97,13 @@ describe('직원 조회 제외/포함 테스트', () => {
         // Given
         const employee = testData.employees[1];
         const excludeReason = '휴직 중';
-        const excludedBy = 'admin-user-id';
 
         // When
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
           .send({
             excludeReason,
-            excludedBy,
           })
           .expect(200);
 
@@ -113,7 +112,9 @@ describe('직원 조회 제외/포함 테스트', () => {
         expect(dbEmployee).toBeDefined();
         expect(dbEmployee.isExcludedFromList).toBe(true);
         expect(dbEmployee.excludeReason).toBe(excludeReason);
-        expect(dbEmployee.excludedBy).toBe(excludedBy);
+        expect(dbEmployee.excludedBy).toBe(
+          '00000000-0000-0000-0000-000000000001',
+        ); // CurrentUser에서 주입된 테스트 사용자 ID
         expect(dbEmployee.excludedAt).toBeDefined();
       });
 
@@ -124,27 +125,27 @@ describe('직원 조회 제외/포함 테스트', () => {
         const employee3 = testData.employees[2];
 
         // When
-        const response1 = await request(app.getHttpServer())
+        const response1 = await testSuite
+          .request()
           .patch(`/admin/employees/${employee1.id}/exclude`)
           .send({
             excludeReason: '퇴사 예정',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
-        const response2 = await request(app.getHttpServer())
+        const response2 = await testSuite
+          .request()
           .patch(`/admin/employees/${employee2.id}/exclude`)
           .send({
             excludeReason: '휴직 중',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
-        const response3 = await request(app.getHttpServer())
+        const response3 = await testSuite
+          .request()
           .patch(`/admin/employees/${employee3.id}/exclude`)
           .send({
             excludeReason: '장기 출장',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
@@ -157,21 +158,21 @@ describe('직원 조회 제외/포함 테스트', () => {
       it('이미 제외된 직원을 다시 제외하면 정보가 업데이트되어야 한다', async () => {
         // Given - 먼저 제외
         const employee = testData.employees[3];
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
           .send({
             excludeReason: '초기 사유',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
         // When - 다시 제외 (사유 변경)
         const newReason = '변경된 사유';
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
           .send({
             excludeReason: newReason,
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
@@ -187,22 +188,22 @@ describe('직원 조회 제외/포함 테스트', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${nonExistentId}/exclude`)
           .send({
             excludeReason: '퇴사 예정',
-            excludedBy: 'admin-user-id',
           })
           .expect(404);
       });
 
       it('잘못된 UUID 형식으로 요청 시 400 에러가 발생해야 한다', async () => {
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch('/admin/employees/invalid-uuid/exclude')
           .send({
             excludeReason: '퇴사 예정',
-            excludedBy: 'admin-user-id',
           })
           .expect(400);
       });
@@ -212,24 +213,10 @@ describe('직원 조회 제외/포함 테스트', () => {
         const employee = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
-          .send({
-            excludedBy: 'admin-user-id',
-          })
-          .expect(400);
-      });
-
-      it('excludedBy가 누락된 경우 400 에러가 발생해야 한다', async () => {
-        // Given
-        const employee = getRandomEmployee();
-
-        // When & Then
-        await request(app.getHttpServer())
-          .patch(`/admin/employees/${employee.id}/exclude`)
-          .send({
-            excludeReason: '퇴사 예정',
-          })
+          .send({})
           .expect(400);
       });
 
@@ -238,11 +225,11 @@ describe('직원 조회 제외/포함 테스트', () => {
         const employee = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
           .send({
             excludeReason: '',
-            excludedBy: 'admin-user-id',
           })
           .expect(400);
       });
@@ -256,20 +243,19 @@ describe('직원 조회 제외/포함 테스트', () => {
       it('제외된 직원을 다시 조회 목록에 포함할 수 있어야 한다', async () => {
         // Given - 먼저 제외
         const employee = testData.employees[0];
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
           .send({
             excludeReason: '퇴사 예정',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
         // When - 다시 포함
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/include`)
-          .send({
-            updatedBy: 'admin-user-id',
-          })
+          .send({})
           .expect(200);
 
         // Then
@@ -284,20 +270,19 @@ describe('직원 조회 제외/포함 테스트', () => {
       it('포함 처리 시 DB에서 제외 정보가 초기화되어야 한다', async () => {
         // Given - 먼저 제외
         const employee = testData.employees[1];
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
           .send({
             excludeReason: '휴직 중',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
         // When - 다시 포함
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/include`)
-          .send({
-            updatedBy: 'admin-user-id',
-          })
+          .send({})
           .expect(200);
 
         // Then - DB에서 확인
@@ -313,35 +298,33 @@ describe('직원 조회 제외/포함 테스트', () => {
         // Given - 여러 직원 제외
         const employee1 = testData.employees[0];
         const employee2 = testData.employees[1];
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee1.id}/exclude`)
           .send({
             excludeReason: '퇴사 예정',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee2.id}/exclude`)
           .send({
             excludeReason: '휴직 중',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
         // When - 각각 포함
-        const response1 = await request(app.getHttpServer())
+        const response1 = await testSuite
+          .request()
           .patch(`/admin/employees/${employee1.id}/include`)
-          .send({
-            updatedBy: 'admin-user-id',
-          })
+          .send({})
           .expect(200);
 
-        const response2 = await request(app.getHttpServer())
+        const response2 = await testSuite
+          .request()
           .patch(`/admin/employees/${employee2.id}/include`)
-          .send({
-            updatedBy: 'admin-user-id',
-          })
+          .send({})
           .expect(200);
 
         // Then
@@ -354,11 +337,10 @@ describe('직원 조회 제외/포함 테스트', () => {
         const employee = testData.employees[2];
 
         // When - 포함 처리
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/include`)
-          .send({
-            updatedBy: 'admin-user-id',
-          })
+          .send({})
           .expect(200);
 
         // Then
@@ -372,31 +354,18 @@ describe('직원 조회 제외/포함 테스트', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${nonExistentId}/include`)
-          .send({
-            updatedBy: 'admin-user-id',
-          })
+          .send({})
           .expect(404);
       });
 
       it('잘못된 UUID 형식으로 요청 시 400 에러가 발생해야 한다', async () => {
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch('/admin/employees/invalid-uuid/include')
-          .send({
-            updatedBy: 'admin-user-id',
-          })
-          .expect(400);
-      });
-
-      it('updatedBy가 누락된 경우 400 에러가 발생해야 한다', async () => {
-        // Given
-        const employee = getRandomEmployee();
-
-        // When & Then
-        await request(app.getHttpServer())
-          .patch(`/admin/employees/${employee.id}/include`)
           .send({})
           .expect(400);
       });
@@ -412,24 +381,25 @@ describe('직원 조회 제외/포함 테스트', () => {
         const employee1 = testData.employees[0];
         const employee2 = testData.employees[1];
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee1.id}/exclude`)
           .send({
             excludeReason: '퇴사 예정',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee2.id}/exclude`)
           .send({
             excludeReason: '휴직 중',
-            excludedBy: 'admin-user-id',
           })
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/excluded')
           .expect(200);
 
@@ -444,7 +414,8 @@ describe('직원 조회 제외/포함 테스트', () => {
 
       it('제외된 직원이 없으면 빈 배열을 반환해야 한다', async () => {
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/excluded')
           .expect(200);
 
@@ -458,18 +429,18 @@ describe('직원 조회 제외/포함 테스트', () => {
         // Given
         const employee = testData.employees[0];
         const excludeReason = '퇴사 예정';
-        const excludedBy = 'admin-user-id';
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(`/admin/employees/${employee.id}/exclude`)
           .send({
             excludeReason,
-            excludedBy,
           })
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get('/admin/employees/excluded')
           .expect(200);
 
@@ -478,7 +449,9 @@ describe('직원 조회 제외/포함 테스트', () => {
         expect(excludedEmployee.id).toBe(employee.id);
         expect(excludedEmployee.isExcludedFromList).toBe(true);
         expect(excludedEmployee.excludeReason).toBe(excludeReason);
-        expect(excludedEmployee.excludedBy).toBe(excludedBy);
+        expect(excludedEmployee.excludedBy).toBe(
+          '00000000-0000-0000-0000-000000000001',
+        );
         expect(excludedEmployee.excludedAt).toBeDefined();
       });
     });
@@ -492,33 +465,34 @@ describe('직원 조회 제외/포함 테스트', () => {
       const employee = testData.employees[0];
 
       // 1. 직원 제외
-      const excludeResponse = await request(app.getHttpServer())
+      const excludeResponse = await testSuite
+        .request()
         .patch(`/admin/employees/${employee.id}/exclude`)
         .send({
           excludeReason: '퇴사 예정',
-          excludedBy: 'admin-user-id',
         })
         .expect(200);
       expect(excludeResponse.body.isExcludedFromList).toBe(true);
 
       // 2. 제외 목록 조회
-      const listResponse = await request(app.getHttpServer())
+      const listResponse = await testSuite
+        .request()
         .get('/admin/employees/excluded')
         .expect(200);
       expect(listResponse.body.length).toBe(1);
       expect(listResponse.body[0].id).toBe(employee.id);
 
       // 3. 다시 포함
-      const includeResponse = await request(app.getHttpServer())
+      const includeResponse = await testSuite
+        .request()
         .patch(`/admin/employees/${employee.id}/include`)
-        .send({
-          updatedBy: 'admin-user-id',
-        })
+        .send({})
         .expect(200);
       expect(includeResponse.body.isExcludedFromList).toBe(false);
 
       // 4. 제외 목록 재조회 (빈 배열이어야 함)
-      const finalListResponse = await request(app.getHttpServer())
+      const finalListResponse = await testSuite
+        .request()
         .get('/admin/employees/excluded')
         .expect(200);
       expect(finalListResponse.body.length).toBe(0);
@@ -531,46 +505,47 @@ describe('직원 조회 제외/포함 테스트', () => {
       const employee3 = testData.employees[2];
 
       // 1. 3명 제외
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/employees/${employee1.id}/exclude`)
         .send({
           excludeReason: '퇴사 예정',
-          excludedBy: 'admin-user-id',
         })
         .expect(200);
 
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/employees/${employee2.id}/exclude`)
         .send({
           excludeReason: '휴직 중',
-          excludedBy: 'admin-user-id',
         })
         .expect(200);
 
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/employees/${employee3.id}/exclude`)
         .send({
           excludeReason: '장기 출장',
-          excludedBy: 'admin-user-id',
         })
         .expect(200);
 
       // 2. 제외 목록 조회 (3명이어야 함)
-      const listResponse1 = await request(app.getHttpServer())
+      const listResponse1 = await testSuite
+        .request()
         .get('/admin/employees/excluded')
         .expect(200);
       expect(listResponse1.body.length).toBe(3);
 
       // 3. 1명만 포함
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(`/admin/employees/${employee1.id}/include`)
-        .send({
-          updatedBy: 'admin-user-id',
-        })
+        .send({})
         .expect(200);
 
       // 4. 제외 목록 재조회 (2명이어야 함)
-      const listResponse2 = await request(app.getHttpServer())
+      const listResponse2 = await testSuite
+        .request()
         .get('/admin/employees/excluded')
         .expect(200);
       expect(listResponse2.body.length).toBe(2);

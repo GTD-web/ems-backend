@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 
@@ -152,9 +151,9 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 성능 테
         for (let i = 0; i < iterations; i++) {
           const startTime = Date.now();
 
-          const response = await request(app.getHttpServer()).get(
-            `/admin/dashboard/${evaluationPeriodId}/employees/status`,
-          );
+          const response = await testSuite
+            .request()
+            .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`);
 
           if (response.status !== 200) {
             console.error(`\n❌ 조회 실패 (반복 ${i + 1}):`, {
@@ -251,7 +250,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 성능 테
       for (let i = 0; i < iterations; i++) {
         const startTime = Date.now();
 
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
           .expect(200);
 
@@ -282,7 +282,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 성능 테
       const promises = Array(parallelCount)
         .fill(null)
         .map(() =>
-          request(app.getHttpServer())
+          testSuite
+            .request()
             .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
             .expect(200),
         );
@@ -310,7 +311,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 성능 테
     it('조회된 데이터가 모두 정확해야 함', async () => {
       console.log(`\n🔍 데이터 정합성 검증 (${TEST_EMPLOYEE_COUNT}명)...`);
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
         .expect(200);
 
@@ -352,7 +354,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/status - 성능 테
       // 반복 조회로 메모리 누수 검증
       const iterations = 20;
       for (let i = 0; i < iterations; i++) {
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
           .expect(200);
 

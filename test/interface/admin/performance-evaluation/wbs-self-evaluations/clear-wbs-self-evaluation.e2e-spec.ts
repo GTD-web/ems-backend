@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 
@@ -102,7 +101,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -116,7 +116,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const evaluationId = createResponse.body.id;
 
         // When - 내용 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/clear`,
           )
@@ -138,7 +139,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -152,7 +154,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const evaluationId = createResponse.body.id;
 
         // 제출
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/submit`,
           )
@@ -160,7 +163,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
           .expect(200);
 
         // When - 내용 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/clear`,
           )
@@ -179,7 +183,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const period = getRandomEvaluationPeriod();
         const wbsItem = getRandomWbsItem();
 
-        const createResponse = await request(app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -192,7 +197,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const evaluationId = createResponse.body.id;
 
         // When - 첫 번째 초기화
-        const firstClearResponse = await request(app.getHttpServer())
+        const firstClearResponse = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/clear`,
           )
@@ -200,7 +206,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
           .expect(200);
 
         // 두 번째 초기화 (멱등성)
-        const secondClearResponse = await request(app.getHttpServer())
+        const secondClearResponse = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/clear`,
           )
@@ -219,7 +226,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const invalidId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${invalidId}/clear`,
           )
@@ -232,7 +240,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/${nonExistentId}/clear`,
           )
@@ -254,7 +263,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         // 실제로 생성된 개수를 추적
         let createdCount = 0;
         for (const wbsItem of wbsItems) {
-          const createResponse = await request(app.getHttpServer())
+          const createResponse = await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -271,7 +281,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         }
 
         // When - 전체 내용 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/clear`,
           )
@@ -295,7 +306,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const wbsItems = testData.wbsItems.slice(0, 2);
 
         for (const wbsItem of wbsItems) {
-          const createResponse = await request(app.getHttpServer())
+          const createResponse = await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -306,7 +318,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
             .expect(200);
 
           // 제출
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .patch(
               `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/submit`,
             )
@@ -315,7 +328,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         }
 
         // When - 전체 내용 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/clear`,
           )
@@ -333,7 +347,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const period = getRandomEvaluationPeriod();
 
         // When - 전체 내용 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/clear`,
           )
@@ -352,7 +367,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const period = getRandomEvaluationPeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/invalid-uuid/period/${period.id}/clear`,
           )
@@ -365,7 +381,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const employee = getRandomEmployee();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/invalid-uuid/clear`,
           )
@@ -388,7 +405,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
 
         // 각 WBS 항목에 대한 자기평가 생성
         for (const wbsItem of projectWbsItems) {
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -401,7 +419,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         }
 
         // When - 프로젝트별 내용 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/project/${project.id}/clear`,
           )
@@ -425,7 +444,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const projectWbsItems = testData.wbsItems.slice(0, 2);
 
         for (const wbsItem of projectWbsItems) {
-          const createResponse = await request(app.getHttpServer())
+          const createResponse = await testSuite
+            .request()
             .post(
               `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
             )
@@ -436,7 +456,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
             .expect(200);
 
           // 제출
-          await request(app.getHttpServer())
+          await testSuite
+            .request()
             .patch(
               `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/submit`,
             )
@@ -445,7 +466,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         }
 
         // When - 프로젝트별 내용 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/project/${project.id}/clear`,
           )
@@ -467,7 +489,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const project = testData.projects[1] || testData.projects[0];
 
         // When - 프로젝트별 내용 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/project/${project.id}/clear`,
           )
@@ -485,7 +508,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
         const period = getRandomEvaluationPeriod();
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/period/${period.id}/project/invalid-uuid/clear`,
           )
@@ -502,7 +526,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -519,7 +544,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
       ).getTime();
 
       // When - 내용 초기화
-      const clearResponse = await request(app.getHttpServer())
+      const clearResponse = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/clear`,
         )
@@ -542,7 +568,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
       const period = getRandomEvaluationPeriod();
       const wbsItem = getRandomWbsItem();
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -558,7 +585,8 @@ describe('PATCH /admin/performance-evaluation/wbs-self-evaluations - 내용 초�
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When - 내용 초기화
-      const clearResponse = await request(app.getHttpServer())
+      const clearResponse = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/wbs-self-evaluations/${createResponse.body.id}/clear`,
         )

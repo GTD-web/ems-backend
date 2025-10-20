@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('POST /admin/evaluation-periods/:id/start', () => {
@@ -37,7 +36,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         ],
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -45,7 +45,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When: 평가 기간 시작
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
@@ -53,7 +54,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       expect(response.body).toEqual({ success: true });
 
       // 상태 변경 확인
-      const detailResponse = await request(app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 
@@ -75,7 +77,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         gradeRanges: [{ grade: 'S', minRange: 95, maxRange: 100 }],
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -83,12 +86,14 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When: 평가 기간 시작
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
       // Then: 활성 목록에서 확인
-      const activeResponse = await request(app.getHttpServer())
+      const activeResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 
@@ -118,7 +123,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         ],
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -126,14 +132,16 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When: 평가 기간 시작
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
       // Then: 응답 및 상태 검증
       expect(response.body).toEqual(expect.any(Object));
 
-      const detailResponse = await request(app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 
@@ -149,7 +157,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         peerEvaluationDeadline: '2024-09-30',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -157,14 +166,16 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When: 평가 기간 시작
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
       // Then: 응답 검증
       expect(response.body).toEqual(expect.any(Object));
 
-      const detailResponse = await request(app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 
@@ -182,9 +193,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const nonExistentId = '12345678-1234-1234-1234-123456789012';
 
       // When & Then: 400 또는 404 에러 발생
-      const response = await request(app.getHttpServer()).post(
-        `/admin/evaluation-periods/${nonExistentId}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${nonExistentId}/start`);
 
       expect([400, 404]).toContain(response.status);
       if (response.status === 404) {
@@ -197,9 +208,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const invalidId = 'invalid-uuid-format';
 
       // When & Then: 400 또는 500 에러 발생
-      const response = await request(app.getHttpServer()).post(
-        `/admin/evaluation-periods/${invalidId}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${invalidId}/start`);
 
       expect([400, 500]).toContain(response.status);
     });
@@ -209,9 +220,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const emptyId = '';
 
       // When & Then: 404 에러 (라우팅 실패)
-      const response = await request(app.getHttpServer()).post(
-        `/admin/evaluation-periods/${emptyId}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${emptyId}/start`);
 
       expect([404, 400]).toContain(response.status);
     });
@@ -221,9 +232,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const nullId = 'null';
 
       // When & Then: 400 또는 500 에러 발생
-      const response = await request(app.getHttpServer()).post(
-        `/admin/evaluation-periods/${nullId}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${nullId}/start`);
 
       expect([400, 500]).toContain(response.status);
     });
@@ -241,7 +252,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         description: '중복 시작 방지 테스트',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -249,12 +261,14 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // 첫 번째 시작 (성공)
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
       // When & Then: 두 번째 시작 시도 (실패)
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(422);
 
@@ -270,7 +284,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         description: '완료된 평가기간 시작 방지 테스트',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -278,19 +293,21 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // 시작
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
       // 완료 (만약 완료 엔드포인트가 있다면)
       // 현재 컨트롤러에 완료 엔드포인트가 없으므로 이 테스트는 주석 처리
-      // await request(app.getHttpServer())
+      // await testSuite.request()
       //   .post(`/admin/evaluation-periods/${evaluationPeriodId}/complete`)
       //   .expect(200);
 
       // When & Then: 완료된 평가 기간 시작 시도 (실패)
       // 현재는 이미 시작된 상태에서 다시 시작하는 경우만 테스트
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(422);
 
@@ -310,7 +327,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         description: '동시성 테스트',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -321,7 +339,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const promises = Array(3)
         .fill(null)
         .map(() =>
-          request(app.getHttpServer())
+          testSuite
+            .request()
             .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
             .then(
               (res) => ({ status: res.status, success: true }),
@@ -342,7 +361,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       expect(successCount + errorCount).toBe(3); // 전체 요청 수
 
       // 최종적으로 평가 기간이 시작 상태인지 확인
-      const detailResponse = await request(app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 
@@ -358,9 +378,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const maxLengthUuid = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
 
       // When & Then: 400 또는 404 에러 발생
-      const response = await request(app.getHttpServer()).post(
-        `/admin/evaluation-periods/${maxLengthUuid}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${maxLengthUuid}/start`);
 
       expect([400, 404]).toContain(response.status);
       if (response.status === 404) {
@@ -373,9 +393,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const minLengthUuid = '00000000-0000-0000-0000-000000000000';
 
       // When & Then: 400 또는 404 에러 발생
-      const response = await request(app.getHttpServer()).post(
-        `/admin/evaluation-periods/${minLengthUuid}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${minLengthUuid}/start`);
 
       expect([400, 404]).toContain(response.status);
       if (response.status === 404) {
@@ -395,7 +415,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -403,9 +424,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When & Then: GET 메서드로 시작 시도
-      const response = await request(app.getHttpServer()).get(
-        `/admin/evaluation-periods/${evaluationPeriodId}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .get(`/admin/evaluation-periods/${evaluationPeriodId}/start`);
 
       expect([404, 405]).toContain(response.status);
     });
@@ -418,7 +439,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -426,9 +448,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When & Then: PUT 메서드로 시작 시도
-      const response = await request(app.getHttpServer()).put(
-        `/admin/evaluation-periods/${evaluationPeriodId}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .put(`/admin/evaluation-periods/${evaluationPeriodId}/start`);
 
       expect([404, 405]).toContain(response.status);
     });
@@ -441,7 +463,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -449,9 +472,9 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When & Then: DELETE 메서드로 시작 시도
-      const response = await request(app.getHttpServer()).delete(
-        `/admin/evaluation-periods/${evaluationPeriodId}/start`,
-      );
+      const response = await testSuite
+        .request()
+        .delete(`/admin/evaluation-periods/${evaluationPeriodId}/start`);
 
       expect([404, 405]).toContain(response.status);
     });
@@ -474,7 +497,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         ],
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -483,12 +507,14 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const originalData = createResponse.body;
 
       // When: 평가 기간 시작
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
       // Then: 기본 데이터는 변경되지 않고 상태만 변경
-      const detailResponse = await request(app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 
@@ -522,7 +548,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -532,12 +559,14 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       const originalCreatedAt = createResponse.body.createdAt;
 
       // When: 평가 기간 시작
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
       // Then: 생성자 정보 유지
-      const detailResponse = await request(app.getHttpServer())
+      const detailResponse = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${evaluationPeriodId}`)
         .expect(200);
 
@@ -554,7 +583,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
     it('여러 평가 기간을 순차적으로 시작할 수 있어야 한다', async () => {
       // Given: 여러 평가 기간 생성
       const createPromises = Array.from({ length: 5 }, (_, index) =>
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send({
             name: `성능 테스트 평가기간 ${index + 1}`,
@@ -575,7 +605,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       // When: 순차적으로 시작
       const startTime = Date.now();
       const startPromises = evaluationPeriodIds.map((id) =>
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .post(`/admin/evaluation-periods/${id}/start`)
           .expect(200),
       );
@@ -593,7 +624,8 @@ describe('POST /admin/evaluation-periods/:id/start', () => {
       expect(executionTime).toBeLessThan(10000); // 10초 이내
 
       // 모든 평가 기간이 활성 상태인지 확인
-      const activeResponse = await request(app.getHttpServer())
+      const activeResponse = await testSuite
+        .request()
         .get('/admin/evaluation-periods/active')
         .expect(200);
 

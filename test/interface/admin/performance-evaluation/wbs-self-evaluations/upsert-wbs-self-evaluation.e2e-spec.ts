@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -96,7 +95,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       createdBy?: string;
     },
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/performance-evaluation/wbs-self-evaluations/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}`,
       )
@@ -133,7 +133,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const createdBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -183,7 +184,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When - 동일한 조합으로 다시 저장 (수정)
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -212,7 +214,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -236,7 +239,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -260,7 +264,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const testScores = [0, 50, 100, 120];
       for (const score of testScores) {
         const wbsItem = getRandomWbsItem();
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post(
             `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
           )
@@ -331,7 +336,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -353,7 +359,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -374,7 +381,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -399,7 +407,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -423,7 +432,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -444,7 +454,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -469,7 +480,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -488,7 +500,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
 
       // When & Then
       // maxSelfEvaluationRate는 기본값 120이므로 150으로 테스트
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -507,7 +520,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
 
       // When & Then
       // maxSelfEvaluationRate는 기본값 120이므로 121로 테스트
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -525,7 +539,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -543,7 +558,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const invalidEmployeeId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${invalidEmployeeId}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -561,7 +577,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const invalidWbsItemId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${invalidWbsItemId}/period/${period.id}`,
         )
@@ -579,7 +596,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const invalidPeriodId = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${invalidPeriodId}`,
         )
@@ -598,7 +616,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const invalidCreatedBy = 'invalid-uuid';
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -617,7 +636,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -639,7 +659,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -682,7 +703,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When - 수정
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -717,7 +739,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When - 수정
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -786,7 +809,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -813,7 +837,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -845,7 +870,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )
@@ -868,7 +894,8 @@ describe('POST /admin/performance-evaluation/wbs-self-evaluations/employee/:empl
       const wbsItem = getRandomWbsItem();
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(
           `/admin/performance-evaluation/wbs-self-evaluations/employee/${employee.id}/wbs/${wbsItem.id}/period/${period.id}`,
         )

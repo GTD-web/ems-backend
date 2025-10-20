@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)', () => {
@@ -37,7 +36,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
         ],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -45,7 +45,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const periodId = createResponse.body.id;
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
@@ -82,7 +83,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
     it('존재하지 않는 평가 기간 조회 시 null을 반환해야 한다', async () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${nonExistentId}`)
         .expect(200);
 
@@ -107,7 +109,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
         ],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -115,12 +118,14 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const periodId = createResponse.body.id;
 
       // 평가 기간 활성화
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/start`)
         .expect(200);
 
       // When & Then: 활성화된 평가 기간 상세 조회
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
@@ -155,7 +160,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
         ],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -163,7 +169,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const periodId = createResponse.body.id;
 
       // When & Then
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
@@ -199,9 +206,9 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const invalidId = 'invalid-uuid-format';
 
       // UUID 형식이 아닌 ID로 요청 시 데이터베이스 에러로 500 응답이 발생할 수 있음
-      const response = await request(testSuite.app.getHttpServer()).get(
-        `/admin/evaluation-periods/${invalidId}`,
-      );
+      const response = await testSuite
+        .request()
+        .get(`/admin/evaluation-periods/${invalidId}`);
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);
@@ -238,7 +245,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
 
       const createdPeriods: any[] = [];
       for (const period of periods) {
-        const createResponse = await request(testSuite.app.getHttpServer())
+        const createResponse = await testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send(period)
           .expect(201);
@@ -247,7 +255,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
 
       // When & Then: 두 번째 평가 기간만 조회
       const targetPeriod = createdPeriods[1];
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${targetPeriod.id}`)
         .expect(200);
 
@@ -274,7 +283,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -282,12 +292,14 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const periodId = createResponse.body.id;
 
       // 평가 기간 삭제
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .delete(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
       // When & Then: 삭제된 평가 기간 조회 시 null 반환
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
@@ -308,7 +320,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -316,17 +329,20 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const periodId = createResponse.body.id;
 
       // 평가 기간 시작
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/start`)
         .expect(200);
 
       // 평가 기간 완료
-      await request(testSuite.app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${periodId}/complete`)
         .expect(200);
 
       // When & Then: 완료된 평가 기간 상세 조회
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
@@ -353,7 +369,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
         gradeRanges: [{ grade: 'A', minRange: 80, maxRange: 100 }],
       };
 
-      const createResponse = await request(testSuite.app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -361,7 +378,8 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const periodId = createResponse.body.id;
 
       // When & Then: 대기 상태 평가 기간 상세 조회
-      const response = await request(testSuite.app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get(`/admin/evaluation-periods/${periodId}`)
         .expect(200);
 
@@ -379,9 +397,9 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
 
     it('빈 문자열 ID로 조회 시 적절한 에러가 발생해야 한다', async () => {
       // When & Then: 빈 문자열 ID로 조회 시도
-      const response = await request(testSuite.app.getHttpServer()).get(
-        '/admin/evaluation-periods/',
-      );
+      const response = await testSuite
+        .request()
+        .get('/admin/evaluation-periods/');
 
       // 200 (OK - 목록 조회), 404 (Not Found), 또는 400 (Bad Request) 중 하나여야 함
       expect([200, 400, 404]).toContain(response.status);
@@ -391,9 +409,9 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const veryLongInvalidId = 'a'.repeat(1000); // 1000자 길이의 잘못된 ID
 
       // When & Then: 매우 긴 잘못된 ID로 조회 시도
-      const response = await request(testSuite.app.getHttpServer()).get(
-        `/admin/evaluation-periods/${veryLongInvalidId}`,
-      );
+      const response = await testSuite
+        .request()
+        .get(`/admin/evaluation-periods/${veryLongInvalidId}`);
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);
@@ -403,9 +421,9 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const sqlInjectionId = "'; DROP TABLE evaluation_period; --";
 
       // When & Then: SQL 인젝션 시도
-      const response = await request(testSuite.app.getHttpServer()).get(
-        `/admin/evaluation-periods/${encodeURIComponent(sqlInjectionId)}`,
-      );
+      const response = await testSuite
+        .request()
+        .get(`/admin/evaluation-periods/${encodeURIComponent(sqlInjectionId)}`);
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);
@@ -415,9 +433,9 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const specialCharId = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 
       // When & Then: 특수 문자가 포함된 ID로 조회 시도
-      const response = await request(testSuite.app.getHttpServer()).get(
-        `/admin/evaluation-periods/${encodeURIComponent(specialCharId)}`,
-      );
+      const response = await testSuite
+        .request()
+        .get(`/admin/evaluation-periods/${encodeURIComponent(specialCharId)}`);
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);
@@ -425,9 +443,9 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
 
     it('null ID로 조회 시 적절한 에러가 발생해야 한다', async () => {
       // When & Then: null ID로 조회 시도
-      const response = await request(testSuite.app.getHttpServer()).get(
-        '/admin/evaluation-periods/null',
-      );
+      const response = await testSuite
+        .request()
+        .get('/admin/evaluation-periods/null');
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);
@@ -435,9 +453,9 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
 
     it('undefined ID로 조회 시 적절한 에러가 발생해야 한다', async () => {
       // When & Then: undefined ID로 조회 시도
-      const response = await request(testSuite.app.getHttpServer()).get(
-        '/admin/evaluation-periods/undefined',
-      );
+      const response = await testSuite
+        .request()
+        .get('/admin/evaluation-periods/undefined');
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);
@@ -447,9 +465,9 @@ describe('EvaluationPeriodManagement GET /evaluation-periods/:id Endpoint (e2e)'
       const numericId = '12345';
 
       // When & Then: 숫자 형태의 ID로 조회 시도
-      const response = await request(testSuite.app.getHttpServer()).get(
-        `/admin/evaluation-periods/${numericId}`,
-      );
+      const response = await testSuite
+        .request()
+        .get(`/admin/evaluation-periods/${numericId}`);
 
       // 400 (Bad Request), 404 (Not Found), 또는 500 (Internal Server Error) 중 하나여야 함
       expect([400, 404, 500]).toContain(response.status);

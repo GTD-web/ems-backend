@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -35,6 +34,21 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
     // 완전한 테스트 환경 생성 (부서, 직원, 프로젝트 모두 포함)
     const { departments, employees, projects } =
       await testContextService.완전한_테스트환경을_생성한다();
+
+    // 테스트용 인증 사용자 생성 (testSuite에서 사용하는 기본 사용자 ID)
+    const testUserId = '00000000-0000-0000-0000-000000000001';
+    const existingUser = await dataSource.manager.query(
+      `SELECT id FROM employee WHERE id = $1`,
+      [testUserId],
+    );
+
+    if (existingUser.length === 0) {
+      await dataSource.manager.query(
+        `INSERT INTO employee (id, "employeeNumber", name, email, "departmentId", status, "externalId", "externalCreatedAt", "externalUpdatedAt", version, "createdAt", "updatedAt")
+         VALUES ($1, 'TEST-USER', '테스트 관리자', 'test@example.com', $2, '재직중', 'test-user-001', NOW(), NOW(), 1, NOW(), NOW())`,
+        [testUserId, departments[0].id],
+      );
+    }
 
     testData = {
       departments,
@@ -112,7 +126,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         maxSelfEvaluationRate: 120,
       };
 
-      const evaluationPeriodResponse = await request(app.getHttpServer())
+      const evaluationPeriodResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(evaluationPeriodData)
         .expect(201);
@@ -126,32 +141,34 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         const employees = getRandomEmployees(3);
         const projects = getRandomProjects(3);
 
-        const assignedBy = employees[0].id; // 모든 할당에 동일한 assignedBy 사용
+        // 인증된 사용자 ID (컨트롤러에서 @CurrentUser()로 자동 설정됨)
+        const testUserId = '00000000-0000-0000-0000-000000000001';
         const bulkAssignmentData = {
           assignments: [
             {
               employeeId: employees[0].id,
               projectId: projects[0].id,
               periodId: evaluationPeriodId,
-              assignedBy: assignedBy,
+              // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             },
             {
               employeeId: employees[1].id,
               projectId: projects[1].id,
               periodId: evaluationPeriodId,
-              assignedBy: assignedBy,
+              // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             },
             {
               employeeId: employees[2].id,
               projectId: projects[2].id,
               periodId: evaluationPeriodId,
-              assignedBy: assignedBy,
+              // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             },
           ],
         };
 
         // When: 대량 할당 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData)
           .expect(201);
@@ -170,7 +187,7 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
             bulkAssignmentData.assignments[index].projectId,
           );
           expect(assignment.periodId).toBe(evaluationPeriodId);
-          expect(assignment.assignedBy).toBe(assignedBy); // 모든 할당이 동일한 assignedBy
+          expect(assignment.assignedBy).toBe(testUserId); // 인증된 사용자가 할당자로 설정됨
         });
       });
 
@@ -195,7 +212,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 대량 할당 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData)
           .expect(201);
@@ -231,7 +249,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 대량 할당 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData)
           .expect(201);
@@ -255,7 +274,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 빈 할당 배열로 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData);
 
@@ -273,7 +293,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         const bulkAssignmentData = {};
 
         // When & Then: 400 에러 발생
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData)
           .expect(400);
@@ -294,7 +315,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 필수 필드가 누락된 데이터로 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData);
 
@@ -317,7 +339,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 잘못된 UUID 형식으로 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData);
 
@@ -353,7 +376,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 완료된 평가기간에 대량 할당 시도
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData);
 
@@ -382,7 +406,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 중복 할당이 포함된 대량 할당 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData);
 
@@ -411,7 +436,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 대량 할당 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData);
 
@@ -444,7 +470,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
 
         // When: 대량 할당 요청
         const startTime = Date.now();
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData);
         const endTime = Date.now();
@@ -498,7 +525,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         // When: 동시에 여러 대량 할당 요청
         const responses = await Promise.all(
           bulkRequests.map((data) =>
-            request(app.getHttpServer())
+            testSuite
+              .request()
               .post('/admin/evaluation-criteria/project-assignments/bulk')
               .send(data),
           ),
@@ -517,35 +545,37 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         const employees = getRandomEmployees(2);
         const projects = getRandomProjects(2);
 
-        const assignedBy = employees[0].id; // 모든 할당에 동일한 assignedBy 사용
+        // 인증된 사용자 ID (컨트롤러에서 @CurrentUser()로 자동 설정됨)
+        const testUserId = '00000000-0000-0000-0000-000000000001';
         const bulkAssignmentData = {
           assignments: [
             {
               employeeId: employees[0].id,
               projectId: projects[0].id,
               periodId: evaluationPeriodId,
-              assignedBy: assignedBy,
+              // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             },
             {
               employeeId: employees[1].id,
               projectId: projects[1].id,
               periodId: evaluationPeriodId,
-              assignedBy: assignedBy,
+              // assignedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
             },
           ],
         };
 
         // When: 대량 할당 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData)
           .expect(201);
 
         // Then: 모든 할당에 감사 정보가 설정되어야 함
         response.body.forEach((assignment: any, index: number) => {
-          expect(assignment.assignedBy).toBe(assignedBy); // 모든 할당이 동일한 assignedBy
-          expect(assignment.createdBy).toBe(assignedBy);
-          expect(assignment.updatedBy).toBe(assignedBy);
+          expect(assignment.assignedBy).toBe(testUserId); // 인증된 사용자가 할당자로 설정됨
+          expect(assignment.createdBy).toBe(testUserId);
+          expect(assignment.updatedBy).toBe(testUserId);
           expect(assignment.createdAt).toBeDefined();
           expect(assignment.updatedAt).toBeDefined();
           expect(assignment.assignedDate).toBeDefined();
@@ -569,7 +599,8 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk', () => {
         };
 
         // When: 대량 할당 요청
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .post('/admin/evaluation-criteria/project-assignments/bulk')
           .send(bulkAssignmentData)
           .expect(201);

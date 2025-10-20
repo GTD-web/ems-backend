@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -127,7 +126,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData)
       .expect(201);
@@ -156,7 +156,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
   ): Promise<any> {
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/project-assignments')
       .send({
         periodId,
@@ -180,7 +181,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
   ): Promise<any> {
     const assignedBy = testData.employees[0].id;
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         periodId,
@@ -210,7 +212,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       await createWbsAssignment(periodId, employee.id, project.id, wbsItem2.id);
 
       // When: 목록 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .expect(200);
 
@@ -225,7 +228,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       // Given: 할당이 하나도 없는 상태
 
       // When: 목록 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .expect(200);
 
@@ -252,7 +256,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       await createWbsAssignment(period2Id, employee.id, project.id, wbsItem.id);
 
       // When: period1Id로 필터링
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ periodId: period1Id })
         .expect(200);
@@ -278,7 +283,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       await createWbsAssignment(periodId, employee2.id, project.id, wbsItem.id);
 
       // When: employee1Id로 필터링
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ employeeId: employee1.id })
         .expect(200);
@@ -316,7 +322,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       );
 
       // When: projectId로 필터링
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ projectId: project.id })
         .expect(200);
@@ -342,7 +349,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       await createWbsAssignment(periodId, employee.id, project.id, wbsItem2.id);
 
       // When: wbsItem1Id로 필터링
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ wbsItemId: wbsItem1.id })
         .expect(200);
@@ -368,7 +376,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       await createWbsAssignment(periodId, employee2.id, project.id, wbsItem.id);
 
       // When: periodId + employeeId + projectId로 필터링
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({
           periodId,
@@ -405,7 +414,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       }
 
       // When: limit=3으로 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ limit: 3 })
         .expect(200);
@@ -435,7 +445,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       }
 
       // When: page=2, limit=2로 조회
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ page: 2, limit: 2 })
         .expect(200);
@@ -474,7 +485,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       );
 
       // When: assignedDate 기준 오름차순 정렬
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ orderBy: 'assignedDate', orderDirection: 'ASC' })
         .expect(200);
@@ -504,7 +516,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       await createWbsAssignment(periodId, employee.id, project.id, wbsItem2.id);
 
       // When: assignedDate 기준 내림차순 정렬
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ orderBy: 'assignedDate', orderDirection: 'DESC' })
         .expect(200);
@@ -527,7 +540,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       const invalidId = 'invalid-uuid';
 
       // When & Then: 400 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ periodId: invalidId })
         .expect(400);
@@ -538,7 +552,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       const invalidId = 'not-a-uuid';
 
       // When & Then: 400 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ employeeId: invalidId })
         .expect(400);
@@ -546,7 +561,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
 
     it('잘못된 page 값으로 요청 시 적절히 처리되어야 한다', async () => {
       // When & Then: 유효하지 않은 페이지 번호
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ page: 0 })
         .expect(200);
@@ -560,7 +576,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       const invalidDirection = 'INVALID';
 
       // When & Then: 400 에러 발생
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ orderDirection: invalidDirection })
         .expect(400);
@@ -588,7 +605,8 @@ describe('GET /admin/evaluation-criteria/wbs-assignments', () => {
       }
 
       // When: periodId 필터 + page=1 + limit=2 + 내림차순 정렬
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({
           periodId,

@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 
 describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
@@ -37,7 +36,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         ],
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -49,7 +49,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         name: '수정된 평가기간 이름',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -73,7 +74,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 130,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -85,7 +87,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         description: '수정된 평가기간 설명입니다.',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -109,7 +112,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -121,7 +125,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 150,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -150,7 +155,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         ],
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -164,7 +170,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 180,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -189,7 +196,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 140,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -199,7 +207,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       // When: 빈 객체로 수정 요청
       const updateData = {};
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -222,7 +231,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 125,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -236,7 +246,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
           '특수문자 포함 설명: @#$%^&*()_+-=[]{}|;:,.<>?/~`\n줄바꿈도 포함',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -258,7 +269,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       };
 
       // When & Then: 404 에러 발생
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${nonExistentId}/basic-info`)
         .send(updateData);
 
@@ -276,7 +288,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       };
 
       // When & Then: 400 또는 500 에러 발생
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${invalidId}/basic-info`)
         .send(updateData);
 
@@ -291,7 +304,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -303,7 +317,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         name: '',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(400);
@@ -321,7 +336,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -333,7 +349,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         name: 123456,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData);
 
@@ -354,7 +371,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -366,7 +384,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         description: ['배열', '타입', '설명'],
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(400);
@@ -388,7 +407,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -400,7 +420,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 99,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(400);
@@ -418,7 +439,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -430,7 +452,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 201,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(400);
@@ -448,7 +471,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -460,7 +484,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: '150%',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(400);
@@ -478,7 +503,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-06-15',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -490,7 +516,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 100,
       };
 
-      const response100 = await request(app.getHttpServer())
+      const response100 = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData100)
         .expect(200);
@@ -502,7 +529,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 200,
       };
 
-      const response200 = await request(app.getHttpServer())
+      const response200 = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData200)
         .expect(200);
@@ -528,12 +556,14 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-31',
       };
 
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData1)
         .expect(201);
 
-      const createResponse2 = await request(app.getHttpServer())
+      const createResponse2 = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData2)
         .expect(201);
@@ -545,7 +575,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         name: '첫 번째 평가기간',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId2}/basic-info`)
         .send(updateData);
 
@@ -572,7 +603,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 120,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -589,7 +621,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 160,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -613,7 +646,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 130,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -621,7 +655,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // 평가 기간 시작
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
@@ -632,7 +667,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 170,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -656,7 +692,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 140,
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -664,11 +701,13 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // 평가 기간 시작 및 완료
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/start`)
         .expect(200);
 
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/complete`)
         .expect(200);
 
@@ -679,7 +718,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 180,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData);
 
@@ -707,7 +747,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         ],
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -722,7 +763,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         maxSelfEvaluationRate: 175,
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -757,7 +799,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         description: '생성자 정보 테스트',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -772,7 +815,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         description: '수정된 설명',
       };
 
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send(updateData)
         .expect(200);
@@ -792,7 +836,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
     it('여러 평가 기간을 순차적으로 수정할 수 있어야 한다', async () => {
       // Given: 여러 평가 기간 생성
       const createPromises = Array.from({ length: 5 }, (_, index) =>
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .post('/admin/evaluation-periods')
           .send({
             name: `성능 테스트 평가기간 ${index + 1}`,
@@ -815,7 +860,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       // When: 순차적으로 수정
       const startTime = Date.now();
       const updatePromises = evaluationPeriodIds.map((id, index) =>
-        request(app.getHttpServer())
+        testSuite
+          .request()
           .patch(`/admin/evaluation-periods/${id}/basic-info`)
           .send({
             name: `수정된 성능 테스트 평가기간 ${index + 1}`,
@@ -856,7 +902,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-15',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -864,9 +911,9 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When & Then: GET 메서드로 수정 시도
-      const response = await request(app.getHttpServer()).get(
-        `/admin/evaluation-periods/${evaluationPeriodId}/basic-info`,
-      );
+      const response = await testSuite
+        .request()
+        .get(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`);
 
       expect([404, 405]).toContain(response.status);
     });
@@ -879,7 +926,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-15',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -887,7 +935,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When & Then: POST 메서드로 수정 시도
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .post(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`)
         .send({ name: '테스트' });
 
@@ -902,7 +951,8 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
         peerEvaluationDeadline: '2024-12-15',
       };
 
-      const createResponse = await request(app.getHttpServer())
+      const createResponse = await testSuite
+        .request()
         .post('/admin/evaluation-periods')
         .send(createData)
         .expect(201);
@@ -910,9 +960,9 @@ describe('PATCH /admin/evaluation-periods/:id/basic-info', () => {
       const evaluationPeriodId = createResponse.body.id;
 
       // When & Then: DELETE 메서드로 수정 시도
-      const response = await request(app.getHttpServer()).delete(
-        `/admin/evaluation-periods/${evaluationPeriodId}/basic-info`,
-      );
+      const response = await testSuite
+        .request()
+        .delete(`/admin/evaluation-periods/${evaluationPeriodId}/basic-info`);
 
       expect([404, 405]).toContain(response.status);
     });

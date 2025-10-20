@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { DataSource } from 'typeorm';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
@@ -154,9 +153,9 @@ describe('GET /admin/dashboard/:evaluationPeriodId/final-evaluations - 성능 �
    * API 호출 헬퍼 함수
    */
   function getFinalEvaluationsByPeriod(periodId: string) {
-    return request(app.getHttpServer()).get(
-      `/admin/dashboard/${periodId}/final-evaluations`,
-    );
+    return testSuite
+      .request()
+      .get(`/admin/dashboard/${periodId}/final-evaluations`);
   }
 
   // ==================== 성능 테스트 ====================

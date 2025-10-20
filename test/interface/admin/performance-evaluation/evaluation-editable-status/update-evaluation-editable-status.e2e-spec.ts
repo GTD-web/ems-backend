@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -107,7 +106,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
     isEditable: boolean,
     updatedBy?: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .patch(
         `/admin/performance-evaluation/evaluation-editable-status/${mappingId}`,
       )
@@ -137,7 +137,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -170,7 +171,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -202,7 +204,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -234,7 +237,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -261,7 +265,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       );
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -397,7 +402,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -420,7 +426,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -443,7 +450,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -460,7 +468,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${nonExistentMappingId}`,
         )
@@ -479,7 +488,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${invalidMappingId}`,
         )
@@ -490,27 +500,29 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
         .expect(400);
     });
 
-    it('잘못된 형식의 updatedBy로 요청 시 400 에러가 발생해야 한다', async () => {
-      // Given
-      const period = getRandomEvaluationPeriod();
-      const employee = getRandomEmployee();
-      const mapping = await createEvaluationPeriodEmployeeMapping(
-        period.id,
-        employee.id,
-      );
-      const invalidUpdatedBy = 'invalid-uuid';
+    // NOTE: updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리되므로
+    // request body의 updatedBy 필드는 무시됩니다.
+    // it('잘못된 형식의 updatedBy로 요청 시 400 에러가 발생해야 한다', async () => {
+    //   // Given
+    //   const period = getRandomEvaluationPeriod();
+    //   const employee = getRandomEmployee();
+    //   const mapping = await createEvaluationPeriodEmployeeMapping(
+    //     period.id,
+    //     employee.id,
+    //   );
+    //   const invalidUpdatedBy = 'invalid-uuid';
 
-      // When & Then
-      await request(app.getHttpServer())
-        .patch(
-          `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
-        )
-        .query({ evaluationType: 'self', isEditable: 'false' })
-        .send({
-          updatedBy: invalidUpdatedBy,
-        })
-        .expect(400);
-    });
+    //   // When & Then
+    //   await testSuite.request()
+    //     .patch(
+    //       `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
+    //     )
+    //     .query({ evaluationType: 'self', isEditable: 'false' })
+    //     .send({
+    //       updatedBy: invalidUpdatedBy,
+    //     })
+    //     .expect(400);
+    // });
 
     it('isEditable이 boolean이 아닌 경우 400 에러가 발생해야 한다', async () => {
       // Given
@@ -523,7 +535,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When & Then
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -549,7 +562,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -582,7 +596,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -609,7 +624,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -638,7 +654,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When - all 타입으로 false 설정
-      await request(app.getHttpServer())
+      await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -699,7 +716,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )
@@ -731,7 +749,8 @@ describe('PATCH /admin/performance-evaluation/evaluation-editable-status/:mappin
       const updatedBy = getRandomEmployee().id;
 
       // When
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .patch(
           `/admin/performance-evaluation/evaluation-editable-status/${mapping.id}`,
         )

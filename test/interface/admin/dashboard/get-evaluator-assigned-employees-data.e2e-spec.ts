@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { DepartmentDto } from '@domain/common/department/department.types';
@@ -105,7 +104,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<void> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}`,
       )
@@ -126,7 +126,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
     wbsItemId: string,
   ): Promise<void> {
     const wbsItem = testData.wbsItems.find((w) => w.id === wbsItemId);
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -149,7 +150,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
     periodId: string,
     evaluatorId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/primary-evaluator`,
       )
@@ -169,7 +171,8 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
     periodId: string,
     evaluatorId: string,
   ): Promise<void> {
-    await request(app.getHttpServer())
+    await testSuite
+      .request()
       .post(
         `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/secondary-evaluator`,
       )
@@ -188,9 +191,11 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
     evaluatorId: string,
     employeeId: string,
   ) {
-    return request(app.getHttpServer()).get(
-      `/admin/dashboard/${evaluationPeriodId}/evaluators/${evaluatorId}/employees/${employeeId}/assigned-data`,
-    );
+    return testSuite
+      .request()
+      .get(
+        `/admin/dashboard/${evaluationPeriodId}/evaluators/${evaluatorId}/employees/${employeeId}/assigned-data`,
+      );
   }
 
   // ==================== 성공 시나리오 ====================

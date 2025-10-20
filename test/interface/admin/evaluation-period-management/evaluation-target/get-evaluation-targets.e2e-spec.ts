@@ -1,5 +1,4 @@
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { TestContextService } from '@context/test-context/test-context.service';
 import { EmployeeDto } from '@domain/common/employee/employee.types';
@@ -69,7 +68,8 @@ describe('평가 대상자 조회 테스트', () => {
     employeeId: string,
     createdBy: string = 'admin-user-id',
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}`,
       )
@@ -86,15 +86,15 @@ describe('평가 대상자 조회 테스트', () => {
     evaluationPeriodId: string,
     employeeId: string,
     excludeReason: string = '제외 사유',
-    excludedBy: string = 'admin-user-id',
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .patch(
         `/admin/evaluation-periods/${evaluationPeriodId}/targets/${employeeId}/exclude`,
       )
       .send({
         excludeReason,
-        excludedBy,
+        // excludedBy는 컨트롤러에서 @CurrentUser()를 통해 자동 설정됨
       })
       .expect(200);
 
@@ -115,7 +115,8 @@ describe('평가 대상자 조회 테스트', () => {
         }
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -149,7 +150,8 @@ describe('평가 대상자 조회 테스트', () => {
         await excludeEvaluationTarget(period.id, employees[1].id);
 
         // When - includeExcluded를 전달하지 않으면 기본값 false 적용
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -176,7 +178,8 @@ describe('평가 대상자 조회 테스트', () => {
         await excludeEvaluationTarget(period.id, employees[1].id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets`)
           .query({ includeExcluded: 'true' })
           .expect(200);
@@ -196,7 +199,8 @@ describe('평가 대상자 조회 테스트', () => {
         const period = getActivePeriod();
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -213,7 +217,8 @@ describe('평가 대상자 조회 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets`)
           .expect(200);
 
@@ -238,7 +243,8 @@ describe('평가 대상자 조회 테스트', () => {
         const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${nonExistentPeriodId}/targets`)
           .expect(200);
 
@@ -253,7 +259,8 @@ describe('평가 대상자 조회 테스트', () => {
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${invalidPeriodId}/targets`)
           .expect(400);
       });
@@ -280,7 +287,8 @@ describe('평가 대상자 조회 테스트', () => {
         await excludeEvaluationTarget(period.id, employees[2].id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets/excluded`)
           .expect(200);
 
@@ -308,7 +316,8 @@ describe('평가 대상자 조회 테스트', () => {
         }
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets/excluded`)
           .expect(200);
 
@@ -331,7 +340,8 @@ describe('평가 대상자 조회 테스트', () => {
         }
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets/excluded`)
           .expect(200);
 
@@ -345,19 +355,15 @@ describe('평가 대상자 조회 테스트', () => {
         // Given
         const period = getActivePeriod();
         const employee = testData.employees[0];
+        const testUserId = '00000000-0000-0000-0000-000000000001';
         const excludeReason = '특정 제외 사유';
-        const excludedBy = 'hr-manager';
 
         await registerEvaluationTarget(period.id, employee.id);
-        await excludeEvaluationTarget(
-          period.id,
-          employee.id,
-          excludeReason,
-          excludedBy,
-        );
+        await excludeEvaluationTarget(period.id, employee.id, excludeReason);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${period.id}/targets/excluded`)
           .expect(200);
 
@@ -365,7 +371,7 @@ describe('평가 대상자 조회 테스트', () => {
         expect(response.body.evaluationPeriodId).toBe(period.id);
         expect(response.body.targets.length).toBe(1);
         expect(response.body.targets[0].excludeReason).toBe(excludeReason);
-        expect(response.body.targets[0].excludedBy).toBe(excludedBy);
+        expect(response.body.targets[0].excludedBy).toBe(testUserId); // 인증된 사용자가 제외 처리자로 설정됨
       });
     });
 
@@ -375,7 +381,8 @@ describe('평가 대상자 조회 테스트', () => {
         const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/${nonExistentPeriodId}/targets/excluded`,
           )
@@ -392,7 +399,8 @@ describe('평가 대상자 조회 테스트', () => {
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(`/admin/evaluation-periods/${invalidPeriodId}/targets/excluded`)
           .expect(400);
       });
@@ -413,7 +421,8 @@ describe('평가 대상자 조회 테스트', () => {
         }
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/employees/${employee.id}/evaluation-periods`,
           )
@@ -442,7 +451,8 @@ describe('평가 대상자 조회 테스트', () => {
         }
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/employees/${employee.id}/evaluation-periods`,
           )
@@ -459,7 +469,8 @@ describe('평가 대상자 조회 테스트', () => {
         const employee = testData.employees[0];
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/employees/${employee.id}/evaluation-periods`,
           )
@@ -485,7 +496,8 @@ describe('평가 대상자 조회 테스트', () => {
         await excludeEvaluationTarget(periods[0].id, employee.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/employees/${employee.id}/evaluation-periods`,
           )
@@ -509,7 +521,8 @@ describe('평가 대상자 조회 테스트', () => {
         const nonExistentEmployeeId = '00000000-0000-0000-0000-000000000000';
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/employees/${nonExistentEmployeeId}/evaluation-periods`,
           )
@@ -527,7 +540,8 @@ describe('평가 대상자 조회 테스트', () => {
         const invalidEmployeeId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/employees/${invalidEmployeeId}/evaluation-periods`,
           )
@@ -547,7 +561,8 @@ describe('평가 대상자 조회 테스트', () => {
         await registerEvaluationTarget(period.id, employee.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/check`,
           )
@@ -567,7 +582,8 @@ describe('평가 대상자 조회 테스트', () => {
         await excludeEvaluationTarget(period.id, employee.id);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/check`,
           )
@@ -585,7 +601,8 @@ describe('평가 대상자 조회 테스트', () => {
         const employee = testData.employees[2];
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/check`,
           )
@@ -604,7 +621,8 @@ describe('평가 대상자 조회 테스트', () => {
         await excludeEvaluationTarget(period.id, employee.id);
 
         // 다시 포함
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .patch(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/include`,
           )
@@ -612,7 +630,8 @@ describe('평가 대상자 조회 테스트', () => {
           .expect(200);
 
         // When
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/${period.id}/targets/${employee.id}/check`,
           )
@@ -630,7 +649,8 @@ describe('평가 대상자 조회 테스트', () => {
         const invalidPeriodId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/${invalidPeriodId}/targets/${employee.id}/check`,
           )
@@ -643,7 +663,8 @@ describe('평가 대상자 조회 테스트', () => {
         const invalidEmployeeId = 'invalid-uuid';
 
         // When & Then
-        await request(app.getHttpServer())
+        await testSuite
+          .request()
           .get(
             `/admin/evaluation-periods/${period.id}/targets/${invalidEmployeeId}/check`,
           )

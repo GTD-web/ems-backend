@@ -1,4 +1,3 @@
-import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
@@ -90,7 +89,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
       maxSelfEvaluationRate: 120,
     };
 
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-periods')
       .send(evaluationPeriodData);
 
@@ -123,7 +123,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
     projectId: string,
     periodId: string,
   ): Promise<any> {
-    const response = await request(app.getHttpServer())
+    const response = await testSuite
+      .request()
       .post('/admin/evaluation-criteria/wbs-assignments')
       .send({
         employeeId,
@@ -203,7 +204,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         expect(countBefore).toBe(3);
 
         // When: 평가기간 WBS 할당 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/period/${periodId}`,
           )
@@ -254,7 +256,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         expect(countBefore).toBeGreaterThan(0);
 
         // When: 평가기간 WBS 할당 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/period/${periodId}`,
           )
@@ -289,7 +292,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         );
 
         // When: 첫 번째 평가기간만 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/period/${periodId1}`,
           )
@@ -314,7 +318,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         const invalidId = 'invalid-uuid-format';
 
         // When: 잘못된 UUID로 초기화 시도
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/period/${invalidId}`,
           )
@@ -331,7 +336,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
         // When: 존재하지 않는 평가기간 초기화 시도
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/period/${nonExistentId}`,
           )
@@ -351,7 +357,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
           periodId,
         );
 
-        const firstResponse = await request(app.getHttpServer())
+        const firstResponse = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/period/${periodId}`,
           )
@@ -359,7 +366,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         expect(firstResponse.status).toBe(200);
 
         // When: 이미 초기화된 평가기간을 다시 초기화 시도
-        const secondResponse = await request(app.getHttpServer())
+        const secondResponse = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/period/${periodId}`,
           )
@@ -399,7 +407,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         expect(countBefore).toBe(2);
 
         // When: 프로젝트 WBS 할당 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/project/${projectId}/period/${periodId}`,
           )
@@ -455,7 +464,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         );
 
         // When: 프로젝트 1만 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/project/${project1.id}/period/${periodId}`,
           )
@@ -500,7 +510,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         );
 
         // When: 첫 번째 평가기간의 프로젝트만 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/project/${projectId}/period/${periodId1}`,
           )
@@ -532,7 +543,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         const periodId = await createEvaluationPeriod('in_progress');
 
         // When: 잘못된 UUID로 초기화 시도
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/project/${invalidId}/period/${periodId}`,
           )
@@ -572,7 +584,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         expect(countBefore).toBe(2);
 
         // When: 직원 WBS 할당 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/employee/${employeeId}/period/${periodId}`,
           )
@@ -612,7 +625,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         );
 
         // When: 직원 1만 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/employee/${employee1.id}/period/${periodId}`,
           )
@@ -657,7 +671,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         );
 
         // When: 첫 번째 평가기간의 직원만 초기화
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/employee/${employeeId}/period/${periodId1}`,
           )
@@ -689,7 +704,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
         const periodId = await createEvaluationPeriod('in_progress');
 
         // When: 잘못된 UUID로 초기화 시도
-        const response = await request(app.getHttpServer())
+        const response = await testSuite
+          .request()
           .delete(
             `/admin/evaluation-criteria/wbs-assignments/employee/${invalidId}/period/${periodId}`,
           )
@@ -720,7 +736,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
       expect(criteriaBeforeReset.length).toBeGreaterThan(0);
 
       // When: 평가기간 초기화
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/period/${periodId}`)
         .send({ resetBy: uuidv4() });
 
@@ -753,13 +770,15 @@ describe('[DELETE] WBS 할당 초기화', () => {
       );
 
       // When: 평가기간 초기화
-      const resetResponse = await request(app.getHttpServer())
+      const resetResponse = await testSuite
+        .request()
         .delete(`/admin/evaluation-criteria/wbs-assignments/period/${periodId}`)
         .send({ resetBy: uuidv4() });
       expect(resetResponse.status).toBe(200);
 
       // Then: 목록 조회 시 빈 결과
-      const listResponse = await request(app.getHttpServer())
+      const listResponse = await testSuite
+        .request()
         .get('/admin/evaluation-criteria/wbs-assignments')
         .query({ periodId });
 
@@ -806,7 +825,8 @@ describe('[DELETE] WBS 할당 초기화', () => {
       );
 
       // When: 프로젝트 1만 초기화
-      const response = await request(app.getHttpServer())
+      const response = await testSuite
+        .request()
         .delete(
           `/admin/evaluation-criteria/wbs-assignments/project/${project1.id}/period/${periodId}`,
         )
