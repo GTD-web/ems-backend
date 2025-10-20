@@ -39,3 +39,20 @@ export interface GetUserWithRolesQuery {
 export interface GetUserWithRolesResult {
   user: AuthenticatedUserInfo | null;
 }
+
+/**
+ * 로그인 명령
+ */
+export interface LoginCommand {
+  email: string;
+  password: string;
+}
+
+/**
+ * 로그인 결과
+ */
+export interface LoginResult {
+  user: AuthenticatedUserInfo;
+  accessToken: string;
+  refreshToken: string;
+}

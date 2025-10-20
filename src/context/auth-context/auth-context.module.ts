@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
 import { CommonDomainModule } from '@domain/common/common-domain.module';
 import { AuthService } from './auth.service';
-import { VerifyAndSyncUserHandler, GetUserWithRolesHandler } from './handlers';
+import {
+  VerifyAndSyncUserHandler,
+  GetUserWithRolesHandler,
+  LoginHandler,
+} from './handlers';
 
 /**
  * 인증 컨텍스트 모듈
@@ -11,7 +15,12 @@ import { VerifyAndSyncUserHandler, GetUserWithRolesHandler } from './handlers';
  */
 @Module({
   imports: [CommonDomainModule],
-  providers: [AuthService, VerifyAndSyncUserHandler, GetUserWithRolesHandler],
+  providers: [
+    AuthService,
+    VerifyAndSyncUserHandler,
+    GetUserWithRolesHandler,
+    LoginHandler,
+  ],
   exports: [AuthService],
 })
 export class AuthContextModule {}

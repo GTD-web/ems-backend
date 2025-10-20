@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { VerifyAndSyncUserHandler } from './handlers/verify-and-sync-user.handler';
 import { GetUserWithRolesHandler } from './handlers/get-user-with-roles.handler';
+import { LoginHandler } from './handlers/login.handler';
 import {
   VerifyAndSyncUserCommand,
   VerifyAndSyncUserResult,
   GetUserWithRolesQuery,
   GetUserWithRolesResult,
+  LoginCommand,
+  LoginResult,
 } from './interfaces/auth-context.interface';
 
 /**
@@ -19,6 +22,7 @@ export class AuthService {
   constructor(
     private readonly verifyAndSyncUserHandler: VerifyAndSyncUserHandler,
     private readonly getUserWithRolesHandler: GetUserWithRolesHandler,
+    private readonly loginHandler: LoginHandler,
   ) {}
 
   /**
@@ -45,5 +49,17 @@ export class AuthService {
   ): Promise<GetUserWithRolesResult> {
     const query: GetUserWithRolesQuery = { employeeNumber };
     return this.getUserWithRolesHandler.execute(query);
+  }
+
+  /**
+   * 이메일과 패스워드로 로그인
+   *
+   * @param email - 이메일
+   * @param password - 패스워드
+   * @returns 사용자 정보 및 토큰
+   */
+  async 로그인한다(email: string, password: string): Promise<LoginResult> {
+    const command: LoginCommand = { email, password };
+    return this.loginHandler.execute(command);
   }
 }
