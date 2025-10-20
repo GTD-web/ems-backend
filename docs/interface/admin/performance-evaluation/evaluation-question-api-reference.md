@@ -3,6 +3,8 @@
 > 평가 질문 관리 API
 >
 > Base Path: `/admin/performance-evaluation/evaluation-questions`
+>
+> **인증 필수:** 모든 API 요청에 JWT 토큰이 필요합니다.
 
 ---
 

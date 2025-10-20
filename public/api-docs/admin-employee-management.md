@@ -3,6 +3,8 @@
 > 관리자용 직원 관리 API
 >
 > Base Path: `/admin/employees`
+>
+> **인증 필수:** 모든 API 요청에 JWT 토큰이 필요합니다.
 
 ---
 
@@ -22,7 +24,7 @@
 ### 부서 하이라키 구조 조회
 
 ```typescript
-GET /admin/employees/departments/hierarchy
+GET / admin / employees / departments / hierarchy;
 ```
 
 전체 부서 구조를 하이라키(계층) 형태로 반환합니다.
@@ -169,7 +171,7 @@ EmployeeDto[]
 ### 제외된 직원 목록 조회
 
 ```typescript
-GET /admin/employees/excluded
+GET / admin / employees / excluded;
 ```
 
 조회에서 제외된 직원 목록을 조회합니다. `isExcludedFromList=true`인 직원들만 반환합니다.

@@ -3,6 +3,8 @@
 > 평가 수정 가능 상태 관리 API
 >
 > Base Path: `/admin/performance-evaluation/evaluation-editable-status`
+>
+> **인증 필수:** 모든 API 요청에 JWT 토큰이 필요합니다.
 
 ---
 
@@ -147,33 +149,63 @@ const mappingId = '550e8400-e29b-41d4-a716-446655440000';
 // 1단계: 자기평가만 수정 가능
 await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=self&isEditable=true`,
-  { method: 'PATCH', headers: { Authorization: 'Bearer YOUR_JWT_TOKEN' } },
+  {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 
 // 2단계: 자기평가 잠금, 1차평가 수정 가능
 await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=self&isEditable=false`,
-  { method: 'PATCH', headers: { Authorization: 'Bearer YOUR_JWT_TOKEN' } },
+  {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=primary&isEditable=true`,
-  { method: 'PATCH', headers: { Authorization: 'Bearer YOUR_JWT_TOKEN' } },
+  {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 
 // 3단계: 1차평가 잠금, 2차평가 수정 가능
 await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=primary&isEditable=false`,
-  { method: 'PATCH', headers: { Authorization: 'Bearer YOUR_JWT_TOKEN' } },
+  {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=secondary&isEditable=true`,
-  { method: 'PATCH', headers: { Authorization: 'Bearer YOUR_JWT_TOKEN' } },
+  {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 
 // 4단계: 평가 종료, 모든 평가 잠금
 await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=all&isEditable=false`,
-  { method: 'PATCH', headers: { Authorization: 'Bearer YOUR_JWT_TOKEN' } },
+  {
+    method: 'PATCH',
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 ```
 

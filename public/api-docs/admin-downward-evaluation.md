@@ -3,6 +3,8 @@
 > 하향평가 관리 API
 >
 > Base Path: `/admin/performance-evaluation/downward-evaluations`
+>
+> **인증 필수:** 모든 API 요청에 JWT 토큰이 필요합니다.
 
 ---
 
@@ -217,11 +219,7 @@ PUT /admin/performance-evaluation/downward-evaluations/:id/submit
 
 **Request Body:**
 
-```typescript
-interface SubmitDownwardEvaluationDto {
-  submittedBy?: string; // 제출자 ID (선택)
-}
-```
+요청 바디 불필요 (제출자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 

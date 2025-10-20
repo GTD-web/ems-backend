@@ -3,6 +3,8 @@
 > 관리자용 대시보드 API
 >
 > Base Path: `/admin/dashboard`
+>
+> **인증 필수:** 모든 API 요청에 JWT 토큰이 필요합니다.
 
 ---
 
@@ -680,6 +682,11 @@ const employeeId = 'employee-uuid';
 
 const response = await fetch(
   `http://localhost:4000/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/status`,
+  {
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 
 const status = await response.json();
@@ -697,6 +704,11 @@ const evaluationPeriodId = 'period-uuid';
 
 const response = await fetch(
   `http://localhost:4000/admin/dashboard/${evaluationPeriodId}/employees/status`,
+  {
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 
 const allStatuses = await response.json();
@@ -734,6 +746,11 @@ const employeeId = 'employee-uuid';
 
 const response = await fetch(
   `http://localhost:4000/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
+  {
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 
 const assignedData = await response.json();
@@ -750,6 +767,11 @@ const evaluationPeriodId = 'period-uuid';
 
 const response = await fetch(
   `http://localhost:4000/admin/dashboard/${evaluationPeriodId}/final-evaluations`,
+  {
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 
 const finalEvaluations = await response.json();
@@ -765,6 +787,11 @@ const employeeId = 'employee-uuid';
 
 const response = await fetch(
   `http://localhost:4000/admin/dashboard/employees/${employeeId}/final-evaluations?startDate=2024-01-01&endDate=2024-12-31`,
+  {
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
 );
 
 const result = await response.json();

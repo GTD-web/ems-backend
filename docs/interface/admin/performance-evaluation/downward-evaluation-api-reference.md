@@ -3,6 +3,8 @@
 > 하향평가 관리 API
 >
 > Base Path: `/admin/performance-evaluation/downward-evaluations`
+>
+> **인증 필수:** 모든 API 요청에 JWT 토큰이 필요합니다.
 
 ---
 

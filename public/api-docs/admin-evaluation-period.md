@@ -3,6 +3,8 @@
 > 평가기간 관리 API
 >
 > Base Path: `/admin/evaluation-periods`
+>
+> **인증 필수:** 모든 API 요청에 JWT 토큰이 필요합니다.
 
 ---
 
@@ -35,7 +37,7 @@
 ### 활성 평가 기간 조회
 
 ```typescript
-GET /admin/evaluation-periods/active
+GET / admin / evaluation - periods / active;
 ```
 
 오직 상태가 'in-progress'인 평가 기간만 반환합니다.
@@ -88,10 +90,10 @@ GET /admin/evaluation-periods?page={number}&limit={number}
 
 **Query Parameters:**
 
-| 파라미터 | 타입   | 필수 | 설명         | 기본값 |
-| -------- | ------ | ---- | ------------ | ------ |
-| `page`   | number | X    | 페이지 번호  | `1`    |
-| `limit`  | number | X    | 페이지 크기  | `10`   |
+| 파라미터 | 타입   | 필수 | 설명        | 기본값 |
+| -------- | ------ | ---- | ----------- | ------ |
+| `page`   | number | X    | 페이지 번호 | `1`    |
+| `limit`  | number | X    | 페이지 크기 | `10`   |
 
 **Response:**
 
@@ -148,7 +150,7 @@ EvaluationPeriodDto | null;
 ### 평가 기간 생성
 
 ```typescript
-POST /admin/evaluation-periods
+POST / admin / evaluation - periods;
 ```
 
 새로운 평가 기간을 생성합니다.
@@ -900,4 +902,3 @@ const updatedPeriod = await response.json();
 **API 버전**: v1  
 **마지막 업데이트**: 2025-10-20  
 **문서 경로**: `docs/interface/admin/evaluation-period/evaluation-period-api-reference.md`
-

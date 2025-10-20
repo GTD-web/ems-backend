@@ -3,6 +3,8 @@
 > 평가 대상 관리 API
 >
 > Base Path: `/admin/evaluation-periods`
+>
+> **인증 필수:** 모든 API 요청에 JWT 토큰이 필요합니다.
 
 ---
 
