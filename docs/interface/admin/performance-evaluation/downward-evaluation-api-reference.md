@@ -40,12 +40,12 @@ POST /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/p
 
 ```typescript
 interface CreatePrimaryDownwardEvaluationDto {
-  evaluatorId?: string; // 평가자 ID (선택, 생략 시 자동 생성)
+  evaluatorId: string; // 평가자 ID (필수)
   selfEvaluationId?: string; // 자기평가 ID (선택)
   downwardEvaluationContent?: string; // 평가 내용 (선택)
   downwardEvaluationScore?: number; // 평가 점수 (선택, 양의 정수만 허용)
-  createdBy?: string; // 생성자 ID (선택)
 }
+// 참고: actionBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -96,12 +96,12 @@ POST /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/p
 
 ```typescript
 interface CreateSecondaryDownwardEvaluationDto {
-  evaluatorId?: string; // 평가자 ID (선택, 생략 시 자동 생성)
+  evaluatorId: string; // 평가자 ID (필수)
   selfEvaluationId?: string; // 자기평가 ID (선택)
   downwardEvaluationContent?: string; // 평가 내용 (선택)
   downwardEvaluationScore?: number; // 평가 점수 (선택, 양의 정수만 허용)
-  createdBy?: string; // 생성자 ID (선택)
 }
+// 참고: actionBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -141,9 +141,9 @@ PUT /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/pe
 
 ```typescript
 interface SubmitDownwardEvaluationDto {
-  evaluatorId?: string; // 평가자 ID (선택)
-  submittedBy?: string; // 제출자 ID (선택)
+  evaluatorId: string; // 평가자 ID (필수)
 }
+// 참고: submittedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -181,9 +181,9 @@ PUT /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/pe
 
 ```typescript
 interface SubmitDownwardEvaluationDto {
-  evaluatorId?: string; // 평가자 ID (선택)
-  submittedBy?: string; // 제출자 ID (선택)
+  evaluatorId: string; // 평가자 ID (필수)
 }
+// 참고: submittedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -217,11 +217,7 @@ PUT /admin/performance-evaluation/downward-evaluations/:id/submit
 
 **Request Body:**
 
-```typescript
-interface SubmitDownwardEvaluationDto {
-  submittedBy?: string; // 제출자 ID (선택)
-}
-```
+요청 바디 불필요 (제출자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 

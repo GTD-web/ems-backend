@@ -58,9 +58,10 @@ POST / admin / performance -
 interface CreateQuestionGroupDto {
   name: string; // 그룹명 (필수, 중복 불가)
   isDefault?: boolean; // 기본 그룹 여부 (선택)
-  createdBy?: string; // 생성자 ID (선택)
 }
 ```
+
+**참고:** 생성자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -102,9 +103,10 @@ PATCH /admin/performance-evaluation/evaluation-questions/question-groups/:id
 interface UpdateQuestionGroupDto {
   name?: string; // 그룹명 (선택)
   isDefault?: boolean; // 기본 그룹 여부 (선택)
-  updatedBy?: string; // 수정자 ID (선택)
 }
 ```
+
+**참고:** 수정자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -135,6 +137,10 @@ DELETE /admin/performance-evaluation/evaluation-questions/question-groups/:id
 | 파라미터 | 타입          | 필수 | 설명         |
 | -------- | ------------- | ---- | ------------ |
 | `id`     | string (UUID) | O    | 질문 그룹 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (삭제자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -253,9 +259,10 @@ interface CreateEvaluationQuestionDto {
   maxScore?: number; // 최대 점수 (선택, 기본값: 5)
   groupId?: string; // 질문 그룹 ID (선택)
   displayOrder?: number; // 표시 순서 (선택, 기본값: 0)
-  createdBy?: string; // 생성자 ID (선택)
 }
 ```
+
+**참고:** 생성자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -293,9 +300,10 @@ interface UpdateEvaluationQuestionDto {
   text?: string; // 질문 내용 (선택)
   minScore?: number; // 최소 점수 (선택)
   maxScore?: number; // 최대 점수 (선택)
-  updatedBy?: string; // 수정자 ID (선택)
 }
 ```
+
+**참고:** 수정자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -325,6 +333,10 @@ DELETE /admin/performance-evaluation/evaluation-questions/:id
 | 파라미터 | 타입          | 필수 | 설명         |
 | -------- | ------------- | ---- | ------------ |
 | `id`     | string (UUID) | O    | 평가 질문 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (삭제자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -413,6 +425,10 @@ POST /admin/performance-evaluation/evaluation-questions/:id/copy
 | -------- | ------------- | ---- | ------------ |
 | `id`     | string (UUID) | O    | 평가 질문 ID |
 
+**Request Body:**
+
+요청 바디 불필요 (복사자 정보는 JWT 토큰에서 자동으로 추출됩니다)
+
 **Response:**
 
 ```typescript
@@ -449,9 +465,10 @@ interface AddQuestionToGroupDto {
   groupId: string; // 질문 그룹 ID (필수)
   questionId: string; // 평가 질문 ID (필수)
   displayOrder?: number; // 표시 순서 (선택, 기본값: 0)
-  createdBy?: string; // 생성자 ID (선택)
 }
 ```
+
+**참고:** 생성자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -488,9 +505,10 @@ interface AddMultipleQuestionsToGroupDto {
   groupId: string; // 질문 그룹 ID (필수)
   questionIds: string[]; // 평가 질문 ID 목록 (필수, 최소 1개)
   startDisplayOrder?: number; // 시작 표시 순서 (선택, 기본값: 0)
-  createdBy?: string; // 생성자 ID (선택)
 }
 ```
+
+**참고:** 생성자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -532,9 +550,10 @@ PATCH / admin / performance -
 interface ReorderGroupQuestionsDto {
   groupId: string; // 질문 그룹 ID (필수)
   questionIds: string[]; // 정렬된 평가 질문 ID 목록 (필수, 순서대로)
-  updatedBy?: string; // 수정자 ID (선택)
 }
 ```
+
+**참고:** 수정자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -565,6 +584,10 @@ DELETE /admin/performance-evaluation/evaluation-questions/question-group-mapping
 | ----------- | ------------- | ---- | ------- |
 | `mappingId` | string (UUID) | O    | 매핑 ID |
 
+**Request Body:**
+
+요청 바디 불필요 (삭제자 정보는 JWT 토큰에서 자동으로 추출됩니다)
+
 **Response:**
 
 ```typescript
@@ -592,6 +615,10 @@ PATCH /admin/performance-evaluation/evaluation-questions/question-group-mappings
 | 파라미터    | 타입          | 필수 | 설명    |
 | ----------- | ------------- | ---- | ------- |
 | `mappingId` | string (UUID) | O    | 매핑 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (수정자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -621,6 +648,10 @@ PATCH /admin/performance-evaluation/evaluation-questions/question-group-mappings
 | 파라미터    | 타입          | 필수 | 설명    |
 | ----------- | ------------- | ---- | ------- |
 | `mappingId` | string (UUID) | O    | 매핑 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (수정자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -714,11 +745,13 @@ const response1 = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-groups',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       name: '2024년 상반기 평가 질문',
       isDefault: false,
-      createdBy: 'admin-user-id',
     }),
   },
 );
@@ -728,7 +761,10 @@ const response2 = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-groups',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       name: '기본 평가 질문 그룹',
       isDefault: true, // 기본 그룹으로 설정
@@ -744,7 +780,10 @@ const response = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       text: '업무 수행 능력이 우수합니까?',
       minScore: 1,
@@ -768,7 +807,10 @@ const response = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-group-mappings/bulk',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       groupId: groupId,
       questionIds: ['question-uuid-1', 'question-uuid-2', 'question-uuid-3'],
@@ -792,7 +834,10 @@ const response = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-group-mappings/reorder',
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       groupId: groupId,
       questionIds: [
@@ -829,8 +874,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-questions/${questionId}/copy`,
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 
@@ -848,8 +894,9 @@ await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-group-mappings/${mappingId}/move-up`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 
@@ -858,8 +905,9 @@ await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-group-mappings/${mappingId}/move-down`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 ```

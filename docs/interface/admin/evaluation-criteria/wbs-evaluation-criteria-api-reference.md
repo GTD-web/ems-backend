@@ -172,8 +172,8 @@ WBS 항목의 평가기준을 저장합니다 (Upsert: wbsItemId 기준으로 �
 interface UpsertWbsEvaluationCriteriaBodyDto {
   criteria: string; // 평가기준 내용
   weight?: number; // 가중치
-  actionBy?: string; // 처리자 ID (숨김 필드, 자동 설정)
 }
+// 참고: actionBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **동작 방식:**

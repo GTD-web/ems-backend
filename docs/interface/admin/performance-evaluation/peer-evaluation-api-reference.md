@@ -181,11 +181,7 @@ PUT /admin/performance-evaluation/peer-evaluations/:id/submit
 
 **Request Body:**
 
-```typescript
-interface SubmitPeerEvaluationDto {
-  submittedBy?: string; // 제출자 ID (선택)
-}
-```
+요청 바디 불필요 (제출자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -512,10 +508,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/peer-evaluations/${evaluationId}/submit`,
   {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      submittedBy: 'evaluator-user-id', // 선택사항
-    }),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
   },
 );
 

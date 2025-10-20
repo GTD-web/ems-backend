@@ -29,9 +29,9 @@ GET /admin/evaluation-criteria/wbs-evaluation-criteria?wbsItemId={uuid}&criteria
 
 **Query Parameters:**
 
-| 파라미터        | 타입          | 필수 | 설명                      |
-| --------------- | ------------- | ---- | ------------------------- |
-| `wbsItemId`     | string (UUID) | X    | WBS 항목 ID               |
+| 파라미터         | 타입          | 필수 | 설명                        |
+| ---------------- | ------------- | ---- | --------------------------- |
+| `wbsItemId`      | string (UUID) | X    | WBS 항목 ID                 |
 | `criteriaSearch` | string        | X    | 평가기준 검색어 (부분 일치) |
 | `criteriaExact`  | string        | X    | 평가기준 검색어 (완전 일치) |
 
@@ -88,7 +88,7 @@ interface WbsEvaluationCriteriaDetailDto {
   deletedAt?: Date; // 삭제일시
   createdBy?: string; // 생성자 ID
   updatedBy?: string; // 수정자 ID
-  
+
   // 조인된 정보
   wbsItem?: {
     id: string;
@@ -99,7 +99,7 @@ interface WbsEvaluationCriteriaDetailDto {
 }
 
 // 응답
-WbsEvaluationCriteriaDetailDto | null
+WbsEvaluationCriteriaDetailDto | null;
 ```
 
 **Status Codes:**
@@ -140,7 +140,7 @@ interface WbsItemEvaluationCriteriaResponseDto {
 }
 
 // 응답
-WbsItemEvaluationCriteriaResponseDto
+WbsItemEvaluationCriteriaResponseDto;
 ```
 
 **Status Codes:**
@@ -172,8 +172,8 @@ WBS 항목의 평가기준을 저장합니다 (Upsert: wbsItemId 기준으로 �
 interface UpsertWbsEvaluationCriteriaBodyDto {
   criteria: string; // 평가기준 내용
   weight?: number; // 가중치
-  actionBy?: string; // 처리자 ID (숨김 필드, 자동 설정)
 }
+// 참고: actionBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **동작 방식:**
@@ -196,7 +196,7 @@ interface WbsEvaluationCriteriaDto {
 }
 
 // 응답
-WbsEvaluationCriteriaDto
+WbsEvaluationCriteriaDto;
 ```
 
 **Status Codes:**
@@ -230,7 +230,7 @@ interface DeleteWbsEvaluationCriteriaResponseDto {
 }
 
 // 응답
-DeleteWbsEvaluationCriteriaResponseDto
+DeleteWbsEvaluationCriteriaResponseDto;
 ```
 
 **Status Codes:**
@@ -263,7 +263,7 @@ interface DeleteWbsItemEvaluationCriteriaResponseDto {
 }
 
 // 응답
-DeleteWbsItemEvaluationCriteriaResponseDto
+DeleteWbsItemEvaluationCriteriaResponseDto;
 ```
 
 **Status Codes:**
@@ -391,4 +391,3 @@ const result = await response.json();
 **API 버전**: v1  
 **마지막 업데이트**: 2025-10-20  
 **문서 경로**: `docs/interface/admin/evaluation-criteria/wbs-evaluation-criteria-api-reference.md`
-

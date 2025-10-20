@@ -33,10 +33,10 @@ POST /admin/evaluation-periods/:evaluationPeriodId/targets/:employeeId
 
 **Path Parameters:**
 
-| 파라미터               | 타입          | 필수 | 설명        |
-| ---------------------- | ------------- | ---- | ----------- |
-| `evaluationPeriodId`   | string (UUID) | O    | 평가기간 ID |
-| `employeeId`           | string (UUID) | O    | 직원 ID     |
+| 파라미터             | 타입          | 필수 | 설명        |
+| -------------------- | ------------- | ---- | ----------- |
+| `evaluationPeriodId` | string (UUID) | O    | 평가기간 ID |
+| `employeeId`         | string (UUID) | O    | 직원 ID     |
 
 **Request Body:**
 
@@ -95,8 +95,8 @@ POST /admin/evaluation-periods/:evaluationPeriodId/targets/bulk
 ```typescript
 interface RegisterBulkEvaluationTargetsDto {
   employeeIds: string[]; // 직원 ID 배열 (최소 1개 이상)
-  createdBy: string; // 생성자 ID (필수)
 }
+// 참고: createdBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -134,8 +134,8 @@ PATCH /admin/evaluation-periods/:evaluationPeriodId/targets/:employeeId/exclude
 ```typescript
 interface ExcludeEvaluationTargetDto {
   excludeReason: string; // 제외 사유 (필수)
-  excludedBy: string; // 제외 처리자 ID (필수)
 }
+// 참고: excludedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -208,9 +208,9 @@ GET /admin/evaluation-periods/:evaluationPeriodId/targets?includeExcluded={boole
 
 **Query Parameters:**
 
-| 파라미터          | 타입    | 필수 | 설명                           | 기본값  |
-| ----------------- | ------- | ---- | ------------------------------ | ------- |
-| `includeExcluded` | boolean | X    | 제외된 대상자 포함 여부        | `false` |
+| 파라미터          | 타입    | 필수 | 설명                    | 기본값  |
+| ----------------- | ------- | ---- | ----------------------- | ------- |
+| `includeExcluded` | boolean | X    | 제외된 대상자 포함 여부 | `false` |
 
 **Response:**
 
@@ -600,4 +600,3 @@ const result = await response.json();
 **API 버전**: v1  
 **마지막 업데이트**: 2025-10-20  
 **문서 경로**: `docs/interface/admin/evaluation-period/evaluation-target-api-reference.md`
-

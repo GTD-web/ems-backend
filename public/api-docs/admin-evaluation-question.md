@@ -9,6 +9,7 @@
 ## 목차
 
 ### 질문 그룹 관리
+
 - [질문 그룹 생성](#질문-그룹-생성)
 - [질문 그룹 수정](#질문-그룹-수정)
 - [질문 그룹 삭제](#질문-그룹-삭제)
@@ -17,6 +18,7 @@
 - [질문 그룹 조회](#질문-그룹-조회)
 
 ### 평가 질문 관리
+
 - [평가 질문 생성](#평가-질문-생성)
 - [평가 질문 수정](#평가-질문-수정)
 - [평가 질문 삭제](#평가-질문-삭제)
@@ -25,6 +27,7 @@
 - [평가 질문 복사](#평가-질문-복사)
 
 ### 질문-그룹 매핑 관리
+
 - [그룹에 질문 추가](#그룹에-질문-추가)
 - [그룹에 여러 질문 추가](#그룹에-여러-질문-추가)
 - [그룹 내 질문 순서 재정의](#그룹-내-질문-순서-재정의)
@@ -41,7 +44,10 @@
 ### 질문 그룹 생성
 
 ```typescript
-POST /admin/performance-evaluation/evaluation-questions/question-groups
+POST / admin / performance -
+  evaluation / evaluation -
+  questions / question -
+  groups;
 ```
 
 평가 질문을 그룹으로 관리하기 위한 질문 그룹을 생성합니다.
@@ -52,9 +58,10 @@ POST /admin/performance-evaluation/evaluation-questions/question-groups
 interface CreateQuestionGroupDto {
   name: string; // 그룹명 (필수, 중복 불가)
   isDefault?: boolean; // 기본 그룹 여부 (선택)
-  createdBy?: string; // 생성자 ID (선택)
 }
 ```
+
+**참고:** 생성자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -96,9 +103,10 @@ PATCH /admin/performance-evaluation/evaluation-questions/question-groups/:id
 interface UpdateQuestionGroupDto {
   name?: string; // 그룹명 (선택)
   isDefault?: boolean; // 기본 그룹 여부 (선택)
-  updatedBy?: string; // 수정자 ID (선택)
 }
 ```
+
+**참고:** 수정자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -130,6 +138,10 @@ DELETE /admin/performance-evaluation/evaluation-questions/question-groups/:id
 | -------- | ------------- | ---- | ------------ |
 | `id`     | string (UUID) | O    | 질문 그룹 ID |
 
+**Request Body:**
+
+요청 바디 불필요 (삭제자 정보는 JWT 토큰에서 자동으로 추출됩니다)
+
 **Response:**
 
 ```typescript
@@ -148,7 +160,10 @@ void; // 응답 본문 없음 (204 No Content)
 ### 질문 그룹 목록 조회
 
 ```typescript
-GET /admin/performance-evaluation/evaluation-questions/question-groups
+GET / admin / performance -
+  evaluation / evaluation -
+  questions / question -
+  groups;
 ```
 
 모든 질문 그룹 목록을 조회합니다.
@@ -230,7 +245,7 @@ QuestionGroupResponseDto;
 ### 평가 질문 생성
 
 ```typescript
-POST /admin/performance-evaluation/evaluation-questions
+POST / admin / performance - evaluation / evaluation - questions;
 ```
 
 새로운 평가 질문을 생성합니다.
@@ -244,9 +259,10 @@ interface CreateEvaluationQuestionDto {
   maxScore?: number; // 최대 점수 (선택, 기본값: 5)
   groupId?: string; // 질문 그룹 ID (선택)
   displayOrder?: number; // 표시 순서 (선택, 기본값: 0)
-  createdBy?: string; // 생성자 ID (선택)
 }
 ```
+
+**참고:** 생성자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -273,8 +289,8 @@ PATCH /admin/performance-evaluation/evaluation-questions/:id
 
 **Path Parameters:**
 
-| 파라미터 | 타입          | 필수 | 설명       |
-| -------- | ------------- | ---- | ---------- |
+| 파라미터 | 타입          | 필수 | 설명         |
+| -------- | ------------- | ---- | ------------ |
 | `id`     | string (UUID) | O    | 평가 질문 ID |
 
 **Request Body:**
@@ -284,9 +300,10 @@ interface UpdateEvaluationQuestionDto {
   text?: string; // 질문 내용 (선택)
   minScore?: number; // 최소 점수 (선택)
   maxScore?: number; // 최대 점수 (선택)
-  updatedBy?: string; // 수정자 ID (선택)
 }
 ```
+
+**참고:** 수정자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -316,6 +333,10 @@ DELETE /admin/performance-evaluation/evaluation-questions/:id
 | 파라미터 | 타입          | 필수 | 설명         |
 | -------- | ------------- | ---- | ------------ |
 | `id`     | string (UUID) | O    | 평가 질문 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (삭제자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -372,7 +393,7 @@ EvaluationQuestionResponseDto;
 ### 평가 질문 목록 조회
 
 ```typescript
-GET /admin/performance-evaluation/evaluation-questions
+GET / admin / performance - evaluation / evaluation - questions;
 ```
 
 모든 평가 질문 목록을 조회합니다.
@@ -404,6 +425,10 @@ POST /admin/performance-evaluation/evaluation-questions/:id/copy
 | -------- | ------------- | ---- | ------------ |
 | `id`     | string (UUID) | O    | 평가 질문 ID |
 
+**Request Body:**
+
+요청 바디 불필요 (복사자 정보는 JWT 토큰에서 자동으로 추출됩니다)
+
 **Response:**
 
 ```typescript
@@ -424,7 +449,11 @@ SuccessResponseDto; // 복사된 새 질문의 ID 반환
 ### 그룹에 질문 추가
 
 ```typescript
-POST /admin/performance-evaluation/evaluation-questions/question-group-mappings
+POST / admin / performance -
+  evaluation / evaluation -
+  questions / question -
+  group -
+  mappings;
 ```
 
 질문 그룹에 평가 질문을 추가합니다.
@@ -436,9 +465,10 @@ interface AddQuestionToGroupDto {
   groupId: string; // 질문 그룹 ID (필수)
   questionId: string; // 평가 질문 ID (필수)
   displayOrder?: number; // 표시 순서 (선택, 기본값: 0)
-  createdBy?: string; // 생성자 ID (선택)
 }
 ```
+
+**참고:** 생성자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -459,7 +489,11 @@ SuccessResponseDto;
 ### 그룹에 여러 질문 추가
 
 ```typescript
-POST /admin/performance-evaluation/evaluation-questions/question-group-mappings/bulk
+POST / admin / performance -
+  evaluation / evaluation -
+  questions / question -
+  group -
+  mappings / bulk;
 ```
 
 질문 그룹에 여러 평가 질문을 한 번에 추가합니다.
@@ -471,9 +505,10 @@ interface AddMultipleQuestionsToGroupDto {
   groupId: string; // 질문 그룹 ID (필수)
   questionIds: string[]; // 평가 질문 ID 목록 (필수, 최소 1개)
   startDisplayOrder?: number; // 시작 표시 순서 (선택, 기본값: 0)
-  createdBy?: string; // 생성자 ID (선택)
 }
 ```
+
+**참고:** 생성자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -500,7 +535,11 @@ BatchSuccessResponseDto;
 ### 그룹 내 질문 순서 재정의
 
 ```typescript
-PATCH /admin/performance-evaluation/evaluation-questions/question-group-mappings/reorder
+PATCH / admin / performance -
+  evaluation / evaluation -
+  questions / question -
+  group -
+  mappings / reorder;
 ```
 
 질문 그룹 내 질문들의 표시 순서를 재정의합니다.
@@ -511,9 +550,10 @@ PATCH /admin/performance-evaluation/evaluation-questions/question-group-mappings
 interface ReorderGroupQuestionsDto {
   groupId: string; // 질문 그룹 ID (필수)
   questionIds: string[]; // 정렬된 평가 질문 ID 목록 (필수, 순서대로)
-  updatedBy?: string; // 수정자 ID (선택)
 }
 ```
+
+**참고:** 수정자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -544,6 +584,10 @@ DELETE /admin/performance-evaluation/evaluation-questions/question-group-mapping
 | ----------- | ------------- | ---- | ------- |
 | `mappingId` | string (UUID) | O    | 매핑 ID |
 
+**Request Body:**
+
+요청 바디 불필요 (삭제자 정보는 JWT 토큰에서 자동으로 추출됩니다)
+
 **Response:**
 
 ```typescript
@@ -571,6 +615,10 @@ PATCH /admin/performance-evaluation/evaluation-questions/question-group-mappings
 | 파라미터    | 타입          | 필수 | 설명    |
 | ----------- | ------------- | ---- | ------- |
 | `mappingId` | string (UUID) | O    | 매핑 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (수정자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -600,6 +648,10 @@ PATCH /admin/performance-evaluation/evaluation-questions/question-group-mappings
 | 파라미터    | 타입          | 필수 | 설명    |
 | ----------- | ------------- | ---- | ------- |
 | `mappingId` | string (UUID) | O    | 매핑 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (수정자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -693,11 +745,13 @@ const response1 = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-groups',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       name: '2024년 상반기 평가 질문',
       isDefault: false,
-      createdBy: 'admin-user-id',
     }),
   },
 );
@@ -707,7 +761,10 @@ const response2 = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-groups',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       name: '기본 평가 질문 그룹',
       isDefault: true, // 기본 그룹으로 설정
@@ -723,7 +780,10 @@ const response = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       text: '업무 수행 능력이 우수합니까?',
       minScore: 1,
@@ -747,14 +807,13 @@ const response = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-group-mappings/bulk',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       groupId: groupId,
-      questionIds: [
-        'question-uuid-1',
-        'question-uuid-2',
-        'question-uuid-3',
-      ],
+      questionIds: ['question-uuid-1', 'question-uuid-2', 'question-uuid-3'],
       startDisplayOrder: 0, // 0부터 시작
     }),
   },
@@ -775,7 +834,10 @@ const response = await fetch(
   'http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-group-mappings/reorder',
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
     body: JSON.stringify({
       groupId: groupId,
       questionIds: [
@@ -812,8 +874,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-questions/${questionId}/copy`,
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 
@@ -831,8 +894,9 @@ await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-group-mappings/${mappingId}/move-up`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 
@@ -841,8 +905,9 @@ await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-questions/question-group-mappings/${mappingId}/move-down`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 ```
@@ -869,7 +934,7 @@ await fetch(
 
 - **매핑**: 질문과 그룹의 다대다 관계를 나타냄
 - **표시 순서**: `displayOrder` 필드로 그룹 내 질문의 표시 순서 관리
-- **순서 조정**: 
+- **순서 조정**:
   - `move-up`: 한 단계 위로 (displayOrder 감소)
   - `move-down`: 한 단계 아래로 (displayOrder 증가)
   - `reorder`: 전체 순서를 한 번에 재정의
@@ -900,4 +965,3 @@ await fetch(
 **API 버전**: v1  
 **마지막 업데이트**: 2025-10-20  
 **문서 경로**: `docs/interface/admin/performance-evaluation/evaluation-question-api-reference.md`
-

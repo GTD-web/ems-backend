@@ -27,8 +27,8 @@ GET /admin/evaluation-criteria/evaluation-lines/evaluator/:evaluatorId/employees
 
 **Path Parameters:**
 
-| 파라미터      | 타입          | 필수 | 설명     |
-| ------------- | ------------- | ---- | -------- |
+| 파라미터      | 타입          | 필수 | 설명      |
+| ------------- | ------------- | ---- | --------- |
 | `evaluatorId` | string (UUID) | O    | 평가자 ID |
 
 **Response:**
@@ -48,7 +48,7 @@ interface EvaluatorEmployeesResponseDto {
 }
 
 // 응답
-EvaluatorEmployeesResponseDto
+EvaluatorEmployeesResponseDto;
 ```
 
 **Status Codes:**
@@ -70,9 +70,9 @@ GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/period/:per
 
 **Path Parameters:**
 
-| 파라미터     | 타입          | 필수 | 설명       |
-| ------------ | ------------- | ---- | ---------- |
-| `employeeId` | string (UUID) | O    | 직원 ID    |
+| 파라미터     | 타입          | 필수 | 설명        |
+| ------------ | ------------- | ---- | ----------- |
+| `employeeId` | string (UUID) | O    | 직원 ID     |
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
 
 **Response:**
@@ -142,7 +142,7 @@ interface EmployeeEvaluationSettingsResponseDto {
 }
 
 // 응답
-EmployeeEvaluationSettingsResponseDto
+EmployeeEvaluationSettingsResponseDto;
 ```
 
 **Status Codes:**
@@ -175,8 +175,8 @@ POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/wbs/:wbsIt
 ```typescript
 interface ConfigurePrimaryEvaluatorDto {
   evaluatorId: string; // 1차 평가자 ID
-  createdBy?: string; // 생성자 ID (숨김 필드, 자동 설정)
 }
+// 참고: assignedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **동작 방식:**
@@ -202,7 +202,7 @@ interface ConfigureEvaluatorResponseDto {
 }
 
 // 응답
-ConfigureEvaluatorResponseDto
+ConfigureEvaluatorResponseDto;
 ```
 
 **Status Codes:**
@@ -234,8 +234,8 @@ POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/wbs/:wbsIt
 ```typescript
 interface ConfigureSecondaryEvaluatorDto {
   evaluatorId: string; // 2차 평가자 ID
-  createdBy?: string; // 생성자 ID (숨김 필드, 자동 설정)
 }
+// 참고: assignedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **동작 방식:**
@@ -261,7 +261,7 @@ interface ConfigureEvaluatorResponseDto {
 }
 
 // 응답
-ConfigureEvaluatorResponseDto
+ConfigureEvaluatorResponseDto;
 ```
 
 **Status Codes:**
@@ -365,4 +365,3 @@ const result = await response.json();
 **API 버전**: v1  
 **마지막 업데이트**: 2025-10-20  
 **문서 경로**: `docs/interface/admin/evaluation-criteria/evaluation-line-api-reference.md`
-

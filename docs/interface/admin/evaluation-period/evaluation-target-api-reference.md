@@ -95,8 +95,8 @@ POST /admin/evaluation-periods/:evaluationPeriodId/targets/bulk
 ```typescript
 interface RegisterBulkEvaluationTargetsDto {
   employeeIds: string[]; // 직원 ID 배열 (최소 1개 이상)
-  createdBy: string; // 생성자 ID (필수)
 }
+// 참고: createdBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -134,8 +134,8 @@ PATCH /admin/evaluation-periods/:evaluationPeriodId/targets/:employeeId/exclude
 ```typescript
 interface ExcludeEvaluationTargetDto {
   excludeReason: string; // 제외 사유 (필수)
-  excludedBy: string; // 제외 처리자 ID (필수)
 }
+// 참고: excludedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**

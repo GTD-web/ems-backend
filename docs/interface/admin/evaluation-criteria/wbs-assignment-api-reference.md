@@ -42,8 +42,8 @@ interface CreateWbsAssignmentDto {
   wbsItemId: string; // WBS 항목 ID (UUID)
   projectId: string; // 프로젝트 ID (UUID)
   periodId: string; // 평가기간 ID (UUID)
-  assignedBy?: string; // 할당자 ID (숨김 필드, 자동 설정)
 }
+// 참고: assignedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**

@@ -42,8 +42,8 @@ interface UpsertFinalEvaluationDto {
   jobGrade: JobGrade; // 직무등급 (필수)
   jobDetailedGrade: JobDetailedGrade; // 직무 상세등급 (필수)
   finalComments?: string; // 최종 평가 의견 (선택)
-  actionBy?: string; // 작업자 ID (선택)
 }
+// 참고: actionBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 
 enum JobGrade {
   T1 = 'T1',
@@ -94,11 +94,7 @@ POST /admin/performance-evaluation/final-evaluations/:id/confirm
 
 **Request Body:**
 
-```typescript
-interface ConfirmFinalEvaluationDto {
-  confirmedBy: string; // 확정자 ID (필수)
-}
-```
+요청 바디 불필요 (확정자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -136,11 +132,7 @@ POST /admin/performance-evaluation/final-evaluations/:id/cancel-confirmation
 
 **Request Body:**
 
-```typescript
-interface CancelConfirmationDto {
-  updatedBy: string; // 수정자 ID (필수)
-}
-```
+요청 바디 불필요 (처리자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -291,13 +283,15 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/final-evaluations/employee/${employeeId}/period/${periodId}`,
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
     body: JSON.stringify({
       evaluationGrade: 'A',
       jobGrade: 'T2',
       jobDetailedGrade: 'n',
       finalComments: '전반적으로 우수한 성과를 보였습니다.',
-      actionBy: 'admin-user-id', // 선택사항
     }),
   },
 );
@@ -318,7 +312,10 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/final-evaluations/employee/${employeeId}/period/${periodId}`,
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
     body: JSON.stringify({
       evaluationGrade: 'S',
       jobGrade: 'T3',
@@ -340,10 +337,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/final-evaluations/${evaluationId}/confirm`,
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      confirmedBy: 'admin-user-id',
-    }),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
   },
 );
 
@@ -360,10 +356,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/final-evaluations/${evaluationId}/cancel-confirmation`,
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      updatedBy: 'admin-user-id',
-    }),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
   },
 );
 

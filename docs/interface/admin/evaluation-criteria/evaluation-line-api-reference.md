@@ -175,8 +175,8 @@ POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/wbs/:wbsIt
 ```typescript
 interface ConfigurePrimaryEvaluatorDto {
   evaluatorId: string; // 1차 평가자 ID
-  createdBy?: string; // 생성자 ID (숨김 필드, 자동 설정)
 }
+// 참고: assignedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **동작 방식:**
@@ -234,8 +234,8 @@ POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/wbs/:wbsIt
 ```typescript
 interface ConfigureSecondaryEvaluatorDto {
   evaluatorId: string; // 2차 평가자 ID
-  createdBy?: string; // 생성자 ID (숨김 필드, 자동 설정)
 }
+// 참고: assignedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **동작 방식:**

@@ -25,7 +25,7 @@
 ### 동료평가 요청 (단일)
 
 ```typescript
-POST /admin/performance-evaluation/peer-evaluations/requests
+POST / admin / performance - evaluation / peer - evaluations / requests;
 ```
 
 관리자가 평가자에게 피평가자를 평가하도록 요청(할당)합니다.
@@ -67,7 +67,13 @@ PeerEvaluationResponseDto;
 ### 동료평가 요청 (한 피평가자→여러 평가자)
 
 ```typescript
-POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluatee-to-many-evaluators
+POST / admin / performance -
+  evaluation / peer -
+  evaluations / requests / bulk / one -
+  evaluatee -
+  to -
+  many -
+  evaluators;
 ```
 
 한 명의 피평가자를 여러 평가자가 평가하도록 일괄 요청합니다.
@@ -120,7 +126,13 @@ BulkPeerEvaluationRequestResponseDto;
 ### 동료평가 요청 (한 평가자→여러 피평가자)
 
 ```typescript
-POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees
+POST / admin / performance -
+  evaluation / peer -
+  evaluations / requests / bulk / one -
+  evaluator -
+  to -
+  many -
+  evaluatees;
 ```
 
 한 명의 평가자가 여러 피평가자를 평가하도록 일괄 요청합니다.
@@ -163,17 +175,13 @@ PUT /admin/performance-evaluation/peer-evaluations/:id/submit
 
 **Path Parameters:**
 
-| 파라미터 | 타입          | 필수 | 설명         |
-| -------- | ------------- | ---- | ------------ |
+| 파라미터 | 타입          | 필수 | 설명        |
+| -------- | ------------- | ---- | ----------- |
 | `id`     | string (UUID) | O    | 동료평가 ID |
 
 **Request Body:**
 
-```typescript
-interface SubmitPeerEvaluationDto {
-  submittedBy?: string; // 제출자 ID (선택)
-}
-```
+요청 바디 불필요 (제출자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -206,16 +214,17 @@ GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluatorId?evalua
 
 **Query Parameters:**
 
-| 파라미터      | 타입          | 필수 | 설명                     | 기본값 |
-| ------------- | ------------- | ---- | ------------------------ | ------ |
-| `evaluateeId` | string (UUID) | X    | 피평가자 ID로 필터링     | -      |
-| `periodId`    | string (UUID) | X    | 평가기간 ID로 필터링     | -      |
-| `projectId`   | string (UUID) | X    | 프로젝트 ID로 필터링     | -      |
-| `status`      | string        | X    | 평가 상태로 필터링       | -      |
-| `page`        | number        | X    | 페이지 번호              | `1`    |
-| `limit`       | number        | X    | 페이지 크기              | `10`   |
+| 파라미터      | 타입          | 필수 | 설명                 | 기본값 |
+| ------------- | ------------- | ---- | -------------------- | ------ |
+| `evaluateeId` | string (UUID) | X    | 피평가자 ID로 필터링 | -      |
+| `periodId`    | string (UUID) | X    | 평가기간 ID로 필터링 | -      |
+| `projectId`   | string (UUID) | X    | 프로젝트 ID로 필터링 | -      |
+| `status`      | string        | X    | 평가 상태로 필터링   | -      |
+| `page`        | number        | X    | 페이지 번호          | `1`    |
+| `limit`       | number        | X    | 페이지 크기          | `10`   |
 
 **status 가능값:**
+
 - `PENDING`: 대기 중
 - `IN_PROGRESS`: 진행 중
 - `COMPLETED`: 완료됨
@@ -318,10 +327,10 @@ GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluatorId/assign
 
 **Query Parameters:**
 
-| 파라미터           | 타입          | 필수 | 설명                        | 기본값 |
-| ------------------ | ------------- | ---- | --------------------------- | ------ |
-| `periodId`         | string (UUID) | X    | 평가기간 ID로 필터링        | -      |
-| `includeCompleted` | boolean       | X    | 완료된 평가 포함 여부       | -      |
+| 파라미터           | 타입          | 필수 | 설명                  | 기본값 |
+| ------------------ | ------------- | ---- | --------------------- | ------ |
+| `periodId`         | string (UUID) | X    | 평가기간 ID로 필터링  | -      |
+| `includeCompleted` | boolean       | X    | 완료된 평가 포함 여부 | -      |
 
 **Response:**
 
@@ -499,10 +508,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/peer-evaluations/${evaluationId}/submit`,
   {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      submittedBy: 'evaluator-user-id', // 선택사항
-    }),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
   },
 );
 
@@ -635,4 +643,3 @@ const result = await response.json();
 **API 버전**: v1  
 **마지막 업데이트**: 2025-10-20  
 **문서 경로**: `docs/interface/admin/performance-evaluation/peer-evaluation-api-reference.md`
-

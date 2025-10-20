@@ -48,8 +48,8 @@ interface CreateWbsSelfEvaluationDto {
   selfEvaluationContent?: string; // 자기평가 내용 (선택)
   selfEvaluationScore?: number; // 자기평가 점수 (선택, 0~maxSelfEvaluationRate, 기본 최대 120)
   performanceResult?: string; // 성과 실적 (선택)
-  createdBy?: string; // 생성자 ID (선택)
 }
+// 참고: actionBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -99,11 +99,7 @@ PUT /admin/performance-evaluation/wbs-self-evaluations/:id/submit
 
 **Request Body:**
 
-```typescript
-interface SubmitWbsSelfEvaluationDto {
-  submittedBy?: string; // 제출자 ID (선택)
-}
-```
+요청 바디 불필요 (제출자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -135,6 +131,10 @@ PUT /admin/performance-evaluation/wbs-self-evaluations/employee/:employeeId/peri
 | ------------ | ------------- | ---- | ----------- |
 | `employeeId` | string (UUID) | O    | 직원 ID     |
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (제출자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -170,6 +170,10 @@ PATCH /admin/performance-evaluation/wbs-self-evaluations/:id/reset
 | -------- | ------------- | ---- | ----------- |
 | `id`     | string (UUID) | O    | 자기평가 ID |
 
+**Request Body:**
+
+요청 바디 불필요 (처리자 정보는 JWT 토큰에서 자동으로 추출됩니다)
+
 **Response:**
 
 ```typescript
@@ -199,6 +203,10 @@ PATCH /admin/performance-evaluation/wbs-self-evaluations/employee/:employeeId/pe
 | ------------ | ------------- | ---- | ----------- |
 | `employeeId` | string (UUID) | O    | 직원 ID     |
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (처리자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -236,6 +244,10 @@ PUT /admin/performance-evaluation/wbs-self-evaluations/employee/:employeeId/peri
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
 | `projectId`  | string (UUID) | O    | 프로젝트 ID |
 
+**Request Body:**
+
+요청 바디 불필요 (제출자 정보는 JWT 토큰에서 자동으로 추출됩니다)
+
 **Response:**
 
 ```typescript
@@ -271,6 +283,10 @@ PATCH /admin/performance-evaluation/wbs-self-evaluations/employee/:employeeId/pe
 | `employeeId` | string (UUID) | O    | 직원 ID     |
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
 | `projectId`  | string (UUID) | O    | 프로젝트 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (처리자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -406,6 +422,10 @@ PATCH /admin/performance-evaluation/wbs-self-evaluations/:id/clear
 | -------- | ------------- | ---- | ----------- |
 | `id`     | string (UUID) | O    | 자기평가 ID |
 
+**Request Body:**
+
+요청 바디 불필요 (처리자 정보는 JWT 토큰에서 자동으로 추출됩니다)
+
 **Response:**
 
 ```typescript
@@ -435,6 +455,10 @@ PATCH /admin/performance-evaluation/wbs-self-evaluations/employee/:employeeId/pe
 | ------------ | ------------- | ---- | ----------- |
 | `employeeId` | string (UUID) | O    | 직원 ID     |
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (처리자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -471,6 +495,10 @@ PATCH /admin/performance-evaluation/wbs-self-evaluations/employee/:employeeId/pe
 | `employeeId` | string (UUID) | O    | 직원 ID     |
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
 | `projectId`  | string (UUID) | O    | 프로젝트 ID |
+
+**Request Body:**
+
+요청 바디 불필요 (처리자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 

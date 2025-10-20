@@ -37,11 +37,7 @@ PATCH /admin/performance-evaluation/evaluation-editable-status/:mappingId?evalua
 
 **Request Body:**
 
-```typescript
-interface UpdateEvaluationEditableStatusDto {
-  updatedBy?: string; // 수정자 ID (선택사항)
-}
-```
+요청 바디 불필요 (수정자 정보는 JWT 토큰에서 자동으로 추출됩니다)
 
 **Response:**
 
@@ -91,10 +87,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=self&isEditable=true`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      updatedBy: 'admin-user-id', // 선택사항
-    }),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
   },
 );
 
@@ -112,8 +107,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=primary&isEditable=true`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}), // updatedBy 생략 가능
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
   },
 );
 
@@ -131,10 +127,9 @@ const response = await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=all&isEditable=false`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      updatedBy: 'admin-user-id',
-    }),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
   },
 );
 
@@ -154,8 +149,9 @@ await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=self&isEditable=true`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 
@@ -164,16 +160,18 @@ await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=self&isEditable=false`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=primary&isEditable=true`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 
@@ -182,16 +180,18 @@ await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=primary&isEditable=false`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=secondary&isEditable=true`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 
@@ -200,8 +200,9 @@ await fetch(
   `http://localhost:4000/admin/performance-evaluation/evaluation-editable-status/${mappingId}?evaluationType=all&isEditable=false`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
   },
 );
 ```

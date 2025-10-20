@@ -29,7 +29,7 @@
 ### WBS 할당 생성
 
 ```typescript
-POST /admin/evaluation-criteria/wbs-assignments
+POST / admin / evaluation - criteria / wbs - assignments;
 ```
 
 평가기간에 직원을 WBS 항목에 할당합니다.
@@ -42,8 +42,8 @@ interface CreateWbsAssignmentDto {
   wbsItemId: string; // WBS 항목 ID (UUID)
   projectId: string; // 프로젝트 ID (UUID)
   periodId: string; // 평가기간 ID (UUID)
-  assignedBy?: string; // 할당자 ID (숨김 필드, 자동 설정)
 }
+// 참고: assignedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -63,7 +63,7 @@ interface WbsAssignmentResponseDto {
 }
 
 // 응답
-WbsAssignmentResponseDto
+WbsAssignmentResponseDto;
 ```
 
 **Status Codes:**
@@ -85,16 +85,16 @@ GET /admin/evaluation-criteria/wbs-assignments?employeeId={uuid}&wbsItemId={uuid
 
 **Query Parameters:**
 
-| 파라미터     | 타입          | 필수 | 설명              | 기본값 |
-| ------------ | ------------- | ---- | ----------------- | ------ |
-| `employeeId` | string (UUID) | X    | 직원 ID           | -      |
-| `wbsItemId`  | string (UUID) | X    | WBS 항목 ID       | -      |
-| `projectId`  | string (UUID) | X    | 프로젝트 ID       | -      |
-| `periodId`   | string (UUID) | X    | 평가기간 ID       | -      |
-| `page`       | number        | X    | 페이지 번호       | `1`    |
-| `limit`      | number        | X    | 페이지 크기       | `10`   |
-| `orderBy`    | string        | X    | 정렬 기준 필드    | -      |
-| `orderDirection` | 'ASC' \| 'DESC' | X | 정렬 방향 | -      |
+| 파라미터         | 타입            | 필수 | 설명           | 기본값 |
+| ---------------- | --------------- | ---- | -------------- | ------ |
+| `employeeId`     | string (UUID)   | X    | 직원 ID        | -      |
+| `wbsItemId`      | string (UUID)   | X    | WBS 항목 ID    | -      |
+| `projectId`      | string (UUID)   | X    | 프로젝트 ID    | -      |
+| `periodId`       | string (UUID)   | X    | 평가기간 ID    | -      |
+| `page`           | number          | X    | 페이지 번호    | `1`    |
+| `limit`          | number          | X    | 페이지 크기    | `10`   |
+| `orderBy`        | string          | X    | 정렬 기준 필드 | -      |
+| `orderDirection` | 'ASC' \| 'DESC' | X    | 정렬 방향      | -      |
 
 **Response:**
 
@@ -108,7 +108,7 @@ interface WbsAssignmentListResponseDto {
 }
 
 // 응답
-WbsAssignmentListResponseDto
+WbsAssignmentListResponseDto;
 ```
 
 **Status Codes:**
@@ -151,7 +151,7 @@ interface WbsAssignmentDetailResponseDto {
   createdAt: Date; // 생성일시
   updatedAt: Date; // 수정일시
   deletedAt?: Date; // 삭제일시
-  
+
   // 조인된 정보
   employee?: {
     id: string;
@@ -179,7 +179,7 @@ interface WbsAssignmentDetailResponseDto {
 }
 
 // 응답
-WbsAssignmentDetailResponseDto
+WbsAssignmentDetailResponseDto;
 ```
 
 **Status Codes:**
@@ -200,9 +200,9 @@ GET /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/period/:peri
 
 **Path Parameters:**
 
-| 파라미터     | 타입          | 필수 | 설명       |
-| ------------ | ------------- | ---- | ---------- |
-| `employeeId` | string (UUID) | O    | 직원 ID    |
+| 파라미터     | 타입          | 필수 | 설명        |
+| ------------ | ------------- | ---- | ----------- |
+| `employeeId` | string (UUID) | O    | 직원 ID     |
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
 
 **Response:**
@@ -222,7 +222,7 @@ interface EmployeeWbsAssignmentsResponseDto {
 }
 
 // 응답
-EmployeeWbsAssignmentsResponseDto
+EmployeeWbsAssignmentsResponseDto;
 ```
 
 **Status Codes:**
@@ -244,8 +244,8 @@ GET /admin/evaluation-criteria/wbs-assignments/project/:projectId/period/:period
 
 **Path Parameters:**
 
-| 파라미터    | 타입          | 필수 | 설명       |
-| ----------- | ------------- | ---- | ---------- |
+| 파라미터    | 타입          | 필수 | 설명        |
+| ----------- | ------------- | ---- | ----------- |
 | `projectId` | string (UUID) | O    | 프로젝트 ID |
 | `periodId`  | string (UUID) | O    | 평가기간 ID |
 
@@ -267,7 +267,7 @@ interface ProjectWbsAssignmentsResponseDto {
 }
 
 // 응답
-ProjectWbsAssignmentsResponseDto
+ProjectWbsAssignmentsResponseDto;
 ```
 
 **Status Codes:**
@@ -312,7 +312,7 @@ interface WbsItemAssignmentsResponseDto {
 }
 
 // 응답
-WbsItemAssignmentsResponseDto
+WbsItemAssignmentsResponseDto;
 ```
 
 **Status Codes:**
@@ -334,10 +334,10 @@ GET /admin/evaluation-criteria/wbs-assignments/unassigned?projectId={uuid}&perio
 
 **Query Parameters:**
 
-| 파라미터     | 타입          | 필수 | 설명                         |
-| ------------ | ------------- | ---- | ---------------------------- |
-| `projectId`  | string (UUID) | O    | 프로젝트 ID                  |
-| `periodId`   | string (UUID) | O    | 평가기간 ID                  |
+| 파라미터     | 타입          | 필수 | 설명                          |
+| ------------ | ------------- | ---- | ----------------------------- |
+| `projectId`  | string (UUID) | O    | 프로젝트 ID                   |
+| `periodId`   | string (UUID) | O    | 평가기간 ID                   |
 | `employeeId` | string (UUID) | X    | 직원 ID (특정 직원 기준 조회) |
 
 **Response:**
@@ -353,7 +353,7 @@ interface UnassignedWbsItemsResponseDto {
 }
 
 // 응답
-UnassignedWbsItemsResponseDto
+UnassignedWbsItemsResponseDto;
 ```
 
 **Status Codes:**
@@ -368,7 +368,7 @@ UnassignedWbsItemsResponseDto
 ### WBS 대량 할당
 
 ```typescript
-POST /admin/evaluation-criteria/wbs-assignments/bulk
+POST / admin / evaluation - criteria / wbs - assignments / bulk;
 ```
 
 여러 WBS 항목을 한 번에 할당합니다.
@@ -442,8 +442,8 @@ DELETE /admin/evaluation-criteria/wbs-assignments/period/:periodId/reset
 
 **Path Parameters:**
 
-| 파라미터   | 타입          | 필수 | 설명       |
-| ---------- | ------------- | ---- | ---------- |
+| 파라미터   | 타입          | 필수 | 설명        |
+| ---------- | ------------- | ---- | ----------- |
 | `periodId` | string (UUID) | O    | 평가기간 ID |
 
 **Request Body:**
@@ -479,8 +479,8 @@ DELETE /admin/evaluation-criteria/wbs-assignments/project/:projectId/period/:per
 
 **Path Parameters:**
 
-| 파라미터    | 타입          | 필수 | 설명       |
-| ----------- | ------------- | ---- | ---------- |
+| 파라미터    | 타입          | 필수 | 설명        |
+| ----------- | ------------- | ---- | ----------- |
 | `projectId` | string (UUID) | O    | 프로젝트 ID |
 | `periodId`  | string (UUID) | O    | 평가기간 ID |
 
@@ -517,9 +517,9 @@ DELETE /admin/evaluation-criteria/wbs-assignments/employee/:employeeId/period/:p
 
 **Path Parameters:**
 
-| 파라미터     | 타입          | 필수 | 설명       |
-| ------------ | ------------- | ---- | ---------- |
-| `employeeId` | string (UUID) | O    | 직원 ID    |
+| 파라미터     | 타입          | 필수 | 설명        |
+| ------------ | ------------- | ---- | ----------- |
+| `employeeId` | string (UUID) | O    | 직원 ID     |
 | `periodId`   | string (UUID) | O    | 평가기간 ID |
 
 **Request Body:**
@@ -561,8 +561,8 @@ WBS 할당의 표시 순서를 변경합니다.
 
 **Query Parameters:**
 
-| 파라미터    | 타입           | 필수 | 설명                          |
-| ----------- | -------------- | ---- | ----------------------------- |
+| 파라미터    | 타입           | 필수 | 설명                               |
+| ----------- | -------------- | ---- | ---------------------------------- |
 | `direction` | 'up' \| 'down' | O    | 이동 방향 (up: 위로, down: 아래로) |
 
 **Request Body:**
@@ -590,7 +590,7 @@ interface WbsAssignmentResponseDto {
 }
 
 // 응답
-WbsAssignmentResponseDto
+WbsAssignmentResponseDto;
 ```
 
 **Status Codes:**
@@ -707,4 +707,3 @@ const response = await fetch(
 **API 버전**: v1  
 **마지막 업데이트**: 2025-10-20  
 **문서 경로**: `docs/interface/admin/evaluation-criteria/wbs-assignment-api-reference.md`
-

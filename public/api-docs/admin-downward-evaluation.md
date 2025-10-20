@@ -30,22 +30,22 @@ POST /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/p
 
 **Path Parameters:**
 
-| 파라미터      | 타입          | 필수 | 설명          |
-| ------------- | ------------- | ---- | ------------- |
-| `evaluateeId` | string (UUID) | O    | 피평가자 ID   |
-| `periodId`    | string (UUID) | O    | 평가기간 ID   |
-| `projectId`   | string (UUID) | O    | 프로젝트 ID   |
+| 파라미터      | 타입          | 필수 | 설명        |
+| ------------- | ------------- | ---- | ----------- |
+| `evaluateeId` | string (UUID) | O    | 피평가자 ID |
+| `periodId`    | string (UUID) | O    | 평가기간 ID |
+| `projectId`   | string (UUID) | O    | 프로젝트 ID |
 
 **Request Body:**
 
 ```typescript
 interface CreatePrimaryDownwardEvaluationDto {
-  evaluatorId?: string; // 평가자 ID (선택, 생략 시 자동 생성)
+  evaluatorId: string; // 평가자 ID (필수)
   selfEvaluationId?: string; // 자기평가 ID (선택)
   downwardEvaluationContent?: string; // 평가 내용 (선택)
   downwardEvaluationScore?: number; // 평가 점수 (선택, 양의 정수만 허용)
-  createdBy?: string; // 생성자 ID (선택)
 }
+// 참고: actionBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -62,6 +62,7 @@ DownwardEvaluationResponseDto;
 ```
 
 **평가 점수 규칙:**
+
 - 양의 정수만 허용 (1 이상)
 - 음수, 0, 소수는 허용되지 않음
 
@@ -95,12 +96,12 @@ POST /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/p
 
 ```typescript
 interface CreateSecondaryDownwardEvaluationDto {
-  evaluatorId?: string; // 평가자 ID (선택, 생략 시 자동 생성)
+  evaluatorId: string; // 평가자 ID (필수)
   selfEvaluationId?: string; // 자기평가 ID (선택)
   downwardEvaluationContent?: string; // 평가 내용 (선택)
   downwardEvaluationScore?: number; // 평가 점수 (선택, 양의 정수만 허용)
-  createdBy?: string; // 생성자 ID (선택)
 }
+// 참고: actionBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -140,9 +141,9 @@ PUT /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/pe
 
 ```typescript
 interface SubmitDownwardEvaluationDto {
-  evaluatorId?: string; // 평가자 ID (선택)
-  submittedBy?: string; // 제출자 ID (선택)
+  evaluatorId: string; // 평가자 ID (필수)
 }
+// 참고: submittedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -180,9 +181,9 @@ PUT /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/pe
 
 ```typescript
 interface SubmitDownwardEvaluationDto {
-  evaluatorId?: string; // 평가자 ID (선택)
-  submittedBy?: string; // 제출자 ID (선택)
+  evaluatorId: string; // 평가자 ID (필수)
 }
+// 참고: submittedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **Response:**
@@ -210,8 +211,8 @@ PUT /admin/performance-evaluation/downward-evaluations/:id/submit
 
 **Path Parameters:**
 
-| 파라미터 | 타입          | 필수 | 설명       |
-| -------- | ------------- | ---- | ---------- |
+| 파라미터 | 타입          | 필수 | 설명        |
+| -------- | ------------- | ---- | ----------- |
 | `id`     | string (UUID) | O    | 하향평가 ID |
 
 **Request Body:**
@@ -253,17 +254,18 @@ GET /admin/performance-evaluation/downward-evaluations/evaluator/:evaluatorId?ev
 
 **Query Parameters:**
 
-| 파라미터         | 타입          | 필수 | 설명                           | 기본값 |
-| ---------------- | ------------- | ---- | ------------------------------ | ------ |
-| `evaluateeId`    | string (UUID) | X    | 피평가자 ID로 필터링           | -      |
-| `periodId`       | string (UUID) | X    | 평가기간 ID로 필터링           | -      |
-| `projectId`      | string (UUID) | X    | 프로젝트 ID로 필터링           | -      |
-| `evaluationType` | string        | X    | 평가 타입으로 필터링           | -      |
-| `isCompleted`    | boolean       | X    | 제출 완료 여부로 필터링        | -      |
-| `page`           | number        | X    | 페이지 번호                    | `1`    |
-| `limit`          | number        | X    | 페이지 크기                    | `10`   |
+| 파라미터         | 타입          | 필수 | 설명                    | 기본값 |
+| ---------------- | ------------- | ---- | ----------------------- | ------ |
+| `evaluateeId`    | string (UUID) | X    | 피평가자 ID로 필터링    | -      |
+| `periodId`       | string (UUID) | X    | 평가기간 ID로 필터링    | -      |
+| `projectId`      | string (UUID) | X    | 프로젝트 ID로 필터링    | -      |
+| `evaluationType` | string        | X    | 평가 타입으로 필터링    | -      |
+| `isCompleted`    | boolean       | X    | 제출 완료 여부로 필터링 | -      |
+| `page`           | number        | X    | 페이지 번호             | `1`    |
+| `limit`          | number        | X    | 페이지 크기             | `10`   |
 
 **evaluationType 가능값:**
+
 - `primary`: 1차평가만
 - `secondary`: 2차평가만
 
@@ -525,4 +527,3 @@ const evaluation = await response.json();
 **API 버전**: v1  
 **마지막 업데이트**: 2025-10-20  
 **문서 경로**: `docs/interface/admin/performance-evaluation/downward-evaluation-api-reference.md`
-

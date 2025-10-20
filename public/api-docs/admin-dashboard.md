@@ -191,17 +191,18 @@ EmployeeEvaluationPeriodStatusResponseDto[]; // 위 1번 API와 동일한 구조
 ### 내가 담당하는 평가 대상자 현황 조회
 
 ```typescript
-GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evaluatorId/status
+GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/status
 ```
 
-평가자가 자신이 담당하는 피평가자들의 평가 현황을 배열로 조회합니다.
+로그인한 평가자가 자신이 담당하는 피평가자들의 평가 현황을 배열로 조회합니다.
 
 **Path Parameters:**
 
 | 파라미터             | 타입          | 필수 | 설명        |
 | -------------------- | ------------- | ---- | ----------- |
 | `evaluationPeriodId` | string (UUID) | O    | 평가기간 ID |
-| `evaluatorId`        | string (UUID) | O    | 평가자 ID   |
+
+**참고:** 평가자 ID는 JWT 토큰에서 자동으로 추출됩니다.
 
 **Response:**
 
@@ -707,14 +708,19 @@ console.log(`전체 직원 수: ${allStatuses.length}`);
 
 ```typescript
 const evaluationPeriodId = 'period-uuid';
-const evaluatorId = 'evaluator-uuid';
 
 const response = await fetch(
-  `http://localhost:4000/admin/dashboard/${evaluationPeriodId}/my-evaluation-targets/${evaluatorId}/status`,
+  `http://localhost:4000/admin/dashboard/${evaluationPeriodId}/my-evaluation-targets/status`,
+  {
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
+  },
 );
 
 const myTargets = await response.json();
 // myTargets: 내가 담당하는 피평가자 목록
+// 평가자 ID는 JWT 토큰에서 자동으로 추출됩니다
 myTargets.forEach((target) => {
   console.log(`평가자 유형: ${target.myEvaluatorTypes.join(', ')}`);
 });

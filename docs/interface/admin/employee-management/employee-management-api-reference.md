@@ -225,15 +225,17 @@ PATCH /admin/employees/:id/exclude
 
 ```typescript
 interface ExcludeEmployeeFromListDto {
-  excludeReason: string; // 조회 제외 사유 (최대 500자)
-  excludedBy: string; // 제외 설정자 (숨김 필드, 자동 설정)
+  excludeReason: string; // 조회 제외 사유 (최대 500자, 필수)
 }
+
+// 참고: excludedBy는 JWT 토큰에서 자동으로 추출되어 설정됩니다.
 ```
 
 **동작 방식:**
 
 - 직원의 `isExcludedFromList`를 `true`로 설정
 - `excludeReason`, `excludedBy`, `excludedAt` 정보 저장
+- 처리자 정보(`excludedBy`)는 JWT 토큰의 인증된 사용자에서 자동으로 추출
 - 이미 제외된 직원 재제외 시 정보 업데이트 (Upsert)
 
 **Response:**
@@ -288,15 +290,15 @@ PATCH /admin/employees/:id/include
 **Request Body:**
 
 ```typescript
-interface IncludeEmployeeInListDto {
-  updatedBy: string; // 업데이트 처리자 (숨김 필드, 자동 설정)
-}
+// 요청 바디 불필요
+// 처리자 정보는 JWT 토큰에서 자동으로 추출됩니다.
 ```
 
 **동작 방식:**
 
 - 직원의 `isExcludedFromList`를 `false`로 설정
 - `excludeReason`, `excludedBy`, `excludedAt`을 `null`로 초기화
+- 처리자 정보는 JWT 토큰의 인증된 사용자에서 자동으로 추출
 - 제외되지 않은 직원에 대해서도 멱등성 보장 (정상 처리)
 
 **Response:**
@@ -492,10 +494,13 @@ const response = await fetch(
   `http://localhost:4000/admin/employees/${employeeId}/exclude`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
     body: JSON.stringify({
       excludeReason: '퇴사 예정',
-      excludedBy: 'admin-user-id',
+      // excludedBy는 JWT 토큰에서 자동으로 추출됩니다
     }),
   },
 );
@@ -511,10 +516,10 @@ const response = await fetch(
   `http://localhost:4000/admin/employees/${employeeId}/include`,
   {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      updatedBy: 'admin-user-id',
-    }),
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN', // JWT 토큰 필수
+    },
+    // 요청 바디 불필요 (처리자 정보는 JWT에서 자동 추출)
   },
 );
 const includedEmployee = await response.json();
