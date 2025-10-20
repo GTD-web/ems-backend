@@ -18,6 +18,8 @@ import { OrderDirection } from '@domain/core/evaluation-project-assignment/evalu
 
 /**
  * 프로젝트 할당 생성 DTO
+ *
+ * Note: assignedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class CreateProjectAssignmentDto {
   @ApiProperty({
@@ -40,11 +42,6 @@ export class CreateProjectAssignmentDto {
   })
   @IsUUID()
   periodId: string;
-
-  @ApiHideProperty()
-  @IsOptional()
-  @IsUUID()
-  assignedBy?: string;
 }
 
 /**
@@ -78,12 +75,12 @@ export class ChangeProjectAssignmentOrderQueryDto {
 
 /**
  * 프로젝트 할당 순서 변경 Body DTO
+ *
+ * Note: 이 DTO는 현재 빈 클래스이지만, 향후 추가 필드가 필요할 경우를 대비해 유지합니다.
+ * updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class ChangeProjectAssignmentOrderBodyDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  updatedBy?: string;
+  // 현재 필요한 필드 없음 - @CurrentUser()를 통해 updatedBy 자동 처리
 }
 
 /**

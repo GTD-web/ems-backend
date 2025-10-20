@@ -248,12 +248,12 @@ export class UpdatePeerEvaluationDto {
 
 /**
  * 동료평가 제출 DTO
+ *
+ * Note: Body가 비어있으므로 컨트롤러에서 @Body() 사용하지 않습니다.
+ * submittedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class SubmitPeerEvaluationDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  submittedBy?: string;
+  // 이 DTO는 더 이상 필드가 없습니다.
 }
 
 /**

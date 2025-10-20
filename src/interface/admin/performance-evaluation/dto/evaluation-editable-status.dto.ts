@@ -15,12 +15,12 @@ import { ToBooleanStrict } from '@interface/decorators';
 
 /**
  * 평가 수정 가능 상태 변경 요청 DTO (Body)
+ *
+ * Note: Body가 비어있으므로 컨트롤러에서 사용하지 않습니다.
+ * updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class UpdateEvaluationEditableStatusBodyDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  updatedBy?: string;
+  // 이 DTO는 더 이상 필드가 없습니다.
 }
 
 /**

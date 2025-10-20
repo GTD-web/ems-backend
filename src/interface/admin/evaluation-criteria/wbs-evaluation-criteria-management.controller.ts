@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
@@ -17,6 +17,8 @@ import {
   WbsEvaluationCriteriaFilterDto,
   WbsItemEvaluationCriteriaResponseDto,
 } from './dto/wbs-evaluation-criteria.dto';
+import { CurrentUser } from '../../decorators';
+import type { AuthenticatedUser } from '../../decorators';
 
 /**
  * WBS 평가기준 관리 컨트롤러
@@ -24,6 +26,7 @@ import {
  * WBS 평가기준 생성, 조회, 수정, 삭제 기능을 제공합니다.
  */
 @ApiTags('B-3. 관리자 - 평가 설정 - WBS 평가기준')
+@ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-criteria/wbs-evaluation-criteria')
 export class WbsEvaluationCriteriaManagementController {
   constructor(
@@ -83,9 +86,9 @@ export class WbsEvaluationCriteriaManagementController {
   async upsertWbsEvaluationCriteria(
     @Param('wbsItemId') wbsItemId: string,
     @Body() dto: UpsertWbsEvaluationCriteriaBodyDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<WbsEvaluationCriteriaDto> {
-    const actionBy = dto.actionBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
+    const actionBy = user.id;
     return await this.evaluationCriteriaManagementService.WBS_평가기준을_저장한다(
       wbsItemId,
       dto.criteria,
@@ -99,8 +102,9 @@ export class WbsEvaluationCriteriaManagementController {
   @DeleteWbsEvaluationCriteria()
   async deleteWbsEvaluationCriteria(
     @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ success: boolean }> {
-    const deletedBy = 'system'; // TODO: 실제 사용자 ID로 변경
+    const deletedBy = user.id;
     const success =
       await this.evaluationCriteriaManagementService.WBS_평가기준을_삭제한다(
         id,
@@ -115,8 +119,9 @@ export class WbsEvaluationCriteriaManagementController {
   @DeleteWbsItemEvaluationCriteria()
   async deleteWbsItemEvaluationCriteria(
     @Param('wbsItemId') wbsItemId: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ success: boolean }> {
-    const deletedBy = 'system'; // TODO: 실제 사용자 ID로 변경
+    const deletedBy = user.id;
     const success =
       await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(
         wbsItemId,

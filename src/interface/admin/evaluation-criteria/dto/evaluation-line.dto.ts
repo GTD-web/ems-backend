@@ -265,6 +265,8 @@ export class EmployeeEvaluationSettingsResponseDto {
 
 /**
  * 1차 평가자 구성 요청 DTO
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class ConfigurePrimaryEvaluatorDto {
   @ApiProperty({
@@ -274,16 +276,12 @@ export class ConfigurePrimaryEvaluatorDto {
   @IsString()
   @IsUUID()
   evaluatorId: string;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsString()
-  @IsUUID()
-  createdBy?: string;
 }
 
 /**
  * 2차 평가자 구성 요청 DTO
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class ConfigureSecondaryEvaluatorDto {
   @ApiProperty({
@@ -293,12 +291,6 @@ export class ConfigureSecondaryEvaluatorDto {
   @IsString()
   @IsUUID()
   evaluatorId: string;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsString()
-  @IsUUID()
-  createdBy?: string;
 }
 
 /**

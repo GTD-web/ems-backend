@@ -1,7 +1,8 @@
 import { Body, Controller, Param } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { CurrentUser } from '../../decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
 import {
   ConfigurePrimaryEvaluator,
   ConfigureSecondaryEvaluator,
@@ -22,6 +23,7 @@ import {
  * 평가라인 구성 및 조회 기능을 제공합니다.
  */
 @ApiTags('B-4. 관리자 - 평가 설정 - 평가라인')
+@ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-criteria/evaluation-lines')
 export class EvaluationLineManagementController {
   constructor(
@@ -70,14 +72,14 @@ export class EvaluationLineManagementController {
     @Param('wbsItemId') wbsItemId: string,
     @Param('periodId') periodId: string,
     @Body() dto: ConfigurePrimaryEvaluatorDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<ConfigureEvaluatorResponseDto> {
-    const createdBy = dto.createdBy || uuidv4();
     return await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(
       employeeId,
       wbsItemId,
       periodId,
       dto.evaluatorId,
-      createdBy,
+      user.id,
     );
   }
 
@@ -90,14 +92,14 @@ export class EvaluationLineManagementController {
     @Param('wbsItemId') wbsItemId: string,
     @Param('periodId') periodId: string,
     @Body() dto: ConfigureSecondaryEvaluatorDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<ConfigureEvaluatorResponseDto> {
-    const createdBy = dto.createdBy || uuidv4();
     return await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
       employeeId,
       wbsItemId,
       periodId,
       dto.evaluatorId,
-      createdBy,
+      user.id,
     );
   }
 }

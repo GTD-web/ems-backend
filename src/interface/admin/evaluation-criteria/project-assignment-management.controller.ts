@@ -1,5 +1,5 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { ParseId } from '../../decorators/parse-uuid.decorator';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
@@ -25,6 +25,8 @@ import {
   ProjectEmployeesResponseDto,
   UnassignedEmployeesResponseDto,
 } from './dto/project-assignment.dto';
+import { CurrentUser } from '../../decorators';
+import type { AuthenticatedUser } from '../../decorators';
 
 /**
  * 프로젝트 할당 관리 컨트롤러
@@ -32,6 +34,7 @@ import {
  * 평가기간에 직원을 프로젝트에 할당하는 기능을 제공합니다.
  */
 @ApiTags('B-1. 관리자 - 평가 설정 - 프로젝트 할당')
+@ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-criteria/project-assignments')
 export class ProjectAssignmentManagementController {
   constructor(
@@ -44,9 +47,9 @@ export class ProjectAssignmentManagementController {
   @CreateProjectAssignment()
   async createProjectAssignment(
     @Body() createDto: CreateProjectAssignmentDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<any> {
-    const assignedBy = createDto.assignedBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
+    const assignedBy = user.id;
     return await this.evaluationCriteriaManagementService.프로젝트를_할당한다(
       {
         employeeId: createDto.employeeId,
@@ -64,9 +67,9 @@ export class ProjectAssignmentManagementController {
   @CancelProjectAssignment()
   async cancelProjectAssignment(
     @Param('id') id: string,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const cancelledBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const cancelledBy = user.id;
     return await this.evaluationCriteriaManagementService.프로젝트_할당을_취소한다(
       id,
       cancelledBy,
@@ -155,10 +158,9 @@ export class ProjectAssignmentManagementController {
   @BulkCreateProjectAssignments()
   async bulkCreateProjectAssignments(
     @Body() bulkCreateDto: BulkCreateProjectAssignmentDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<any[]> {
-    // 각 할당에서 assignedBy를 추출 (첫 번째 할당의 assignedBy 사용, 없으면 임시 UUID 생성)
-    const assignedBy = bulkCreateDto.assignments[0]?.assignedBy || uuidv4();
+    const assignedBy = user.id;
 
     return await this.evaluationCriteriaManagementService.프로젝트를_대량으로_할당한다(
       bulkCreateDto.assignments.map((assignment) => ({
@@ -178,10 +180,9 @@ export class ProjectAssignmentManagementController {
   async changeProjectAssignmentOrder(
     @ParseId() id: string,
     @Query() queryDto: ChangeProjectAssignmentOrderQueryDto,
-    @Body() bodyDto: ChangeProjectAssignmentOrderBodyDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<ProjectAssignmentResponseDto> {
-    const updatedBy = bodyDto.updatedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     return await this.evaluationCriteriaManagementService.프로젝트_할당_순서를_변경한다(
       id,
       queryDto.direction,

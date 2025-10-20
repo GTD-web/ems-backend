@@ -1,8 +1,8 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
-import { ParseUUID } from '@interface/decorators/parse-uuid.decorator';
+import { ParseUUID, CurrentUser } from '@interface/decorators';
+import type { AuthenticatedUser } from '@interface/decorators';
 import {
   UpsertFinalEvaluation,
   ConfirmFinalEvaluation,
@@ -13,8 +13,6 @@ import {
 } from './decorators/final-evaluation-api.decorators';
 import {
   UpsertFinalEvaluationBodyDto,
-  ConfirmFinalEvaluationBodyDto,
-  CancelConfirmationBodyDto,
   FinalEvaluationFilterDto,
   FinalEvaluationResponseDto,
   FinalEvaluationDetailDto,
@@ -32,6 +30,7 @@ import {
  * 최종평가의 저장(생성/수정), 확정, 조회 기능을 제공합니다.
  */
 @ApiTags('C-5. 관리자 - 성과평가 - 최종평가')
+@ApiBearerAuth('Bearer')
 @Controller('admin/performance-evaluation/final-evaluations')
 export class FinalEvaluationManagementController {
   constructor(
@@ -46,8 +45,9 @@ export class FinalEvaluationManagementController {
     @ParseUUID('employeeId') employeeId: string,
     @ParseUUID('periodId') periodId: string,
     @Body() dto: UpsertFinalEvaluationBodyDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<FinalEvaluationResponseDto> {
-    const actionBy = dto.actionBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
+    const actionBy = user.id;
 
     const evaluationId =
       await this.performanceEvaluationService.최종평가를_저장한다(
@@ -72,12 +72,9 @@ export class FinalEvaluationManagementController {
   @ConfirmFinalEvaluation()
   async confirmFinalEvaluation(
     @ParseUUID('id') id: string,
-    @Body() dto: ConfirmFinalEvaluationBodyDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ message: string }> {
-    await this.performanceEvaluationService.최종평가를_확정한다(
-      id,
-      dto.confirmedBy,
-    );
+    await this.performanceEvaluationService.최종평가를_확정한다(id, user.id);
 
     return {
       message: '최종평가가 성공적으로 확정되었습니다.',
@@ -90,11 +87,11 @@ export class FinalEvaluationManagementController {
   @CancelConfirmationFinalEvaluation()
   async cancelConfirmationFinalEvaluation(
     @ParseUUID('id') id: string,
-    @Body() dto: CancelConfirmationBodyDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ message: string }> {
     await this.performanceEvaluationService.최종평가_확정을_취소한다(
       id,
-      dto.updatedBy,
+      user.id,
     );
 
     return {

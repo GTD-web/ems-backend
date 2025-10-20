@@ -1,5 +1,5 @@
 import { Body, Controller, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationPeriodManagementContextService } from '../../../context/evaluation-period-management-context/evaluation-period-management.service';
 import type {
   CreateEvaluationPeriodMinimalDto,
@@ -17,7 +17,8 @@ import type {
   UpdateSelfEvaluationSettingPermissionDto,
 } from '../../../context/evaluation-period-management-context/interfaces/evaluation-period-creation.interface';
 import type { EvaluationPeriodDto } from '../../../domain/core/evaluation-period/evaluation-period.types';
-import { ParseId } from '../../decorators/parse-uuid.decorator';
+import { ParseId, CurrentUser } from '../../decorators';
+import type { AuthenticatedUser } from '../../decorators';
 import {
   CompleteEvaluationPeriod,
   CreateEvaluationPeriod,
@@ -61,6 +62,7 @@ import {
  * 평가 관리 기능을 제공합니다.
  */
 @ApiTags('A-2. 관리자 - 평가기간')
+@ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-periods')
 // @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EvaluationPeriodManagementController {
@@ -110,9 +112,9 @@ export class EvaluationPeriodManagementController {
   @CreateEvaluationPeriod()
   async createEvaluationPeriod(
     @Body() createData: CreateEvaluationPeriodApiDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const createdBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const createdBy = user.id;
     const contextDto: CreateEvaluationPeriodMinimalDto = {
       name: createData.name,
       startDate: createData.startDate as unknown as Date,
@@ -139,9 +141,9 @@ export class EvaluationPeriodManagementController {
   @StartEvaluationPeriod()
   async startEvaluationPeriod(
     @ParseId() periodId: string,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ success: boolean }> {
-    const startedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const startedBy = user.id;
     const result =
       await this.evaluationPeriodManagementService.평가기간_시작한다(
         periodId,
@@ -158,9 +160,9 @@ export class EvaluationPeriodManagementController {
   @CompleteEvaluationPeriod()
   async completeEvaluationPeriod(
     @ParseId() periodId: string,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ success: boolean }> {
-    const completedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const completedBy = user.id;
     const result =
       await this.evaluationPeriodManagementService.평가기간_완료한다(
         periodId,
@@ -180,9 +182,9 @@ export class EvaluationPeriodManagementController {
   async updateEvaluationPeriodBasicInfo(
     @ParseId() periodId: string,
     @Body() updateData: UpdateEvaluationPeriodBasicApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     const contextDto: UpdateEvaluationPeriodBasicDto = {
       name: updateData.name,
       description: updateData.description,
@@ -202,9 +204,9 @@ export class EvaluationPeriodManagementController {
   async updateEvaluationPeriodSchedule(
     @ParseId() periodId: string,
     @Body() scheduleData: UpdateEvaluationPeriodScheduleApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     const contextDto: UpdateEvaluationPeriodScheduleDto = {
       startDate: scheduleData.startDate as unknown as Date,
       evaluationSetupDeadline:
@@ -229,9 +231,9 @@ export class EvaluationPeriodManagementController {
   async updateEvaluationPeriodStartDate(
     @ParseId() periodId: string,
     @Body() startDateData: UpdateEvaluationPeriodStartDateApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     const contextDto: UpdateEvaluationPeriodStartDateDto = {
       startDate: startDateData.startDate as unknown as Date,
     };
@@ -249,9 +251,9 @@ export class EvaluationPeriodManagementController {
   async updateEvaluationSetupDeadline(
     @ParseId() periodId: string,
     @Body() deadlineData: UpdateEvaluationSetupDeadlineApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     const contextDto: UpdateEvaluationSetupDeadlineDto = {
       evaluationSetupDeadline:
         deadlineData.evaluationSetupDeadline as unknown as Date,
@@ -270,9 +272,9 @@ export class EvaluationPeriodManagementController {
   async updatePerformanceDeadline(
     @ParseId() periodId: string,
     @Body() deadlineData: UpdatePerformanceDeadlineApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     const contextDto: UpdatePerformanceDeadlineDto = {
       performanceDeadline: deadlineData.performanceDeadline as unknown as Date,
     };
@@ -290,9 +292,9 @@ export class EvaluationPeriodManagementController {
   async updateSelfEvaluationDeadline(
     @ParseId() periodId: string,
     @Body() deadlineData: UpdateSelfEvaluationDeadlineApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     const contextDto: UpdateSelfEvaluationDeadlineDto = {
       selfEvaluationDeadline:
         deadlineData.selfEvaluationDeadline as unknown as Date,
@@ -311,9 +313,9 @@ export class EvaluationPeriodManagementController {
   async updatePeerEvaluationDeadline(
     @ParseId() periodId: string,
     @Body() deadlineData: UpdatePeerEvaluationDeadlineApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     const contextDto: UpdatePeerEvaluationDeadlineDto = {
       peerEvaluationDeadline:
         deadlineData.peerEvaluationDeadline as unknown as Date,
@@ -332,9 +334,9 @@ export class EvaluationPeriodManagementController {
   async updateEvaluationPeriodGradeRanges(
     @ParseId() periodId: string,
     @Body() gradeData: UpdateGradeRangesApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const updatedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     const contextDto: UpdateGradeRangesDto = {
       gradeRanges: gradeData.gradeRanges.map((range) => ({
         grade: range.grade,
@@ -356,9 +358,9 @@ export class EvaluationPeriodManagementController {
   async updateCriteriaSettingPermission(
     @ParseId() periodId: string,
     @Body() permissionData: ManualPermissionSettingDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const changedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const changedBy = user.id;
     const contextDto: UpdateCriteriaSettingPermissionDto = {
       enabled: permissionData.allowManualSetting,
     };
@@ -376,9 +378,9 @@ export class EvaluationPeriodManagementController {
   async updateSelfEvaluationSettingPermission(
     @ParseId() periodId: string,
     @Body() permissionData: ManualPermissionSettingDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const changedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const changedBy = user.id;
     const contextDto: UpdateSelfEvaluationSettingPermissionDto = {
       enabled: permissionData.allowManualSetting,
     };
@@ -396,9 +398,9 @@ export class EvaluationPeriodManagementController {
   async updateFinalEvaluationSettingPermission(
     @ParseId() periodId: string,
     @Body() permissionData: ManualPermissionSettingDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const changedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const changedBy = user.id;
     const contextDto: UpdateFinalEvaluationSettingPermissionDto = {
       enabled: permissionData.allowManualSetting,
     };
@@ -416,9 +418,9 @@ export class EvaluationPeriodManagementController {
   async updateManualSettingPermissions(
     @ParseId() periodId: string,
     @Body() permissionData: UpdateManualSettingPermissionsApiDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationPeriodDto> {
-    const changedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const changedBy = user.id;
     const contextDto: UpdateManualSettingPermissionsDto = {
       criteriaSettingEnabled: permissionData.allowCriteriaManualSetting,
       selfEvaluationSettingEnabled:
@@ -441,9 +443,9 @@ export class EvaluationPeriodManagementController {
   @DeleteEvaluationPeriod()
   async deleteEvaluationPeriod(
     @ParseId() periodId: string,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ success: boolean }> {
-    const deletedBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const deletedBy = user.id;
     const result =
       await this.evaluationPeriodManagementService.평가기간_삭제한다(
         periodId,

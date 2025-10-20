@@ -66,16 +66,18 @@ export class EmployeeBasicInfoDto {
 
 /**
  * 평가 대상자 등록 요청 DTO
+ *
+ * Note: 이 DTO는 현재 빈 클래스이지만, 향후 추가 필드가 필요할 경우를 대비해 유지합니다.
+ * createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class RegisterEvaluationTargetDto {
-  @ApiHideProperty()
-  @IsNotEmpty()
-  @IsString()
-  createdBy!: string;
+  // 현재 필요한 필드 없음 - @CurrentUser()를 통해 createdBy 자동 처리
 }
 
 /**
  * 평가 대상자 대량 등록 요청 DTO
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class RegisterBulkEvaluationTargetsDto {
   @ApiProperty({
@@ -90,15 +92,12 @@ export class RegisterBulkEvaluationTargetsDto {
   @IsArray()
   @IsUUID('4', { each: true })
   employeeIds!: string[];
-
-  @ApiHideProperty()
-  @IsNotEmpty()
-  @IsString()
-  createdBy!: string;
 }
 
 /**
  * 평가 대상 제외 요청 DTO
+ *
+ * Note: excludedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class ExcludeEvaluationTargetDto {
   @ApiProperty({
@@ -110,21 +109,16 @@ export class ExcludeEvaluationTargetDto {
   @IsString()
   @MaxLength(500)
   excludeReason!: string;
-
-  @ApiHideProperty()
-  @IsNotEmpty()
-  @IsString()
-  excludedBy!: string;
 }
 
 /**
  * 평가 대상 포함 요청 DTO
+ *
+ * Note: 이 DTO는 현재 빈 클래스이지만, 향후 추가 필드가 필요할 경우를 대비해 유지합니다.
+ * updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class IncludeEvaluationTargetDto {
-  @ApiHideProperty()
-  @IsNotEmpty()
-  @IsString()
-  updatedBy!: string;
+  // 현재 필요한 필드 없음 - @CurrentUser()를 통해 updatedBy 자동 처리
 }
 
 /**

@@ -1,9 +1,10 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
 import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
-import { ParseUUID } from '@interface/decorators/parse-uuid.decorator';
+import { ParseUUID, CurrentUser } from '@interface/decorators';
+import type { AuthenticatedUser } from '@interface/decorators';
 import {
   RequestPeerEvaluation,
   RequestPeerEvaluationToMultipleEvaluators,
@@ -20,7 +21,6 @@ import {
   RequestPeerEvaluationToMultipleEvaluatorsDto,
   RequestMultiplePeerEvaluationsDto,
   CreatePeerEvaluationBodyDto,
-  SubmitPeerEvaluationDto,
   PeerEvaluationFilterDto,
   PeerEvaluationResponseDto,
   BulkPeerEvaluationRequestResponseDto,
@@ -35,6 +35,7 @@ import {
  * 동료평가의 저장(생성/수정), 제출, 조회 기능을 제공합니다.
  */
 @ApiTags('C-4. 관리자 - 성과평가 - 동료평가')
+@ApiBearerAuth('Bearer')
 @Controller('admin/performance-evaluation/peer-evaluations')
 export class PeerEvaluationManagementController {
   constructor(
@@ -140,9 +141,9 @@ export class PeerEvaluationManagementController {
   @SubmitPeerEvaluation()
   async submitPeerEvaluation(
     @ParseUUID('id') id: string,
-    @Body() submitDto: SubmitPeerEvaluationDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const submittedBy = submitDto.submittedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const submittedBy = user.id;
 
     await this.peerEvaluationBusinessService.동료평가를_제출한다({
       evaluationId: id,

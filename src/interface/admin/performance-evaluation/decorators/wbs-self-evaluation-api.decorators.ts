@@ -19,7 +19,6 @@ import {
   EmployeeSelfEvaluationsResponseDto,
   ResetAllWbsSelfEvaluationsResponseDto,
   SubmitAllWbsSelfEvaluationsResponseDto,
-  SubmitWbsSelfEvaluationDto,
   UpdateWbsSelfEvaluationDto,
   WbsSelfEvaluationBasicDto,
   WbsSelfEvaluationDetailResponseDto,
@@ -210,10 +209,6 @@ export function SubmitWbsSelfEvaluation() {
       description: 'WBS 자기평가 ID (UUID 형식)',
       example: '550e8400-e29b-41d4-a716-446655440000',
       schema: { type: 'string', format: 'uuid' },
-    }),
-    ApiBody({
-      type: SubmitWbsSelfEvaluationDto,
-      description: '제출자 정보 (선택사항)',
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -443,11 +438,6 @@ export function SubmitAllWbsSelfEvaluationsByEmployeePeriod() {
       example: '550e8400-e29b-41d4-a716-446655440002',
       schema: { type: 'string', format: 'uuid' },
     }),
-    ApiBody({
-      type: SubmitWbsSelfEvaluationDto,
-      description: '제출자 정보 (선택사항)',
-      required: false,
-    }),
     ApiResponse({
       status: HttpStatus.OK,
       description:
@@ -505,10 +495,6 @@ export function ResetWbsSelfEvaluation() {
       description: 'WBS 자기평가 ID (UUID 형식)',
       example: '550e8400-e29b-41d4-a716-446655440000',
       schema: { type: 'string', format: 'uuid' },
-    }),
-    ApiBody({
-      type: SubmitWbsSelfEvaluationDto,
-      description: '초기화 처리자 정보 (선택사항)',
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -579,11 +565,6 @@ export function ResetAllWbsSelfEvaluationsByEmployeePeriod() {
       description: '평가기간 ID (UUID 형식)',
       example: '550e8400-e29b-41d4-a716-446655440002',
       schema: { type: 'string', format: 'uuid' },
-    }),
-    ApiBody({
-      type: SubmitWbsSelfEvaluationDto,
-      description: '초기화 처리자 정보 (선택사항)',
-      required: false,
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -659,11 +640,6 @@ export function SubmitWbsSelfEvaluationsByProject() {
       description: '프로젝트 ID (UUID 형식)',
       example: '550e8400-e29b-41d4-a716-446655440003',
       schema: { type: 'string', format: 'uuid' },
-    }),
-    ApiBody({
-      type: SubmitWbsSelfEvaluationDto,
-      description: '제출자 정보 (선택사항)',
-      required: false,
     }),
     ApiResponse({
       status: HttpStatus.OK,
@@ -742,11 +718,6 @@ export function ResetWbsSelfEvaluationsByProject() {
       description: '프로젝트 ID (UUID 형식)',
       example: '550e8400-e29b-41d4-a716-446655440003',
       schema: { type: 'string', format: 'uuid' },
-    }),
-    ApiBody({
-      type: SubmitWbsSelfEvaluationDto,
-      description: '초기화 처리자 정보 (선택사항)',
-      required: false,
     }),
     ApiResponse({
       status: HttpStatus.OK,

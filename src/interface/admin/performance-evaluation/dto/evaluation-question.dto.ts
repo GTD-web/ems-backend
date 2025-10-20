@@ -18,6 +18,8 @@ import {
 
 /**
  * 질문 그룹 생성 DTO
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class CreateQuestionGroupDto {
   @ApiProperty({
@@ -35,15 +37,12 @@ export class CreateQuestionGroupDto {
   })
   @IsOptional()
   isDefault?: boolean;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  createdBy?: string;
 }
 
 /**
  * 질문 그룹 수정 DTO
+ *
+ * Note: updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class UpdateQuestionGroupDto {
   @ApiPropertyOptional({
@@ -60,11 +59,6 @@ export class UpdateQuestionGroupDto {
   })
   @IsOptional()
   isDefault?: boolean;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  updatedBy?: string;
 }
 
 /**
@@ -160,15 +154,12 @@ export class CreateEvaluationQuestionDto {
   @IsInt()
   @Min(0)
   displayOrder?: number;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  createdBy?: string;
 }
 
 /**
  * 평가 질문 수정 DTO
+ *
+ * Note: updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class UpdateEvaluationQuestionDto {
   @ApiPropertyOptional({
@@ -198,11 +189,6 @@ export class UpdateEvaluationQuestionDto {
   @IsInt()
   @Max(100)
   maxScore?: number;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  updatedBy?: string;
 }
 
 /**
@@ -279,15 +265,12 @@ export class AddQuestionToGroupDto {
   @IsInt()
   @Min(0)
   displayOrder?: number;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  createdBy?: string;
 }
 
 /**
  * 그룹에 여러 질문 추가 DTO
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class AddMultipleQuestionsToGroupDto {
   @ApiProperty({
@@ -320,15 +303,12 @@ export class AddMultipleQuestionsToGroupDto {
   @IsInt()
   @Min(0)
   startDisplayOrder?: number;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  createdBy?: string;
 }
 
 /**
  * 그룹 내 질문 순서 재정의 DTO
+ *
+ * Note: updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class ReorderGroupQuestionsDto {
   @ApiProperty({
@@ -351,11 +331,6 @@ export class ReorderGroupQuestionsDto {
   })
   @IsNotEmpty()
   questionIds: string[];
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  updatedBy?: string;
 }
 
 /**

@@ -185,11 +185,14 @@ export function ExcludeEmployeeFromList() {
       summary: '직원을 조회 목록에서 제외',
       description: `**중요**: 직원을 일반 조회 목록에서 제외합니다. 제외 사유와 처리자 정보를 함께 저장합니다.
 
+**요청 바디**: excludeReason(제외 사유)만 필요합니다. 처리자 정보(excludedBy)는 JWT 토큰에서 자동으로 가져옵니다.
+
 **동작 방식:**
 - 직원의 isExcludedFromList를 true로 설정
 - excludeReason, excludedBy, excludedAt 정보 저장
 - 이미 제외된 직원 재제외 시 정보 업데이트 (Upsert)
 - 제외 후 일반 직원 목록 조회 시 자동으로 필터링됨
+- 처리자 정보는 JWT 토큰의 인증된 사용자에서 자동으로 추출
 
 **테스트 케이스:**
 - 정상적인 직원을 조회 목록에서 제외: 재직 중인 직원을 제외 처리하고 isExcludedFromList=true로 설정 (200)
@@ -200,7 +203,6 @@ export function ExcludeEmployeeFromList() {
 - 존재하지 않는 직원 ID: 유효한 UUID이지만 존재하지 않는 ID로 요청 시 404 에러
 - 잘못된 UUID 형식: 잘못된 UUID 형식의 직원 ID로 요청 시 400 에러
 - excludeReason 누락: excludeReason 필드가 없을 때 400 에러
-- excludedBy 누락: excludedBy 필드가 없을 때 400 에러
 - 빈 문자열 excludeReason: 빈 문자열로 요청 시 400 에러
 - 응답 데이터 검증: isExcludedFromList, excludeReason, excludedBy, excludedAt 포함
 - 타임스탬프 형식: excludedAt이 올바른 ISO 8601 Date 형식`,
@@ -217,7 +219,8 @@ export function ExcludeEmployeeFromList() {
     }),
     ApiResponse({
       status: 400,
-      description: '잘못된 요청 데이터',
+      description:
+        '잘못된 요청 데이터 (excludeReason 누락 또는 잘못된 UUID 형식)',
     }),
     ApiResponse({
       status: 404,
@@ -238,11 +241,14 @@ export function IncludeEmployeeInList() {
       summary: '직원을 조회 목록에 포함',
       description: `**중요**: 제외되었던 직원을 다시 일반 조회 목록에 포함시킵니다. 제외 관련 정보(excludeReason, excludedBy, excludedAt)는 모두 초기화됩니다.
 
+**참고**: 이 엔드포인트는 요청 바디가 필요하지 않습니다. 인증된 사용자 정보는 JWT 토큰에서 자동으로 가져옵니다.
+
 **동작 방식:**
 - 직원의 isExcludedFromList를 false로 설정
 - excludeReason, excludedBy, excludedAt을 null로 초기화
 - 포함 후 일반 직원 목록 조회 시 정상적으로 조회됨
 - 제외되지 않은 직원에 대해서도 멱등성 보장 (정상 처리)
+- 처리자 정보는 JWT 토큰의 인증된 사용자에서 자동으로 추출
 
 **테스트 케이스:**
 - 제외된 직원을 다시 조회 목록에 포함: 제외되었던 직원을 포함 처리하고 isExcludedFromList=false로 설정 (200)
@@ -253,7 +259,6 @@ export function IncludeEmployeeInList() {
 - 멱등성 보장: 이미 포함된 직원을 다시 포함해도 에러 없이 정상 동작
 - 존재하지 않는 직원 ID: 유효한 UUID이지만 존재하지 않는 ID로 요청 시 404 에러
 - 잘못된 UUID 형식: 잘못된 UUID 형식의 직원 ID로 요청 시 400 에러
-- updatedBy 누락: updatedBy 필드가 없을 때 400 에러
 - 응답 데이터 검증: isExcludedFromList=false, excludeReason=null, excludedBy=null, excludedAt=null
 - 연속 제외/포함: 제외 → 포함 → 재제외 → 재포함 흐름이 정상 동작`,
     }),
@@ -269,7 +274,7 @@ export function IncludeEmployeeInList() {
     }),
     ApiResponse({
       status: 400,
-      description: '잘못된 요청 데이터',
+      description: '잘못된 UUID 형식',
     }),
     ApiResponse({
       status: 404,

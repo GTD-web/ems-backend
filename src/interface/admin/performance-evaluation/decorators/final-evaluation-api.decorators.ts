@@ -10,8 +10,6 @@ import { HttpStatus } from '@nestjs/common';
 import {
   UpsertFinalEvaluationBodyDto,
   UpdateFinalEvaluationBodyDto,
-  ConfirmFinalEvaluationBodyDto,
-  CancelConfirmationBodyDto,
   FinalEvaluationResponseDto,
   FinalEvaluationBasicDto,
   FinalEvaluationDetailDto,
@@ -128,7 +126,6 @@ export function ConfirmFinalEvaluation() {
       description: '최종평가 ID',
       example: '345e6789-e89b-12d3-a456-426614174002',
     }),
-    ApiBody({ type: ConfirmFinalEvaluationBodyDto }),
     ApiResponse({
       status: HttpStatus.OK,
       description: '최종평가가 성공적으로 확정되었습니다.',
@@ -186,7 +183,6 @@ export function CancelConfirmationFinalEvaluation() {
       description: '최종평가 ID',
       example: '345e6789-e89b-12d3-a456-426614174002',
     }),
-    ApiBody({ type: CancelConfirmationBodyDto }),
     ApiResponse({
       status: HttpStatus.OK,
       description: '최종평가 확정이 성공적으로 취소되었습니다.',

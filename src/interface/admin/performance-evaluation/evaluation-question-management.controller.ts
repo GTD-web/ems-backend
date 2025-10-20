@@ -1,7 +1,8 @@
 import { Body, Controller, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
+import { CurrentUser } from '@interface/decorators';
+import type { AuthenticatedUser } from '@interface/decorators';
 import {
   CreateQuestionGroup,
   UpdateQuestionGroup,
@@ -45,6 +46,7 @@ import {
  * 평가 질문 및 질문 그룹 관리 기능을 제공합니다.
  */
 @ApiTags('C-3. 관리자 - 성과평가 - 평가 질문 관리')
+@ApiBearerAuth('Bearer')
 @Controller('admin/performance-evaluation/evaluation-questions')
 export class EvaluationQuestionManagementController {
   constructor(
@@ -59,8 +61,9 @@ export class EvaluationQuestionManagementController {
   @CreateQuestionGroup()
   async createQuestionGroup(
     @Body() dto: CreateQuestionGroupDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const createdBy = dto.createdBy || uuidv4();
+    const createdBy = user.id;
 
     const groupId =
       await this.evaluationQuestionManagementService.질문그룹을_생성한다(
@@ -84,8 +87,9 @@ export class EvaluationQuestionManagementController {
   async updateQuestionGroup(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateQuestionGroupDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const updatedBy = dto.updatedBy || uuidv4();
+    const updatedBy = user.id;
 
     await this.evaluationQuestionManagementService.질문그룹을_수정한다(
       id,
@@ -108,8 +112,9 @@ export class EvaluationQuestionManagementController {
   @DeleteQuestionGroup()
   async deleteQuestionGroup(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const deletedBy = uuidv4();
+    const deletedBy = user.id;
 
     await this.evaluationQuestionManagementService.질문그룹을_삭제한다(
       id,
@@ -153,8 +158,9 @@ export class EvaluationQuestionManagementController {
   @CreateEvaluationQuestion()
   async createEvaluationQuestion(
     @Body() dto: CreateEvaluationQuestionDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const createdBy = dto.createdBy || uuidv4();
+    const createdBy = user.id;
 
     const questionId =
       await this.evaluationQuestionManagementService.평가질문을_생성한다(
@@ -181,8 +187,9 @@ export class EvaluationQuestionManagementController {
   async updateEvaluationQuestion(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateEvaluationQuestionDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const updatedBy = dto.updatedBy || uuidv4();
+    const updatedBy = user.id;
 
     await this.evaluationQuestionManagementService.평가질문을_수정한다(
       id,
@@ -206,8 +213,9 @@ export class EvaluationQuestionManagementController {
   @DeleteEvaluationQuestion()
   async deleteEvaluationQuestion(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const deletedBy = uuidv4();
+    const deletedBy = user.id;
 
     await this.evaluationQuestionManagementService.평가질문을_삭제한다(
       id,
@@ -241,8 +249,9 @@ export class EvaluationQuestionManagementController {
   @CopyEvaluationQuestion()
   async copyEvaluationQuestion(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const copiedBy = uuidv4();
+    const copiedBy = user.id;
 
     const newQuestionId =
       await this.evaluationQuestionManagementService.평가질문을_복사한다(
@@ -264,8 +273,9 @@ export class EvaluationQuestionManagementController {
   @AddQuestionToGroup()
   async addQuestionToGroup(
     @Body() dto: AddQuestionToGroupDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const createdBy = dto.createdBy || uuidv4();
+    const createdBy = user.id;
 
     const mappingId =
       await this.evaluationQuestionManagementService.그룹에_질문을_추가한다(
@@ -289,8 +299,9 @@ export class EvaluationQuestionManagementController {
   @AddMultipleQuestionsToGroup()
   async addMultipleQuestionsToGroup(
     @Body() dto: AddMultipleQuestionsToGroupDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<BatchSuccessResponseDto> {
-    const createdBy = dto.createdBy || uuidv4();
+    const createdBy = user.id;
 
     const mappingIds =
       await this.evaluationQuestionManagementService.그룹에_여러_질문을_추가한다(
@@ -314,8 +325,9 @@ export class EvaluationQuestionManagementController {
   @ReorderGroupQuestions()
   async reorderGroupQuestions(
     @Body() dto: ReorderGroupQuestionsDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const updatedBy = dto.updatedBy || uuidv4();
+    const updatedBy = user.id;
 
     await this.evaluationQuestionManagementService.그룹내_질문순서를_재정의한다(
       dto.groupId,
@@ -335,8 +347,9 @@ export class EvaluationQuestionManagementController {
   @RemoveQuestionFromGroup()
   async removeQuestionFromGroup(
     @Param('mappingId', ParseUUIDPipe) mappingId: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const deletedBy = uuidv4();
+    const deletedBy = user.id;
 
     await this.evaluationQuestionManagementService.그룹에서_질문을_제거한다(
       mappingId,
@@ -350,8 +363,9 @@ export class EvaluationQuestionManagementController {
   @MoveQuestionUp()
   async moveQuestionUp(
     @Param('mappingId', ParseUUIDPipe) mappingId: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const updatedBy = uuidv4();
+    const updatedBy = user.id;
 
     await this.evaluationQuestionManagementService.질문순서를_위로_이동한다(
       mappingId,
@@ -370,8 +384,9 @@ export class EvaluationQuestionManagementController {
   @MoveQuestionDown()
   async moveQuestionDown(
     @Param('mappingId', ParseUUIDPipe) mappingId: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<SuccessResponseDto> {
-    const updatedBy = uuidv4();
+    const updatedBy = user.id;
 
     await this.evaluationQuestionManagementService.질문순서를_아래로_이동한다(
       mappingId,

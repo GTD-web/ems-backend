@@ -19,12 +19,16 @@ import { ToBoolean } from '@interface/decorators';
 
 /**
  * 1차 하향평가 생성 Body DTO (경로 파라미터 제외)
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class CreatePrimaryDownwardEvaluationBodyDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
   @IsUUID()
-  evaluatorId?: string;
+  evaluatorId: string;
 
   @ApiPropertyOptional({
     description: '자기평가 ID',
@@ -51,21 +55,20 @@ export class CreatePrimaryDownwardEvaluationBodyDto {
   @IsInt()
   @Min(1)
   downwardEvaluationScore?: number;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  createdBy?: string;
 }
 
 /**
  * 2차 하향평가 생성 Body DTO (경로 파라미터 제외)
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class CreateSecondaryDownwardEvaluationBodyDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
   @IsUUID()
-  evaluatorId?: string;
+  evaluatorId: string;
 
   @ApiPropertyOptional({
     description: '자기평가 ID',
@@ -92,11 +95,6 @@ export class CreateSecondaryDownwardEvaluationBodyDto {
   @IsInt()
   @Min(1)
   downwardEvaluationScore?: number;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  createdBy?: string;
 }
 
 /**
@@ -124,17 +122,16 @@ export class UpdateDownwardEvaluationDto {
 
 /**
  * 하향평가 제출 DTO
+ *
+ * Note: submittedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class SubmitDownwardEvaluationDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
   @IsUUID()
-  evaluatorId?: string;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  submittedBy?: string;
+  evaluatorId: string;
 }
 
 /**

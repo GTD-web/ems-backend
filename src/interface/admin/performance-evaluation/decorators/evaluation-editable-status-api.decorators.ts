@@ -40,7 +40,6 @@ export function UpdateEvaluationEditableStatus() {
 - 1차평가 상태 변경: 1차평가만 선택적으로 수정 가능/불가능 설정
 - 2차평가 상태 변경: 2차평가만 선택적으로 수정 가능/불가능 설정
 - 일괄 변경: all 타입으로 모든 평가 수정 가능 상태 한 번에 변경
-- updatedBy 선택사항: 수정자 ID 없이도 상태 변경 가능
 - 여러 번 변경: 동일한 맵핑의 상태를 여러 번 변경 가능
 - 순차적 잠금 시나리오: 평가 진행 단계별로 순차적 잠금 처리 (자기평가 → 1차평가 → 2차평가 → 전체 종료)
 - DB 저장 검증: 변경된 상태가 DB에 올바르게 반영됨
@@ -53,7 +52,6 @@ export function UpdateEvaluationEditableStatus() {
 - 잘못된 isEditable 값: boolean으로 변환할 수 없는 값 입력 시 400 에러
 - 존재하지 않는 맵핑: 유효하지 않은 맵핑 ID로 요청 시 404 에러
 - 잘못된 UUID 형식: mappingId가 UUID 형식이 아닐 때 400 에러
-- 잘못된 updatedBy: updatedBy가 UUID 형식이 아닐 때 400 에러
 - 응답 필드 검증: 응답에 id, evaluationPeriodId, employeeId, 수정 가능 상태 필드들, 타임스탬프 포함
 - 응답 ID 일치: 응답의 ID가 요청한 mappingId와 정확히 일치
 - 동시 변경: 같은 맵핑에 대한 동시 상태 변경 요청 처리
@@ -80,10 +78,6 @@ export function UpdateEvaluationEditableStatus() {
       type: String,
       required: true,
       example: 'true',
-    }),
-    ApiBody({
-      type: UpdateEvaluationEditableStatusBodyDto,
-      description: '수정자 정보 (선택사항)',
     }),
     ApiResponse({
       status: HttpStatus.OK,

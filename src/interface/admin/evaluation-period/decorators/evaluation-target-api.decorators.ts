@@ -27,6 +27,8 @@ import {
 
 /**
  * 평가 대상자 등록 API 데코레이터
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export const RegisterEvaluationTarget = () =>
   applyDecorators(
@@ -45,8 +47,7 @@ export const RegisterEvaluationTarget = () =>
 - 존재하지 않는 직원: 직원 미존재 시 404 에러
 - 중복 등록: 이미 등록된 평가 대상자 재등록 시 409 에러
 - 잘못된 평가기간 UUID: 형식이 올바르지 않은 평가기간 ID로 요청 시 400 에러
-- 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러
-- 필수 필드 누락: createdBy 필드 누락 시 400 에러`,
+- 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'evaluationPeriodId',
@@ -60,20 +61,6 @@ export const RegisterEvaluationTarget = () =>
       type: String,
       example: '223e4567-e89b-12d3-a456-426614174001',
     }),
-    ApiBody({
-      description: '평가 대상자 등록 정보',
-      schema: {
-        type: 'object',
-        required: ['createdBy'],
-        properties: {
-          createdBy: {
-            type: 'string',
-            description: '생성자 ID',
-            example: 'admin-user-id',
-          },
-        },
-      },
-    }),
     ApiCreatedResponse({
       description: '평가 대상자 등록 성공',
       type: EvaluationTargetMappingResponseDto,
@@ -85,6 +72,8 @@ export const RegisterEvaluationTarget = () =>
 
 /**
  * 평가 대상자 대량 등록 API 데코레이터
+ *
+ * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export const RegisterBulkEvaluationTargets = () =>
   applyDecorators(
@@ -110,7 +99,7 @@ export const RegisterBulkEvaluationTargets = () =>
 - 빈 배열: 빈 배열로 요청 시 400 에러
 - 잘못된 직원 UUID: 배열 내 잘못된 UUID 형식 포함 시 400 에러
 - 존재하지 않는 평가기간: 평가기간 미존재 시 404 에러
-- 필수 필드 누락: createdBy 또는 employeeIds 누락 시 400 에러
+- 필수 필드 누락: employeeIds 누락 시 400 에러
 - 배열 타입 검증: employeeIds가 배열이 아닌 경우 400 에러`,
     }),
     ApiParam({
@@ -129,6 +118,8 @@ export const RegisterBulkEvaluationTargets = () =>
 
 /**
  * 평가 대상 제외 API 데코레이터
+ *
+ * Note: excludedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export const ExcludeEvaluationTarget = () =>
   applyDecorators(
@@ -146,7 +137,6 @@ export const ExcludeEvaluationTarget = () =>
 - 등록되지 않은 대상자: 평가 대상자로 등록되지 않은 경우 404 에러
 - 중복 제외: 이미 제외된 대상자를 다시 제외 시 409 에러
 - 제외 사유 누락: excludeReason 필드 누락 시 400 에러
-- 제외 처리자 누락: excludedBy 필드 누락 시 400 에러
 - 잘못된 평가기간 UUID: 형식이 올바르지 않은 평가기간 ID로 요청 시 400 에러
 - 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러`,
     }),
@@ -173,6 +163,8 @@ export const ExcludeEvaluationTarget = () =>
 
 /**
  * 평가 대상 포함 API 데코레이터
+ *
+ * Note: updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export const IncludeEvaluationTarget = () =>
   applyDecorators(
@@ -190,7 +182,6 @@ export const IncludeEvaluationTarget = () =>
 - 등록되지 않은 대상자: 평가 대상자로 등록되지 않은 경우 404 에러
 - 제외되지 않은 대상자: 제외되지 않은 대상자를 포함 시 409 에러
 - 중복 포함: 이미 포함된 대상자를 다시 포함 시 409 에러
-- 필수 필드 누락: updatedBy 필드 누락 시 400 에러
 - 잘못된 평가기간 UUID: 형식이 올바르지 않은 평가기간 ID로 요청 시 400 에러
 - 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러`,
     }),

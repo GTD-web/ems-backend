@@ -6,7 +6,7 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
 import {
@@ -39,6 +39,8 @@ import {
   WbsItemAssignmentsResponseDto,
 } from './dto/wbs-assignment.dto';
 import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
+import { CurrentUser } from '../../decorators';
+import type { AuthenticatedUser } from '../../decorators';
 
 /**
  * WBS 할당 관리 컨트롤러
@@ -46,6 +48,7 @@ import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-ma
  * 평가기간에 직원을 WBS 항목에 할당하는 기능을 제공합니다.
  */
 @ApiTags('B-2. 관리자 - 평가 설정 - WBS 할당')
+@ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-criteria/wbs-assignments')
 export class WbsAssignmentManagementController {
   constructor(
@@ -58,9 +61,9 @@ export class WbsAssignmentManagementController {
   @CreateWbsAssignment()
   async createWbsAssignment(
     @Body() createDto: CreateWbsAssignmentDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<any> {
-    const assignedBy = createDto.assignedBy || uuidv4(); // DTO에서 받은 UUID 또는 임시 UUID 사용
+    const assignedBy = user.id;
     return await this.wbsAssignmentBusinessService.WBS를_할당한다({
       employeeId: createDto.employeeId,
       wbsItemId: createDto.wbsItemId,
@@ -76,9 +79,9 @@ export class WbsAssignmentManagementController {
   @CancelWbsAssignment()
   async cancelWbsAssignment(
     @Param('id', ParseUUIDPipe) id: string,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const cancelledBy = 'admin'; // TODO: 실제 사용자 ID로 변경
+    const cancelledBy = user.id;
     return await this.wbsAssignmentBusinessService.WBS_할당을_취소한다({
       assignmentId: id,
       cancelledBy,
@@ -199,10 +202,9 @@ export class WbsAssignmentManagementController {
   @BulkCreateWbsAssignments()
   async bulkCreateWbsAssignments(
     @Body() bulkCreateDto: BulkCreateWbsAssignmentDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<any[]> {
-    // 각 할당에서 assignedBy를 추출 (첫 번째 할당의 assignedBy 사용, 없으면 임시 UUID 생성)
-    const assignedBy = bulkCreateDto.assignments[0]?.assignedBy || uuidv4();
+    const assignedBy = user.id;
 
     return await this.wbsAssignmentBusinessService.WBS를_대량으로_할당한다({
       assignments: bulkCreateDto.assignments.map((assignment) => ({
@@ -222,10 +224,9 @@ export class WbsAssignmentManagementController {
   @ResetPeriodWbsAssignments()
   async resetPeriodWbsAssignments(
     @Param('periodId', ParseUUIDPipe) periodId: string,
-    @Body() resetDto: ResetWbsAssignmentsDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const resetBy = resetDto.resetBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const resetBy = user.id;
     return await this.wbsAssignmentBusinessService.평가기간의_WBS_할당을_초기화한다(
       {
         periodId,
@@ -241,10 +242,9 @@ export class WbsAssignmentManagementController {
   async resetProjectWbsAssignments(
     @Param('projectId', ParseUUIDPipe) projectId: string,
     @Param('periodId', ParseUUIDPipe) periodId: string,
-    @Body() resetDto: ResetWbsAssignmentsDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const resetBy = resetDto.resetBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const resetBy = user.id;
     return await this.wbsAssignmentBusinessService.프로젝트의_WBS_할당을_초기화한다(
       {
         projectId,
@@ -261,10 +261,9 @@ export class WbsAssignmentManagementController {
   async resetEmployeeWbsAssignments(
     @Param('employeeId', ParseUUIDPipe) employeeId: string,
     @Param('periodId', ParseUUIDPipe) periodId: string,
-    @Body() resetDto: ResetWbsAssignmentsDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const resetBy = resetDto.resetBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const resetBy = user.id;
     return await this.wbsAssignmentBusinessService.직원의_WBS_할당을_초기화한다(
       {
         employeeId,
@@ -281,10 +280,9 @@ export class WbsAssignmentManagementController {
   async changeWbsAssignmentOrder(
     @Param('id', ParseUUIDPipe) id: string,
     @Query() queryDto: ChangeWbsAssignmentOrderQueryDto,
-    @Body() bodyDto: ChangeWbsAssignmentOrderBodyDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<any> {
-    const updatedBy = bodyDto.updatedBy || 'admin'; // TODO: 실제 사용자 ID로 변경
+    const updatedBy = user.id;
     return await this.wbsAssignmentBusinessService.WBS_할당_순서를_변경한다({
       assignmentId: id,
       direction: queryDto.direction,

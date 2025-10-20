@@ -30,6 +30,8 @@ export class CreateWbsEvaluationCriteriaDto {
  * - wbsItemId에 평가기준이 없으면 생성
  * - wbsItemId에 평가기준이 있으면 수정
  * - WBS 항목당 하나의 평가기준만 존재
+ *
+ * Note: actionBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class UpsertWbsEvaluationCriteriaBodyDto {
   @ApiProperty({
@@ -38,11 +40,6 @@ export class UpsertWbsEvaluationCriteriaBodyDto {
   })
   @IsString()
   criteria: string;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsUUID()
-  actionBy?: string;
 }
 
 /**

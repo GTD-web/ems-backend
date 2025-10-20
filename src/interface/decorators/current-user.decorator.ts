@@ -12,6 +12,8 @@ export interface AuthenticatedUser {
   name: string;
   /** 사번 */
   employeeNumber: string;
+  /** EMS-PROD 시스템 역할 */
+  roles: string[];
 }
 
 /**

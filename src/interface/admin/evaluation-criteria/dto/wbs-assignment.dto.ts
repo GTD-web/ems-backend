@@ -19,6 +19,8 @@ import { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 
 /**
  * WBS 할당 생성 DTO
+ *
+ * Note: assignedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class CreateWbsAssignmentDto {
   @ApiProperty({
@@ -52,12 +54,6 @@ export class CreateWbsAssignmentDto {
   @IsString()
   @IsUUID()
   periodId: string;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsOptional()
-  @IsString()
-  @IsUUID()
-  assignedBy?: string;
 }
 
 /**
@@ -436,13 +432,12 @@ export class WbsAssignmentDetailResponseDto {
 
 /**
  * WBS 할당 초기화 DTO
+ *
+ * Note: 이 DTO는 현재 빈 클래스이지만, 향후 추가 필드가 필요할 경우를 대비해 유지합니다.
+ * resetBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class ResetWbsAssignmentsDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @ApiHideProperty()
-  @IsString()
-  @IsUUID()
-  resetBy?: string;
+  // 현재 필요한 필드 없음 - @CurrentUser()를 통해 resetBy 자동 처리
 }
 
 /**

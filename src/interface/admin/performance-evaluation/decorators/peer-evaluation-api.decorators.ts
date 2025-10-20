@@ -20,7 +20,6 @@ import {
   RequestMultiplePeerEvaluationsDto,
   CreatePeerEvaluationBodyDto,
   UpdatePeerEvaluationDto,
-  SubmitPeerEvaluationDto,
   PeerEvaluationFilterDto,
   PeerEvaluationResponseDto,
   BulkPeerEvaluationRequestResponseDto,
@@ -314,10 +313,6 @@ export function SubmitPeerEvaluation() {
       name: 'id',
       description: '동료평가 ID',
       example: '550e8400-e29b-41d4-a716-446655440000',
-    }),
-    ApiBody({
-      type: SubmitPeerEvaluationDto,
-      description: '동료평가 제출 정보',
     }),
     ApiResponse({
       status: HttpStatus.OK,

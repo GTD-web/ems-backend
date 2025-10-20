@@ -20,6 +20,8 @@ import {
 
 /**
  * 최종평가 저장 Body DTO (Upsert)
+ *
+ * Note: actionBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class UpsertFinalEvaluationBodyDto {
   @ApiProperty({
@@ -52,11 +54,6 @@ export class UpsertFinalEvaluationBodyDto {
   @IsString()
   @IsOptional()
   finalComments?: string;
-
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsString()
-  @IsOptional()
-  actionBy?: string;
 }
 
 /**
@@ -105,20 +102,22 @@ export class UpdateFinalEvaluationBodyDto {
 
 /**
  * 최종평가 확정 Body DTO
+ *
+ * Note: Body가 비어있으므로 컨트롤러에서 @Body() 사용하지 않습니다.
+ * confirmedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class ConfirmFinalEvaluationBodyDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsString()
-  confirmedBy: string;
+  // 이 DTO는 더 이상 필드가 없습니다.
 }
 
 /**
  * 최종평가 확정 취소 Body DTO
+ *
+ * Note: Body가 비어있으므로 컨트롤러에서 @Body() 사용하지 않습니다.
+ * updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class CancelConfirmationBodyDto {
-  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
-  @IsString()
-  updatedBy: string;
+  // 이 DTO는 더 이상 필드가 없습니다.
 }
 
 /**

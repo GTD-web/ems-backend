@@ -1,7 +1,9 @@
 import { Controller, Query, NotFoundException } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
 import { ParseUUID } from '../../decorators/parse-uuid.decorator';
+import { CurrentUser } from '../../decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
 import { EvaluationPeriodService } from '../../../domain/core/evaluation-period/evaluation-period.service';
 import { EmployeeSyncService } from '../../../domain/common/employee/employee-sync.service';
 import {
@@ -37,6 +39,7 @@ import {
  * 직원별 평가기간 현황, 평가 진행 상태 등의 정보를 제공합니다.
  */
 @ApiTags('A-0. 관리자 - 대시보드')
+@ApiBearerAuth('Bearer')
 @Controller('admin/dashboard')
 // @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class DashboardController {
@@ -66,11 +69,11 @@ export class DashboardController {
   @GetMyEvaluationTargetsStatus()
   async getMyEvaluationTargetsStatus(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
-    @ParseUUID('evaluatorId') evaluatorId: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<MyEvaluationTargetStatusResponseDto[]> {
     return await this.dashboardService.내가_담당하는_평가대상자_현황을_조회한다(
       evaluationPeriodId,
-      evaluatorId,
+      user.id,
     );
   }
 

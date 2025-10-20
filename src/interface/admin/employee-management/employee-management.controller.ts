@@ -1,12 +1,13 @@
 import { Body, Controller, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
 import { EmployeeDto } from '../../../domain/common/employee/employee.types';
 import {
   DepartmentHierarchyDto,
   DepartmentHierarchyWithEmployeesDto,
 } from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
-import { ParseId } from '../../decorators/parse-uuid.decorator';
+import { ParseId, CurrentUser } from '../../decorators';
+import type { AuthenticatedUser } from '../../decorators';
 import {
   ExcludeEmployeeFromList,
   GetAllEmployees,
@@ -18,7 +19,6 @@ import {
 import {
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
-  IncludeEmployeeInListDto,
 } from './dto/employee-management.dto';
 
 /**
@@ -28,6 +28,7 @@ import {
  * 직원 관리 기능을 제공합니다.
  */
 @ApiTags('A-1. 관리자 - 조직 관리')
+@ApiBearerAuth('Bearer')
 @Controller('admin/employees')
 // @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EmployeeManagementController {
@@ -92,12 +93,12 @@ export class EmployeeManagementController {
   async excludeEmployeeFromList(
     @ParseId() employeeId: string,
     @Body() excludeData: ExcludeEmployeeFromListDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EmployeeDto> {
     return await this.organizationManagementService.직원조회제외(
       employeeId,
       excludeData.excludeReason,
-      excludeData.excludedBy,
+      user.id,
     );
   }
 
@@ -107,12 +108,11 @@ export class EmployeeManagementController {
   @IncludeEmployeeInList()
   async includeEmployeeInList(
     @ParseId() employeeId: string,
-    @Body() includeData: IncludeEmployeeInListDto,
-    // @CurrentUser() user: User, // TODO: 사용자 정보 데코레이터 추가
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EmployeeDto> {
     return await this.organizationManagementService.직원조회포함(
       employeeId,
-      includeData.updatedBy,
+      user.id,
     );
   }
 }

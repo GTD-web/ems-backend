@@ -1,7 +1,9 @@
 import { Body, Controller, Query } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationPeriodManagementContextService } from '../../../context/evaluation-period-management-context/evaluation-period-management.service';
 import { ParseUUID } from '../../decorators/parse-uuid.decorator';
+import { CurrentUser } from '../../decorators/current-user.decorator';
+import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
 import {
   CheckEvaluationTarget,
   ExcludeEvaluationTarget,
@@ -21,9 +23,7 @@ import {
   EvaluationTargetsResponseDto,
   ExcludeEvaluationTargetDto,
   GetEvaluationTargetsQueryDto,
-  IncludeEvaluationTargetDto,
   RegisterBulkEvaluationTargetsDto,
-  RegisterEvaluationTargetDto,
 } from './dto/evaluation-target.dto';
 
 /**
@@ -32,6 +32,7 @@ import {
  * 평가기간별 평가 대상자 등록, 제외/포함, 조회 등을 처리하는 API 엔드포인트를 제공합니다.
  */
 @ApiTags('A-3. 관리자 - 평가 대상')
+@ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-periods')
 export class EvaluationTargetController {
   constructor(
@@ -48,27 +49,30 @@ export class EvaluationTargetController {
   async registerBulkEvaluationTargets(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @Body() dto: RegisterBulkEvaluationTargetsDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationTargetMappingResponseDto[]> {
     return await this.evaluationPeriodManagementService.평가대상자_대량_등록한다(
       evaluationPeriodId,
       dto.employeeIds,
-      dto.createdBy,
+      user.id,
     );
   }
 
   /**
    * 평가 대상자 등록
+   *
+   * Note: createdBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
    */
   @RegisterEvaluationTarget()
   async registerEvaluationTarget(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @ParseUUID('employeeId') employeeId: string,
-    @Body() dto: RegisterEvaluationTargetDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationTargetMappingResponseDto> {
     return await this.evaluationPeriodManagementService.평가대상자_등록한다(
       evaluationPeriodId,
       employeeId,
-      dto.createdBy,
+      user.id,
     );
   }
 
@@ -80,28 +84,31 @@ export class EvaluationTargetController {
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @ParseUUID('employeeId') employeeId: string,
     @Body() dto: ExcludeEvaluationTargetDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationTargetMappingResponseDto> {
     return await this.evaluationPeriodManagementService.평가대상에서_제외한다(
       evaluationPeriodId,
       employeeId,
       dto.excludeReason,
-      dto.excludedBy,
+      user.id,
     );
   }
 
   /**
    * 평가 대상 포함 (제외 취소)
+   *
+   * Note: updatedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
    */
   @IncludeEvaluationTarget()
   async includeEvaluationTarget(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @ParseUUID('employeeId') employeeId: string,
-    @Body() dto: IncludeEvaluationTargetDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<EvaluationTargetMappingResponseDto> {
     return await this.evaluationPeriodManagementService.평가대상에_포함한다(
       evaluationPeriodId,
       employeeId,
-      dto.updatedBy,
+      user.id,
     );
   }
 
