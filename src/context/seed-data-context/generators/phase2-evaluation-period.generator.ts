@@ -81,11 +81,15 @@ export class Phase2EvaluationPeriodGenerator {
   ): Promise<string[]> {
     const periods: EvaluationPeriod[] = [];
     const baseDate = new Date();
+    const uniqueSuffix = Date.now().toString(36).slice(-4); // 타임스탬프 기반 4자리 고유 식별자
 
     for (let i = 0; i < count; i++) {
       const period = new EvaluationPeriod();
       const year = baseDate.getFullYear() - i;
-      period.name = `${year}년 ${i % 2 === 0 ? '상반기' : '하반기'} 평가`;
+      const halfYear = i % 2 === 0 ? '상반기' : '하반기';
+
+      // 동시성 이슈 방지: 타임스탬프 기반 고유 식별자 추가
+      period.name = `${year}년 ${halfYear} 평가-${uniqueSuffix}`;
 
       // 날짜 생성
       const { startDate, endDate } = DateGeneratorUtil.generateDateRange(

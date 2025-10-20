@@ -94,8 +94,10 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
         // Given - 자기평가 생성
         const employee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
-        const wbsItem1 = getRandomWbsItem();
-        const wbsItem2 = getRandomWbsItem();
+
+        // 서로 다른 WBS 항목 선택 (중복 방지)
+        const wbsItem1 = testData.wbsItems[0];
+        const wbsItem2 = testData.wbsItems[1];
 
         await testSuite
           .request()
@@ -233,14 +235,10 @@ describe('GET /admin/performance-evaluation/wbs-self-evaluations - 조회', () =
       });
 
       it('페이지네이션이 정상적으로 작동해야 한다', async () => {
-        // Given - 여러 개 생성
+        // Given - 여러 개 생성 (서로 다른 WBS 항목 사용)
         const employee = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
-        const wbsItems = [
-          getRandomWbsItem(),
-          getRandomWbsItem(),
-          getRandomWbsItem(),
-        ];
+        const wbsItems = testData.wbsItems.slice(0, 3); // 처음 3개 사용
 
         for (const wbsItem of wbsItems) {
           await testSuite

@@ -123,14 +123,37 @@ Repository Layer (영속화)
 - 질문 관리 기능 테스트
 - 평가 라인 관리 테스트
 
-### 5. FULL (전체 사이클) ✅
+### 5. WITH_EVALUATIONS (성과평가입력 완료) ✅
+
+**목적**: 자기평가, 하향평가, 동료평가까지 완료 (최종평가 제외)
+
+**생성 데이터**:
+
+- Phase 1-6: 모든 설정
+- Phase 7: WbsSelfEvaluation, DownwardEvaluation, PeerEvaluation (모두 완료 상태)
+- Phase 7: FinalEvaluation (미시작 상태)
+
+**기본 상태 분포**:
+
+- 자기평가: 100% 완료
+- 하향평가: 100% 완료
+- 동료평가: 100% 완료
+- 최종평가: 100% 미시작
+
+**사용 사례**:
+
+- 최종평가 단계 테스트
+- 평가 취합 로직 테스트
+- 평가 데이터 집계 테스트
+
+### 6. FULL (전체 사이클) ✅
 
 **목적**: 평가 실행 및 응답까지 전체 생성
 
 **생성 데이터**:
 
 - Phase 1-6: 모든 설정
-- Phase 7: WbsSelfEvaluation, DownwardEvaluation, PeerEvaluation, FinalEvaluation
+- Phase 7: WbsSelfEvaluation, DownwardEvaluation, PeerEvaluation, FinalEvaluation (모두 완료)
 - Phase 8: EvaluationResponse
 
 **사용 사례**:
