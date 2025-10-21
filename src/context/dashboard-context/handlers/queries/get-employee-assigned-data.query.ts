@@ -87,8 +87,6 @@ export interface AssignedWbsInfo {
   wbsId: string;
   wbsName: string;
   wbsCode: string;
-  projectId: string;
-  projectName: string;
   weight: number;
   assignedAt: Date;
   criteria: WbsEvaluationCriterion[];
@@ -323,15 +321,15 @@ export class GetEmployeeAssignedDataHandler
       )
       .select([
         'assignment.id AS assignment_id',
-        'assignment.projectId AS assignment_projectId',
-        'assignment.assignedDate AS assignment_assignedDate',
-        'assignment.displayOrder AS assignment_displayOrder',
+        'assignment.projectId AS assignment_projectid',
+        'assignment.assignedDate AS assignment_assigneddate',
+        'assignment.displayOrder AS assignment_displayorder',
         'project.id AS project_id',
         'project.name AS project_name',
-        'project.projectCode AS project_projectCode',
+        'project.projectCode AS project_projectcode', // 소문자로 변경
         'project.status AS project_status',
-        'project.startDate AS project_startDate',
-        'project.endDate AS project_endDate',
+        'project.startDate AS project_startdate',
+        'project.endDate AS project_enddate',
       ])
       .where('assignment.periodId = :periodId', {
         periodId: evaluationPeriodId,
@@ -346,7 +344,7 @@ export class GetEmployeeAssignedDataHandler
     const projectsWithWbs: AssignedProjectWithWbs[] = [];
 
     for (const row of projectAssignments) {
-      const projectId = row.assignment_projectId || row.project_id;
+      const projectId = row.assignment_projectid || row.project_id; // 소문자로 수정
 
       if (!projectId) {
         this.logger.warn('프로젝트 ID가 없는 할당 발견', { row });
@@ -362,17 +360,11 @@ export class GetEmployeeAssignedDataHandler
       projectsWithWbs.push({
         projectId,
         projectName: row.project_name || '',
-        projectCode: row.project_projectCode || '',
-        assignedAt: row.assignment_assignedDate,
+        projectCode: row.project_projectcode || '', // 소문자로 수정
+        assignedAt: row.assignment_assigneddate, // 소문자로 수정
         wbsList,
       });
     }
-
-    this.logger.debug('프로젝트별 할당 정보 조회 완료', {
-      employeeId,
-      projectCount: projectsWithWbs.length,
-      totalWbs: projectsWithWbs.reduce((sum, p) => sum + p.wbsList.length, 0),
-    });
 
     return projectsWithWbs;
   }
@@ -388,23 +380,36 @@ export class GetEmployeeAssignedDataHandler
     employeeId: string,
     projectId: string,
   ): Promise<AssignedWbsInfo[]> {
+    // 디버깅: 먼저 assignment만 조회
+    const assignmentsOnly = await this.wbsAssignmentRepository
+      .createQueryBuilder('assignment')
+      .select(['assignment.id', 'assignment.wbsItemId', 'assignment.projectId'])
+      .where('assignment.periodId = :periodId', {
+        periodId: evaluationPeriodId,
+      })
+      .andWhere('assignment.employeeId = :employeeId', { employeeId })
+      .andWhere('assignment.projectId = :projectId', { projectId })
+      .andWhere('assignment.deletedAt IS NULL')
+      .getMany();
+
     // 1. WBS 할당 조회 (WbsItem join)
     const wbsAssignments = await this.wbsAssignmentRepository
       .createQueryBuilder('assignment')
       .leftJoin(
         WbsItem,
         'wbsItem',
-        'wbsItem.id = assignment.wbsItemId AND wbsItem.deletedAt IS NULL',
+        'wbsItem.id = assignment.wbsItemId AND wbsItem.projectId = assignment.projectId AND wbsItem.deletedAt IS NULL',
       )
       .select([
         'assignment.id AS assignment_id',
-        'assignment.wbsItemId AS assignment_wbsItemId',
-        'assignment.projectId AS assignment_projectId',
-        'assignment.assignedDate AS assignment_assignedDate',
-        'assignment.displayOrder AS assignment_displayOrder',
-        'wbsItem.id AS wbsItem_id',
-        'wbsItem.wbsCode AS wbsItem_wbsCode',
-        'wbsItem.title AS wbsItem_title',
+        'assignment.wbsItemId AS assignment_wbsitemid', // 소문자로 변경
+        'assignment.projectId AS assignment_projectid', // 소문자로 변경
+        'assignment.assignedDate AS assignment_assigneddate', // 소문자로 변경
+        'assignment.displayOrder AS assignment_displayorder', // 소문자로 변경
+        'wbsItem.id AS wbsitem_id', // 소문자로 변경
+        'wbsItem.wbsCode AS wbsitem_wbscode', // 소문자로 변경
+        'wbsItem.title AS wbsitem_title', // 소문자로 변경
+        'wbsItem.projectId AS wbsitem_projectid', // 소문자로 변경
       ])
       .where('assignment.periodId = :periodId', {
         periodId: evaluationPeriodId,
@@ -420,7 +425,7 @@ export class GetEmployeeAssignedDataHandler
     const wbsInfos: AssignedWbsInfo[] = [];
 
     for (const row of wbsAssignments) {
-      const wbsItemId = row.assignment_wbsItemId;
+      const wbsItemId = row.assignment_wbsitemid; // 소문자로 수정
 
       // 평가기준 조회
       const criteria = await this.getWbsCriteriaByWbsId(wbsItemId);
@@ -441,7 +446,7 @@ export class GetEmployeeAssignedDataHandler
         secondary: null,
       };
 
-      const projectId = row.assignment_projectId;
+      const projectId = row.assignment_projectid; // 소문자로 수정
       if (projectId) {
         downwardEvaluations = await this.getWbsDownwardEvaluationsByWbsId(
           evaluationPeriodId,
@@ -454,12 +459,10 @@ export class GetEmployeeAssignedDataHandler
 
       wbsInfos.push({
         wbsId: wbsItemId,
-        wbsName: row.wbsItem_title || '',
-        wbsCode: row.wbsItem_wbsCode || '',
-        projectId,
-        projectName: '', // 프로젝트명은 이미 상위에서 제공됨
+        wbsName: row.wbsitem_title || '', // 소문자로 수정
+        wbsCode: row.wbsitem_wbscode || '', // 소문자로 수정
         weight: 0, // weight 컬럼이 엔티티에 없으므로 기본값 0 사용
-        assignedAt: row.assignment_assignedDate,
+        assignedAt: row.assignment_assigneddate, // 소문자로 수정
         criteria,
         performance: selfEvaluationData?.performance || null,
         selfEvaluation: selfEvaluationData?.selfEvaluation || null,

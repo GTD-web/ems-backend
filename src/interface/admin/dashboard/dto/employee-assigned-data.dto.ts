@@ -314,18 +314,6 @@ export class AssignedWbsInfoDto {
   wbsCode: string;
 
   @ApiProperty({
-    description: '프로젝트 ID',
-    example: '123e4567-e89b-12d3-a456-426614174010',
-  })
-  projectId: string;
-
-  @ApiProperty({
-    description: '프로젝트명',
-    example: '신규 ERP 시스템 개발',
-  })
-  projectName: string;
-
-  @ApiProperty({
     description: '가중치 (%)',
     example: 20,
   })
