@@ -72,6 +72,8 @@ export interface EmployeeDto {
   externalUpdatedAt: Date;
   /** 마지막 동기화 시간 */
   lastSyncAt?: Date;
+  /** EMS-PROD 시스템 역할 목록 */
+  roles?: string[];
   /** 목록 조회 제외 여부 */
   isExcludedFromList: boolean;
   /** 조회 제외 사유 */

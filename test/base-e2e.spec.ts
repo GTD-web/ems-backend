@@ -13,6 +13,7 @@ import request from 'supertest';
 export class BaseE2ETest {
   public app: INestApplication;
   protected dataSource: DataSource;
+  private mockAuthService: any;
 
   /**
    * 모든 E2E 테스트에서 사용할 수 있는 테스트용 인증 토큰
@@ -53,45 +54,48 @@ export class BaseE2ETest {
    * 테스트 애플리케이션 초기화
    */
   async initializeApp(): Promise<void> {
+    // AuthService 모킹 객체 생성 (나중에 동적으로 변경 가능)
+    this.mockAuthService = {
+      토큰검증및사용자동기화: jest.fn().mockResolvedValue({
+        user: {
+          id: '00000000-0000-0000-0000-000000000001',
+          email: 'test@example.com',
+          name: '테스트 사용자',
+          employeeNumber: 'TEST001',
+          roles: ['admin', 'user'],
+        },
+        isSynced: false,
+      }),
+      역할포함사용자조회: jest.fn().mockResolvedValue({
+        user: {
+          id: '00000000-0000-0000-0000-000000000001',
+          email: 'test@example.com',
+          name: '테스트 사용자',
+          employeeNumber: 'TEST001',
+          roles: ['admin', 'user'],
+        },
+      }),
+      로그인한다: jest.fn().mockResolvedValue({
+        user: {
+          id: '00000000-0000-0000-0000-000000000001',
+          externalId: 'external-001',
+          email: 'test@example.com',
+          name: '테스트 사용자',
+          employeeNumber: 'TEST001',
+          roles: ['admin', 'user'],
+          status: '재직중',
+        },
+        accessToken: 'mock-access-token',
+        refreshToken: 'mock-refresh-token',
+      }),
+    };
+
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
       // AuthService를 mock으로 대체 - 항상 성공하는 인증 반환
       .overrideProvider(AuthService)
-      .useValue({
-        토큰검증및사용자동기화: jest.fn().mockResolvedValue({
-          user: {
-            id: '00000000-0000-0000-0000-000000000001',
-            email: 'test@example.com',
-            name: '테스트 사용자',
-            employeeNumber: 'TEST001',
-            roles: ['admin', 'user'],
-          },
-          isSynced: false,
-        }),
-        역할포함사용자조회: jest.fn().mockResolvedValue({
-          user: {
-            id: '00000000-0000-0000-0000-000000000001',
-            email: 'test@example.com',
-            name: '테스트 사용자',
-            employeeNumber: 'TEST001',
-            roles: ['admin', 'user'],
-          },
-        }),
-        로그인한다: jest.fn().mockResolvedValue({
-          user: {
-            id: '00000000-0000-0000-0000-000000000001',
-            externalId: 'external-001',
-            email: 'test@example.com',
-            name: '테스트 사용자',
-            employeeNumber: 'TEST001',
-            roles: ['admin', 'user'],
-            status: '재직중',
-          },
-          accessToken: 'mock-access-token',
-          refreshToken: 'mock-refresh-token',
-        }),
-      })
+      .useValue(this.mockAuthService)
       .overrideProvider('SSO_CONFIG')
       .useValue({
         baseUrl: 'http://localhost:3000',
@@ -294,5 +298,77 @@ export class BaseE2ETest {
     // 필요한 경우 기본 테스트 데이터 삽입
     // 예: 기본 사용자, 기본 설정 등
     return {};
+  }
+
+  /**
+   * 현재 로그인한 사용자 정보를 동적으로 설정
+   * JWT 인증 시 반환될 사용자 정보를 변경합니다.
+   *
+   * @param user 설정할 사용자 정보
+   *
+   * @example
+   * ```typescript
+   * testSuite.setCurrentUser({
+   *   id: employee.id,
+   *   email: employee.email,
+   *   name: employee.name,
+   *   employeeNumber: employee.employeeNumber,
+   * });
+   * ```
+   */
+  setCurrentUser(user: {
+    id: string;
+    email: string;
+    name: string;
+    employeeNumber: string;
+    externalId?: string;
+    roles?: string[];
+    status?: string;
+  }): void {
+    const defaultUser = {
+      externalId: user.externalId || 'test-external-id',
+      roles: user.roles || ['admin', 'user'],
+      status: user.status || '재직중',
+    };
+
+    // 토큰검증및사용자동기화 모킹 업데이트
+    this.mockAuthService.토큰검증및사용자동기화 = jest.fn().mockResolvedValue({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        employeeNumber: user.employeeNumber,
+        roles: defaultUser.roles,
+      },
+      isSynced: false,
+    });
+
+    // 역할포함사용자조회 모킹 업데이트
+    this.mockAuthService.역할포함사용자조회 = jest.fn().mockResolvedValue({
+      user: {
+        id: user.id,
+        externalId: defaultUser.externalId,
+        email: user.email,
+        name: user.name,
+        employeeNumber: user.employeeNumber,
+        roles: defaultUser.roles,
+        status: defaultUser.status,
+      },
+    });
+
+    // 로그인한다 모킹 업데이트
+    this.mockAuthService.로그인한다 = jest.fn().mockResolvedValue({
+      user: {
+        id: user.id,
+        externalId: defaultUser.externalId,
+        email: user.email,
+        name: user.name,
+        employeeNumber: user.employeeNumber,
+        roles: defaultUser.roles,
+        status: defaultUser.status,
+      },
+      accessToken: 'mock-access-token',
+      refreshToken: 'mock-refresh-token',
+    });
   }
 }

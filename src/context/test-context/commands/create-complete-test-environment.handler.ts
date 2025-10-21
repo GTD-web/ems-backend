@@ -84,13 +84,14 @@ export class CreateCompleteTestEnvironmentHandler
     // 5. 평가기간 데이터 생성
     const periods = await this.createEvaluationPeriods();
 
-    // 6. WBS 할당 데이터 생성
-    const wbsAssignments = await this.createWbsAssignments(
-      employees,
-      projects,
-      wbsItems,
-      periods,
-    );
+    // 6. WBS 할당 데이터 생성 (기본적으로 생성하지 않음 - 테스트에서 명시적으로 할당)
+    // const wbsAssignments = await this.createWbsAssignments(
+    //   employees,
+    //   projects,
+    //   wbsItems,
+    //   periods,
+    // );
+    const wbsAssignments: EvaluationWbsAssignmentDto[] = [];
 
     console.log(
       `완전한 테스트 환경 생성 완료: 부서 ${departments.length}, 직원 ${employees.length}, 프로젝트 ${projects.length}, WBS ${wbsItems.length}, 평가기간 ${periods.length}, WBS할당 ${wbsAssignments.length}`,

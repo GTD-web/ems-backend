@@ -300,6 +300,61 @@ export function GetEmployeeAssignedData() {
 }
 
 /**
+ * 내 할당 정보 조회 API 데코레이터
+ */
+export function GetMyAssignedData() {
+  return applyDecorators(
+    Get(':evaluationPeriodId/my-assigned-data'),
+    ApiOperation({
+      summary: '나의 할당 정보 조회 (현재 로그인 사용자)',
+      description: `현재 로그인한 사용자의 평가기간 내 할당된 모든 정보를 조회합니다.
+
+**동작:**
+- JWT 토큰에서 현재 로그인한 사용자 정보 추출
+- 평가기간 정보 반환 (평가기간명, 시작/종료일, 상태, 설정 허용 여부, 자기평가 최대 달성률)
+- 직원 기본 정보 반환 (직원명, 직원번호, 이메일, 부서, 상태)
+- 할당된 프로젝트 목록을 프로젝트별로 그룹화하여 반환
+- 각 프로젝트에 속한 WBS 목록 반환 (WBS 정보, 평가기준, 성과, 자기평가, 하향평가 포함)
+- 데이터 요약 정보 제공 (총 프로젝트 수, 총 WBS 수, 완료된 성과 수, 완료된 자기평가 수)
+- 할당이 없는 경우에도 빈 배열로 정상 응답
+
+**테스트 케이스:**
+- 정상 조회: 유효한 JWT 토큰으로 자신의 할당 정보 조회 성공 (200)
+- 응답 필드 포함: evaluationPeriod, employee, projects, summary 필드 반환
+- 프로젝트/WBS 할당: 할당된 프로젝트와 WBS 정보 조회 성공
+- 평가기준 포함: WBS별 평가기준이 올바르게 반환됨
+- 성과 포함: 등록된 성과 정보가 포함됨
+- 자기평가 포함: 등록된 자기평가 정보가 포함됨
+- 하향평가 포함: 등록된 하향평가 정보가 포함됨
+- 요약 정보 정확성: summary 카운트가 실제 데이터와 일치
+- 할당 없음: 할당이 없는 경우 빈 배열 반환 (200)
+- 토큰 없음: Authorization 헤더 없이 요청 시 401 에러
+- 잘못된 토큰: 유효하지 않은 JWT 토큰으로 요청 시 401 에러
+- 존재하지 않는 평가기간: 404 에러
+- 잘못된 UUID: 잘못된 평가기간 UUID 형식으로 요청 시 400 에러`,
+    }),
+    ApiParam({
+      name: 'evaluationPeriodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    ApiOkResponse({
+      description: '나의 할당 정보 조회 성공',
+      type: EmployeeAssignedDataResponseDto,
+    }),
+    ApiNotFoundResponse({
+      description:
+        '평가기간에 등록되지 않은 사용자 또는 평가기간을 찾을 수 없음',
+    }),
+    ApiBadRequestResponse({
+      description: '잘못된 요청 (UUID 형식 오류 등)',
+    }),
+  );
+}
+
+/**
  * 담당자의 피평가자 할당 정보 조회 API 데코레이터
  */
 export function GetEvaluatorAssignedEmployeesData() {

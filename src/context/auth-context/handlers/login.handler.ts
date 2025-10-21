@@ -93,20 +93,18 @@ export class LoginHandler {
       );
     }
 
-    this.logger.debug(
-      `기존 Employee 확인: ${employee.employeeNumber} (정보 업데이트 생략, 권한만 동기화)`,
-    );
-
     // 3. 역할 정보 추출 (systemRoles['EMS-PROD'])
     const roles: string[] = loginResult.systemRoles?.['EMS-PROD'] || [];
+    this.logger.log(
+      `로그인 결과의 systemRoles: ${JSON.stringify(loginResult.systemRoles)}`,
+    );
+    this.logger.log(`추출된 roles: [${roles.join(', ')}]`);
 
-    // 4. Employee에 역할 정보 저장
-    if (roles.length > 0) {
-      await this.employeeService.updateRoles(employee.id, roles);
-      this.logger.debug(
-        `역할 정보 업데이트: ${employee.employeeNumber}, roles: [${roles.join(', ')}]`,
-      );
-    }
+    // 4. Employee에 역할 정보 저장 (빈 배열이어도 저장)
+    await this.employeeService.updateRoles(employee.id, roles);
+    this.logger.log(
+      `역할 정보 DB 업데이트 완료: ${employee.employeeNumber}, roles: [${roles.join(', ')}]`,
+    );
 
     // 5. 최신 정보 재조회
     const updatedEmployee = await this.employeeService.findById(employee.id);

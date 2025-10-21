@@ -296,6 +296,7 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
       externalCreatedAt: this.externalCreatedAt,
       externalUpdatedAt: this.externalUpdatedAt,
       lastSyncAt: this.lastSyncAt,
+      roles: this.roles,
       isExcludedFromList: this.isExcludedFromList,
       excludeReason: this.excludeReason,
       excludedBy: this.excludedBy,

@@ -266,11 +266,6 @@ export class GetEmployeeAssignedDataHandler
       completedSelfEvaluations,
     };
 
-    this.logger.log('사용자 할당 정보 조회 완료', {
-      employeeId,
-      summary,
-    });
-
     return {
       evaluationPeriod: {
         id: evaluationPeriod.id,

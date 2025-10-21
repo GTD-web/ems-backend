@@ -11,6 +11,7 @@ import {
   GetAllEmployeesEvaluationPeriodStatus,
   GetMyEvaluationTargetsStatus,
   GetEmployeeAssignedData,
+  GetMyAssignedData,
   GetEvaluatorAssignedEmployeesData,
   GetFinalEvaluationsByPeriod,
   GetFinalEvaluationsByEmployee,
@@ -102,6 +103,20 @@ export class DashboardController {
     return await this.dashboardService.사용자_할당_정보를_조회한다(
       evaluationPeriodId,
       employeeId,
+    );
+  }
+
+  /**
+   * 현재 로그인한 사용자의 할당된 정보를 조회합니다.
+   */
+  @GetMyAssignedData()
+  async getMyAssignedData(
+    @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<EmployeeAssignedDataResponseDto> {
+    return await this.dashboardService.사용자_할당_정보를_조회한다(
+      evaluationPeriodId,
+      user.id, // JWT에서 추출한 현재 로그인 사용자의 ID
     );
   }
 
