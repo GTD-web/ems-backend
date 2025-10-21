@@ -1,4 +1,4 @@
-import type { DeliverableStatus, DeliverableType } from '../deliverable.types';
+import type { DeliverableType } from '../deliverable.types';
 
 /**
  * 산출물 인터페이스
@@ -12,18 +12,18 @@ export interface IDeliverable {
   description?: string;
   /** 산출물 유형 */
   type: DeliverableType;
-  /** 산출물 상태 */
-  status: DeliverableStatus;
-  /** 예상 완료일 */
-  expectedCompletionDate?: Date;
-  /** 실제 완료일 */
-  actualCompletionDate?: Date;
   /** 파일 경로 */
   filePath?: string;
-  /** 파일 크기 (bytes) */
-  fileSize?: number;
-  /** MIME 타입 */
-  mimeType?: string;
+  /** 직원 ID */
+  employeeId?: string;
+  /** WBS 항목 ID */
+  wbsItemId?: string;
+  /** 매핑일 */
+  mappedDate?: Date;
+  /** 매핑자 ID */
+  mappedBy?: string;
+  /** 활성 상태 */
+  isActive: boolean;
   /** 생성 일시 */
   createdAt: Date;
   /** 수정 일시 */

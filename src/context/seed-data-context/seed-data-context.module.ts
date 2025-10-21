@@ -25,7 +25,6 @@ import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/eval
 
 // Core Domain Entities - Phase 5
 import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
-import { DeliverableMapping } from '@domain/core/deliverable-mapping/deliverable-mapping.entity';
 
 // Sub Domain Entities - Phase 6
 import { QuestionGroup } from '@domain/sub/question-group/question-group.entity';
@@ -84,7 +83,6 @@ import { SeedDataService } from './seed-data.service';
 
       // Core (Phase 5)
       Deliverable,
-      DeliverableMapping,
 
       // Sub (Phase 6)
       QuestionGroup,

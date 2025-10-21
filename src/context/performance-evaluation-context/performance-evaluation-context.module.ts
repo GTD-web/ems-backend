@@ -13,6 +13,7 @@ import { PeerEvaluation } from '../../domain/core/peer-evaluation/peer-evaluatio
 import { PeerEvaluationQuestionMapping } from '../../domain/core/peer-evaluation-question-mapping/peer-evaluation-question-mapping.entity';
 import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evaluation.entity';
 import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation-period.entity';
+import { Deliverable } from '../../domain/core/deliverable/deliverable.entity';
 import { Employee } from '../../domain/common/employee/employee.entity';
 import { Department } from '../../domain/common/department/department.entity';
 import { WbsItem } from '../../domain/common/wbs-item/wbs-item.entity';
@@ -38,6 +39,7 @@ import { QueryHandlers } from './handlers/query-handlers';
       PeerEvaluationQuestionMapping,
       FinalEvaluation,
       EvaluationPeriod,
+      Deliverable,
       Employee,
       Department,
       WbsItem,

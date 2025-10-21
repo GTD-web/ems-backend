@@ -25,6 +25,7 @@ import { PeerEvaluationManagementController } from './performance-evaluation/pee
 import { FinalEvaluationManagementController } from './performance-evaluation/final-evaluation-management.controller';
 import { EvaluationEditableStatusManagementController } from './performance-evaluation/evaluation-editable-status-management.controller';
 import { EvaluationQuestionManagementController } from './performance-evaluation/evaluation-question-management.controller';
+import { DeliverableManagementController } from './performance-evaluation/deliverable-management.controller';
 import { EmployeeManagementController } from './employee-management/employee-management.controller';
 import { SeedDataController } from './seed-data/seed-data.controller';
 
@@ -65,6 +66,7 @@ import { SeedDataController } from './seed-data/seed-data.controller';
     FinalEvaluationManagementController, // 최종평가 관리 컨트롤러
     EvaluationEditableStatusManagementController, // 평가 수정 가능 상태 관리 컨트롤러
     EvaluationQuestionManagementController, // 평가 질문 관리 컨트롤러
+    DeliverableManagementController, // 산출물 관리 컨트롤러
     SeedDataController, // 시드 데이터 컨트롤러
   ],
   providers: [],

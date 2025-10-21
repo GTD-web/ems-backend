@@ -24,7 +24,6 @@ import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/eval
 
 // Core Domain - Phase 5
 import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
-import { DeliverableMapping } from '@domain/core/deliverable-mapping/deliverable-mapping.entity';
 
 // Sub Domain - Phase 6
 import { QuestionGroup } from '@domain/sub/question-group/question-group.entity';
@@ -86,8 +85,6 @@ export class GetSeedDataStatusHandler
     // Phase 5
     @InjectRepository(Deliverable)
     private readonly deliverableRepository: Repository<Deliverable>,
-    @InjectRepository(DeliverableMapping)
-    private readonly deliverableMappingRepository: Repository<DeliverableMapping>,
 
     // Phase 6
     @InjectRepository(QuestionGroup)
@@ -135,7 +132,6 @@ export class GetSeedDataStatusHandler
 
       // Phase 5
       this.deliverableRepository.count(),
-      this.deliverableMappingRepository.count(),
 
       // Phase 6
       this.questionGroupRepository.count(),
@@ -172,21 +168,20 @@ export class GetSeedDataStatusHandler
 
       // Phase 5
       Deliverable: counts[11],
-      DeliverableMapping: counts[12],
 
       // Phase 6
-      QuestionGroup: counts[13],
-      EvaluationQuestion: counts[14],
-      QuestionGroupMapping: counts[15],
+      QuestionGroup: counts[12],
+      EvaluationQuestion: counts[13],
+      QuestionGroupMapping: counts[14],
 
       // Phase 7
-      WbsSelfEvaluation: counts[16],
-      DownwardEvaluation: counts[17],
-      PeerEvaluation: counts[18],
-      FinalEvaluation: counts[19],
+      WbsSelfEvaluation: counts[15],
+      DownwardEvaluation: counts[16],
+      PeerEvaluation: counts[17],
+      FinalEvaluation: counts[18],
 
       // Phase 8
-      EvaluationResponse: counts[20],
+      EvaluationResponse: counts[19],
     };
 
     const hasData = Object.values(entityCounts).some((count) => count > 0);

@@ -51,6 +51,14 @@ Chrome 확장 프로그램 [Markdown Viewer](https://chromewebstore.google.com/d
 
 ## 관리자 API 문서 목록
 
+### 인증
+
+- **[Authentication API Reference](./admin-auth.md)**
+  - SSO 기반 로그인
+  - JWT 토큰 발급
+  - 현재 사용자 정보 조회
+  - EMS-PROD 역할 자동 검증
+
 ### 대시보드
 
 - **[Dashboard API Reference](./admin-dashboard.md)**
@@ -140,6 +148,13 @@ Chrome 확장 프로그램 [Markdown Viewer](https://chromewebstore.google.com/d
   - 미제출 상태로 변경
   - 자기평가 내용 초기화
   - 자기평가 목록 조회
+
+- **[Deliverable Management API Reference](./admin-deliverable.md)**
+  - 산출물 생성/수정/삭제
+  - 직원별/WBS 항목별 산출물 조회
+  - 산출물 상세 조회
+  - 벌크 산출물 생성/삭제
+  - 활성/비활성 상태 관리
 
 - **[Evaluation Question API Reference](./admin-evaluation-question.md)**
   - 질문 그룹 생성/수정/삭제/조회

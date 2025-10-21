@@ -122,3 +122,29 @@ export class DeliverableDuplicateException extends DeliverableDomainException {
     this.name = 'DeliverableDuplicateException';
   }
 }
+
+// 산출물 매핑 관련 예외 (deliverable-mapping에서 통합)
+export class DeliverableMappingDuplicateException extends DeliverableDomainException {
+  constructor(employeeId: string, wbsItemId: string, deliverableId: string) {
+    super(
+      `이미 존재하는 산출물 매핑입니다: 직원 ${employeeId}, WBS ${wbsItemId}, 산출물 ${deliverableId}`,
+      'DELIVERABLE_MAPPING_DUPLICATE',
+      409,
+      { employeeId, wbsItemId, deliverableId },
+    );
+    this.name = 'DeliverableMappingDuplicateException';
+  }
+}
+
+// 산출물 매핑 권한 없음 예외
+export class DeliverableMappingPermissionDeniedException extends DeliverableDomainException {
+  constructor(deliverableId: string, employeeId: string, requesterId: string) {
+    super(
+      `산출물 매핑 권한이 없습니다. 본인의 산출물만 관리할 수 있습니다: 산출물 ${deliverableId}, 소유자 ${employeeId}, 요청자 ${requesterId}`,
+      'DELIVERABLE_MAPPING_PERMISSION_DENIED',
+      403,
+      { deliverableId, employeeId, requesterId },
+    );
+    this.name = 'DeliverableMappingPermissionDeniedException';
+  }
+}

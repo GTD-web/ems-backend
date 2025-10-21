@@ -14,6 +14,7 @@
 - [평가기간의 모든 직원 현황 조회](#평가기간의-모든-직원-현황-조회)
 - [내가 담당하는 평가 대상자 현황 조회](#내가-담당하는-평가-대상자-현황-조회)
 - [사용자 할당 정보 조회](#사용자-할당-정보-조회)
+- [나의 할당 정보 조회](#나의-할당-정보-조회)
 - [담당자의 피평가자 할당 정보 조회](#담당자의-피평가자-할당-정보-조회)
 - [평가기간별 최종평가 목록 조회](#평가기간별-최종평가-목록-조회)
 - [직원별 최종평가 목록 조회](#직원별-최종평가-목록-조회)
@@ -401,6 +402,121 @@ EmployeeAssignedDataResponseDto;
 
 ---
 
+### 나의 할당 정보 조회
+
+```typescript
+GET /admin/dashboard/:evaluationPeriodId/my-assigned-data
+```
+
+현재 로그인한 사용자의 평가기간 내 할당된 모든 정보를 조회합니다.
+
+**Path Parameters:**
+
+| 파라미터             | 타입          | 필수 | 설명        |
+| -------------------- | ------------- | ---- | ----------- |
+| `evaluationPeriodId` | string (UUID) | O    | 평가기간 ID |
+
+**Request Headers:**
+
+| 헤더          | 값                     | 필수 | 설명            |
+| ------------- | ---------------------- | ---- | --------------- |
+| Authorization | Bearer `<accessToken>` | O    | JWT 액세스 토큰 |
+
+**Response:**
+
+```typescript
+// 응답 구조는 "사용자 할당 정보 조회"와 동일
+EmployeeAssignedDataResponseDto;
+```
+
+**Status Codes:**
+
+- `200`: 할당 정보 조회 성공
+- `400`: 잘못된 UUID 형식
+- `401`: 인증 실패 (토큰 없음, 잘못된 토큰)
+- `404`: 평가기간 또는 사용자를 찾을 수 없음
+
+**비즈니스 로직:**
+
+1. **JWT 토큰 검증 및 사용자 추출**
+
+   ```typescript
+   const user = request.user; // JWT Guard에서 주입된 사용자 정보
+   const employeeId = user.id; // 현재 로그인한 사용자 ID
+   ```
+
+2. **평가기간 존재 여부 확인**
+
+   ```typescript
+   const period =
+     await evaluationPeriodService.ID로_조회한다(evaluationPeriodId);
+   if (!period) {
+     throw new NotFoundException('평가기간을 찾을 수 없습니다.');
+   }
+   ```
+
+3. **사용자 할당 정보 조회**
+
+   ```typescript
+   const assignedData = await dashboardService.사용자_할당_정보를_조회한다(
+     evaluationPeriodId,
+     employeeId, // JWT에서 추출한 사용자 ID
+   );
+   ```
+
+4. **응답 반환**
+   - 평가기간 정보, 직원 정보, 할당된 프로젝트/WBS, 평가기준, 성과, 자기평가, 하향평가 포함
+   - 데이터 요약 정보 제공
+
+**주요 차이점:**
+
+| 구분        | 사용자 할당 정보 조회             | 나의 할당 정보 조회       |
+| ----------- | --------------------------------- | ------------------------- |
+| 엔드포인트  | `.../:employeeId/assigned-data`   | `.../my-assigned-data`    |
+| 사용자 지정 | URL 파라미터로 employeeId 전달    | JWT 토큰에서 자동 추출    |
+| 사용 목적   | 관리자가 특정 직원 정보 조회      | 사용자가 본인 정보 조회   |
+| 권한 필요   | 관리자 권한 (다른 직원 조회 가능) | 일반 사용자 권한 (본인만) |
+| URL 보안    | 직원 ID가 URL에 노출됨            | 직원 ID가 토큰에만 존재   |
+| 인증 방식   | JWT + employeeId 검증             | JWT 토큰만으로 완전 인증  |
+
+**보안 고려사항:**
+
+- JWT 토큰에서 사용자 ID를 추출하므로 URL 조작 불가능
+- 사용자는 본인의 정보만 조회 가능 (다른 사용자 정보 접근 차단)
+- 관리자가 특정 직원 정보를 조회하려면 별도의 `GetEmployeeAssignedData` 엔드포인트 사용
+
+**사용 시나리오:**
+
+1. **직원 본인의 평가 현황 확인**
+   - 로그인 후 본인에게 할당된 프로젝트/WBS 확인
+   - 완료해야 할 자기평가 목록 확인
+
+2. **모바일 앱 또는 개인 대시보드**
+   - 사용자 ID를 URL에 노출하지 않고 안전하게 조회
+   - 토큰 기반 자동 인증으로 편리한 UX 제공
+
+3. **마이 페이지**
+   - 사용자별 맞춤 정보 제공
+   - 할당된 업무 및 평가 현황 한눈에 확인
+
+**테스트 케이스:**
+
+- 정상 조회: 유효한 JWT 토큰으로 자신의 할당 정보 조회 성공 (200)
+- 응답 필드 포함: evaluationPeriod, employee, projects, summary 필드 반환
+- 프로젝트/WBS 할당: 할당된 프로젝트와 WBS 정보 조회 성공
+- 평가기준 포함: WBS별 평가기준이 올바르게 반환됨
+- 성과 포함: 등록된 성과 정보가 포함됨
+- 자기평가 포함: 등록된 자기평가 정보가 포함됨
+- 하향평가 포함: 등록된 하향평가 정보가 포함됨
+- 요약 정보 정확성: summary 카운트가 실제 데이터와 일치
+- 할당 없음: 할당이 없는 경우 빈 배열 반환 (200)
+- 토큰 없음: Authorization 헤더 없이 요청 시 401 에러
+- 잘못된 토큰: 유효하지 않은 JWT 토큰으로 요청 시 401 에러
+- 존재하지 않는 평가기간: 404 에러
+- 잘못된 UUID: 잘못된 평가기간 UUID 형식으로 요청 시 400 에러
+
+---
+
 ### 담당자의 피평가자 할당 정보 조회
 
 ```typescript
@@ -760,7 +876,33 @@ console.log(`전체 프로젝트: ${assignedData.summary.totalProjects}`);
 console.log(`전체 WBS: ${assignedData.summary.totalWbs}`);
 ```
 
-### 5. 평가기간별 최종평가 목록 조회
+### 5. 나의 할당 정보 조회
+
+```typescript
+const evaluationPeriodId = 'period-uuid';
+// JWT 토큰에서 자동으로 사용자 ID 추출 (employeeId 파라미터 불필요)
+
+const response = await fetch(
+  `http://localhost:4000/admin/dashboard/${evaluationPeriodId}/my-assigned-data`,
+  {
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
+);
+
+const myAssignedData = await response.json();
+// myAssignedData.employee: 본인 정보
+// myAssignedData.projects: 할당된 프로젝트 목록
+// myAssignedData.summary: 요약 정보
+console.log(`내 이름: ${myAssignedData.employee.name}`);
+console.log(`내 프로젝트 수: ${myAssignedData.summary.totalProjects}`);
+console.log(
+  `완료한 자기평가: ${myAssignedData.summary.completedSelfEvaluations}`,
+);
+```
+
+### 6. 평가기간별 최종평가 목록 조회
 
 ```typescript
 const evaluationPeriodId = 'period-uuid';
@@ -780,7 +922,7 @@ const finalEvaluations = await response.json();
 console.log(`최종평가 수: ${finalEvaluations.evaluations.length}`);
 ```
 
-### 6. 직원별 최종평가 목록 조회 (날짜 필터)
+### 7. 직원별 최종평가 목록 조회 (날짜 필터)
 
 ```typescript
 const employeeId = 'employee-uuid';

@@ -50,6 +50,15 @@ import {
   UpdatePeriodAllEvaluationEditableStatusHandler,
 } from './evaluation-editable-status';
 
+// 산출물
+import {
+  CreateDeliverableHandler,
+  UpdateDeliverableHandler,
+  DeleteDeliverableHandler,
+  BulkCreateDeliverablesHandler,
+  BulkDeleteDeliverablesHandler,
+} from './deliverable';
+
 export const CommandHandlers = [
   // 자기평가 커맨드 핸들러
   CreateWbsSelfEvaluationHandler,
@@ -94,4 +103,11 @@ export const CommandHandlers = [
   // 평가 수정 가능 상태 커맨드 핸들러
   UpdateEvaluationEditableStatusHandler,
   UpdatePeriodAllEvaluationEditableStatusHandler,
+
+  // 산출물 커맨드 핸들러
+  CreateDeliverableHandler,
+  UpdateDeliverableHandler,
+  DeleteDeliverableHandler,
+  BulkCreateDeliverablesHandler,
+  BulkDeleteDeliverablesHandler,
 ];

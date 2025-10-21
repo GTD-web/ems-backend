@@ -23,6 +23,13 @@ import {
   GetFinalEvaluationByEmployeePeriodHandler,
 } from './final-evaluation';
 
+// 산출물
+import {
+  GetEmployeeDeliverablesHandler,
+  GetWbsDeliverablesHandler,
+  GetDeliverableDetailHandler,
+} from './deliverable';
+
 export const QueryHandlers = [
   // 자기평가 쿼리 핸들러
   GetEmployeeSelfEvaluationsHandler,
@@ -42,4 +49,9 @@ export const QueryHandlers = [
   GetFinalEvaluationHandler,
   GetFinalEvaluationListHandler,
   GetFinalEvaluationByEmployeePeriodHandler,
+
+  // 산출물 쿼리 핸들러
+  GetEmployeeDeliverablesHandler,
+  GetWbsDeliverablesHandler,
+  GetDeliverableDetailHandler,
 ];

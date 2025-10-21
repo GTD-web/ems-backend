@@ -79,6 +79,23 @@ import {
   UpsertFinalEvaluationCommand,
 } from './handlers/final-evaluation';
 
+// 산출물 관련 커맨드 및 쿼리
+import {
+  CreateDeliverableCommand,
+  UpdateDeliverableCommand,
+  DeleteDeliverableCommand,
+  BulkCreateDeliverablesCommand,
+  BulkDeleteDeliverablesCommand,
+  type BulkDeliverableData,
+} from './handlers/deliverable/command';
+import {
+  GetEmployeeDeliverablesQuery,
+  GetWbsDeliverablesQuery,
+  GetDeliverableDetailQuery,
+} from './handlers/deliverable/query';
+import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
+import { DeliverableType } from '@domain/core/deliverable/deliverable.types';
+
 import {
   EmployeeSelfEvaluationsResponseDto,
   WbsSelfEvaluationBasicDto,
@@ -1016,5 +1033,157 @@ export class PerformanceEvaluationService
 
     const result = await this.queryBus.execute(query);
     return result;
+  }
+
+  // ==================== 산출물 관련 메서드 ====================
+
+  /**
+   * 산출물을 생성한다
+   */
+  async 산출물을_생성한다(data: {
+    name: string;
+    type: DeliverableType;
+    employeeId: string;
+    wbsItemId: string;
+    description?: string;
+    filePath?: string;
+    createdBy: string;
+  }): Promise<Deliverable> {
+    const command = new CreateDeliverableCommand(
+      data.name,
+      data.type,
+      data.employeeId,
+      data.wbsItemId,
+      data.description,
+      data.filePath,
+      data.createdBy,
+    );
+
+    const deliverable = await this.commandBus.execute(command);
+    return deliverable;
+  }
+
+  /**
+   * 산출물을 수정한다
+   */
+  async 산출물을_수정한다(data: {
+    id: string;
+    updatedBy: string;
+    name?: string;
+    type?: DeliverableType;
+    description?: string;
+    filePath?: string;
+    employeeId?: string;
+    wbsItemId?: string;
+    isActive?: boolean;
+  }): Promise<Deliverable> {
+    const command = new UpdateDeliverableCommand(
+      data.id,
+      data.updatedBy,
+      data.name,
+      data.type,
+      data.description,
+      data.filePath,
+      data.employeeId,
+      data.wbsItemId,
+      data.isActive,
+    );
+
+    const deliverable = await this.commandBus.execute(command);
+    return deliverable;
+  }
+
+  /**
+   * 산출물을 삭제한다
+   */
+  async 산출물을_삭제한다(id: string, deletedBy: string): Promise<void> {
+    const command = new DeleteDeliverableCommand(id, deletedBy);
+    await this.commandBus.execute(command);
+  }
+
+  /**
+   * 산출물을 벌크 생성한다
+   */
+  async 산출물을_벌크_생성한다(data: {
+    deliverables: BulkDeliverableData[];
+    createdBy: string;
+  }): Promise<{
+    successCount: number;
+    failedCount: number;
+    createdIds: string[];
+    failedItems: Array<{
+      data: Partial<BulkDeliverableData>;
+      error: string;
+    }>;
+  }> {
+    const command = new BulkCreateDeliverablesCommand(
+      data.deliverables,
+      data.createdBy,
+    );
+
+    const result = await this.commandBus.execute(command);
+    return {
+      successCount: result.length,
+      failedCount: data.deliverables.length - result.length,
+      createdIds: result,
+      failedItems: [],
+    };
+  }
+
+  /**
+   * 산출물을 벌크 삭제한다
+   */
+  async 산출물을_벌크_삭제한다(data: {
+    ids: string[];
+    deletedBy: string;
+  }): Promise<{
+    successCount: number;
+    failedCount: number;
+    failedIds: Array<{ id: string; error: string }>;
+  }> {
+    const command = new BulkDeleteDeliverablesCommand(data.ids, data.deletedBy);
+
+    const result = await this.commandBus.execute(command);
+    return {
+      successCount: result.successCount,
+      failedCount: result.failureCount,
+      failedIds: result.failedIds.map((id) => ({
+        id,
+        error: 'Deletion failed',
+      })),
+    };
+  }
+
+  /**
+   * 직원별 산출물을 조회한다
+   */
+  async 직원별_산출물을_조회한다(
+    employeeId: string,
+    activeOnly: boolean = true,
+  ): Promise<Deliverable[]> {
+    const query = new GetEmployeeDeliverablesQuery(employeeId, activeOnly);
+    const deliverables = await this.queryBus.execute(query);
+    return deliverables;
+  }
+
+  /**
+   * WBS 항목별 산출물을 조회한다
+   */
+  async WBS항목별_산출물을_조회한다(
+    wbsItemId: string,
+    activeOnly: boolean = true,
+  ): Promise<Deliverable[]> {
+    const query = new GetWbsDeliverablesQuery(wbsItemId, activeOnly);
+    const deliverables = await this.queryBus.execute(query);
+    return deliverables;
+  }
+
+  /**
+   * 산출물 상세를 조회한다
+   */
+  async 산출물_상세를_조회한다(id: string): Promise<Deliverable> {
+    const query = new GetDeliverableDetailQuery(id);
+    const deliverable = await this.queryBus.execute(query);
+    return deliverable;
   }
 }

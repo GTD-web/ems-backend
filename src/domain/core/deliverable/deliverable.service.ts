@@ -7,7 +7,6 @@ import {
   DeliverableValidationException,
   DeliverableDuplicateException,
 } from './deliverable.exceptions';
-import { DeliverableStatus } from './deliverable.types';
 import type {
   CreateDeliverableData,
   UpdateDeliverableData,
@@ -79,16 +78,19 @@ export class DeliverableService {
         updateData.name,
         updateData.description,
         updateData.type,
-        updateData.expectedCompletionDate,
         updateData.filePath,
-        updateData.fileSize,
-        updateData.mimeType,
+        updateData.employeeId,
+        updateData.wbsItemId,
         updatedBy,
       );
 
-      // 상태 변경 처리
-      if (updateData.status !== undefined) {
-        this.상태를_변경한다(deliverable, updateData.status, updatedBy);
+      // 활성 상태 변경 처리
+      if (updateData.isActive !== undefined) {
+        if (updateData.isActive) {
+          deliverable.활성화한다(updatedBy);
+        } else {
+          deliverable.비활성화한다(updatedBy);
+        }
       }
 
       const saved = await this.deliverableRepository.save(deliverable);
@@ -158,58 +160,46 @@ export class DeliverableService {
         });
       }
 
-      if (filter.status) {
-        queryBuilder.andWhere('deliverable.status = :status', {
-          status: filter.status,
+      if (filter.employeeId) {
+        queryBuilder.andWhere('deliverable.employeeId = :employeeId', {
+          employeeId: filter.employeeId,
         });
       }
 
-      if (filter.completedOnly) {
-        queryBuilder.andWhere('deliverable.status = :status', {
-          status: DeliverableStatus.COMPLETED,
+      if (filter.wbsItemId) {
+        queryBuilder.andWhere('deliverable.wbsItemId = :wbsItemId', {
+          wbsItemId: filter.wbsItemId,
         });
       }
 
-      if (filter.pendingOnly) {
-        queryBuilder.andWhere('deliverable.status = :status', {
-          status: DeliverableStatus.PENDING,
+      if (filter.mappedBy) {
+        queryBuilder.andWhere('deliverable.mappedBy = :mappedBy', {
+          mappedBy: filter.mappedBy,
         });
       }
 
-      if (filter.expectedCompletionDateFrom) {
-        queryBuilder.andWhere(
-          'deliverable.expectedCompletionDate >= :expectedCompletionDateFrom',
-          {
-            expectedCompletionDateFrom: filter.expectedCompletionDateFrom,
-          },
-        );
+      if (filter.activeOnly) {
+        queryBuilder.andWhere('deliverable.isActive = :isActive', {
+          isActive: true,
+        });
       }
 
-      if (filter.expectedCompletionDateTo) {
-        queryBuilder.andWhere(
-          'deliverable.expectedCompletionDate <= :expectedCompletionDateTo',
-          {
-            expectedCompletionDateTo: filter.expectedCompletionDateTo,
-          },
-        );
+      if (filter.inactiveOnly) {
+        queryBuilder.andWhere('deliverable.isActive = :isActive', {
+          isActive: false,
+        });
       }
 
-      if (filter.actualCompletionDateFrom) {
-        queryBuilder.andWhere(
-          'deliverable.actualCompletionDate >= :actualCompletionDateFrom',
-          {
-            actualCompletionDateFrom: filter.actualCompletionDateFrom,
-          },
-        );
+      if (filter.mappedDateFrom) {
+        queryBuilder.andWhere('deliverable.mappedDate >= :mappedDateFrom', {
+          mappedDateFrom: filter.mappedDateFrom,
+        });
       }
 
-      if (filter.actualCompletionDateTo) {
-        queryBuilder.andWhere(
-          'deliverable.actualCompletionDate <= :actualCompletionDateTo',
-          {
-            actualCompletionDateTo: filter.actualCompletionDateTo,
-          },
-        );
+      if (filter.mappedDateTo) {
+        queryBuilder.andWhere('deliverable.mappedDate <= :mappedDateTo', {
+          mappedDateTo: filter.mappedDateTo,
+        });
       }
 
       // 정렬
@@ -229,30 +219,6 @@ export class DeliverableService {
         `산출물 필터 조회 실패 - 필터: ${JSON.stringify(filter)}`,
         error.stack,
       );
-      throw error;
-    }
-  }
-
-  /**
-   * 산출물을 완료로 표시한다
-   */
-  async 완료한다(id: string, completedBy: string): Promise<Deliverable> {
-    this.logger.log(`산출물 완료 처리 시작 - ID: ${id}`);
-
-    const deliverable = await this.조회한다(id);
-    if (!deliverable) {
-      throw new DeliverableNotFoundException(id);
-    }
-
-    try {
-      deliverable.완료한다(completedBy);
-
-      const saved = await this.deliverableRepository.save(deliverable);
-
-      this.logger.log(`산출물 완료 처리 완료 - ID: ${id}`);
-      return saved;
-    } catch (error) {
-      this.logger.error(`산출물 완료 처리 실패 - ID: ${id}`, error.stack);
       throw error;
     }
   }
@@ -305,31 +271,139 @@ export class DeliverableService {
   }
 
   /**
-   * 상태를 변경한다
+   * 직원별 산출물 목록을 조회한다
    */
-  private 상태를_변경한다(
-    deliverable: Deliverable,
-    status: string,
-    updatedBy: string,
-  ): void {
-    switch (status) {
-      case DeliverableStatus.COMPLETED:
-        deliverable.완료한다(updatedBy);
-        break;
-      case DeliverableStatus.IN_PROGRESS:
-        deliverable.진행중으로_변경한다(updatedBy);
-        break;
-      case DeliverableStatus.REJECTED:
-        deliverable.거부한다(updatedBy);
-        break;
-      case DeliverableStatus.PENDING:
-        deliverable.메타데이터를_업데이트한다(updatedBy);
-        deliverable.status = DeliverableStatus.PENDING;
-        break;
-      default:
-        throw new DeliverableValidationException(
-          `유효하지 않은 상태입니다: ${status}`,
-        );
+  async 직원별_조회한다(employeeId: string): Promise<Deliverable[]> {
+    this.logger.debug(`직원별 산출물 조회 - 직원: ${employeeId}`);
+
+    try {
+      return await this.필터_조회한다({ employeeId, activeOnly: true });
+    } catch (error) {
+      this.logger.error(
+        `직원별 산출물 조회 실패 - 직원: ${employeeId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * WBS 항목별 산출물 목록을 조회한다
+   */
+  async WBS항목별_조회한다(wbsItemId: string): Promise<Deliverable[]> {
+    this.logger.debug(`WBS 항목별 산출물 조회 - WBS: ${wbsItemId}`);
+
+    try {
+      return await this.필터_조회한다({ wbsItemId, activeOnly: true });
+    } catch (error) {
+      this.logger.error(
+        `WBS 항목별 산출물 조회 실패 - WBS: ${wbsItemId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 산출물에 직원과 WBS 항목을 매핑한다
+   */
+  async 매핑한다(
+    id: string,
+    employeeId: string,
+    wbsItemId: string,
+    mappedBy: string,
+  ): Promise<Deliverable> {
+    this.logger.log(
+      `산출물 매핑 시작 - ID: ${id}, 직원: ${employeeId}, WBS: ${wbsItemId}`,
+    );
+
+    const deliverable = await this.조회한다(id);
+    if (!deliverable) {
+      throw new DeliverableNotFoundException(id);
+    }
+
+    try {
+      deliverable.매핑한다(employeeId, wbsItemId, mappedBy);
+
+      const saved = await this.deliverableRepository.save(deliverable);
+
+      this.logger.log(`산출물 매핑 완료 - ID: ${id}`);
+      return saved;
+    } catch (error) {
+      this.logger.error(`산출물 매핑 실패 - ID: ${id}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * 산출물의 매핑을 해제한다
+   */
+  async 매핑을_해제한다(id: string, unmappedBy: string): Promise<Deliverable> {
+    this.logger.log(`산출물 매핑 해제 시작 - ID: ${id}`);
+
+    const deliverable = await this.조회한다(id);
+    if (!deliverable) {
+      throw new DeliverableNotFoundException(id);
+    }
+
+    try {
+      deliverable.매핑을_해제한다(unmappedBy);
+
+      const saved = await this.deliverableRepository.save(deliverable);
+
+      this.logger.log(`산출물 매핑 해제 완료 - ID: ${id}`);
+      return saved;
+    } catch (error) {
+      this.logger.error(`산출물 매핑 해제 실패 - ID: ${id}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * 산출물을 활성화한다
+   */
+  async 활성화한다(id: string, activatedBy: string): Promise<Deliverable> {
+    this.logger.log(`산출물 활성화 시작 - ID: ${id}`);
+
+    const deliverable = await this.조회한다(id);
+    if (!deliverable) {
+      throw new DeliverableNotFoundException(id);
+    }
+
+    try {
+      deliverable.활성화한다(activatedBy);
+
+      const saved = await this.deliverableRepository.save(deliverable);
+
+      this.logger.log(`산출물 활성화 완료 - ID: ${id}`);
+      return saved;
+    } catch (error) {
+      this.logger.error(`산출물 활성화 실패 - ID: ${id}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * 산출물을 비활성화한다
+   */
+  async 비활성화한다(id: string, deactivatedBy: string): Promise<Deliverable> {
+    this.logger.log(`산출물 비활성화 시작 - ID: ${id}`);
+
+    const deliverable = await this.조회한다(id);
+    if (!deliverable) {
+      throw new DeliverableNotFoundException(id);
+    }
+
+    try {
+      deliverable.비활성화한다(deactivatedBy);
+
+      const saved = await this.deliverableRepository.save(deliverable);
+
+      this.logger.log(`산출물 비활성화 완료 - ID: ${id}`);
+      return saved;
+    } catch (error) {
+      this.logger.error(`산출물 비활성화 실패 - ID: ${id}`, error.stack);
+      throw error;
     }
   }
 }

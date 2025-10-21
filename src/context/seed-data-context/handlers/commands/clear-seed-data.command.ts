@@ -23,7 +23,6 @@ import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/eval
 
 // Core Domain - Phase 5
 import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
-import { DeliverableMapping } from '@domain/core/deliverable-mapping/deliverable-mapping.entity';
 
 // Sub Domain - Phase 6
 import { QuestionGroup } from '@domain/sub/question-group/question-group.entity';
@@ -82,8 +81,6 @@ export class ClearSeedDataHandler
     // Phase 5
     @InjectRepository(Deliverable)
     private readonly deliverableRepository: Repository<Deliverable>,
-    @InjectRepository(DeliverableMapping)
-    private readonly deliverableMappingRepository: Repository<DeliverableMapping>,
 
     // Phase 6
     @InjectRepository(QuestionGroup)
@@ -215,12 +212,6 @@ export class ClearSeedDataHandler
 
   private async clearPhase5(): Promise<void> {
     this.logger.log('Phase 5 데이터 삭제 중...');
-
-    await this.deliverableMappingRepository
-      .createQueryBuilder()
-      .delete()
-      .execute();
-    this.logger.log('DeliverableMapping 삭제 완료');
 
     await this.deliverableRepository.createQueryBuilder().delete().execute();
     this.logger.log('Deliverable 삭제 완료');
