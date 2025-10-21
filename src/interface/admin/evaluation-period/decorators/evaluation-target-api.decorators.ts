@@ -296,13 +296,18 @@ export const GetEmployeeEvaluationPeriods = () =>
     Get('employees/:employeeId/evaluation-periods'),
     ApiOperation({
       summary: '직원의 평가기간 맵핑 조회',
-      description: `**중요**: 특정 직원이 등록된 모든 평가기간 맵핑 정보를 조회합니다. 제외된 맵핑도 포함하여 반환됩니다. 직원 정보는 최상위에 한 번만 제공되고, 맵핑 정보만 배열로 제공됩니다.
+      description: `**중요**: 특정 직원이 등록된 모든 평가기간 맵핑 정보를 조회합니다. 제외된 맵핑도 포함하여 반환됩니다. 직원 정보는 최상위에 한 번만 제공되고, 맵핑 정보만 배열로 제공됩니다. 각 맵핑에는 evaluationPeriodId 대신 평가기간 객체(evaluationPeriod)가 포함됩니다.
+
+**동작:**
+- 직원이 등록된 모든 평가기간 맵핑 조회
+- 각 맵핑에 평가기간 상세 정보 포함 (id, name, startDate, endDate, status, currentPhase)
+- 제외된 맵핑도 포함하여 반환
 
 **테스트 케이스:**
 - 기본 조회: 직원이 등록된 모든 평가기간 맵핑을 조회
 - 직원 정보 포함: employee 객체에 id 및 직원 기본 정보 포함
 - 중복 필드 제거: mappings 배열의 개별 항목에서 employeeId가 undefined로 제거됨
-- 맵핑 필드: evaluationPeriodId, id 등 필수 필드 포함
+- 평가기간 객체 포함: mappings 배열의 각 항목에 evaluationPeriod 객체가 포함됨 (id, name, startDate, endDate, status, currentPhase)
 - 다중 평가기간: 여러 평가기간에 등록된 경우 모두 반환됨
 - 제외 맵핑 포함: 제외된 평가기간 맵핑도 조회됨
 - 제외 상태 확인: 제외된 맵핑의 isExcluded가 true로 설정됨

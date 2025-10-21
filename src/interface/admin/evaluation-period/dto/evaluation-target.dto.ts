@@ -14,6 +14,55 @@ import {
   MaxLength,
 } from 'class-validator';
 import { ToBooleanStrict } from '@interface/decorators';
+import {
+  EvaluationPeriodStatus,
+  EvaluationPeriodPhase,
+} from '../../../../domain/core/evaluation-period/evaluation-period.types';
+
+/**
+ * 평가기간 기본 정보 DTO
+ */
+export class EvaluationPeriodBasicInfoDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  id!: string;
+
+  @ApiProperty({
+    description: '평가기간명',
+    example: '2024년 상반기 평가',
+  })
+  name!: string;
+
+  @ApiProperty({
+    description: '평가 기간 시작일',
+    example: '2024-01-01T00:00:00.000Z',
+  })
+  startDate!: Date;
+
+  @ApiPropertyOptional({
+    description: '평가 기간 종료일',
+    example: '2024-06-30T23:59:59.999Z',
+    nullable: true,
+  })
+  endDate?: Date | null;
+
+  @ApiProperty({
+    description: '평가 기간 상태',
+    enum: EvaluationPeriodStatus,
+    example: EvaluationPeriodStatus.IN_PROGRESS,
+  })
+  status!: EvaluationPeriodStatus;
+
+  @ApiPropertyOptional({
+    description: '현재 진행 단계',
+    enum: EvaluationPeriodPhase,
+    example: EvaluationPeriodPhase.SELF_EVALUATION,
+    nullable: true,
+  })
+  currentPhase?: EvaluationPeriodPhase | null;
+}
 
 /**
  * 직원 기본 정보 DTO (평가 대상자 조회용)
@@ -248,10 +297,10 @@ export class EmployeeEvaluationPeriodMappingItemDto {
   id!: string;
 
   @ApiProperty({
-    description: '평가기간 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: '평가기간 정보',
+    type: EvaluationPeriodBasicInfoDto,
   })
-  evaluationPeriodId!: string;
+  evaluationPeriod!: EvaluationPeriodBasicInfoDto;
 
   @ApiProperty({
     description: '평가 대상 제외 여부',

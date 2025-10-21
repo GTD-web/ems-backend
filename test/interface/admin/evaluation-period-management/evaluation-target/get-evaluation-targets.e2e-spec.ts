@@ -495,7 +495,29 @@ describe('평가 대상자 조회 테스트', () => {
         expect(response.body.mappings.length).toBe(periods.length);
 
         response.body.mappings.forEach((mapping: any) => {
-          expect(mapping.evaluationPeriodId).toBeDefined();
+          // evaluationPeriodId는 더 이상 존재하지 않아야 함
+          expect(mapping.evaluationPeriodId).toBeUndefined();
+
+          // evaluationPeriod 객체가 존재해야 함
+          expect(mapping.evaluationPeriod).toBeDefined();
+          expect(typeof mapping.evaluationPeriod).toBe('object');
+
+          // evaluationPeriod 객체의 필수 필드 검증
+          expect(mapping.evaluationPeriod.id).toBeDefined();
+          expect(typeof mapping.evaluationPeriod.id).toBe('string');
+          expect(mapping.evaluationPeriod.name).toBeDefined();
+          expect(typeof mapping.evaluationPeriod.name).toBe('string');
+          expect(mapping.evaluationPeriod.startDate).toBeDefined();
+          expect(mapping.evaluationPeriod.status).toBeDefined();
+
+          // endDate와 currentPhase는 nullable
+          if (mapping.evaluationPeriod.endDate !== null) {
+            expect(mapping.evaluationPeriod.endDate).toBeDefined();
+          }
+          if (mapping.evaluationPeriod.currentPhase !== null) {
+            expect(mapping.evaluationPeriod.currentPhase).toBeDefined();
+          }
+
           expect(mapping.id).toBeDefined();
           expect(mapping.employeeId).toBeUndefined(); // 중복 제거됨
         });
@@ -569,9 +591,16 @@ describe('평가 대상자 조회 테스트', () => {
         expect(response.body.mappings.length).toBe(periods.length);
 
         const excludedMapping = response.body.mappings.find(
-          (m: any) => m.evaluationPeriodId === periods[0].id,
+          (m: any) => m.evaluationPeriod.id === periods[0].id,
         );
+        expect(excludedMapping).toBeDefined();
         expect(excludedMapping.isExcluded).toBe(true);
+
+        // 제외된 맵핑에도 평가기간 객체가 제대로 포함되어 있는지 검증
+        expect(excludedMapping.evaluationPeriod).toBeDefined();
+        expect(excludedMapping.evaluationPeriod.id).toBe(periods[0].id);
+        expect(excludedMapping.evaluationPeriod.name).toBeDefined();
+        expect(excludedMapping.evaluationPeriod.status).toBeDefined();
       });
     });
 
