@@ -486,6 +486,7 @@ export class EvaluationCriteriaManagementService
   async WBS_평가기준을_저장한다(
     wbsItemId: string,
     criteria: string,
+    importance: number,
     actionBy: string,
   ): Promise<WbsEvaluationCriteriaDto> {
     // wbsItemId로 기존 평가기준 조회
@@ -497,13 +498,13 @@ export class EvaluationCriteriaManagementService
       const criteriaToUpdate = existingCriteria[0];
       return await this.WBS_평가기준을_수정한다(
         criteriaToUpdate.id,
-        { criteria },
+        { criteria, importance },
         actionBy,
       );
     } else {
       // 기존 평가기준이 없으면 생성
       return await this.WBS_평가기준을_생성한다(
-        { wbsItemId, criteria },
+        { wbsItemId, criteria, importance },
         actionBy,
       );
     }
@@ -538,6 +539,7 @@ export class EvaluationCriteriaManagementService
   async WBS_평가기준_상세를_조회한다(id: string): Promise<{
     id: string;
     criteria: string;
+    importance: number;
     createdAt: Date;
     updatedAt: Date;
     wbsItem: {

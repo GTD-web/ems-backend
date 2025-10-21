@@ -1,6 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { WbsEvaluationCriteriaService } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.service';
+import { WbsAssignmentWeightCalculationService } from '../../../services/wbs-assignment-weight-calculation.service';
 
 /**
  * WBS 항목 평가기준 전체 삭제 커맨드
@@ -25,6 +26,7 @@ export class DeleteWbsItemEvaluationCriteriaHandler
 
   constructor(
     private readonly wbsEvaluationCriteriaService: WbsEvaluationCriteriaService,
+    private readonly weightCalculationService: WbsAssignmentWeightCalculationService,
   ) {}
 
   async execute(
@@ -44,6 +46,11 @@ export class DeleteWbsItemEvaluationCriteriaHandler
 
       this.logger.log(
         `WBS 항목 평가기준 전체 삭제 완료 - WBS 항목 ID: ${wbsItemId}`,
+      );
+
+      // 가중치 재계산
+      await this.weightCalculationService.WBS별_할당된_직원_가중치를_재계산한다(
+        wbsItemId,
       );
 
       return true;

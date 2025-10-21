@@ -35,6 +35,7 @@ import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 
 import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
+import { WbsAssignmentWeightCalculationService } from './services/wbs-assignment-weight-calculation.service';
 
 /**
  * 평가기준관리 컨텍스트 모듈 (MVP 버전)
@@ -73,6 +74,7 @@ import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
   providers: [
     EvaluationCriteriaManagementService,
     TransactionManagerService,
+    WbsAssignmentWeightCalculationService,
     // Project Assignment Handlers
     ...PROJECT_ASSIGNMENT_HANDLERS,
     // WBS Assignment Handlers

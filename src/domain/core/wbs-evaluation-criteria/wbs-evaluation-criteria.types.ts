@@ -6,6 +6,8 @@ export interface CreateWbsEvaluationCriteriaData {
   wbsItemId: string;
   /** 평가 기준 내용 */
   criteria: string;
+  /** 중요도 (1~10) */
+  importance: number;
 }
 
 /**
@@ -14,6 +16,8 @@ export interface CreateWbsEvaluationCriteriaData {
 export interface UpdateWbsEvaluationCriteriaData {
   /** 평가 기준 내용 */
   criteria?: string;
+  /** 중요도 (1~10) */
+  importance?: number;
 }
 
 /**
@@ -26,6 +30,8 @@ export interface WbsEvaluationCriteriaDto {
   wbsItemId: string;
   /** 평가 기준 내용 */
   criteria: string;
+  /** 중요도 (1~10) */
+  importance: number;
   /** 생성일시 */
   createdAt: Date;
   /** 수정일시 */

@@ -64,6 +64,15 @@ export class EvaluationWbsAssignment
   })
   displayOrder: number;
 
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    comment: '가중치 (0~100, 직원별 WBS 중요도 기반 자동 계산)',
+    default: 0,
+  })
+  weight: number;
+
   constructor(data?: CreateEvaluationWbsAssignmentData) {
     super();
     if (data) {
@@ -74,6 +83,7 @@ export class EvaluationWbsAssignment
       this.assignedBy = data.assignedBy;
       this.assignedDate = new Date();
       this.displayOrder = 0;
+      this.weight = 0; // 초기값, 생성 후 자동 계산됨
     }
   }
 
@@ -116,6 +126,16 @@ export class EvaluationWbsAssignment
   }
 
   /**
+   * 가중치를 설정한다
+   */
+  가중치를_설정한다(weight: number): void {
+    if (weight < 0 || weight > 100) {
+      throw new Error('가중치는 0~100 사이여야 합니다.');
+    }
+    this.weight = weight;
+  }
+
+  /**
    * DTO로 변환한다
    */
   DTO로_변환한다(): EvaluationWbsAssignmentDto {
@@ -128,6 +148,7 @@ export class EvaluationWbsAssignment
       assignedDate: this.assignedDate,
       assignedBy: this.assignedBy,
       displayOrder: this.displayOrder,
+      weight: this.weight,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
       deletedAt: this.deletedAt,

@@ -19,6 +19,7 @@ export interface WbsEvaluationCriteriaDetailResult {
   // 평가기준 기본 정보
   id: string;
   criteria: string;
+  importance: number;
   createdAt: Date;
   updatedAt: Date;
 
@@ -71,6 +72,7 @@ export class GetWbsEvaluationCriteriaDetailHandler
           'criteria.id AS criteria_id',
           'criteria.wbsItemId AS criteria_wbsitemid',
           'criteria.criteria AS criteria_criteria',
+          'criteria.importance AS criteria_importance',
           'criteria.createdAt AS criteria_createdat',
           'criteria.updatedAt AS criteria_updatedat',
           // WBS 항목 정보
@@ -97,6 +99,7 @@ export class GetWbsEvaluationCriteriaDetailHandler
       return {
         id: result.criteria_id,
         criteria: result.criteria_criteria,
+        importance: result.criteria_importance,
         createdAt: result.criteria_createdat,
         updatedAt: result.criteria_updatedat,
 

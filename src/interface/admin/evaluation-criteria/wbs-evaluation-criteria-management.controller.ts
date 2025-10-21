@@ -92,6 +92,7 @@ export class WbsEvaluationCriteriaManagementController {
     return await this.evaluationCriteriaManagementService.WBS_평가기준을_저장한다(
       wbsItemId,
       dto.criteria,
+      dto.importance,
       actionBy,
     );
   }

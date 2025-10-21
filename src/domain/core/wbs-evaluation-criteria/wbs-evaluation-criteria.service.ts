@@ -179,6 +179,7 @@ export class WbsEvaluationCriteriaService
       const criteria = repository.create({
         wbsItemId: createData.wbsItemId,
         criteria: createData.criteria,
+        importance: createData.importance,
       });
 
       const savedCriteria = await repository.save(criteria);
@@ -220,8 +221,13 @@ export class WbsEvaluationCriteriaService
       );
 
       // 업데이트 적용
-      if (updateData.criteria !== undefined) {
-        criteria.기준내용업데이트한다(updateData.criteria, updatedBy);
+      if (
+        updateData.criteria !== undefined ||
+        updateData.importance !== undefined
+      ) {
+        const newCriteria = updateData.criteria ?? criteria.criteria;
+        const newImportance = updateData.importance ?? criteria.importance;
+        criteria.기준내용업데이트한다(newCriteria, newImportance, updatedBy);
       }
 
       const updatedCriteria = await repository.save(criteria);
@@ -322,4 +328,3 @@ export class WbsEvaluationCriteriaService
     }, 'WBS항목_평가기준_전체삭제한다');
   }
 }
-

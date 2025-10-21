@@ -9,13 +9,20 @@ export interface IWbsEvaluationCriteria extends IBaseEntity {
   wbsItemId: string;
   /** 평가 기준 내용 */
   criteria: string;
+  /** 중요도 (1~10) */
+  importance: number;
 
   /**
    * 평가 기준 내용을 업데이트한다
    * @param criteria 새로운 평가 기준 내용
+   * @param importance 중요도 (1~10)
    * @param updatedBy 수정자 ID
    */
-  기준내용업데이트한다(criteria: string, updatedBy: string): void;
+  기준내용업데이트한다(
+    criteria: string,
+    importance: number,
+    updatedBy: string,
+  ): void;
 
   /**
    * 평가 기준이 특정 WBS 항목에 속하는지 확인한다

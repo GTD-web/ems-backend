@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EvaluationWbsAssignmentService } from '../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
+import { WbsAssignmentWeightCalculationService } from '../../../services/wbs-assignment-weight-calculation.service';
 
 /**
  * WBS 할당 취소 커맨드
@@ -28,6 +29,7 @@ export class CancelWbsAssignmentHandler
 
   constructor(
     private readonly wbsAssignmentService: EvaluationWbsAssignmentService,
+    private readonly weightCalculationService: WbsAssignmentWeightCalculationService,
   ) {}
 
   async execute(command: CancelWbsAssignmentCommand): Promise<void> {
@@ -45,8 +47,17 @@ export class CancelWbsAssignmentHandler
     }
 
     // 3. 할당이 존재하면 삭제 수행 (도메인 서비스에서는 에러를 던지지 않음)
+    const employeeId = assignment.employeeId;
+    const periodId = assignment.periodId;
+    
     await this.wbsAssignmentService.삭제한다(id, cancelledBy);
 
     this.logger.log(`WBS 할당 취소 완료 - ID: ${id}`);
+    
+    // 4. 가중치 재계산
+    await this.weightCalculationService.직원_평가기간_가중치를_재계산한다(
+      employeeId,
+      periodId,
+    );
   }
 }

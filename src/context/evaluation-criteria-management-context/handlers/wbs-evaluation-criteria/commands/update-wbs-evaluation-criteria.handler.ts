@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Logger } from '@nestjs/common';
 import { WbsEvaluationCriteriaService } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.service';
 import { UpdateWbsEvaluationCriteriaData } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
+import { WbsAssignmentWeightCalculationService } from '../../../services/wbs-assignment-weight-calculation.service';
 
 /**
  * WBS 평가기준 수정 커맨드
@@ -25,6 +26,7 @@ export class UpdateWbsEvaluationCriteriaHandler
 
   constructor(
     private readonly wbsEvaluationCriteriaService: WbsEvaluationCriteriaService,
+    private readonly weightCalculationService: WbsAssignmentWeightCalculationService,
   ) {}
 
   async execute(command: UpdateWbsEvaluationCriteriaCommand) {
@@ -40,6 +42,13 @@ export class UpdateWbsEvaluationCriteriaHandler
       );
 
       this.logger.log(`WBS 평가기준 수정 완료 - ID: ${id}`);
+
+      // 중요도가 변경된 경우 가중치 재계산
+      if (updateData.importance !== undefined) {
+        await this.weightCalculationService.WBS별_할당된_직원_가중치를_재계산한다(
+          criteria.wbsItemId,
+        );
+      }
 
       return criteria.DTO로_변환한다();
     } catch (error) {

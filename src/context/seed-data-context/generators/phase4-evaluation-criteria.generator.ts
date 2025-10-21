@@ -102,6 +102,7 @@ export class Phase4EvaluationCriteriaGenerator {
         const criteria = new WbsEvaluationCriteria();
         criteria.wbsItemId = wbsId;
         criteria.criteria = faker.lorem.sentence();
+        criteria.importance = faker.number.int({ min: 1, max: 10 });
         criteria.createdBy = systemAdminId;
         allCriteria.push(criteria);
       }

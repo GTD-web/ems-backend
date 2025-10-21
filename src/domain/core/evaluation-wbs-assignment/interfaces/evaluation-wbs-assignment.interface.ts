@@ -18,6 +18,10 @@ export interface IEvaluationWbsAssignment extends IBaseEntity {
   assignedDate: Date;
   /** 할당자 ID */
   assignedBy: string;
+  /** 표시 순서 */
+  displayOrder: number;
+  /** 가중치 (0~100, 직원별 WBS 중요도 기반 자동 계산) */
+  weight: number;
 
   /**
    * 특정 평가기간에 속하는지 확인한다

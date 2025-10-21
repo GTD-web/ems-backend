@@ -74,6 +74,7 @@ export class WbsAssignmentBusinessService {
         {
           wbsItemId: params.wbsItemId,
           criteria: '', // 빈 평가기준으로 생성
+          importance: 5, // 기본 중요도
         },
         params.assignedBy,
       );
@@ -249,6 +250,7 @@ export class WbsAssignmentBusinessService {
             {
               wbsItemId,
               criteria: '', // 빈 평가기준으로 생성
+              importance: 5, // 기본 중요도
             },
             params.assignedBy,
           );

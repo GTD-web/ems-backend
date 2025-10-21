@@ -3,7 +3,7 @@ import {
   ApiProperty,
   ApiPropertyOptional,
 } from '@nestjs/swagger';
-import { IsString, IsUUID, IsOptional } from 'class-validator';
+import { IsString, IsUUID, IsOptional, IsInt, Min, Max } from 'class-validator';
 
 /**
  * WBS 평가기준 생성 DTO
@@ -23,6 +23,17 @@ export class CreateWbsEvaluationCriteriaDto {
   })
   @IsString()
   criteria: string;
+
+  @ApiProperty({
+    description: '중요도 (1~10)',
+    example: 5,
+    minimum: 1,
+    maximum: 10,
+  })
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  importance: number;
 }
 
 /**
@@ -40,6 +51,17 @@ export class UpsertWbsEvaluationCriteriaBodyDto {
   })
   @IsString()
   criteria: string;
+
+  @ApiProperty({
+    description: '중요도 (1~10)',
+    example: 5,
+    minimum: 1,
+    maximum: 10,
+  })
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  importance: number;
 }
 
 /**
@@ -53,6 +75,18 @@ export class UpdateWbsEvaluationCriteriaDto {
   @IsOptional()
   @IsString()
   criteria?: string;
+
+  @ApiPropertyOptional({
+    description: '중요도 (1~10)',
+    example: 5,
+    minimum: 1,
+    maximum: 10,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(10)
+  importance?: number;
 }
 
 /**
@@ -107,6 +141,12 @@ export class WbsEvaluationCriteriaDto {
   })
   criteria: string;
 
+  @ApiProperty({
+    description: '중요도 (1~10)',
+    example: 5,
+  })
+  importance: number;
+
   @ApiProperty({ description: '생성일시', example: '2024-10-01T09:00:00Z' })
   createdAt: Date;
 
@@ -129,6 +169,12 @@ export class WbsEvaluationCriteriaDetailDto {
     example: '코드 품질 및 성능 최적화',
   })
   criteria: string;
+
+  @ApiProperty({
+    description: '중요도 (1~10)',
+    example: 5,
+  })
+  importance: number;
 
   @ApiProperty({ description: '생성일시', example: '2024-10-01T09:00:00Z' })
   createdAt: Date;

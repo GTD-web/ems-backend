@@ -33,6 +33,17 @@ export class WbsEvaluationCriteria
   criteria: string;
 
   /**
+   * 중요도
+   * 평가 기준의 중요도 (1~10)
+   */
+  @Column({
+    type: 'int',
+    default: 5,
+    comment: '중요도 (1~10, 기본값: 5)',
+  })
+  importance: number;
+
+  /**
    * DTO로 변환
    */
   DTO로_변환한다(): WbsEvaluationCriteriaDto {
@@ -40,6 +51,7 @@ export class WbsEvaluationCriteria
       id: this.id,
       wbsItemId: this.wbsItemId,
       criteria: this.criteria,
+      importance: this.importance,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };
@@ -48,8 +60,13 @@ export class WbsEvaluationCriteria
   /**
    * 평가 기준 내용을 업데이트한다
    */
-  기준내용업데이트한다(criteria: string, updatedBy: string): void {
+  기준내용업데이트한다(
+    criteria: string,
+    importance: number,
+    updatedBy: string,
+  ): void {
     this.criteria = criteria;
+    this.importance = importance;
     this.수정자를_설정한다(updatedBy);
     this.메타데이터를_업데이트한다();
   }
@@ -96,4 +113,3 @@ export class WbsEvaluationCriteria
     );
   }
 }
-
