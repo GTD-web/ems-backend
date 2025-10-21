@@ -17,3 +17,8 @@ export {
   SubmitDownwardEvaluationCommand,
   SubmitDownwardEvaluationHandler,
 } from './submit-downward-evaluation.handler';
+
+export {
+  ResetDownwardEvaluationCommand,
+  ResetDownwardEvaluationHandler,
+} from './reset-downward-evaluation.handler';

@@ -7,9 +7,12 @@ import {
   GetDownwardEvaluationListQuery,
 } from '../../../context/performance-evaluation-context/handlers/downward-evaluation';
 import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
+import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
 import {
   GetDownwardEvaluationDetail,
   GetEvaluatorDownwardEvaluations,
+  ResetPrimaryDownwardEvaluation,
+  ResetSecondaryDownwardEvaluation,
   SubmitDownwardEvaluation,
   SubmitPrimaryDownwardEvaluation,
   SubmitSecondaryDownwardEvaluation,
@@ -37,6 +40,7 @@ import {
 export class DownwardEvaluationManagementController {
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
+    private readonly downwardEvaluationBusinessService: DownwardEvaluationBusinessService,
   ) {}
 
   /**
@@ -46,24 +50,25 @@ export class DownwardEvaluationManagementController {
   async upsertPrimaryDownwardEvaluation(
     @ParseUUID('evaluateeId') evaluateeId: string,
     @ParseUUID('periodId') periodId: string,
-    @ParseUUID('projectId') projectId: string,
+    @ParseUUID('wbsId') wbsId: string,
     @Body() dto: CreatePrimaryDownwardEvaluationBodyDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<DownwardEvaluationResponseDto> {
     const actionBy = user.id;
     const evaluatorId = dto.evaluatorId;
+    
+    // 비즈니스 서비스를 통해 평가라인 검증 후 저장
     const evaluationId =
-      await this.performanceEvaluationService.하향평가를_저장한다(
+      await this.downwardEvaluationBusinessService.일차_하향평가를_저장한다({
         evaluatorId,
         evaluateeId,
         periodId,
-        projectId,
-        dto.selfEvaluationId,
-        'primary',
-        dto.downwardEvaluationContent,
-        dto.downwardEvaluationScore,
+        wbsId,
+        selfEvaluationId: dto.selfEvaluationId,
+        downwardEvaluationContent: dto.downwardEvaluationContent,
+        downwardEvaluationScore: dto.downwardEvaluationScore,
         actionBy,
-      );
+      });
 
     return {
       id: evaluationId,
@@ -79,24 +84,25 @@ export class DownwardEvaluationManagementController {
   async upsertSecondaryDownwardEvaluation(
     @ParseUUID('evaluateeId') evaluateeId: string,
     @ParseUUID('periodId') periodId: string,
-    @ParseUUID('projectId') projectId: string,
+    @ParseUUID('wbsId') wbsId: string,
     @Body() dto: CreateSecondaryDownwardEvaluationBodyDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<DownwardEvaluationResponseDto> {
     const actionBy = user.id;
     const evaluatorId = dto.evaluatorId;
+    
+    // 비즈니스 서비스를 통해 평가라인 검증 후 저장
     const evaluationId =
-      await this.performanceEvaluationService.하향평가를_저장한다(
+      await this.downwardEvaluationBusinessService.이차_하향평가를_저장한다({
         evaluatorId,
         evaluateeId,
         periodId,
-        projectId,
-        dto.selfEvaluationId,
-        'secondary',
-        dto.downwardEvaluationContent,
-        dto.downwardEvaluationScore,
+        wbsId,
+        selfEvaluationId: dto.selfEvaluationId,
+        downwardEvaluationContent: dto.downwardEvaluationContent,
+        downwardEvaluationScore: dto.downwardEvaluationScore,
         actionBy,
-      );
+      });
 
     return {
       id: evaluationId,
@@ -112,7 +118,7 @@ export class DownwardEvaluationManagementController {
   async submitPrimaryDownwardEvaluation(
     @ParseUUID('evaluateeId') evaluateeId: string,
     @ParseUUID('periodId') periodId: string,
-    @ParseUUID('projectId') projectId: string,
+    @ParseUUID('wbsId') wbsId: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
@@ -121,7 +127,7 @@ export class DownwardEvaluationManagementController {
     await this.performanceEvaluationService.일차_하향평가를_제출한다(
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       evaluatorId,
       submittedBy,
     );
@@ -134,7 +140,7 @@ export class DownwardEvaluationManagementController {
   async submitSecondaryDownwardEvaluation(
     @ParseUUID('evaluateeId') evaluateeId: string,
     @ParseUUID('periodId') periodId: string,
-    @ParseUUID('projectId') projectId: string,
+    @ParseUUID('wbsId') wbsId: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
@@ -143,9 +149,53 @@ export class DownwardEvaluationManagementController {
     await this.performanceEvaluationService.이차_하향평가를_제출한다(
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       evaluatorId,
       submittedBy,
+    );
+  }
+
+  /**
+   * 1차 하향평가 미제출 상태로 변경
+   */
+  @ResetPrimaryDownwardEvaluation()
+  async resetPrimaryDownwardEvaluation(
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('wbsId') wbsId: string,
+    @Body() submitDto: SubmitDownwardEvaluationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    const evaluatorId = submitDto.evaluatorId;
+    const resetBy = user.id;
+    await this.performanceEvaluationService.일차_하향평가를_초기화한다(
+      evaluateeId,
+      periodId,
+      wbsId,
+      evaluatorId,
+      resetBy,
+    );
+  }
+
+  /**
+   * 2차 하향평가 미제출 상태로 변경
+   */
+  @ResetSecondaryDownwardEvaluation()
+  async resetSecondaryDownwardEvaluation(
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('wbsId') wbsId: string,
+    @Body() submitDto: SubmitDownwardEvaluationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    const evaluatorId = submitDto.evaluatorId;
+    const resetBy = user.id;
+    await this.performanceEvaluationService.이차_하향평가를_초기화한다(
+      evaluateeId,
+      periodId,
+      wbsId,
+      evaluatorId,
+      resetBy,
     );
   }
 
@@ -176,7 +226,7 @@ export class DownwardEvaluationManagementController {
       evaluatorId,
       filter.evaluateeId,
       filter.periodId,
-      filter.projectId,
+      filter.wbsId,
       filter.evaluationType,
       filter.isCompleted,
       filter.page || 1,

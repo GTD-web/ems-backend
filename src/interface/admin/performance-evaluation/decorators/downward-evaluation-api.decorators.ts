@@ -496,6 +496,172 @@ export function SubmitDownwardEvaluation() {
 }
 
 /**
+ * 1차 하향평가 미제출 상태 변경 API 데코레이터
+ */
+export function ResetPrimaryDownwardEvaluation() {
+  return applyDecorators(
+    Post(
+      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/primary/reset',
+    ),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '1차 하향평가 미제출 상태 변경',
+      description: `**중요**: 제출된 1차 하향평가를 미제출 상태로 되돌립니다. 평가 내용은 유지되며, isCompleted 상태만 false로 변경됩니다.
+
+**초기화 프로세스:**
+1. 평가자, 피평가자, 평가기간, 프로젝트 정보로 1차 하향평가 조회
+2. 평가 상태를 미완료(isCompleted: false)로 변경
+3. 수정 일시 기록
+
+**선택적 필드:**
+- resetBy: 초기화자 ID (선택사항, 추후 요청자 ID로 변경 예정)
+
+**테스트 케이스:**
+- 기본 초기화: 제출된 1차 하향평가를 미제출 상태로 변경 가능
+- isCompleted 변경: 초기화 시 isCompleted가 false로 변경됨
+- 평가 내용 유지: 초기화 후에도 평가 내용과 점수는 유지됨
+- resetBy 없이 초기화: resetBy 생략 가능 (기본값: '시스템')
+- 트랜잭션 보장: 초기화 프로세스가 트랜잭션으로 안전하게 처리됨
+- 초기화 후 재제출 가능: 초기화 후 다시 제출할 수 있어야 함
+- 초기화 후 updatedAt 갱신: 초기화 시 updatedAt이 갱신되어야 함
+- 존재하지 않는 평가: 저장되지 않은 평가 초기화 시 404 에러
+- 미제출 평가 초기화: 이미 미제출 상태인 평가 초기화 시 400 에러
+- 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
+    }),
+    ApiParam({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440003',
+    }),
+    ApiBody({
+      type: SubmitDownwardEvaluationDto,
+      description: '1차 하향평가 초기화 정보 (evaluatorId 포함)',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '1차 하향평가를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 2차 하향평가 미제출 상태 변경 API 데코레이터
+ */
+export function ResetSecondaryDownwardEvaluation() {
+  return applyDecorators(
+    Post(
+      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/secondary/reset',
+    ),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '2차 하향평가 미제출 상태 변경',
+      description: `**중요**: 제출된 2차 하향평가를 미제출 상태로 되돌립니다. 평가 내용은 유지되며, isCompleted 상태만 false로 변경됩니다. 1차 하향평가와 독립적으로 초기화됩니다.
+
+**초기화 프로세스:**
+1. 평가자, 피평가자, 평가기간, 프로젝트 정보로 2차 하향평가 조회
+2. 평가 상태를 미완료(isCompleted: false)로 변경
+3. 수정 일시 기록
+
+**선택적 필드:**
+- resetBy: 초기화자 ID (선택사항, 추후 요청자 ID로 변경 예정)
+
+**테스트 케이스:**
+- 기본 초기화: 제출된 2차 하향평가를 미제출 상태로 변경 가능
+- isCompleted 변경: 초기화 시 isCompleted가 false로 변경됨
+- 평가 내용 유지: 초기화 후에도 평가 내용과 점수는 유지됨
+- 독립적 초기화: 1차와 2차 하향평가가 독립적으로 초기화됨 (1차 상태와 무관)
+- resetBy 없이 초기화: resetBy 생략 가능 (기본값: '시스템')
+- 트랜잭션 보장: 초기화 프로세스가 트랜잭션으로 안전하게 처리됨
+- 초기화 후 재제출 가능: 초기화 후 다시 제출할 수 있어야 함
+- 존재하지 않는 2차 평가: 저장되지 않은 2차 평가 초기화 시 404 에러
+- 미제출 평가 초기화: 이미 미제출 상태인 2차 평가 초기화 시 400 에러
+- 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
+    }),
+    ApiParam({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440003',
+    }),
+    ApiBody({
+      type: SubmitDownwardEvaluationDto,
+      description: '2차 하향평가 초기화 정보 (evaluatorId 포함)',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '2차 하향평가를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
  * 평가자의 하향평가 목록 조회 API 데코레이터
  */
 export function GetEvaluatorDownwardEvaluations() {

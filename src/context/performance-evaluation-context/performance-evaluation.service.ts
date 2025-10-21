@@ -64,6 +64,7 @@ import {
   SubmitDownwardEvaluationCommand,
   UpdateDownwardEvaluationCommand,
   UpsertDownwardEvaluationCommand,
+  ResetDownwardEvaluationCommand,
 } from './handlers/downward-evaluation';
 
 // 최종평가 관련 커맨드 및 쿼리
@@ -612,6 +613,80 @@ export class PerformanceEvaluationService
       evaluationId,
       submittedBy || '시스템',
     );
+
+    await this.commandBus.execute(command);
+  }
+
+  /**
+   * 1차 하향평가를 초기화한다 (미제출 상태로 변경)
+   */
+  async 일차_하향평가를_초기화한다(
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluatorId: string,
+    resetBy: string,
+  ): Promise<void> {
+    // 1차 하향평가를 조회
+    const query = new GetDownwardEvaluationListQuery(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
+      'primary',
+      undefined,
+      1,
+      1,
+    );
+
+    const result = await this.queryBus.execute(query);
+    if (!result.evaluations || result.evaluations.length === 0) {
+      throw new DownwardEvaluationNotFoundException(
+        `1차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, projectId: ${projectId})`,
+      );
+    }
+
+    const evaluation = result.evaluations[0];
+
+    // 초기화 커맨드 실행
+    const command = new ResetDownwardEvaluationCommand(evaluation.id, resetBy);
+
+    await this.commandBus.execute(command);
+  }
+
+  /**
+   * 2차 하향평가를 초기화한다 (미제출 상태로 변경)
+   */
+  async 이차_하향평가를_초기화한다(
+    evaluateeId: string,
+    periodId: string,
+    projectId: string,
+    evaluatorId: string,
+    resetBy: string,
+  ): Promise<void> {
+    // 2차 하향평가를 조회
+    const query = new GetDownwardEvaluationListQuery(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      projectId,
+      'secondary',
+      undefined,
+      1,
+      1,
+    );
+
+    const result = await this.queryBus.execute(query);
+    if (!result.evaluations || result.evaluations.length === 0) {
+      throw new DownwardEvaluationNotFoundException(
+        `2차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, projectId: ${projectId})`,
+      );
+    }
+
+    const evaluation = result.evaluations[0];
+
+    // 초기화 커맨드 실행
+    const command = new ResetDownwardEvaluationCommand(evaluation.id, resetBy);
 
     await this.commandBus.execute(command);
   }

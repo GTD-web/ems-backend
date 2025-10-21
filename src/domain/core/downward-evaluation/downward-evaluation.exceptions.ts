@@ -147,3 +147,16 @@ export class DownwardEvaluationAlreadyCompletedException extends DownwardEvaluat
     this.name = 'DownwardEvaluationAlreadyCompletedException';
   }
 }
+
+// 완료되지 않은 하향평가 예외
+export class DownwardEvaluationNotCompletedException extends DownwardEvaluationDomainException {
+  constructor(evaluationId: string) {
+    super(
+      `완료되지 않은 하향평가입니다: ${evaluationId}`,
+      'DOWNWARD_EVALUATION_NOT_COMPLETED',
+      400,
+      { evaluationId },
+    );
+    this.name = 'DownwardEvaluationNotCompletedException';
+  }
+}

@@ -32,6 +32,7 @@ import {
   UpdateDownwardEvaluationHandler,
   UpsertDownwardEvaluationHandler,
   SubmitDownwardEvaluationHandler,
+  ResetDownwardEvaluationHandler,
 } from './downward-evaluation';
 
 // 최종평가
@@ -91,6 +92,7 @@ export const CommandHandlers = [
   UpdateDownwardEvaluationHandler,
   UpsertDownwardEvaluationHandler,
   SubmitDownwardEvaluationHandler,
+  ResetDownwardEvaluationHandler,
 
   // 최종평가 커맨드 핸들러
   CreateFinalEvaluationHandler,
