@@ -13,7 +13,7 @@ import {
   IsUUID,
   MaxLength,
 } from 'class-validator';
-import { ToBoolean } from '@interface/decorators';
+import { ToBooleanStrict } from '@interface/decorators';
 
 /**
  * 직원 기본 정보 DTO (평가 대상자 조회용)
@@ -126,12 +126,14 @@ export class IncludeEvaluationTargetDto {
  */
 export class GetEvaluationTargetsQueryDto {
   @ApiPropertyOptional({
-    description: '제외된 대상자 포함 여부',
+    description:
+      '제외된 대상자 포함 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+    type: String,
     example: 'false',
     default: 'false',
   })
   @IsOptional()
-  @ToBoolean(false) // 기본값 false
+  @ToBooleanStrict(false, 'includeExcluded')
   @IsBoolean()
   includeExcluded?: boolean;
 }

@@ -217,16 +217,20 @@ export const GetEvaluationTargets = () =>
       description: `**중요**: 특정 평가기간의 평가 대상자 목록을 조회합니다. includeExcluded 파라미터로 제외된 대상자 포함 여부를 제어할 수 있습니다. 각 평가 대상자 정보에는 직원 상세 정보(employee 객체)가 함께 포함됩니다.
 
 **테스트 케이스:**
-- 기본 조회: 평가기간의 모든 평가 대상자를 조회할 수 있어야 함
-- includeExcluded 미전달: includeExcluded 파라미터를 전달하지 않으면 제외된 대상자가 포함되지 않음 (기본값 false)
-- includeExcluded=true: 제외된 대상자도 포함하여 조회됨
-- 제외 상태 확인: includeExcluded 미전달 시 반환된 모든 대상자의 isExcluded가 false
+- 기본 조회: 평가기간의 모든 평가 대상자를 조회
+- 필수 필드 검증: id, employee, isExcluded, createdBy, createdAt 필드 포함
+- 중복 필드 제거: targets 배열의 개별 항목에서 evaluationPeriodId, employeeId가 undefined로 제거됨
+- 직원 정보 포함: employee 객체에 id 및 기타 직원 정보 포함
+- includeExcluded 미전달: 기본값 false 적용되어 제외된 대상자가 포함되지 않음 (200)
+- includeExcluded=false: 제외된 대상자 미포함, isExcluded=false인 대상자만 반환 (200)
+- includeExcluded=true: 제외된 대상자도 포함하여 조회 (200)
+- 제외 상태 확인: includeExcluded=false 시 반환된 모든 대상자의 isExcluded가 false
 - 제외 수 확인: includeExcluded=true 시 제외된 대상자 수 확인 가능
-- 빈 결과: 평가 대상자가 없는 경우 빈 배열 반환
-- 필수 필드: 반환된 데이터에 id, evaluationPeriodId, employeeId, employee, isExcluded, createdBy, createdAt 등 필수 필드 포함
-- 직원 정보 포함: employee 객체에 id, employeeNumber, name, email, departmentName, rankName, status 필드 포함
-- 존재하지 않는 평가기간: 평가기간 미존재 시 빈 배열 반환
-- 잘못된 UUID: 잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러`,
+- 빈 결과: 평가 대상자가 없는 경우 빈 배열 반환 (200)
+- 허용된 값: includeExcluded에 "true", "false", "1", "0" 허용 (200)
+- 존재하지 않는 평가기간: 평가기간 미존재 시 빈 배열 반환 (200)
+- 잘못된 UUID: 잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러
+- 잘못된 includeExcluded 값: "yes", "no", "invalid", "2" 등 허용되지 않는 값 입력 시 400 에러`,
     }),
     ApiParam({
       name: 'evaluationPeriodId',
@@ -246,6 +250,10 @@ export const GetEvaluationTargets = () =>
       description: '평가 대상자 목록 조회 성공',
       type: EvaluationTargetsResponseDto,
     }),
+    ApiBadRequestResponse({
+      description:
+        '잘못된 요청 (잘못된 UUID 형식 또는 잘못된 includeExcluded 값)',
+    }),
   );
 
 /**
@@ -259,13 +267,13 @@ export const GetExcludedEvaluationTargets = () =>
       description: `**중요**: 특정 평가기간에서 제외된 평가 대상자 목록만 조회합니다. 모든 반환된 대상자는 isExcluded=true 상태입니다. 각 평가 대상자 정보에는 직원 상세 정보(employee 객체)가 함께 포함됩니다.
 
 **테스트 케이스:**
-- 기본 조회: 제외된 평가 대상자만 조회할 수 있어야 함
-- isExcluded 상태: 모든 대상자가 isExcluded=true 상태여야 함
-- 제외 정보 포함: excludeReason, excludedBy, excludedAt 필드가 정의되어 있음
-- 제외 정보 정확성: 제외 사유와 처리자 정보가 올바르게 반환됨
-- 직원 정보 포함: employee 객체에 id, employeeNumber, name, email, departmentName, rankName, status 필드 포함
-- 빈 결과: 제외된 대상자가 없는 경우 빈 배열 반환
-- 존재하지 않는 평가기간: 평가기간 미존재 시 빈 배열 반환
+- 기본 조회: 제외된 평가 대상자만 조회
+- isExcluded 상태: 모든 대상자가 isExcluded=true 상태
+- 모든 대상자 제외 검증: every() 메서드로 모든 대상자가 isExcluded=true인지 확인
+- 제외 정보 포함: excludeReason, excludedBy, excludedAt 필드 정의됨
+- 제외 정보 정확성: 지정한 제외 사유(excludeReason)와 제외자(excludedBy)가 올바르게 반환됨
+- 빈 결과: 제외된 대상자가 없는 경우 빈 배열 반환 (200)
+- 존재하지 않는 평가기간: 평가기간 미존재 시 빈 배열 반환 (200)
 - 잘못된 UUID: 잘못된 UUID 형식의 평가기간 ID로 요청 시 400 에러`,
     }),
     ApiParam({
@@ -291,13 +299,15 @@ export const GetEmployeeEvaluationPeriods = () =>
       description: `**중요**: 특정 직원이 등록된 모든 평가기간 맵핑 정보를 조회합니다. 제외된 맵핑도 포함하여 반환됩니다. 직원 정보는 최상위에 한 번만 제공되고, 맵핑 정보만 배열로 제공됩니다.
 
 **테스트 케이스:**
-- 기본 조회: 직원이 등록된 모든 평가기간 맵핑을 조회할 수 있어야 함
-- 직원 정보 포함: employee 객체에 직원의 기본 정보 포함
+- 기본 조회: 직원이 등록된 모든 평가기간 맵핑을 조회
+- 직원 정보 포함: employee 객체에 id 및 직원 기본 정보 포함
+- 중복 필드 제거: mappings 배열의 개별 항목에서 employeeId가 undefined로 제거됨
+- 맵핑 필드: evaluationPeriodId, id 등 필수 필드 포함
 - 다중 평가기간: 여러 평가기간에 등록된 경우 모두 반환됨
-- 제외 맵핑 포함: 제외된 평가기간 맵핑도 조회되어야 함
+- 제외 맵핑 포함: 제외된 평가기간 맵핑도 조회됨
 - 제외 상태 확인: 제외된 맵핑의 isExcluded가 true로 설정됨
-- 빈 맵핑: 등록된 평가기간이 없는 경우 빈 배열 반환
-- 존재하지 않는 직원: 직원 미존재 시 빈 배열 반환
+- 빈 맵핑: 등록된 평가기간이 없는 경우 빈 배열 반환 (200)
+- 존재하지 않는 직원: 직원 미존재 시 빈 배열 반환 (200)
 - 잘못된 UUID: 잘못된 UUID 형식의 직원 ID로 요청 시 400 에러`,
     }),
     ApiParam({
@@ -323,11 +333,11 @@ export const CheckEvaluationTarget = () =>
       description: `**중요**: 특정 직원이 특정 평가기간의 평가 대상인지 확인합니다. 제외된 대상자는 false로 반환됩니다.
 
 **테스트 케이스:**
-- 등록된 대상자: 등록된 평가 대상자인 경우 isEvaluationTarget이 true 반환
-- 제외된 대상자: 제외된 대상자인 경우 isEvaluationTarget이 false 반환
-- 등록되지 않은 대상자: 등록되지 않은 경우 isEvaluationTarget이 false 반환
-- 반복 제외/포함: 포함 → 제외 → 다시 포함 시 isEvaluationTarget이 true 반환
-- 응답 필드: evaluationPeriodId와 employeeId 필드가 정확히 반환됨
+- 등록된 대상자: 등록된 평가 대상자인 경우 isEvaluationTarget=true 반환 (200)
+- 제외된 대상자: 제외된 대상자인 경우 isEvaluationTarget=false 반환 (200)
+- 등록되지 않은 대상자: 등록되지 않은 경우 isEvaluationTarget=false 반환 (200)
+- 반복 상태 변경: 포함 → 제외 → 다시 포함 시 isEvaluationTarget=true 반환 (200)
+- 응답 필드 검증: evaluationPeriodId, employeeId, isEvaluationTarget 필드 정확히 반환
 - 잘못된 평가기간 UUID: 형식이 올바르지 않은 평가기간 ID로 요청 시 400 에러
 - 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러`,
     }),

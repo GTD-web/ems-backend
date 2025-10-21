@@ -264,6 +264,66 @@ describe('평가 대상자 조회 테스트', () => {
           .get(`/admin/evaluation-periods/${invalidPeriodId}/targets`)
           .expect(400);
       });
+
+      it('잘못된 includeExcluded 값으로 요청 시 400 에러가 발생해야 한다', async () => {
+        // Given
+        const period = getActivePeriod();
+
+        // When & Then - 허용되지 않는 값들
+        await testSuite
+          .request()
+          .get(`/admin/evaluation-periods/${period.id}/targets`)
+          .query({ includeExcluded: 'yes' })
+          .expect(400);
+
+        await testSuite
+          .request()
+          .get(`/admin/evaluation-periods/${period.id}/targets`)
+          .query({ includeExcluded: 'no' })
+          .expect(400);
+
+        await testSuite
+          .request()
+          .get(`/admin/evaluation-periods/${period.id}/targets`)
+          .query({ includeExcluded: 'invalid' })
+          .expect(400);
+
+        await testSuite
+          .request()
+          .get(`/admin/evaluation-periods/${period.id}/targets`)
+          .query({ includeExcluded: '2' })
+          .expect(400);
+      });
+
+      it('includeExcluded에 true, false, 1, 0만 허용되어야 한다', async () => {
+        // Given
+        const period = getActivePeriod();
+
+        // When & Then - 허용되는 값들은 성공해야 함
+        await testSuite
+          .request()
+          .get(`/admin/evaluation-periods/${period.id}/targets`)
+          .query({ includeExcluded: 'true' })
+          .expect(200);
+
+        await testSuite
+          .request()
+          .get(`/admin/evaluation-periods/${period.id}/targets`)
+          .query({ includeExcluded: 'false' })
+          .expect(200);
+
+        await testSuite
+          .request()
+          .get(`/admin/evaluation-periods/${period.id}/targets`)
+          .query({ includeExcluded: '1' })
+          .expect(200);
+
+        await testSuite
+          .request()
+          .get(`/admin/evaluation-periods/${period.id}/targets`)
+          .query({ includeExcluded: '0' })
+          .expect(200);
+      });
     });
   });
 

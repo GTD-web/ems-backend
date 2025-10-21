@@ -103,18 +103,64 @@ export function ToBoolean(defaultValue?: boolean) {
  * Query string이나 form data의 값을 boolean으로 엄격하게 변환하는 데코레이터
  * 허용되지 않는 값이 들어오면 BadRequestException 발생
  *
- * 허용되는 true 값: true, 'true', '1', 1, 'yes', 'on'
- * 허용되는 false 값: false, 'false', '0', 0, 'no', 'off'
+ * 허용되는 true 값: true, 'true', '1', 1
+ * 허용되는 false 값: false, 'false', '0', 0
+ *
+ * ⚠️ 'yes', 'no', 'on', 'off' 등은 허용하지 않음
+ *
+ * @param defaultValue - undefined/null일 때 사용할 기본값
+ * @param fieldName - 에러 메시지에 표시할 필드명 (선택사항)
  *
  * @example
  * ```typescript
- * @ToBooleanStrict()
- * isActive: boolean;
+ * @ToBooleanStrict(false, 'includeExcluded')
+ * @IsBoolean()
+ * includeExcluded: boolean;
  * ```
  */
-export function ToBooleanStrict(defaultValue?: boolean) {
-  return Transform(({ value }) => {
-    return convertToBoolean(value, defaultValue, true);
+export function ToBooleanStrict(defaultValue?: boolean, fieldName?: string) {
+  return Transform(({ value, key }) => {
+    // undefined나 null은 기본값으로 처리
+    if (value === undefined || value === null) {
+      return defaultValue ?? false;
+    }
+
+    // 이미 boolean인 경우 그대로 반환
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    // 숫자인 경우 - 0, 1만 허용
+    if (typeof value === 'number') {
+      if (value === 1) return true;
+      if (value === 0) return false;
+
+      throw new BadRequestException(
+        `${fieldName || key}는 0 또는 1만 허용됩니다 (입력값: ${value})`,
+      );
+    }
+
+    // 문자열인 경우 - 'true', 'false', '1', '0'만 허용
+    if (typeof value === 'string') {
+      const lowerValue = value.toLowerCase().trim();
+
+      if (lowerValue === 'true' || lowerValue === '1') {
+        return true;
+      }
+
+      if (lowerValue === 'false' || lowerValue === '0') {
+        return false;
+      }
+
+      throw new BadRequestException(
+        `${fieldName || key}는 true, false, 1, 0만 허용됩니다 (입력값: "${value}")`,
+      );
+    }
+
+    // 그 외의 타입
+    throw new BadRequestException(
+      `${fieldName || key}는 boolean 값만 허용됩니다 (입력 타입: ${typeof value})`,
+    );
   });
 }
 

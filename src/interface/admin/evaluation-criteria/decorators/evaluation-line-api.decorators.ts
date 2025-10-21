@@ -503,22 +503,28 @@ export const GetEvaluatorsByPeriod = () =>
 
 **동작:**
 - 해당 평가기간의 WBS 할당 중 평가자로 지정된 직원 목록 반환
-- 쿼리 파라미터로 1차/2차/전체 평가자 선택 가능
+- 쿼리 파라미터로 1차/2차/전체 평가자 선택 가능 (기본값: all)
 - 각 평가자가 담당하는 피평가자 수 포함
-- 직원 기본 정보 포함 (이름, 부서 등)
-- 평가자 유형 정보 포함
+- 직원 기본 정보 포함 (이름, 부서명)
+- 동일 직원이 1차/2차 평가자 역할을 모두 하는 경우 각각 별도 항목으로 반환
 
 **테스트 케이스:**
-- 기본 조회 (type=all): 평가기간의 모든 평가자 목록 조회 성공 (200)
+- 기본 조회 (type=all): 평가기간의 모든 평가자 목록을 조회 (200)
+- type 파라미터 생략: 기본값(all)로 동작하여 모든 평가자 조회 (200)
 - 1차 평가자만 조회 (type=primary): 1차 평가자만 반환됨 (200)
 - 2차 평가자만 조회 (type=secondary): 2차 평가자만 반환됨 (200)
-- 피평가자 수 포함: 각 평가자가 담당하는 피평가자 수가 응답에 포함됨
-- 직원 정보 포함: 평가자의 이름, 부서 정보가 포함됨
-- 평가자 유형 포함: 각 평가자의 유형(primary/secondary)이 포함됨
-- 평가자가 없는 경우: 평가자가 없으면 빈 배열 반환 (200)
+- 피평가자 수 정확도: 동일 평가자에게 3명 할당 시 evaluateeCount가 3으로 반환됨
+- 직원 정보 포함: 평가자의 이름(evaluatorName), 부서명(departmentName) 포함
+- 평가자 유형 포함: 각 평가자의 유형(primary/secondary) 포함
+- 동일 직원 이중 역할: 같은 직원이 1차/2차 평가자 역할을 모두 하는 경우 2개 항목으로 반환됨
+- 평가자가 없는 경우: 빈 배열 반환 (200)
 - 존재하지 않는 평가기간: 유효한 UUID이지만 존재하지 않는 평가기간 ID로 조회 시 빈 배열 반환 (200)
 - 잘못된 UUID 형식: 잘못된 UUID 형식의 평가기간 ID로 조회 시 400 에러
-- 잘못된 type 값: 유효하지 않은 type 값으로 조회 시 400 에러`,
+- 잘못된 type 값: 유효하지 않은 type 값(예: 'invalid-type')으로 조회 시 400 에러
+- type=primary 필터링 정확도: type=primary일 때 secondary 평가자가 절대 포함되지 않음
+- type=secondary 필터링 정확도: type=secondary일 때 primary 평가자가 절대 포함되지 않음
+- 필수 필드 존재: periodId, type, evaluators 필드가 항상 존재
+- 평가자 필수 필드: evaluatorId, evaluatorName, departmentName, evaluatorType, evaluateeCount 필드 존재`,
     }),
     ApiParam({
       name: 'periodId',
