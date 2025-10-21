@@ -41,6 +41,9 @@ export interface StateDistributionConfig {
     resigned: number; // 퇴사 (기본: 0.10)
   };
 
+  // 직원 조회 제외 비율 (전체 시스템에서 제외)
+  excludedFromList?: number; // (기본: 0.03)
+
   // 프로젝트 상태 분포
   projectStatus?: {
     active: number; // 진행중 (기본: 0.70)

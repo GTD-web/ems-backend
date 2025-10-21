@@ -139,12 +139,29 @@ export class Phase2EvaluationPeriodGenerator {
         Math.floor(Math.random() * 4)
       ];
 
+      // 등급 구간 설정 (기본값)
+      period.gradeRanges = this.생성_기본_등급구간();
+
       period.createdBy = CREATED_BY;
       periods.push(period);
     }
 
     const saved = await this.평가기간을_배치로_저장한다(periods);
     return saved.map((p) => p.id);
+  }
+
+  /**
+   * 기본 등급 구간을 생성한다
+   * S: 95-100, A: 90-94, B: 80-89, C: 70-79, D: 60-69
+   */
+  private 생성_기본_등급구간() {
+    return [
+      { grade: 'S', minRange: 95, maxRange: 100 },
+      { grade: 'A', minRange: 90, maxRange: 94 },
+      { grade: 'B', minRange: 80, maxRange: 89 },
+      { grade: 'C', minRange: 70, maxRange: 79 },
+      { grade: 'D', minRange: 60, maxRange: 69 },
+    ];
   }
 
   private 맵_단계_키_to_Enum(key: string): EvaluationPeriodPhase {

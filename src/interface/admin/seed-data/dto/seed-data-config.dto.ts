@@ -89,7 +89,8 @@ export class SeedDataConfigDto {
   @ApiPropertyOptional({
     description:
       '상태 분포 설정 (선택사항, 기본값 사용 가능). ' +
-      '부서 계층 구조(departmentHierarchy), 직원 상태(employeeStatus), 평가 진행 상태 등을 커스터마이징할 수 있습니다. ' +
+      '부서 계층 구조(departmentHierarchy), 직원 상태(employeeStatus), 직원 조회 제외(excludedFromList), ' +
+      '평가 대상 제외(excludedFromEvaluation), 평가 진행 상태 등을 커스터마이징할 수 있습니다. ' +
       '자세한 내용은 API 문서를 참고하세요.',
     example: {
       departmentHierarchy: {
@@ -98,6 +99,8 @@ export class SeedDataConfigDto {
         rootDepartmentRatio: 0.15,
       },
       employeeStatus: { active: 0.85, onLeave: 0.05, resigned: 0.1 },
+      excludedFromList: 0.03,
+      excludedFromEvaluation: 0.05,
     },
   })
   @IsOptional()

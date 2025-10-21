@@ -8,6 +8,7 @@ export const DEFAULT_STATE_DISTRIBUTION: Required<StateDistributionConfig> = {
     rootDepartmentRatio: 0.2,
   },
   employeeStatus: { active: 0.85, onLeave: 0.05, resigned: 0.1 },
+  excludedFromList: 0.03,
   projectStatus: { active: 0.7, completed: 0.25, cancelled: 0.05 },
   projectManagerAssignmentRatio: 0.95,
   wbsHierarchy: {

@@ -215,6 +215,17 @@ export class Phase1OrganizationGenerator {
             ? '휴직중'
             : '퇴사';
 
+      // 조회 제외 여부 결정
+      emp.isExcludedFromList = ProbabilityUtil.rollDice(
+        dist.excludedFromList,
+      );
+
+      if (emp.isExcludedFromList) {
+        emp.excludeReason = this.생성_제외_사유(emp.status);
+        emp.excludedBy = CREATED_BY;
+        emp.excludedAt = new Date();
+      }
+
       // 랜덤 부서 할당 (externalId 사용)
       const randomDept =
         departments[Math.floor(Math.random() * departments.length)];
@@ -230,6 +241,35 @@ export class Phase1OrganizationGenerator {
     // 배치 저장
     const saved = await this.직원을_배치로_저장한다(employees);
     return saved.map((e) => e.id);
+  }
+
+  /**
+   * 직원 상태에 따른 제외 사유를 생성한다
+   */
+  private 생성_제외_사유(status: string): string {
+    const reasons: Record<string, string[]> = {
+      퇴사: [
+        '퇴사 처리 완료',
+        '퇴직금 정산 완료 후 제외',
+        '계약 종료로 인한 퇴사',
+        '자진 퇴사 처리 완료',
+      ],
+      휴직중: [
+        '장기 휴직으로 평가 불가',
+        '육아휴직 중 (1년 이상)',
+        '병가 휴직 중',
+        '무급 휴직 중',
+      ],
+      재직중: [
+        '임원으로 평가 대상 제외',
+        '외부 파견 근무 중',
+        '계열사 파견 중',
+        '별도 평가 체계 적용',
+      ],
+    };
+
+    const reasonList = reasons[status] || reasons['재직중'];
+    return reasonList[Math.floor(Math.random() * reasonList.length)];
   }
 
   private async 생성_Project들(
