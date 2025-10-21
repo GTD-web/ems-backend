@@ -31,7 +31,7 @@ import {
  *
  * 하향평가의 저장(생성/수정), 제출, 조회 기능을 제공합니다.
  */
-@ApiTags('C-2. 관리자 - 성과평가 - 하향평가')
+@ApiTags('C-3. 관리자 - 성과평가 - 하향평가')
 @ApiBearerAuth('Bearer')
 @Controller('admin/performance-evaluation/downward-evaluations')
 export class DownwardEvaluationManagementController {

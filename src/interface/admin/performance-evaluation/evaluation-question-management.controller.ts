@@ -45,7 +45,7 @@ import {
  *
  * 평가 질문 및 질문 그룹 관리 기능을 제공합니다.
  */
-@ApiTags('C-3. 관리자 - 성과평가 - 평가 질문 관리')
+@ApiTags('C-4. 관리자 - 성과평가 - 평가 질문 관리')
 @ApiBearerAuth('Bearer')
 @Controller('admin/performance-evaluation/evaluation-questions')
 export class EvaluationQuestionManagementController {

@@ -32,7 +32,7 @@ import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
  *
  * 산출물의 생성, 수정, 삭제, 조회 기능을 제공합니다.
  */
-@ApiTags('C-5. 관리자 - 성과평가 - 산출물')
+@ApiTags('C-2. 관리자 - 성과평가 - 산출물')
 @ApiBearerAuth('Bearer')
 @Controller('admin/performance-evaluation/deliverables')
 export class DeliverableManagementController {

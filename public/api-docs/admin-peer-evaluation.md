@@ -27,7 +27,7 @@
 ### 동료평가 요청 (단일)
 
 ```typescript
-POST /admin/performance-evaluation/peer-evaluations/requests
+POST / admin / performance - evaluation / peer - evaluations / requests;
 ```
 
 관리자가 평가자에게 피평가자를 평가하도록 요청(할당)합니다.
