@@ -51,7 +51,6 @@ import {
 import { ProbabilityUtil, ScoreGeneratorUtil } from '../utils';
 
 const BATCH_SIZE = 500;
-const CREATED_BY = 'seed-generator';
 
 @Injectable()
 export class Phase3To8FullCycleGenerator {
@@ -114,6 +113,7 @@ export class Phase3To8FullCycleGenerator {
 
     this.logger.log(`Phase 3-8 시작 (시나리오: ${config.scenario})`);
 
+    const systemAdminId = phase1Result.generatedIds.systemAdminId as string;
     const results: Partial<GeneratorResult> = {
       phase: 'Phase3-8',
       entityCounts: {},
@@ -122,32 +122,56 @@ export class Phase3To8FullCycleGenerator {
 
     // Phase 3: 프로젝트 및 WBS 할당
     if (this.shouldRunPhase(3, config.scenario)) {
-      await this.실행_Phase3(phase1Result, phase2Result, dist, results);
+      await this.실행_Phase3(
+        phase1Result,
+        phase2Result,
+        dist,
+        results,
+        systemAdminId,
+      );
     }
 
     // Phase 4: 평가 기준 및 라인
     if (this.shouldRunPhase(4, config.scenario)) {
-      await this.실행_Phase4(phase1Result, phase2Result, dist, results);
+      await this.실행_Phase4(
+        phase1Result,
+        phase2Result,
+        dist,
+        results,
+        systemAdminId,
+      );
     }
 
     // Phase 5: 산출물
     if (this.shouldRunPhase(5, config.scenario)) {
-      await this.실행_Phase5(phase1Result, phase2Result, dist, results);
+      await this.실행_Phase5(
+        phase1Result,
+        phase2Result,
+        dist,
+        results,
+        systemAdminId,
+      );
     }
 
     // Phase 6: 질문 그룹 및 질문
     if (this.shouldRunPhase(6, config.scenario)) {
-      await this.실행_Phase6(config, dist, results);
+      await this.실행_Phase6(config, dist, results, systemAdminId);
     }
 
     // Phase 7: 평가 실행
     if (this.shouldRunPhase(7, config.scenario)) {
-      await this.실행_Phase7(phase1Result, phase2Result, dist, results);
+      await this.실행_Phase7(
+        phase1Result,
+        phase2Result,
+        dist,
+        results,
+        systemAdminId,
+      );
     }
 
     // Phase 8: 응답
     if (this.shouldRunPhase(8, config.scenario)) {
-      await this.실행_Phase8(phase2Result, dist, results);
+      await this.실행_Phase8(phase2Result, dist, results, systemAdminId);
     }
 
     const duration = Date.now() - startTime;
@@ -179,19 +203,21 @@ export class Phase3To8FullCycleGenerator {
     phase2Result: GeneratorResult,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     results: Partial<GeneratorResult>,
+    systemAdminId: string,
   ): Promise<void> {
     this.logger.log('Phase 3: 프로젝트 및 WBS 할당 생성');
 
-    const periodIds = phase2Result.generatedIds.periodIds!;
-    const employeeIds = phase1Result.generatedIds.employeeIds!;
-    const projectIds = phase1Result.generatedIds.projectIds!;
-    const wbsIds = phase1Result.generatedIds.wbsIds!;
+    const periodIds = phase2Result.generatedIds.periodIds as string[];
+    const employeeIds = phase1Result.generatedIds.employeeIds as string[];
+    const projectIds = phase1Result.generatedIds.projectIds as string[];
+    const wbsIds = phase1Result.generatedIds.wbsIds as string[];
 
     // 1. EvaluationProjectAssignment 생성
     const projectAssignments = await this.생성_프로젝트_할당들(
       periodIds,
       employeeIds,
       projectIds,
+      systemAdminId,
     );
     this.logger.log(
       `생성 완료: EvaluationProjectAssignment ${projectAssignments.length}개`,
@@ -203,6 +229,7 @@ export class Phase3To8FullCycleGenerator {
       employeeIds,
       projectIds,
       wbsIds,
+      systemAdminId,
     );
     this.logger.log(
       `생성 완료: EvaluationWbsAssignment ${wbsAssignments.length}개`,
@@ -221,13 +248,14 @@ export class Phase3To8FullCycleGenerator {
     periodIds: string[],
     employeeIds: string[],
     projectIds: string[],
+    systemAdminId: string,
   ): Promise<EvaluationProjectAssignment[]> {
     const assignments: EvaluationProjectAssignment[] = [];
 
     // 첫 번째 평가기간에만 할당 (간단화)
     const periodId = periodIds[0];
-    // 첫 번째 직원을 할당자로 사용 (관리자 역할)
-    const assignerId = employeeIds[0];
+    // 시스템 관리자를 할당자로 사용
+    const assignerId = systemAdminId;
 
     // 각 직원에게 1-3개의 프로젝트 할당
     for (const employeeId of employeeIds) {
@@ -242,10 +270,10 @@ export class Phase3To8FullCycleGenerator {
         assignment.periodId = periodId;
         assignment.employeeId = employeeId;
         assignment.projectId = selectedProjects[i];
-        assignment.assignedBy = assignerId; // UUID (직원 ID)
+        assignment.assignedBy = assignerId;
         assignment.assignedDate = new Date();
         assignment.displayOrder = i;
-        assignment.createdBy = CREATED_BY; // 문자열
+        assignment.createdBy = systemAdminId;
         assignments.push(assignment);
       }
     }
@@ -258,11 +286,12 @@ export class Phase3To8FullCycleGenerator {
     employeeIds: string[],
     projectIds: string[],
     wbsIds: string[],
+    systemAdminId: string,
   ): Promise<EvaluationWbsAssignment[]> {
     const assignments: EvaluationWbsAssignment[] = [];
     const periodId = periodIds[0];
-    // 첫 번째 직원을 할당자로 사용 (관리자 역할)
-    const assignerId = employeeIds[0];
+    // 시스템 관리자를 할당자로 사용
+    const assignerId = systemAdminId;
 
     // 각 직원의 프로젝트별로 WBS 할당
     for (const employeeId of employeeIds) {
@@ -285,10 +314,10 @@ export class Phase3To8FullCycleGenerator {
           assignment.employeeId = employeeId;
           assignment.projectId = projectId;
           assignment.wbsItemId = selectedWbs[i];
-          assignment.assignedBy = assignerId; // UUID (직원 ID)
+          assignment.assignedBy = assignerId;
           assignment.assignedDate = new Date();
           assignment.displayOrder = i;
-          assignment.createdBy = CREATED_BY; // 문자열
+          assignment.createdBy = systemAdminId;
           assignments.push(assignment);
         }
       }
@@ -304,18 +333,19 @@ export class Phase3To8FullCycleGenerator {
     phase2Result: GeneratorResult,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     results: Partial<GeneratorResult>,
+    systemAdminId: string,
   ): Promise<void> {
     this.logger.log('Phase 4: 평가 기준 및 라인 생성');
 
-    const wbsIds = phase1Result.generatedIds.wbsIds!;
-    const employeeIds = phase1Result.generatedIds.employeeIds!;
+    const wbsIds = phase1Result.generatedIds.wbsIds as string[];
+    const employeeIds = phase1Result.generatedIds.employeeIds as string[];
 
     // 1. WBS 평가 기준 생성
-    const criteria = await this.생성_WBS평가기준들(wbsIds, dist);
+    const criteria = await this.생성_WBS평가기준들(wbsIds, dist, systemAdminId);
     this.logger.log(`생성 완료: WbsEvaluationCriteria ${criteria.length}개`);
 
     // 2. 평가 라인 생성 (primary, secondary)
-    const evaluationLines = await this.생성_평가라인들();
+    const evaluationLines = await this.생성_평가라인들(systemAdminId);
     this.logger.log(`생성 완료: EvaluationLine ${evaluationLines.length}개`);
 
     // 3. 평가 라인 매핑 생성
@@ -323,6 +353,7 @@ export class Phase3To8FullCycleGenerator {
       employeeIds,
       evaluationLines,
       dist,
+      systemAdminId,
     );
     this.logger.log(
       `생성 완료: EvaluationLineMapping ${lineMappings.length}개`,
@@ -341,6 +372,7 @@ export class Phase3To8FullCycleGenerator {
   private async 생성_WBS평가기준들(
     wbsIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<WbsEvaluationCriteria[]> {
     const allCriteria: WbsEvaluationCriteria[] = [];
 
@@ -354,7 +386,7 @@ export class Phase3To8FullCycleGenerator {
         const criteria = new WbsEvaluationCriteria();
         criteria.wbsItemId = wbsId;
         criteria.criteria = faker.lorem.sentence();
-        criteria.createdBy = CREATED_BY;
+        criteria.createdBy = systemAdminId;
         allCriteria.push(criteria);
       }
     }
@@ -366,7 +398,9 @@ export class Phase3To8FullCycleGenerator {
     );
   }
 
-  private async 생성_평가라인들(): Promise<EvaluationLine[]> {
+  private async 생성_평가라인들(
+    systemAdminId: string,
+  ): Promise<EvaluationLine[]> {
     const lines: EvaluationLine[] = [];
 
     // Primary 평가자 라인
@@ -375,7 +409,7 @@ export class Phase3To8FullCycleGenerator {
     primary.order = 1;
     primary.isRequired = true;
     primary.isAutoAssigned = false;
-    primary.createdBy = CREATED_BY;
+    primary.createdBy = systemAdminId;
     lines.push(primary);
 
     // Secondary 평가자 라인
@@ -384,7 +418,7 @@ export class Phase3To8FullCycleGenerator {
     secondary.order = 2;
     secondary.isRequired = false;
     secondary.isAutoAssigned = false;
-    secondary.createdBy = CREATED_BY;
+    secondary.createdBy = systemAdminId;
     lines.push(secondary);
 
     return await this.evaluationLineRepository.save(lines);
@@ -394,6 +428,7 @@ export class Phase3To8FullCycleGenerator {
     employeeIds: string[],
     evaluationLines: EvaluationLine[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<EvaluationLineMapping[]> {
     const mappings: EvaluationLineMapping[] = [];
     const primaryLine = evaluationLines.find(
@@ -421,7 +456,7 @@ export class Phase3To8FullCycleGenerator {
       primaryMapping.employeeId = employeeId;
       primaryMapping.evaluatorId = primaryEvaluator;
       primaryMapping.evaluationLineId = primaryLine.id;
-      primaryMapping.createdBy = CREATED_BY;
+      primaryMapping.createdBy = systemAdminId;
       mappings.push(primaryMapping);
 
       // Secondary 평가자 매핑 (확률적)
@@ -442,7 +477,7 @@ export class Phase3To8FullCycleGenerator {
           secondaryMapping.employeeId = employeeId;
           secondaryMapping.evaluatorId = secondaryEvaluator;
           secondaryMapping.evaluationLineId = secondaryLine.id;
-          secondaryMapping.createdBy = CREATED_BY;
+          secondaryMapping.createdBy = systemAdminId;
           mappings.push(secondaryMapping);
         }
       }
@@ -547,14 +582,15 @@ export class Phase3To8FullCycleGenerator {
     phase2Result: GeneratorResult,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     results: Partial<GeneratorResult>,
+    systemAdminId: string,
   ): Promise<void> {
     this.logger.log('Phase 5: 산출물 생성');
 
-    const wbsIds = phase1Result.generatedIds.wbsIds!;
-    const employeeIds = phase1Result.generatedIds.employeeIds!;
+    const wbsIds = phase1Result.generatedIds.wbsIds as string[];
+    const employeeIds = phase1Result.generatedIds.employeeIds as string[];
 
     // 1. Deliverable 생성
-    const deliverables = await this.생성_산출물들(dist);
+    const deliverables = await this.생성_산출물들(dist, systemAdminId);
     this.logger.log(`생성 완료: Deliverable ${deliverables.length}개`);
 
     // 2. DeliverableMapping 생성
@@ -563,6 +599,7 @@ export class Phase3To8FullCycleGenerator {
       wbsIds,
       employeeIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(
       `생성 완료: DeliverableMapping ${deliverableMappings.length}개`,
@@ -578,6 +615,7 @@ export class Phase3To8FullCycleGenerator {
 
   private async 생성_산출물들(
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<Deliverable[]> {
     const deliverables: Deliverable[] = [];
     const deliverableCount = 20; // 기본 20개 산출물 생성
@@ -618,7 +656,7 @@ export class Phase3To8FullCycleGenerator {
 
       deliverable.fileSize = faker.number.int({ min: 1024, max: 10485760 });
       deliverable.mimeType = 'application/pdf';
-      deliverable.createdBy = CREATED_BY;
+      deliverable.createdBy = systemAdminId;
       deliverables.push(deliverable);
     }
 
@@ -634,6 +672,7 @@ export class Phase3To8FullCycleGenerator {
     wbsIds: string[],
     employeeIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<DeliverableMapping[]> {
     const mappings: DeliverableMapping[] = [];
 
@@ -671,10 +710,10 @@ export class Phase3To8FullCycleGenerator {
         mapping.employeeId = randomEmployee;
         mapping.wbsItemId = wbsId;
         mapping.deliverableId = deliverable.id;
-        mapping.mappedBy = employeeIds[0]; // UUID (관리자 직원 ID)
+        mapping.mappedBy = systemAdminId;
         mapping.mappedDate = new Date();
         mapping.isActive = true;
-        mapping.createdBy = CREATED_BY; // 문자열
+        mapping.createdBy = systemAdminId;
         mappings.push(mapping);
       }
     }
@@ -692,15 +731,16 @@ export class Phase3To8FullCycleGenerator {
     config: SeedDataConfig,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     results: Partial<GeneratorResult>,
+    systemAdminId: string,
   ): Promise<void> {
     this.logger.log('Phase 6: 질문 그룹 및 질문 생성');
 
     // 1. QuestionGroup 생성
-    const questionGroups = await this.생성_질문그룹들(dist);
+    const questionGroups = await this.생성_질문그룹들(dist, systemAdminId);
     this.logger.log(`생성 완료: QuestionGroup ${questionGroups.length}개`);
 
     // 2. EvaluationQuestion 생성
-    const questions = await this.생성_평가질문들(dist);
+    const questions = await this.생성_평가질문들(dist, systemAdminId);
     this.logger.log(`생성 완료: EvaluationQuestion ${questions.length}개`);
 
     // 3. QuestionGroupMapping 생성
@@ -708,6 +748,7 @@ export class Phase3To8FullCycleGenerator {
       questionGroups,
       questions,
       dist,
+      systemAdminId,
     );
     this.logger.log(
       `생성 완료: QuestionGroupMapping ${groupMappings.length}개`,
@@ -725,6 +766,7 @@ export class Phase3To8FullCycleGenerator {
 
   private async 생성_질문그룹들(
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<QuestionGroup[]> {
     const groups: QuestionGroup[] = [];
     const groupCount = ProbabilityUtil.randomInt(
@@ -740,7 +782,7 @@ export class Phase3To8FullCycleGenerator {
       group.isDeletable =
         !group.isDefault &&
         Math.random() > dist.questionGroupSpecial.nonDeletableRatio;
-      group.createdBy = CREATED_BY;
+      group.createdBy = systemAdminId;
       groups.push(group);
     }
 
@@ -753,6 +795,7 @@ export class Phase3To8FullCycleGenerator {
 
   private async 생성_평가질문들(
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<EvaluationQuestion[]> {
     const questions: EvaluationQuestion[] = [];
     const questionCount = ProbabilityUtil.randomInt(15, 30);
@@ -773,7 +816,7 @@ export class Phase3To8FullCycleGenerator {
         question.maxScore = 100;
       }
 
-      question.createdBy = CREATED_BY;
+      question.createdBy = systemAdminId;
       questions.push(question);
     }
 
@@ -788,6 +831,7 @@ export class Phase3To8FullCycleGenerator {
     questionGroups: QuestionGroup[],
     questions: EvaluationQuestion[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<QuestionGroupMapping[]> {
     const mappings: QuestionGroupMapping[] = [];
 
@@ -819,7 +863,7 @@ export class Phase3To8FullCycleGenerator {
         mapping.groupId = selectedGroups[i].id;
         mapping.questionId = question.id;
         mapping.displayOrder = i;
-        mapping.createdBy = CREATED_BY;
+        mapping.createdBy = systemAdminId;
         mappings.push(mapping);
       }
     }
@@ -838,18 +882,21 @@ export class Phase3To8FullCycleGenerator {
     phase2Result: GeneratorResult,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     results: Partial<GeneratorResult>,
+    systemAdminId: string,
   ): Promise<void> {
     this.logger.log('Phase 7: 평가 실행 생성');
 
-    const employeeIds = phase1Result.generatedIds.employeeIds!;
-    const wbsAssignmentIds = results.generatedIds?.wbsAssignmentIds || [];
-    const periodIds = phase2Result.generatedIds.periodIds!;
+    const employeeIds = phase1Result.generatedIds.employeeIds as string[];
+    const wbsAssignmentIds = (results.generatedIds?.wbsAssignmentIds ||
+      []) as string[];
+    const periodIds = phase2Result.generatedIds.periodIds as string[];
 
     // 1. WbsSelfEvaluation 생성 (간소화)
     const selfEvaluations = await this.생성_자기평가들(
       employeeIds,
       periodIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(`생성 완료: WbsSelfEvaluation ${selfEvaluations.length}개`);
 
@@ -858,6 +905,7 @@ export class Phase3To8FullCycleGenerator {
       employeeIds,
       periodIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(
       `생성 완료: DownwardEvaluation ${downwardEvaluations.length}개`,
@@ -868,6 +916,7 @@ export class Phase3To8FullCycleGenerator {
       employeeIds,
       periodIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(`생성 완료: PeerEvaluation ${peerEvaluations.length}개`);
 
@@ -876,6 +925,7 @@ export class Phase3To8FullCycleGenerator {
       employeeIds,
       periodIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(`생성 완료: FinalEvaluation ${finalEvaluations.length}개`);
 
@@ -901,6 +951,7 @@ export class Phase3To8FullCycleGenerator {
     employeeIds: string[],
     periodIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<WbsSelfEvaluation[]> {
     const evaluations: WbsSelfEvaluation[] = [];
     const periodId = periodIds[0];
@@ -917,7 +968,7 @@ export class Phase3To8FullCycleGenerator {
         evaluation.employeeId = employeeId;
         evaluation.periodId = periodId;
         evaluation.wbsItemId = dummyWbsId;
-        evaluation.assignedBy = employeeIds[0]; // UUID (관리자 직원 ID)
+        evaluation.assignedBy = systemAdminId;
         evaluation.assignedDate = new Date();
         evaluation.evaluationDate = new Date();
 
@@ -937,7 +988,7 @@ export class Phase3To8FullCycleGenerator {
         );
         evaluation.selfEvaluationContent = faker.lorem.paragraph();
         evaluation.performanceResult = faker.lorem.paragraph();
-        evaluation.createdBy = CREATED_BY; // 문자열
+        evaluation.createdBy = systemAdminId;
         evaluations.push(evaluation);
       }
     }
@@ -953,6 +1004,7 @@ export class Phase3To8FullCycleGenerator {
     employeeIds: string[],
     periodIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<DownwardEvaluation[]> {
     const evaluations: DownwardEvaluation[] = [];
     const periodId = periodIds[0];
@@ -1002,6 +1054,7 @@ export class Phase3To8FullCycleGenerator {
     employeeIds: string[],
     periodIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<PeerEvaluation[]> {
     const evaluations: PeerEvaluation[] = [];
     const periodId = periodIds[0];
@@ -1013,7 +1066,7 @@ export class Phase3To8FullCycleGenerator {
       evaluation.evaluatorId = employeeIds[(i + 1) % employeeIds.length];
       evaluation.periodId = periodId;
       evaluation.evaluationDate = new Date();
-      evaluation.mappedBy = employeeIds[0]; // UUID (관리자 직원 ID)
+      evaluation.mappedBy = systemAdminId;
       evaluation.mappedDate = new Date();
       evaluation.isActive = true;
 
@@ -1032,7 +1085,7 @@ export class Phase3To8FullCycleGenerator {
         evaluation.completedAt = new Date();
       }
 
-      evaluation.createdBy = CREATED_BY; // 문자열
+      evaluation.createdBy = systemAdminId;
       evaluations.push(evaluation);
     }
 
@@ -1047,6 +1100,7 @@ export class Phase3To8FullCycleGenerator {
     employeeIds: string[],
     periodIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<FinalEvaluation[]> {
     const evaluations: FinalEvaluation[] = [];
 
@@ -1080,11 +1134,11 @@ export class Phase3To8FullCycleGenerator {
         evaluation.isConfirmed = statusChoice === 'completed';
         if (evaluation.isConfirmed) {
           evaluation.confirmedAt = new Date();
-          evaluation.confirmedBy = employeeIds[0]; // UUID (관리자 직원 ID)
+          evaluation.confirmedBy = systemAdminId;
         }
 
         evaluation.finalComments = faker.lorem.paragraph();
-        evaluation.createdBy = CREATED_BY; // 문자열
+        evaluation.createdBy = systemAdminId;
         evaluations.push(evaluation);
       }
     }
@@ -1102,17 +1156,20 @@ export class Phase3To8FullCycleGenerator {
     phase2Result: GeneratorResult,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     results: Partial<GeneratorResult>,
+    systemAdminId: string,
   ): Promise<void> {
     this.logger.log('Phase 8: 응답 생성');
 
-    const questionIds = results.generatedIds?.questionIds || [];
-    const selfEvaluationIds = results.generatedIds?.selfEvaluationIds || [];
+    const questionIds = (results.generatedIds?.questionIds || []) as string[];
+    const selfEvaluationIds = (results.generatedIds?.selfEvaluationIds ||
+      []) as string[];
 
     // EvaluationResponse 생성 (간소화)
     const responses = await this.생성_평가응답들(
       questionIds,
       selfEvaluationIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(`생성 완료: EvaluationResponse ${responses.length}개`);
 
@@ -1124,6 +1181,7 @@ export class Phase3To8FullCycleGenerator {
     questionIds: string[],
     evaluationIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<EvaluationResponse[]> {
     const responses: EvaluationResponse[] = [];
 
@@ -1154,7 +1212,7 @@ export class Phase3To8FullCycleGenerator {
             dist.scoreGeneration.stdDev!,
           );
           response.answer = faker.lorem.paragraph();
-          response.createdBy = CREATED_BY;
+          response.createdBy = systemAdminId;
           responses.push(response);
         }
       }

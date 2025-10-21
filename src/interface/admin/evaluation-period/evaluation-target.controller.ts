@@ -197,17 +197,10 @@ export class EvaluationTargetController {
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @ParseUUID('employeeId') employeeId: string,
   ): Promise<EvaluationTargetStatusResponseDto> {
-    const isTarget =
-      await this.evaluationPeriodManagementService.평가대상_여부_확인한다(
-        evaluationPeriodId,
-        employeeId,
-      );
-
-    return {
-      isEvaluationTarget: isTarget,
+    return await this.evaluationPeriodManagementService.평가대상_여부_확인한다(
       evaluationPeriodId,
       employeeId,
-    };
+    );
   }
 
   /**

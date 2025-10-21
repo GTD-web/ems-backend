@@ -16,7 +16,6 @@ import {
 import { DateGeneratorUtil, ProbabilityUtil } from '../utils';
 
 const BATCH_SIZE = 500;
-const CREATED_BY = 'seed-generator';
 
 @Injectable()
 export class Phase1OrganizationGenerator {
@@ -44,14 +43,14 @@ export class Phase1OrganizationGenerator {
 
     this.logger.log('Phase 1 시작: 조직 데이터 생성');
 
-    // 1. Department 계층 생성
+    // 1. Department 계층 생성 (첫 번째 단계에서는 임시 ID 사용)
     const departmentIds = await this.생성_Department들(
       config.dataScale.departmentCount,
       dist,
     );
     this.logger.log(`생성 완료: Department ${departmentIds.length}개`);
 
-    // 2. Employee 생성 (부서 전체 정보를 전달)
+    // 2. Employee 생성 (부서 전체 정보를 전달, 첫 번째 직원을 관리자로 지정)
     const allDepartments = await this.departmentRepository.find();
     const employeeIds = await this.생성_Employee들(
       config.dataScale.employeeCount,
@@ -60,20 +59,27 @@ export class Phase1OrganizationGenerator {
     );
     this.logger.log(`생성 완료: Employee ${employeeIds.length}개`);
 
-    // 3. Project 생성
+    // 3. 첫 번째 직원을 관리자로 사용하여 Department의 createdBy 업데이트
+    const systemAdminId = employeeIds[0];
+    await this.업데이트_Department_생성자(departmentIds, systemAdminId);
+    this.logger.log(`Department createdBy 업데이트 완료`);
+
+    // 4. Project 생성
     const projectIds = await this.생성_Project들(
       config.dataScale.projectCount,
       employeeIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(`생성 완료: Project ${projectIds.length}개`);
 
-    // 4. WbsItem 계층 생성 (프로젝트별)
+    // 5. WbsItem 계층 생성 (프로젝트별)
     const wbsIds = await this.생성_WbsItem들(
       projectIds,
       config.dataScale.wbsPerProject,
       employeeIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(`생성 완료: WbsItem ${wbsIds.length}개`);
 
@@ -93,6 +99,7 @@ export class Phase1OrganizationGenerator {
         employeeIds,
         projectIds,
         wbsIds,
+        systemAdminId, // 시스템 관리자 ID 추가
       },
       duration,
     };
@@ -113,7 +120,7 @@ export class Phase1OrganizationGenerator {
 
     let deptCounter = 0;
 
-    // 1단계: 회사 생성 (최상위)
+    // 1단계: 회사 생성 (최상위) - createdBy는 나중에 업데이트
     for (let i = 0; i < companyCount; i++) {
       const dept = new Department();
       dept.name = `${faker.company.name()} 회사`;
@@ -122,7 +129,8 @@ export class Phase1OrganizationGenerator {
       dept.externalId = faker.string.uuid();
       dept.externalCreatedAt = new Date();
       dept.externalUpdatedAt = new Date();
-      dept.createdBy = CREATED_BY;
+      // createdBy는 나중에 업데이트하므로 일단 임시 값 설정
+      dept.createdBy = 'temp-system';
       departments.push(dept);
     }
 
@@ -147,7 +155,8 @@ export class Phase1OrganizationGenerator {
         dept.externalId = faker.string.uuid();
         dept.externalCreatedAt = new Date();
         dept.externalUpdatedAt = new Date();
-        dept.createdBy = CREATED_BY;
+        // createdBy는 나중에 업데이트하므로 일단 임시 값 설정
+        dept.createdBy = 'temp-system';
         headquarterDepts.push(dept);
         departments.push(dept);
       }
@@ -172,7 +181,8 @@ export class Phase1OrganizationGenerator {
         dept.externalId = faker.string.uuid();
         dept.externalCreatedAt = new Date();
         dept.externalUpdatedAt = new Date();
-        dept.createdBy = CREATED_BY;
+        // createdBy는 나중에 업데이트하므로 일단 임시 값 설정
+        dept.createdBy = 'temp-system';
         partDepts.push(dept);
         departments.push(dept);
       }
@@ -182,6 +192,21 @@ export class Phase1OrganizationGenerator {
     await this.부서를_배치로_저장한다(partDepts);
 
     return departments.map((d) => d.id);
+  }
+
+  /**
+   * Department의 createdBy를 시스템 관리자 ID로 업데이트한다
+   */
+  private async 업데이트_Department_생성자(
+    departmentIds: string[],
+    adminId: string,
+  ): Promise<void> {
+    await this.departmentRepository
+      .createQueryBuilder()
+      .update(Department)
+      .set({ createdBy: adminId })
+      .where('id IN (:...ids)', { ids: departmentIds })
+      .execute();
   }
 
   private async 생성_Employee들(
@@ -194,7 +219,35 @@ export class Phase1OrganizationGenerator {
     // 고유한 employeeNumber 생성을 위한 타임스탬프 접미사
     const timestamp = Date.now().toString().slice(-6);
 
-    for (let i = 0; i < count; i++) {
+    // 첫 번째 직원을 먼저 생성하고 저장 (시스템 관리자 역할)
+    const adminEmp = new Employee();
+    adminEmp.employeeNumber = `EMP${timestamp}001`;
+    adminEmp.name = '시스템 관리자';
+    adminEmp.email = 'admin@system.com';
+    adminEmp.phoneNumber = faker.phone.number('010-####-####');
+    adminEmp.dateOfBirth = faker.date.birthdate({
+      min: 30,
+      max: 50,
+      mode: 'age',
+    });
+    adminEmp.gender = 'MALE';
+    adminEmp.hireDate = DateGeneratorUtil.generatePastDate(3650);
+    adminEmp.status = '재직중';
+    adminEmp.isExcludedFromList = false;
+
+    // 첫 번째 부서에 할당
+    const firstDept = departments[0];
+    adminEmp.departmentId = firstDept.externalId;
+    adminEmp.externalId = faker.string.uuid();
+    adminEmp.externalCreatedAt = new Date();
+    adminEmp.externalUpdatedAt = new Date();
+    // 첫 번째 직원은 자기 자신을 생성자로 설정 (나중에 업데이트)
+    adminEmp.createdBy = 'temp-system';
+
+    employees.push(adminEmp);
+
+    // 나머지 직원 생성
+    for (let i = 1; i < count; i++) {
       const emp = new Employee();
       emp.employeeNumber = `EMP${timestamp}${String(i + 1).padStart(3, '0')}`;
       emp.name = faker.person.fullName();
@@ -220,7 +273,8 @@ export class Phase1OrganizationGenerator {
 
       if (emp.isExcludedFromList) {
         emp.excludeReason = this.생성_제외_사유(emp.status);
-        emp.excludedBy = CREATED_BY;
+        // excludedBy는 나중에 첫 번째 직원 ID로 업데이트
+        emp.excludedBy = 'temp-system';
         emp.excludedAt = new Date();
       }
 
@@ -231,14 +285,49 @@ export class Phase1OrganizationGenerator {
       emp.externalId = faker.string.uuid();
       emp.externalCreatedAt = new Date();
       emp.externalUpdatedAt = new Date();
-      emp.createdBy = CREATED_BY;
+      emp.createdBy = 'temp-system'; // 임시로 temp-system (나중에 업데이트)
 
       employees.push(emp);
     }
 
     // 배치 저장
     const saved = await this.직원을_배치로_저장한다(employees);
+
+    // 첫 번째 직원 ID를 가져와서 나머지 직원들의 createdBy와 excludedBy 업데이트
+    const adminId = saved[0].id;
+    await this.업데이트_Employee_생성자(
+      saved.map((e) => e.id),
+      adminId,
+    );
+
     return saved.map((e) => e.id);
+  }
+
+  /**
+   * Employee의 createdBy와 excludedBy를 시스템 관리자 ID로 업데이트한다
+   */
+  private async 업데이트_Employee_생성자(
+    employeeIds: string[],
+    adminId: string,
+  ): Promise<void> {
+    // createdBy 업데이트
+    await this.employeeRepository
+      .createQueryBuilder()
+      .update(Employee)
+      .set({ createdBy: adminId })
+      .where('id IN (:...ids)', { ids: employeeIds })
+      .andWhere("createdBy = 'temp-system'")
+      .execute();
+
+    // excludedBy 업데이트 (제외된 직원만)
+    await this.employeeRepository
+      .createQueryBuilder()
+      .update(Employee)
+      .set({ excludedBy: adminId })
+      .where('id IN (:...ids)', { ids: employeeIds })
+      .andWhere("excludedBy = 'temp-system'")
+      .andWhere('isExcludedFromList = :isExcluded', { isExcluded: true })
+      .execute();
   }
 
   /**
@@ -274,6 +363,7 @@ export class Phase1OrganizationGenerator {
     count: number,
     employeeIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<string[]> {
     const projects: Project[] = [];
     const now = new Date();
@@ -308,7 +398,7 @@ export class Phase1OrganizationGenerator {
           employeeIds[Math.floor(Math.random() * employeeIds.length)];
       }
 
-      project.createdBy = CREATED_BY;
+      project.createdBy = systemAdminId;
       projects.push(project);
     }
 
@@ -322,6 +412,7 @@ export class Phase1OrganizationGenerator {
     wbsPerProject: number,
     employeeIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<string[]> {
     const allWbsItems: WbsItem[] = [];
     const hierarchy = dist.wbsHierarchy;
@@ -340,6 +431,7 @@ export class Phase1OrganizationGenerator {
           null,
           employeeIds,
           dist,
+          systemAdminId,
         );
         wbsItems.push(wbs);
       }
@@ -371,6 +463,7 @@ export class Phase1OrganizationGenerator {
               parent.id,
               employeeIds,
               dist,
+              systemAdminId,
             );
             nextLevel.push(wbs);
             wbsItems.push(wbs);
@@ -398,6 +491,7 @@ export class Phase1OrganizationGenerator {
     parentWbsId: string | null,
     employeeIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): WbsItem {
     const wbs = new WbsItem();
     wbs.projectId = projectId;
@@ -442,7 +536,7 @@ export class Phase1OrganizationGenerator {
         employeeIds[Math.floor(Math.random() * employeeIds.length)];
     }
 
-    wbs.createdBy = CREATED_BY;
+    wbs.createdBy = systemAdminId;
     return wbs;
   }
 

@@ -497,14 +497,14 @@ export class EvaluationTargetStatusResponseDto {
   isEvaluationTarget!: boolean;
 
   @ApiProperty({
-    description: '평가기간 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: '평가기간 정보',
+    type: EvaluationPeriodBasicInfoDto,
   })
-  evaluationPeriodId!: string;
+  evaluationPeriod!: EvaluationPeriodBasicInfoDto;
 
   @ApiProperty({
-    description: '직원 ID',
-    example: '223e4567-e89b-12d3-a456-426614174001',
+    description: '직원 정보',
+    type: EmployeeBasicInfoDto,
   })
-  employeeId!: string;
+  employee!: EmployeeBasicInfoDto;
 }

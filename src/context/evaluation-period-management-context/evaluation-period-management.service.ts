@@ -466,10 +466,7 @@ export class EvaluationPeriodManagementContextService
   /**
    * 평가 대상 여부를 확인한다
    */
-  async 평가대상_여부_확인한다(
-    evaluationPeriodId: string,
-    employeeId: string,
-  ): Promise<boolean> {
+  async 평가대상_여부_확인한다(evaluationPeriodId: string, employeeId: string) {
     const query = new CheckEvaluationTargetQuery(
       evaluationPeriodId,
       employeeId,

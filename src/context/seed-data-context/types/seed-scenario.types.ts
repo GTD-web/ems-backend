@@ -269,7 +269,7 @@ export interface StateDistributionConfig {
 export interface GeneratorResult {
   phase: string;
   entityCounts: Record<string, number>;
-  generatedIds: Record<string, string[]>;
+  generatedIds: Record<string, string[] | string>;
   stateDistribution?: Record<string, Record<string, number>>;
   duration: number;
   errors?: string[];

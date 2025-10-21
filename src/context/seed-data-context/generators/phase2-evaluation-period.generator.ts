@@ -16,7 +16,6 @@ import {
 } from '@domain/core/evaluation-period/evaluation-period.types';
 
 const BATCH_SIZE = 500;
-const CREATED_BY = 'seed-generator';
 
 @Injectable()
 export class Phase2EvaluationPeriodGenerator {
@@ -41,11 +40,16 @@ export class Phase2EvaluationPeriodGenerator {
 
     this.logger.log('Phase 2 시작: 평가기간 데이터 생성');
 
-    const employeeIds = phase1Result.generatedIds.employeeIds;
+    const employeeIds = phase1Result.generatedIds.employeeIds as string[];
+    const systemAdminId = phase1Result.generatedIds.systemAdminId as string;
 
     // 1. EvaluationPeriod 생성
     const periodCount = config.evaluationConfig?.periodCount || 1;
-    const periodIds = await this.생성_평가기간들(periodCount, dist);
+    const periodIds = await this.생성_평가기간들(
+      periodCount,
+      dist,
+      systemAdminId,
+    );
     this.logger.log(`생성 완료: EvaluationPeriod ${periodIds.length}개`);
 
     // 2. EvaluationPeriodEmployeeMapping 생성
@@ -53,6 +57,7 @@ export class Phase2EvaluationPeriodGenerator {
       periodIds,
       employeeIds,
       dist,
+      systemAdminId,
     );
     this.logger.log(
       `생성 완료: EvaluationPeriodEmployeeMapping ${mappingIds.length}개`,
@@ -78,6 +83,7 @@ export class Phase2EvaluationPeriodGenerator {
   private async 생성_평가기간들(
     count: number,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<string[]> {
     const periods: EvaluationPeriod[] = [];
     const baseDate = new Date();
@@ -142,7 +148,7 @@ export class Phase2EvaluationPeriodGenerator {
       // 등급 구간 설정 (기본값)
       period.gradeRanges = this.생성_기본_등급구간();
 
-      period.createdBy = CREATED_BY;
+      period.createdBy = systemAdminId;
       periods.push(period);
     }
 
@@ -210,6 +216,7 @@ export class Phase2EvaluationPeriodGenerator {
     periodIds: string[],
     employeeIds: string[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    systemAdminId: string,
   ): Promise<string[]> {
     const allMappings: EvaluationPeriodEmployeeMapping[] = [];
 
@@ -228,7 +235,7 @@ export class Phase2EvaluationPeriodGenerator {
 
         if (mapping.isExcluded) {
           mapping.excludeReason = faker.lorem.sentence();
-          mapping.excludedBy = CREATED_BY;
+          mapping.excludedBy = systemAdminId;
           mapping.excludedAt = new Date();
         }
 
@@ -237,7 +244,7 @@ export class Phase2EvaluationPeriodGenerator {
         mapping.isPrimaryEvaluationEditable = true;
         mapping.isSecondaryEvaluationEditable = true;
 
-        mapping.createdBy = CREATED_BY;
+        mapping.createdBy = systemAdminId;
         mappings.push(mapping);
       }
 

@@ -335,14 +335,21 @@ export const CheckEvaluationTarget = () =>
     Get(':evaluationPeriodId/targets/:employeeId/check'),
     ApiOperation({
       summary: '평가 대상 여부 확인',
-      description: `**중요**: 특정 직원이 특정 평가기간의 평가 대상인지 확인합니다. 제외된 대상자는 false로 반환됩니다.
+      description: `**중요**: 특정 직원이 특정 평가기간의 평가 대상인지 확인합니다. 제외된 대상자는 false로 반환됩니다. 응답에는 평가기간 및 직원의 상세 정보가 포함됩니다.
+
+**동작:**
+- 평가 대상 여부 확인 (등록 여부)
+- 평가기간 정보 포함 (id, name, startDate, endDate, status, currentPhase)
+- 직원 정보 포함 (id, name, email, departmentName, rankName, status)
 
 **테스트 케이스:**
 - 등록된 대상자: 등록된 평가 대상자인 경우 isEvaluationTarget=true 반환 (200)
 - 제외된 대상자: 제외된 대상자인 경우 isEvaluationTarget=false 반환 (200)
 - 등록되지 않은 대상자: 등록되지 않은 경우 isEvaluationTarget=false 반환 (200)
 - 반복 상태 변경: 포함 → 제외 → 다시 포함 시 isEvaluationTarget=true 반환 (200)
-- 응답 필드 검증: evaluationPeriodId, employeeId, isEvaluationTarget 필드 정확히 반환
+- 응답 필드 검증: evaluationPeriod 및 employee 객체 포함
+- 평가기간 객체 검증: id, name, startDate, status 등 필드 포함
+- 직원 객체 검증: id, name, email, status 등 필드 포함
 - 잘못된 평가기간 UUID: 형식이 올바르지 않은 평가기간 ID로 요청 시 400 에러
 - 잘못된 직원 UUID: 형식이 올바르지 않은 직원 ID로 요청 시 400 에러`,
     }),
@@ -361,29 +368,8 @@ export const CheckEvaluationTarget = () =>
     ApiOkResponse({
       description: '평가 대상 여부 확인 성공',
       type: EvaluationTargetStatusResponseDto,
-      schema: {
-        type: 'object',
-        properties: {
-          isEvaluationTarget: {
-            type: 'boolean',
-            description: '평가 대상 여부',
-          },
-          evaluationPeriodId: {
-            type: 'string',
-            description: '평가기간 ID',
-          },
-          employeeId: {
-            type: 'string',
-            description: '직원 ID',
-          },
-        },
-        example: {
-          isEvaluationTarget: true,
-          evaluationPeriodId: '123e4567-e89b-12d3-a456-426614174000',
-          employeeId: '223e4567-e89b-12d3-a456-426614174001',
-        },
-      },
     }),
+    ApiBadRequestResponse({ description: '잘못된 요청' }),
   );
 
 /**

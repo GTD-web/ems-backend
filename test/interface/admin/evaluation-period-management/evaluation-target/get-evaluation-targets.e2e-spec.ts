@@ -659,8 +659,24 @@ describe('평가 대상자 조회 테스트', () => {
 
         // Then
         expect(response.body.isEvaluationTarget).toBe(true);
-        expect(response.body.evaluationPeriodId).toBe(period.id);
-        expect(response.body.employeeId).toBe(employee.id);
+
+        // evaluationPeriod 객체 검증
+        expect(response.body.evaluationPeriod).toBeDefined();
+        expect(response.body.evaluationPeriod.id).toBe(period.id);
+        expect(response.body.evaluationPeriod.name).toBeDefined();
+        expect(response.body.evaluationPeriod.startDate).toBeDefined();
+        expect(response.body.evaluationPeriod.status).toBeDefined();
+
+        // employee 객체 검증
+        expect(response.body.employee).toBeDefined();
+        expect(response.body.employee.id).toBe(employee.id);
+        expect(response.body.employee.name).toBeDefined();
+        expect(response.body.employee.email).toBeDefined();
+        expect(response.body.employee.status).toBeDefined();
+
+        // ID 필드는 더 이상 직접 제공하지 않음
+        expect(response.body.evaluationPeriodId).toBeUndefined();
+        expect(response.body.employeeId).toBeUndefined();
       });
 
       it('제외된 대상자인 경우 false를 반환해야 한다', async () => {
@@ -680,8 +696,10 @@ describe('평가 대상자 조회 테스트', () => {
 
         // Then
         expect(response.body.isEvaluationTarget).toBe(false);
-        expect(response.body.evaluationPeriodId).toBe(period.id);
-        expect(response.body.employeeId).toBe(employee.id);
+        expect(response.body.evaluationPeriod).toBeDefined();
+        expect(response.body.evaluationPeriod.id).toBe(period.id);
+        expect(response.body.employee).toBeDefined();
+        expect(response.body.employee.id).toBe(employee.id);
       });
 
       it('등록되지 않은 경우 false를 반환해야 한다', async () => {
