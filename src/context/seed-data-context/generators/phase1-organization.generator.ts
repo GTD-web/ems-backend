@@ -1,5 +1,7 @@
 import { Department } from '@domain/common/department/department.entity';
+import { DepartmentSyncService } from '@domain/common/department/department-sync.service';
 import { Employee } from '@domain/common/employee/employee.entity';
+import { EmployeeSyncService } from '@domain/common/employee/employee-sync.service';
 import { Project } from '@domain/common/project/project.entity';
 import { ProjectStatus } from '@domain/common/project/project.types';
 import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
@@ -7,7 +9,7 @@ import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
 import { faker } from '@faker-js/faker';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import {
   DEFAULT_STATE_DISTRIBUTION,
   GeneratorResult,
@@ -30,6 +32,8 @@ export class Phase1OrganizationGenerator {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(WbsItem)
     private readonly wbsItemRepository: Repository<WbsItem>,
+    private readonly departmentSyncService: DepartmentSyncService,
+    private readonly employeeSyncService: EmployeeSyncService,
   ) {}
   // Note: @faker-js/faker v8+ 에서는 로케일 설정 방식이 변경되었습니다.
   // 한국어 특화 데이터가 필요한 경우 별도로 처리합니다.
@@ -43,26 +47,64 @@ export class Phase1OrganizationGenerator {
 
     this.logger.log('Phase 1 시작: 조직 데이터 생성');
 
-    // 1. Department 계층 생성 (첫 번째 단계에서는 임시 ID 사용)
-    const departmentIds = await this.생성_Department들(
-      config.dataScale.departmentCount,
-      dist,
-    );
-    this.logger.log(`생성 완료: Department ${departmentIds.length}개`);
+    // 1. Department 계층 생성
+    let departmentIds: string[];
+    if (config.useRealDepartments) {
+      // 실제 부서 데이터 사용
+      departmentIds = await this.조회_실제_Department들();
+      this.logger.log(`실제 부서 사용: Department ${departmentIds.length}개`);
+    } else {
+      // Faker로 생성
+      departmentIds = await this.생성_Department들(
+        config.dataScale.departmentCount,
+        dist,
+      );
+      this.logger.log(`생성 완료: Department ${departmentIds.length}개`);
+    }
 
-    // 2. Employee 생성 (부서 전체 정보를 전달, 첫 번째 직원을 관리자로 지정)
+    // 부서가 없으면 최소 1개 생성
+    if (departmentIds.length === 0) {
+      this.logger.warn('부서가 없어 기본 부서 1개를 생성합니다.');
+      departmentIds = await this.생성_Department들(1, dist);
+    }
+
+    // 2. Employee 생성
     const allDepartments = await this.departmentRepository.find();
-    const employeeIds = await this.생성_Employee들(
-      config.dataScale.employeeCount,
-      allDepartments,
-      dist,
-    );
-    this.logger.log(`생성 완료: Employee ${employeeIds.length}개`);
+    let employeeIds: string[];
+    if (config.useRealEmployees) {
+      // 실제 직원 데이터 사용
+      employeeIds = await this.조회_실제_Employee들();
+      this.logger.log(`실제 직원 사용: Employee ${employeeIds.length}개`);
+    } else {
+      // Faker로 생성
+      employeeIds = await this.생성_Employee들(
+        config.dataScale.employeeCount,
+        allDepartments,
+        dist,
+      );
+      this.logger.log(`생성 완료: Employee ${employeeIds.length}개`);
+    }
+
+    // 직원이 없으면 최소 1명 생성
+    if (employeeIds.length === 0) {
+      this.logger.warn('직원이 없어 기본 직원 1명을 생성합니다.');
+      employeeIds = await this.생성_Employee들(1, allDepartments, dist);
+    }
 
     // 3. 첫 번째 직원을 관리자로 사용하여 Department의 createdBy 업데이트
     const systemAdminId = employeeIds[0];
-    await this.업데이트_Department_생성자(departmentIds, systemAdminId);
-    this.logger.log(`Department createdBy 업데이트 완료`);
+
+    // 실제 부서 데이터를 사용하지 않은 경우에만 업데이트
+    if (!config.useRealDepartments) {
+      await this.업데이트_Department_생성자(departmentIds, systemAdminId);
+      this.logger.log(`Department createdBy 업데이트 완료`);
+    }
+
+    // 실제 직원 데이터를 사용하지 않은 경우에만 업데이트
+    if (!config.useRealEmployees) {
+      await this.업데이트_Employee_생성자(employeeIds, systemAdminId);
+      this.logger.log(`Employee createdBy/excludedBy 업데이트 완료`);
+    }
 
     // 4. Project 생성
     const projectIds = await this.생성_Project들(
@@ -292,13 +334,6 @@ export class Phase1OrganizationGenerator {
 
     // 배치 저장
     const saved = await this.직원을_배치로_저장한다(employees);
-
-    // 첫 번째 직원 ID를 가져와서 나머지 직원들의 createdBy와 excludedBy 업데이트
-    const adminId = saved[0].id;
-    await this.업데이트_Employee_생성자(
-      saved.map((e) => e.id),
-      adminId,
-    );
 
     return saved.map((e) => e.id);
   }
@@ -540,7 +575,97 @@ export class Phase1OrganizationGenerator {
     return wbs;
   }
 
-  // 배치 저장 헬퍼 메서드들
+  // ==================== 실제 데이터 조회 메서드 ====================
+
+  /**
+   * 외부 서버에서 실제 부서 데이터를 동기화하고 조회한다
+   */
+  private async 조회_실제_Department들(): Promise<string[]> {
+    try {
+      // 1. 외부 서버에서 부서 데이터 동기화
+      this.logger.log('외부 서버에서 부서 데이터를 동기화합니다...');
+      const syncResult = await this.departmentSyncService.syncDepartments(true);
+
+      if (!syncResult.success) {
+        this.logger.warn(
+          `부서 동기화 실패: ${syncResult.errors.join(', ')}. Faker 데이터로 대체됩니다.`,
+        );
+        return [];
+      }
+
+      this.logger.log(
+        `부서 동기화 완료: ${syncResult.created}개 생성, ${syncResult.updated}개 업데이트`,
+      );
+
+      // 2. 동기화된 부서 데이터 조회
+      const departments = await this.departmentRepository.find({
+        where: { deletedAt: IsNull() },
+        order: { order: 'ASC', name: 'ASC' },
+      });
+
+      if (departments.length === 0) {
+        this.logger.warn(
+          '동기화된 부서 데이터가 없습니다. Faker 데이터로 대체됩니다.',
+        );
+        return [];
+      }
+
+      this.logger.log(`동기화된 부서 ${departments.length}개를 사용합니다.`);
+      return departments.map((d) => d.id);
+    } catch (error) {
+      this.logger.error('부서 동기화/조회 실패:', error.message);
+      this.logger.warn('Faker 데이터로 대체됩니다.');
+      return [];
+    }
+  }
+
+  /**
+   * 외부 서버에서 실제 직원 데이터를 동기화하고 조회한다
+   */
+  private async 조회_실제_Employee들(): Promise<string[]> {
+    try {
+      // 1. 외부 서버에서 직원 데이터 동기화
+      this.logger.log('외부 서버에서 직원 데이터를 동기화합니다...');
+      const syncResult = await this.employeeSyncService.syncEmployees(true);
+
+      if (!syncResult.success) {
+        this.logger.warn(
+          `직원 동기화 실패: ${syncResult.errors.join(', ')}. Faker 데이터로 대체됩니다.`,
+        );
+        return [];
+      }
+
+      this.logger.log(
+        `직원 동기화 완료: ${syncResult.created}개 생성, ${syncResult.updated}개 업데이트`,
+      );
+
+      // 2. 동기화된 직원 데이터 조회 (삭제되지 않고, 제외되지 않은 것만)
+      const employees = await this.employeeRepository.find({
+        where: {
+          deletedAt: IsNull(),
+          isExcludedFromList: false,
+        },
+        order: { name: 'ASC' },
+      });
+
+      if (employees.length === 0) {
+        this.logger.warn(
+          '동기화된 직원 데이터가 없습니다. Faker 데이터로 대체됩니다.',
+        );
+        return [];
+      }
+
+      this.logger.log(`동기화된 직원 ${employees.length}명을 사용합니다.`);
+      return employees.map((e) => e.id);
+    } catch (error) {
+      this.logger.error('직원 동기화/조회 실패:', error.message);
+      this.logger.warn('Faker 데이터로 대체됩니다.');
+      return [];
+    }
+  }
+
+  // ==================== 배치 저장 헬퍼 메서드들 ====================
+
   private async 부서를_배치로_저장한다(
     departments: Department[],
   ): Promise<Department[]> {

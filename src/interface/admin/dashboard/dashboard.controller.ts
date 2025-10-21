@@ -38,7 +38,7 @@ import {
  * 평가 관련 대시보드 정보 조회 기능을 제공합니다.
  * 직원별 평가기간 현황, 평가 진행 상태 등의 정보를 제공합니다.
  */
-@ApiTags('A-0. 관리자 - 대시보드')
+@ApiTags('A-0-2. 관리자 - 대시보드')
 @ApiBearerAuth('Bearer')
 @Controller('admin/dashboard')
 // @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가

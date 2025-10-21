@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+// Common Domain Modules (for Sync Services)
+import { DepartmentModule } from '@domain/common/department/department.module';
+import { EmployeeModule } from '@domain/common/employee/employee.module';
+
 // Common Domain Entities
 import { Department } from '@domain/common/department/department.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
@@ -41,7 +45,12 @@ import { EvaluationResponse } from '@domain/sub/evaluation-response/evaluation-r
 import {
   Phase1OrganizationGenerator,
   Phase2EvaluationPeriodGenerator,
-  Phase3To8FullCycleGenerator,
+  Phase3AssignmentGenerator,
+  Phase4EvaluationCriteriaGenerator,
+  Phase5DeliverableGenerator,
+  Phase6QuestionGenerator,
+  Phase7EvaluationGenerator,
+  Phase8ResponseGenerator,
 } from './generators';
 
 // Handlers
@@ -53,6 +62,8 @@ import { SeedDataService } from './seed-data.service';
 @Module({
   imports: [
     CqrsModule,
+    DepartmentModule, // For DepartmentSyncService
+    EmployeeModule, // For EmployeeSyncService
     TypeOrmModule.forFeature([
       // Common (Phase 1)
       Department,
@@ -96,7 +107,12 @@ import { SeedDataService } from './seed-data.service';
     // Generators
     Phase1OrganizationGenerator,
     Phase2EvaluationPeriodGenerator,
-    Phase3To8FullCycleGenerator,
+    Phase3AssignmentGenerator,
+    Phase4EvaluationCriteriaGenerator,
+    Phase5DeliverableGenerator,
+    Phase6QuestionGenerator,
+    Phase7EvaluationGenerator,
+    Phase8ResponseGenerator,
     // Handlers
     ...CommandHandlers,
     ...QueryHandlers,

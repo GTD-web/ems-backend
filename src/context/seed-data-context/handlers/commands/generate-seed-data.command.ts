@@ -1,10 +1,15 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
-import { SeedDataConfig, GeneratorResult } from '../../types';
+import { SeedDataConfig, GeneratorResult, SeedScenario } from '../../types';
 import {
   Phase1OrganizationGenerator,
   Phase2EvaluationPeriodGenerator,
-  Phase3To8FullCycleGenerator,
+  Phase3AssignmentGenerator,
+  Phase4EvaluationCriteriaGenerator,
+  Phase5DeliverableGenerator,
+  Phase6QuestionGenerator,
+  Phase7EvaluationGenerator,
+  Phase8ResponseGenerator,
 } from '../../generators';
 
 export class GenerateSeedDataCommand {
@@ -21,7 +26,12 @@ export class GenerateSeedDataHandler
   constructor(
     private readonly phase1Generator: Phase1OrganizationGenerator,
     private readonly phase2Generator: Phase2EvaluationPeriodGenerator,
-    private readonly phase3To8Generator: Phase3To8FullCycleGenerator,
+    private readonly phase3Generator: Phase3AssignmentGenerator,
+    private readonly phase4Generator: Phase4EvaluationCriteriaGenerator,
+    private readonly phase5Generator: Phase5DeliverableGenerator,
+    private readonly phase6Generator: Phase6QuestionGenerator,
+    private readonly phase7Generator: Phase7EvaluationGenerator,
+    private readonly phase8Generator: Phase8ResponseGenerator,
   ) {}
 
   async execute(command: GenerateSeedDataCommand): Promise<GeneratorResult[]> {
@@ -38,21 +48,71 @@ export class GenerateSeedDataHandler
       results.push(phase1Result);
 
       // Phase 2: 평가기간 (WITH_PERIOD 이상)
-      if (this.shouldRunPhase2OrHigher(config.scenario)) {
+      if (this.shouldRunPhase(2, config.scenario)) {
         const phase2Result = await this.phase2Generator.generate(
           config,
           phase1Result,
         );
         results.push(phase2Result);
 
-        // Phase 3-8: 나머지 (WITH_ASSIGNMENTS 이상)
-        if (this.shouldRunPhase3OrHigher(config.scenario)) {
-          const phase3To8Result = await this.phase3To8Generator.generate(
+        // Phase 3: 프로젝트 및 WBS 할당 (WITH_ASSIGNMENTS 이상)
+        if (this.shouldRunPhase(3, config.scenario)) {
+          const phase3Result = await this.phase3Generator.generate(
             config,
             phase1Result,
             phase2Result,
           );
-          results.push(phase3To8Result);
+          results.push(phase3Result);
+
+          // Phase 4: 평가 기준 및 라인 (WITH_ASSIGNMENTS 이상)
+          if (this.shouldRunPhase(4, config.scenario)) {
+            const phase4Result = await this.phase4Generator.generate(
+              config,
+              phase1Result,
+              phase2Result,
+            );
+            results.push(phase4Result);
+
+            // Phase 5: 산출물 (WITH_ASSIGNMENTS 이상)
+            if (this.shouldRunPhase(5, config.scenario)) {
+              const phase5Result = await this.phase5Generator.generate(
+                config,
+                phase1Result,
+                phase2Result,
+              );
+              results.push(phase5Result);
+
+              // Phase 6: 질문 그룹 및 질문 (WITH_SETUP 이상)
+              if (this.shouldRunPhase(6, config.scenario)) {
+                const phase6Result = await this.phase6Generator.generate(
+                  config,
+                  phase1Result,
+                );
+                results.push(phase6Result);
+
+                // Phase 7: 평가 실행 (FULL)
+                if (this.shouldRunPhase(7, config.scenario)) {
+                  const phase7Result = await this.phase7Generator.generate(
+                    config,
+                    phase1Result,
+                    phase2Result,
+                  );
+                  results.push(phase7Result);
+
+                  // Phase 8: 응답 (FULL)
+                  if (this.shouldRunPhase(8, config.scenario)) {
+                    const phase8Result = await this.phase8Generator.generate(
+                      config,
+                      phase1Result,
+                      phase6Result,
+                      phase7Result,
+                    );
+                    results.push(phase8Result);
+                  }
+                }
+              }
+            }
+          }
         }
       }
 
@@ -64,13 +124,14 @@ export class GenerateSeedDataHandler
     }
   }
 
-  private shouldRunPhase2OrHigher(scenario: string): boolean {
-    return ['with_period', 'with_assignments', 'with_setup', 'full'].includes(
-      scenario,
-    );
-  }
-
-  private shouldRunPhase3OrHigher(scenario: string): boolean {
-    return ['with_assignments', 'with_setup', 'full'].includes(scenario);
+  private shouldRunPhase(phase: number, scenario: SeedScenario): boolean {
+    const phaseMap = {
+      [SeedScenario.MINIMAL]: 1,
+      [SeedScenario.WITH_PERIOD]: 2,
+      [SeedScenario.WITH_ASSIGNMENTS]: 5,
+      [SeedScenario.WITH_SETUP]: 6,
+      [SeedScenario.FULL]: 8,
+    };
+    return phase <= phaseMap[scenario];
   }
 }

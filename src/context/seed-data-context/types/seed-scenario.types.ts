@@ -19,6 +19,8 @@ export interface SeedDataConfig {
     periodCount: number;
   };
   stateDistribution?: StateDistributionConfig;
+  useRealDepartments?: boolean;
+  useRealEmployees?: boolean;
 }
 
 export interface StateDistributionConfig {
