@@ -141,16 +141,16 @@ describe('POST /admin/seed/generate - 시드 데이터 생성 테스트', () => 
       expect(response.body.success).toBe(true);
       expect(response.body.results.length).toBeGreaterThanOrEqual(3);
 
-      // Phase3-8 결과 검증
-      const phase38Result = response.body.results.find(
-        (r: any) => r.phase === 'Phase3-8',
+      // Phase3 결과 검증 (프로젝트 및 WBS 할당)
+      const phase3Result = response.body.results.find(
+        (r: any) => r.phase === 'Phase3',
       );
 
-      expect(phase38Result).toBeDefined();
-      expect(phase38Result.entityCounts).toHaveProperty(
+      expect(phase3Result).toBeDefined();
+      expect(phase3Result.entityCounts).toHaveProperty(
         'EvaluationProjectAssignment',
       );
-      expect(phase38Result.entityCounts).toHaveProperty(
+      expect(phase3Result.entityCounts).toHaveProperty(
         'EvaluationWbsAssignment',
       );
     });

@@ -615,12 +615,12 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
         testData.evaluationPeriodId,
         employee.id,
       );
+      // WBS 배정 시 자동으로 평가기준이 생성됨
       await assignWbsToEmployee(
         testData.evaluationPeriodId,
         employee.id,
         wbsItem.id,
       );
-      await createWbsEvaluationCriteria(wbsItem.id, '테스트 평가기준');
 
       // When
       const response = await testSuite
@@ -893,17 +893,14 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
         project.id,
       );
 
-      // 3. WBS 배정
+      // 3. WBS 배정 (평가기준 자동 생성됨)
       await assignWbsToEmployee(
         testData.evaluationPeriodId,
         evaluatee.id,
         wbsItem.id,
       );
 
-      // 4. WBS 평가기준 설정
-      await createWbsEvaluationCriteria(wbsItem.id, '완전한 평가기준');
-
-      // 5. PRIMARY 평가자 지정
+      // 4. PRIMARY 평가자 지정
       await configurePrimaryEvaluator(
         evaluatee.id,
         wbsItem.id,

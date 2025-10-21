@@ -8,6 +8,7 @@ import { ProjectTestService } from '../../../domain/common/project/project-test.
 import { WbsItemTestService } from '../../../domain/common/wbs-item/wbs-item-test.service';
 import { EvaluationPeriod } from '../../../domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationWbsAssignment } from '../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationProjectAssignment } from '../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { DepartmentDto } from '../../../domain/common/department/department.types';
 import { EmployeeDto } from '../../../domain/common/employee/employee.types';
 import { ProjectDto } from '../../../domain/common/project/project.types';
@@ -56,6 +57,8 @@ export class CreateCompleteTestEnvironmentHandler
     private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
     @InjectRepository(EvaluationWbsAssignment)
     private readonly evaluationWbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+    @InjectRepository(EvaluationProjectAssignment)
+    private readonly evaluationProjectAssignmentRepository: Repository<EvaluationProjectAssignment>,
   ) {}
 
   async execute(
@@ -84,14 +87,13 @@ export class CreateCompleteTestEnvironmentHandler
     // 5. 평가기간 데이터 생성
     const periods = await this.createEvaluationPeriods();
 
-    // 6. WBS 할당 데이터 생성 (기본적으로 생성하지 않음 - 테스트에서 명시적으로 할당)
-    // const wbsAssignments = await this.createWbsAssignments(
-    //   employees,
-    //   projects,
-    //   wbsItems,
-    //   periods,
-    // );
-    const wbsAssignments: EvaluationWbsAssignmentDto[] = [];
+    // 6. WBS 할당 데이터 생성
+    const wbsAssignments = await this.createWbsAssignments(
+      employees,
+      projects,
+      wbsItems,
+      periods,
+    );
 
     console.log(
       `완전한 테스트 환경 생성 완료: 부서 ${departments.length}, 직원 ${employees.length}, 프로젝트 ${projects.length}, WBS ${wbsItems.length}, 평가기간 ${periods.length}, WBS할당 ${wbsAssignments.length}`,
@@ -153,7 +155,7 @@ export class CreateCompleteTestEnvironmentHandler
   }
 
   /**
-   * WBS 할당 생성
+   * WBS 할당 생성 (프로젝트 할당 포함)
    */
   private async createWbsAssignments(
     employees: EmployeeDto[],
@@ -179,8 +181,24 @@ export class CreateCompleteTestEnvironmentHandler
 
     const firstProject = projects[0];
     const assignedBy = employees[0].id;
-    const assignments: EvaluationWbsAssignment[] = [];
 
+    // 1. 프로젝트 할당 생성
+    const projectAssignments: EvaluationProjectAssignment[] = [];
+    for (const employee of employees) {
+      const projectAssignment =
+        this.evaluationProjectAssignmentRepository.create({
+          periodId: inProgressPeriod.id,
+          employeeId: employee.id,
+          projectId: firstProject.id,
+          assignedBy: assignedBy,
+          assignedDate: new Date(),
+        });
+      projectAssignments.push(projectAssignment);
+    }
+    await this.evaluationProjectAssignmentRepository.save(projectAssignments);
+
+    // 2. WBS 할당 생성
+    const assignments: EvaluationWbsAssignment[] = [];
     for (const employee of employees) {
       for (let i = 0; i < wbsItems.length; i++) {
         const wbsItem = wbsItems[i];

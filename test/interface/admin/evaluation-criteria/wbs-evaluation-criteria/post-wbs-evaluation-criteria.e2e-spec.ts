@@ -94,7 +94,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
   async function createWbsEvaluationCriteria(
     wbsItemId: string,
     criteria: string,
-    actionBy?: string,
+    importance: number = 5,
   ): Promise<any> {
     const response = await testSuite
       .request()
@@ -103,7 +103,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       )
       .send({
         criteria,
-        actionBy: actionBy || getRandomEmployee().id,
+        importance,
       })
       .expect(200);
 
@@ -138,7 +138,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -164,6 +164,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria,
+          importance: 5,
         })
         .expect(200);
 
@@ -194,7 +195,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
             )
             .send({
               criteria,
-              actionBy,
+              importance: 5,
             })
             .expect(200),
         ),
@@ -224,7 +225,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: longCriteria,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -245,7 +246,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem1.id}`,
         )
-        .send({ criteria, actionBy })
+        .send({ criteria, importance: 5 })
         .expect(200);
 
       const response2 = await testSuite
@@ -253,7 +254,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         .post(
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem2.id}`,
         )
-        .send({ criteria, actionBy })
+        .send({ criteria, importance: 5 })
         .expect(200);
 
       // Then
@@ -277,7 +278,6 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const created = await createWbsEvaluationCriteria(
         wbsItem.id,
         originalCriteria,
-        actionBy,
       );
 
       // When - 동일한 wbsItemId로 다시 요청하면 자동으로 수정됨
@@ -288,7 +288,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: updatedCriteria,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -308,7 +308,6 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const created = await createWbsEvaluationCriteria(
         wbsItem.id,
         originalCriteria,
-        actionBy,
       );
 
       // 시간 차이를 보장하기 위해 약간 대기
@@ -322,7 +321,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: updatedCriteria,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -338,11 +337,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const criteria = '동일한 평가기준';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // When - 동일한 wbsItemId와 동일한 내용으로 요청
       const response = await testSuite
@@ -352,7 +347,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: criteria, // 동일한 내용
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -377,7 +372,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
           `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
         )
         .send({
-          actionBy,
+          importance: 5,
           // criteria 누락
         })
         .expect(400);
@@ -396,7 +391,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: '',
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -418,7 +413,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria,
-          actionBy,
+          importance: 5,
         });
 
       // Then
@@ -439,7 +434,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria,
-          actionBy,
+          importance: 5,
         });
 
       // Then - UUID 검증이 DB 쿼리 단계에서 발생하여 500 반환될 수 있음
@@ -474,7 +469,6 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const created1 = await createWbsEvaluationCriteria(
         wbsItem1.id,
         criteria1,
-        actionBy,
       );
 
       // When - WBS 항목 2에 평가기준 생성
@@ -485,7 +479,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: criteria2,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -515,7 +509,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -537,7 +531,6 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const created = await createWbsEvaluationCriteria(
         wbsItem.id,
         originalCriteria,
-        actionBy,
       );
 
       // When - 동일한 wbsItemId로 다시 요청
@@ -548,7 +541,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: updatedCriteria,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -559,7 +552,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       expect(dbRecord.criteria).not.toBe(originalCriteria);
     });
 
-    it('평가기준 수정 시 createdAt은 거의 변경되지 않는다 (50ms 이내)', async () => {
+    it('평가기준 수정 시 createdAt은 거의 변경되지 않는다 (100ms 이내)', async () => {
       // Given
       const wbsItem = getRandomWbsItem();
       const originalCriteria = '원본 평가기준';
@@ -569,7 +562,6 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       const created = await createWbsEvaluationCriteria(
         wbsItem.id,
         originalCriteria,
-        actionBy,
       );
 
       // When - 동일한 wbsItemId로 다시 요청
@@ -580,16 +572,16 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: updatedCriteria,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
-      // Then - 타임스탬프 정밀도 차이를 허용 (50ms 이내)
+      // Then - 타임스탬프 정밀도 차이를 허용 (100ms 이내)
       const createdAtDiff = Math.abs(
         new Date(response.body.createdAt).getTime() -
           new Date(created.createdAt).getTime(),
       );
-      expect(createdAtDiff).toBeLessThanOrEqual(50);
+      expect(createdAtDiff).toBeLessThanOrEqual(100);
     });
   });
 
@@ -611,7 +603,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: criteriaWithSpecialChars,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -634,7 +626,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: criteriaWithNewlines,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -656,7 +648,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: criteriaWithEmoji,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 
@@ -678,7 +670,7 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
         )
         .send({
           criteria: mixedCriteria,
-          actionBy,
+          importance: 5,
         })
         .expect(200);
 

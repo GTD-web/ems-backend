@@ -94,7 +94,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
   async function createWbsEvaluationCriteria(
     wbsItemId: string,
     criteria: string,
-    actionBy?: string,
+    importance: number = 5,
   ): Promise<any> {
     const response = await testSuite
       .request()
@@ -103,7 +103,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       )
       .send({
         criteria,
-        actionBy: actionBy || getRandomEmployee().id,
+        importance,
       })
       .expect(200);
 
@@ -140,11 +140,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = '코드 품질 및 성능 최적화';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // When
       const response = await testSuite
@@ -166,11 +162,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = '테스트 평가기준';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // When
       const response = await testSuite
@@ -197,11 +189,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = '상세 테스트';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       const dbWbsItem = await getWbsItemFromDb(wbsItem.id);
 
@@ -229,11 +217,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = '필드 검증 테스트';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // When
       const response = await testSuite
@@ -265,11 +249,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = 'Not null 검증 테스트';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // When
       const response = await testSuite
@@ -301,17 +281,14 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const created1 = await createWbsEvaluationCriteria(
         wbsItem1.id,
         '평가기준 1',
-        getRandomEmployee().id,
       );
       const created2 = await createWbsEvaluationCriteria(
         wbsItem2.id,
         '평가기준 2',
-        getRandomEmployee().id,
       );
       const created3 = await createWbsEvaluationCriteria(
         wbsItem3.id,
         '평가기준 3',
-        getRandomEmployee().id,
       );
 
       // When & Then - 첫 번째 평가기준 조회
@@ -357,11 +334,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = 'WBS 삭제 테스트';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // WBS 항목 삭제
       await deleteWbsItemInDb(wbsItem.id);
@@ -414,11 +387,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = '삭제될 평가기준';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // 평가기준 삭제
       await testSuite
@@ -464,7 +433,6 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const created = await createWbsEvaluationCriteria(
         wbsItem.id,
         '초기 평가기준',
-        actionBy,
       );
 
       // 2. 상세 조회
@@ -477,11 +445,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       expect(response1.body.wbsItem).toBeDefined();
 
       // 3. 수정 (같은 WBS 항목에 다시 저장)
-      await createWbsEvaluationCriteria(
-        wbsItem.id,
-        '수정된 평가기준',
-        actionBy,
-      );
+      await createWbsEvaluationCriteria(wbsItem.id, '수정된 평가기준');
 
       // 4. 다시 상세 조회
       const response2 = await testSuite
@@ -501,11 +465,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const actionBy = getRandomEmployee().id;
 
       // 1. 생성
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        '평가기준',
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, '평가기준');
 
       // 2. 상세 조회
       const response1 = await testSuite
@@ -541,7 +501,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = '목록-상세 연동 테스트';
       const actionBy = getRandomEmployee().id;
 
-      await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
+      await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // 1. 목록 조회
       const listResponse = await testSuite
@@ -578,11 +538,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = '정합성 검증 테스트';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       // When
       const response = await testSuite
@@ -607,11 +563,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria/:id - WBS 평�
       const criteria = 'DB 일치 검증';
       const actionBy = getRandomEmployee().id;
 
-      const created = await createWbsEvaluationCriteria(
-        wbsItem.id,
-        criteria,
-        actionBy,
-      );
+      const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
       const dbWbsItem = await getWbsItemFromDb(wbsItem.id);
 

@@ -94,7 +94,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
   async function createWbsEvaluationCriteria(
     wbsItemId: string,
     criteria: string,
-    actionBy?: string,
+    importance: number = 5,
   ): Promise<any> {
     const response = await testSuite
       .request()
@@ -103,7 +103,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
       )
       .send({
         criteria,
-        actionBy: actionBy || getRandomEmployee().id,
+        importance,
       })
       .expect(200);
 
@@ -143,21 +143,9 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const wbsItem2 = testData.wbsItems[1];
         const wbsItem3 = testData.wbsItems[2];
 
-        await createWbsEvaluationCriteria(
-          wbsItem1.id,
-          '평가기준 1',
-          getRandomEmployee().id,
-        );
-        await createWbsEvaluationCriteria(
-          wbsItem2.id,
-          '평가기준 2',
-          getRandomEmployee().id,
-        );
-        await createWbsEvaluationCriteria(
-          wbsItem3.id,
-          '평가기준 3',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem1.id, '평가기준 1');
+        await createWbsEvaluationCriteria(wbsItem2.id, '평가기준 2');
+        await createWbsEvaluationCriteria(wbsItem3.id, '평가기준 3');
 
         // When
         const response = await testSuite
@@ -200,16 +188,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const wbsItem1 = testData.wbsItems[0];
         const wbsItem2 = testData.wbsItems[1];
 
-        await createWbsEvaluationCriteria(
-          wbsItem1.id,
-          '평가기준 1',
-          getRandomEmployee().id,
-        );
-        await createWbsEvaluationCriteria(
-          wbsItem2.id,
-          '평가기준 2',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem1.id, '평가기준 1');
+        await createWbsEvaluationCriteria(wbsItem2.id, '평가기준 2');
 
         // When: wbsItem1 필터링
         const response = await testSuite
@@ -232,21 +212,9 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const wbsItem2 = testData.wbsItems[1];
         const wbsItem3 = testData.wbsItems[2];
 
-        await createWbsEvaluationCriteria(
-          wbsItem1.id,
-          '코드 품질 검토',
-          getRandomEmployee().id,
-        );
-        await createWbsEvaluationCriteria(
-          wbsItem2.id,
-          '성능 최적화',
-          getRandomEmployee().id,
-        );
-        await createWbsEvaluationCriteria(
-          wbsItem3.id,
-          '코드 리팩토링',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem1.id, '코드 품질 검토');
+        await createWbsEvaluationCriteria(wbsItem2.id, '성능 최적화');
+        await createWbsEvaluationCriteria(wbsItem3.id, '코드 리팩토링');
 
         // When: '코드'로 검색
         const response = await testSuite
@@ -269,16 +237,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const wbsItem1 = testData.wbsItems[0];
         const wbsItem2 = testData.wbsItems[1];
 
-        await createWbsEvaluationCriteria(
-          wbsItem1.id,
-          '코드 품질',
-          getRandomEmployee().id,
-        );
-        await createWbsEvaluationCriteria(
-          wbsItem2.id,
-          '코드 품질 검토',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem1.id, '코드 품질');
+        await createWbsEvaluationCriteria(wbsItem2.id, '코드 품질 검토');
 
         // When: '코드 품질' 완전 일치 검색
         const response = await testSuite
@@ -299,16 +259,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const wbsItem1 = testData.wbsItems[0];
         const wbsItem2 = testData.wbsItems[1];
 
-        await createWbsEvaluationCriteria(
-          wbsItem1.id,
-          '코드 품질',
-          getRandomEmployee().id,
-        );
-        await createWbsEvaluationCriteria(
-          wbsItem2.id,
-          '코드 품질',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem1.id, '코드 품질');
+        await createWbsEvaluationCriteria(wbsItem2.id, '코드 품질');
 
         // When: wbsItemId와 criteriaExact 동시 적용
         const response = await testSuite
@@ -334,7 +286,6 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const created = await createWbsEvaluationCriteria(
           wbsItem.id,
           '삭제될 평가기준',
-          getRandomEmployee().id,
         );
 
         // 평가기준 삭제
@@ -364,11 +315,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         for (let i = 0; i < 10; i++) {
           const wbsItem = testData.wbsItems[i % testData.wbsItems.length];
           createPromises.push(
-            createWbsEvaluationCriteria(
-              wbsItem.id,
-              `평가기준 ${i + 1}`,
-              getRandomEmployee().id,
-            ),
+            createWbsEvaluationCriteria(wbsItem.id, `평가기준 ${i + 1}`),
           );
         }
         await Promise.all(createPromises);
@@ -420,11 +367,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
       it('빈 문자열 criteriaSearch로 조회 시 모든 평가기준을 반환해야 한다', async () => {
         // Given
         const wbsItem = getRandomWbsItem();
-        await createWbsEvaluationCriteria(
-          wbsItem.id,
-          '평가기준',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem.id, '평가기준');
 
         // When
         const response = await testSuite
@@ -442,11 +385,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
       it('빈 문자열 criteriaExact로 조회 시 빈 배열을 반환해야 한다', async () => {
         // Given
         const wbsItem = getRandomWbsItem();
-        await createWbsEvaluationCriteria(
-          wbsItem.id,
-          '평가기준',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem.id, '평가기준');
 
         // When
         const response = await testSuite
@@ -470,11 +409,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         // Given
         const wbsItem = getRandomWbsItem();
         const criteria = '평가기준';
-        const created = await createWbsEvaluationCriteria(
-          wbsItem.id,
-          criteria,
-          getRandomEmployee().id,
-        );
+        const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When
         const response = await testSuite
@@ -520,7 +455,6 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const created = await createWbsEvaluationCriteria(
           wbsItem.id,
           '삭제될 평가기준',
-          getRandomEmployee().id,
         );
 
         // 평가기준 삭제
@@ -548,17 +482,12 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
       it('WBS 항목당 하나의 평가기준만 조회되어야 한다', async () => {
         // Given: 동일 WBS 항목에 평가기준 생성
         const wbsItem = getRandomWbsItem();
-        await createWbsEvaluationCriteria(
-          wbsItem.id,
-          '첫 번째 평가기준',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem.id, '첫 번째 평가기준');
 
         // 같은 WBS 항목에 다시 저장 (덮어쓰기)
         const updated = await createWbsEvaluationCriteria(
           wbsItem.id,
           '두 번째 평가기준',
-          getRandomEmployee().id,
         );
 
         // When
@@ -582,16 +511,8 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const wbsItem1 = testData.wbsItems[0];
         const wbsItem2 = testData.wbsItems[1];
 
-        await createWbsEvaluationCriteria(
-          wbsItem1.id,
-          '평가기준 1',
-          getRandomEmployee().id,
-        );
-        await createWbsEvaluationCriteria(
-          wbsItem2.id,
-          '평가기준 2',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem1.id, '평가기준 1');
+        await createWbsEvaluationCriteria(wbsItem2.id, '평가기준 2');
 
         // When
         const response1 = await testSuite
@@ -619,11 +540,7 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
       it('응답에 wbsItemId가 포함되어야 한다', async () => {
         // Given
         const wbsItem = getRandomWbsItem();
-        await createWbsEvaluationCriteria(
-          wbsItem.id,
-          '평가기준',
-          getRandomEmployee().id,
-        );
+        await createWbsEvaluationCriteria(wbsItem.id, '평가기준');
 
         // When
         const response = await testSuite
@@ -687,13 +604,11 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
       it('생성 -> 조회 -> 수정 -> 조회 흐름이 정상적으로 동작해야 한다', async () => {
         // Given
         const wbsItem = getRandomWbsItem();
-        const actionBy = getRandomEmployee().id;
 
         // 1. 생성
         const created = await createWbsEvaluationCriteria(
           wbsItem.id,
           '초기 평가기준',
-          actionBy,
         );
 
         // 2. 조회
@@ -711,7 +626,6 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
         const updated = await createWbsEvaluationCriteria(
           wbsItem.id,
           '수정된 평가기준',
-          actionBy,
         );
 
         // 4. 다시 조회
@@ -731,13 +645,11 @@ describe('GET /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가기
       it('생성 -> 조회 -> 삭제 -> 조회 흐름이 정상적으로 동작해야 한다', async () => {
         // Given
         const wbsItem = getRandomWbsItem();
-        const actionBy = getRandomEmployee().id;
 
         // 1. 생성
         const created = await createWbsEvaluationCriteria(
           wbsItem.id,
           '평가기준',
-          actionBy,
         );
 
         // 2. 조회

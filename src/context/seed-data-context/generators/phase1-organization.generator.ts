@@ -81,6 +81,7 @@ export class Phase1OrganizationGenerator {
         config.dataScale.employeeCount,
         allDepartments,
         dist,
+        config.clearExisting,
       );
       this.logger.log(`생성 완료: Employee ${employeeIds.length}개`);
     }
@@ -88,7 +89,7 @@ export class Phase1OrganizationGenerator {
     // 직원이 없으면 최소 1명 생성
     if (employeeIds.length === 0) {
       this.logger.warn('직원이 없어 기본 직원 1명을 생성합니다.');
-      employeeIds = await this.생성_Employee들(1, allDepartments, dist);
+      employeeIds = await this.생성_Employee들(1, allDepartments, dist, true);
     }
 
     // 3. 첫 번째 직원을 관리자로 사용하여 Department의 createdBy 업데이트
@@ -255,41 +256,63 @@ export class Phase1OrganizationGenerator {
     count: number,
     departments: Department[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
+    clearExisting: boolean = true,
   ): Promise<string[]> {
     const employees: Employee[] = [];
 
     // 고유한 employeeNumber 생성을 위한 타임스탬프 접미사
     const timestamp = Date.now().toString().slice(-6);
 
-    // 첫 번째 직원을 먼저 생성하고 저장 (시스템 관리자 역할)
-    const adminEmp = new Employee();
-    adminEmp.employeeNumber = `EMP${timestamp}001`;
-    adminEmp.name = '시스템 관리자';
-    adminEmp.email = 'admin@system.com';
-    adminEmp.phoneNumber = faker.phone.number('010-####-####');
-    adminEmp.dateOfBirth = faker.date.birthdate({
-      min: 30,
-      max: 50,
-      mode: 'age',
-    });
-    adminEmp.gender = 'MALE';
-    adminEmp.hireDate = DateGeneratorUtil.generatePastDate(3650);
-    adminEmp.status = '재직중';
-    adminEmp.isExcludedFromList = false;
+    // clearExisting=false 모드에서는 기존 시스템 관리자 확인
+    let existingAdminId: string | null = null;
+    if (!clearExisting) {
+      const existingAdmin = await this.employeeRepository.findOne({
+        where: {
+          email: 'admin@system.com',
+          deletedAt: IsNull(),
+        },
+      });
 
-    // 첫 번째 부서에 할당
-    const firstDept = departments[0];
-    adminEmp.departmentId = firstDept.externalId;
-    adminEmp.externalId = faker.string.uuid();
-    adminEmp.externalCreatedAt = new Date();
-    adminEmp.externalUpdatedAt = new Date();
-    // 첫 번째 직원은 자기 자신을 생성자로 설정 (나중에 업데이트)
-    adminEmp.createdBy = 'temp-system';
+      if (existingAdmin) {
+        this.logger.log('기존 시스템 관리자 계정 사용: admin@system.com');
+        existingAdminId = existingAdmin.id;
+      }
+    }
 
-    employees.push(adminEmp);
+    // 시스템 관리자가 없는 경우에만 생성
+    if (!existingAdminId) {
+      // 첫 번째 직원을 먼저 생성하고 저장 (시스템 관리자 역할)
+      const adminEmp = new Employee();
+      adminEmp.employeeNumber = `EMP${timestamp}001`;
+      adminEmp.name = '시스템 관리자';
+      adminEmp.email = 'admin@system.com';
+      adminEmp.phoneNumber = faker.phone.number('010-####-####');
+      adminEmp.dateOfBirth = faker.date.birthdate({
+        min: 30,
+        max: 50,
+        mode: 'age',
+      });
+      adminEmp.gender = 'MALE';
+      adminEmp.hireDate = DateGeneratorUtil.generatePastDate(3650);
+      adminEmp.status = '재직중';
+      adminEmp.isExcludedFromList = false;
+
+      // 첫 번째 부서에 할당
+      const firstDept = departments[0];
+      adminEmp.departmentId = firstDept.externalId;
+      adminEmp.externalId = faker.string.uuid();
+      adminEmp.externalCreatedAt = new Date();
+      adminEmp.externalUpdatedAt = new Date();
+      // 첫 번째 직원은 자기 자신을 생성자로 설정 (나중에 업데이트)
+      adminEmp.createdBy = 'temp-system';
+
+      employees.push(adminEmp);
+    }
 
     // 나머지 직원 생성
-    for (let i = 1; i < count; i++) {
+    // existingAdminId가 있으면 i=0부터, 없으면 i=1부터 시작
+    const startIndex = existingAdminId ? 0 : 1;
+    for (let i = startIndex; i < count; i++) {
       const emp = new Employee();
       emp.employeeNumber = `EMP${timestamp}${String(i + 1).padStart(3, '0')}`;
       emp.name = faker.person.fullName();
@@ -333,7 +356,15 @@ export class Phase1OrganizationGenerator {
     }
 
     // 배치 저장
-    const saved = await this.직원을_배치로_저장한다(employees);
+    let saved: Employee[] = [];
+    if (employees.length > 0) {
+      saved = await this.직원을_배치로_저장한다(employees);
+    }
+
+    // 기존 관리자가 있는 경우 첫 번째에 추가
+    if (existingAdminId) {
+      return [existingAdminId, ...saved.map((e) => e.id)];
+    }
 
     return saved.map((e) => e.id);
   }

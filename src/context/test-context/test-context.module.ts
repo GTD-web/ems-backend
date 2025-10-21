@@ -8,6 +8,7 @@ import { ProjectTestModule } from '../../domain/common/project/project-test.modu
 import { WbsItemTestModule } from '../../domain/common/wbs-item/wbs-item-test.module';
 import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationProjectAssignment } from '../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { QuestionGroup } from '../../domain/sub/question-group/question-group.entity';
 import { EvaluationQuestion } from '../../domain/sub/evaluation-question/evaluation-question.entity';
 import { QuestionGroupMapping } from '../../domain/sub/question-group-mapping/question-group-mapping.entity';
@@ -29,6 +30,7 @@ import { QUERY_HANDLERS } from './queries';
     TypeOrmModule.forFeature([
       EvaluationPeriod,
       EvaluationWbsAssignment,
+      EvaluationProjectAssignment,
       QuestionGroup,
       EvaluationQuestion,
       QuestionGroupMapping,

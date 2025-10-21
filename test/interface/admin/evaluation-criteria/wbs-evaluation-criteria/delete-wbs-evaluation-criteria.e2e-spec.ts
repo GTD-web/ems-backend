@@ -102,7 +102,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
   async function createWbsEvaluationCriteria(
     wbsItemId: string,
     criteria: string,
-    actionBy?: string,
+    importance: number = 5,
   ): Promise<any> {
     const response = await testSuite
       .request()
@@ -111,7 +111,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
       )
       .send({
         criteria,
-        actionBy: actionBy || uuidv4(),
+        importance,
       })
       .expect(200);
 
@@ -151,11 +151,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = '삭제할 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        const created = await createWbsEvaluationCriteria(
-          wbsItem.id,
-          criteria,
-          actionBy,
-        );
+        const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When
         const response = await testSuite
@@ -176,11 +172,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = '삭제할 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        const created = await createWbsEvaluationCriteria(
-          wbsItem.id,
-          criteria,
-          actionBy,
-        );
+        const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When
         await testSuite
@@ -202,11 +194,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = '삭제할 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        const created = await createWbsEvaluationCriteria(
-          wbsItem.id,
-          criteria,
-          actionBy,
-        );
+        const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When
         await testSuite
@@ -237,11 +225,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = '삭제할 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        const created = await createWbsEvaluationCriteria(
-          wbsItem.id,
-          criteria,
-          actionBy,
-        );
+        const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When
         await testSuite
@@ -272,11 +256,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = '삭제할 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        const created = await createWbsEvaluationCriteria(
-          wbsItem.id,
-          criteria,
-          actionBy,
-        );
+        const created = await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When - 첫 번째 삭제
         await testSuite
@@ -339,7 +319,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = 'WBS 항목 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
+        await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When
         const response = await testSuite
@@ -360,7 +340,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = 'WBS 항목 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
+        await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When
         await testSuite
@@ -383,7 +363,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = 'WBS 항목 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
+        await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When
         await testSuite
@@ -424,7 +404,7 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria = 'WBS 항목 평가기준';
         const actionBy = getRandomEmployee().id;
 
-        await createWbsEvaluationCriteria(wbsItem.id, criteria, actionBy);
+        await createWbsEvaluationCriteria(wbsItem.id, criteria);
 
         // When - 첫 번째 삭제
         await testSuite
@@ -453,12 +433,10 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
         const criteria1 = await createWbsEvaluationCriteria(
           wbsItem1.id,
           'WBS 1 평가기준',
-          actionBy,
         );
         const criteria2 = await createWbsEvaluationCriteria(
           wbsItem2.id,
           'WBS 2 평가기준',
-          actionBy,
         );
 
         // When - WBS 1의 평가기준만 삭제
@@ -527,7 +505,6 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
       const created = await createWbsEvaluationCriteria(
         wbsItem.id,
         '첫 번째 평가기준',
-        actionBy,
       );
       expect(created.criteria).toBe('첫 번째 평가기준');
 
@@ -543,7 +520,6 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
       const recreated = await createWbsEvaluationCriteria(
         wbsItem.id,
         '두 번째 평가기준',
-        actionBy,
       );
       expect(recreated.criteria).toBe('두 번째 평가기준');
       expect(recreated.id).not.toBe(created.id); // 새로운 ID로 생성됨
@@ -558,7 +534,6 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
       const created = await createWbsEvaluationCriteria(
         wbsItem.id,
         '첫 번째 평가기준',
-        actionBy,
       );
 
       // WBS 항목 평가기준 전체 삭제
@@ -573,7 +548,6 @@ describe('DELETE /admin/evaluation-criteria/wbs-evaluation-criteria - WBS 평가
       const recreated = await createWbsEvaluationCriteria(
         wbsItem.id,
         '두 번째 평가기준',
-        actionBy,
       );
       expect(recreated.criteria).toBe('두 번째 평가기준');
       expect(recreated.id).not.toBe(created.id);

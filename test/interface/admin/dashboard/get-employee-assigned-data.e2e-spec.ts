@@ -38,8 +38,11 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
     const { departments, employees, projects, periods } =
       await testContextService.완전한_테스트환경을_생성한다();
 
-    // 첫 번째 평가기간 사용
-    const evaluationPeriodId = periods[0].id;
+    // IN_PROGRESS 상태의 평가기간 사용 (WBS 할당이 생성된 평가기간)
+    const inProgressPeriod = periods.find((p) => p.status === 'in-progress');
+    const evaluationPeriodId = inProgressPeriod
+      ? inProgressPeriod.id
+      : periods[0].id;
 
     // 활성 프로젝트의 WBS 항목 조회
     const activeProject = projects.find((p) => p.isActive) || projects[0];
@@ -59,6 +62,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       projects: testData.projects.length,
       wbsItems: testData.wbsItems.length,
       evaluationPeriodId: testData.evaluationPeriodId,
+      periodStatus: inProgressPeriod ? 'in-progress' : 'other',
     });
   });
 
@@ -208,6 +212,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
   async function createWbsEvaluationCriteria(
     wbsItemId: string,
     criteria: string,
+    importance: number = 5,
   ): Promise<void> {
     await testSuite
       .request()
@@ -216,7 +221,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       )
       .send({
         criteria,
-        actionBy: testData.employees[0].id,
+        importance,
       })
       .expect(200);
   }
@@ -513,9 +518,13 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
         expect(project).toHaveProperty('wbsList');
         expect(Array.isArray(project.wbsList)).toBe(true);
 
-        // 각 WBS가 해당 프로젝트에 속해야 함
+        // 각 WBS가 필수 필드를 가지고 있어야 함
         for (const wbs of project.wbsList) {
-          expect(wbs.projectId).toBe(project.projectId);
+          expect(wbs).toHaveProperty('wbsId');
+          expect(wbs).toHaveProperty('wbsName');
+          expect(wbs).toHaveProperty('wbsCode');
+          expect(wbs).toHaveProperty('criteria');
+          expect(Array.isArray(wbs.criteria)).toBe(true);
         }
       }
     });

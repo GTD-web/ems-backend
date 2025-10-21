@@ -32,13 +32,21 @@ describe('WBS 평가기준 가중치 자동 계산 테스트', () => {
   beforeEach(async () => {
     await testSuite.cleanupBeforeTest();
 
-    // 완전한 테스트 환경 생성
-    const { departments, employees, projects, periods } =
-      await testContextService.완전한_테스트환경을_생성한다();
+    // 기본 테스트 환경 생성
+    const { departments, employees, projects, wbsItems, periods } =
+      await testContextService.평가시스템용_완전한_테스트데이터를_생성한다();
 
-    // 활성 프로젝트의 WBS 항목 조회
-    const activeProject = projects.find((p) => p.isActive) || projects[0];
-    const wbsItems = await getWbsItemsFromProject(activeProject.id);
+    // 가중치 계산 테스트에서는 WBS 할당을 수동으로 제어해야 하므로
+    // 자동 생성된 WBS 할당과 프로젝트 할당을 삭제
+    await dataSource.manager.query(
+      'DELETE FROM evaluation_wbs_assignment WHERE "deletedAt" IS NULL',
+    );
+    await dataSource.manager.query(
+      'DELETE FROM evaluation_project_assignment WHERE "deletedAt" IS NULL',
+    );
+    await dataSource.manager.query(
+      'DELETE FROM wbs_evaluation_criteria WHERE "deletedAt" IS NULL',
+    );
 
     testData = {
       departments,
