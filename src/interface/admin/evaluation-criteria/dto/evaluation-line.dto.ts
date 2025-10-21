@@ -328,3 +328,88 @@ export class ConfigureEvaluatorResponseDto {
     evaluationLineId: string;
   };
 }
+
+/**
+ * 평가자 유형 쿼리 DTO
+ */
+export class EvaluatorTypeQueryDto {
+  @ApiPropertyOptional({
+    description: '평가자 유형 (primary: 1차만, secondary: 2차만, all: 전체)',
+    enum: ['primary', 'secondary', 'all'],
+    default: 'all',
+    example: 'all',
+  })
+  @IsOptional()
+  @IsEnum(['primary', 'secondary', 'all'])
+  type?: 'primary' | 'secondary' | 'all';
+}
+
+/**
+ * 평가기간별 평가자 정보 DTO
+ */
+export class EvaluatorInfoDto {
+  @ApiProperty({
+    description: '평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '평가자 이름',
+    example: '홍길동',
+  })
+  evaluatorName: string;
+
+  @ApiProperty({
+    description: '부서명',
+    example: '개발팀',
+  })
+  departmentName: string;
+
+  @ApiProperty({
+    description: '평가자 유형 (primary: 1차, secondary: 2차)',
+    enum: ['primary', 'secondary'],
+    example: 'primary',
+  })
+  evaluatorType: 'primary' | 'secondary';
+
+  @ApiProperty({
+    description: '담당 피평가자 수',
+    example: 5,
+  })
+  evaluateeCount: number;
+}
+
+/**
+ * 평가기간별 평가자 목록 조회 응답 DTO
+ */
+export class EvaluatorsByPeriodResponseDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '조회된 평가자 유형',
+    enum: ['primary', 'secondary', 'all'],
+    example: 'all',
+  })
+  type: 'primary' | 'secondary' | 'all';
+
+  @ApiProperty({
+    description: '평가자 목록',
+    type: [EvaluatorInfoDto],
+  })
+  evaluators: EvaluatorInfoDto[];
+}
+
+/**
+ * @deprecated PrimaryEvaluatorInfoDto 대신 EvaluatorInfoDto 사용
+ */
+export class PrimaryEvaluatorInfoDto extends EvaluatorInfoDto {}
+
+/**
+ * @deprecated PrimaryEvaluatorsByPeriodResponseDto 대신 EvaluatorsByPeriodResponseDto 사용
+ */
+export class PrimaryEvaluatorsByPeriodResponseDto extends EvaluatorsByPeriodResponseDto {}

@@ -237,6 +237,24 @@ export interface IEvaluationCriteriaManagementService {
     }[];
   }>;
 
+  /**
+   * 평가기간의 평가자 목록을 조회한다
+   */
+  평가기간의_평가자_목록을_조회한다(
+    periodId: string,
+    type: 'primary' | 'secondary' | 'all',
+  ): Promise<{
+    periodId: string;
+    type: 'primary' | 'secondary' | 'all';
+    evaluators: {
+      evaluatorId: string;
+      evaluatorName: string;
+      departmentName: string;
+      evaluatorType: 'primary' | 'secondary';
+      evaluateeCount: number;
+    }[];
+  }>;
+
   // ============================================================================
   // 평가라인 구성 관리 (핵심 기능)
   // ============================================================================

@@ -403,16 +403,20 @@ export class Phase3To8FullCycleGenerator {
       (el) => el.evaluatorType === EvaluatorType.SECONDARY,
     )!;
 
+    // 부서별 직원 그룹화 (각 부서의 첫 번째 직원이 부서장 역할)
+    const departmentMap = await this.부서별_직원_그룹화(employeeIds);
+
     for (let i = 0; i < employeeIds.length; i++) {
       const employeeId = employeeIds[i];
 
-      // 다른 직원을 평가자로 선택 (자기 자신 제외)
-      const otherEmployees = employeeIds.filter((id) => id !== employeeId);
-      if (otherEmployees.length === 0) continue;
+      // Primary 평가자 결정
+      const primaryEvaluator = await this.일차평가자_선택(
+        employeeId,
+        employeeIds,
+        departmentMap,
+      );
+      if (!primaryEvaluator) continue;
 
-      // Primary 평가자 매핑
-      const primaryEvaluator =
-        otherEmployees[Math.floor(Math.random() * otherEmployees.length)];
       const primaryMapping = new EvaluationLineMapping();
       primaryMapping.employeeId = employeeId;
       primaryMapping.evaluatorId = primaryEvaluator;
@@ -428,14 +432,12 @@ export class Phase3To8FullCycleGenerator {
         mappingType === 'primaryAndSecondary' ||
         mappingType === 'withAdditional'
       ) {
-        const availableSecondary = otherEmployees.filter(
-          (id) => id !== primaryEvaluator,
+        const otherEmployees = employeeIds.filter(
+          (id) => id !== employeeId && id !== primaryEvaluator,
         );
-        if (availableSecondary.length > 0) {
+        if (otherEmployees.length > 0) {
           const secondaryEvaluator =
-            availableSecondary[
-              Math.floor(Math.random() * availableSecondary.length)
-            ];
+            otherEmployees[Math.floor(Math.random() * otherEmployees.length)];
           const secondaryMapping = new EvaluationLineMapping();
           secondaryMapping.employeeId = employeeId;
           secondaryMapping.evaluatorId = secondaryEvaluator;
@@ -451,6 +453,91 @@ export class Phase3To8FullCycleGenerator {
       mappings,
       '평가 라인 매핑',
     );
+  }
+
+  /**
+   * 부서별로 직원을 그룹화한다
+   * 각 부서의 첫 번째 직원이 부서장 역할을 한다
+   */
+  private async 부서별_직원_그룹화(
+    employeeIds: string[],
+  ): Promise<Map<string, string[]>> {
+    const departmentMap = new Map<string, string[]>();
+
+    // Employee 엔티티에서 부서 정보 조회
+    const employees = await this.projectAssignmentRepository.manager
+      .createQueryBuilder()
+      .select(['employee.id', 'employee.departmentId'])
+      .from('employee', 'employee')
+      .where('employee.id IN (:...employeeIds)', { employeeIds })
+      .andWhere('employee.deletedAt IS NULL')
+      .orderBy('employee.createdAt', 'ASC') // 생성 순서대로 정렬 (첫 번째 = 부서장)
+      .getRawMany();
+
+    for (const emp of employees) {
+      const deptId = emp.employee_departmentId || 'NO_DEPARTMENT';
+      if (!departmentMap.has(deptId)) {
+        departmentMap.set(deptId, []);
+      }
+      departmentMap.get(deptId)!.push(emp.employee_id);
+    }
+
+    return departmentMap;
+  }
+
+  /**
+   * 1차 평가자를 선택한다
+   * - 같은 부서의 첫 번째 직원(부서장)이 1차 평가자
+   * - 부서장 본인은 다른 부서의 부서장이 평가
+   * - 부서가 없는 경우 무작위 선택
+   */
+  private async 일차평가자_선택(
+    employeeId: string,
+    allEmployeeIds: string[],
+    departmentMap: Map<string, string[]>,
+  ): Promise<string | null> {
+    // 해당 직원이 속한 부서 찾기
+    let employeeDepartment: string | null = null;
+    let isDepartmentHead = false;
+
+    for (const [deptId, empIds] of departmentMap.entries()) {
+      if (empIds.includes(employeeId)) {
+        employeeDepartment = deptId;
+        // 부서의 첫 번째 직원이면 부서장
+        isDepartmentHead = empIds[0] === employeeId;
+        break;
+      }
+    }
+
+    // 부서장이 아닌 경우: 같은 부서의 첫 번째 직원(부서장)이 평가
+    if (!isDepartmentHead && employeeDepartment) {
+      const deptEmployees = departmentMap.get(employeeDepartment);
+      if (deptEmployees && deptEmployees.length > 0) {
+        return deptEmployees[0]; // 부서의 첫 번째 직원(부서장)
+      }
+    }
+
+    // 부서장인 경우: 다른 부서의 부서장 중 무작위 선택
+    if (isDepartmentHead) {
+      const otherDepartmentHeads: string[] = [];
+      for (const [deptId, empIds] of departmentMap.entries()) {
+        if (deptId !== employeeDepartment && empIds.length > 0) {
+          otherDepartmentHeads.push(empIds[0]); // 각 부서의 첫 번째 직원(부서장)
+        }
+      }
+
+      if (otherDepartmentHeads.length > 0) {
+        return otherDepartmentHeads[
+          Math.floor(Math.random() * otherDepartmentHeads.length)
+        ];
+      }
+    }
+
+    // 부서가 없거나 다른 부서장이 없는 경우: 무작위 선택
+    const otherEmployees = allEmployeeIds.filter((id) => id !== employeeId);
+    if (otherEmployees.length === 0) return null;
+
+    return otherEmployees[Math.floor(Math.random() * otherEmployees.length)];
   }
 
   // ==================== Phase 5: 산출물 ====================

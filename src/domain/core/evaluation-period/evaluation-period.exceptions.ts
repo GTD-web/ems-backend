@@ -11,6 +11,8 @@
  * - 502 Bad Gateway: 외부 서비스 연동 실패
  */
 
+import { DateTimeUtils } from './utils/date-time.utils';
+
 // 기본 도메인 예외
 export class EvaluationPeriodDomainException extends Error {
   constructor(
@@ -216,8 +218,11 @@ export class EvaluationPeriodOverlapException extends EvaluationPeriodRepository
     conflictingPeriodId: string,
     originalError?: Error,
   ) {
+    const formattedStartDate = DateTimeUtils.날짜문자열변환한다(startDate);
+    const formattedEndDate = DateTimeUtils.날짜문자열변환한다(endDate);
+
     super(
-      `평가 기간이 기존 기간과 겹칩니다: ${startDate} - ${endDate} (충돌 기간: ${conflictingPeriodId})`,
+      `평가 기간이 기존 기간과 겹칩니다: ${formattedStartDate} ~ ${formattedEndDate} (충돌 기간 ID: ${conflictingPeriodId})`,
       409,
       originalError,
       'PERIOD_OVERLAP_CHECK',
@@ -356,8 +361,11 @@ export class DuplicateEvaluationPeriodNameException extends EvaluationPeriodRepo
 // 평가 기간 날짜 겹침 예외 (409 Conflict - 기간 충돌)
 export class EvaluationPeriodDateOverlapException extends EvaluationPeriodRepositoryException {
   constructor(startDate: Date, endDate: Date, originalError?: Error) {
+    const formattedStartDate = DateTimeUtils.날짜문자열변환한다(startDate);
+    const formattedEndDate = DateTimeUtils.날짜문자열변환한다(endDate);
+
     super(
-      `평가 기간이 기존 기간과 겹칩니다: ${startDate} - ${endDate}`,
+      `평가 기간이 기존 기간과 겹칩니다: ${formattedStartDate} ~ ${formattedEndDate}`,
       409,
       originalError,
       'PERIOD_OVERLAP_CHECK',

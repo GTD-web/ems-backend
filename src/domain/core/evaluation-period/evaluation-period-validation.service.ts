@@ -799,12 +799,12 @@ export class EvaluationPeriodValidationService {
       queryBuilder.andWhere('period.id != :excludeId', { excludeId });
     }
 
-    const count = await queryBuilder.getCount();
-    if (count > 0) {
+    const conflictingPeriod = await queryBuilder.getOne();
+    if (conflictingPeriod) {
       throw new EvaluationPeriodOverlapException(
         startDate,
         endDate || new Date(),
-        '',
+        conflictingPeriod.id,
       );
     }
   }

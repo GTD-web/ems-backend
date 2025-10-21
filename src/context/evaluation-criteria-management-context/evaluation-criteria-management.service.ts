@@ -53,6 +53,7 @@ import {
   ConfigureSecondaryEvaluatorCommand,
   GetEmployeeEvaluationSettingsQuery,
   GetEvaluatorEmployeesQuery,
+  GetEvaluatorsByPeriodQuery,
 } from './handlers/evaluation-line';
 
 import {
@@ -343,6 +344,24 @@ export class EvaluationCriteriaManagementService
     }[];
   }> {
     const query = new GetEvaluatorEmployeesQuery(evaluatorId);
+    return await this.queryBus.execute(query);
+  }
+
+  async 평가기간의_평가자_목록을_조회한다(
+    periodId: string,
+    type: 'primary' | 'secondary' | 'all',
+  ): Promise<{
+    periodId: string;
+    type: 'primary' | 'secondary' | 'all';
+    evaluators: {
+      evaluatorId: string;
+      evaluatorName: string;
+      departmentName: string;
+      evaluatorType: 'primary' | 'secondary';
+      evaluateeCount: number;
+    }[];
+  }> {
+    const query = new GetEvaluatorsByPeriodQuery(periodId, type);
     return await this.queryBus.execute(query);
   }
 

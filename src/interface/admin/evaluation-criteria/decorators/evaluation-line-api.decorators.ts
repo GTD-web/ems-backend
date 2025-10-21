@@ -1,4 +1,4 @@
-import { applyDecorators, Get, Post, Param, Query } from '@nestjs/common';
+import { applyDecorators, Get, Post, Param } from '@nestjs/common';
 import {
   ApiOperation,
   ApiResponse,
@@ -490,3 +490,85 @@ export const ConfigureSecondaryEvaluator = () =>
       description: '직원, WBS 항목 또는 평가기간을 찾을 수 없습니다.',
     }),
   );
+
+/**
+ * 평가기간별 평가자 목록 조회 API 데코레이터
+ */
+export const GetEvaluatorsByPeriod = () =>
+  applyDecorators(
+    Get('period/:periodId/evaluators'),
+    ApiOperation({
+      summary: '평가기간별 평가자 목록 조회',
+      description: `특정 평가기간에서 평가자로 지정된 직원 목록을 조회합니다.
+
+**동작:**
+- 해당 평가기간의 WBS 할당 중 평가자로 지정된 직원 목록 반환
+- 쿼리 파라미터로 1차/2차/전체 평가자 선택 가능
+- 각 평가자가 담당하는 피평가자 수 포함
+- 직원 기본 정보 포함 (이름, 부서 등)
+- 평가자 유형 정보 포함
+
+**테스트 케이스:**
+- 기본 조회 (type=all): 평가기간의 모든 평가자 목록 조회 성공 (200)
+- 1차 평가자만 조회 (type=primary): 1차 평가자만 반환됨 (200)
+- 2차 평가자만 조회 (type=secondary): 2차 평가자만 반환됨 (200)
+- 피평가자 수 포함: 각 평가자가 담당하는 피평가자 수가 응답에 포함됨
+- 직원 정보 포함: 평가자의 이름, 부서 정보가 포함됨
+- 평가자 유형 포함: 각 평가자의 유형(primary/secondary)이 포함됨
+- 평가자가 없는 경우: 평가자가 없으면 빈 배열 반환 (200)
+- 존재하지 않는 평가기간: 유효한 UUID이지만 존재하지 않는 평가기간 ID로 조회 시 빈 배열 반환 (200)
+- 잘못된 UUID 형식: 잘못된 UUID 형식의 평가기간 ID로 조회 시 400 에러
+- 잘못된 type 값: 유효하지 않은 type 값으로 조회 시 400 에러`,
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+    }),
+    ApiQuery({
+      name: 'type',
+      required: false,
+      description:
+        '평가자 유형 (primary: 1차만, secondary: 2차만, all: 전체, 기본값: all)',
+      enum: ['primary', 'secondary', 'all'],
+      example: 'all',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '평가자 목록이 성공적으로 조회되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          periodId: { type: 'string', format: 'uuid' },
+          type: { type: 'string', enum: ['primary', 'secondary', 'all'] },
+          evaluators: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                evaluatorId: { type: 'string', format: 'uuid' },
+                evaluatorName: { type: 'string' },
+                departmentName: { type: 'string' },
+                evaluatorType: {
+                  type: 'string',
+                  enum: ['primary', 'secondary'],
+                },
+                evaluateeCount: { type: 'number' },
+              },
+            },
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청입니다.',
+    }),
+  );
+
+/**
+ * @deprecated GetEvaluatorsByPeriod 사용 권장
+ */
+export const GetPrimaryEvaluatorsByPeriod = GetEvaluatorsByPeriod;

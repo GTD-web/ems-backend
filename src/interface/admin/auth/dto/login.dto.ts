@@ -7,7 +7,7 @@ import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 export class LoginDto {
   @ApiProperty({
     description: '이메일',
-    example: 'user@example.com',
+    example: 'user@lumir.space',
   })
   @IsNotEmpty({ message: '이메일은 필수입니다.' })
   @IsEmail({}, { message: '올바른 이메일 형식이 아닙니다.' })

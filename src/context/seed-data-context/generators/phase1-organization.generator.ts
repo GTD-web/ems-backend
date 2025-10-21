@@ -216,9 +216,7 @@ export class Phase1OrganizationGenerator {
             : '퇴사';
 
       // 조회 제외 여부 결정
-      emp.isExcludedFromList = ProbabilityUtil.rollDice(
-        dist.excludedFromList,
-      );
+      emp.isExcludedFromList = ProbabilityUtil.rollDice(dist.excludedFromList);
 
       if (emp.isExcludedFromList) {
         emp.excludeReason = this.생성_제외_사유(emp.status);

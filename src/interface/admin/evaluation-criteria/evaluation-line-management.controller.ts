@@ -1,4 +1,4 @@
-import { Body, Controller, Param } from '@nestjs/common';
+import { Body, Controller, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { CurrentUser } from '../../decorators/current-user.decorator';
@@ -8,6 +8,7 @@ import {
   ConfigureSecondaryEvaluator,
   GetEmployeeEvaluationSettings,
   GetEvaluatorEmployees,
+  GetEvaluatorsByPeriod,
 } from './decorators/evaluation-line-api.decorators';
 import {
   ConfigureEvaluatorResponseDto,
@@ -15,6 +16,8 @@ import {
   ConfigureSecondaryEvaluatorDto,
   EmployeeEvaluationSettingsResponseDto,
   EvaluatorEmployeesResponseDto,
+  EvaluatorsByPeriodResponseDto,
+  EvaluatorTypeQueryDto,
 } from './dto/evaluation-line.dto';
 
 /**
@@ -100,6 +103,21 @@ export class EvaluationLineManagementController {
       periodId,
       dto.evaluatorId,
       user.id,
+    );
+  }
+
+  /**
+   * 평가기간별 평가자 목록 조회
+   */
+  @GetEvaluatorsByPeriod()
+  async getEvaluatorsByPeriod(
+    @Param('periodId', ParseUUIDPipe) periodId: string,
+    @Query() query: EvaluatorTypeQueryDto,
+  ): Promise<EvaluatorsByPeriodResponseDto> {
+    const type = query.type || 'all';
+    return await this.evaluationCriteriaManagementService.평가기간의_평가자_목록을_조회한다(
+      periodId,
+      type,
     );
   }
 }

@@ -45,6 +45,16 @@ export {
   GetUpdaterEvaluationLineMappingsHandler,
 } from './queries/get-updater-evaluation-line-mappings.handler';
 
+export {
+  GetEvaluatorsByPeriodQuery,
+  GetEvaluatorsByPeriodHandler,
+  type EvaluatorsByPeriodResult,
+  // Deprecated exports for backward compatibility
+  GetPrimaryEvaluatorsByPeriodQuery,
+  GetPrimaryEvaluatorsByPeriodHandler,
+  type PrimaryEvaluatorsByPeriodResult,
+} from './queries/get-evaluators-by-period.handler';
+
 // Handler 배열 export (Module에서 사용)
 import { ConfigureEmployeeWbsEvaluationLineHandler } from './commands/configure-employee-wbs-evaluation-line.handler';
 import { ConfigurePrimaryEvaluatorHandler } from './commands/configure-primary-evaluator.handler';
@@ -54,6 +64,7 @@ import { GetEmployeeEvaluationSettingsHandler } from './queries/get-employee-eva
 import { GetEvaluationLineListHandler } from './queries/get-evaluation-line-list.handler';
 import { GetEvaluatorEmployeesHandler } from './queries/get-evaluator-employees.handler';
 import { GetUpdaterEvaluationLineMappingsHandler } from './queries/get-updater-evaluation-line-mappings.handler';
+import { GetEvaluatorsByPeriodHandler } from './queries/get-evaluators-by-period.handler';
 
 export const EVALUATION_LINE_COMMAND_HANDLERS = [
   ConfigureEmployeeWbsEvaluationLineHandler,
@@ -67,6 +78,7 @@ export const EVALUATION_LINE_QUERY_HANDLERS = [
   GetEvaluationLineListHandler,
   GetEvaluatorEmployeesHandler,
   GetUpdaterEvaluationLineMappingsHandler,
+  GetEvaluatorsByPeriodHandler,
 ];
 
 export const EVALUATION_LINE_HANDLERS = [
