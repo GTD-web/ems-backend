@@ -109,28 +109,28 @@ export class Phase5DeliverableGenerator {
         const randomEmployee =
           employeeIds[Math.floor(Math.random() * employeeIds.length)];
 
-        const deliverable = new Deliverable();
-        deliverable.name = faker.commerce.productName();
-        deliverable.description = faker.lorem.sentence();
-        deliverable.type =
-          deliverableTypes[Math.floor(Math.random() * deliverableTypes.length)];
-
         const typeChoice = ProbabilityUtil.selectByProbability(
           dist.deliverableType,
         );
-        deliverable.filePath =
-          typeChoice === 'url'
-            ? faker.internet.url()
-            : `/nas/project/${faker.string.uuid()}/file.pdf`;
 
-        // 매핑 정보 설정
-        deliverable.employeeId = randomEmployee;
-        deliverable.wbsItemId = wbsId;
-        deliverable.mappedBy = systemAdminId;
-        deliverable.mappedDate = new Date();
-        deliverable.isActive = true;
+        const deliverable = new Deliverable({
+          name: faker.commerce.productName(),
+          description: faker.lorem.sentence(),
+          type: deliverableTypes[
+            Math.floor(Math.random() * deliverableTypes.length)
+          ],
+          filePath:
+            typeChoice === 'url'
+              ? faker.internet.url()
+              : `/nas/project/${faker.string.uuid()}/file.pdf`,
+          employeeId: randomEmployee,
+          wbsItemId: wbsId,
+          mappedBy: systemAdminId,
+          mappedDate: new Date(),
+          isActive: true,
+          createdBy: systemAdminId,
+        });
 
-        deliverable.createdBy = systemAdminId;
         deliverables.push(deliverable);
       }
     }

@@ -46,10 +46,7 @@
 ### 질문 그룹 생성
 
 ```typescript
-POST / admin / performance -
-  evaluation / evaluation -
-  questions / question -
-  groups;
+POST /admin/performance-evaluation/evaluation-questions/question-groups
 ```
 
 평가 질문을 그룹으로 관리하기 위한 질문 그룹을 생성합니다.
@@ -162,10 +159,7 @@ void; // 응답 본문 없음 (204 No Content)
 ### 질문 그룹 목록 조회
 
 ```typescript
-GET / admin / performance -
-  evaluation / evaluation -
-  questions / question -
-  groups;
+GET /admin/performance-evaluation/evaluation-questions/question-groups
 ```
 
 모든 질문 그룹 목록을 조회합니다.
@@ -247,7 +241,7 @@ QuestionGroupResponseDto;
 ### 평가 질문 생성
 
 ```typescript
-POST / admin / performance - evaluation / evaluation - questions;
+POST /admin/performance-evaluation/evaluation-questions
 ```
 
 새로운 평가 질문을 생성합니다.
@@ -395,7 +389,7 @@ EvaluationQuestionResponseDto;
 ### 평가 질문 목록 조회
 
 ```typescript
-GET / admin / performance - evaluation / evaluation - questions;
+GET /admin/performance-evaluation/evaluation-questions
 ```
 
 모든 평가 질문 목록을 조회합니다.
@@ -451,11 +445,7 @@ SuccessResponseDto; // 복사된 새 질문의 ID 반환
 ### 그룹에 질문 추가
 
 ```typescript
-POST / admin / performance -
-  evaluation / evaluation -
-  questions / question -
-  group -
-  mappings;
+POST /admin/performance-evaluation/evaluation-questions/question-group-mappings
 ```
 
 질문 그룹에 평가 질문을 추가합니다.
@@ -491,11 +481,7 @@ SuccessResponseDto;
 ### 그룹에 여러 질문 추가
 
 ```typescript
-POST / admin / performance -
-  evaluation / evaluation -
-  questions / question -
-  group -
-  mappings / bulk;
+POST /admin/performance-evaluation/evaluation-questions/question-group-mappings/bulk
 ```
 
 질문 그룹에 여러 평가 질문을 한 번에 추가합니다.
@@ -537,11 +523,7 @@ BatchSuccessResponseDto;
 ### 그룹 내 질문 순서 재정의
 
 ```typescript
-PATCH / admin / performance -
-  evaluation / evaluation -
-  questions / question -
-  group -
-  mappings / reorder;
+PATCH /admin/performance-evaluation/evaluation-questions/question-group-mappings/reorder
 ```
 
 질문 그룹 내 질문들의 표시 순서를 재정의합니다.

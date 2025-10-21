@@ -14,6 +14,7 @@
 - [직원 평가설정 통합 조회](#직원-평가설정-통합-조회)
 - [1차 평가자 구성](#1차-평가자-구성)
 - [2차 평가자 구성](#2차-평가자-구성)
+- [평가기간별 평가자 목록 조회](#평가기간별-평가자-목록-조회)
 
 ---
 
@@ -274,6 +275,98 @@ ConfigureEvaluatorResponseDto;
 
 ---
 
+### 평가기간별 평가자 목록 조회
+
+```typescript
+GET /admin/evaluation-criteria/evaluation-lines/period/:periodId/evaluators?type={all|primary|secondary}
+```
+
+특정 평가기간에서 평가자로 지정된 직원 목록을 조회합니다.
+
+**Path Parameters:**
+
+- `periodId` (string, UUID): 평가기간 ID
+
+**Query Parameters:**
+
+- `type` (optional, string): 평가자 유형
+  - `all` (기본값): 모든 평가자 (1차 + 2차)
+  - `primary`: 1차 평가자만
+  - `secondary`: 2차 평가자만
+
+**Request Headers:**
+
+```http
+Authorization: Bearer {JWT_TOKEN}
+Content-Type: application/json
+```
+
+**Response:**
+
+```typescript
+interface EvaluatorsByPeriodResponseDto {
+  periodId: string; // 평가기간 ID
+  type: 'all' | 'primary' | 'secondary'; // 조회 유형
+  evaluators: Array<{
+    evaluatorId: string; // 평가자 ID (UUID)
+    evaluatorName: string; // 평가자 이름
+    departmentName: string; // 부서명
+    evaluatorType: 'primary' | 'secondary'; // 평가자 유형
+    evaluateeCount: number; // 담당 피평가자 수
+  }>;
+}
+
+// 응답
+EvaluatorsByPeriodResponseDto;
+```
+
+**Status Codes:**
+
+- `200`: 평가자 목록이 성공적으로 조회됨
+- `400`: 잘못된 요청 (잘못된 UUID 형식, 잘못된 type 값)
+- `404`: 평가기간을 찾을 수 없음
+
+**비즈니스 로직:**
+
+1. **평가기간 검증**: 요청된 평가기간이 존재하는지 확인
+2. **평가자 추출**: 해당 평가기간의 WBS 할당에서 평가자로 지정된 직원 추출
+3. **타입 필터링**: 쿼리 파라미터에 따라 1차/2차/전체 평가자 필터링
+4. **직원 정보 조회**: 각 평가자의 기본 정보 (이름, 부서명) 조회
+5. **피평가자 수 계산**: 각 평가자가 담당하는 피평가자 수 계산
+6. **중복 처리**: 동일 직원이 1차/2차 역할을 모두 하는 경우 각각 별도 항목으로 반환
+
+**사용 시나리오:**
+
+1. **평가기간 관리자 대시보드**
+   - 평가기간별 평가자 현황 파악
+   - 각 평가자의 업무량 (피평가자 수) 확인
+   - 평가 진행 상황 모니터링
+
+2. **평가자 배정 검증**
+   - 1차 평가자 배정 현황 확인 (type=primary)
+   - 2차 평가자 배정 현황 확인 (type=secondary)
+   - 평가자별 담당 인원 균형 확인
+
+3. **평가 알림 발송**
+   - 평가자 목록 기반 알림 발송 대상 추출
+   - 유형별 (1차/2차) 맞춤 알림 발송
+
+**테스트 케이스:**
+
+- ✅ 기본 조회 (type=all): 평가기간의 모든 평가자 목록 조회 (200)
+- ✅ type 파라미터 생략: 기본값(all)로 동작하여 모든 평가자 조회 (200)
+- ✅ 1차 평가자만 조회 (type=primary): 1차 평가자만 반환 (200)
+- ✅ 2차 평가자만 조회 (type=secondary): 2차 평가자만 반환 (200)
+- ✅ 피평가자 수 정확도: evaluateeCount가 실제 할당 수와 일치
+- ✅ 직원 정보 포함: evaluatorName, departmentName 필드 포함
+- ✅ 동일 직원 이중 역할: 1차/2차 모두인 경우 2개 항목 반환
+- ✅ 평가자가 없는 경우: 빈 배열 반환 (200)
+- ⚠️ 존재하지 않는 평가기간: 빈 배열 반환 (200)
+- ❌ 잘못된 UUID 형식: 400 에러
+- ❌ 잘못된 type 값: 400 에러
+
+---
+
 ## 사용 예시
 
 ### 1. 평가자별 피평가자 조회
@@ -339,6 +432,39 @@ const response = await fetch(
 );
 const result = await response.json();
 // result: 평가라인 구성 결과
+```
+
+### 5. 평가기간별 평가자 목록 조회
+
+```typescript
+const periodId = 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a';
+
+// 모든 평가자 조회 (기본값)
+const allResponse = await fetch(
+  `http://localhost:4000/admin/evaluation-criteria/evaluation-lines/period/${periodId}/evaluators`,
+);
+const allData = await allResponse.json();
+console.log(`총 평가자 수: ${allData.evaluators.length}`);
+// allData.evaluators: 1차 + 2차 평가자 모두 포함
+
+// 1차 평가자만 조회
+const primaryResponse = await fetch(
+  `http://localhost:4000/admin/evaluation-criteria/evaluation-lines/period/${periodId}/evaluators?type=primary`,
+);
+const primaryData = await primaryResponse.json();
+console.log(`1차 평가자 수: ${primaryData.evaluators.length}`);
+primaryData.evaluators.forEach((evaluator) => {
+  console.log(
+    `${evaluator.evaluatorName} (${evaluator.departmentName}): ${evaluator.evaluateeCount}명 담당`,
+  );
+});
+
+// 2차 평가자만 조회
+const secondaryResponse = await fetch(
+  `http://localhost:4000/admin/evaluation-criteria/evaluation-lines/period/${periodId}/evaluators?type=secondary`,
+);
+const secondaryData = await secondaryResponse.json();
+console.log(`2차 평가자 수: ${secondaryData.evaluators.length}`);
 ```
 
 ---

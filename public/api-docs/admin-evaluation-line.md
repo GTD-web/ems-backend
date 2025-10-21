@@ -275,6 +275,59 @@ ConfigureEvaluatorResponseDto;
 
 ---
 
+### 평가기간별 평가자 목록 조회
+
+```typescript
+GET /admin/evaluation-criteria/evaluation-lines/period/:periodId/evaluators?type={all|primary|secondary}
+```
+
+특정 평가기간에서 평가자로 지정된 직원 목록을 조회합니다.
+
+**Path Parameters:**
+
+- `periodId` (string, UUID): 평가기간 ID
+
+**Query Parameters:**
+
+- `type` (optional, string): 평가자 유형
+  - `all` (기본값): 모든 평가자 (1차 + 2차)
+  - `primary`: 1차 평가자만
+  - `secondary`: 2차 평가자만
+
+**Response:**
+
+```typescript
+interface EvaluatorsByPeriodResponseDto {
+  periodId: string; // 평가기간 ID
+  type: 'all' | 'primary' | 'secondary'; // 조회 유형
+  evaluators: Array<{
+    evaluatorId: string; // 평가자 ID
+    evaluatorName: string; // 평가자 이름
+    departmentName: string; // 부서명
+    evaluatorType: 'primary' | 'secondary'; // 평가자 유형
+    evaluateeCount: number; // 담당 피평가자 수
+  }>;
+}
+
+// 응답
+EvaluatorsByPeriodResponseDto;
+```
+
+**Status Codes:**
+
+- `200`: 평가자 목록이 성공적으로 조회됨
+- `400`: 잘못된 요청 (잘못된 UUID 형식, 잘못된 type 값)
+- `404`: 평가기간을 찾을 수 없음
+
+**특징:**
+
+- 해당 평가기간의 WBS 할당 중 평가자로 지정된 직원 목록 반환
+- 각 평가자가 담당하는 피평가자 수 포함
+- 직원 기본 정보 포함 (이름, 부서명)
+- 동일 직원이 1차/2차 평가자 역할을 모두 하는 경우 각각 별도 항목으로 반환
+
+---
+
 ## 사용 예시
 
 ### 1. 평가자별 피평가자 조회
@@ -340,6 +393,33 @@ const response = await fetch(
 );
 const result = await response.json();
 // result: 평가라인 구성 결과
+```
+
+### 5. 평가기간별 평가자 목록 조회
+
+```typescript
+const periodId = 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a';
+
+// 모든 평가자 조회 (기본값)
+const allResponse = await fetch(
+  `http://localhost:4000/admin/evaluation-criteria/evaluation-lines/period/${periodId}/evaluators`,
+);
+const allData = await allResponse.json();
+// allData.evaluators: 1차 + 2차 평가자 모두 포함
+
+// 1차 평가자만 조회
+const primaryResponse = await fetch(
+  `http://localhost:4000/admin/evaluation-criteria/evaluation-lines/period/${periodId}/evaluators?type=primary`,
+);
+const primaryData = await primaryResponse.json();
+// primaryData.evaluators: 1차 평가자만 포함
+
+// 2차 평가자만 조회
+const secondaryResponse = await fetch(
+  `http://localhost:4000/admin/evaluation-criteria/evaluation-lines/period/${periodId}/evaluators?type=secondary`,
+);
+const secondaryData = await secondaryResponse.json();
+// secondaryData.evaluators: 2차 평가자만 포함
 ```
 
 ---
