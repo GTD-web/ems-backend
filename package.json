@@ -24,7 +24,12 @@
     "test:e2e:simple": "cross-env NODE_ENV=test LOG_LEVEL=silent jest --config ./test/jest-e2e.json --verbose=false --passWithNoTests",
     "test:e2e:fast": "cross-env NODE_ENV=test LOG_LEVEL=error jest --config ./test/jest-e2e-fast.json --maxWorkers=10 --silent",
     "test:e2e:single": "cross-env NODE_ENV=test LOG_LEVEL=error jest --config ./test/jest-e2e-fast.json --maxWorkers=1 --silent --testPathPatterns",
-    "test:jwt": "ts-node -r tsconfig-paths/register scripts/test-jwt-verify.ts"
+    "docker:build": "docker build -t lumir-evaluation-management-system:latest -t lumir-evaluation-management-system:$npm_package_version .",
+    "docker:push": "docker tag lumir-evaluation-management-system:$npm_package_version $DOCKER_USERNAME/lumir-evaluation-management-system:$npm_package_version && docker tag lumir-evaluation-management-system:latest $DOCKER_USERNAME/lumir-evaluation-management-system:latest && docker push $DOCKER_USERNAME/lumir-evaluation-management-system:$npm_package_version && docker push $DOCKER_USERNAME/lumir-evaluation-management-system:latest",
+    "docker:build-and-push": "npm run docker:build && npm run docker:push",
+    "docker:compose:up": "docker-compose up -d",
+    "docker:compose:down": "docker-compose down",
+    "docker:compose:logs": "docker-compose logs -f"
   },
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
