@@ -14,6 +14,10 @@ import {
   JobDetailedGrade,
 } from '@domain/core/final-evaluation/final-evaluation.types';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 
 import {
   SeedDataConfig,
@@ -39,6 +43,12 @@ export class Phase7EvaluationGenerator {
     private readonly finalEvaluationRepository: Repository<FinalEvaluation>,
     @InjectRepository(EvaluationPeriod)
     private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
+    @InjectRepository(EvaluationWbsAssignment)
+    private readonly wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+    @InjectRepository(EvaluationLineMapping)
+    private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
+    @InjectRepository(EvaluationLine)
+    private readonly evaluationLineRepository: Repository<EvaluationLine>,
   ) {}
 
   async generate(
@@ -133,30 +143,44 @@ export class Phase7EvaluationGenerator {
     const periodId = periodIds[0];
     const maxRate = periodMaxRates.get(periodId) || 120; // 기본값 120
 
-    // WBS 할당이 필요하므로 간단히 첫 번째 WBS ID를 사용 (실제로는 results에서 가져와야 함)
-    const dummyWbsId = '00000000-0000-0000-0000-000000000000';
+    // 실제 WBS 할당 데이터를 조회해서 자기평가 생성
+    const wbsAssignments = await this.wbsAssignmentRepository
+      .createQueryBuilder('assignment')
+      .select([
+        'assignment.id',
+        'assignment.employeeId',
+        'assignment.periodId',
+        'assignment.wbsItemId',
+        'assignment.assignedBy',
+        'assignment.assignedDate',
+      ])
+      .where('assignment.periodId = :periodId', { periodId })
+      .andWhere('assignment.deletedAt IS NULL')
+      .getMany();
 
-    // 간소화: 직원별로 1-2개의 자기평가 생성
-    for (const employeeId of employeeIds) {
-      const evalCount = ProbabilityUtil.randomInt(1, 2);
+    this.logger.log(`조회된 WBS 할당: ${wbsAssignments.length}개`);
 
-      for (let i = 0; i < evalCount; i++) {
-        const evaluation = new WbsSelfEvaluation();
-        evaluation.employeeId = employeeId;
-        evaluation.periodId = periodId;
-        evaluation.wbsItemId = dummyWbsId;
-        evaluation.assignedBy = systemAdminId;
-        evaluation.assignedDate = new Date();
-        evaluation.evaluationDate = new Date();
+    // 각 WBS 할당에 대해 자기평가 생성
+    for (const assignment of wbsAssignments) {
+      // stateDistribution 설정에 따라 완료 상태 결정
+      const statusChoice = ProbabilityUtil.selectByProbability(
+        dist.selfEvaluationProgress,
+      );
+      const isCompleted = statusChoice === 'completed';
 
-        const statusChoice = ProbabilityUtil.selectByProbability(
-          dist.selfEvaluationProgress,
-        );
-        evaluation.isCompleted = statusChoice === 'completed';
-        if (evaluation.isCompleted) {
-          evaluation.completedAt = new Date();
-        }
+      const evaluation = new WbsSelfEvaluation();
+      evaluation.employeeId = assignment.employeeId;
+      evaluation.periodId = assignment.periodId;
+      evaluation.wbsItemId = assignment.wbsItemId;
+      evaluation.assignedBy = assignment.assignedBy || systemAdminId;
+      evaluation.assignedDate = assignment.assignedDate || new Date();
+      evaluation.evaluationDate = new Date();
+      evaluation.isCompleted = isCompleted;
 
+      if (isCompleted) {
+        evaluation.completedAt = new Date();
+
+        // 완료된 경우에만 점수 생성
         // 평가기간의 maxSelfEvaluationRate를 최대값으로 사용
         // 최소값은 1, 평균은 maxRate의 70%, 표준편차는 maxRate의 10%
         const mean = Math.round(maxRate * 0.7);
@@ -169,11 +193,15 @@ export class Phase7EvaluationGenerator {
         );
         evaluation.selfEvaluationContent = faker.lorem.paragraph();
         evaluation.performanceResult = faker.lorem.paragraph();
-        evaluation.createdBy = systemAdminId;
-        evaluations.push(evaluation);
       }
+
+      evaluation.createdBy = systemAdminId;
+      evaluations.push(evaluation);
     }
 
+    this.logger.log(
+      `자기평가 생성 - 총 ${evaluations.length}개 (완료: ${evaluations.filter((e) => e.isCompleted).length}개)`,
+    );
     this.logger.log(
       `자기평가 점수 범위: 1-${maxRate} (평균: ${Math.round(maxRate * 0.7)})`,
     );
@@ -194,44 +222,132 @@ export class Phase7EvaluationGenerator {
   ): Promise<DownwardEvaluation[]> {
     const evaluations: DownwardEvaluation[] = [];
     const periodId = periodIds[0];
-    const maxRate = periodMaxRates.get(periodId) || 120; // 기본값 120
-    const dummyProjectId = '00000000-0000-0000-0000-000000000000';
 
-    // 간소화: 직원별로 1개의 하향평가 생성
-    for (let i = 0; i < employeeIds.length - 1; i++) {
-      const evaluation = new DownwardEvaluation();
-      evaluation.employeeId = employeeIds[i];
-      evaluation.evaluatorId = employeeIds[i + 1];
-      evaluation.periodId = periodId;
-      evaluation.wbsId = dummyProjectId;
-      evaluation.evaluationType =
-        Math.random() < 0.7
-          ? DownwardEvaluationType.PRIMARY
-          : DownwardEvaluationType.SECONDARY;
-      evaluation.evaluationDate = new Date();
+    // 실제 WBS 할당 데이터를 조회
+    const wbsAssignments = await this.wbsAssignmentRepository
+      .createQueryBuilder('assignment')
+      .select([
+        'assignment.id',
+        'assignment.employeeId',
+        'assignment.periodId',
+        'assignment.wbsItemId',
+      ])
+      .where('assignment.periodId = :periodId', { periodId })
+      .andWhere('assignment.deletedAt IS NULL')
+      .getMany();
 
-      const statusChoice = ProbabilityUtil.selectByProbability(
-        dist.downwardEvaluationProgress,
+    this.logger.log(`조회된 WBS 할당: ${wbsAssignments.length}개`);
+
+    // 평가라인 조회 (PRIMARY, SECONDARY)
+    const evaluationLines = await this.evaluationLineRepository
+      .createQueryBuilder('line')
+      .where('line.deletedAt IS NULL')
+      .andWhere('line.evaluatorType IN (:...types)', {
+        types: [EvaluatorType.PRIMARY, EvaluatorType.SECONDARY],
+      })
+      .getMany();
+
+    const primaryLine = evaluationLines.find(
+      (l) => l.evaluatorType === EvaluatorType.PRIMARY,
+    );
+    const secondaryLine = evaluationLines.find(
+      (l) => l.evaluatorType === EvaluatorType.SECONDARY,
+    );
+
+    if (!primaryLine) {
+      this.logger.warn('PRIMARY 평가라인이 없습니다.');
+      return [];
+    }
+
+    // 각 WBS 할당에 대해 하향평가 생성
+    for (const assignment of wbsAssignments) {
+      // 해당 직원의 평가라인 매핑 조회
+      const lineMappings = await this.evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .where('mapping.employeeId = :employeeId', {
+          employeeId: assignment.employeeId,
+        })
+        .andWhere('mapping.evaluationLineId IN (:...lineIds)', {
+          lineIds: [primaryLine.id, secondaryLine?.id].filter(Boolean),
+        })
+        .andWhere('mapping.deletedAt IS NULL')
+        .getMany();
+
+      // PRIMARY 평가자 하향평가 생성
+      const primaryMapping = lineMappings.find(
+        (m) => m.evaluationLineId === primaryLine.id,
       );
-      evaluation.isCompleted = statusChoice === 'completed';
-      if (evaluation.isCompleted) {
-        evaluation.completedAt = new Date();
+      if (primaryMapping) {
+        // 1차 하향평가는 전용 progress 옵션 사용 (있으면)
+        const primaryProgress =
+          dist.primaryDownwardEvaluationProgress ||
+          dist.downwardEvaluationProgress;
+        const statusChoice =
+          ProbabilityUtil.selectByProbability(primaryProgress);
+        const isCompleted = statusChoice === 'completed';
+
+        const evaluation = new DownwardEvaluation();
+        evaluation.employeeId = assignment.employeeId;
+        evaluation.evaluatorId = primaryMapping.evaluatorId;
+        evaluation.periodId = assignment.periodId;
+        evaluation.wbsId = assignment.wbsItemId;
+        evaluation.evaluationType = DownwardEvaluationType.PRIMARY;
+        evaluation.evaluationDate = new Date();
+        evaluation.isCompleted = isCompleted;
+
+        if (isCompleted) {
+          evaluation.completedAt = new Date();
+          // 하향평가는 1-5점 범위 (평균 3점, 표준편차 1점)
+          evaluation.downwardEvaluationScore =
+            ScoreGeneratorUtil.generateNormalScore(1, 5, 3, 1);
+          evaluation.downwardEvaluationContent = faker.lorem.paragraph();
+        }
+
+        evaluation.createdBy = primaryMapping.evaluatorId;
+        evaluations.push(evaluation);
       }
 
-      // 평가기간의 maxSelfEvaluationRate를 최대값으로 사용
-      // 최소값은 1, 평균은 maxRate의 70%, 표준편차는 maxRate의 10%
-      const mean = Math.round(maxRate * 0.7);
-      const stdDev = Math.round(maxRate * 0.1);
-      evaluation.downwardEvaluationScore =
-        ScoreGeneratorUtil.generateNormalScore(1, maxRate, mean, stdDev);
-      evaluation.downwardEvaluationContent = faker.lorem.paragraph();
-      evaluation.createdBy = employeeIds[i + 1];
-      evaluations.push(evaluation);
+      // SECONDARY 평가자 하향평가 생성
+      if (secondaryLine) {
+        const secondaryMapping = lineMappings.find(
+          (m) => m.evaluationLineId === secondaryLine.id,
+        );
+        if (secondaryMapping) {
+          // 2차 하향평가는 전용 progress 옵션 사용 (있으면)
+          const secondaryProgress =
+            dist.secondaryDownwardEvaluationProgress ||
+            dist.downwardEvaluationProgress;
+          const statusChoice =
+            ProbabilityUtil.selectByProbability(secondaryProgress);
+          const isCompleted = statusChoice === 'completed';
+
+          const evaluation = new DownwardEvaluation();
+          evaluation.employeeId = assignment.employeeId;
+          evaluation.evaluatorId = secondaryMapping.evaluatorId;
+          evaluation.periodId = assignment.periodId;
+          evaluation.wbsId = assignment.wbsItemId;
+          evaluation.evaluationType = DownwardEvaluationType.SECONDARY;
+          evaluation.evaluationDate = new Date();
+          evaluation.isCompleted = isCompleted;
+
+          if (isCompleted) {
+            evaluation.completedAt = new Date();
+            // 하향평가는 1-5점 범위 (평균 3점, 표준편차 1점)
+            evaluation.downwardEvaluationScore =
+              ScoreGeneratorUtil.generateNormalScore(1, 5, 3, 1);
+            evaluation.downwardEvaluationContent = faker.lorem.paragraph();
+          }
+
+          evaluation.createdBy = secondaryMapping.evaluatorId;
+          evaluations.push(evaluation);
+        }
+      }
     }
 
     this.logger.log(
-      `하향평가 점수 범위: 1-${maxRate} (평균: ${Math.round(maxRate * 0.7)})`,
+      `하향평가 생성 - 총 ${evaluations.length}개 (완료: ${evaluations.filter((e) => e.isCompleted).length}개)`,
     );
+    this.logger.log(`하향평가 점수 범위: 1-5 (평균: 3)`);
 
     return await this.배치로_저장한다(
       this.downwardEvaluationRepository,

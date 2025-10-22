@@ -6,7 +6,9 @@ import { faker } from '@faker-js/faker';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
+import { WbsAssignmentWeightCalculationService } from '@context/evaluation-criteria-management-context/services/wbs-assignment-weight-calculation.service';
 
 import {
   SeedDataConfig,
@@ -28,12 +30,16 @@ export class Phase4EvaluationCriteriaGenerator {
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
     @InjectRepository(EvaluationLineMapping)
     private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
+    @InjectRepository(EvaluationWbsAssignment)
+    private readonly wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+    private readonly weightCalculationService: WbsAssignmentWeightCalculationService,
   ) {}
 
   async generate(
     config: SeedDataConfig,
     phase1Result: GeneratorResult,
     phase2Result: GeneratorResult,
+    phase3Result: GeneratorResult,
   ): Promise<GeneratorResult> {
     const startTime = Date.now();
     const dist = {
@@ -46,6 +52,7 @@ export class Phase4EvaluationCriteriaGenerator {
     const systemAdminId = phase1Result.generatedIds.systemAdminId as string;
     const wbsIds = phase1Result.generatedIds.wbsIds as string[];
     const employeeIds = phase1Result.generatedIds.employeeIds as string[];
+    const periodIds = phase2Result.generatedIds.periodIds as string[];
 
     // 1. WBS 평가 기준 생성
     const criteria = await this.생성_WBS평가기준들(wbsIds, dist, systemAdminId);
@@ -65,6 +72,9 @@ export class Phase4EvaluationCriteriaGenerator {
     this.logger.log(
       `생성 완료: EvaluationLineMapping ${lineMappings.length}개`,
     );
+
+    // 4. WBS 할당 가중치 재계산 (WBS 평가 기준 생성 후)
+    await this.WBS할당_가중치를_재계산한다(employeeIds, periodIds);
 
     const duration = Date.now() - startTime;
     this.logger.log(`Phase 4 완료 (${duration}ms)`);
@@ -296,6 +306,44 @@ export class Phase4EvaluationCriteriaGenerator {
     if (otherEmployees.length === 0) return null;
 
     return otherEmployees[Math.floor(Math.random() * otherEmployees.length)];
+  }
+
+  /**
+   * WBS 할당 가중치를 재계산한다
+   * - WBS 평가 기준 생성 후 모든 직원-평가기간 조합에 대해 가중치를 재계산한다
+   */
+  private async WBS할당_가중치를_재계산한다(
+    employeeIds: string[],
+    periodIds: string[],
+  ): Promise<void> {
+    this.logger.log('WBS 할당 가중치 재계산 시작');
+
+    let recalculatedCount = 0;
+
+    // 모든 직원-평가기간 조합에 대해 가중치 재계산
+    for (const employeeId of employeeIds) {
+      for (const periodId of periodIds) {
+        // 해당 직원-평가기간에 WBS 할당이 있는지 확인
+        const hasAssignment = await this.wbsAssignmentRepository
+          .createQueryBuilder('assignment')
+          .where('assignment.employeeId = :employeeId', { employeeId })
+          .andWhere('assignment.periodId = :periodId', { periodId })
+          .andWhere('assignment.deletedAt IS NULL')
+          .getCount();
+
+        if (hasAssignment > 0) {
+          await this.weightCalculationService.직원_평가기간_가중치를_재계산한다(
+            employeeId,
+            periodId,
+          );
+          recalculatedCount++;
+        }
+      }
+    }
+
+    this.logger.log(
+      `WBS 할당 가중치 재계산 완료 - ${recalculatedCount}개 직원-평가기간 조합`,
+    );
   }
 
   // ==================== 유틸리티 메서드 ====================

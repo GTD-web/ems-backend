@@ -178,8 +178,22 @@ export interface StateDistributionConfig {
     completed: number; // 완료 (기본: 0.60)
   };
 
-  // 하향평가 진행 상태
+  // 하향평가 진행 상태 (전체 - 1차/2차 구분 없음)
   downwardEvaluationProgress?: {
+    notStarted: number; // 미작성 (기본: 0.20)
+    inProgress: number; // 진행중 (기본: 0.30)
+    completed: number; // 완료 (기본: 0.50)
+  };
+
+  // 1차 하향평가 진행 상태 (우선 적용)
+  primaryDownwardEvaluationProgress?: {
+    notStarted: number; // 미작성 (기본: 0.20)
+    inProgress: number; // 진행중 (기본: 0.30)
+    completed: number; // 완료 (기본: 0.50)
+  };
+
+  // 2차 하향평가 진행 상태 (우선 적용)
+  secondaryDownwardEvaluationProgress?: {
     notStarted: number; // 미작성 (기본: 0.20)
     inProgress: number; // 진행중 (기본: 0.30)
     completed: number; // 완료 (기본: 0.50)

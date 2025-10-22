@@ -173,8 +173,10 @@ export interface EmployeeEvaluationPeriodStatusDto {
     completedMappingCount: number;
     /** 자기평가 수정 가능 여부 */
     isEditable: boolean;
-    /** 평균 자기평가 점수 (1-5점) */
-    averageScore: number | null;
+    /** 가중치 기반 자기평가 총점 (0-100) */
+    totalScore: number | null;
+    /** 평가기간 등급 기준에 따른 자기평가 등급 (예: S+, A-, B 등) */
+    grade: string | null;
   };
 
   /** 하향평가 진행 정보 */
@@ -191,8 +193,10 @@ export interface EmployeeEvaluationPeriodStatusDto {
       completedEvaluationCount: number;
       /** 1차평가 수정 가능 여부 */
       isEditable: boolean;
-      /** 평균 하향평가 점수 (1-5점) */
-      averageScore: number | null;
+      /** 가중치 기반 1차 하향평가 총점 (0-100) */
+      totalScore: number | null;
+      /** 평가기간 등급 기준에 따른 1차 하향평가 등급 (예: S+, A-, B 등) */
+      grade: string | null;
     };
     /** 2차 평가 정보 (여러 명 가능) */
     secondary: {
@@ -209,8 +213,10 @@ export interface EmployeeEvaluationPeriodStatusDto {
       }>;
       /** 2차평가 수정 가능 여부 */
       isEditable: boolean;
-      /** 모든 2차평가의 평균 점수 (1-5점) */
-      averageScore: number | null;
+      /** 가중치 기반 2차 하향평가 총점 (0-100) */
+      totalScore: number | null;
+      /** 평가기간 등급 기준에 따른 2차 하향평가 등급 (예: S+, A-, B 등) */
+      grade: string | null;
     };
   };
 

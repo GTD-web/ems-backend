@@ -57,6 +57,7 @@ import { CommandHandlers, QueryHandlers } from './handlers';
 
 // Service
 import { SeedDataService } from './seed-data.service';
+import { WbsAssignmentWeightCalculationService } from '@context/evaluation-criteria-management-context/services/wbs-assignment-weight-calculation.service';
 
 @Module({
   imports: [
@@ -102,6 +103,7 @@ import { SeedDataService } from './seed-data.service';
   providers: [
     // Service
     SeedDataService,
+    WbsAssignmentWeightCalculationService,
     // Generators
     Phase1OrganizationGenerator,
     Phase2EvaluationPeriodGenerator,

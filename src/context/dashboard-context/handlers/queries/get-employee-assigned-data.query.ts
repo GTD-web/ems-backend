@@ -14,6 +14,18 @@ import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
+import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import {
+  가중치_기반_자기평가_점수를_계산한다,
+  자기평가_등급을_조회한다,
+} from './get-employee-evaluation-period-status/self-evaluation.utils';
+import {
+  가중치_기반_1차_하향평가_점수를_계산한다,
+  가중치_기반_2차_하향평가_점수를_계산한다,
+  하향평가_등급을_조회한다,
+} from './get-employee-evaluation-period-status/downward-evaluation-score.utils';
 
 /**
  * 사용자 할당 정보 조회 쿼리
@@ -138,6 +150,18 @@ export interface EmployeeAssignedDataResult {
     totalWbs: number;
     completedPerformances: number;
     completedSelfEvaluations: number;
+    selfEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
+    primaryDownwardEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
+    secondaryDownwardEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
   };
 }
 
@@ -177,6 +201,8 @@ export class GetEmployeeAssignedDataHandler
     private readonly downwardEvaluationRepository: Repository<DownwardEvaluation>,
     @InjectRepository(EvaluationLine)
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
+    @InjectRepository(EvaluationLineMapping)
+    private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
   ) {}
 
   async execute(
@@ -259,11 +285,185 @@ export class GetEmployeeAssignedDataHandler
       return sum + project.wbsList.length;
     }, 0);
 
+    // 7. 자기평가 점수/등급 계산
+    let selfEvaluationScore: number | null = null;
+    let selfEvaluationGrade: string | null = null;
+
+    const totalSelfEvaluations = await this.selfEvaluationRepository.count({
+      where: {
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+        deletedAt: null as any,
+      },
+    });
+
+    if (
+      totalSelfEvaluations > 0 &&
+      completedSelfEvaluations === totalSelfEvaluations
+    ) {
+      selfEvaluationScore = await 가중치_기반_자기평가_점수를_계산한다(
+        evaluationPeriodId,
+        employeeId,
+        this.selfEvaluationRepository,
+        this.wbsAssignmentRepository,
+        this.evaluationPeriodRepository,
+      );
+
+      if (selfEvaluationScore !== null) {
+        selfEvaluationGrade = await 자기평가_등급을_조회한다(
+          evaluationPeriodId,
+          selfEvaluationScore,
+          this.evaluationPeriodRepository,
+        );
+      }
+    }
+
+    // 8. 1차 하향평가 점수/등급 계산
+    let primaryDownwardScore: number | null = null;
+    let primaryDownwardGrade: string | null = null;
+
+    // 1차 평가자 조회
+    const primaryEvaluatorMapping = await this.evaluationLineMappingRepository
+      .createQueryBuilder('mapping')
+      .leftJoin(
+        EvaluationLine,
+        'line',
+        'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+      )
+      .where('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('line.evaluatorType = :evaluatorType', {
+        evaluatorType: EvaluatorType.PRIMARY,
+      })
+      .andWhere('mapping.deletedAt IS NULL')
+      .getOne();
+
+    if (primaryEvaluatorMapping) {
+      const primaryEvaluatorId = primaryEvaluatorMapping.evaluatorId;
+
+      // 1차 평가자의 할당된 WBS 수 조회
+      const primaryAssignedCount = totalWbs;
+
+      // 1차 평가자의 완료된 평가 수 조회
+      const primaryCompletedCount =
+        await this.downwardEvaluationRepository.count({
+          where: {
+            periodId: evaluationPeriodId,
+            employeeId: employeeId,
+            evaluatorId: primaryEvaluatorId,
+            evaluationType: DownwardEvaluationType.PRIMARY,
+            isCompleted: true,
+            deletedAt: null as any,
+          },
+        });
+
+      // 모든 WBS가 완료되면 점수/등급 계산
+      if (
+        primaryAssignedCount > 0 &&
+        primaryCompletedCount === primaryAssignedCount
+      ) {
+        primaryDownwardScore = await 가중치_기반_1차_하향평가_점수를_계산한다(
+          evaluationPeriodId,
+          employeeId,
+          primaryEvaluatorId,
+          this.downwardEvaluationRepository,
+          this.wbsAssignmentRepository,
+        );
+
+        if (primaryDownwardScore !== null) {
+          primaryDownwardGrade = await 하향평가_등급을_조회한다(
+            evaluationPeriodId,
+            primaryDownwardScore,
+            this.evaluationPeriodRepository,
+          );
+        }
+      }
+    }
+
+    // 9. 2차 하향평가 점수/등급 계산
+    let secondaryDownwardScore: number | null = null;
+    let secondaryDownwardGrade: string | null = null;
+
+    // 2차 평가자들 조회
+    const secondaryEvaluatorMappings =
+      await this.evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .leftJoin(
+          EvaluationLine,
+          'line',
+          'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+        )
+        .where('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('line.evaluatorType = :evaluatorType', {
+          evaluatorType: EvaluatorType.SECONDARY,
+        })
+        .andWhere('mapping.deletedAt IS NULL')
+        .getMany();
+
+    if (secondaryEvaluatorMappings.length > 0) {
+      const secondaryEvaluatorIds = secondaryEvaluatorMappings.map(
+        (m) => m.evaluatorId,
+      );
+
+      // 2차 평가자들의 할당된 WBS 수 (모든 평가자가 동일한 WBS 평가)
+      const secondaryAssignedCount = totalWbs;
+
+      // 각 평가자별 완료된 평가 수 조회
+      const completedCounts = await Promise.all(
+        secondaryEvaluatorIds.map((evaluatorId) =>
+          this.downwardEvaluationRepository.count({
+            where: {
+              periodId: evaluationPeriodId,
+              employeeId: employeeId,
+              evaluatorId: evaluatorId,
+              evaluationType: DownwardEvaluationType.SECONDARY,
+              isCompleted: true,
+              deletedAt: null as any,
+            },
+          }),
+        ),
+      );
+
+      // 모든 평가자가 모든 WBS를 완료했는지 확인
+      const allCompleted = completedCounts.every(
+        (count) => count === secondaryAssignedCount,
+      );
+
+      if (secondaryAssignedCount > 0 && allCompleted) {
+        secondaryDownwardScore = await 가중치_기반_2차_하향평가_점수를_계산한다(
+          evaluationPeriodId,
+          employeeId,
+          secondaryEvaluatorIds,
+          this.downwardEvaluationRepository,
+          this.wbsAssignmentRepository,
+        );
+
+        if (secondaryDownwardScore !== null) {
+          secondaryDownwardGrade = await 하향평가_등급을_조회한다(
+            evaluationPeriodId,
+            secondaryDownwardScore,
+            this.evaluationPeriodRepository,
+          );
+        }
+      }
+    }
+
     const summary = {
       totalProjects: projects.length,
       totalWbs,
       completedPerformances,
       completedSelfEvaluations,
+      selfEvaluation: {
+        totalScore: selfEvaluationScore,
+        grade: selfEvaluationGrade,
+      },
+      primaryDownwardEvaluation: {
+        totalScore: primaryDownwardScore,
+        grade: primaryDownwardGrade,
+      },
+      secondaryDownwardEvaluation: {
+        totalScore: secondaryDownwardScore,
+        grade: secondaryDownwardGrade,
+      },
     };
 
     return {
@@ -432,7 +632,7 @@ export class GetEmployeeAssignedDataHandler
         wbsItemId,
       );
 
-      // 하향평가 조회 (1차, 2차) - 프로젝트 단위
+      // 하향평가 조회 (1차, 2차) - WBS 단위
       let downwardEvaluations: {
         primary: WbsDownwardEvaluationInfo | null;
         secondary: WbsDownwardEvaluationInfo | null;
@@ -441,15 +641,14 @@ export class GetEmployeeAssignedDataHandler
         secondary: null,
       };
 
-      const projectId = row.assignment_projectid; // 소문자로 수정
-      if (projectId) {
+      if (wbsItemId) {
         downwardEvaluations = await this.getWbsDownwardEvaluationsByWbsId(
           evaluationPeriodId,
           employeeId,
-          projectId,
+          wbsItemId,
         );
       } else {
-        this.logger.warn(`ProjectId가 없는 WBS: ${wbsItemId}`);
+        this.logger.warn(`WbsItemId가 없는 WBS: ${wbsItemId}`);
       }
 
       wbsInfos.push({
@@ -513,19 +712,19 @@ export class GetEmployeeAssignedDataHandler
     const selfEvaluation = await this.selfEvaluationRepository
       .createQueryBuilder('evaluation')
       .select([
-        'evaluation.id AS evaluation_id',
-        'evaluation.performanceResult AS evaluation_performanceResult',
-        'evaluation.selfEvaluationContent AS evaluation_selfEvaluationContent',
-        'evaluation.selfEvaluationScore AS evaluation_selfEvaluationScore',
-        'evaluation.isCompleted AS evaluation_isCompleted',
-        'evaluation.completedAt AS evaluation_completedAt',
+        '"evaluation"."id" AS "evaluation_id"',
+        '"evaluation"."performanceResult" AS "evaluation_performanceResult"',
+        '"evaluation"."selfEvaluationContent" AS "evaluation_selfEvaluationContent"',
+        '"evaluation"."selfEvaluationScore" AS "evaluation_selfEvaluationScore"',
+        '"evaluation"."isCompleted" AS "evaluation_isCompleted"',
+        '"evaluation"."completedAt" AS "evaluation_completedAt"',
       ])
-      .where('evaluation.periodId = :periodId', {
+      .where('"evaluation"."periodId" = :periodId', {
         periodId: evaluationPeriodId,
       })
-      .andWhere('evaluation.employeeId = :employeeId', { employeeId })
-      .andWhere('evaluation.wbsItemId = :wbsItemId', { wbsItemId })
-      .andWhere('evaluation.deletedAt IS NULL')
+      .andWhere('"evaluation"."employeeId" = :employeeId', { employeeId })
+      .andWhere('"evaluation"."wbsItemId" = :wbsItemId', { wbsItemId })
+      .andWhere('"evaluation"."deletedAt" IS NULL')
       .getRawOne();
 
     if (!selfEvaluation) {
@@ -563,13 +762,12 @@ export class GetEmployeeAssignedDataHandler
   private async getWbsDownwardEvaluationsByWbsId(
     evaluationPeriodId: string,
     employeeId: string,
-    projectId: string, // wbsItemId 대신 projectId 사용 (하향평가는 프로젝트 단위)
+    wbsId: string, // wbsId 사용 (하향평가는 WBS 단위)
   ): Promise<{
     primary: WbsDownwardEvaluationInfo | null;
     secondary: WbsDownwardEvaluationInfo | null;
   }> {
     // 하향평가 조회 (PRIMARY, SECONDARY 구분)
-    // 하향평가는 WBS 단위가 아니라 프로젝트 단위로 이루어짐
     const downwardEvaluations = await this.downwardEvaluationRepository
       .createQueryBuilder('downward')
       .select([
@@ -593,7 +791,7 @@ export class GetEmployeeAssignedDataHandler
       .andWhere('"downward"."employeeId" = :employeeId', {
         employeeId: employeeId,
       })
-      .andWhere('"downward"."projectId" = :projectId', { projectId })
+      .andWhere('"downward"."wbsId" = :wbsId', { wbsId })
       .andWhere('"downward"."deletedAt" IS NULL')
       .getRawMany();
 

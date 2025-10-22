@@ -438,6 +438,18 @@ export class EmployeeAssignedDataResponseDto {
       totalWbs: 5,
       completedPerformances: 5,
       completedSelfEvaluations: 3,
+      selfEvaluation: {
+        totalScore: 75.5,
+        grade: 'C',
+      },
+      primaryDownwardEvaluation: {
+        totalScore: 82.3,
+        grade: 'B',
+      },
+      secondaryDownwardEvaluation: {
+        totalScore: 78.9,
+        grade: 'C',
+      },
     },
   })
   summary: {
@@ -445,6 +457,18 @@ export class EmployeeAssignedDataResponseDto {
     totalWbs: number;
     completedPerformances: number;
     completedSelfEvaluations: number;
+    selfEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
+    primaryDownwardEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
+    secondaryDownwardEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
   };
 }
 
@@ -473,6 +497,18 @@ export class EvaluateeAssignedDataDto {
       totalWbs: 5,
       completedPerformances: 3,
       completedSelfEvaluations: 2,
+      selfEvaluation: {
+        totalScore: 75.5,
+        grade: 'C',
+      },
+      primaryDownwardEvaluation: {
+        totalScore: 82.3,
+        grade: 'B',
+      },
+      secondaryDownwardEvaluation: {
+        totalScore: 78.9,
+        grade: 'C',
+      },
     },
   })
   summary: {
@@ -480,6 +516,18 @@ export class EvaluateeAssignedDataDto {
     totalWbs: number;
     completedPerformances: number;
     completedSelfEvaluations: number;
+    selfEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
+    primaryDownwardEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
+    secondaryDownwardEvaluation: {
+      totalScore: number | null;
+      grade: string | null;
+    };
   };
 }
 

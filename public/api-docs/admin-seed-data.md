@@ -133,7 +133,60 @@
 }
 ```
 
-### 6️⃣ FULL - 최종평가까지 완료 (3단계 완료)
+### 6️⃣ FULL - 전체 평가 사이클 완료 (3단계 완료)
+
+평가 진행 단계에 따라 세 가지 옵션을 제공합니다:
+
+#### 6-1. 1차 하향평가까지 완료
+
+```json
+{
+  "scenario": "full",
+  "clearExisting": true,
+  "dataScale": {
+    "departmentCount": 2,
+    "employeeCount": 10,
+    "projectCount": 3,
+    "wbsPerProject": 5
+  },
+  "evaluationConfig": {
+    "periodCount": 1
+  },
+  "stateDistribution": {
+    "selfEvaluationProgress": { "completed": 1.0 },
+    "primaryDownwardEvaluationProgress": { "completed": 1.0 },
+    "secondaryDownwardEvaluationProgress": { "notStarted": 1.0 },
+    "peerEvaluationProgress": { "notStarted": 1.0 },
+    "finalEvaluationProgress": { "notStarted": 1.0 }
+  }
+}
+```
+
+#### 6-2. 성과평가 입력 완료 (2차까지 완료)
+
+```json
+{
+  "scenario": "full",
+  "clearExisting": true,
+  "dataScale": {
+    "departmentCount": 2,
+    "employeeCount": 10,
+    "projectCount": 3,
+    "wbsPerProject": 5
+  },
+  "evaluationConfig": {
+    "periodCount": 1
+  },
+  "stateDistribution": {
+    "selfEvaluationProgress": { "completed": 1.0 },
+    "downwardEvaluationProgress": { "completed": 1.0 },
+    "peerEvaluationProgress": { "completed": 1.0 },
+    "finalEvaluationProgress": { "notStarted": 1.0 }
+  }
+}
+```
+
+#### 6-3. 최종평가까지 모두 완료
 
 ```json
 {
@@ -326,23 +379,15 @@
 - 완료된 평가 조회 기능 테스트
 - 통계 및 리포트 기능 테스트
 
-**기본 Request Body:**
+**평가 진행 단계별 옵션:**
 
-```json
-{
-  "scenario": "full",
-  "clearExisting": true,
-  "dataScale": {
-    "departmentCount": 5,
-    "employeeCount": 20,
-    "projectCount": 3,
-    "wbsPerProject": 10
-  },
-  "evaluationConfig": {
-    "periodCount": 1
-  }
-}
-```
+FULL 시나리오는 평가 진행 단계에 따라 세 가지 방식으로 사용할 수 있습니다:
+
+1. **1차 하향평가까지 완료** - 자기평가 + 1차 하향평가만 완료
+2. **성과평가 입력 완료** - 자기평가 + 1차/2차 하향평가 + 동료평가 완료
+3. **최종평가까지 완료** - 모든 평가 완료 (기본값)
+
+자세한 예시는 [빠른 시작](#빠른-시작) 섹션의 6번을 참고하세요.
 
 ---
 
@@ -478,7 +523,48 @@
 }
 ```
 
-#### 예시 4: 3단계 진행 중 (최종평가 50% 완료)
+#### 예시 4: 1차 하향평가만 완료 (2차는 미작성)
+
+```json
+{
+  "scenario": "full",
+  "clearExisting": true,
+  "dataScale": {
+    "departmentCount": 2,
+    "employeeCount": 10,
+    "projectCount": 3,
+    "wbsPerProject": 5
+  },
+  "evaluationConfig": {
+    "periodCount": 1
+  },
+  "stateDistribution": {
+    "selfEvaluationProgress": {
+      "completed": 1.0
+    },
+    "primaryDownwardEvaluationProgress": {
+      "completed": 1.0
+    },
+    "secondaryDownwardEvaluationProgress": {
+      "notStarted": 1.0
+    },
+    "peerEvaluationProgress": {
+      "notStarted": 1.0
+    },
+    "finalEvaluationProgress": {
+      "notStarted": 1.0
+    }
+  }
+}
+```
+
+> 💡 **하향평가 옵션 설명:**
+>
+> - **방식 1**: `downwardEvaluationProgress` 사용 시 1차/2차 구분 없이 모두 동일하게 적용
+> - **방식 2**: `primaryDownwardEvaluationProgress`와 `secondaryDownwardEvaluationProgress`를 사용하면 1차/2차를 별도로 제어 가능
+> - 예시 4는 방식 2를 사용하여 1차만 완료, 2차는 미작성 상태로 설정
+
+#### 예시 5: 3단계 진행 중 (최종평가 50% 완료)
 
 ```json
 {
@@ -525,7 +611,22 @@
       completed?: number;   // 기본: 0.60
     };
 
+    // 하향평가 옵션 (두 가지 방식 중 선택)
+    // 방식 1: 1차/2차 구분 없이 동일하게 적용
     downwardEvaluationProgress?: {
+      notStarted?: number;  // 기본: 0.20
+      inProgress?: number;  // 기본: 0.30
+      completed?: number;   // 기본: 0.50
+    };
+
+    // 방식 2: 1차/2차 별도 지정
+    primaryDownwardEvaluationProgress?: {
+      notStarted?: number;  // 기본: 0.20
+      inProgress?: number;  // 기본: 0.30
+      completed?: number;   // 기본: 0.50
+    };
+
+    secondaryDownwardEvaluationProgress?: {
       notStarted?: number;  // 기본: 0.20
       inProgress?: number;  // 기본: 0.30
       completed?: number;   // 기본: 0.50
@@ -633,6 +734,8 @@ SELECT * FROM department WHERE parent_department_id = '부서ID';
 
 | 버전  | 날짜       | 변경 내용                                                      |
 | ----- | ---------- | -------------------------------------------------------------- |
+| 3.3.0 | 2024-10-22 | FULL 시나리오 평가 단계별 옵션 명확화 (1차→2차→전체 순서)      |
+| 3.2.0 | 2024-10-22 | 하향평가 1차/2차 별도 지정 옵션 추가                           |
 | 3.1.0 | 2024-10-21 | 직원 제외 옵션 추가 (excludedFromList, excludedFromEvaluation) |
 | 3.0.0 | 2024-10-21 | 시나리오별 Request Body 중심으로 문서 재구성                   |
 | 2.2.0 | 2024-10-21 | WITH_EVALUATIONS 시나리오 구현 완료                            |

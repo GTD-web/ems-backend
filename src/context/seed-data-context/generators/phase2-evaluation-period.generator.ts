@@ -158,15 +158,16 @@ export class Phase2EvaluationPeriodGenerator {
 
   /**
    * 기본 등급 구간을 생성한다
-   * S: 95-100, A: 90-94, B: 80-89, C: 70-79, D: 60-69
+   * S: 95-100, A: 90-94.99, B: 80-89.99, C: 70-79.99, D: 60-69.99, F: 0-59.99
    */
   private 생성_기본_등급구간() {
     return [
       { grade: 'S', minRange: 95, maxRange: 100 },
-      { grade: 'A', minRange: 90, maxRange: 94 },
-      { grade: 'B', minRange: 80, maxRange: 89 },
-      { grade: 'C', minRange: 70, maxRange: 79 },
-      { grade: 'D', minRange: 60, maxRange: 69 },
+      { grade: 'A', minRange: 90, maxRange: 94.99 },
+      { grade: 'B', minRange: 80, maxRange: 89.99 },
+      { grade: 'C', minRange: 70, maxRange: 79.99 },
+      { grade: 'D', minRange: 60, maxRange: 69.99 },
+      { grade: 'F', minRange: 0, maxRange: 59.99 },
     ];
   }
 

@@ -74,6 +74,16 @@ export const DEFAULT_STATE_DISTRIBUTION: Required<StateDistributionConfig> = {
     inProgress: 0.3,
     completed: 0.5,
   },
+  primaryDownwardEvaluationProgress: {
+    notStarted: 0.2,
+    inProgress: 0.3,
+    completed: 0.5,
+  },
+  secondaryDownwardEvaluationProgress: {
+    notStarted: 0.2,
+    inProgress: 0.3,
+    completed: 0.5,
+  },
   downwardEvaluationTypes: { primaryOnly: 0.2, secondaryOnly: 0.1, both: 0.7 },
   downwardEvaluationSelfReference: 0.8,
   peerEvaluationProgress: {

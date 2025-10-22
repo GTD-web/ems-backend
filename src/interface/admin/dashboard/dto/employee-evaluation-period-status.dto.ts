@@ -234,11 +234,18 @@ export class SelfEvaluationInfoDto {
   isEditable: boolean;
 
   @ApiPropertyOptional({
-    description: '평균 자기평가 점수 (1-5점)',
-    example: 3.5,
+    description: '가중치 기반 자기평가 총점 (0-100)',
+    example: 85.5,
     nullable: true,
   })
-  averageScore: number | null;
+  totalScore: number | null;
+
+  @ApiPropertyOptional({
+    description: '평가기간 등급 기준에 따른 자기평가 등급 (예: S+, A-, B 등)',
+    example: 'A-',
+    nullable: true,
+  })
+  grade: string | null;
 }
 
 /**
@@ -278,11 +285,19 @@ export class PrimaryDownwardEvaluationDto {
   isEditable: boolean;
 
   @ApiPropertyOptional({
-    description: '평균 하향평가 점수 (1-5점)',
-    example: 4.0,
+    description: '가중치 기반 1차 하향평가 총점 (0-100)',
+    example: 85.5,
     nullable: true,
   })
-  averageScore: number | null;
+  totalScore: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      '평가기간 등급 기준에 따른 1차 하향평가 등급 (예: S+, A-, B 등)',
+    example: 'A-',
+    nullable: true,
+  })
+  grade: string | null;
 }
 
 /**
@@ -332,11 +347,19 @@ export class SecondaryDownwardEvaluationDto {
   isEditable: boolean;
 
   @ApiPropertyOptional({
-    description: '모든 2차평가의 평균 점수 (1-5점)',
-    example: 3.8,
+    description: '가중치 기반 2차 하향평가 총점 (0-100)',
+    example: 82.3,
     nullable: true,
   })
-  averageScore: number | null;
+  totalScore: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      '평가기간 등급 기준에 따른 2차 하향평가 등급 (예: S+, A-, B 등)',
+    example: 'B+',
+    nullable: true,
+  })
+  grade: string | null;
 }
 
 /**
@@ -552,4 +575,3 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
   })
   finalEvaluation: FinalEvaluationInfoDto;
 }
-

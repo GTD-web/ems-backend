@@ -70,6 +70,7 @@ export class GenerateSeedDataHandler
               config,
               phase1Result,
               phase2Result,
+              phase3Result,
             );
             results.push(phase4Result);
 

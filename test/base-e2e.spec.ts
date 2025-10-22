@@ -66,6 +66,15 @@ export class BaseE2ETest {
         },
         isSynced: false,
       }),
+      토큰검증및사용자조회: jest.fn().mockResolvedValue({
+        user: {
+          id: '00000000-0000-0000-0000-000000000001',
+          email: 'test@example.com',
+          name: '테스트 사용자',
+          employeeNumber: 'TEST001',
+          roles: ['admin', 'user'],
+        },
+      }),
       역할포함사용자조회: jest.fn().mockResolvedValue({
         user: {
           id: '00000000-0000-0000-0000-000000000001',

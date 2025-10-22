@@ -7,7 +7,7 @@ import { EmployeeEvaluationPeriodStatusDto } from '../../interfaces/dashboard-co
 import {
   GetEmployeeEvaluationPeriodStatusQuery,
   GetEmployeeEvaluationPeriodStatusHandler,
-} from './get-employee-evaluation-period-status.query';
+} from './get-employee-evaluation-period-status';
 
 /**
  * 평가기간의 모든 피평가자 현황 조회 쿼리

@@ -17,7 +17,7 @@ import {
   ApiGenerateSeedDataWithRealData,
   ApiClearSeedData,
   ApiGetSeedDataStatus,
-} from './decorators/seed-data.decorators';
+} from './decorators';
 import { SeedScenario } from '@context/seed-data-context/types';
 
 @ApiTags('A-0-1. Seed Data')
