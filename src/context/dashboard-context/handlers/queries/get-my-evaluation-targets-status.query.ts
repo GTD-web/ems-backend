@@ -10,6 +10,7 @@ import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-ass
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import {
   MyEvaluationTargetStatusDto,
@@ -18,6 +19,11 @@ import {
   EvaluationLineStatus,
   PerformanceInputStatus,
 } from '../../interfaces/dashboard-context.interface';
+import {
+  가중치_기반_1차_하향평가_점수를_계산한다,
+  가중치_기반_2차_하향평가_점수를_계산한다,
+  하향평가_등급을_조회한다,
+} from '../queries/get-employee-evaluation-period-status/downward-evaluation-score.utils';
 
 /**
  * 내가 담당하는 평가 대상자 현황 조회 쿼리
@@ -59,6 +65,8 @@ export class GetMyEvaluationTargetsStatusHandler
     private readonly wbsCriteriaRepository: Repository<WbsEvaluationCriteria>,
     @InjectRepository(WbsSelfEvaluation)
     private readonly wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>,
+    @InjectRepository(EvaluationPeriod)
+    private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
   ) {}
 
   async execute(
@@ -139,9 +147,13 @@ export class GetMyEvaluationTargetsStatusHandler
               activeEmployeeIds.has(m.employeeId),
           );
 
-          const evaluatorTypes = myMappings
-            .map((m) => lineMap.get(m.evaluationLineId))
-            .filter((type): type is EvaluatorType => type !== undefined);
+          const evaluatorTypes = [
+            ...new Set(
+              myMappings
+                .map((m) => lineMap.get(m.evaluationLineId))
+                .filter((type): type is EvaluatorType => type !== undefined),
+            ),
+          ];
 
           if (evaluatorTypes.length === 0) {
             continue;
@@ -296,13 +308,15 @@ export class GetMyEvaluationTargetsStatusHandler
       assignedWbsCount: number;
       completedEvaluationCount: number;
       isEditable: boolean;
-      averageScore: number | null;
+      totalScore: number | null;
+      grade: string | null;
     } | null;
     secondaryStatus: {
       assignedWbsCount: number;
       completedEvaluationCount: number;
       isEditable: boolean;
-      averageScore: number | null;
+      totalScore: number | null;
+      grade: string | null;
     } | null;
   }> {
     const isPrimary = evaluatorTypes.includes(EvaluatorType.PRIMARY);
@@ -324,13 +338,15 @@ export class GetMyEvaluationTargetsStatusHandler
       assignedWbsCount: number;
       completedEvaluationCount: number;
       isEditable: boolean;
-      averageScore: number | null;
+      totalScore: number | null;
+      grade: string | null;
     } | null = null;
     let secondaryStatus: {
       assignedWbsCount: number;
       completedEvaluationCount: number;
       isEditable: boolean;
-      averageScore: number | null;
+      totalScore: number | null;
+      grade: string | null;
     } | null = null;
 
     if (isPrimary) {
@@ -345,6 +361,7 @@ export class GetMyEvaluationTargetsStatusHandler
         .andWhere('eval.evaluationType = :evaluationType', {
           evaluationType: 'primary',
         })
+        .andWhere('eval.deletedAt IS NULL')
         .getMany();
 
       const assignedWbsCount = evaluations.length;
@@ -354,24 +371,37 @@ export class GetMyEvaluationTargetsStatusHandler
           e.downwardEvaluationScore !== undefined,
       ).length;
 
-      // 평균 점수 계산
-      const scoresWithValue = evaluations
-        .map((e) => e.downwardEvaluationScore)
-        .filter(
-          (score): score is number => score !== null && score !== undefined,
+      // 모든 WBS가 완료되면 점수/등급 계산
+      let totalScore: number | null = null;
+      let grade: string | null = null;
+
+      if (
+        assignedWbsCount > 0 &&
+        completedEvaluationCount === assignedWbsCount
+      ) {
+        totalScore = await 가중치_기반_1차_하향평가_점수를_계산한다(
+          evaluationPeriodId,
+          employeeId,
+          evaluatorId,
+          this.downwardEvaluationRepository,
+          this.wbsAssignmentRepository,
         );
 
-      const averageScore =
-        scoresWithValue.length > 0
-          ? scoresWithValue.reduce((sum, score) => sum + score, 0) /
-            scoresWithValue.length
-          : null;
+        if (totalScore !== null) {
+          grade = await 하향평가_등급을_조회한다(
+            evaluationPeriodId,
+            totalScore,
+            this.evaluationPeriodRepository,
+          );
+        }
+      }
 
       primaryStatus = {
         assignedWbsCount,
         completedEvaluationCount,
         isEditable: isPrimaryEditable,
-        averageScore,
+        totalScore,
+        grade,
       };
     }
 
@@ -387,6 +417,7 @@ export class GetMyEvaluationTargetsStatusHandler
         .andWhere('eval.evaluationType = :evaluationType', {
           evaluationType: 'secondary',
         })
+        .andWhere('eval.deletedAt IS NULL')
         .getMany();
 
       const assignedWbsCount = evaluations.length;
@@ -396,24 +427,37 @@ export class GetMyEvaluationTargetsStatusHandler
           e.downwardEvaluationScore !== undefined,
       ).length;
 
-      // 평균 점수 계산
-      const scoresWithValue = evaluations
-        .map((e) => e.downwardEvaluationScore)
-        .filter(
-          (score): score is number => score !== null && score !== undefined,
+      // 모든 WBS가 완료되면 점수/등급 계산
+      let totalScore: number | null = null;
+      let grade: string | null = null;
+
+      if (
+        assignedWbsCount > 0 &&
+        completedEvaluationCount === assignedWbsCount
+      ) {
+        totalScore = await 가중치_기반_2차_하향평가_점수를_계산한다(
+          evaluationPeriodId,
+          employeeId,
+          [evaluatorId], // 배열로 전달 (현재 평가자만)
+          this.downwardEvaluationRepository,
+          this.wbsAssignmentRepository,
         );
 
-      const averageScore =
-        scoresWithValue.length > 0
-          ? scoresWithValue.reduce((sum, score) => sum + score, 0) /
-            scoresWithValue.length
-          : null;
+        if (totalScore !== null) {
+          grade = await 하향평가_등급을_조회한다(
+            evaluationPeriodId,
+            totalScore,
+            this.evaluationPeriodRepository,
+          );
+        }
+      }
 
       secondaryStatus = {
         assignedWbsCount,
         completedEvaluationCount,
         isEditable: isSecondaryEditable,
-        averageScore,
+        totalScore,
+        grade,
       };
     }
 

@@ -26,11 +26,19 @@ export class MyEvaluationStatusDetailDto {
   isEditable: boolean;
 
   @ApiPropertyOptional({
-    description: '평균 점수 (1-5점)',
-    example: 4.2,
+    description: '가중치 기반 하향평가 총점 (0-100점)',
+    example: 85.5,
     nullable: true,
   })
-  averageScore: number | null;
+  totalScore: number | null;
+
+  @ApiPropertyOptional({
+    description:
+      '평가기간 등급 기준에 따른 하향평가 등급 (예: S, A, B, C, D, F 등)',
+    example: 'B',
+    nullable: true,
+  })
+  grade: string | null;
 }
 
 /**
@@ -244,4 +252,3 @@ export class MyEvaluationTargetStatusResponseDto {
   @Type(() => MyDownwardEvaluationStatusDto)
   downwardEvaluation: MyDownwardEvaluationStatusDto;
 }
-

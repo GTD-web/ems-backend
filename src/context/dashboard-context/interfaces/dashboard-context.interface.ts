@@ -311,9 +311,14 @@ export interface MyDownwardEvaluationStatus {
     isEditable: boolean;
 
     /**
-     * 평균 점수 (1-5점)
+     * 가중치 기반 1차 하향평가 총점 (0-100)
      */
-    averageScore: number | null;
+    totalScore: number | null;
+
+    /**
+     * 평가기간 등급 기준에 따른 1차 하향평가 등급 (예: S, A, B, C, D, F 등)
+     */
+    grade: string | null;
   } | null;
 
   /**
@@ -336,9 +341,14 @@ export interface MyDownwardEvaluationStatus {
     isEditable: boolean;
 
     /**
-     * 평균 점수 (1-5점)
+     * 가중치 기반 2차 하향평가 총점 (0-100)
      */
-    averageScore: number | null;
+    totalScore: number | null;
+
+    /**
+     * 평가기간 등급 기준에 따른 2차 하향평가 등급 (예: S, A, B, C, D, F 등)
+     */
+    grade: string | null;
   } | null;
 }
 
