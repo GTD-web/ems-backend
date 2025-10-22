@@ -183,7 +183,7 @@ export class Phase7EvaluationGenerator {
       evaluation.employeeId = employeeIds[i];
       evaluation.evaluatorId = employeeIds[i + 1];
       evaluation.periodId = periodId;
-      evaluation.projectId = dummyProjectId;
+      evaluation.wbsId = dummyProjectId;
       evaluation.evaluationType =
         Math.random() < 0.7
           ? DownwardEvaluationType.PRIMARY

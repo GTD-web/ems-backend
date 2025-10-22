@@ -21,4 +21,3 @@ import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.ent
   exports: [DownwardEvaluationBusinessService],
 })
 export class DownwardEvaluationBusinessModule {}
-

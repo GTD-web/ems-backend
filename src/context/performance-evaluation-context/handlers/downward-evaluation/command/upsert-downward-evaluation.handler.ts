@@ -12,7 +12,7 @@ export class UpsertDownwardEvaluationCommand {
     public readonly evaluatorId: string,
     public readonly evaluateeId: string,
     public readonly periodId: string,
-    public readonly projectId: string,
+    public readonly wbsId: string,
     public readonly selfEvaluationId?: string,
     public readonly evaluationType: string = 'primary',
     public readonly downwardEvaluationContent?: string,
@@ -42,7 +42,7 @@ export class UpsertDownwardEvaluationHandler
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       selfEvaluationId,
       evaluationType,
       downwardEvaluationContent,
@@ -54,18 +54,18 @@ export class UpsertDownwardEvaluationHandler
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       evaluationType,
     });
 
     return await this.transactionManager.executeTransaction(async () => {
-      // 기존 하향평가 조회 (employeeId, evaluatorId, periodId, evaluationType로 찾기)
+      // 기존 하향평가 조회 (employeeId, evaluatorId, periodId, wbsId, evaluationType로 찾기)
       const existingEvaluations =
         await this.downwardEvaluationService.필터_조회한다({
           employeeId: evaluateeId,
           evaluatorId,
           periodId,
-          projectId,
+          wbsId,
           evaluationType: evaluationType as DownwardEvaluationType,
         });
 
@@ -103,7 +103,7 @@ export class UpsertDownwardEvaluationHandler
         const evaluation = await this.downwardEvaluationService.생성한다({
           employeeId: evaluateeId,
           evaluatorId,
-          projectId,
+          wbsId,
           periodId,
           selfEvaluationId,
           downwardEvaluationContent,

@@ -12,7 +12,7 @@ export class CreateDownwardEvaluationCommand {
     public readonly evaluatorId: string,
     public readonly evaluateeId: string,
     public readonly periodId: string,
-    public readonly projectId: string,
+    public readonly wbsId: string,
     public readonly selfEvaluationId?: string,
     public readonly evaluationType: string = 'primary',
     public readonly downwardEvaluationContent?: string,
@@ -41,7 +41,7 @@ export class CreateDownwardEvaluationHandler
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       selfEvaluationId,
       evaluationType,
       downwardEvaluationContent,
@@ -53,7 +53,7 @@ export class CreateDownwardEvaluationHandler
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       evaluationType,
     });
 
@@ -62,7 +62,7 @@ export class CreateDownwardEvaluationHandler
       const evaluation = await this.downwardEvaluationService.생성한다({
         employeeId: evaluateeId,
         evaluatorId,
-        projectId,
+        wbsId,
         periodId,
         selfEvaluationId,
         downwardEvaluationContent,

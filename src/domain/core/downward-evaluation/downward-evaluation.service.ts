@@ -185,9 +185,9 @@ export class DownwardEvaluationService {
         });
       }
 
-      if (filter.projectId) {
-        queryBuilder.andWhere('evaluation.projectId = :projectId', {
-          projectId: filter.projectId,
+      if (filter.wbsId) {
+        queryBuilder.andWhere('evaluation.wbsId = :wbsId', {
+          wbsId: filter.wbsId,
         });
       }
 
@@ -349,16 +349,16 @@ export class DownwardEvaluationService {
   }
 
   /**
-   * 특정 프로젝트의 하향평가 목록을 조회한다
+   * 특정 WBS의 하향평가 목록을 조회한다
    */
-  async 프로젝트별_조회한다(projectId: string): Promise<DownwardEvaluation[]> {
-    this.logger.debug(`프로젝트별 하향평가 조회 - 프로젝트: ${projectId}`);
+  async WBS별_조회한다(wbsId: string): Promise<DownwardEvaluation[]> {
+    this.logger.debug(`WBS별 하향평가 조회 - WBS: ${wbsId}`);
 
     try {
-      return await this.필터_조회한다({ projectId });
+      return await this.필터_조회한다({ wbsId });
     } catch (error) {
       this.logger.error(
-        `프로젝트별 하향평가 조회 실패 - 프로젝트: ${projectId}`,
+        `WBS별 하향평가 조회 실패 - WBS: ${wbsId}`,
         error.stack,
       );
       throw error;
@@ -425,10 +425,8 @@ export class DownwardEvaluationService {
       );
     }
 
-    if (!data.projectId) {
-      throw new DownwardEvaluationValidationException(
-        '프로젝트 ID는 필수입니다.',
-      );
+    if (!data.wbsId) {
+      throw new DownwardEvaluationValidationException('WBS ID는 필수입니다.');
     }
 
     if (!data.periodId) {

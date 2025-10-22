@@ -30,11 +30,11 @@ import {
  */
 export function UpsertPrimaryDownwardEvaluation() {
   return applyDecorators(
-    Post('evaluatee/:evaluateeId/period/:periodId/project/:projectId/primary'),
+    Post('evaluatee/:evaluateeId/period/:periodId/wbs/:wbsId/primary'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '1차 하향평가 저장',
-      description: `**중요**: 1차 하향평가를 저장합니다. Upsert 방식으로 동작하여 동일 조건(evaluatorId, evaluateeId, periodId, evaluationType)의 평가가 있으면 수정하고, 없으면 새로 생성합니다.
+      description: `**중요**: 1차 하향평가를 저장합니다. Upsert 방식으로 동작하여 동일 조건(evaluatorId, evaluateeId, periodId, wbsId, evaluationType)의 평가가 있으면 수정하고, 없으면 새로 생성합니다.
 
 **평가 점수 규칙:**
 - 양의 정수만 허용 (1 이상)
@@ -56,7 +56,7 @@ export function UpsertPrimaryDownwardEvaluation() {
 - 여러 번 수정: 동일한 평가를 여러 번 수정 가능 (Upsert)
 - 모든 필드 생략: 선택적 필드를 모두 생략하고 생성 가능
 - 데이터 무결성: 신규 생성 시 isCompleted는 false, evaluationDate 자동 설정
-- 경로 파라미터 저장: evaluateeId, periodId, projectId가 DB에 올바르게 저장됨
+- 경로 파라미터 저장: evaluateeId, periodId, wbsId가 DB에 올바르게 저장됨
 - 중복 방지: 동일 조건의 중복 평가는 Upsert로 처리됨
 - 평가 점수가 문자열: 400 에러 발생
 - 평가 점수가 음수: -10 입력 시 400 에러
@@ -64,7 +64,7 @@ export function UpsertPrimaryDownwardEvaluation() {
 - 평가 점수가 소수: 3.5 입력 시 400 에러
 - 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
-- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러
+- 잘못된 wbsId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 evaluatorId: UUID 형식이 아닌 경우 400 에러
 - 평가 내용 타입 오류: 문자열이 아닌 타입 입력 시 400 에러
 - 응답 구조: 응답에 id와 message 필드 포함
@@ -114,7 +114,7 @@ export function UpsertPrimaryDownwardEvaluation() {
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: '피평가자, 평가기간 또는 프로젝트를 찾을 수 없습니다.',
+      description: '피평가자, 평가기간 또는 WBS를 찾을 수 없습니다.',
     }),
   );
 }
@@ -124,13 +124,11 @@ export function UpsertPrimaryDownwardEvaluation() {
  */
 export function UpsertSecondaryDownwardEvaluation() {
   return applyDecorators(
-    Post(
-      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/secondary',
-    ),
+    Post('evaluatee/:evaluateeId/period/:periodId/wbs/:wbsId/secondary'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '2차 하향평가 저장',
-      description: `**중요**: 2차 하향평가를 저장합니다. Upsert 방식으로 동작하여 동일 조건(evaluatorId, evaluateeId, periodId, evaluationType)의 평가가 있으면 수정하고, 없으면 새로 생성합니다. 1차 하향평가와 독립적으로 관리됩니다.
+      description: `**중요**: 2차 하향평가를 저장합니다. Upsert 방식으로 동작하여 동일 조건(evaluatorId, evaluateeId, periodId, wbsId, evaluationType)의 평가가 있으면 수정하고, 없으면 새로 생성합니다. 1차 하향평가와 독립적으로 관리됩니다.
 
 **평가 점수 규칙:**
 - 양의 정수만 허용 (1 이상)
@@ -150,7 +148,7 @@ export function UpsertSecondaryDownwardEvaluation() {
 - 자기평가 ID 포함: selfEvaluationId를 포함하여 생성 가능
 - 모든 필드 생략: 선택적 필드를 모두 생략하고 생성 가능
 - 데이터 무결성: 신규 생성 시 isCompleted는 false, evaluationDate 자동 설정
-- 경로 파라미터 저장: evaluateeId, periodId, projectId가 DB에 올바르게 저장됨
+- 경로 파라미터 저장: evaluateeId, periodId, wbsId가 DB에 올바르게 저장됨
 - evaluationType 구분: evaluationType이 'secondary'로 올바르게 저장됨
 - 평가 점수가 문자열: 400 에러 발생
 - 평가 점수가 음수: -5 입력 시 400 에러
@@ -173,8 +171,8 @@ export function UpsertSecondaryDownwardEvaluation() {
       example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiParam({
-      name: 'projectId',
-      description: '프로젝트 ID',
+      name: 'wbsId',
+      description: 'WBS ID',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440003',
@@ -202,7 +200,7 @@ export function UpsertSecondaryDownwardEvaluation() {
     }),
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
-      description: '피평가자, 평가기간 또는 프로젝트를 찾을 수 없습니다.',
+      description: '피평가자, 평가기간 또는 WBS를 찾을 수 없습니다.',
     }),
   );
 }
@@ -256,16 +254,14 @@ export function UpdateDownwardEvaluation() {
  */
 export function SubmitPrimaryDownwardEvaluation() {
   return applyDecorators(
-    Post(
-      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/primary/submit',
-    ),
+    Post('evaluatee/:evaluateeId/period/:periodId/wbs/:wbsId/primary/submit'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '1차 하향평가 제출',
       description: `**중요**: 1차 하향평가를 제출합니다. 제출 후에는 평가가 확정되어 수정이 불가능하며, isCompleted 상태가 true로 변경됩니다.
 
 **제출 프로세스:**
-1. 평가자, 피평가자, 평가기간, 프로젝트 정보로 1차 하향평가 조회
+1. 평가자, 피평가자, 평가기간, WBS 정보로 1차 하향평가 조회
 2. 평가 상태를 완료(isCompleted: true)로 변경
 3. 제출 일시 기록
 
@@ -285,7 +281,7 @@ export function SubmitPrimaryDownwardEvaluation() {
 - 이미 제출된 평가: 재제출 시 409 에러 발생
 - 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
-- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
+- 잘못된 wbsId: UUID 형식이 아닌 경우 400 에러`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -302,8 +298,8 @@ export function SubmitPrimaryDownwardEvaluation() {
       example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiParam({
-      name: 'projectId',
-      description: '프로젝트 ID',
+      name: 'wbsId',
+      description: 'WBS ID',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440003',
@@ -344,16 +340,14 @@ export function SubmitPrimaryDownwardEvaluation() {
  */
 export function SubmitSecondaryDownwardEvaluation() {
   return applyDecorators(
-    Post(
-      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/secondary/submit',
-    ),
+    Post('evaluatee/:evaluateeId/period/:periodId/wbs/:wbsId/secondary/submit'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '2차 하향평가 제출',
       description: `**중요**: 2차 하향평가를 제출합니다. 제출 후에는 평가가 확정되어 수정이 불가능하며, isCompleted 상태가 true로 변경됩니다. 1차 하향평가와 독립적으로 제출됩니다.
 
 **제출 프로세스:**
-1. 평가자, 피평가자, 평가기간, 프로젝트 정보로 2차 하향평가 조회
+1. 평가자, 피평가자, 평가기간, WBS 정보로 2차 하향평가 조회
 2. 평가 상태를 완료(isCompleted: true)로 변경
 3. 제출 일시 기록
 
@@ -371,7 +365,7 @@ export function SubmitSecondaryDownwardEvaluation() {
 - 이미 제출된 2차 평가: 재제출 시 409 에러 발생
 - 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
-- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
+- 잘못된 wbsId: UUID 형식이 아닌 경우 400 에러`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -388,8 +382,8 @@ export function SubmitSecondaryDownwardEvaluation() {
       example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiParam({
-      name: 'projectId',
-      description: '프로젝트 ID',
+      name: 'wbsId',
+      description: 'WBS ID',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440003',
@@ -500,16 +494,14 @@ export function SubmitDownwardEvaluation() {
  */
 export function ResetPrimaryDownwardEvaluation() {
   return applyDecorators(
-    Post(
-      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/primary/reset',
-    ),
+    Post('evaluatee/:evaluateeId/period/:periodId/wbs/:wbsId/primary/reset'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '1차 하향평가 미제출 상태 변경',
       description: `**중요**: 제출된 1차 하향평가를 미제출 상태로 되돌립니다. 평가 내용은 유지되며, isCompleted 상태만 false로 변경됩니다.
 
 **초기화 프로세스:**
-1. 평가자, 피평가자, 평가기간, 프로젝트 정보로 1차 하향평가 조회
+1. 평가자, 피평가자, 평가기간, WBS 정보로 1차 하향평가 조회
 2. 평가 상태를 미완료(isCompleted: false)로 변경
 3. 수정 일시 기록
 
@@ -528,7 +520,7 @@ export function ResetPrimaryDownwardEvaluation() {
 - 미제출 평가 초기화: 이미 미제출 상태인 평가 초기화 시 400 에러
 - 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
-- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
+- 잘못된 wbsId: UUID 형식이 아닌 경우 400 에러`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -545,8 +537,8 @@ export function ResetPrimaryDownwardEvaluation() {
       example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiParam({
-      name: 'projectId',
-      description: '프로젝트 ID',
+      name: 'wbsId',
+      description: 'WBS ID',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440003',
@@ -583,16 +575,14 @@ export function ResetPrimaryDownwardEvaluation() {
  */
 export function ResetSecondaryDownwardEvaluation() {
   return applyDecorators(
-    Post(
-      'evaluatee/:evaluateeId/period/:periodId/project/:projectId/secondary/reset',
-    ),
+    Post('evaluatee/:evaluateeId/period/:periodId/wbs/:wbsId/secondary/reset'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '2차 하향평가 미제출 상태 변경',
       description: `**중요**: 제출된 2차 하향평가를 미제출 상태로 되돌립니다. 평가 내용은 유지되며, isCompleted 상태만 false로 변경됩니다. 1차 하향평가와 독립적으로 초기화됩니다.
 
 **초기화 프로세스:**
-1. 평가자, 피평가자, 평가기간, 프로젝트 정보로 2차 하향평가 조회
+1. 평가자, 피평가자, 평가기간, WBS 정보로 2차 하향평가 조회
 2. 평가 상태를 미완료(isCompleted: false)로 변경
 3. 수정 일시 기록
 
@@ -611,7 +601,7 @@ export function ResetSecondaryDownwardEvaluation() {
 - 미제출 평가 초기화: 이미 미제출 상태인 2차 평가 초기화 시 400 에러
 - 잘못된 evaluateeId: UUID 형식이 아닌 경우 400 에러
 - 잘못된 periodId: UUID 형식이 아닌 경우 400 에러
-- 잘못된 projectId: UUID 형식이 아닌 경우 400 에러`,
+- 잘못된 wbsId: UUID 형식이 아닌 경우 400 에러`,
     }),
     ApiParam({
       name: 'evaluateeId',
@@ -628,8 +618,8 @@ export function ResetSecondaryDownwardEvaluation() {
       example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiParam({
-      name: 'projectId',
-      description: '프로젝트 ID',
+      name: 'wbsId',
+      description: 'WBS ID',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440003',
@@ -718,8 +708,8 @@ export function GetEvaluatorDownwardEvaluations() {
       example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiQuery({
-      name: 'projectId',
-      description: '프로젝트 ID',
+      name: 'wbsId',
+      description: 'WBS ID',
       required: false,
       example: '550e8400-e29b-41d4-a716-446655440004',
     }),

@@ -164,12 +164,35 @@ export class DownwardEvaluationBusinessService {
       evaluationType,
     });
 
-    // 1. 평가라인 매핑 조회
+    // 1. 평가 유형에 맞는 평가라인 조회
+    const expectedEvaluatorType =
+      evaluationType === 'primary'
+        ? EvaluatorType.PRIMARY
+        : EvaluatorType.SECONDARY;
+
+    const evaluationLine = await this.evaluationLineRepository.findOne({
+      where: {
+        evaluatorType: expectedEvaluatorType,
+        deletedAt: IsNull(),
+      },
+    });
+
+    if (!evaluationLine) {
+      this.logger.error('평가라인을 찾을 수 없습니다', {
+        evaluatorType: expectedEvaluatorType,
+      });
+      throw new ForbiddenException(
+        `${evaluationType === 'primary' ? '1차' : '2차'} 평가라인 정보를 찾을 수 없습니다.`,
+      );
+    }
+
+    // 2. 평가라인 ID를 포함하여 평가라인 매핑 조회
     const mapping = await this.evaluationLineMappingRepository.findOne({
       where: {
         employeeId: evaluateeId,
         evaluatorId: evaluatorId,
         wbsItemId: wbsId,
+        evaluationLineId: evaluationLine.id,
         deletedAt: IsNull(),
       },
     });
@@ -179,52 +202,11 @@ export class DownwardEvaluationBusinessService {
         evaluateeId,
         evaluatorId,
         wbsId,
+        evaluationLineId: evaluationLine.id,
+        evaluationType,
       });
       throw new ForbiddenException(
-        `해당 평가자는 이 WBS 항목에 대한 평가 권한이 없습니다. (피평가자: ${evaluateeId}, 평가자: ${evaluatorId}, WBS: ${wbsId})`,
-      );
-    }
-
-    // 2. 평가라인 조회하여 평가 유형 확인
-    const evaluationLine = await this.evaluationLineRepository.findOne({
-      where: {
-        id: mapping.evaluationLineId,
-        deletedAt: IsNull(),
-      },
-    });
-
-    if (!evaluationLine) {
-      this.logger.error('평가라인을 찾을 수 없습니다', {
-        evaluationLineId: mapping.evaluationLineId,
-      });
-      throw new ForbiddenException(
-        `평가라인 정보를 찾을 수 없습니다. (평가라인 ID: ${mapping.evaluationLineId})`,
-      );
-    }
-
-    // 3. 평가 유형 검증
-    const expectedEvaluatorType =
-      evaluationType === 'primary'
-        ? EvaluatorType.PRIMARY
-        : EvaluatorType.SECONDARY;
-
-    if (evaluationLine.evaluatorType !== expectedEvaluatorType) {
-      const currentTypeLabel =
-        evaluationLine.evaluatorType === EvaluatorType.PRIMARY
-          ? '1차'
-          : '2차';
-      const expectedTypeLabel = evaluationType === 'primary' ? '1차' : '2차';
-
-      this.logger.warn('평가 유형이 일치하지 않습니다', {
-        evaluatorId,
-        evaluateeId,
-        wbsId,
-        currentType: currentTypeLabel,
-        expectedType: expectedTypeLabel,
-      });
-
-      throw new ForbiddenException(
-        `해당 평가자는 ${expectedTypeLabel} 평가자로 지정되지 않았습니다. (현재: ${currentTypeLabel} 평가자)`,
+        `해당 평가자는 이 WBS 항목에 대한 ${evaluationType === 'primary' ? '1차' : '2차'} 평가 권한이 없습니다. (피평가자: ${evaluateeId}, 평가자: ${evaluatorId}, WBS: ${wbsId})`,
       );
     }
 
@@ -233,7 +215,7 @@ export class DownwardEvaluationBusinessService {
       evaluatorId,
       wbsId,
       evaluationType,
+      evaluationLineId: evaluationLine.id,
     });
   }
 }
-

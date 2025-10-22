@@ -499,7 +499,7 @@ export class PerformanceEvaluationService
     evaluatorId: string,
     evaluateeId: string,
     periodId: string,
-    projectId: string,
+    wbsId: string,
     selfEvaluationId?: string,
     evaluationType?: string,
     downwardEvaluationContent?: string,
@@ -510,7 +510,7 @@ export class PerformanceEvaluationService
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       selfEvaluationId,
       evaluationType || 'primary',
       downwardEvaluationContent,
@@ -528,7 +528,7 @@ export class PerformanceEvaluationService
   async 일차_하향평가를_제출한다(
     evaluateeId: string,
     periodId: string,
-    projectId: string,
+    wbsId: string,
     evaluatorId: string,
     submittedBy: string,
   ): Promise<void> {
@@ -537,7 +537,7 @@ export class PerformanceEvaluationService
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       'primary',
       undefined,
       1,
@@ -547,7 +547,7 @@ export class PerformanceEvaluationService
     const result = await this.queryBus.execute(query);
     if (!result.evaluations || result.evaluations.length === 0) {
       throw new DownwardEvaluationNotFoundException(
-        `1차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, projectId: ${projectId})`,
+        `1차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, wbsId: ${wbsId})`,
       );
     }
 
@@ -568,7 +568,7 @@ export class PerformanceEvaluationService
   async 이차_하향평가를_제출한다(
     evaluateeId: string,
     periodId: string,
-    projectId: string,
+    wbsId: string,
     evaluatorId: string,
     submittedBy: string,
   ): Promise<void> {
@@ -577,7 +577,7 @@ export class PerformanceEvaluationService
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       'secondary',
       undefined,
       1,
@@ -587,7 +587,7 @@ export class PerformanceEvaluationService
     const result = await this.queryBus.execute(query);
     if (!result.evaluations || result.evaluations.length === 0) {
       throw new DownwardEvaluationNotFoundException(
-        `2차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, projectId: ${projectId})`,
+        `2차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, wbsId: ${wbsId})`,
       );
     }
 
@@ -623,7 +623,7 @@ export class PerformanceEvaluationService
   async 일차_하향평가를_초기화한다(
     evaluateeId: string,
     periodId: string,
-    projectId: string,
+    wbsId: string,
     evaluatorId: string,
     resetBy: string,
   ): Promise<void> {
@@ -632,7 +632,7 @@ export class PerformanceEvaluationService
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       'primary',
       undefined,
       1,
@@ -642,7 +642,7 @@ export class PerformanceEvaluationService
     const result = await this.queryBus.execute(query);
     if (!result.evaluations || result.evaluations.length === 0) {
       throw new DownwardEvaluationNotFoundException(
-        `1차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, projectId: ${projectId})`,
+        `1차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, wbsId: ${wbsId})`,
       );
     }
 
@@ -660,7 +660,7 @@ export class PerformanceEvaluationService
   async 이차_하향평가를_초기화한다(
     evaluateeId: string,
     periodId: string,
-    projectId: string,
+    wbsId: string,
     evaluatorId: string,
     resetBy: string,
   ): Promise<void> {
@@ -669,7 +669,7 @@ export class PerformanceEvaluationService
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       'secondary',
       undefined,
       1,
@@ -679,7 +679,7 @@ export class PerformanceEvaluationService
     const result = await this.queryBus.execute(query);
     if (!result.evaluations || result.evaluations.length === 0) {
       throw new DownwardEvaluationNotFoundException(
-        `2차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, projectId: ${projectId})`,
+        `2차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, wbsId: ${wbsId})`,
       );
     }
 

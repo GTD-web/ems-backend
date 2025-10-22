@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
-import { Project } from '@domain/common/project/project.entity';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluationNotFoundException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
@@ -54,13 +54,10 @@ export interface DownwardEvaluationDetailResult {
     status: string;
   } | null;
 
-  project: {
+  wbsItem: {
     id: string;
-    name: string;
-    code: string;
-    status: string;
-    startDate: Date;
-    endDate: Date;
+    title: string;
+    wbsCode: string;
   } | null;
 
   period: {
@@ -119,9 +116,9 @@ export class GetDownwardEvaluationDetailHandler
         'evaluator.id = evaluation.evaluatorId AND evaluator.deletedAt IS NULL',
       )
       .leftJoin(
-        Project,
-        'project',
-        'project.id = evaluation.projectId AND project.deletedAt IS NULL',
+        WbsItem,
+        'wbsItem',
+        'wbsItem.id = evaluation.wbsId AND wbsItem.deletedAt IS NULL',
       )
       .leftJoin(
         EvaluationPeriod,
@@ -138,7 +135,7 @@ export class GetDownwardEvaluationDetailHandler
         'evaluation.id AS evaluation_id',
         'evaluation.employeeId AS evaluation_employeeid',
         'evaluation.evaluatorId AS evaluation_evaluatorid',
-        'evaluation.projectId AS evaluation_projectid',
+        'evaluation.wbsId AS evaluation_wbsid',
         'evaluation.periodId AS evaluation_periodid',
         'evaluation.selfEvaluationId AS evaluation_selfevaluationid',
         'evaluation.evaluationDate AS evaluation_evaluationdate',
@@ -167,13 +164,10 @@ export class GetDownwardEvaluationDetailHandler
         'evaluator.email AS evaluator_email',
         'evaluator.departmentId AS evaluator_departmentid',
         'evaluator.status AS evaluator_status',
-        // 프로젝트 정보
-        'project.id AS project_id',
-        'project.name AS project_name',
-        'project.projectCode AS project_code',
-        'project.status AS project_status',
-        'project.startDate AS project_startdate',
-        'project.endDate AS project_enddate',
+        // WBS 정보
+        'wbsItem.id AS wbsitem_id',
+        'wbsItem.title AS wbsitem_title',
+        'wbsItem.wbsCode AS wbsitem_wbscode',
         // 평가기간 정보
         'period.id AS period_id',
         'period.name AS period_name',
@@ -237,14 +231,11 @@ export class GetDownwardEvaluationDetailHandler
           }
         : null,
 
-      project: result.project_id
+      wbsItem: result.wbsitem_id
         ? {
-            id: result.project_id,
-            name: result.project_name,
-            code: result.project_code,
-            status: result.project_status,
-            startDate: result.project_startdate,
-            endDate: result.project_enddate,
+            id: result.wbsitem_id,
+            title: result.wbsitem_title,
+            wbsCode: result.wbsitem_wbscode,
           }
         : null,
 

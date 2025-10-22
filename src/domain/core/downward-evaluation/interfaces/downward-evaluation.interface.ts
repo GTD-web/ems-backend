@@ -10,8 +10,8 @@ export interface IDownwardEvaluation {
   employeeId: string;
   /** 평가자 ID */
   evaluatorId: string;
-  /** 프로젝트 ID */
-  projectId: string;
+  /** WBS ID */
+  wbsId: string;
   /** 평가 기간 ID */
   periodId: string;
   /** 자기평가 ID */

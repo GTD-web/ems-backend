@@ -12,6 +12,8 @@ import { ProjectDto } from '@domain/common/project/project.types';
  * 테스트 대상:
  * - GET /admin/performance-evaluation/downward-evaluations/evaluator/:evaluatorId (평가자의 하향평가 목록 조회)
  * - GET /admin/performance-evaluation/downward-evaluations/:id (하향평가 상세정보 조회)
+ *
+ * 주의: 엔드포인트는 wbsId 기반으로 변경됨
  */
 describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () => {
   let testSuite: BaseE2ETest;
@@ -31,7 +33,19 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
   const getRandomEvaluationPeriod = () =>
     testData.periods[Math.floor(Math.random() * testData.periods.length)];
   const getRandomProject = () =>
-    testData.projects[Math.floor(Math.random() * testData.projects.length)];
+    // WBS는 첫 번째 프로젝트에만 생성되므로 첫 번째 프로젝트 반환
+    testData.projects[0];
+
+  /**
+   * 프로젝트에서 WBS를 가져오는 헬퍼 함수
+   */
+  const getWbsFromProject = async (projectId: string): Promise<any> => {
+    const result = await dataSource.query(
+      `SELECT * FROM wbs_item WHERE "projectId" = $1 AND "deletedAt" IS NULL LIMIT 1`,
+      [projectId],
+    );
+    return result[0];
+  };
 
   beforeAll(async () => {
     testSuite = new BaseE2ETest();
@@ -78,12 +92,13 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // 1차 하향평가 저장
         const primaryResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -96,7 +111,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const secondaryResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -131,7 +146,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         expect(evaluation).toHaveProperty('id');
         expect(evaluation).toHaveProperty('employeeId');
         expect(evaluation).toHaveProperty('evaluatorId');
-        expect(evaluation).toHaveProperty('projectId');
+        expect(evaluation).toHaveProperty('wbsId');
         expect(evaluation).toHaveProperty('periodId');
         expect(evaluation).toHaveProperty('evaluationDate');
         expect(evaluation).toHaveProperty('evaluationType');
@@ -155,11 +170,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee1.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee1.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -171,7 +187,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -202,11 +218,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -231,17 +248,18 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         });
       });
 
-      it('projectId 필터로 특정 프로젝트의 평가만 조회할 수 있어야 한다', async () => {
+      it('wbsId 필터로 특정 프로젝트의 평가만 조회할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -250,19 +268,19 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           })
           .expect(200);
 
-        // When - projectId로 필터링
+        // When - wbsId로 필터링
         const response = await testSuite
           .request()
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
-          .query({ projectId: project.id })
+          .query({ wbsId: wbs.id })
           .expect(200);
 
         // Then
         expect(response.body.evaluations.length).toBeGreaterThanOrEqual(1);
         response.body.evaluations.forEach((evaluation: any) => {
-          expect(evaluation.projectId).toBe(project.id);
+          expect(evaluation.wbsId).toBe(wbs.id);
         });
       });
 
@@ -272,11 +290,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -288,7 +307,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -338,12 +357,13 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // 미완료 평가
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -357,7 +377,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/project/${project.id}/secondary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/wbs/${wbs.id}/secondary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -370,7 +390,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/project/${project.id}/secondary/submit`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee2.id}/period/${period.id}/wbs/${wbs.id}/secondary/submit`,
           )
           .send({ evaluatorId: evaluator.id })
           .expect(200);
@@ -416,6 +436,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // evaluator를 제외한 다른 직원들에 대해 평가 생성
         const evaluatees = testData.employees.filter(
@@ -427,7 +448,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           await testSuite
             .request()
             .post(
-              `/admin/performance-evaluation/downward-evaluations/evaluatee/${employee.id}/period/${period.id}/project/${project.id}/primary`,
+              `/admin/performance-evaluation/downward-evaluations/evaluatee/${employee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
             )
             .send({
               evaluatorId: evaluator.id,
@@ -440,7 +461,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           await testSuite
             .request()
             .post(
-              `/admin/performance-evaluation/downward-evaluations/evaluatee/${employee.id}/period/${period.id}/project/${project.id}/secondary`,
+              `/admin/performance-evaluation/downward-evaluations/evaluatee/${employee.id}/period/${period.id}/wbs/${wbs.id}/secondary`,
             )
             .send({
               evaluatorId: evaluator.id,
@@ -491,11 +512,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -513,7 +535,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .query({
             evaluateeId: evaluatee.id,
             periodId: period.id,
-            projectId: project.id,
+            wbsId: wbs.id,
             evaluationType: 'primary',
             isCompleted: false,
           })
@@ -524,7 +546,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         response.body.evaluations.forEach((evaluation: any) => {
           expect(evaluation.employeeId).toBe(evaluatee.id);
           expect(evaluation.periodId).toBe(period.id);
-          expect(evaluation.projectId).toBe(project.id);
+          expect(evaluation.wbsId).toBe(wbs.id);
           expect(evaluation.evaluationType).toBe('primary');
           expect(evaluation.isCompleted).toBe(false);
         });
@@ -589,7 +611,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .expect(400);
       });
 
-      it('잘못된 projectId 필터로 요청 시 400 에러가 발생해야 한다', async () => {
+      it('잘못된 wbsId 필터로 요청 시 400 에러가 발생해야 한다', async () => {
         // Given
         const evaluator = getRandomEmployee();
 
@@ -599,7 +621,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
           .get(
             `/admin/performance-evaluation/downward-evaluations/evaluator/${evaluator.id}`,
           )
-          .query({ projectId: 'invalid-uuid' })
+          .query({ wbsId: 'invalid-uuid' })
           .expect(400);
       });
 
@@ -658,11 +680,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const createResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -704,14 +727,11 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         expect(response.body.evaluator.departmentId).toBeDefined();
         expect(response.body.evaluator.status).toBeDefined();
 
-        expect(response.body).toHaveProperty('project');
-        expect(response.body.project).not.toBeNull();
-        expect(response.body.project.id).toBe(project.id);
-        expect(response.body.project.name).toBeDefined();
-        expect(response.body.project.code).toBeDefined();
-        expect(response.body.project.status).toBeDefined();
-        expect(response.body.project.startDate).toBeDefined();
-        expect(response.body.project.endDate).toBeDefined();
+        expect(response.body).toHaveProperty('wbsItem');
+        expect(response.body.wbsItem).not.toBeNull();
+        expect(response.body.wbsItem.id).toBe(wbs.id);
+        expect(response.body.wbsItem.title).toBeDefined();
+        expect(response.body.wbsItem.wbsCode).toBeDefined();
 
         expect(response.body).toHaveProperty('period');
         expect(response.body.period).not.toBeNull();
@@ -754,11 +774,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const createResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -786,11 +807,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const createResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -818,11 +840,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const createResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -835,7 +858,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/submit`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/submit`,
           )
           .send({ evaluatorId: evaluator.id })
           .expect(200);
@@ -860,11 +883,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const createResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -892,12 +916,13 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
         const selfEvaluationId = '550e8400-e29b-41d4-a716-446655440099';
 
         const createResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -942,11 +967,12 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const createResponse = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary`,
           )
           .send({
             evaluatorId: evaluator.id,

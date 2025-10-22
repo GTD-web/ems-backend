@@ -9,6 +9,8 @@ import { WbsItemTestModule } from '../../domain/common/wbs-item/wbs-item-test.mo
 import { EvaluationPeriod } from '../../domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { EvaluationProjectAssignment } from '../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
+import { EvaluationLine } from '../../domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluationLineMapping } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { QuestionGroup } from '../../domain/sub/question-group/question-group.entity';
 import { EvaluationQuestion } from '../../domain/sub/evaluation-question/evaluation-question.entity';
 import { QuestionGroupMapping } from '../../domain/sub/question-group-mapping/question-group-mapping.entity';
@@ -31,6 +33,8 @@ import { QUERY_HANDLERS } from './queries';
       EvaluationPeriod,
       EvaluationWbsAssignment,
       EvaluationProjectAssignment,
+      EvaluationLine,
+      EvaluationLineMapping,
       QuestionGroup,
       EvaluationQuestion,
       QuestionGroupMapping,

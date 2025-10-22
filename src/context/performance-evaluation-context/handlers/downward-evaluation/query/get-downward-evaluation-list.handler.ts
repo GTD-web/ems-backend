@@ -16,7 +16,7 @@ export class GetDownwardEvaluationListQuery {
     public readonly evaluatorId?: string,
     public readonly evaluateeId?: string,
     public readonly periodId?: string,
-    public readonly projectId?: string,
+    public readonly wbsId?: string,
     public readonly evaluationType?: string,
     public readonly isCompleted?: boolean,
     public readonly page: number = 1,
@@ -49,7 +49,7 @@ export class GetDownwardEvaluationListHandler
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       evaluationType,
       isCompleted,
       page,
@@ -60,7 +60,7 @@ export class GetDownwardEvaluationListHandler
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
+      wbsId,
       evaluationType,
       isCompleted,
       page,
@@ -89,8 +89,8 @@ export class GetDownwardEvaluationListHandler
       queryBuilder.andWhere('evaluation.periodId = :periodId', { periodId });
     }
 
-    if (projectId) {
-      queryBuilder.andWhere('evaluation.projectId = :projectId', { projectId });
+    if (wbsId) {
+      queryBuilder.andWhere('evaluation.wbsId = :wbsId', { wbsId });
     }
 
     if (evaluationType) {

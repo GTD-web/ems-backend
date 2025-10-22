@@ -155,12 +155,12 @@ export class DownwardEvaluationFilterDto {
   periodId?: string;
 
   @ApiPropertyOptional({
-    description: '프로젝트 ID',
+    description: 'WBS ID',
     example: '550e8400-e29b-41d4-a716-446655440004',
   })
   @IsOptional()
   @IsUUID()
-  projectId?: string;
+  wbsId?: string;
 
   @ApiPropertyOptional({
     description: '평가 유형',
@@ -227,10 +227,10 @@ export class DownwardEvaluationBasicDto {
   evaluatorId: string;
 
   @ApiProperty({
-    description: '프로젝트 ID',
+    description: 'WBS ID',
     example: '550e8400-e29b-41d4-a716-446655440003',
   })
-  projectId: string;
+  wbsId: string;
 
   @ApiProperty({
     description: '평가기간 ID',
@@ -497,18 +497,18 @@ export class DownwardEvaluationDetailResponseDto {
   } | null;
 
   @ApiPropertyOptional({
-    description: '프로젝트 정보',
+    description: 'WBS 정보',
     type: 'object',
     properties: {
       id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440003' },
-      name: { type: 'string', example: 'AI 프로젝트' },
-      code: { type: 'string', example: 'PRJ001' },
+      name: { type: 'string', example: 'API 개발' },
+      code: { type: 'string', example: 'WBS001' },
       status: { type: 'string', example: 'IN_PROGRESS' },
       startDate: { type: 'string', example: '2024-01-01T00:00:00Z' },
       endDate: { type: 'string', example: '2024-12-31T23:59:59Z' },
     },
   })
-  project?: {
+  wbs?: {
     id: string;
     name: string;
     code: string;

@@ -10,8 +10,8 @@ import { ProjectDto } from '@domain/common/project/project.types';
  * 하향평가 초기화(미제출 상태 변경) E2E 테스트
  *
  * 테스트 대상:
- * - POST /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/period/:periodId/project/:projectId/primary/reset (1차 하향평가 미제출 상태 변경)
- * - POST /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/period/:periodId/project/:projectId/secondary/reset (2차 하향평가 미제출 상태 변경)
+ * - POST /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/period/:periodId/project/:wbsId/primary/reset (1차 하향평가 미제출 상태 변경)
+ * - POST /admin/performance-evaluation/downward-evaluations/evaluatee/:evaluateeId/period/:periodId/project/:wbsId/secondary/reset (2차 하향평가 미제출 상태 변경)
  */
 describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 상태 변경', () => {
   let testSuite: BaseE2ETest;
@@ -79,9 +79,19 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
   }
 
   function getRandomProject(): ProjectDto {
-    return testData.projects[
-      Math.floor(Math.random() * testData.projects.length)
-    ];
+    // WBS는 첫 번째 프로젝트에만 생성되므로 첫 번째 프로젝트 반환
+    return testData.projects[0];
+  }
+
+  /**
+   * 프로젝트에서 WBS를 가져오는 헬퍼 함수
+   */
+  async function getWbsFromProject(projectId: string): Promise<any> {
+    const result = await dataSource.query(
+      `SELECT * FROM wbs_item WHERE "projectId" = $1 AND "deletedAt" IS NULL LIMIT 1`,
+      [projectId],
+    );
+    return result[0];
   }
 
   /**
@@ -90,7 +100,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
   async function upsertDownwardEvaluation(
     evaluateeId: string,
     periodId: string,
-    projectId: string,
+    wbsId: string,
     evaluationType: 'primary' | 'secondary',
     data: {
       evaluatorId?: string;
@@ -103,7 +113,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
     const response = await testSuite
       .request()
       .post(
-        `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluateeId}/period/${periodId}/project/${projectId}/${evaluationType}`,
+        `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluateeId}/period/${periodId}/wbs/${wbsId}/${evaluationType}`,
       )
       .send(data)
       .expect(200);
@@ -120,14 +130,14 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
   async function submitDownwardEvaluation(
     evaluateeId: string,
     periodId: string,
-    projectId: string,
+    wbsId: string,
     evaluationType: 'primary' | 'secondary',
     evaluatorId: string,
   ): Promise<void> {
     await testSuite
       .request()
       .post(
-        `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluateeId}/period/${periodId}/project/${projectId}/${evaluationType}/submit`,
+        `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluateeId}/period/${periodId}/wbs/${wbsId}/${evaluationType}/submit`,
       )
       .send({
         evaluatorId: evaluatorId,
@@ -148,7 +158,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
 
   // ==================== 1차 하향평가 미제출 상태 변경 테스트 ====================
 
-  describe('1차 하향평가 미제출 상태 변경 (POST /evaluatee/:evaluateeId/period/:periodId/project/:projectId/primary/reset)', () => {
+  describe('1차 하향평가 미제출 상태 변경 (POST /evaluatee/:evaluateeId/period/:periodId/project/:wbsId/primary/reset)', () => {
     describe('성공 시나리오', () => {
       it('제출된 1차 하향평가를 미제출 상태로 변경할 수 있어야 한다', async () => {
         // Given - 1차 하향평가 저장 및 제출
@@ -156,12 +166,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const { id: evaluationId, evaluatorId } =
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'primary',
             {
               evaluatorId: evaluator.id,
@@ -174,7 +185,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           evaluatorId,
         );
@@ -187,7 +198,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -206,12 +217,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const { id: evaluationId, evaluatorId } =
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'primary',
             {
               evaluatorId: evaluator.id,
@@ -224,7 +236,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           evaluatorId,
         );
@@ -233,7 +245,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -251,6 +263,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const content = '우수한 업무 수행 능력';
         const score = 5;
@@ -259,7 +272,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'primary',
             {
               evaluatorId: evaluator.id,
@@ -272,7 +285,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           evaluatorId,
         );
@@ -283,7 +296,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -304,12 +317,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const { id: evaluationId, evaluatorId } =
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'primary',
             {
               evaluatorId: evaluator.id,
@@ -321,7 +335,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           evaluatorId,
         );
@@ -329,7 +343,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -343,7 +357,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           evaluatorId,
         );
@@ -359,12 +373,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const { id: evaluationId, evaluatorId } =
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'primary',
             {
               evaluatorId: evaluator.id,
@@ -376,7 +391,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           evaluatorId,
         );
@@ -390,7 +405,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -412,12 +427,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // When & Then
         const response = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -433,11 +449,12 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const { evaluatorId } = await upsertDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           {
             evaluatorId: evaluator.id,
@@ -450,7 +467,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const response = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -465,12 +482,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // When & Then
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/invalid-uuid/period/${period.id}/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/invalid-uuid/period/${period.id}/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -483,12 +501,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluatee = getRandomEmployee();
         const evaluator = getRandomEmployee();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // When & Then
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/invalid-uuid/project/${project.id}/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/invalid-uuid/wbs/${wbs.id}/primary/reset`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -496,7 +515,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
           .expect(400);
       });
 
-      it('잘못된 projectId UUID 형식이면 400 에러를 반환해야 한다', async () => {
+      it('잘못된 wbsId UUID 형식이면 400 에러를 반환해야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
         const evaluator = getRandomEmployee();
@@ -506,7 +525,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/invalid-uuid/primary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/invalid-uuid/primary/reset`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -518,7 +537,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
 
   // ==================== 2차 하향평가 미제출 상태 변경 테스트 ====================
 
-  describe('2차 하향평가 미제출 상태 변경 (POST /evaluatee/:evaluateeId/period/:periodId/project/:projectId/secondary/reset)', () => {
+  describe('2차 하향평가 미제출 상태 변경 (POST /evaluatee/:evaluateeId/period/:periodId/project/:wbsId/secondary/reset)', () => {
     describe('성공 시나리오', () => {
       it('제출된 2차 하향평가를 미제출 상태로 변경할 수 있어야 한다', async () => {
         // Given - 2차 하향평가 저장 및 제출
@@ -526,12 +545,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const { id: evaluationId, evaluatorId } =
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'secondary',
             {
               evaluatorId: evaluator.id,
@@ -544,7 +564,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'secondary',
           evaluatorId,
         );
@@ -557,7 +577,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -576,6 +596,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const content = '2차 평가 내용';
         const score = 4;
@@ -584,7 +605,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'secondary',
             {
               evaluatorId: evaluator.id,
@@ -597,7 +618,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'secondary',
           evaluatorId,
         );
@@ -608,7 +629,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -628,13 +649,14 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // 1차 평가 저장 및 제출
         const { id: primaryId, evaluatorId: primaryEvaluatorId } =
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'primary',
             {
               evaluatorId: evaluator.id,
@@ -645,7 +667,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           primaryEvaluatorId,
         );
@@ -655,7 +677,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'secondary',
             {
               evaluatorId: evaluator.id,
@@ -666,7 +688,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'secondary',
           secondaryEvaluatorId,
         );
@@ -675,7 +697,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary/reset`,
           )
           .send({
             evaluatorId: secondaryEvaluatorId,
@@ -696,12 +718,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const { id: evaluationId, evaluatorId } =
           await upsertDownwardEvaluation(
             evaluatee.id,
             period.id,
-            project.id,
+            wbs.id,
             'secondary',
             {
               evaluatorId: evaluator.id,
@@ -713,7 +736,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'secondary',
           evaluatorId,
         );
@@ -721,7 +744,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -735,7 +758,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'secondary',
           evaluatorId,
         );
@@ -753,12 +776,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // When & Then
         const response = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary/reset`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -774,11 +798,12 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         const { evaluatorId } = await upsertDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'secondary',
           {
             evaluatorId: evaluator.id,
@@ -791,7 +816,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const response = await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary/reset`,
           )
           .send({
             evaluatorId: evaluatorId,
@@ -806,12 +831,13 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         const evaluator = getRandomEmployee();
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
+        const wbs = await getWbsFromProject(project.id);
 
         // When & Then
         await testSuite
           .request()
           .post(
-            `/admin/performance-evaluation/downward-evaluations/evaluatee/invalid-uuid/period/${period.id}/project/${project.id}/secondary/reset`,
+            `/admin/performance-evaluation/downward-evaluations/evaluatee/invalid-uuid/period/${period.id}/wbs/${wbs.id}/secondary/reset`,
           )
           .send({
             evaluatorId: evaluator.id,
@@ -830,13 +856,14 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
       const evaluator = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
       const project = getRandomProject();
+      const wbs = await getWbsFromProject(project.id);
 
       // 1차 평가 저장 및 제출
       const { id: primaryId, evaluatorId: primaryEvaluatorId } =
         await upsertDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           {
             evaluatorId: evaluator.id,
@@ -847,7 +874,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
       await submitDownwardEvaluation(
         evaluatee.id,
         period.id,
-        project.id,
+        wbs.id,
         'primary',
         primaryEvaluatorId,
       );
@@ -857,7 +884,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await upsertDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'secondary',
           {
             evaluatorId: evaluator.id,
@@ -868,7 +895,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
       await submitDownwardEvaluation(
         evaluatee.id,
         period.id,
-        project.id,
+        wbs.id,
         'secondary',
         secondaryEvaluatorId,
       );
@@ -877,7 +904,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
       await testSuite
         .request()
         .post(
-          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
         )
         .send({
           evaluatorId: primaryEvaluatorId,
@@ -894,7 +921,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
       await testSuite
         .request()
         .post(
-          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/secondary/reset`,
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/secondary/reset`,
         )
         .send({
           evaluatorId: secondaryEvaluatorId,
@@ -911,7 +938,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
       await submitDownwardEvaluation(
         evaluatee.id,
         period.id,
-        project.id,
+        wbs.id,
         'primary',
         primaryEvaluatorId,
       );
@@ -920,7 +947,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
       await submitDownwardEvaluation(
         evaluatee.id,
         period.id,
-        project.id,
+        wbs.id,
         'secondary',
         secondaryEvaluatorId,
       );
@@ -938,11 +965,12 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
       const evaluator = getRandomEmployee();
       const period = getRandomEvaluationPeriod();
       const project = getRandomProject();
+      const wbs = await getWbsFromProject(project.id);
 
       const { id: evaluationId, evaluatorId } = await upsertDownwardEvaluation(
         evaluatee.id,
         period.id,
-        project.id,
+        wbs.id,
         'primary',
         {
           evaluatorId: evaluator.id,
@@ -957,7 +985,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
         await submitDownwardEvaluation(
           evaluatee.id,
           period.id,
-          project.id,
+          wbs.id,
           'primary',
           evaluatorId,
         );
@@ -970,7 +998,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 미제출 �
           await testSuite
             .request()
             .post(
-              `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/project/${project.id}/primary/reset`,
+              `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluatee.id}/period/${period.id}/wbs/${wbs.id}/primary/reset`,
             )
             .send({
               evaluatorId: evaluatorId,

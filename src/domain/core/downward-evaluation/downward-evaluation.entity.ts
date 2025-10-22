@@ -15,7 +15,7 @@ import type {
 @Entity('downward_evaluation')
 @Index(['employeeId'])
 @Index(['evaluatorId'])
-@Index(['projectId'])
+@Index(['wbsId'])
 @Index(['periodId'])
 @Index(['selfEvaluationId'])
 @Index(['evaluationType'])
@@ -40,9 +40,9 @@ export class DownwardEvaluation
 
   @Column({
     type: 'uuid',
-    comment: '프로젝트 ID',
+    comment: 'WBS ID',
   })
-  projectId: string;
+  wbsId: string;
 
   @Column({
     type: 'uuid',
@@ -104,7 +104,7 @@ export class DownwardEvaluation
     if (data) {
       this.employeeId = data.employeeId;
       this.evaluatorId = data.evaluatorId;
-      this.projectId = data.projectId;
+      this.wbsId = data.wbsId;
       this.periodId = data.periodId;
       this.selfEvaluationId = data.selfEvaluationId;
       this.downwardEvaluationContent = data.downwardEvaluationContent;
@@ -183,10 +183,10 @@ export class DownwardEvaluation
   }
 
   /**
-   * 특정 프로젝트의 평가인지 확인한다
+   * 특정 WBS의 평가인지 확인한다
    */
-  해당_프로젝트의_평가인가(projectId: string): boolean {
-    return this.projectId === projectId;
+  해당_WBS의_평가인가(wbsId: string): boolean {
+    return this.wbsId === wbsId;
   }
 
   /**
@@ -242,7 +242,7 @@ export class DownwardEvaluation
       id: this.id,
       employeeId: this.employeeId,
       evaluatorId: this.evaluatorId,
-      projectId: this.projectId,
+      wbsId: this.wbsId,
       periodId: this.periodId,
       selfEvaluationId: this.selfEvaluationId,
       downwardEvaluationContent: this.downwardEvaluationContent,

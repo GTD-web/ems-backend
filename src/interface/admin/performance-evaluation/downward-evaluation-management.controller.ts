@@ -56,7 +56,7 @@ export class DownwardEvaluationManagementController {
   ): Promise<DownwardEvaluationResponseDto> {
     const actionBy = user.id;
     const evaluatorId = dto.evaluatorId;
-    
+
     // 비즈니스 서비스를 통해 평가라인 검증 후 저장
     const evaluationId =
       await this.downwardEvaluationBusinessService.일차_하향평가를_저장한다({
@@ -90,7 +90,7 @@ export class DownwardEvaluationManagementController {
   ): Promise<DownwardEvaluationResponseDto> {
     const actionBy = user.id;
     const evaluatorId = dto.evaluatorId;
-    
+
     // 비즈니스 서비스를 통해 평가라인 검증 후 저장
     const evaluationId =
       await this.downwardEvaluationBusinessService.이차_하향평가를_저장한다({
