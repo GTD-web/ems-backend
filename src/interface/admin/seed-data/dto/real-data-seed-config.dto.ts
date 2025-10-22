@@ -8,7 +8,9 @@ import {
   IsNumber,
   Min,
   IsIn,
+  IsObject,
 } from 'class-validator';
+import type { StateDistributionConfig } from '@context/seed-data-context/types';
 
 /**
  * 평가 설정 (공통 사용)
@@ -46,7 +48,12 @@ export class RealDataSeedConfigDto {
   })
   @IsString()
   @IsIn(['minimal', 'with_period', 'with_assignments', 'with_setup', 'full'])
-  scenario: 'minimal' | 'with_period' | 'with_assignments' | 'with_setup' | 'full';
+  scenario:
+    | 'minimal'
+    | 'with_period'
+    | 'with_assignments'
+    | 'with_setup'
+    | 'full';
 
   @ApiPropertyOptional({
     description:
@@ -60,7 +67,8 @@ export class RealDataSeedConfigDto {
   clearExisting?: boolean;
 
   @ApiPropertyOptional({
-    description: '생성할 프로젝트 수 (with_assignments, with_setup, full 시나리오에서 사용)',
+    description:
+      '생성할 프로젝트 수 (with_assignments, with_setup, full 시나리오에서 사용)',
     example: 10,
     default: 5,
     minimum: 1,
@@ -90,5 +98,26 @@ export class RealDataSeedConfigDto {
   @ValidateNested()
   @Type(() => EvaluationConfig)
   evaluationConfig?: EvaluationConfig;
-}
 
+  @ApiPropertyOptional({
+    description:
+      '상태 분포 설정 (선택사항, 기본값 사용 가능). ' +
+      '부서 계층 구조(departmentHierarchy), 직원 상태(employeeStatus), 직원 조회 제외(excludedFromList), ' +
+      '평가 대상 제외(excludedFromEvaluation), 평가 진행 상태 등을 커스터마이징할 수 있습니다.',
+    example: {
+      selfEvaluationProgress: {
+        completed: 1.0,
+        notStarted: 0.0,
+        inProgress: 0.0,
+      },
+      primaryDownwardEvaluationProgress: {
+        completed: 0.0,
+        notStarted: 1.0,
+        inProgress: 0.0,
+      },
+    },
+  })
+  @IsOptional()
+  @IsObject()
+  stateDistribution?: StateDistributionConfig;
+}

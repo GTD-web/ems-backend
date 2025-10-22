@@ -670,23 +670,26 @@ export class Phase1OrganizationGenerator {
         `직원 동기화 완료: ${syncResult.created}개 생성, ${syncResult.updated}개 업데이트`,
       );
 
-      // 2. 동기화된 직원 데이터 조회 (삭제되지 않고, 제외되지 않은 것만)
+      // 2. 동기화된 직원 데이터 조회 (삭제되지 않고, 제외되지 않고, 재직중인 것만)
       const employees = await this.employeeRepository.find({
         where: {
           deletedAt: IsNull(),
           isExcludedFromList: false,
+          status: '재직중', // 재직중인 직원만 평가 대상으로 포함
         },
         order: { name: 'ASC' },
       });
 
       if (employees.length === 0) {
         this.logger.warn(
-          '동기화된 직원 데이터가 없습니다. Faker 데이터로 대체됩니다.',
+          '재직중인 직원 데이터가 없습니다. Faker 데이터로 대체됩니다.',
         );
         return [];
       }
 
-      this.logger.log(`동기화된 직원 ${employees.length}명을 사용합니다.`);
+      this.logger.log(
+        `재직중인 직원 ${employees.length}명을 평가 대상으로 사용합니다.`,
+      );
       return employees.map((e) => e.id);
     } catch (error) {
       this.logger.error('직원 동기화/조회 실패:', error.message);

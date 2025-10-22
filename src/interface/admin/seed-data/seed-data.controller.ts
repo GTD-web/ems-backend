@@ -67,9 +67,18 @@ export class SeedDataController {
       evaluationConfig: {
         periodCount: config.evaluationConfig?.periodCount ?? 1,
       },
+      stateDistribution: config.stateDistribution, // 상태 분포 설정 전달
       useRealDepartments: true, // 항상 true
       useRealEmployees: true, // 항상 true
     };
+
+    // 디버그: 설정 로깅
+    if (config.stateDistribution) {
+      console.log(
+        '[Controller] stateDistribution.selfEvaluationProgress:',
+        JSON.stringify(config.stateDistribution.selfEvaluationProgress),
+      );
+    }
 
     const results =
       await this.seedDataService.시드_데이터를_생성한다(seedConfig);

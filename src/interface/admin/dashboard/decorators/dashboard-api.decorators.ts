@@ -240,12 +240,8 @@ export function GetEmployeeAssignedData() {
 - 평가기간 정보 반환 (평가기간명, 시작/종료일, 상태, 설정 허용 여부, 자기평가 최대 달성률)
 - 직원 기본 정보 반환 (직원명, 직원번호, 이메일, 부서, 상태)
 - 할당된 프로젝트 목록을 프로젝트별로 그룹화하여 반환
-- 각 프로젝트에 속한 WBS 목록 반환 (WBS 정보, 평가기준, 성과, 자기평가, 1차/2차 하향평가 포함)
+- 각 프로젝트에 속한 WBS 목록 반환 (WBS 정보, 평가기준, 성과, 자기평가, 하향평가 포함)
 - 데이터 요약 정보 제공 (총 프로젝트 수, 총 WBS 수, 완료된 성과 수, 완료된 자기평가 수)
-- **평가 점수 및 등급 계산** (모든 평가가 완료된 경우):
-  - 자기평가: 가중치 기반 총점 및 등급 (S/A/B/C/D)
-  - 1차 하향평가: 가중치 기반 총점 및 등급
-  - 2차 하향평가: 가중치 기반 평균 총점 및 등급 (여러 평가자)
 - 할당이 없는 경우에도 빈 배열로 정상 응답
 - 등록되지 않은 직원이나 존재하지 않는 평가기간 조회 시 404 에러 반환
 
@@ -255,14 +251,9 @@ export function GetEmployeeAssignedData() {
 - 프로젝트와 WBS가 할당된 경우 조회 성공해야 한다
 - 평가기간 정보가 올바르게 반환되어야 한다
 - 직원 정보가 올바르게 반환되어야 한다
-- summary 카운트가 정확해야 한다 (totalProjects, totalWbs, completedPerformances, completedSelfEvaluations)
-- summary에 자기평가 점수/등급이 포함되어야 한다 (selfEvaluation.totalScore, selfEvaluation.grade)
-- summary에 1차 하향평가 점수/등급이 포함되어야 한다 (primaryDownwardEvaluation.totalScore, grade)
-- summary에 2차 하향평가 점수/등급이 포함되어야 한다 (secondaryDownwardEvaluation.totalScore, grade)
-- 평가 미완료 시 점수/등급은 null로 반환되어야 한다
+- summary 카운트가 정확해야 한다
 - 할당이 없는 직원도 조회 성공해야 한다 (빈 배열)
 - WBS별 평가기준이 올바르게 반환되어야 한다
-- WBS별 1차/2차 하향평가 정보가 올바르게 반환되어야 한다
 - 프로젝트별로 WBS가 올바르게 그룹화되어야 한다
 - 여러 직원의 할당 정보를 조회해도 데이터가 섞이지 않아야 한다
 - 등록되지 않은 직원 조회 시 404 에러가 발생해야 한다

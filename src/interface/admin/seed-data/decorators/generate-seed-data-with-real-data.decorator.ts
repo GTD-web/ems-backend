@@ -21,14 +21,10 @@ export const ApiGenerateSeedDataWithRealData = () =>
       examples: {
         minimalQuick: {
           summary: '1. MINIMAL (빠른확인) - 부서/직원만, 디버깅용',
-          description: '실제 부서/직원만 사용, 최소 프로젝트/WBS',
+          description: '실제 부서/직원만 사용, 추가 데이터 없음',
           value: {
             scenario: 'minimal',
             clearExisting: true,
-            dataScale: {
-              projectCount: 2,
-              wbsPerProject: 5,
-            },
           },
         },
         minimalWithProjects: {
@@ -37,10 +33,8 @@ export const ApiGenerateSeedDataWithRealData = () =>
           value: {
             scenario: 'minimal',
             clearExisting: true,
-            dataScale: {
-              projectCount: 5,
-              wbsPerProject: 10,
-            },
+            projectCount: 5,
+            wbsPerProject: 10,
           },
         },
         withPeriodSingle: {
@@ -49,10 +43,8 @@ export const ApiGenerateSeedDataWithRealData = () =>
           value: {
             scenario: 'with_period',
             clearExisting: true,
-            dataScale: {
-              projectCount: 5,
-              wbsPerProject: 10,
-            },
+            projectCount: 5,
+            wbsPerProject: 10,
             evaluationConfig: {
               periodCount: 1,
             },
@@ -65,10 +57,8 @@ export const ApiGenerateSeedDataWithRealData = () =>
           value: {
             scenario: 'with_period',
             clearExisting: true,
-            dataScale: {
-              projectCount: 10,
-              wbsPerProject: 15,
-            },
+            projectCount: 10,
+            wbsPerProject: 15,
             evaluationConfig: {
               periodCount: 3,
             },
@@ -80,10 +70,8 @@ export const ApiGenerateSeedDataWithRealData = () =>
           value: {
             scenario: 'with_assignments',
             clearExisting: true,
-            dataScale: {
-              projectCount: 10,
-              wbsPerProject: 15,
-            },
+            projectCount: 10,
+            wbsPerProject: 15,
             evaluationConfig: {
               periodCount: 1,
             },
@@ -95,178 +83,142 @@ export const ApiGenerateSeedDataWithRealData = () =>
           value: {
             scenario: 'with_setup',
             clearExisting: true,
-            dataScale: {
-              projectCount: 10,
-              wbsPerProject: 15,
-            },
+            projectCount: 10,
+            wbsPerProject: 15,
             evaluationConfig: {
               periodCount: 1,
             },
           },
         },
-        fullPrimaryOnly: {
-          summary: '7. FULL (1차 완료) - 1차 하향평가까지 완료 ⭐',
-          description: '자기평가 + 1차 하향평가 완료, 2차/동료/최종평가 미작성',
+        fullSelfOnly: {
+          summary: '7. FULL (자기평가만) - 자기평가만 완료 ⭐',
+          description:
+            '자기평가만 완료, 1차/2차 하향평가 미작성 (점수계산 검증용)',
           value: {
             scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 10,
-              wbsPerProject: 15,
-            },
+            clearExisting: false,
+            projectCount: 2,
+            wbsPerProject: 3,
             evaluationConfig: {
               periodCount: 1,
             },
             stateDistribution: {
               selfEvaluationProgress: {
                 completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
               },
               primaryDownwardEvaluationProgress: {
-                completed: 1.0,
+                completed: 0.0,
+                notStarted: 1.0,
+                inProgress: 0.0,
               },
               secondaryDownwardEvaluationProgress: {
+                completed: 0.0,
                 notStarted: 1.0,
+                inProgress: 0.0,
               },
               peerEvaluationProgress: {
+                completed: 0.0,
                 notStarted: 1.0,
               },
               finalEvaluationProgress: {
+                completed: 0.0,
+                notStarted: 1.0,
+              },
+            },
+          },
+        },
+        fullPrimaryOnly: {
+          summary: '8. FULL (1차 완료) - 1차 하향평가까지 완료 ⭐',
+          description: '자기평가 + 1차 하향평가 완료, 2차/동료/최종평가 미작성',
+          value: {
+            scenario: 'full',
+            clearExisting: false,
+            projectCount: 2,
+            wbsPerProject: 3,
+            evaluationConfig: {
+              periodCount: 1,
+            },
+            stateDistribution: {
+              selfEvaluationProgress: {
+                completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
+              },
+              primaryDownwardEvaluationProgress: {
+                completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
+              },
+              secondaryDownwardEvaluationProgress: {
+                completed: 0.0,
+                notStarted: 1.0,
+                inProgress: 0.0,
+              },
+              peerEvaluationProgress: {
+                completed: 0.0,
+                notStarted: 1.0,
+              },
+              finalEvaluationProgress: {
+                completed: 0.0,
                 notStarted: 1.0,
               },
             },
           },
         },
         fullSecondaryComplete: {
-          summary: '8. FULL (2차 완료) - 성과평가 입력 완료 ⭐',
+          summary: '9. FULL (2차 완료) - 성과평가 입력 완료 ⭐',
           description: '자기/1차/2차 하향/동료평가 완료, 최종평가 미작성',
           value: {
             scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 10,
-              wbsPerProject: 15,
-            },
+            clearExisting: false,
+            projectCount: 2,
+            wbsPerProject: 3,
             evaluationConfig: {
               periodCount: 1,
             },
             stateDistribution: {
+              evaluationLineMappingTypes: {
+                primaryOnly: 0.0,
+                primaryAndSecondary: 1.0,
+                withAdditional: 0.0,
+              },
               selfEvaluationProgress: {
                 completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
               },
-              downwardEvaluationProgress: {
+              primaryDownwardEvaluationProgress: {
                 completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
+              },
+              secondaryDownwardEvaluationProgress: {
+                completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
               },
               peerEvaluationProgress: {
-                completed: 1.0,
+                completed: 0.0,
+                notStarted: 1.0,
               },
               finalEvaluationProgress: {
+                completed: 0.0,
                 notStarted: 1.0,
               },
             },
           },
         },
         fullComplete: {
-          summary: '9. FULL (전체 완료) - 최종평가까지 완료 ⭐⭐⭐ (권장)',
+          summary: '10. FULL (전체 완료) - 최종평가까지 완료 ⭐⭐⭐ (권장)',
           description:
             '실제 조직으로 전체 평가 프로세스 완료 (운영 환경 시뮬레이션)',
           value: {
             scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 10,
-              wbsPerProject: 15,
-            },
-            evaluationConfig: {
-              periodCount: 1,
-            },
-          },
-        },
-        fullMediumProject: {
-          summary: '10. FULL (중규모) - 프로젝트 15개',
-          description: '실제 조직 + 중규모 프로젝트 환경',
-          value: {
-            scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 15,
-              wbsPerProject: 20,
-            },
-            evaluationConfig: {
-              periodCount: 1,
-            },
-          },
-        },
-        fullLargeProject: {
-          summary: '11. FULL (대규모) - 프로젝트 50개',
-          description: '실제 조직 + 대규모 프로젝트 환경',
-          value: {
-            scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 50,
-              wbsPerProject: 30,
-            },
-            evaluationConfig: {
-              periodCount: 1,
-            },
-          },
-        },
-        fullMultiPeriod: {
-          summary: '12. FULL (다중기간) - 평가기간 3개',
-          description: '실제 조직 + 연간 3회 평가 시나리오',
-          value: {
-            scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 15,
-              wbsPerProject: 20,
-            },
-            evaluationConfig: {
-              periodCount: 3,
-            },
-          },
-        },
-        demoPresentation: {
-          summary: '13. DEMO - 프리젠테이션/시연용 ✨',
-          description: '완성도 높은 데모 데이터 (고객 시연, 교육 자료용)',
-          value: {
-            scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 12,
-              wbsPerProject: 18,
-            },
-            evaluationConfig: {
-              periodCount: 2,
-            },
-          },
-        },
-        performanceTest: {
-          summary: '14. PERFORMANCE - 프로젝트 100개, 성능 테스트용',
-          description: '실제 조직 + 대용량 프로젝트, 시스템 부하 테스트용',
-          value: {
-            scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 100,
-              wbsPerProject: 50,
-            },
-            evaluationConfig: {
-              periodCount: 1,
-            },
-          },
-        },
-        cleanStart: {
-          summary: '15. CLEAN START - 전체 삭제 후 재생성 ⚠️',
-          description:
-            '모든 기존 데이터 삭제 후 재생성 (⚠️ 실제 부서/직원 데이터도 삭제)',
-          value: {
-            scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              projectCount: 10,
-              wbsPerProject: 15,
-            },
+            clearExisting: false,
+            projectCount: 10,
+            wbsPerProject: 15,
             evaluationConfig: {
               periodCount: 1,
             },

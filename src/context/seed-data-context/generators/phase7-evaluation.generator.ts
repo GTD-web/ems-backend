@@ -159,6 +159,9 @@ export class Phase7EvaluationGenerator {
       .getMany();
 
     this.logger.log(`조회된 WBS 할당: ${wbsAssignments.length}개`);
+    this.logger.log(
+      `자기평가 진행 상태 설정: ${JSON.stringify(dist.selfEvaluationProgress)}`,
+    );
 
     // 각 WBS 할당에 대해 자기평가 생성
     for (const assignment of wbsAssignments) {

@@ -184,18 +184,45 @@ export const ApiGenerateSeedData = () =>
         },
         fullComplete: {
           summary: '9. FULL (전체 완료) - 최종평가까지 완료',
-          description: '최종평가까지 모두 완료, 전체 사이클 완료 (직원 20명)',
+          description: '최종평가까지 모두 완료, 전체 사이클 완료 (직원 10명)',
           value: {
             scenario: 'full',
             clearExisting: true,
             dataScale: {
-              departmentCount: 5,
-              employeeCount: 20,
-              projectCount: 3,
-              wbsPerProject: 10,
+              departmentCount: 2,
+              employeeCount: 10,
+              projectCount: 10,
+              wbsPerProject: 15,
             },
             evaluationConfig: {
               periodCount: 1,
+            },
+            stateDistribution: {
+              selfEvaluationProgress: {
+                completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
+              },
+              primaryDownwardEvaluationProgress: {
+                completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
+              },
+              secondaryDownwardEvaluationProgress: {
+                completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
+              },
+              peerEvaluationProgress: {
+                completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
+              },
+              finalEvaluationProgress: {
+                completed: 1.0,
+                notStarted: 0.0,
+                inProgress: 0.0,
+              },
             },
           },
         },
@@ -256,23 +283,6 @@ export const ApiGenerateSeedData = () =>
                 inProgress: 0,
                 completed: 0,
               },
-            },
-          },
-        },
-        largeScale: {
-          summary: '12. LARGE SCALE - 직원 500명, 성능 테스트용',
-          description: '대규모 조직 데이터, 성능 테스트용 (직원 500명)',
-          value: {
-            scenario: 'full',
-            clearExisting: true,
-            dataScale: {
-              departmentCount: 50,
-              employeeCount: 500,
-              projectCount: 100,
-              wbsPerProject: 20,
-            },
-            evaluationConfig: {
-              periodCount: 1,
             },
           },
         },
