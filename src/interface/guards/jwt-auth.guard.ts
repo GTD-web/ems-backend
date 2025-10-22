@@ -45,9 +45,9 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     try {
-      // Auth Context를 통해 토큰 검증 및 Employee 동기화
-      // 이 과정에서 SSO 서버 검증, Employee 생성/업데이트, 역할 동기화가 모두 수행됨
-      const result = await this.authService.토큰검증및사용자동기화(token);
+      // Auth Context를 통해 토큰 검증 및 사용자 정보 조회
+      // SSO 서버에서 토큰을 검증하고, 기존 Employee 정보를 조회함
+      const result = await this.authService.토큰검증및사용자조회(token);
 
       // 검증된 사용자 정보를 Request에 주입
       request['user'] = {

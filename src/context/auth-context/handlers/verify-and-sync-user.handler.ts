@@ -8,12 +8,11 @@ import {
 } from '../interfaces/auth-context.interface';
 
 /**
- * 토큰 검증 및 사용자 동기화 핸들러
+ * 토큰 검증 및 사용자 조회 핸들러
  *
  * 1. SSO 서버에 토큰 검증
- * 2. Employee 정보 동기화 (생성/업데이트)
- * 3. 역할 정보 업데이트
- * 4. 최신 사용자 정보 반환
+ * 2. Employee 정보 조회
+ * 3. 사용자 정보 반환
  */
 @Injectable()
 export class VerifyAndSyncUserHandler {
@@ -33,92 +32,41 @@ export class VerifyAndSyncUserHandler {
       // 1. 토큰 검증 (valid: false이면 UnauthorizedException 발생)
       const verifyResult = await this.ssoService.토큰을검증한다(accessToken);
 
-      // 2. SSO에서 직원 상세 정보 조회
-      const ssoEmployeeInfo = await this.ssoService.직원정보를조회한다({
-        employeeNumber: verifyResult.employeeNumber!,
-        withDetail: true,
-      });
-
-      // 3. Employee 동기화 (upsert)
-      let employee = await this.employeeService.findByEmployeeNumber(
+      // 2. Employee 정보 조회 (시스템에 등록된 직원만 인증 허용)
+      const employee = await this.employeeService.findByEmployeeNumber(
         verifyResult.employeeNumber!,
       );
 
-      const employeeData = {
-        employeeNumber: ssoEmployeeInfo.employeeNumber,
-        name: ssoEmployeeInfo.name,
-        email: ssoEmployeeInfo.email,
-        phoneNumber: ssoEmployeeInfo.phoneNumber,
-        status: ssoEmployeeInfo.isTerminated ? '퇴사' : '재직중',
-        departmentId: ssoEmployeeInfo.department?.id,
-        departmentName: ssoEmployeeInfo.department?.departmentName,
-        departmentCode: ssoEmployeeInfo.department?.departmentCode,
-        positionId: ssoEmployeeInfo.position?.id,
-        rankId: ssoEmployeeInfo.jobTitle?.id,
-        rankName: ssoEmployeeInfo.jobTitle?.jobTitleName,
-        rankLevel: ssoEmployeeInfo.jobTitle?.jobTitleLevel,
-        externalId: verifyResult.id!,
-        externalCreatedAt: new Date(),
-        externalUpdatedAt: new Date(),
-        lastSyncAt: new Date(),
-      };
-
-      let isSynced = false;
-
-      if (employee) {
-        // 업데이트
-        await this.employeeService.update(employee.id, employeeData as any);
-        this.logger.debug(`Employee 정보 업데이트: ${employee.employeeNumber}`);
-        isSynced = true;
-      } else {
-        // 생성
-        employee = await this.employeeService.create(employeeData as any);
-        this.logger.log(`새 Employee 생성: ${employee.employeeNumber}`);
-        isSynced = true;
-      }
-
-      // 4. 역할 정보 추출 (systemRoles['EMS-PROD'])
-      const roles: string[] = [];
-      if (ssoEmployeeInfo['systemRoles']?.['EMS-PROD']) {
-        roles.push(...ssoEmployeeInfo['systemRoles']['EMS-PROD']);
-      }
-
-      // 5. Employee에 역할 정보 저장
-      if (roles.length > 0) {
-        await this.employeeService.updateRoles(employee.id, roles);
-        this.logger.debug(
-          `역할 정보 업데이트: ${employee.employeeNumber}, roles: [${roles.join(', ')}]`,
+      if (!employee) {
+        this.logger.warn(
+          `시스템에 등록되지 않은 직원의 토큰 검증 시도: ${verifyResult.employeeNumber}`,
+        );
+        throw new UnauthorizedException(
+          '시스템에 등록되지 않은 사용자입니다. 관리자에게 문의하세요.',
         );
       }
 
-      // 6. 최신 정보 재조회
-      const updatedEmployee = await this.employeeService.findById(employee.id);
-
-      if (!updatedEmployee) {
-        throw new UnauthorizedException('사용자 정보를 찾을 수 없습니다.');
-      }
-
-      // 7. 결과 반환
+      // 3. 결과 반환
       const userInfo: AuthenticatedUserInfo = {
-        id: updatedEmployee.id,
-        externalId: updatedEmployee.externalId,
-        email: updatedEmployee.email,
-        name: updatedEmployee.name,
-        employeeNumber: updatedEmployee.employeeNumber,
-        roles: updatedEmployee['roles'] || roles,
-        status: updatedEmployee.status,
+        id: employee.id,
+        externalId: employee.externalId,
+        email: employee.email,
+        name: employee.name,
+        employeeNumber: employee.employeeNumber,
+        roles: employee['roles'] || [],
+        status: employee.status,
       };
 
       return {
         user: userInfo,
-        isSynced,
+        isSynced: false, // 더 이상 동기화하지 않음
       };
     } catch (error) {
       if (error instanceof UnauthorizedException) {
         throw error;
       }
 
-      this.logger.error('토큰 검증 및 사용자 동기화 실패:', error);
+      this.logger.error('토큰 검증 실패:', error);
       throw new UnauthorizedException('인증에 실패했습니다.');
     }
   }

@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { DownwardEvaluationBusinessService } from './downward-evaluation-business.service';
 import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
 import { EvaluationCriteriaManagementContextModule } from '@context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
-import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
-import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluationPeriodManagementContextModule } from '@context/evaluation-period-management-context/evaluation-period-management-context.module';
 
 /**
  * 하향평가 비즈니스 모듈
@@ -13,9 +11,9 @@ import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.ent
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([EvaluationLineMapping, EvaluationLine]),
     PerformanceEvaluationContextModule,
     EvaluationCriteriaManagementContextModule,
+    EvaluationPeriodManagementContextModule,
   ],
   providers: [DownwardEvaluationBusinessService],
   exports: [DownwardEvaluationBusinessService],

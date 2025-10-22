@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-criteria-management.interface';
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 
 // Project Assignment Commands & Queries
 import {
@@ -97,9 +102,17 @@ import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 export class EvaluationCriteriaManagementService
   implements IEvaluationCriteriaManagementService
 {
+  private readonly logger = new Logger(
+    EvaluationCriteriaManagementService.name,
+  );
+
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    @InjectRepository(EvaluationLineMapping)
+    private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
+    @InjectRepository(EvaluationLine)
+    private readonly evaluationLineRepository: Repository<EvaluationLine>,
   ) {}
 
   // ============================================================================
@@ -578,5 +591,87 @@ export class EvaluationCriteriaManagementService
   }> {
     const query = new GetEmployeeEvaluationSettingsQuery(employeeId, periodId);
     return await this.queryBus.execute(query);
+  }
+
+  // ============================================================================
+  // 평가라인 검증
+  // ============================================================================
+
+  /**
+   * 평가라인을 검증한다
+   * - 평가자가 해당 피평가자의 해당 WBS에 대해 평가 권한이 있는지 확인
+   * - 평가 유형(1차/2차)이 올바른지 확인
+   * @param evaluateeId 피평가자 ID
+   * @param evaluatorId 평가자 ID
+   * @param wbsId WBS ID
+   * @param evaluationType 평가 유형 ('primary' | 'secondary')
+   * @throws ForbiddenException 평가 권한이 없는 경우
+   */
+  async 평가라인을_검증한다(
+    evaluateeId: string,
+    evaluatorId: string,
+    wbsId: string,
+    evaluationType: 'primary' | 'secondary',
+  ): Promise<void> {
+    this.logger.debug('평가라인 검증 시작', {
+      evaluateeId,
+      evaluatorId,
+      wbsId,
+      evaluationType,
+    });
+
+    // 1. 평가 유형에 맞는 평가라인 조회
+    const expectedEvaluatorType =
+      evaluationType === 'primary'
+        ? EvaluatorType.PRIMARY
+        : EvaluatorType.SECONDARY;
+
+    const evaluationLine = await this.evaluationLineRepository.findOne({
+      where: {
+        evaluatorType: expectedEvaluatorType,
+        deletedAt: IsNull(),
+      },
+    });
+
+    if (!evaluationLine) {
+      this.logger.error('평가라인을 찾을 수 없습니다', {
+        evaluatorType: expectedEvaluatorType,
+      });
+      throw new ForbiddenException(
+        `${evaluationType === 'primary' ? '1차' : '2차'} 평가라인 정보를 찾을 수 없습니다.`,
+      );
+    }
+
+    // 2. 평가라인 ID를 포함하여 평가라인 매핑 조회
+    const mapping = await this.evaluationLineMappingRepository.findOne({
+      where: {
+        employeeId: evaluateeId,
+        evaluatorId: evaluatorId,
+        wbsItemId: wbsId,
+        evaluationLineId: evaluationLine.id,
+        deletedAt: IsNull(),
+      },
+    });
+
+    if (!mapping) {
+      this.logger.warn('평가라인 매핑을 찾을 수 없습니다', {
+        evaluateeId,
+        evaluatorId,
+        wbsId,
+        evaluationLineId: evaluationLine.id,
+        evaluationType,
+      });
+      throw new ForbiddenException(
+        `해당 평가자는 이 WBS 항목에 대한 ${evaluationType === 'primary' ? '1차' : '2차'} 평가 권한이 없습니다. (피평가자: ${evaluateeId}, 평가자: ${evaluatorId}, WBS: ${wbsId})`,
+      );
+    }
+
+    this.logger.debug('평가라인 검증 완료', {
+      evaluateeId,
+      evaluatorId,
+      wbsId,
+      evaluationType,
+      evaluationLineId: evaluationLine.id,
+    });
   }
 }

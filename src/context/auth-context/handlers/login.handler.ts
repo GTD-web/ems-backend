@@ -18,8 +18,7 @@ import {
  *
  * 1. SSO 서버에 로그인 (이메일, 패스워드)
  * 2. Employee 존재 여부 확인 (없으면 로그인 거부)
- * 3. 역할 정보만 동기화 (권한 업데이트)
- * 4. 사용자 정보 및 토큰 반환
+ * 3. 사용자 정보 및 토큰 반환
  */
 @Injectable()
 export class LoginHandler {
@@ -100,28 +99,15 @@ export class LoginHandler {
     );
     this.logger.log(`추출된 roles: [${roles.join(', ')}]`);
 
-    // 4. Employee에 역할 정보 저장 (빈 배열이어도 저장)
-    await this.employeeService.updateRoles(employee.id, roles);
-    this.logger.log(
-      `역할 정보 DB 업데이트 완료: ${employee.employeeNumber}, roles: [${roles.join(', ')}]`,
-    );
-
-    // 5. 최신 정보 재조회
-    const updatedEmployee = await this.employeeService.findById(employee.id);
-
-    if (!updatedEmployee) {
-      throw new InternalServerErrorException('사용자 정보를 찾을 수 없습니다.');
-    }
-
-    // 6. 결과 반환
+    // 4. 결과 반환 (역할 정보는 업데이트하지 않음)
     const userInfo: AuthenticatedUserInfo = {
-      id: updatedEmployee.id,
-      externalId: updatedEmployee.externalId,
-      email: updatedEmployee.email,
-      name: updatedEmployee.name,
-      employeeNumber: updatedEmployee.employeeNumber,
-      roles: updatedEmployee['roles'] || roles,
-      status: updatedEmployee.status,
+      id: employee.id,
+      externalId: employee.externalId,
+      email: employee.email,
+      name: employee.name,
+      employeeNumber: employee.employeeNumber,
+      roles: employee['roles'] || roles,
+      status: employee.status,
     };
 
     return {

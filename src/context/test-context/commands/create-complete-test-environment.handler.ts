@@ -295,6 +295,7 @@ export class CreateCompleteTestEnvironmentHandler
       return;
     }
 
+    const batchSize = 500; // 한 번에 저장할 매핑 개수
     const mappings: EvaluationLineMapping[] = [];
 
     // 각 피평가자(employee)에 대해
@@ -303,6 +304,11 @@ export class CreateCompleteTestEnvironmentHandler
       for (const wbsItem of wbsItems) {
         // 모든 직원이 평가자가 될 수 있도록 매핑
         for (const evaluator of employees) {
+          // 자기 자신은 평가하지 않음
+          if (evaluatee.id === evaluator.id) {
+            continue;
+          }
+
           // 1차 평가자 매핑
           const primaryMapping = this.evaluationLineMappingRepository.create({
             employeeId: evaluatee.id,
@@ -320,11 +326,23 @@ export class CreateCompleteTestEnvironmentHandler
             wbsItemId: wbsItem.id,
           });
           mappings.push(secondaryMapping);
+
+          // 배치 크기에 도달하면 저장
+          if (mappings.length >= batchSize) {
+            console.log(`평가라인 매핑 배치 저장: ${mappings.length}개`);
+            await this.evaluationLineMappingRepository.save(mappings);
+            mappings.length = 0; // 배열 비우기
+          }
         }
       }
     }
 
-    console.log(`평가라인 매핑 생성: 총 ${mappings.length}개`);
-    await this.evaluationLineMappingRepository.save(mappings);
+    // 남은 매핑 저장
+    if (mappings.length > 0) {
+      console.log(`평가라인 매핑 최종 저장: ${mappings.length}개`);
+      await this.evaluationLineMappingRepository.save(mappings);
+    }
+
+    console.log('평가라인 매핑 생성 완료');
   }
 }

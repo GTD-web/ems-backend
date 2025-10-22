@@ -6,12 +6,12 @@ import { AuthService } from '@context/auth-context';
 
 describe('JwtAuthGuard', () => {
   let guard: JwtAuthGuard;
-  let authService: jest.Mocked<AuthService>;
+  let authService: any;
   let reflector: jest.Mocked<Reflector>;
 
   beforeEach(async () => {
     const mockAuthService = {
-      토큰검증및사용자동기화: jest.fn(),
+      토큰검증및사용자조회: jest.fn(),
     };
 
     const mockReflector = {
@@ -65,7 +65,7 @@ describe('JwtAuthGuard', () => {
       const result = await guard.canActivate(mockExecutionContext);
 
       expect(result).toBe(true);
-      expect(authService.토큰검증및사용자동기화).not.toHaveBeenCalled();
+      expect(authService.토큰검증및사용자조회).not.toHaveBeenCalled();
     });
 
     it('토큰이 없으면 UnauthorizedException을 던진다', async () => {
@@ -96,12 +96,12 @@ describe('JwtAuthGuard', () => {
         isSynced: true,
       };
 
-      authService.토큰검증및사용자동기화.mockResolvedValue(mockSyncResult);
+      authService.토큰검증및사용자조회.mockResolvedValue(mockSyncResult);
 
       const result = await guard.canActivate(mockExecutionContext);
 
       expect(result).toBe(true);
-      expect(authService.토큰검증및사용자동기화).toHaveBeenCalledWith(
+      expect(authService.토큰검증및사용자조회).toHaveBeenCalledWith(
         'valid-token-123',
       );
       expect(mockRequest.user).toEqual({
@@ -118,7 +118,7 @@ describe('JwtAuthGuard', () => {
       mockRequest.headers.authorization = 'Bearer invalid-token';
 
       // AuthService에서 토큰이 유효하지 않으면 예외를 던짐
-      authService.토큰검증및사용자동기화.mockRejectedValue(
+      authService.토큰검증및사용자조회.mockRejectedValue(
         new UnauthorizedException('유효하지 않은 토큰입니다.'),
       );
 
@@ -143,7 +143,7 @@ describe('JwtAuthGuard', () => {
       reflector.getAllAndOverride.mockReturnValue(false);
       mockRequest.headers.authorization = 'Bearer token-123';
 
-      authService.토큰검증및사용자동기화.mockRejectedValue(
+      authService.토큰검증및사용자조회.mockRejectedValue(
         new Error('네트워크 에러'),
       );
 

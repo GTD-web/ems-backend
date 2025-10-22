@@ -85,8 +85,8 @@ export function UpsertPrimaryDownwardEvaluation() {
       example: '550e8400-e29b-41d4-a716-446655440002',
     }),
     ApiParam({
-      name: 'projectId',
-      description: '프로젝트 ID',
+      name: 'wbsId',
+      description: 'WBS ID',
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440003',

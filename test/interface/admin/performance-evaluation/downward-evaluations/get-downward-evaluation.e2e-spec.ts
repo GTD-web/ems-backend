@@ -30,6 +30,17 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
   // 헬퍼 함수
   const getRandomEmployee = () =>
     testData.employees[Math.floor(Math.random() * testData.employees.length)];
+  const getDifferentEmployee = (excludeEmployee: EmployeeDto) => {
+    const availableEmployees = testData.employees.filter(
+      (emp) => emp.id !== excludeEmployee.id,
+    );
+    if (availableEmployees.length === 0) {
+      throw new Error('다른 직원을 찾을 수 없습니다');
+    }
+    return availableEmployees[
+      Math.floor(Math.random() * availableEmployees.length)
+    ];
+  };
   const getRandomEvaluationPeriod = () =>
     testData.periods[Math.floor(Math.random() * testData.periods.length)];
   const getRandomProject = () =>
@@ -89,7 +100,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('평가자의 모든 하향평가를 조회할 수 있어야 한다', async () => {
         // Given - 1차 및 2차 하향평가 생성
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -166,8 +177,15 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('evaluateeId 필터로 특정 피평가자의 평가만 조회할 수 있어야 한다', async () => {
         // Given - 여러 피평가자에 대한 평가 생성
         const evaluatee1 = getRandomEmployee();
-        const evaluatee2 = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee1);
+        // evaluatee2는 evaluatee1과 evaluator 모두와 달라야 함
+        const availableForEvaluatee2 = testData.employees.filter(
+          (emp) => emp.id !== evaluatee1.id && emp.id !== evaluator.id,
+        );
+        const evaluatee2 =
+          availableForEvaluatee2[
+            Math.floor(Math.random() * availableForEvaluatee2.length)
+          ];
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -215,7 +233,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('periodId 필터로 특정 평가기간의 평가만 조회할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -251,7 +269,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('wbsId 필터로 특정 프로젝트의 평가만 조회할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -287,7 +305,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('evaluationType 필터로 1차 또는 2차 평가만 조회할 수 있어야 한다', async () => {
         // Given - 1차 및 2차 평가 생성
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -354,7 +372,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('isCompleted 필터로 완료/미완료 평가를 구분 조회할 수 있어야 한다', async () => {
         // Given - 평가 생성 및 제출
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -509,7 +527,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('복합 필터를 사용하여 조회할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -677,7 +695,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('하향평가 ID로 상세정보를 조회할 수 있어야 한다', async () => {
         // Given - 평가 생성
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -771,7 +789,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('1차 하향평가의 상세정보를 조회할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -804,7 +822,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('2차 하향평가의 상세정보를 조회할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -837,7 +855,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('완료된 평가는 completedAt이 포함되어야 한다', async () => {
         // Given - 평가 생성 및 제출
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -880,7 +898,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('미완료 평가는 completedAt이 null이어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -913,7 +931,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('selfEvaluationId가 있는 경우 selfEvaluation 객체가 포함되어야 한다', async () => {
         // Given - selfEvaluationId 포함하여 생성
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -964,7 +982,7 @@ describe('GET /admin/performance-evaluation/downward-evaluations - 조회', () =
       it('타임스탬프 필드들이 올바르게 반환되어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);

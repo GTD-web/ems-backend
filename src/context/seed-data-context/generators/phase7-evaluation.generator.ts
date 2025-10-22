@@ -13,6 +13,7 @@ import {
   JobGrade,
   JobDetailedGrade,
 } from '@domain/core/final-evaluation/final-evaluation.types';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 
 import {
   SeedDataConfig,
@@ -36,6 +37,8 @@ export class Phase7EvaluationGenerator {
     private readonly peerEvaluationRepository: Repository<PeerEvaluation>,
     @InjectRepository(FinalEvaluation)
     private readonly finalEvaluationRepository: Repository<FinalEvaluation>,
+    @InjectRepository(EvaluationPeriod)
+    private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
   ) {}
 
   async generate(
@@ -55,10 +58,14 @@ export class Phase7EvaluationGenerator {
     const employeeIds = phase1Result.generatedIds.employeeIds as string[];
     const periodIds = phase2Result.generatedIds.periodIds as string[];
 
+    // 평가기간별 maxSelfEvaluationRate 조회 (점수 범위 결정을 위해)
+    const periodMaxRates = await this.평가기간_최대달성률을_조회한다(periodIds);
+
     // 1. WbsSelfEvaluation 생성 (간소화)
     const selfEvaluations = await this.생성_자기평가들(
       employeeIds,
       periodIds,
+      periodMaxRates,
       dist,
       systemAdminId,
     );
@@ -68,6 +75,7 @@ export class Phase7EvaluationGenerator {
     const downwardEvaluations = await this.생성_하향평가들(
       employeeIds,
       periodIds,
+      periodMaxRates,
       dist,
       systemAdminId,
     );
@@ -117,11 +125,13 @@ export class Phase7EvaluationGenerator {
   private async 생성_자기평가들(
     employeeIds: string[],
     periodIds: string[],
+    periodMaxRates: Map<string, number>,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     systemAdminId: string,
   ): Promise<WbsSelfEvaluation[]> {
     const evaluations: WbsSelfEvaluation[] = [];
     const periodId = periodIds[0];
+    const maxRate = periodMaxRates.get(periodId) || 120; // 기본값 120
 
     // WBS 할당이 필요하므로 간단히 첫 번째 WBS ID를 사용 (실제로는 results에서 가져와야 함)
     const dummyWbsId = '00000000-0000-0000-0000-000000000000';
@@ -147,11 +157,15 @@ export class Phase7EvaluationGenerator {
           evaluation.completedAt = new Date();
         }
 
+        // 평가기간의 maxSelfEvaluationRate를 최대값으로 사용
+        // 최소값은 1, 평균은 maxRate의 70%, 표준편차는 maxRate의 10%
+        const mean = Math.round(maxRate * 0.7);
+        const stdDev = Math.round(maxRate * 0.1);
         evaluation.selfEvaluationScore = ScoreGeneratorUtil.generateNormalScore(
-          dist.scoreGeneration.min,
-          dist.scoreGeneration.max,
-          dist.scoreGeneration.mean!,
-          dist.scoreGeneration.stdDev!,
+          1,
+          maxRate,
+          mean,
+          stdDev,
         );
         evaluation.selfEvaluationContent = faker.lorem.paragraph();
         evaluation.performanceResult = faker.lorem.paragraph();
@@ -159,6 +173,10 @@ export class Phase7EvaluationGenerator {
         evaluations.push(evaluation);
       }
     }
+
+    this.logger.log(
+      `자기평가 점수 범위: 1-${maxRate} (평균: ${Math.round(maxRate * 0.7)})`,
+    );
 
     return await this.배치로_저장한다(
       this.wbsSelfEvaluationRepository,
@@ -170,11 +188,13 @@ export class Phase7EvaluationGenerator {
   private async 생성_하향평가들(
     employeeIds: string[],
     periodIds: string[],
+    periodMaxRates: Map<string, number>,
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     systemAdminId: string,
   ): Promise<DownwardEvaluation[]> {
     const evaluations: DownwardEvaluation[] = [];
     const periodId = periodIds[0];
+    const maxRate = periodMaxRates.get(periodId) || 120; // 기본값 120
     const dummyProjectId = '00000000-0000-0000-0000-000000000000';
 
     // 간소화: 직원별로 1개의 하향평가 생성
@@ -198,17 +218,20 @@ export class Phase7EvaluationGenerator {
         evaluation.completedAt = new Date();
       }
 
+      // 평가기간의 maxSelfEvaluationRate를 최대값으로 사용
+      // 최소값은 1, 평균은 maxRate의 70%, 표준편차는 maxRate의 10%
+      const mean = Math.round(maxRate * 0.7);
+      const stdDev = Math.round(maxRate * 0.1);
       evaluation.downwardEvaluationScore =
-        ScoreGeneratorUtil.generateNormalScore(
-          dist.scoreGeneration.min,
-          dist.scoreGeneration.max,
-          dist.scoreGeneration.mean!,
-          dist.scoreGeneration.stdDev!,
-        );
+        ScoreGeneratorUtil.generateNormalScore(1, maxRate, mean, stdDev);
       evaluation.downwardEvaluationContent = faker.lorem.paragraph();
       evaluation.createdBy = employeeIds[i + 1];
       evaluations.push(evaluation);
     }
+
+    this.logger.log(
+      `하향평가 점수 범위: 1-${maxRate} (평균: ${Math.round(maxRate * 0.7)})`,
+    );
 
     return await this.배치로_저장한다(
       this.downwardEvaluationRepository,
@@ -318,6 +341,25 @@ export class Phase7EvaluationGenerator {
   }
 
   // ==================== 유틸리티 메서드 ====================
+
+  /**
+   * 평가기간별 최대 달성률을 조회한다
+   */
+  private async 평가기간_최대달성률을_조회한다(
+    periodIds: string[],
+  ): Promise<Map<string, number>> {
+    const periods = await this.evaluationPeriodRepository.findByIds(periodIds);
+    const periodMaxRates = new Map<string, number>();
+
+    for (const period of periods) {
+      periodMaxRates.set(period.id, period.maxSelfEvaluationRate);
+      this.logger.log(
+        `평가기간 ${period.name}: maxSelfEvaluationRate = ${period.maxSelfEvaluationRate}`,
+      );
+    }
+
+    return periodMaxRates;
+  }
 
   private async 배치로_저장한다<T extends object>(
     repository: Repository<T>,

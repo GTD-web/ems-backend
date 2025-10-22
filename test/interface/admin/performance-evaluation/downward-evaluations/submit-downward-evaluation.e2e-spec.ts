@@ -73,6 +73,21 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
     ];
   }
 
+  /**
+   * 특정 직원과 다른 직원을 랜덤으로 선택
+   */
+  function getDifferentEmployee(excludeEmployee: EmployeeDto): EmployeeDto {
+    const availableEmployees = testData.employees.filter(
+      (emp) => emp.id !== excludeEmployee.id,
+    );
+    if (availableEmployees.length === 0) {
+      throw new Error('다른 직원을 찾을 수 없습니다');
+    }
+    return availableEmployees[
+      Math.floor(Math.random() * availableEmployees.length)
+    ];
+  }
+
   function getRandomEvaluationPeriod(): EvaluationPeriodDto {
     return testData.periods[
       Math.floor(Math.random() * testData.periods.length)
@@ -143,7 +158,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('저장된 1차 하향평가를 제출할 수 있어야 한다', async () => {
         // Given - 1차 하향평가 저장
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -182,7 +197,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('제출 시 isCompleted가 true로 변경되어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -221,7 +236,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('submittedBy 없이도 제출 가능해야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -271,7 +286,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('이미 제출된 평가를 재제출하면 409 에러가 발생해야 한다', async () => {
         // Given - 평가 저장
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -366,7 +381,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('저장된 2차 하향평가를 제출할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -401,7 +416,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('1차와 2차 하향평가를 독립적으로 제출할 수 있어야 한다', async () => {
         // Given - 동일한 평가자/피평가자에 대해 1차, 2차 평가 저장
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -486,7 +501,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('이미 제출된 2차 평가를 재제출하면 409 에러가 발생해야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -531,7 +546,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('1차 하향평가 ID로 직접 제출할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -565,7 +580,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('2차 하향평가 ID로 직접 제출할 수 있어야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -600,7 +615,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('평가 타입에 관계없이 ID만으로 제출 가능해야 한다', async () => {
         // Given - 1차, 2차 평가 각각 생성
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -687,7 +702,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
       it('이미 제출된 평가를 ID로 재제출하면 409 에러가 발생해야 한다', async () => {
         // Given
         const evaluatee = getRandomEmployee();
-        const evaluator = getRandomEmployee();
+        const evaluator = getDifferentEmployee(evaluatee);
         const period = getRandomEvaluationPeriod();
         const project = getRandomProject();
         const wbs = await getWbsFromProject(project.id);
@@ -731,7 +746,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
     it('제출 후 평가 내용과 점수는 변경되지 않아야 한다', async () => {
       // Given
       const evaluatee = getRandomEmployee();
-      const evaluator = getRandomEmployee();
+      const evaluator = getDifferentEmployee(evaluatee);
       const period = getRandomEvaluationPeriod();
       const project = getRandomProject();
       const wbs = await getWbsFromProject(project.id);
@@ -770,7 +785,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
     it('제출 후 updatedAt이 갱신되어야 한다', async () => {
       // Given
       const evaluatee = getRandomEmployee();
-      const evaluator = getRandomEmployee();
+      const evaluator = getDifferentEmployee(evaluatee);
       const period = getRandomEvaluationPeriod();
       const project = getRandomProject();
       const wbs = await getWbsFromProject(project.id);
@@ -814,7 +829,7 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 제출', () 
     it('제출 후 createdAt은 변경되지 않아야 한다', async () => {
       // Given
       const evaluatee = getRandomEmployee();
-      const evaluator = getRandomEmployee();
+      const evaluator = getDifferentEmployee(evaluatee);
       const period = getRandomEvaluationPeriod();
       const project = getRandomProject();
       const wbs = await getWbsFromProject(project.id);

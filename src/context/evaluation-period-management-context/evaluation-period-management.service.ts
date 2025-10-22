@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { InvalidDownwardEvaluationScoreException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 import { EvaluationPeriodDto } from '../../domain/core/evaluation-period/evaluation-period.types';
 import {
   CompleteEvaluationPeriodCommand,
@@ -61,6 +62,10 @@ import {
 export class EvaluationPeriodManagementContextService
   implements IEvaluationPeriodManagementContext
 {
+  private readonly logger = new Logger(
+    EvaluationPeriodManagementContextService.name,
+  );
+
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
@@ -480,5 +485,45 @@ export class EvaluationPeriodManagementContextService
   async 필터로_평가대상자_조회한다(filter: any): Promise<any[]> {
     const query = new GetEvaluationTargetsByFilterQuery(filter);
     return await this.queryBus.execute(query);
+  }
+
+  /**
+   * 평가 점수를 검증한다
+   * - 평가기간의 달성률 최대값을 기준으로 점수 범위를 검증
+   * @param periodId 평가기간 ID
+   * @param score 평가 점수
+   * @throws InvalidDownwardEvaluationScoreException 점수가 유효 범위를 벗어난 경우
+   */
+  async 평가_점수를_검증한다(periodId: string, score: number): Promise<void> {
+    this.logger.debug('평가 점수 검증 시작', { periodId, score });
+
+    // 1. 평가기간 조회
+    const period = await this.평가기간상세_조회한다(periodId);
+
+    if (!period) {
+      this.logger.error('평가기간을 찾을 수 없습니다', { periodId });
+      throw new InvalidDownwardEvaluationScoreException(
+        score,
+        1,
+        120,
+        `평가기간을 찾을 수 없습니다: ${periodId}`,
+      );
+    }
+
+    // 2. 평가기간의 달성률 최대값 조회
+    const maxRate = period.maxSelfEvaluationRate;
+
+    // 3. 점수 범위 검증 (1 ~ maxRate)
+    if (score < 1 || score > maxRate) {
+      this.logger.error('평가 점수가 유효 범위를 벗어났습니다', {
+        score,
+        minScore: 1,
+        maxScore: maxRate,
+        periodId,
+      });
+      throw new InvalidDownwardEvaluationScoreException(score, 1, maxRate);
+    }
+
+    this.logger.debug('평가 점수 검증 완료', { periodId, score, maxRate });
   }
 }

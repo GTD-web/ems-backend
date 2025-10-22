@@ -26,12 +26,12 @@ export class AuthService {
   ) {}
 
   /**
-   * 토큰 검증 및 사용자 정보 동기화
+   * 토큰 검증 및 사용자 정보 조회
    *
    * @param accessToken - JWT 액세스 토큰
-   * @returns 인증된 사용자 정보 및 동기화 여부
+   * @returns 인증된 사용자 정보
    */
-  async 토큰검증및사용자동기화(
+  async 토큰검증및사용자조회(
     accessToken: string,
   ): Promise<VerifyAndSyncUserResult> {
     const command: VerifyAndSyncUserCommand = { accessToken };

@@ -31,6 +31,20 @@ export class GetDepartmentHierarchyWithEmployeesQueryHandler
     const allDepartments = await this.departmentRepository.findAll();
     const allEmployees = await this.employeeRepository.findAll();
 
+    const kimEmployee = allEmployees.find((emp) => emp.name === '김종식');
+    console.log('🚀 김종식 직원:', kimEmployee);
+
+    // Web파트 부서 찾기
+    const webDept = allDepartments.find((dept) => dept.name === 'Web파트');
+    console.log('🚀 Web파트 부서:', webDept);
+
+    console.log(
+      '🚀 매칭 여부:',
+      kimEmployee?.departmentId === webDept?.externalId
+        ? '✅ 일치'
+        : '❌ 불일치',
+    );
+
     // 부서별로 직원들을 그룹화 (간결한 직원 정보만)
     // 직원의 departmentId는 외부 시스템 ID이므로 부서의 externalId로 그룹화
     const employeesByDeptExternalId = allEmployees.reduce(
