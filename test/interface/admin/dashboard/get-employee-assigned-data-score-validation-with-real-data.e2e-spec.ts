@@ -159,6 +159,35 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
 
       console.log('\n✅ 자기평가만 점수/등급 계산됨 (예상대로)');
     });
+
+    it('자기평가가 완료되어 수정 불가 상태여야 한다', async () => {
+      // EvaluationPeriodEmployeeMapping 조회
+      const mapping = await dataSource
+        .getRepository('EvaluationPeriodEmployeeMapping')
+        .createQueryBuilder('mapping')
+        .where('mapping.evaluationPeriodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.deletedAt IS NULL')
+        .getOne();
+
+      expect(mapping).not.toBeNull();
+      expect(mapping).toBeDefined();
+
+      console.log('\n📝 평가 수정 가능 상태:');
+      console.log('  자기평가:', mapping!.isSelfEvaluationEditable);
+      console.log('  1차평가:', mapping!.isPrimaryEvaluationEditable);
+      console.log('  2차평가:', mapping!.isSecondaryEvaluationEditable);
+
+      // 자기평가만 완료되었으므로 자기평가만 수정 불가
+      expect(mapping!.isSelfEvaluationEditable).toBe(false);
+      // 하향평가는 미완료이므로 수정 가능
+      expect(mapping!.isPrimaryEvaluationEditable).toBe(true);
+      expect(mapping!.isSecondaryEvaluationEditable).toBe(true);
+
+      console.log('\n✅ 자기평가만 수정 불가 상태로 설정됨 (예상대로)');
+    });
   });
 
   describe('시나리오 2: 자기평가 + 1차 하향평가 100% 완료 (실제 데이터 기반)', () => {
@@ -303,6 +332,37 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       expect(summary.secondaryDownwardEvaluation.grade).toBeNull();
 
       console.log('\n✅ 자기평가 + 1차 하향평가 점수/등급 계산됨 (예상대로)');
+    });
+
+    it('자기평가와 1차평가가 완료되어 수정 불가 상태여야 한다', async () => {
+      // EvaluationPeriodEmployeeMapping 조회
+      const mapping = await dataSource
+        .getRepository('EvaluationPeriodEmployeeMapping')
+        .createQueryBuilder('mapping')
+        .where('mapping.evaluationPeriodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.deletedAt IS NULL')
+        .getOne();
+
+      expect(mapping).not.toBeNull();
+      expect(mapping).toBeDefined();
+
+      console.log('\n📝 평가 수정 가능 상태:');
+      console.log('  자기평가:', mapping!.isSelfEvaluationEditable);
+      console.log('  1차평가:', mapping!.isPrimaryEvaluationEditable);
+      console.log('  2차평가:', mapping!.isSecondaryEvaluationEditable);
+
+      // 자기평가와 1차평가가 완료되었으므로 둘 다 수정 불가
+      expect(mapping!.isSelfEvaluationEditable).toBe(false);
+      expect(mapping!.isPrimaryEvaluationEditable).toBe(false);
+      // 2차평가는 미완료이므로 수정 가능
+      expect(mapping!.isSecondaryEvaluationEditable).toBe(true);
+
+      console.log(
+        '\n✅ 자기평가와 1차평가가 수정 불가 상태로 설정됨 (예상대로)',
+      );
     });
   });
 
@@ -494,6 +554,34 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
         `  2차 하향평가: ${summary.secondaryDownwardEvaluation.totalScore} → ${summary.secondaryDownwardEvaluation.grade}`,
       );
       console.log('\n✅ 모든 등급이 유효한 범위 내에 있음');
+    });
+
+    it('모든 평가가 완료되어 모두 수정 불가 상태여야 한다', async () => {
+      // EvaluationPeriodEmployeeMapping 조회
+      const mapping = await dataSource
+        .getRepository('EvaluationPeriodEmployeeMapping')
+        .createQueryBuilder('mapping')
+        .where('mapping.evaluationPeriodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.deletedAt IS NULL')
+        .getOne();
+
+      expect(mapping).not.toBeNull();
+      expect(mapping).toBeDefined();
+
+      console.log('\n📝 평가 수정 가능 상태:');
+      console.log('  자기평가:', mapping!.isSelfEvaluationEditable);
+      console.log('  1차평가:', mapping!.isPrimaryEvaluationEditable);
+      console.log('  2차평가:', mapping!.isSecondaryEvaluationEditable);
+
+      // 모든 평가가 완료되었으므로 모두 수정 불가
+      expect(mapping!.isSelfEvaluationEditable).toBe(false);
+      expect(mapping!.isPrimaryEvaluationEditable).toBe(false);
+      expect(mapping!.isSecondaryEvaluationEditable).toBe(false);
+
+      console.log('\n✅ 모든 평가가 수정 불가 상태로 설정됨 (예상대로)');
     });
   });
 });

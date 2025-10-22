@@ -18,6 +18,7 @@ import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 
 import {
   SeedDataConfig,
@@ -49,6 +50,8 @@ export class Phase7EvaluationGenerator {
     private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
     @InjectRepository(EvaluationLine)
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly evaluationPeriodEmployeeMappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
   ) {}
 
   async generate(
@@ -209,11 +212,20 @@ export class Phase7EvaluationGenerator {
       `자기평가 점수 범위: 1-${maxRate} (평균: ${Math.round(maxRate * 0.7)})`,
     );
 
-    return await this.배치로_저장한다(
+    const savedEvaluations = await this.배치로_저장한다(
       this.wbsSelfEvaluationRepository,
       evaluations,
       '자기평가',
     );
+
+    // 완료된 자기평가에 대해 수정 가능 상태를 false로 설정
+    await this.수정가능상태_업데이트_자기평가(
+      savedEvaluations,
+      periodId,
+      systemAdminId,
+    );
+
+    return savedEvaluations;
   }
 
   private async 생성_하향평가들(
@@ -352,11 +364,20 @@ export class Phase7EvaluationGenerator {
     );
     this.logger.log(`하향평가 점수 범위: 1-5 (평균: 3)`);
 
-    return await this.배치로_저장한다(
+    const savedEvaluations = await this.배치로_저장한다(
       this.downwardEvaluationRepository,
       evaluations,
       '하향평가',
     );
+
+    // 완료된 하향평가에 대해 수정 가능 상태를 false로 설정
+    await this.수정가능상태_업데이트_하향평가(
+      savedEvaluations,
+      periodId,
+      systemAdminId,
+    );
+
+    return savedEvaluations;
   }
 
   private async 생성_동료평가들(
@@ -495,5 +516,153 @@ export class Phase7EvaluationGenerator {
       );
     }
     return saved;
+  }
+
+  /**
+   * 완료된 자기평가에 대해 수정 가능 상태를 false로 업데이트한다
+   */
+  private async 수정가능상태_업데이트_자기평가(
+    evaluations: WbsSelfEvaluation[],
+    periodId: string,
+    updatedBy: string,
+  ): Promise<void> {
+    // 완료된 평가의 직원 ID 목록 추출
+    const completedEmployeeIds = [
+      ...new Set(
+        evaluations.filter((e) => e.isCompleted).map((e) => e.employeeId),
+      ),
+    ];
+
+    if (completedEmployeeIds.length === 0) {
+      return;
+    }
+
+    this.logger.log(
+      `자기평가 수정 불가 설정 - ${completedEmployeeIds.length}명의 직원`,
+    );
+
+    // 해당 직원들의 매핑을 조회하여 업데이트
+    const mappings = await this.evaluationPeriodEmployeeMappingRepository
+      .createQueryBuilder('mapping')
+      .where('mapping.evaluationPeriodId = :periodId', { periodId })
+      .andWhere('mapping.employeeId IN (:...employeeIds)', {
+        employeeIds: completedEmployeeIds,
+      })
+      .andWhere('mapping.deletedAt IS NULL')
+      .getMany();
+
+    // 수정 가능 상태를 false로 변경
+    for (const mapping of mappings) {
+      mapping.isSelfEvaluationEditable = false;
+      mapping.updatedBy = updatedBy;
+      mapping.updatedAt = new Date();
+    }
+
+    // 배치로 저장
+    if (mappings.length > 0) {
+      await this.evaluationPeriodEmployeeMappingRepository.save(mappings);
+      this.logger.log(
+        `자기평가 수정 불가 설정 완료 - ${mappings.length}개 매핑 업데이트`,
+      );
+    }
+  }
+
+  /**
+   * 완료된 하향평가에 대해 수정 가능 상태를 false로 업데이트한다
+   */
+  private async 수정가능상태_업데이트_하향평가(
+    evaluations: DownwardEvaluation[],
+    periodId: string,
+    updatedBy: string,
+  ): Promise<void> {
+    // 1차 평가가 완료된 직원 ID 목록
+    const primaryCompletedEmployeeIds = [
+      ...new Set(
+        evaluations
+          .filter(
+            (e) =>
+              e.isCompleted &&
+              e.evaluationType === DownwardEvaluationType.PRIMARY,
+          )
+          .map((e) => e.employeeId),
+      ),
+    ];
+
+    // 2차 평가가 완료된 직원 ID 목록
+    const secondaryCompletedEmployeeIds = [
+      ...new Set(
+        evaluations
+          .filter(
+            (e) =>
+              e.isCompleted &&
+              e.evaluationType === DownwardEvaluationType.SECONDARY,
+          )
+          .map((e) => e.employeeId),
+      ),
+    ];
+
+    // 1차 평가 수정 불가 설정
+    if (primaryCompletedEmployeeIds.length > 0) {
+      this.logger.log(
+        `1차 하향평가 수정 불가 설정 - ${primaryCompletedEmployeeIds.length}명의 직원`,
+      );
+
+      const primaryMappings =
+        await this.evaluationPeriodEmployeeMappingRepository
+          .createQueryBuilder('mapping')
+          .where('mapping.evaluationPeriodId = :periodId', { periodId })
+          .andWhere('mapping.employeeId IN (:...employeeIds)', {
+            employeeIds: primaryCompletedEmployeeIds,
+          })
+          .andWhere('mapping.deletedAt IS NULL')
+          .getMany();
+
+      for (const mapping of primaryMappings) {
+        mapping.isPrimaryEvaluationEditable = false;
+        mapping.updatedBy = updatedBy;
+        mapping.updatedAt = new Date();
+      }
+
+      if (primaryMappings.length > 0) {
+        await this.evaluationPeriodEmployeeMappingRepository.save(
+          primaryMappings,
+        );
+        this.logger.log(
+          `1차 하향평가 수정 불가 설정 완료 - ${primaryMappings.length}개 매핑 업데이트`,
+        );
+      }
+    }
+
+    // 2차 평가 수정 불가 설정
+    if (secondaryCompletedEmployeeIds.length > 0) {
+      this.logger.log(
+        `2차 하향평가 수정 불가 설정 - ${secondaryCompletedEmployeeIds.length}명의 직원`,
+      );
+
+      const secondaryMappings =
+        await this.evaluationPeriodEmployeeMappingRepository
+          .createQueryBuilder('mapping')
+          .where('mapping.evaluationPeriodId = :periodId', { periodId })
+          .andWhere('mapping.employeeId IN (:...employeeIds)', {
+            employeeIds: secondaryCompletedEmployeeIds,
+          })
+          .andWhere('mapping.deletedAt IS NULL')
+          .getMany();
+
+      for (const mapping of secondaryMappings) {
+        mapping.isSecondaryEvaluationEditable = false;
+        mapping.updatedBy = updatedBy;
+        mapping.updatedAt = new Date();
+      }
+
+      if (secondaryMappings.length > 0) {
+        await this.evaluationPeriodEmployeeMappingRepository.save(
+          secondaryMappings,
+        );
+        this.logger.log(
+          `2차 하향평가 수정 불가 설정 완료 - ${secondaryMappings.length}개 매핑 업데이트`,
+        );
+      }
+    }
   }
 }
