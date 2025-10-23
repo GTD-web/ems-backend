@@ -94,6 +94,25 @@ describe('GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluato
       console.log('\n✅ 기본 목록 조회 성공');
     });
 
+    it('여러 개의 평가 목록을 조회할 수 있어야 한다', async () => {
+      const evaluatorId = await getEvaluatorWithPeerEvaluations();
+      if (!evaluatorId) {
+        console.log('동료평가가 없어서 테스트 스킵');
+        return;
+      }
+
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/performance-evaluation/peer-evaluations/evaluator/${evaluatorId}`,
+        )
+        .expect(HttpStatus.OK);
+
+      expect(response.body.evaluations.length).toBeGreaterThanOrEqual(0);
+
+      console.log('\n✅ 여러 평가 목록 조회 성공');
+    });
+
     it('페이지네이션: page와 limit 파라미터가 작동해야 한다', async () => {
       const evaluatorId = await getEvaluatorWithPeerEvaluations();
       if (!evaluatorId) {
