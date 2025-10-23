@@ -28,6 +28,8 @@ import {
   PeerEvaluationDetailResponseDto,
   GetEvaluatorAssignedEvaluateesQueryDto,
   AssignedEvaluateeDto,
+  UpsertPeerEvaluationAnswersDto,
+  UpsertPeerEvaluationAnswersResponseDto,
 } from '../dto/peer-evaluation.dto';
 
 /**
@@ -709,6 +711,63 @@ export function CancelPeerEvaluationsByPeriod() {
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
       description: '피평가자 또는 평가기간을 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 동료평가 질문 답변 저장/업데이트 API 데코레이터
+ */
+export function UpsertPeerEvaluationAnswers() {
+  return applyDecorators(
+    Post(':id/answers'),
+    HttpCode(HttpStatus.CREATED),
+    ApiOperation({
+      summary: '동료평가 질문 답변 저장/업데이트 (Upsert)',
+      description: `동료평가에 매핑된 질문들에 대한 답변을 저장하거나 업데이트합니다.
+
+**동작:**
+- 동료평가에 매핑된 질문의 답변을 저장/업데이트 (Upsert)
+- 기존 답변이 있으면 업데이트
+- 기존 답변이 없으면 신규 저장
+- 동료평가 상태가 PENDING이면 자동으로 IN_PROGRESS로 변경
+- 매핑되지 않은 질문의 답변은 무시 (스킵)
+
+**테스트 케이스:**
+- 단일 질문 답변 저장: 1개의 질문에 대한 답변 저장 성공
+- 복수 질문 답변 저장: 여러 질문에 대한 답변을 한 번에 저장
+- 답변 업데이트: 기존 답변이 있을 때 새 답변으로 업데이트됨
+- 상태 변경 확인: PENDING 상태에서 답변 저장 시 IN_PROGRESS로 변경됨
+- 매핑되지 않은 질문 무시: 동료평가에 매핑되지 않은 질문의 답변은 스킵됨
+- 잘못된 동료평가 ID: 유효하지 않은 UUID 형식의 ID로 요청 시 400 에러
+- 존재하지 않는 동료평가: 존재하지 않는 ID로 요청 시 404 에러
+- 취소된 동료평가: 취소된 동료평가에 답변 저장 시 404 에러
+- 답변 목록 누락: answers 배열이 비어있거나 누락 시 400 에러
+- 필수 필드 누락: questionId 또는 answer 누락 시 400 에러`,
+    }),
+    ApiParam({
+      name: 'id',
+      description: '동료평가 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    ApiBody({
+      type: UpsertPeerEvaluationAnswersDto,
+      description: '답변 저장/업데이트 정보',
+    }),
+    ApiResponse({
+      status: HttpStatus.CREATED,
+      description: '답변이 성공적으로 저장/업데이트되었습니다.',
+      type: UpsertPeerEvaluationAnswersResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '동료평가를 찾을 수 없거나 취소된 동료평가입니다.',
     }),
   );
 }

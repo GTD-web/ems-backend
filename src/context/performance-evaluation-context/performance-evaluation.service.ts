@@ -53,6 +53,7 @@ import {
   RemoveQuestionFromPeerEvaluationCommand,
   UpdatePeerEvaluationQuestionOrderCommand,
   GetPeerEvaluationQuestionsQuery,
+  UpsertPeerEvaluationAnswersCommand,
   type PeerEvaluationQuestionDetail,
 } from './handlers/peer-evaluation';
 
@@ -1108,6 +1109,24 @@ export class PerformanceEvaluationService
 
     const result = await this.queryBus.execute(query);
     return result;
+  }
+
+  /**
+   * 동료평가 질문에 대한 답변을 저장/업데이트한다
+   */
+  async 동료평가_답변을_저장한다(
+    peerEvaluationId: string,
+    answers: Array<{ questionId: string; answer: string }>,
+    answeredBy: string,
+  ): Promise<number> {
+    const command = new UpsertPeerEvaluationAnswersCommand(
+      peerEvaluationId,
+      answers,
+      answeredBy,
+    );
+
+    const savedCount = await this.commandBus.execute(command);
+    return savedCount;
   }
 
   // ==================== 산출물 관련 메서드 ====================

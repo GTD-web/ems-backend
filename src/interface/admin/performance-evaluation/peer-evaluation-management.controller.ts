@@ -15,6 +15,7 @@ import {
   GetEvaluatorAssignedEvaluatees,
   CancelPeerEvaluation,
   CancelPeerEvaluationsByPeriod,
+  UpsertPeerEvaluationAnswers,
 } from './decorators/peer-evaluation-api.decorators';
 import {
   RequestPeerEvaluationDto,
@@ -27,6 +28,8 @@ import {
   PeerEvaluationListResponseDto,
   GetEvaluatorAssignedEvaluateesQueryDto,
   AssignedEvaluateeDto,
+  UpsertPeerEvaluationAnswersDto,
+  UpsertPeerEvaluationAnswersResponseDto,
 } from './dto/peer-evaluation.dto';
 
 /**
@@ -235,6 +238,33 @@ export class PeerEvaluationManagementController {
     return {
       message: '동료평가 요청들이 성공적으로 취소되었습니다.',
       cancelledCount: result.cancelledCount,
+    };
+  }
+
+  /**
+   * 동료평가 질문 답변 저장/업데이트 (Upsert)
+   */
+  @UpsertPeerEvaluationAnswers()
+  async upsertPeerEvaluationAnswers(
+    @ParseUUID('id') id: string,
+    @Body() dto: UpsertPeerEvaluationAnswersDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<UpsertPeerEvaluationAnswersResponseDto> {
+    const answeredBy = user.id;
+
+    const result =
+      await this.peerEvaluationBusinessService.동료평가_답변을_저장한다({
+        peerEvaluationId: dto.peerEvaluationId,
+        answers: dto.answers.map((a) => ({
+          questionId: a.questionId,
+          answer: a.answer,
+        })),
+        answeredBy,
+      });
+
+    return {
+      savedCount: result.savedCount,
+      message: '답변이 성공적으로 저장되었습니다.',
     };
   }
 }

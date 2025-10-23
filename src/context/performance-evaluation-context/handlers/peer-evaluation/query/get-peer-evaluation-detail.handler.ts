@@ -111,6 +111,9 @@ export interface PeerEvaluationDetailResult {
     minScore?: number;
     maxScore?: number;
     displayOrder: number;
+    answer?: string;
+    answeredAt?: Date;
+    answeredBy?: string;
   }[];
 }
 
@@ -249,7 +252,7 @@ export class GetPeerEvaluationDetailHandler
       throw new NotFoundException('존재하지 않는 동료평가입니다.');
     }
 
-    // 평가질문 조회
+    // 평가질문 조회 (답변 정보 포함)
     const questions = await this.questionMappingRepository
       .createQueryBuilder('mapping')
       .leftJoin(
@@ -259,6 +262,9 @@ export class GetPeerEvaluationDetailHandler
       )
       .select([
         'mapping.displayOrder AS displayorder',
+        'mapping.answer AS mapping_answer',
+        'mapping.answeredAt AS mapping_answeredat',
+        'mapping.answeredBy AS mapping_answeredby',
         'question.id AS question_id',
         'question.text AS question_text',
         'question.minScore AS question_minscore',
@@ -372,6 +378,9 @@ export class GetPeerEvaluationDetailHandler
         minScore: q.question_minscore,
         maxScore: q.question_maxscore,
         displayOrder: q.displayorder,
+        answer: q.mapping_answer,
+        answeredAt: q.mapping_answeredat,
+        answeredBy: q.mapping_answeredby,
       })),
     };
   }

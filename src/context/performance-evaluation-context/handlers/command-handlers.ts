@@ -24,6 +24,7 @@ import {
   AddMultipleQuestionsToPeerEvaluationHandler,
   RemoveQuestionFromPeerEvaluationHandler,
   UpdatePeerEvaluationQuestionOrderHandler,
+  UpsertPeerEvaluationAnswersHandler,
 } from './peer-evaluation';
 
 // 하향평가
@@ -86,6 +87,7 @@ export const CommandHandlers = [
   AddMultipleQuestionsToPeerEvaluationHandler,
   RemoveQuestionFromPeerEvaluationHandler,
   UpdatePeerEvaluationQuestionOrderHandler,
+  UpsertPeerEvaluationAnswersHandler,
 
   // 하향평가 커맨드 핸들러
   CreateDownwardEvaluationHandler,

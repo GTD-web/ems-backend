@@ -734,6 +734,24 @@ export class EvaluationQuestionInDetailDto {
     example: 1,
   })
   displayOrder: number;
+
+  @ApiPropertyOptional({
+    description: '답변 내용',
+    example: '팀원과의 협업 능력이 뛰어나며, 적극적으로 의견을 나눕니다.',
+  })
+  answer?: string;
+
+  @ApiPropertyOptional({
+    description: '답변 작성일',
+    example: '2024-01-15T10:30:00Z',
+  })
+  answeredAt?: Date;
+
+  @ApiPropertyOptional({
+    description: '답변 작성자 ID',
+    example: '550e8400-e29b-41d4-a716-446655440002',
+  })
+  answeredBy?: string;
 }
 
 /**
@@ -902,4 +920,70 @@ export class PeerEvaluationDetailResponseDto {
     type: [EvaluationQuestionInDetailDto],
   })
   questions: EvaluationQuestionInDetailDto[];
+}
+
+/**
+ * 동료평가 질문 답변 항목 DTO
+ */
+export class PeerEvaluationAnswerItemDto {
+  @ApiProperty({
+    description: '질문 ID',
+    example: '550e8400-e29b-41d4-a716-446655440010',
+  })
+  @IsUUID()
+  questionId: string;
+
+  @ApiProperty({
+    description: '답변 내용',
+    example: '팀원과의 협업 능력이 뛰어나며, 적극적으로 의견을 나눕니다.',
+  })
+  @IsString()
+  answer: string;
+}
+
+/**
+ * 동료평가 질문 답변 저장/업데이트 (Upsert) DTO
+ */
+export class UpsertPeerEvaluationAnswersDto {
+  @ApiProperty({
+    description: '동료평가 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsUUID()
+  peerEvaluationId: string;
+
+  @ApiProperty({
+    description: '답변 목록 (questionId와 answer 쌍)',
+    type: [PeerEvaluationAnswerItemDto],
+    example: [
+      {
+        questionId: '550e8400-e29b-41d4-a716-446655440010',
+        answer: '팀원과의 협업 능력이 뛰어나며, 적극적으로 의견을 나눕니다.',
+      },
+      {
+        questionId: '550e8400-e29b-41d4-a716-446655440011',
+        answer: '업무 처리 속도가 빠르고 정확합니다.',
+      },
+    ],
+  })
+  @ArrayNotEmpty({ message: '답변 목록은 최소 1개 이상이어야 합니다.' })
+  @Type(() => PeerEvaluationAnswerItemDto)
+  answers: PeerEvaluationAnswerItemDto[];
+}
+
+/**
+ * 동료평가 질문 답변 저장 응답 DTO
+ */
+export class UpsertPeerEvaluationAnswersResponseDto {
+  @ApiProperty({
+    description: '저장/업데이트된 답변 개수',
+    example: 2,
+  })
+  savedCount: number;
+
+  @ApiProperty({
+    description: '응답 메시지',
+    example: '답변이 성공적으로 저장되었습니다.',
+  })
+  message: string;
 }

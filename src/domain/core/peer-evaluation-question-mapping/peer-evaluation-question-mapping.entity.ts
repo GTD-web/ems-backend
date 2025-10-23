@@ -42,6 +42,27 @@ export class PeerEvaluationQuestionMapping
   })
   displayOrder: number;
 
+  @Column({
+    type: 'text',
+    nullable: true,
+    comment: '답변 내용',
+  })
+  answer?: string;
+
+  @Column({
+    type: 'timestamp with time zone',
+    nullable: true,
+    comment: '답변일',
+  })
+  answeredAt?: Date;
+
+  @Column({
+    type: 'uuid',
+    nullable: true,
+    comment: '답변자 ID',
+  })
+  answeredBy?: string;
+
   constructor(
     data?: CreatePeerEvaluationQuestionMappingDto & { createdBy: string },
   ) {
@@ -92,6 +113,37 @@ export class PeerEvaluationQuestionMapping
   }
 
   /**
+   * 답변이 있는가
+   */
+  답변이_있는가(): boolean {
+    return (
+      this.answer !== undefined &&
+      this.answer !== null &&
+      this.answer.trim() !== ''
+    );
+  }
+
+  /**
+   * 답변을 저장한다
+   */
+  답변을_저장한다(answer: string, answeredBy: string): void {
+    this.answer = answer;
+    this.answeredAt = new Date();
+    this.answeredBy = answeredBy;
+    this.메타데이터를_업데이트한다(answeredBy);
+  }
+
+  /**
+   * 답변을 삭제한다
+   */
+  답변을_삭제한다(deletedBy: string): void {
+    this.answer = undefined;
+    this.answeredAt = undefined;
+    this.answeredBy = undefined;
+    this.메타데이터를_업데이트한다(deletedBy);
+  }
+
+  /**
    * DTO로 변환한다
    */
   DTO로_변환한다(): PeerEvaluationQuestionMappingDto {
@@ -101,6 +153,9 @@ export class PeerEvaluationQuestionMapping
       questionId: this.questionId,
       questionGroupId: this.questionGroupId,
       displayOrder: this.displayOrder,
+      answer: this.answer,
+      answeredAt: this.answeredAt,
+      answeredBy: this.answeredBy,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt,
     };

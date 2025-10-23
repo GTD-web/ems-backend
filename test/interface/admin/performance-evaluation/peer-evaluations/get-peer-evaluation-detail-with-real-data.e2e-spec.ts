@@ -434,5 +434,145 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id (실제 데이�
 
       console.log('\n✅ 초기 status pending 확인');
     });
+
+    it('답변을 저장한 후 상세 조회 시 답변 정보가 포함되어야 한다', async () => {
+      const employees = await getTwoEmployees();
+      const period = await getEvaluationPeriod();
+      if (!employees || !period) {
+        console.log('데이터가 없어서 테스트 스킵');
+        return;
+      }
+
+      // 질문 2개 가져오기
+      const questions = await dataSource.query(
+        `SELECT id FROM evaluation_question WHERE "deletedAt" IS NULL LIMIT 2`,
+      );
+      if (questions.length < 2) {
+        console.log('질문 데이터가 부족하여 테스트 스킵');
+        return;
+      }
+
+      // 동료평가 생성
+      const createResponse = await testSuite
+        .request()
+        .post('/admin/performance-evaluation/peer-evaluations/requests')
+        .send({
+          evaluatorId: employees.evaluator.id,
+          evaluateeId: employees.evaluatee.id,
+          periodId: period.id,
+          questionIds: [questions[0].id, questions[1].id],
+        });
+
+      if (createResponse.status !== 201) {
+        console.log('평가 생성 실패, 테스트 스킵');
+        return;
+      }
+
+      const evaluationId = createResponse.body.id;
+
+      // 답변 저장
+      const answersData = [
+        {
+          questionId: questions[0].id,
+          answer: '첫 번째 질문에 대한 답변입니다.',
+        },
+        {
+          questionId: questions[1].id,
+          answer: '두 번째 질문에 대한 답변입니다.',
+        },
+      ];
+
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/peer-evaluations/${evaluationId}/answers`,
+        )
+        .send({
+          peerEvaluationId: evaluationId,
+          answers: answersData,
+        })
+        .expect(HttpStatus.CREATED);
+
+      // 상세 조회
+      const response = await testSuite
+        .request()
+        .get(`/admin/performance-evaluation/peer-evaluations/${evaluationId}`)
+        .expect(HttpStatus.OK);
+
+      // 질문 목록 확인
+      expect(response.body.questions).toBeDefined();
+      expect(response.body.questions.length).toBeGreaterThan(0);
+
+      // 답변이 포함된 질문 확인
+      const answeredQuestions = response.body.questions.filter(
+        (q: any) => q.answer !== null && q.answer !== undefined,
+      );
+      expect(answeredQuestions.length).toBeGreaterThan(0);
+
+      // 첫 번째 답변 확인
+      const firstAnsweredQuestion = answeredQuestions[0];
+      expect(firstAnsweredQuestion).toHaveProperty('answer');
+      expect(firstAnsweredQuestion).toHaveProperty('answeredAt');
+      expect(firstAnsweredQuestion).toHaveProperty('answeredBy');
+      expect(typeof firstAnsweredQuestion.answer).toBe('string');
+      expect(firstAnsweredQuestion.answer.length).toBeGreaterThan(0);
+
+      console.log('\n✅ 답변 정보 포함 확인');
+      console.log('  - 답변된 질문 수:', answeredQuestions.length);
+      console.log('  - 첫 번째 답변:', firstAnsweredQuestion.answer);
+    });
+
+    it('답변이 없는 질문은 answer 필드가 null이어야 한다', async () => {
+      const employees = await getTwoEmployees();
+      const period = await getEvaluationPeriod();
+      if (!employees || !period) {
+        console.log('데이터가 없어서 테스트 스킵');
+        return;
+      }
+
+      // 질문 포함하여 동료평가 생성
+      const questions = await dataSource.query(
+        `SELECT id FROM evaluation_question WHERE "deletedAt" IS NULL LIMIT 2`,
+      );
+      if (questions.length < 2) {
+        console.log('질문 데이터가 부족하여 테스트 스킵');
+        return;
+      }
+
+      const createResponse = await testSuite
+        .request()
+        .post('/admin/performance-evaluation/peer-evaluations/requests')
+        .send({
+          evaluatorId: employees.evaluator.id,
+          evaluateeId: employees.evaluatee.id,
+          periodId: period.id,
+          questionIds: [questions[0].id, questions[1].id],
+        });
+
+      if (createResponse.status !== 201) {
+        console.log('평가 생성 실패, 테스트 스킵');
+        return;
+      }
+
+      const evaluationId = createResponse.body.id;
+
+      // 답변 저장하지 않고 바로 조회
+      const response = await testSuite
+        .request()
+        .get(`/admin/performance-evaluation/peer-evaluations/${evaluationId}`)
+        .expect(HttpStatus.OK);
+
+      // 모든 질문의 answer가 null이어야 함
+      expect(response.body.questions).toBeDefined();
+      expect(response.body.questions.length).toBeGreaterThan(0);
+
+      response.body.questions.forEach((question: any) => {
+        expect(question.answer).toBeUndefined();
+        expect(question.answeredAt).toBeUndefined();
+        expect(question.answeredBy).toBeUndefined();
+      });
+
+      console.log('\n✅ 답변 없는 질문 확인');
+    });
   });
 });

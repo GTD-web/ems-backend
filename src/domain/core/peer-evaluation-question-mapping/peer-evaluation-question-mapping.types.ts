@@ -34,6 +34,12 @@ export interface PeerEvaluationQuestionMappingDto {
   questionGroupId?: string;
   /** 표시 순서 */
   displayOrder: number;
+  /** 답변 내용 */
+  answer?: string;
+  /** 답변일 */
+  answeredAt?: Date;
+  /** 답변자 ID */
+  answeredBy?: string;
   /** 생성일시 */
   createdAt: Date;
   /** 수정일시 */

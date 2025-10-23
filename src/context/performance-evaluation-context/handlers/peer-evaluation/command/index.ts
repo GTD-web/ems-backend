@@ -47,3 +47,9 @@ export {
   AddMultipleQuestionsToPeerEvaluationCommand,
   AddMultipleQuestionsToPeerEvaluationHandler,
 } from './add-multiple-questions-to-peer-evaluation.handler';
+
+export {
+  UpsertPeerEvaluationAnswersCommand,
+  UpsertPeerEvaluationAnswersHandler,
+  type AnswerItem,
+} from './upsert-peer-evaluation-answers.handler';

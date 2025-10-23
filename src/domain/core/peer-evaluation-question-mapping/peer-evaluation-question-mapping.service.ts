@@ -334,4 +334,29 @@ export class PeerEvaluationQuestionMappingService
       order: { displayOrder: 'ASC' },
     });
   }
+
+  /**
+   * 동료평가와 질문으로 매핑을 조회한다
+   */
+  async 동료평가와_질문으로_조회한다(
+    peerEvaluationId: string,
+    questionId: string,
+  ): Promise<PeerEvaluationQuestionMapping | null> {
+    this.logger.log(
+      `동료평가와 질문으로 매핑 조회 - peerEvaluationId: ${peerEvaluationId}, questionId: ${questionId}`,
+    );
+
+    return await this.mappingRepository.findOne({
+      where: { peerEvaluationId, questionId, deletedAt: IsNull() },
+    });
+  }
+
+  /**
+   * 매핑을 저장한다
+   */
+  async 저장한다(
+    mapping: PeerEvaluationQuestionMapping,
+  ): Promise<PeerEvaluationQuestionMapping> {
+    return await this.mappingRepository.save(mapping);
+  }
 }

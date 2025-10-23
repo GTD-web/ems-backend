@@ -531,4 +531,43 @@ export class PeerEvaluationBusinessService {
       query,
     );
   }
+
+  /**
+   * 동료평가 질문에 대한 답변을 저장/업데이트한다
+   *
+   * 동료평가에 매핑된 질문들에 대한 답변을 upsert합니다.
+   * - 기존 답변이 있으면 업데이트
+   * - 기존 답변이 없으면 신규 저장
+   * - 동료평가 상태를 자동으로 '진행중'으로 변경
+   */
+  async 동료평가_답변을_저장한다(params: {
+    peerEvaluationId: string;
+    answers: Array<{
+      questionId: string;
+      answer: string;
+    }>;
+    answeredBy: string;
+  }): Promise<{ savedCount: number }> {
+    this.logger.log('동료평가 답변 저장 비즈니스 로직 시작', {
+      peerEvaluationId: params.peerEvaluationId,
+      answersCount: params.answers.length,
+    });
+
+    const savedCount =
+      await this.performanceEvaluationService.동료평가_답변을_저장한다(
+        params.peerEvaluationId,
+        params.answers,
+        params.answeredBy,
+      );
+
+    this.logger.log('동료평가 답변 저장 완료', {
+      peerEvaluationId: params.peerEvaluationId,
+      savedCount,
+    });
+
+    // TODO: 알림 발송 (답변 저장 알림)
+    // await this.notificationService.동료평가_답변저장_알림(params.peerEvaluationId);
+
+    return { savedCount };
+  }
 }
