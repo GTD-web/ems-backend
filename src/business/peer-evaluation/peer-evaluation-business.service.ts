@@ -469,7 +469,6 @@ export class PeerEvaluationBusinessService {
     evaluatorId?: string;
     evaluateeId?: string;
     periodId?: string;
-    projectId?: string;
     status?: string;
     page?: number;
     limit?: number;
@@ -482,7 +481,6 @@ export class PeerEvaluationBusinessService {
       params.evaluatorId,
       params.evaluateeId,
       params.periodId,
-      params.projectId,
       params.status,
       params.page,
       params.limit,

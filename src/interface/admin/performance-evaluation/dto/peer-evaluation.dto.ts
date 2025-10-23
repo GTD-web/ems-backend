@@ -285,14 +285,6 @@ export class PeerEvaluationFilterDto {
   periodId?: string;
 
   @ApiPropertyOptional({
-    description: '프로젝트 ID',
-    example: '550e8400-e29b-41d4-a716-446655440004',
-  })
-  @IsOptional()
-  @IsUUID()
-  projectId?: string;
-
-  @ApiPropertyOptional({
     description: '평가 상태',
     example: 'DRAFT',
     enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],

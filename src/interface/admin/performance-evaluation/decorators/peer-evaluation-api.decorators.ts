@@ -354,7 +354,7 @@ export function GetEvaluatorPeerEvaluations() {
 
 **동작:**
 - 평가자에게 할당된 모든 동료평가 목록 조회
-- 다양한 필터 조건 지원 (피평가자, 평가기간, 프로젝트, 상태)
+- 다양한 필터 조건 지원 (피평가자, 평가기간, 상태)
 - 페이지네이션 지원 (기본값: page=1, limit=10)
 - 평가 기본 정보만 포함 (상세 정보는 detail 엔드포인트 사용)
 
@@ -392,12 +392,6 @@ export function GetEvaluatorPeerEvaluations() {
       description: '평가기간 ID',
       required: false,
       example: '550e8400-e29b-41d4-a716-446655440002',
-    }),
-    ApiQuery({
-      name: 'projectId',
-      description: '프로젝트 ID',
-      required: false,
-      example: '550e8400-e29b-41d4-a716-446655440004',
     }),
     ApiQuery({
       name: 'status',

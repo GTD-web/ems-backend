@@ -163,7 +163,6 @@ export class PeerEvaluationManagementController {
       evaluatorId,
       evaluateeId: filter.evaluateeId,
       periodId: filter.periodId,
-      projectId: filter.projectId,
       status: filter.status,
       page: filter.page || 1,
       limit: filter.limit || 10,

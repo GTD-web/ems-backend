@@ -16,7 +16,6 @@ export class GetPeerEvaluationListQuery {
     public readonly evaluatorId?: string,
     public readonly evaluateeId?: string,
     public readonly periodId?: string,
-    public readonly projectId?: string,
     public readonly status?: string,
     public readonly page: number = 1,
     public readonly limit: number = 10,
@@ -44,21 +43,12 @@ export class GetPeerEvaluationListHandler
     page: number;
     limit: number;
   }> {
-    const {
-      evaluatorId,
-      evaluateeId,
-      periodId,
-      projectId,
-      status,
-      page,
-      limit,
-    } = query;
+    const { evaluatorId, evaluateeId, periodId, status, page, limit } = query;
 
     this.logger.log('동료평가 목록 조회 핸들러 실행', {
       evaluatorId,
       evaluateeId,
       periodId,
-      projectId,
       status,
       page,
       limit,
@@ -84,10 +74,6 @@ export class GetPeerEvaluationListHandler
 
     if (periodId) {
       queryBuilder.andWhere('evaluation.periodId = :periodId', { periodId });
-    }
-
-    if (projectId) {
-      queryBuilder.andWhere('evaluation.projectId = :projectId', { projectId });
     }
 
     if (status) {

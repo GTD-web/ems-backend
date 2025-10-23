@@ -402,7 +402,7 @@ export class Phase7EvaluationGenerator {
     const periodId = periodIds[0];
 
     // 간소화: 일부 직원에 대해서만 동료평가 생성
-    for (let i = 0; i < Math.min(5, employeeIds.length); i++) {
+    for (let i = 0; i < Math.min(20, employeeIds.length); i++) {
       const evaluation = new PeerEvaluation();
       evaluation.evaluateeId = employeeIds[i];
       evaluation.evaluatorId = employeeIds[(i + 1) % employeeIds.length];
