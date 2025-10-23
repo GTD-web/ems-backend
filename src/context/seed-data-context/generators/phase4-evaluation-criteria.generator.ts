@@ -174,8 +174,19 @@ export class Phase4EvaluationCriteriaGenerator {
     // 부서별 직원 그룹화 (각 부서의 첫 번째 직원이 부서장 역할)
     const departmentMap = await this.부서별_직원_그룹화(employeeIds);
 
-    for (let i = 0; i < employeeIds.length; i++) {
-      const employeeId = employeeIds[i];
+    // WBS 할당 조회 (wbsItemId를 매핑에 포함하기 위함)
+    const wbsAssignments = await this.wbsAssignmentRepository.find({
+      where: { deletedAt: null as any },
+    });
+
+    this.logger.log(
+      `WBS 할당 ${wbsAssignments.length}개에 대해 평가라인 매핑 생성`,
+    );
+
+    // WBS 할당별로 평가라인 매핑 생성
+    for (const assignment of wbsAssignments) {
+      const employeeId = assignment.employeeId;
+      const wbsItemId = assignment.wbsItemId;
 
       // Primary 평가자 결정
       const primaryEvaluator = await this.일차평가자_선택(
@@ -188,6 +199,7 @@ export class Phase4EvaluationCriteriaGenerator {
       const primaryMapping = new EvaluationLineMapping();
       primaryMapping.employeeId = employeeId;
       primaryMapping.evaluatorId = primaryEvaluator;
+      primaryMapping.wbsItemId = wbsItemId; // wbsItemId 추가
       primaryMapping.evaluationLineId = primaryLine.id;
       primaryMapping.createdBy = systemAdminId;
       mappings.push(primaryMapping);
@@ -209,6 +221,7 @@ export class Phase4EvaluationCriteriaGenerator {
           const secondaryMapping = new EvaluationLineMapping();
           secondaryMapping.employeeId = employeeId;
           secondaryMapping.evaluatorId = secondaryEvaluator;
+          secondaryMapping.wbsItemId = wbsItemId; // wbsItemId 추가
           secondaryMapping.evaluationLineId = secondaryLine.id;
           secondaryMapping.createdBy = systemAdminId;
           mappings.push(secondaryMapping);

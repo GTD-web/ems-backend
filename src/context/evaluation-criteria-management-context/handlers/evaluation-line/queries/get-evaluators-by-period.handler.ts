@@ -1,6 +1,7 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Logger } from '@nestjs/common';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
@@ -50,6 +51,8 @@ export interface EvaluatorsByPeriodResult {
 export class GetEvaluatorsByPeriodHandler
   implements IQueryHandler<GetEvaluatorsByPeriodQuery, EvaluatorsByPeriodResult>
 {
+  private readonly logger = new Logger(GetEvaluatorsByPeriodHandler.name);
+
   constructor(
     @InjectRepository(EvaluationLineMapping)
     private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
@@ -66,6 +69,10 @@ export class GetEvaluatorsByPeriodHandler
   async execute(
     query: GetEvaluatorsByPeriodQuery,
   ): Promise<EvaluatorsByPeriodResult> {
+    this.logger.log(
+      `[GetEvaluatorsByPeriod] 평가자 목록 조회 시작 - periodId: ${query.periodId}, type: ${query.type}`,
+    );
+
     // 1. 평가라인 조회 (타입에 따라 필터링)
     const evaluationLinesQuery =
       this.evaluationLineRepository.createQueryBuilder('line');
@@ -85,9 +92,16 @@ export class GetEvaluatorsByPeriodHandler
       });
     }
 
+    evaluationLinesQuery.andWhere('line.deletedAt IS NULL');
+
     const evaluationLines = await evaluationLinesQuery.getMany();
 
+    this.logger.log(
+      `[GetEvaluatorsByPeriod] 1단계: 평가라인 조회 완료 - ${evaluationLines.length}개`,
+    );
+
     if (evaluationLines.length === 0) {
+      this.logger.warn('[GetEvaluatorsByPeriod] 평가라인이 없어 빈 배열 반환');
       return {
         periodId: query.periodId,
         type: query.type,
@@ -106,11 +120,18 @@ export class GetEvaluatorsByPeriodHandler
     );
 
     // 2. 해당 평가기간의 WBS 할당 조회
-    const wbsAssignments = await this.evaluationWbsAssignmentRepository.find({
-      where: { periodId: query.periodId },
-    });
+    const wbsAssignments = await this.evaluationWbsAssignmentRepository
+      .createQueryBuilder('assignment')
+      .where('assignment.periodId = :periodId', { periodId: query.periodId })
+      .andWhere('assignment.deletedAt IS NULL')
+      .getMany();
+
+    this.logger.log(
+      `[GetEvaluatorsByPeriod] 2단계: WBS 할당 조회 완료 - ${wbsAssignments.length}개`,
+    );
 
     if (wbsAssignments.length === 0) {
+      this.logger.warn('[GetEvaluatorsByPeriod] WBS 할당이 없어 빈 배열 반환');
       return {
         periodId: query.periodId,
         type: query.type,
@@ -127,9 +148,17 @@ export class GetEvaluatorsByPeriodHandler
         lineIds,
       })
       .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
+      .andWhere('mapping.deletedAt IS NULL')
       .getMany();
 
+    this.logger.log(
+      `[GetEvaluatorsByPeriod] 3단계: 평가라인 매핑 조회 완료 - ${mappings.length}개`,
+    );
+
     if (mappings.length === 0) {
+      this.logger.warn(
+        '[GetEvaluatorsByPeriod] 평가라인 매핑이 없어 빈 배열 반환',
+      );
       return {
         periodId: query.periodId,
         type: query.type,
@@ -169,9 +198,11 @@ export class GetEvaluatorsByPeriodHandler
     const evaluatorIds = [
       ...new Set(Array.from(evaluatorMap.values()).map((e) => e.evaluatorId)),
     ];
-    const employees = await this.employeeRepository.find({
-      where: evaluatorIds.map((id) => ({ id })),
-    });
+    const employees = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .where('employee.id IN (:...ids)', { ids: evaluatorIds })
+      .andWhere('employee.deletedAt IS NULL')
+      .getMany();
 
     // 부서 정보 조회
     const departmentIds = [
@@ -181,9 +212,11 @@ export class GetEvaluatorsByPeriodHandler
           .filter((id): id is string => !!id),
       ),
     ];
-    const departments = await this.departmentRepository.find({
-      where: departmentIds.map((externalId) => ({ externalId })),
-    });
+    const departments = await this.departmentRepository
+      .createQueryBuilder('department')
+      .where('department.externalId IN (:...ids)', { ids: departmentIds })
+      .andWhere('department.deletedAt IS NULL')
+      .getMany();
 
     const departmentMap = new Map(
       departments.map((dept) => [dept.externalId, dept.name]),
