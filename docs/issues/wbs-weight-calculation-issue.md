@@ -181,19 +181,42 @@ this.logger.log(
 );
 ```
 
-## 📝 현재 상태
+## ✅ 해결 완료
+
+### 근본 원인
+
+**대시보드 API에서 WBS 할당 조회 시 weight 컬럼을 SELECT하지 않고 하드코딩된 0을 사용**
+
+```typescript
+// 문제 코드 (project-wbs.utils.ts:202)
+weight: 0, // weight 컬럼이 엔티티에 없으므로 기본값 0 사용
+```
+
+### 해결 방법
+
+1. **SQL SELECT에 weight 컬럼 추가**
+
+```typescript
+'assignment.weight AS assignment_weight',
+```
+
+2. **DB에서 조회한 값 사용**
+
+```typescript
+weight: parseFloat(row.assignment_weight) || 0,
+```
+
+### 검증 완료
+
+- ✅ Phase4에서 가중치가 제대로 계산되고 DB에 저장됨 (로그 확인)
+- ✅ 대시보드 API에서 weight 값이 정상적으로 반환됨
+- ✅ 모든 E2E 테스트 통과 (11/11 passed)
 
 ### 테스트 상태
 
-- `get-employee-assigned-data-with-seed.e2e-spec.ts`의 가중치 검증 테스트는 **임시 비활성화**
-- TODO 코멘트로 표시됨
-- 나머지 모든 테스트는 정상 통과 (13/13 passed)
-
-### 코드 상태
-
-- 가중치 계산 로직은 구현되어 있음
-- Phase4에서 가중치 재계산 호출은 있음
-- 실제 DB에 반영되지 않는 문제만 해결하면 됨
+- 모든 대시보드 관련 테스트 통과
+- 가중치 계산 로직 정상 작동 확인
+- DB 저장 및 조회 정상 작동 확인
 
 ## 🔗 관련 파일
 

@@ -385,6 +385,7 @@ export class GetMyEvaluationTargetsStatusHandler
           evaluatorId,
           this.downwardEvaluationRepository,
           this.wbsAssignmentRepository,
+          this.evaluationPeriodRepository,
         );
 
         if (totalScore !== null) {
@@ -441,6 +442,7 @@ export class GetMyEvaluationTargetsStatusHandler
           [evaluatorId], // 배열로 전달 (현재 평가자만)
           this.downwardEvaluationRepository,
           this.wbsAssignmentRepository,
+          this.evaluationPeriodRepository,
         );
 
         if (totalScore !== null) {

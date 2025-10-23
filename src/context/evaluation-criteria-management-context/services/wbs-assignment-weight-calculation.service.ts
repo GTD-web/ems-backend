@@ -66,19 +66,6 @@ export class WbsAssignmentWeightCalculationService {
       .andWhere('criteria.deletedAt IS NULL')
       .getMany();
 
-    console.log(
-      `[DEBUG 가중치 계산] 직원: ${employeeId}, WBS 수: ${assignments.length}, 평가기준 수: ${criteriaList.length}`,
-    );
-    if (criteriaList.length > 0) {
-      console.log(
-        `[DEBUG 평가기준 샘플]`,
-        criteriaList.slice(0, 3).map((c) => ({
-          wbsItemId: c.wbsItemId,
-          importance: c.importance,
-        })),
-      );
-    }
-
     // 3. WBS별 중요도 맵 생성 (여러 평가기준의 중요도 합계)
     const importanceMap = new Map<string, number>();
     criteriaList.forEach((criteria) => {
@@ -145,27 +132,13 @@ export class WbsAssignmentWeightCalculationService {
 
     // 6. 저장 - 각 할당마다 개별 업데이트
     for (const assignment of assignments) {
-      const result = await repository
+      await repository
         .createQueryBuilder()
         .update()
         .set({ weight: assignment.weight })
         .where('id = :id', { id: assignment.id })
         .execute();
-      
-      console.log(
-        `[DEBUG 가중치 저장] ID: ${assignment.id}, weight: ${assignment.weight}, affected: ${result.affected}`,
-      );
     }
-
-    // 저장 후 DB에서 다시 조회하여 확인
-    const savedAssignments = await repository.find({
-      where: {
-        employeeId,
-        periodId,
-      },
-    });
-    const savedWeights = savedAssignments.map((a) => a.weight);
-    console.log(`[DEBUG DB 조회 후 가중치] [${savedWeights.join(', ')}]`);
 
     // 저장 후 weight 값 로그
     const weights = assignments.map((a) => a.weight);

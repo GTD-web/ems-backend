@@ -9,8 +9,8 @@ const logger = new Logger('DownwardEvaluationScoreUtils');
 
 /**
  * 가중치 기반 1차 하향평가 점수를 계산한다
- * 계산식: Σ(WBS 가중치 × 하향평가 점수 / 5 × 100)
- * 하향평가 점수 범위: 1-5점
+ * 계산식: Σ(WBS 가중치 × 하향평가 점수 / maxRate × 100)
+ * 하향평가 점수 범위: 0 ~ 평가기간의 최대 달성률
  */
 export async function 가중치_기반_1차_하향평가_점수를_계산한다(
   evaluationPeriodId: string,
@@ -18,6 +18,7 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
   evaluatorId: string | null,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+  evaluationPeriodRepository: Repository<EvaluationPeriod>,
 ): Promise<number | null> {
   try {
     // 평가자가 없으면 계산 불가
@@ -63,6 +64,12 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
       .andWhere('assignment.deletedAt IS NULL')
       .getMany();
 
+    // 평가기간의 최대 달성률 조회
+    const evaluationPeriod = await evaluationPeriodRepository.findOne({
+      where: { id: evaluationPeriodId },
+    });
+    const maxRate = evaluationPeriod?.maxSelfEvaluationRate || 100;
+
     // WBS별 가중치 맵 생성
     const weightMap = new Map<string, number>();
     wbsAssignments.forEach((assignment) => {
@@ -77,8 +84,8 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
       const weight = weightMap.get(evaluation.wbsId) || 0;
       const score = evaluation.downwardEvaluationScore || 0;
 
-      // 정규화: (score / 5) × 100 (하향평가는 1-5점 범위)
-      const normalizedScore = (score / 5) * 100;
+      // 정규화: (score / maxRate) × 100 (하향평가는 0 ~ maxRate 범위)
+      const normalizedScore = (score / maxRate) * 100;
 
       // 가중치 적용: weight × normalizedScore
       totalWeightedScore += (weight / 100) * normalizedScore;
@@ -110,7 +117,7 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
 /**
  * 가중치 기반 2차 하향평가 점수를 계산한다
  * 여러 명의 2차 평가자가 있을 경우, 모든 평가자의 평가를 종합하여 계산
- * 계산식: Σ(WBS 가중치 × 모든 2차 평가자의 평균 점수 / 5 × 100)
+ * 계산식: Σ(WBS 가중치 × 모든 2차 평가자의 평균 점수 / maxRate × 100)
  */
 export async function 가중치_기반_2차_하향평가_점수를_계산한다(
   evaluationPeriodId: string,
@@ -118,6 +125,7 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
   evaluatorIds: string[],
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+  evaluationPeriodRepository: Repository<EvaluationPeriod>,
 ): Promise<number | null> {
   try {
     // 평가자가 없으면 계산 불가
@@ -162,6 +170,12 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
       .andWhere('assignment.deletedAt IS NULL')
       .getMany();
 
+    // 평가기간의 최대 달성률 조회
+    const evaluationPeriod = await evaluationPeriodRepository.findOne({
+      where: { id: evaluationPeriodId },
+    });
+    const maxRate = evaluationPeriod?.maxSelfEvaluationRate || 100;
+
     // WBS별 가중치 맵 생성
     const weightMap = new Map<string, number>();
     wbsAssignments.forEach((assignment) => {
@@ -190,8 +204,8 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
       const averageScore =
         scores.reduce((sum, score) => sum + score, 0) / scores.length;
 
-      // 정규화: (averageScore / 5) × 100 (하향평가는 1-5점 범위)
-      const normalizedScore = (averageScore / 5) * 100;
+      // 정규화: (averageScore / maxRate) × 100 (하향평가는 0 ~ maxRate 범위)
+      const normalizedScore = (averageScore / maxRate) * 100;
 
       // 가중치 적용: weight × normalizedScore
       totalWeightedScore += (weight / 100) * normalizedScore;

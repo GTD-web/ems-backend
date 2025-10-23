@@ -315,9 +315,12 @@ export class Phase7EvaluationGenerator {
 
         if (isCompleted) {
           evaluation.completedAt = new Date();
-          // 하향평가는 1-5점 범위 (평균 3점, 표준편차 1점)
+          // 하향평가 점수는 0 ~ 평가기간의 최대 달성률 범위
+          const maxRate = periodMaxRates.get(periodId) || 100;
+          const mean = maxRate / 2; // 평균은 범위의 중간값
+          const stdDev = maxRate / 6; // 표준편차는 범위의 1/6 (약 99.7%가 범위 내)
           evaluation.downwardEvaluationScore =
-            ScoreGeneratorUtil.generateNormalScore(1, 5, 3, 1);
+            ScoreGeneratorUtil.generateNormalScore(0, maxRate, mean, stdDev);
           evaluation.downwardEvaluationContent = faker.lorem.paragraph();
         }
 
@@ -350,9 +353,12 @@ export class Phase7EvaluationGenerator {
 
           if (isCompleted) {
             evaluation.completedAt = new Date();
-            // 하향평가는 1-5점 범위 (평균 3점, 표준편차 1점)
+            // 하향평가 점수는 0 ~ 평가기간의 최대 달성률 범위
+            const maxRate = periodMaxRates.get(periodId) || 100;
+            const mean = maxRate / 2; // 평균은 범위의 중간값
+            const stdDev = maxRate / 6; // 표준편차는 범위의 1/6 (약 99.7%가 범위 내)
             evaluation.downwardEvaluationScore =
-              ScoreGeneratorUtil.generateNormalScore(1, 5, 3, 1);
+              ScoreGeneratorUtil.generateNormalScore(0, maxRate, mean, stdDev);
             evaluation.downwardEvaluationContent = faker.lorem.paragraph();
           }
 
@@ -365,7 +371,10 @@ export class Phase7EvaluationGenerator {
     this.logger.log(
       `하향평가 생성 - 총 ${evaluations.length}개 (완료: ${evaluations.filter((e) => e.isCompleted).length}개)`,
     );
-    this.logger.log(`하향평가 점수 범위: 1-5 (평균: 3)`);
+
+    // 평가기간별 최대 달성률 로그
+    const maxRate = periodMaxRates.get(periodId) || 100;
+    this.logger.log(`하향평가 점수 범위: 0-${maxRate} (평균: ${maxRate / 2})`);
 
     const savedEvaluations = await this.배치로_저장한다(
       this.downwardEvaluationRepository,

@@ -163,6 +163,7 @@ export async function calculatePrimaryDownwardEvaluationScore(
         primaryEvaluatorId,
         downwardEvaluationRepository,
         wbsAssignmentRepository,
+        evaluationPeriodRepository,
       );
 
       if (primaryDownwardScore !== null) {
@@ -282,6 +283,7 @@ export async function calculateSecondaryDownwardEvaluationScore(
         secondaryEvaluatorIds,
         downwardEvaluationRepository,
         wbsAssignmentRepository,
+        evaluationPeriodRepository,
       );
 
       if (secondaryDownwardScore !== null) {

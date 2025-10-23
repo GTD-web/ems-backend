@@ -139,6 +139,7 @@ export async function 하향평가_상태를_조회한다(
       secondaryEvaluators,
       downwardEvaluationRepository,
       wbsAssignmentRepository,
+      periodRepository,
     );
 
     // 총점이 계산되었으면 등급 조회
@@ -166,6 +167,7 @@ export async function 하향평가_상태를_조회한다(
       primaryEvaluatorId,
       downwardEvaluationRepository,
       wbsAssignmentRepository,
+      periodRepository,
     );
 
     // 총점이 계산되었으면 등급 조회

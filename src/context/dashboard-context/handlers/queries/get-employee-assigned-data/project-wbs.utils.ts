@@ -143,6 +143,7 @@ export async function getWbsListByProject(
       'assignment.projectId AS assignment_projectid',
       'assignment.assignedDate AS assignment_assigneddate',
       'assignment.displayOrder AS assignment_displayorder',
+      'assignment.weight AS assignment_weight',
       'wbsItem.id AS wbsitem_id',
       'wbsItem.wbsCode AS wbsitem_wbscode',
       'wbsItem.title AS wbsitem_title',
@@ -199,7 +200,7 @@ export async function getWbsListByProject(
       wbsId: wbsItemId,
       wbsName: row.wbsitem_title || '',
       wbsCode: row.wbsitem_wbscode || '',
-      weight: 0, // weight 컬럼이 엔티티에 없으므로 기본값 0 사용
+      weight: parseFloat(row.assignment_weight) || 0, // DB에서 조회한 weight 값 사용
       assignedAt: row.assignment_assigneddate,
       criteria,
       performance: selfEvaluationData?.performance || null,

@@ -96,7 +96,7 @@ export const ApiGenerateSeedDataWithRealData = () =>
             '자기평가만 완료, 1차/2차 하향평가 미작성 (점수계산 검증용)',
           value: {
             scenario: 'full',
-            clearExisting: false,
+            clearExisting: true,
             projectCount: 2,
             wbsPerProject: 3,
             evaluationConfig: {
@@ -134,7 +134,7 @@ export const ApiGenerateSeedDataWithRealData = () =>
           description: '자기평가 + 1차 하향평가 완료, 2차/동료/최종평가 미작성',
           value: {
             scenario: 'full',
-            clearExisting: false,
+            clearExisting: true,
             projectCount: 2,
             wbsPerProject: 3,
             evaluationConfig: {
@@ -172,7 +172,7 @@ export const ApiGenerateSeedDataWithRealData = () =>
           description: '자기/1차/2차 하향/동료평가 완료, 최종평가 미작성',
           value: {
             scenario: 'full',
-            clearExisting: false,
+            clearExisting: true,
             projectCount: 2,
             wbsPerProject: 3,
             evaluationConfig: {
@@ -216,7 +216,7 @@ export const ApiGenerateSeedDataWithRealData = () =>
             '실제 조직으로 전체 평가 프로세스 완료 (운영 환경 시뮬레이션)',
           value: {
             scenario: 'full',
-            clearExisting: false,
+            clearExisting: true,
             projectCount: 10,
             wbsPerProject: 15,
             evaluationConfig: {
