@@ -304,6 +304,7 @@ export async function getWbsSelfEvaluationByWbsId(
  * 특정 WBS의 하향평가 조회 (1차, 2차)
  *
  * DownwardEvaluation 엔티티에서 PRIMARY와 SECONDARY 평가자의 하향평가 정보를 조회합니다.
+ * 여러 평가자의 평가가 있을 경우 평균 점수를 계산합니다.
  */
 export async function getWbsDownwardEvaluationsByWbsId(
   evaluationPeriodId: string,
@@ -342,25 +343,73 @@ export async function getWbsDownwardEvaluationsByWbsId(
     .andWhere('"downward"."deletedAt" IS NULL')
     .getRawMany();
 
+  // 평가 타입별로 그룹화
+  const primaryEvaluations = downwardEvaluations.filter(
+    (row) => row.downward_evaluatortype === 'primary',
+  );
+  const secondaryEvaluations = downwardEvaluations.filter(
+    (row) => row.downward_evaluatortype === 'secondary',
+  );
+
+  // 1차 평가 평균 계산
   let primary: WbsDownwardEvaluationInfo | null = null;
+  if (primaryEvaluations.length > 0) {
+    const completedPrimary = primaryEvaluations.filter(
+      (row) => row.downward_iscompleted === true,
+    );
+
+    if (completedPrimary.length === primaryEvaluations.length) {
+      // 모두 완료된 경우에만 평균 점수 계산
+      const averageScore =
+        completedPrimary.reduce(
+          (sum, row) => sum + (row.downward_score || 0),
+          0,
+        ) / completedPrimary.length;
+
+      primary = {
+        downwardEvaluationId: undefined, // 여러 평가의 평균이므로 ID 없음
+        evaluatorId: undefined,
+        evaluatorName:
+          completedPrimary.length > 1
+            ? `${completedPrimary.length}명의 1차 평가자`
+            : completedPrimary[0].evaluator_name,
+        evaluationContent: undefined, // 여러 평가의 평균이므로 내용 없음
+        score: Math.round(averageScore * 100) / 100, // 소수점 2자리
+        isCompleted: true,
+        isEditable: false,
+        submittedAt: completedPrimary[0].downward_completedat,
+      };
+    }
+  }
+
+  // 2차 평가 평균 계산
   let secondary: WbsDownwardEvaluationInfo | null = null;
+  if (secondaryEvaluations.length > 0) {
+    const completedSecondary = secondaryEvaluations.filter(
+      (row) => row.downward_iscompleted === true,
+    );
 
-  for (const row of downwardEvaluations) {
-    const evaluationInfo: WbsDownwardEvaluationInfo = {
-      downwardEvaluationId: row.downward_id,
-      evaluatorId: row.downward_evaluatorId,
-      evaluatorName: row.evaluator_name,
-      evaluationContent: row.downward_evaluationContent,
-      score: row.downward_score,
-      isCompleted: row.downward_isCompleted === true,
-      isEditable: row.downward_isCompleted !== true,
-      submittedAt: row.downward_completedAt,
-    };
+    if (completedSecondary.length === secondaryEvaluations.length) {
+      // 모두 완료된 경우에만 평균 점수 계산
+      const averageScore =
+        completedSecondary.reduce(
+          (sum, row) => sum + (row.downward_score || 0),
+          0,
+        ) / completedSecondary.length;
 
-    if (row.downward_evaluatorType === 'primary') {
-      primary = evaluationInfo;
-    } else if (row.downward_evaluatorType === 'secondary') {
-      secondary = evaluationInfo;
+      secondary = {
+        downwardEvaluationId: undefined, // 여러 평가의 평균이므로 ID 없음
+        evaluatorId: undefined,
+        evaluatorName:
+          completedSecondary.length > 1
+            ? `${completedSecondary.length}명의 2차 평가자`
+            : completedSecondary[0].evaluator_name,
+        evaluationContent: undefined, // 여러 평가의 평균이므로 내용 없음
+        score: Math.round(averageScore * 100) / 100, // 소수점 2자리
+        isCompleted: true,
+        isEditable: false,
+        submittedAt: completedSecondary[0].downward_completedat,
+      };
     }
   }
 

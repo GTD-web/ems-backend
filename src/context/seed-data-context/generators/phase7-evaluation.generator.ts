@@ -276,11 +276,14 @@ export class Phase7EvaluationGenerator {
 
     // 각 WBS 할당에 대해 하향평가 생성
     for (const assignment of wbsAssignments) {
-      // 해당 직원의 평가라인 매핑 조회
+      // 해당 직원의 특정 WBS에 대한 평가라인 매핑 조회
       const lineMappings = await this.evaluationLineMappingRepository
         .createQueryBuilder('mapping')
         .where('mapping.employeeId = :employeeId', {
           employeeId: assignment.employeeId,
+        })
+        .andWhere('mapping.wbsItemId = :wbsItemId', {
+          wbsItemId: assignment.wbsItemId,
         })
         .andWhere('mapping.evaluationLineId IN (:...lineIds)', {
           lineIds: [primaryLine.id, secondaryLine?.id].filter(Boolean),

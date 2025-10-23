@@ -55,7 +55,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
         .post('/admin/seed/generate-with-real-data')
         .send({
           scenario: 'full',
-          clearExisting: false, // 실제 부서/직원 데이터 보존
+          clearExisting: true, // 기존 평가 데이터 완전 삭제 후 재생성
           projectCount: 2,
           wbsPerProject: 3,
           evaluationConfig: {
@@ -258,7 +258,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
         .post('/admin/seed/generate-with-real-data')
         .send({
           scenario: 'full',
-          clearExisting: false, // 실제 부서/직원 데이터 보존
+          clearExisting: true, // 기존 평가 데이터 완전 삭제 후 재생성
           projectCount: 2,
           wbsPerProject: 3,
           evaluationConfig: {
@@ -475,7 +475,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
         .post('/admin/seed/generate-with-real-data')
         .send({
           scenario: 'full',
-          clearExisting: false, // 실제 부서/직원 데이터 보존
+          clearExisting: true, // 기존 평가 데이터 완전 삭제 후 재생성
           projectCount: 2,
           wbsPerProject: 3,
           evaluationConfig: {
@@ -705,6 +705,164 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
 
       // PM 정보가 있는 경우, 구조가 올바른지 이미 검증됨
       // 확률적으로 PM이 없을 수도 있음
+    });
+
+    it('🔍 WBS별 하향평가 정보가 포함되어야 한다 (근본 원인 확인)', async () => {
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
+        )
+        .expect(HttpStatus.OK);
+
+      const { projects, summary } = response.body;
+
+      console.log('\n=== WBS별 하향평가 정보 검증 ===');
+      console.log(
+        '📊 Summary 1차 하향평가:',
+        summary.primaryDownwardEvaluation,
+      );
+      console.log(
+        '📊 Summary 2차 하향평가:',
+        summary.secondaryDownwardEvaluation,
+      );
+
+      let totalWbs = 0;
+      let wbsWithPrimaryEval = 0;
+      let wbsWithSecondaryEval = 0;
+      let wbsWithoutPrimaryEval = 0;
+      let wbsWithoutSecondaryEval = 0;
+
+      for (const project of projects) {
+        console.log(`\n프로젝트: ${project.projectName}`);
+
+        for (const wbs of project.wbsList) {
+          totalWbs++;
+          console.log(`  WBS: ${wbs.wbsName} (${wbs.wbsCode})`);
+          console.log('    1차 하향평가:', wbs.primaryDownwardEvaluation);
+          console.log('    2차 하향평가:', wbs.secondaryDownwardEvaluation);
+
+          // 1차 하향평가 검증
+          if (wbs.primaryDownwardEvaluation) {
+            wbsWithPrimaryEval++;
+
+            // 필수 필드 검증
+            expect(wbs.primaryDownwardEvaluation).toMatchObject({
+              isCompleted: expect.any(Boolean),
+              isEditable: expect.any(Boolean),
+            });
+
+            // 완료된 경우 모든 필드 검증
+            if (wbs.primaryDownwardEvaluation.isCompleted) {
+              // evaluatorName 검증 (여러 평가자의 경우 "N명의 1차 평가자" 형식)
+              expect(wbs.primaryDownwardEvaluation.evaluatorName).toBeDefined();
+              expect(typeof wbs.primaryDownwardEvaluation.evaluatorName).toBe(
+                'string',
+              );
+
+              // score 검증
+              expect(wbs.primaryDownwardEvaluation.score).toBeDefined();
+              expect(wbs.primaryDownwardEvaluation.score).not.toBeNull();
+              expect(typeof wbs.primaryDownwardEvaluation.score).toBe('number');
+              expect(
+                wbs.primaryDownwardEvaluation.score,
+              ).toBeGreaterThanOrEqual(0);
+              expect(wbs.primaryDownwardEvaluation.score).toBeLessThanOrEqual(
+                100,
+              );
+
+              // submittedAt 검증
+              expect(wbs.primaryDownwardEvaluation.submittedAt).toBeDefined();
+
+              console.log(
+                `      ✅ 1차 평가 완료 (평가자: ${wbs.primaryDownwardEvaluation.evaluatorName}, 점수: ${wbs.primaryDownwardEvaluation.score})`,
+              );
+            } else {
+              console.log('      ⚠️  1차 평가는 있지만 미완료');
+            }
+          } else {
+            wbsWithoutPrimaryEval++;
+            console.log('      ❌ 1차 평가 정보가 null');
+          }
+
+          // 2차 하향평가 검증
+          if (wbs.secondaryDownwardEvaluation) {
+            wbsWithSecondaryEval++;
+
+            // 필수 필드 검증
+            expect(wbs.secondaryDownwardEvaluation).toMatchObject({
+              isCompleted: expect.any(Boolean),
+              isEditable: expect.any(Boolean),
+            });
+
+            // 완료된 경우 모든 필드 검증
+            if (wbs.secondaryDownwardEvaluation.isCompleted) {
+              // evaluatorName 검증 (여러 평가자의 경우 "N명의 2차 평가자" 형식)
+              expect(
+                wbs.secondaryDownwardEvaluation.evaluatorName,
+              ).toBeDefined();
+              expect(typeof wbs.secondaryDownwardEvaluation.evaluatorName).toBe(
+                'string',
+              );
+
+              // score 검증
+              expect(wbs.secondaryDownwardEvaluation.score).toBeDefined();
+              expect(wbs.secondaryDownwardEvaluation.score).not.toBeNull();
+              expect(typeof wbs.secondaryDownwardEvaluation.score).toBe(
+                'number',
+              );
+              expect(
+                wbs.secondaryDownwardEvaluation.score,
+              ).toBeGreaterThanOrEqual(0);
+              expect(wbs.secondaryDownwardEvaluation.score).toBeLessThanOrEqual(
+                100,
+              );
+
+              // submittedAt 검증
+              expect(wbs.secondaryDownwardEvaluation.submittedAt).toBeDefined();
+
+              console.log(
+                `      ✅ 2차 평가 완료 (평가자: ${wbs.secondaryDownwardEvaluation.evaluatorName}, 점수: ${wbs.secondaryDownwardEvaluation.score})`,
+              );
+            } else {
+              console.log('      ⚠️  2차 평가는 있지만 미완료');
+            }
+          } else {
+            wbsWithoutSecondaryEval++;
+            console.log('      ❌ 2차 평가 정보가 null');
+          }
+        }
+      }
+
+      console.log('\n📈 통계:');
+      console.log('  총 WBS 수:', totalWbs);
+      console.log('  1차 평가 있음:', wbsWithPrimaryEval);
+      console.log('  1차 평가 없음:', wbsWithoutPrimaryEval);
+      console.log('  2차 평가 있음:', wbsWithSecondaryEval);
+      console.log('  2차 평가 없음:', wbsWithoutSecondaryEval);
+
+      // Summary에는 점수가 있지만 WBS별로는 없다면 문제!
+      if (
+        summary.primaryDownwardEvaluation.totalScore !== null &&
+        wbsWithoutPrimaryEval > 0
+      ) {
+        console.log(
+          '\n⚠️  근본 원인 발견: Summary에는 1차 평가 점수가 있지만 일부 WBS에는 없음!',
+        );
+      }
+
+      if (
+        summary.secondaryDownwardEvaluation.totalScore !== null &&
+        wbsWithoutSecondaryEval > 0
+      ) {
+        console.log(
+          '\n⚠️  근본 원인 발견: Summary에는 2차 평가 점수가 있지만 일부 WBS에는 없음!',
+        );
+      }
+
+      // 모든 평가가 완료되었으므로 WBS별로도 평가 정보가 있어야 함
+      expect(wbsWithPrimaryEval).toBeGreaterThan(0);
+      expect(wbsWithSecondaryEval).toBeGreaterThan(0);
     });
   });
 });

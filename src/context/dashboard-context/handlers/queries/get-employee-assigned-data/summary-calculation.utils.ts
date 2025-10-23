@@ -104,9 +104,10 @@ export async function calculatePrimaryDownwardEvaluationScore(
   if (primaryEvaluatorMapping) {
     const primaryEvaluatorId = primaryEvaluatorMapping.evaluatorId;
 
-    // 1차 평가자의 할당된 WBS 수 조회 (EvaluationLineMapping에서 조회)
-    const primaryAssignedCount = await evaluationLineMappingRepository
+    // 1차 평가자에게 할당된 WBS 목록 조회 (wbsItemId 포함)
+    const primaryAssignedMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
+      .select(['mapping.id', 'mapping.wbsItemId'])
       .leftJoin(
         EvaluationLine,
         'line',
@@ -120,19 +121,36 @@ export async function calculatePrimaryDownwardEvaluationScore(
         evaluatorType: EvaluatorType.PRIMARY,
       })
       .andWhere('mapping.deletedAt IS NULL')
-      .getCount();
+      .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
+      .getRawMany();
 
-    // 1차 평가자의 완료된 평가 수 조회
-    const primaryCompletedCount = await downwardEvaluationRepository.count({
-      where: {
-        periodId: evaluationPeriodId,
-        employeeId: employeeId,
-        evaluatorId: primaryEvaluatorId,
-        evaluationType: DownwardEvaluationType.PRIMARY,
-        isCompleted: true,
-        deletedAt: null as any,
-      },
-    });
+    const primaryAssignedCount = primaryAssignedMappings.length;
+
+    // 할당된 WBS ID 목록 추출
+    const primaryAssignedWbsIds = primaryAssignedMappings.map(
+      (m) => m.mapping_wbsItemId,
+    );
+
+    // 할당된 WBS에 대한 완료된 평가 수 조회
+    let primaryCompletedCount = 0;
+    if (primaryAssignedWbsIds.length > 0) {
+      primaryCompletedCount = await downwardEvaluationRepository
+        .createQueryBuilder('eval')
+        .where('eval.periodId = :periodId', { periodId: evaluationPeriodId })
+        .andWhere('eval.employeeId = :employeeId', { employeeId })
+        .andWhere('eval.evaluatorId = :evaluatorId', {
+          evaluatorId: primaryEvaluatorId,
+        })
+        .andWhere('eval.wbsId IN (:...wbsIds)', {
+          wbsIds: primaryAssignedWbsIds,
+        })
+        .andWhere('eval.evaluationType = :evaluationType', {
+          evaluationType: DownwardEvaluationType.PRIMARY,
+        })
+        .andWhere('eval.isCompleted = :isCompleted', { isCompleted: true })
+        .andWhere('eval.deletedAt IS NULL')
+        .getCount();
+    }
 
     // 모든 WBS가 완료되면 점수/등급 계산
     if (
@@ -204,9 +222,10 @@ export async function calculateSecondaryDownwardEvaluationScore(
     // 각 2차 평가자별 할당된 WBS 수와 완료된 평가 수 조회
     const evaluatorStats = await Promise.all(
       secondaryEvaluatorIds.map(async (evaluatorId) => {
-        // 할당된 WBS 수는 EvaluationLineMapping에서 조회
-        const assignedCount = await evaluationLineMappingRepository
+        // 할당된 WBS 목록 조회 (wbsItemId 포함)
+        const assignedMappings = await evaluationLineMappingRepository
           .createQueryBuilder('mapping')
+          .select(['mapping.id', 'mapping.wbsItemId'])
           .leftJoin(
             EvaluationLine,
             'line',
@@ -218,20 +237,34 @@ export async function calculateSecondaryDownwardEvaluationScore(
             evaluatorType: EvaluatorType.SECONDARY,
           })
           .andWhere('mapping.deletedAt IS NULL')
-          .getCount();
+          .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
+          .getRawMany();
 
-        const completedCount = await downwardEvaluationRepository.count({
-          where: {
-            periodId: evaluationPeriodId,
-            employeeId: employeeId,
-            evaluatorId: evaluatorId,
-            evaluationType: DownwardEvaluationType.SECONDARY,
-            isCompleted: true,
-            deletedAt: null as any,
-          },
-        });
+        const assignedCount = assignedMappings.length;
 
-        return { assignedCount, completedCount };
+        // 할당된 WBS ID 목록 추출
+        const assignedWbsIds = assignedMappings.map((m) => m.mapping_wbsItemId);
+
+        // 할당된 WBS에 대한 완료된 평가 수 조회
+        let completedCount = 0;
+        if (assignedWbsIds.length > 0) {
+          completedCount = await downwardEvaluationRepository
+            .createQueryBuilder('eval')
+            .where('eval.periodId = :periodId', {
+              periodId: evaluationPeriodId,
+            })
+            .andWhere('eval.employeeId = :employeeId', { employeeId })
+            .andWhere('eval.evaluatorId = :evaluatorId', { evaluatorId })
+            .andWhere('eval.wbsId IN (:...wbsIds)', { wbsIds: assignedWbsIds })
+            .andWhere('eval.evaluationType = :evaluationType', {
+              evaluationType: DownwardEvaluationType.SECONDARY,
+            })
+            .andWhere('eval.isCompleted = :isCompleted', { isCompleted: true })
+            .andWhere('eval.deletedAt IS NULL')
+            .getCount();
+        }
+
+        return { evaluatorId, assignedCount, completedCount };
       }),
     );
 
