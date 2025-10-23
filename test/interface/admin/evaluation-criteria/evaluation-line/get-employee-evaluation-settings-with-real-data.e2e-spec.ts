@@ -819,12 +819,10 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/p
         .request()
         .get(
           `/admin/evaluation-criteria/evaluation-lines/employee/${invalidUuid}/period/${evaluationPeriodId}/settings`,
-        );
+        )
+        .expect(HttpStatus.BAD_REQUEST);
 
-      console.log('\n📊 응답 상태:', response.status);
-      expect([400, 500]).toContain(response.status);
-
-      console.log('\n✅ 에러 응답 확인');
+      console.log('\n✅ 에러 응답 확인 (400)');
     });
 
     it('잘못된 UUID 형식의 평가기간 ID로 조회 시 에러가 발생해야 한다', async () => {
@@ -846,12 +844,10 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/p
         .request()
         .get(
           `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${invalidUuid}/settings`,
-        );
+        )
+        .expect(HttpStatus.BAD_REQUEST);
 
-      console.log('\n📊 응답 상태:', response.status);
-      expect([400, 500]).toContain(response.status);
-
-      console.log('\n✅ 에러 응답 확인');
+      console.log('\n✅ 에러 응답 확인 (400)');
     });
 
     it('빈 문자열 직원 ID로 조회 시 에러가 발생해야 한다', async () => {
@@ -872,12 +868,10 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/p
         .request()
         .get(
           `/admin/evaluation-criteria/evaluation-lines/employee/ /period/${evaluationPeriodId}/settings`,
-        );
+        )
+        .expect(HttpStatus.BAD_REQUEST);
 
-      console.log('\n📊 응답 상태:', response.status);
-      expect([400, 404, 500]).toContain(response.status);
-
-      console.log('\n✅ 에러 응답 확인');
+      console.log('\n✅ 에러 응답 확인 (400)');
     });
   });
 

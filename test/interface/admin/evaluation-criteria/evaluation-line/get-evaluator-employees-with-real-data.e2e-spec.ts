@@ -640,12 +640,10 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/evaluator/:evaluatorId
         .request()
         .get(
           `/admin/evaluation-criteria/evaluation-lines/evaluator/${invalidUuid}/employees`,
-        );
+        )
+        .expect(HttpStatus.BAD_REQUEST);
 
-      console.log('\n📊 응답 상태:', response.status);
-      expect([400, 500]).toContain(response.status);
-
-      console.log('\n✅ 에러 응답 확인');
+      console.log('\n✅ 에러 응답 확인 (400)');
     });
 
     it('빈 문자열 평가자 ID로 조회 시 에러가 발생해야 한다', async () => {
@@ -655,12 +653,10 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/evaluator/:evaluatorId
         .request()
         .get(
           `/admin/evaluation-criteria/evaluation-lines/evaluator/ /employees`,
-        );
+        )
+        .expect(HttpStatus.BAD_REQUEST);
 
-      console.log('\n📊 응답 상태:', response.status);
-      expect([400, 404, 500]).toContain(response.status);
-
-      console.log('\n✅ 에러 응답 확인');
+      console.log('\n✅ 에러 응답 확인 (400)');
     });
   });
 });

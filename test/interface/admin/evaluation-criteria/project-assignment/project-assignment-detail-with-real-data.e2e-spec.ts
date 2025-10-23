@@ -163,15 +163,11 @@ describe('GET /admin/evaluation-criteria/project-assignments/:id (실제 데이�
       console.log('\n✅ 존재하지 않는 ID 에러 성공');
     });
 
-    it('잘못된 UUID 형식으로 조회 시 400 또는 500 에러가 발생해야 한다', async () => {
+    it('잘못된 UUID 형식으로 조회 시 400 에러가 발생해야 한다', async () => {
       const response = await testSuite
         .request()
-        .get('/admin/evaluation-criteria/project-assignments/invalid-uuid');
-
-      expect([
-        HttpStatus.BAD_REQUEST,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      ]).toContain(response.status);
+        .get('/admin/evaluation-criteria/project-assignments/invalid-uuid')
+        .expect(HttpStatus.BAD_REQUEST);
 
       console.log('\n✅ 잘못된 UUID 에러 성공');
     });
