@@ -38,7 +38,7 @@ export class EvaluationLineManagementController {
    */
   @GetEvaluatorEmployees()
   async getEvaluatorEmployees(
-    @Param('evaluatorId') evaluatorId: string,
+    @Param('evaluatorId', ParseUUIDPipe) evaluatorId: string,
   ): Promise<EvaluatorEmployeesResponseDto> {
     return await this.evaluationCriteriaManagementService.특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
       evaluatorId,
@@ -50,8 +50,8 @@ export class EvaluationLineManagementController {
    */
   @GetEmployeeEvaluationSettings()
   async getEmployeeEvaluationSettings(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
   ): Promise<EmployeeEvaluationSettingsResponseDto> {
     const settings =
       await this.evaluationCriteriaManagementService.특정_평가기간에_직원의_평가설정을_통합_조회한다(
@@ -71,9 +71,9 @@ export class EvaluationLineManagementController {
    */
   @ConfigurePrimaryEvaluator()
   async configurePrimaryEvaluator(
-    @Param('employeeId') employeeId: string,
-    @Param('wbsItemId') wbsItemId: string,
-    @Param('periodId') periodId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Param('wbsItemId', ParseUUIDPipe) wbsItemId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
     @Body() dto: ConfigurePrimaryEvaluatorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ConfigureEvaluatorResponseDto> {
@@ -91,9 +91,9 @@ export class EvaluationLineManagementController {
    */
   @ConfigureSecondaryEvaluator()
   async configureSecondaryEvaluator(
-    @Param('employeeId') employeeId: string,
-    @Param('wbsItemId') wbsItemId: string,
-    @Param('periodId') periodId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Param('wbsItemId', ParseUUIDPipe) wbsItemId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
     @Body() dto: ConfigureSecondaryEvaluatorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ConfigureEvaluatorResponseDto> {

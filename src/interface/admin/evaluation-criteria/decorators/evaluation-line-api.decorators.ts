@@ -350,8 +350,10 @@ export const ConfigurePrimaryEvaluator = () =>
 - WBS 할당 시 자동 생성된 1차 평가자 업데이트: WBS 할당으로 자동 생성된 평가라인의 평가자를 새로운 평가자로 변경 (201)
 - DB 업데이트 확인: 업데이트된 매핑 정보가 DB에 정상적으로 저장됨
 - 여러 직원 업데이트: 서로 다른 직원의 1차 평가자를 각각 업데이트 가능
-- 잘못된 UUID: 잘못된 UUID 형식의 evaluatorId로 요청 시 400 에러
-- evaluatorId 누락: evaluatorId가 누락된 경우 400 에러`,
+- 잘못된 UUID 형식 evaluatorId: 잘못된 UUID 형식의 evaluatorId로 요청 시 400 에러
+- evaluatorId 누락: evaluatorId가 누락된 경우 400 에러
+- 잘못된 UUID 형식 직원 ID: 잘못된 UUID 형식의 employeeId로 요청 시 400 에러
+- 잘못된 UUID 형식 WBS ID: 잘못된 UUID 형식의 wbsItemId로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'employeeId',
@@ -431,8 +433,10 @@ export const ConfigureSecondaryEvaluator = () =>
 - WBS 할당 시 자동 생성된 2차 평가자 업데이트: WBS 할당으로 자동 생성된 평가라인의 평가자를 새로운 평가자로 변경 (201)
 - DB 업데이트 확인: 업데이트된 매핑 정보가 DB에 정상적으로 저장됨
 - 1차/2차 평가자 함께 업데이트: 동일 직원의 1차 평가자와 2차 평가자를 연속으로 업데이트 가능
-- 잘못된 UUID: 잘못된 UUID 형식의 evaluatorId로 요청 시 400 에러
-- evaluatorId 누락: evaluatorId가 누락된 경우 400 에러`,
+- 잘못된 UUID 형식 evaluatorId: 잘못된 UUID 형식의 evaluatorId로 요청 시 400 에러
+- evaluatorId 누락: evaluatorId가 누락된 경우 400 에러
+- 잘못된 UUID 형식 직원 ID: 잘못된 UUID 형식의 employeeId로 요청 시 400 에러
+- 잘못된 UUID 형식 WBS ID: 잘못된 UUID 형식의 wbsItemId로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'employeeId',

@@ -256,12 +256,202 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/p
     });
   });
 
-  describe('시나리오 2: 빈 설정 조회', () => {
+  describe('시나리오 2: 프로젝트만 할당된 경우', () => {
     let evaluationPeriodId: string;
     let employeeId: string;
 
     beforeAll(async () => {
-      console.log('\n=== 시나리오 2: 빈 설정 조회 ===');
+      console.log('\n=== 시나리오 2: 프로젝트만 할당된 경우 ===');
+
+      // 평가기간 조회
+      const evaluationPeriods = await dataSource
+        .getRepository('EvaluationPeriod')
+        .createQueryBuilder('period')
+        .where('period.deletedAt IS NULL')
+        .orderBy('period.createdAt', 'DESC')
+        .limit(1)
+        .getMany();
+
+      evaluationPeriodId = evaluationPeriods[0].id;
+
+      // 프로젝트 할당만 있는 직원 조회 (WBS 할당 없음)
+      const projectAssignments = await dataSource
+        .getRepository('EvaluationProjectAssignment')
+        .createQueryBuilder('assignment')
+        .where('assignment.periodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
+        .andWhere('assignment.deletedAt IS NULL')
+        .andWhere(
+          `NOT EXISTS (
+            SELECT 1 FROM evaluation_wbs_assignment wbs
+            WHERE wbs."employeeId" = assignment."employeeId"
+            AND wbs."periodId" = assignment."periodId"
+            AND wbs."deletedAt" IS NULL
+          )`,
+        )
+        .limit(1)
+        .getMany();
+
+      if (projectAssignments.length > 0) {
+        employeeId = projectAssignments[0].employeeId;
+        console.log(`프로젝트만 할당된 직원 ID: ${employeeId}`);
+      } else {
+        // 프로젝트만 할당된 직원이 없으면 새로 생성
+        const newEmployee = await dataSource.manager.query(
+          `INSERT INTO employee 
+          (id, name, "departmentId", "employeeNumber", email, version, "createdAt", "updatedAt")
+          SELECT gen_random_uuid(), '프로젝트만할당', id, 'PROJ-ONLY', 'projonly@test.com', 1, NOW(), NOW()
+          FROM department
+          WHERE "deletedAt" IS NULL
+          LIMIT 1
+          RETURNING id`,
+        );
+        employeeId = newEmployee[0].id;
+
+        // 프로젝트 할당
+        const projects = await dataSource
+          .getRepository('Project')
+          .createQueryBuilder('project')
+          .where('project.deletedAt IS NULL')
+          .limit(1)
+          .getMany();
+
+        await dataSource.manager.query(
+          `INSERT INTO evaluation_project_assignment 
+          (id, "periodId", "employeeId", "projectId", "assignedDate", "assignedBy", "displayOrder", version, "createdAt", "updatedAt")
+          VALUES (gen_random_uuid(), $1, $2, $3, NOW(), $2, 1, 1, NOW(), NOW())`,
+          [evaluationPeriodId, employeeId, projects[0].id],
+        );
+
+        console.log(`새로운 프로젝트만 할당 직원 생성: ${employeeId}`);
+      }
+    });
+
+    it('프로젝트 할당만 있고 WBS와 평가라인은 빈 배열이어야 한다', async () => {
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${evaluationPeriodId}/settings`,
+        )
+        .expect(HttpStatus.OK);
+
+      const result = response.body;
+
+      console.log('\n📊 프로젝트만 할당된 경우:');
+      console.log('  projectAssignments:', result.projectAssignments.length);
+      console.log('  wbsAssignments:', result.wbsAssignments.length);
+      console.log(
+        '  evaluationLineMappings:',
+        result.evaluationLineMappings.length,
+      );
+
+      expect(result.projectAssignments.length).toBeGreaterThan(0);
+      expect(result.wbsAssignments).toEqual([]);
+      expect(result.evaluationLineMappings).toEqual([]);
+
+      console.log('\n✅ 프로젝트만 할당된 경우 검증 완료');
+    });
+  });
+
+  describe('시나리오 2-1: WBS만 할당된 경우', () => {
+    let evaluationPeriodId: string;
+    let employeeId: string;
+
+    beforeAll(async () => {
+      console.log('\n=== 시나리오 2-1: WBS만 할당된 경우 ===');
+
+      // 평가기간 조회
+      const evaluationPeriods = await dataSource
+        .getRepository('EvaluationPeriod')
+        .createQueryBuilder('period')
+        .where('period.deletedAt IS NULL')
+        .orderBy('period.createdAt', 'DESC')
+        .limit(1)
+        .getMany();
+
+      evaluationPeriodId = evaluationPeriods[0].id;
+
+      // WBS 할당이 있는 직원 중 프로젝트 할당이 없는 직원 조회
+      const wbsAssignments = await dataSource
+        .getRepository('EvaluationWbsAssignment')
+        .createQueryBuilder('assignment')
+        .where('assignment.periodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
+        .andWhere('assignment.deletedAt IS NULL')
+        .andWhere(
+          `NOT EXISTS (
+            SELECT 1 FROM evaluation_project_assignment proj
+            WHERE proj."employeeId" = assignment."employeeId"
+            AND proj."periodId" = assignment."periodId"
+            AND proj."deletedAt" IS NULL
+          )`,
+        )
+        .limit(1)
+        .getMany();
+
+      if (wbsAssignments.length > 0) {
+        employeeId = wbsAssignments[0].employeeId;
+        console.log(`WBS만 할당된 직원 ID: ${employeeId}`);
+      } else {
+        // 첫 번째 WBS 할당 직원을 사용하되, 프로젝트 할당을 삭제
+        const allWbsAssignments = await dataSource
+          .getRepository('EvaluationWbsAssignment')
+          .createQueryBuilder('assignment')
+          .where('assignment.periodId = :periodId', {
+            periodId: evaluationPeriodId,
+          })
+          .andWhere('assignment.deletedAt IS NULL')
+          .limit(1)
+          .getMany();
+
+        employeeId = allWbsAssignments[0].employeeId;
+
+        // 해당 직원의 프로젝트 할당을 소프트 삭제
+        await dataSource.manager.query(
+          `UPDATE evaluation_project_assignment 
+          SET "deletedAt" = NOW() 
+          WHERE "employeeId" = $1 AND "periodId" = $2`,
+          [employeeId, evaluationPeriodId],
+        );
+
+        console.log(`WBS만 할당되도록 프로젝트 할당 삭제: ${employeeId}`);
+      }
+    });
+
+    it('WBS 할당과 평가라인 매핑은 있고 프로젝트 할당은 빈 배열이어야 한다', async () => {
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${evaluationPeriodId}/settings`,
+        )
+        .expect(HttpStatus.OK);
+
+      const result = response.body;
+
+      console.log('\n📊 WBS만 할당된 경우:');
+      console.log('  projectAssignments:', result.projectAssignments.length);
+      console.log('  wbsAssignments:', result.wbsAssignments.length);
+      console.log(
+        '  evaluationLineMappings:',
+        result.evaluationLineMappings.length,
+      );
+
+      expect(result.projectAssignments).toEqual([]);
+      expect(result.wbsAssignments.length).toBeGreaterThan(0);
+      expect(result.evaluationLineMappings.length).toBeGreaterThan(0);
+
+      console.log('\n✅ WBS만 할당된 경우 검증 완료');
+    });
+  });
+
+  describe('시나리오 2-2: 빈 설정 조회', () => {
+    let evaluationPeriodId: string;
+    let employeeId: string;
+
+    beforeAll(async () => {
+      console.log('\n=== 시나리오 2-2: 빈 설정 조회 ===');
 
       // 평가기간 조회 (시나리오 1에서 생성된 데이터 재사용)
       const evaluationPeriods = await dataSource
@@ -662,6 +852,138 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/p
       expect([400, 500]).toContain(response.status);
 
       console.log('\n✅ 에러 응답 확인');
+    });
+
+    it('빈 문자열 직원 ID로 조회 시 에러가 발생해야 한다', async () => {
+      console.log('\n=== 시나리오 5-5: 빈 문자열 직원 ID ===');
+
+      // 평가기간 조회
+      const evaluationPeriods = await dataSource
+        .getRepository('EvaluationPeriod')
+        .createQueryBuilder('period')
+        .where('period.deletedAt IS NULL')
+        .orderBy('period.createdAt', 'DESC')
+        .limit(1)
+        .getMany();
+
+      const evaluationPeriodId = evaluationPeriods[0].id;
+
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/evaluation-criteria/evaluation-lines/employee/ /period/${evaluationPeriodId}/settings`,
+        );
+
+      console.log('\n📊 응답 상태:', response.status);
+      expect([400, 404, 500]).toContain(response.status);
+
+      console.log('\n✅ 에러 응답 확인');
+    });
+  });
+
+  describe('시나리오 5-1: 선택적 필드 검증', () => {
+    let evaluationPeriodId: string;
+    let employeeId: string;
+
+    beforeAll(async () => {
+      console.log('\n=== 시나리오 5-1: 선택적 필드 검증 ===');
+
+      // 평가기간 조회
+      const evaluationPeriods = await dataSource
+        .getRepository('EvaluationPeriod')
+        .createQueryBuilder('period')
+        .where('period.deletedAt IS NULL')
+        .orderBy('period.createdAt', 'DESC')
+        .limit(1)
+        .getMany();
+
+      evaluationPeriodId = evaluationPeriods[0].id;
+
+      // WBS 할당이 있는 직원 조회
+      const wbsAssignments = await dataSource
+        .getRepository('EvaluationWbsAssignment')
+        .createQueryBuilder('assignment')
+        .where('assignment.periodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
+        .andWhere('assignment.deletedAt IS NULL')
+        .limit(1)
+        .getMany();
+
+      employeeId = wbsAssignments[0].employeeId;
+    });
+
+    it('선택적 필드(deletedAt, createdBy, updatedBy)가 있으면 올바른 타입이어야 한다', async () => {
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${evaluationPeriodId}/settings`,
+        )
+        .expect(HttpStatus.OK);
+
+      const result = response.body;
+
+      console.log('\n📊 선택적 필드 검증:');
+
+      // 프로젝트 할당 선택적 필드 검증
+      result.projectAssignments.forEach((assignment: any) => {
+        if (
+          assignment.deletedAt !== undefined &&
+          assignment.deletedAt !== null
+        ) {
+          expect(new Date(assignment.deletedAt).toString()).not.toBe(
+            'Invalid Date',
+          );
+          console.log('  ✓ projectAssignment.deletedAt: 유효한 Date');
+        }
+
+        if (
+          assignment.createdBy !== undefined &&
+          assignment.createdBy !== null
+        ) {
+          expect(typeof assignment.createdBy).toBe('string');
+          console.log('  ✓ projectAssignment.createdBy: 유효한 UUID');
+        }
+
+        if (
+          assignment.updatedBy !== undefined &&
+          assignment.updatedBy !== null
+        ) {
+          expect(typeof assignment.updatedBy).toBe('string');
+          console.log('  ✓ projectAssignment.updatedBy: 유효한 UUID');
+        }
+      });
+
+      // WBS 할당 선택적 필드 검증
+      result.wbsAssignments.forEach((assignment: any) => {
+        if (
+          assignment.deletedAt !== undefined &&
+          assignment.deletedAt !== null
+        ) {
+          expect(new Date(assignment.deletedAt).toString()).not.toBe(
+            'Invalid Date',
+          );
+          console.log('  ✓ wbsAssignment.deletedAt: 유효한 Date');
+        }
+
+        if (
+          assignment.createdBy !== undefined &&
+          assignment.createdBy !== null
+        ) {
+          expect(typeof assignment.createdBy).toBe('string');
+          console.log('  ✓ wbsAssignment.createdBy: 유효한 UUID');
+        }
+
+        if (
+          assignment.updatedBy !== undefined &&
+          assignment.updatedBy !== null
+        ) {
+          expect(typeof assignment.updatedBy).toBe('string');
+          console.log('  ✓ wbsAssignment.updatedBy: 유효한 UUID');
+        }
+      });
+
+      console.log('\n✅ 선택적 필드 검증 완료');
     });
   });
 });

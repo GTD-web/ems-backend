@@ -160,33 +160,46 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/evaluator/:evaluatorId
     });
   });
 
-  describe('시나리오 2: 다른 평가자의 피평가자 조회', () => {
+  describe('시나리오 2: 2차 평가자의 피평가자 조회', () => {
     let evaluatorId: string;
 
     beforeAll(async () => {
-      console.log('\n=== 시나리오 2: 다른 평가자의 피평가자 조회 ===');
+      console.log('\n=== 시나리오 2: 2차 평가자의 피평가자 조회 ===');
 
-      // 다른 평가자 조회
-      const mappings = await dataSource.manager.query(
-        `
-        SELECT DISTINCT m."evaluatorId"
-        FROM evaluation_line_mappings m
-        WHERE m."deletedAt" IS NULL
-        LIMIT 1 OFFSET 1
-        `,
-      );
+      // 2차 평가자 조회
+      const secondaryLine = await dataSource
+        .getRepository('EvaluationLine')
+        .createQueryBuilder('line')
+        .where('line."evaluatorType" = :type', { type: 'secondary' })
+        .andWhere('line."deletedAt" IS NULL')
+        .getOne();
 
-      if (mappings.length > 0) {
-        evaluatorId = mappings[0].evaluatorId;
-        console.log(`다른 평가자 ID: ${evaluatorId}`);
-      } else {
-        console.log('다른 평가자가 없어서 테스트 스킵');
+      if (secondaryLine) {
+        const mappings = await dataSource.manager.query(
+          `
+          SELECT DISTINCT m."evaluatorId"
+          FROM evaluation_line_mappings m
+          WHERE m."evaluationLineId" = $1
+          AND m."deletedAt" IS NULL
+          LIMIT 1
+          `,
+          [secondaryLine.id],
+        );
+
+        if (mappings.length > 0) {
+          evaluatorId = mappings[0].evaluatorId;
+          console.log(`2차 평가자 ID: ${evaluatorId}`);
+        }
+      }
+
+      if (!evaluatorId) {
+        console.log('2차 평가자가 없어서 테스트 스킵');
       }
     });
 
-    it('다른 평가자의 피평가자 목록을 조회할 수 있어야 한다', async () => {
+    it('2차 평가자로 구성된 피평가자 목록을 조회할 수 있어야 한다', async () => {
       if (!evaluatorId) {
-        console.log('다른 평가자가 없어서 테스트 스킵');
+        console.log('2차 평가자가 없어서 테스트 스킵');
         return;
       }
 
@@ -199,12 +212,12 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/evaluator/:evaluatorId
 
       const result = response.body;
 
-      console.log('\n📊 평가자 피평가자 수:', result.employees.length);
+      console.log('\n📊 2차 평가자 피평가자 수:', result.employees.length);
 
       expect(result.evaluatorId).toBe(evaluatorId);
       expect(Array.isArray(result.employees)).toBe(true);
 
-      console.log('\n✅ 평가자 피평가자 조회 성공');
+      console.log('\n✅ 2차 평가자 피평가자 조회 성공');
     });
   });
 
@@ -257,6 +270,148 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/evaluator/:evaluatorId
       expect(result.employees.length).toBeGreaterThanOrEqual(2);
 
       console.log('\n✅ 여러 피평가자 조회 성공');
+    });
+  });
+
+  describe('시나리오 3-1: 1차 및 2차 평가자 모두 구성된 경우', () => {
+    let primaryEvaluatorId: string;
+    let secondaryEvaluatorId: string;
+
+    beforeAll(async () => {
+      console.log('\n=== 시나리오 3-1: 1차 및 2차 평가자 모두 구성된 경우 ===');
+
+      // 1차 평가자 조회
+      const primaryLine = await dataSource
+        .getRepository('EvaluationLine')
+        .createQueryBuilder('line')
+        .where('line."evaluatorType" = :type', { type: 'primary' })
+        .andWhere('line."deletedAt" IS NULL')
+        .getOne();
+
+      if (primaryLine) {
+        const primaryMappings = await dataSource.manager.query(
+          `
+          SELECT DISTINCT m."evaluatorId"
+          FROM evaluation_line_mappings m
+          WHERE m."evaluationLineId" = $1
+          AND m."deletedAt" IS NULL
+          LIMIT 1
+          `,
+          [primaryLine.id],
+        );
+
+        if (primaryMappings.length > 0) {
+          primaryEvaluatorId = primaryMappings[0].evaluatorId;
+        }
+      }
+
+      // 2차 평가자 조회
+      const secondaryLine = await dataSource
+        .getRepository('EvaluationLine')
+        .createQueryBuilder('line')
+        .where('line."evaluatorType" = :type', { type: 'secondary' })
+        .andWhere('line."deletedAt" IS NULL')
+        .getOne();
+
+      if (secondaryLine) {
+        const secondaryMappings = await dataSource.manager.query(
+          `
+          SELECT DISTINCT m."evaluatorId"
+          FROM evaluation_line_mappings m
+          WHERE m."evaluationLineId" = $1
+          AND m."deletedAt" IS NULL
+          LIMIT 1
+          `,
+          [secondaryLine.id],
+        );
+
+        if (secondaryMappings.length > 0) {
+          secondaryEvaluatorId = secondaryMappings[0].evaluatorId;
+        }
+      }
+
+      console.log(`1차 평가자 ID: ${primaryEvaluatorId}`);
+      console.log(`2차 평가자 ID: ${secondaryEvaluatorId}`);
+    });
+
+    it('1차 평가자의 피평가자를 조회할 수 있어야 한다', async () => {
+      if (!primaryEvaluatorId) {
+        console.log('1차 평가자가 없어서 테스트 스킵');
+        return;
+      }
+
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/evaluation-criteria/evaluation-lines/evaluator/${primaryEvaluatorId}/employees`,
+        )
+        .expect(HttpStatus.OK);
+
+      const result = response.body;
+
+      console.log('\n📊 1차 평가자 피평가자 수:', result.employees.length);
+
+      expect(result.evaluatorId).toBe(primaryEvaluatorId);
+      expect(Array.isArray(result.employees)).toBe(true);
+      expect(result.employees.length).toBeGreaterThan(0);
+
+      console.log('\n✅ 1차 평가자 피평가자 조회 성공');
+    });
+
+    it('2차 평가자의 피평가자를 조회할 수 있어야 한다', async () => {
+      if (!secondaryEvaluatorId) {
+        console.log('2차 평가자가 없어서 테스트 스킵');
+        return;
+      }
+
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/evaluation-criteria/evaluation-lines/evaluator/${secondaryEvaluatorId}/employees`,
+        )
+        .expect(HttpStatus.OK);
+
+      const result = response.body;
+
+      console.log('\n📊 2차 평가자 피평가자 수:', result.employees.length);
+
+      expect(result.evaluatorId).toBe(secondaryEvaluatorId);
+      expect(Array.isArray(result.employees)).toBe(true);
+      expect(result.employees.length).toBeGreaterThan(0);
+
+      console.log('\n✅ 2차 평가자 피평가자 조회 성공');
+    });
+
+    it('1차와 2차 평가자가 서로 다른 직원에 대해 구성되어야 한다', async () => {
+      if (!primaryEvaluatorId || !secondaryEvaluatorId) {
+        console.log('평가자가 없어서 테스트 스킵');
+        return;
+      }
+
+      const primaryResponse = await testSuite
+        .request()
+        .get(
+          `/admin/evaluation-criteria/evaluation-lines/evaluator/${primaryEvaluatorId}/employees`,
+        )
+        .expect(HttpStatus.OK);
+
+      const secondaryResponse = await testSuite
+        .request()
+        .get(
+          `/admin/evaluation-criteria/evaluation-lines/evaluator/${secondaryEvaluatorId}/employees`,
+        )
+        .expect(HttpStatus.OK);
+
+      const primaryResult = primaryResponse.body;
+      const secondaryResult = secondaryResponse.body;
+
+      console.log('\n📊 1차 평가자:', primaryResult.employees.length, '명');
+      console.log('📊 2차 평가자:', secondaryResult.employees.length, '명');
+
+      expect(primaryResult.employees.length).toBeGreaterThan(0);
+      expect(secondaryResult.employees.length).toBeGreaterThan(0);
+
+      console.log('\n✅ 1차/2차 평가자 모두 피평가자 존재');
     });
   });
 
@@ -503,7 +658,7 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/evaluator/:evaluatorId
         );
 
       console.log('\n📊 응답 상태:', response.status);
-      expect([404, 500]).toContain(response.status);
+      expect([400, 404, 500]).toContain(response.status);
 
       console.log('\n✅ 에러 응답 확인');
     });

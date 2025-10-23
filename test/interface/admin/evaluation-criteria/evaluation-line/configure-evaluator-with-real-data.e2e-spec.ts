@@ -510,7 +510,7 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       console.log('\n✅ 400 에러 반환 확인');
     });
 
-    it('잘못된 UUID 형식의 직원 ID로 요청 시 500 에러가 발생해야 한다', async () => {
+    it('잘못된 UUID 형식의 직원 ID로 요청 시 400 에러가 발생해야 한다', async () => {
       console.log('\n=== 시나리오 4-3: 잘못된 직원 ID ===');
 
       const evaluators = await dataSource
@@ -528,12 +528,12 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
           `/admin/evaluation-criteria/evaluation-lines/employee/invalid-uuid/wbs/${wbsItemId}/period/${evaluationPeriodId}/primary-evaluator`,
         )
         .send({ evaluatorId })
-        .expect(HttpStatus.INTERNAL_SERVER_ERROR);
+        .expect(HttpStatus.BAD_REQUEST);
 
-      console.log('\n✅ 500 에러 반환 확인 (UUID 검증 필요)');
+      console.log('\n✅ 400 에러 반환 확인');
     });
 
-    it('잘못된 UUID 형식의 WBS ID로 요청 시 500 에러가 발생해야 한다', async () => {
+    it('잘못된 UUID 형식의 WBS ID로 요청 시 400 에러가 발생해야 한다', async () => {
       console.log('\n=== 시나리오 4-4: 잘못된 WBS ID ===');
 
       const evaluators = await dataSource
@@ -551,9 +551,9 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
           `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/invalid-uuid/period/${evaluationPeriodId}/primary-evaluator`,
         )
         .send({ evaluatorId })
-        .expect(HttpStatus.INTERNAL_SERVER_ERROR);
+        .expect(HttpStatus.BAD_REQUEST);
 
-      console.log('\n✅ 500 에러 반환 확인 (UUID 검증 필요)');
+      console.log('\n✅ 400 에러 반환 확인');
     });
   });
 });
