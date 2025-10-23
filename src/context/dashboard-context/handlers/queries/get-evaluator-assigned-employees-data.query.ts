@@ -12,7 +12,7 @@ import {
   EmployeeAssignedDataResult,
   EvaluationPeriodInfo,
   EmployeeInfo,
-} from './get-employee-assigned-data.query';
+} from './get-employee-assigned-data';
 
 /**
  * 담당자의 피평가자 할당 정보 조회 쿼리

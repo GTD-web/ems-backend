@@ -492,6 +492,41 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
     });
 
     it('자기평가, 1차, 2차 하향평가 점수/등급이 모두 계산되어야 한다', async () => {
+      // DB에서 2차 평가자 할당 확인
+      const secondaryMappings = await dataSource
+        .getRepository('EvaluationLineMapping')
+        .createQueryBuilder('mapping')
+        .leftJoin(
+          'EvaluationLine',
+          'line',
+          'line.id = mapping.evaluationLineId',
+        )
+        .where('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('line.evaluatorType = :type', { type: 'secondary' })
+        .andWhere('mapping.deletedAt IS NULL')
+        .getRawMany();
+
+      console.log('\n=== 2차 평가자 할당 확인 ===');
+      console.log('2차 평가자 매핑 수:', secondaryMappings.length);
+      if (secondaryMappings.length > 0) {
+        console.log('2차 평가자 ID:', secondaryMappings[0].mapping_evaluatorId);
+      }
+
+      // 2차 하향평가 데이터 확인
+      const secondaryEvaluations = await dataSource
+        .getRepository('DownwardEvaluation')
+        .createQueryBuilder('eval')
+        .where('eval.employeeId = :employeeId', { employeeId })
+        .andWhere('eval.evaluationType = :type', { type: 'secondary' })
+        .andWhere('eval.deletedAt IS NULL')
+        .getRawMany();
+
+      console.log('2차 하향평가 레코드 수:', secondaryEvaluations.length);
+      console.log(
+        '완료된 2차 하향평가 수:',
+        secondaryEvaluations.filter((e) => e.eval_isCompleted).length,
+      );
+
       const response = await testSuite
         .request()
         .get(

@@ -20,7 +20,7 @@ export {
   type EmployeeAssignedDataResult,
   type EvaluationPeriodInfo,
   type EmployeeInfo,
-} from './get-employee-assigned-data.query';
+} from './get-employee-assigned-data';
 
 export {
   GetEvaluatorAssignedEmployeesDataQuery,
@@ -50,7 +50,7 @@ export {
 import { GetEmployeeEvaluationPeriodStatusHandler } from './get-employee-evaluation-period-status';
 import { GetAllEmployeesEvaluationPeriodStatusHandler } from './get-all-employees-evaluation-period-status.query';
 import { GetMyEvaluationTargetsStatusHandler } from './get-my-evaluation-targets-status.query';
-import { GetEmployeeAssignedDataHandler } from './get-employee-assigned-data.query';
+import { GetEmployeeAssignedDataHandler } from './get-employee-assigned-data';
 import { GetEvaluatorAssignedEmployeesDataHandler } from './get-evaluator-assigned-employees-data.query';
 import { GetFinalEvaluationsByPeriodHandler } from './get-final-evaluations-by-period.query';
 import { GetFinalEvaluationsByEmployeeHandler } from './get-final-evaluations-by-employee.query';
