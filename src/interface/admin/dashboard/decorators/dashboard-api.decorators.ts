@@ -373,25 +373,109 @@ export function GetEvaluatorAssignedEmployeesData() {
 - 평가자 기본 정보 반환 (직원명, 직원번호, 이메일, 부서, 상태)
 - 피평가자의 할당된 프로젝트 목록을 프로젝트별로 그룹화하여 반환
 - 각 프로젝트에 속한 WBS 목록 반환 (WBS 정보, 평가기준, 성과, 자기평가, 하향평가 포함)
-- 데이터 요약 정보 제공 (총 프로젝트 수, 총 WBS 수, 완료된 성과 수, 완료된 자기평가 수)
 - 평가자가 담당하지 않는 피평가자 조회 시 404 에러 반환
 - 등록되지 않은 직원이나 존재하지 않는 평가기간 조회 시 404 에러 반환
 
+**반환 데이터 구조:**
+\`\`\`json
+{
+  "evaluationPeriod": {
+    "id": "평가기간 ID",
+    "name": "평가기간명",
+    "startDate": "시작일",
+    "endDate": "종료일",
+    "status": "상태",
+    "criteriaSettingEnabled": "평가기준 설정 가능 여부",
+    "selfEvaluationSettingEnabled": "자기평가 설정 가능 여부",
+    "finalEvaluationSettingEnabled": "최종평가 설정 가능 여부",
+    "maxSelfEvaluationRate": "자기평가 최대 달성률"
+  },
+  "evaluator": {
+    "id": "평가자 ID",
+    "name": "평가자명",
+    "employeeNumber": "사번",
+    "email": "이메일",
+    "departmentName": "부서명",
+    "rankName": "직책",
+    "status": "상태"
+  },
+  "evaluatee": {
+    "employee": { /* 피평가자 정보 (evaluator와 동일 구조) */ },
+    "projects": [
+      {
+        "projectId": "프로젝트 ID",
+        "projectName": "프로젝트명",
+        "projectCode": "프로젝트 코드",
+        "assignedAt": "할당일시",
+        "projectManager": {
+          "id": "PM ID",
+          "name": "PM명"
+        },
+        "wbsList": [
+          {
+            "wbsId": "WBS ID",
+            "wbsName": "WBS명",
+            "wbsCode": "WBS 코드",
+            "weight": "가중치(%)",
+            "assignedAt": "할당일시",
+            "criteria": [
+              {
+                "criterionId": "평가기준 ID",
+                "criteria": "평가기준 내용"
+              }
+            ],
+            "performance": {
+              "performanceResult": "성과 결과",
+              "isCompleted": "완료 여부",
+              "completedAt": "완료일시"
+            },
+            "selfEvaluation": {
+              "selfEvaluationId": "자기평가 ID",
+              "evaluationContent": "평가 내용",
+              "score": "점수",
+              "isCompleted": "완료 여부",
+              "isEditable": "수정 가능 여부",
+              "submittedAt": "제출일시"
+            },
+            "primaryDownwardEvaluation": {
+              "evaluatorName": "1차 평가자명",
+              "score": "점수",
+              "isCompleted": "완료 여부",
+              "isEditable": "수정 가능 여부"
+            },
+            "secondaryDownwardEvaluation": {
+              "evaluatorName": "2차 평가자명",
+              "score": "점수",
+              "isCompleted": "완료 여부",
+              "isEditable": "수정 가능 여부"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
+\`\`\`
+
 **테스트 케이스:**
-- 유효한 평가기간, 평가자, 피평가자 ID로 할당 정보를 조회할 수 있어야 한다
-- 응답에 모든 필수 필드가 포함되어야 한다 (evaluationPeriod, evaluator, evaluatee)
-- 평가자가 PRIMARY 평가자로 지정된 경우 조회 성공해야 한다
-- 평가자가 SECONDARY 평가자로 지정된 경우 조회 성공해야 한다
-- 피평가자의 프로젝트와 WBS 정보가 포함되어야 한다
-- 평가자로 지정되지 않은 직원이 조회 시 404 에러가 발생해야 한다
-- 존재하지 않는 평가기간 조회 시 404 에러가 발생해야 한다
-- 존재하지 않는 평가자 조회 시 404 에러가 발생해야 한다
-- 존재하지 않는 피평가자 조회 시 404 에러가 발생해야 한다
-- 잘못된 평가기간 UUID 형식으로 요청 시 400 에러가 발생해야 한다
-- 잘못된 평가자 UUID 형식으로 요청 시 400 에러가 발생해야 한다
-- 잘못된 피평가자 UUID 형식으로 요청 시 400 에러가 발생해야 한다
-- 평가자와 피평가자 정보가 올바르게 분리되어야 한다
-- 여러 평가자가 동일한 피평가자를 조회해도 데이터가 일관되어야 한다
+- 담당자의 피평가자 할당 정보 조회 성공
+- 응답에 모든 필수 필드 포함 (evaluationPeriod, evaluator, evaluatee)
+- 평가자가 PRIMARY 평가자로 지정된 경우 조회 성공
+- 평가자가 SECONDARY 평가자로 지정된 경우 조회 성공
+- WBS별 평가기준 확인 (criteria 배열)
+- WBS별 가중치 확인 (0-100% 범위)
+- 성과 및 자기평가 완료 현황 확인 (isCompleted 필드)
+- 하향평가 정보 확인 (1차/2차 평가)
+- 프로젝트 매니저 정보 검증
+- 일반 조회와 평가자별 조회 데이터 일관성 확인
+- 존재하지 않는 평가기간 조회 시 404 에러
+- 존재하지 않는 평가자 조회 시 404 에러
+- 존재하지 않는 피평가자 조회 시 404 에러
+- 잘못된 평가기간 UUID 형식으로 요청 시 400 에러
+- 잘못된 평가자 UUID 형식으로 요청 시 400 에러
+- 잘못된 피평가자 UUID 형식으로 요청 시 400 에러
+- 평가자가 담당하지 않는 피평가자 조회 시 404 에러
+- 응답 속도 측정 (3회 반복, 평균 500ms 이내)
 
 **성능:**
 - 평균 응답 시간: ~100ms (목표: 1500ms 이내)
@@ -453,14 +537,52 @@ export function GetFinalEvaluationsByPeriod() {
 - 제외된 직원(isExcluded=true)은 결과에서 자동 제외
 - 삭제된 최종평가는 조회되지 않음
 
+**반환 데이터 구조:**
+\`\`\`json
+{
+  "period": {
+    "id": "평가기간 ID",
+    "name": "평가기간명",
+    "startDate": "시작일",
+    "endDate": "종료일"
+  },
+  "evaluations": [
+    {
+      "employee": {
+        "id": "직원 ID",
+        "name": "직원명",
+        "employeeNumber": "사번",
+        "email": "이메일",
+        "departmentName": "부서명",
+        "rankName": "직책"
+      },
+      "evaluation": {
+        "id": "최종평가 ID",
+        "evaluationGrade": "평가등급 (S, A, B, C, D)",
+        "jobGrade": "직무등급 (T1, T2, T3)",
+        "jobDetailedGrade": "직무 상세등급 (u, n, a)",
+        "finalComments": "최종 평가 의견",
+        "isConfirmed": "확정 여부",
+        "confirmedAt": "확정일시",
+        "confirmedBy": "확정자 ID",
+        "createdAt": "생성일시",
+        "updatedAt": "수정일시"
+      }
+    }
+  ]
+}
+\`\`\`
+
 **테스트 케이스:**
-- 평가기간에 등록된 모든 최종평가를 조회할 수 있어야 함
-- 빈 결과: 최종평가가 없는 경우 빈 배열 반환
-- 제외된 직원: isExcluded=true인 직원의 최종평가는 조회되지 않음
-- 사번 순으로 정렬: 직원 사번 오름차순으로 정렬되어야 함
-- 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러
-- 존재하지 않는 평가기간: 존재하지 않는 평가기간 조회 시 404 에러
-- 응답 구조 검증: 응답에 필요한 모든 필드가 포함되어야 함
+- 첫 번째 평가기간의 최종평가 목록 조회 성공
+- 열 번째 평가기간의 최종평가 목록 조회 성공
+- 평가기간 정보 검증 (id, name, startDate, endDate)
+- 직원 정보 검증 (id, name, employeeNumber, email, departmentName, rankName)
+- 최종평가 정보 검증 (id, evaluationGrade, jobGrade, jobDetailedGrade, isConfirmed, createdAt, updatedAt)
+- 직원 사번 오름차순 정렬 확인
+- 존재하지 않는 평가기간 조회 시 404 에러
+- 잘못된 UUID 형식으로 요청 시 400 에러
+- 응답 구조 검증 (period와 evaluations 필드 포함)
 
 **성능:**
 - 대용량 데이터 (100명): 평균 ~25ms (목표 2,000ms 대비 98.8% 빠름, 1.2% 달성) 🚀
@@ -507,14 +629,55 @@ export function GetFinalEvaluationsByEmployee() {
 - startDate, endDate로 날짜 범위 필터링 가능 (평가기간 시작일 기준)
 - 날짜 범위를 지정하지 않으면 모든 평가기간의 최종평가 조회
 
+**반환 데이터 구조:**
+\`\`\`json
+{
+  "employee": {
+    "id": "직원 ID",
+    "name": "직원명",
+    "employeeNumber": "사번",
+    "email": "이메일",
+    "departmentName": "부서명",
+    "rankName": "직책"
+  },
+  "finalEvaluations": [
+    {
+      "id": "최종평가 ID",
+      "period": {
+        "id": "평가기간 ID",
+        "name": "평가기간명",
+        "startDate": "시작일",
+        "endDate": "종료일"
+      },
+      "evaluationGrade": "평가등급 (S, A, B, C, D)",
+      "jobGrade": "직무등급 (T1, T2, T3)",
+      "jobDetailedGrade": "직무 상세등급 (u, n, a)",
+      "finalComments": "최종 평가 의견",
+      "isConfirmed": "확정 여부",
+      "confirmedAt": "확정일시",
+      "confirmedBy": "확정자 ID",
+      "createdAt": "생성일시",
+      "updatedAt": "수정일시"
+    }
+  ]
+}
+\`\`\`
+
 **테스트 케이스:**
-- 직원의 모든 최종평가를 조회할 수 있어야 함
-- 날짜 범위 필터링: startDate, endDate로 특정 기간의 평가만 조회
-- 빈 결과: 최종평가가 없는 경우 빈 배열 반환
-- 평가기간 시작일 내림차순 정렬: 최신 평가가 먼저 표시되어야 함
-- 잘못된 UUID: 잘못된 UUID 형식으로 요청 시 400 에러
-- 존재하지 않는 직원: 존재하지 않는 직원 조회 시 404 에러
-- 응답 구조 검증: 응답에 필요한 모든 필드가 포함되어야 함 (평가기간 정보 포함)`,
+- 직원의 모든 평가기간 최종평가 조회 성공
+- 여러 직원의 최종평가 조회 (데이터 일관성 확인)
+- 최종평가 시간순 정렬 확인 (평가기간 시작일 내림차순)
+- startDate 필터: 특정 날짜 이후 평가만 조회
+- endDate 필터: 특정 날짜 이전 평가만 조회
+- startDate & endDate 필터: 특정 기간 내 평가만 조회
+- 미래 날짜 필터: 빈 배열 반환
+- 최종평가가 하나도 없는 직원 조회 (빈 배열 반환)
+- 여러 평가기간에 걸친 평가 등급 분포 확인
+- 평가 확정 상태 확인 (isConfirmed 필드)
+- 존재하지 않는 직원 조회 시 404 에러
+- 잘못된 UUID 형식으로 요청 시 400 에러
+- 잘못된 날짜 형식으로 요청 시 400 에러
+- 동시에 여러 직원 조회 성능 테스트 (5명, 2초 이내)`,
     }),
     ApiParam({
       name: 'employeeId',
@@ -567,15 +730,64 @@ export function GetAllEmployeesFinalEvaluations() {
 - 제외된 직원(isExcluded=true)은 결과에서 자동 제외
 - 삭제된 최종평가는 조회되지 않음
 
+**반환 데이터 구조:**
+\`\`\`json
+{
+  "evaluationPeriods": [
+    {
+      "id": "평가기간 ID",
+      "name": "평가기간명",
+      "startDate": "시작일",
+      "endDate": "종료일"
+    }
+  ],
+  "employees": [
+    {
+      "employee": {
+        "id": "직원 ID",
+        "name": "직원명",
+        "employeeNumber": "사번",
+        "email": "이메일",
+        "departmentName": "부서명",
+        "rankName": "직책"
+      },
+      "finalEvaluations": [
+        {
+          "id": "최종평가 ID",
+          "evaluationGrade": "평가등급 (S, A, B, C, D)",
+          "jobGrade": "직무등급 (T1, T2, T3)",
+          "jobDetailedGrade": "직무 상세등급 (u, n, a)",
+          "finalComments": "최종 평가 의견",
+          "isConfirmed": "확정 여부",
+          "confirmedAt": "확정일시",
+          "confirmedBy": "확정자 ID",
+          "createdAt": "생성일시",
+          "updatedAt": "수정일시"
+        },
+        null
+      ]
+    }
+  ]
+}
+\`\`\`
+**참고:** finalEvaluations 배열의 인덱스는 evaluationPeriods 배열의 인덱스와 일치합니다. 특정 평가기간에 평가가 없으면 해당 위치에 null이 들어갑니다.
+
 **테스트 케이스:**
-- 기본 조회: 모든 직원의 최종평가를 조회할 수 있어야 함
-- 날짜 범위 필터링: startDate, endDate로 특정 기간의 평가만 조회
-- 빈 결과: 최종평가가 없는 경우 빈 배열 반환
-- 제외된 직원: isExcluded=true인 직원의 최종평가는 조회되지 않음
-- 정렬 확인: 평가기간 시작일 내림차순, 직원 사번 오름차순 정렬
-- 배열 길이 일치: 각 직원의 finalEvaluations 배열 길이가 evaluationPeriods 배열 길이와 같음
-- 잘못된 날짜 형식: 잘못된 날짜 형식으로 요청 시 400 에러
-- 응답 구조 검증: 응답에 evaluationPeriods와 employees 필드 포함
+- 기본 조회: 모든 직원의 모든 평가기간 최종평가 조회 성공
+- 기간 필터: startDate만 지정하여 해당 날짜 이후 평가기간 조회
+- 기간 필터: endDate만 지정하여 해당 날짜 이전 평가기간 조회
+- 기간 필터: startDate와 endDate 모두 지정하여 기간 범위 내 조회
+- 평가기간 검증 (id, name, startDate, endDate 필드 포함)
+- 직원 검증 (id, name, employeeNumber, email 필드 포함)
+- 최종평가 정보 검증 (id, evaluationGrade, jobGrade, isConfirmed 등)
+- 평가기간 시작일 내림차순 정렬 확인 (최신순)
+- 직원 사번 오름차순 정렬 확인
+- 배열 길이 일치 확인 (finalEvaluations 배열 길이 = evaluationPeriods 배열 길이)
+- null 처리 확인 (평가가 없는 평가기간은 null)
+- 전체 조회와 평가기간별 조회 결과 일관성 확인
+- 직원별 조회와 전체 조회 결과 일관성 확인
+- 잘못된 날짜 형식으로 요청 시 400 에러
+- 응답 구조 검증 (evaluationPeriods와 employees 필드 포함)
 
 **성능:**
 - 초대용량 데이터 (100명 x 10개 평가기간): 평균 ~55ms (목표 5,000ms 대비 98.9% 빠름, 1.1% 달성) 🚀
