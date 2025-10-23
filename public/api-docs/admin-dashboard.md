@@ -493,7 +493,10 @@ interface EvaluatorAssignedEmployeesDataResponseDto {
     startDate: Date; // 시작일
     endDate?: Date; // 종료일
     status: string; // 상태
-    // ... 기타 평가기간 정보
+    criteriaSettingEnabled: boolean; // 평가기준 설정 가능 여부
+    selfEvaluationSettingEnabled: boolean; // 자기평가 설정 가능 여부
+    finalEvaluationSettingEnabled: boolean; // 최종평가 설정 가능 여부
+    maxSelfEvaluationRate: number; // 자기평가 최대 달성률
   };
 
   evaluator: {
@@ -502,6 +505,7 @@ interface EvaluatorAssignedEmployeesDataResponseDto {
     name: string; // 평가자 이름
     email: string; // 이메일
     departmentName?: string; // 부서명
+    rankName?: string; // 직급명
     status: string; // 상태
   };
 
@@ -512,17 +516,55 @@ interface EvaluatorAssignedEmployeesDataResponseDto {
       name: string; // 피평가자 이름
       email: string; // 이메일
       departmentName?: string; // 부서명
+      rankName?: string; // 직급명
       status: string; // 상태
     };
     projects: Array<{
-      // EmployeeAssignedDataResponseDto의 projects와 동일한 구조
+      projectId: string; // 프로젝트 ID
+      projectName: string; // 프로젝트명
+      projectCode: string; // 프로젝트 코드
+      assignedAt: Date; // 할당일시
+      projectManager: {
+        id: string; // PM ID
+        name: string; // PM명
+      };
+      wbsList: Array<{
+        wbsId: string; // WBS ID
+        wbsName: string; // WBS명
+        wbsCode: string; // WBS 코드
+        weight: number; // 가중치(%)
+        assignedAt: Date; // 할당일시
+        criteria: Array<{
+          criterionId: string; // 평가기준 ID
+          criteria: string; // 평가기준 내용
+        }>;
+        performance?: {
+          performanceResult: string; // 성과 결과
+          isCompleted: boolean; // 완료 여부
+          completedAt: Date; // 완료일시
+        } | null;
+        selfEvaluation?: {
+          selfEvaluationId: string; // 자기평가 ID
+          evaluationContent: string; // 평가 내용
+          score: number; // 점수
+          isCompleted: boolean; // 완료 여부
+          isEditable: boolean; // 수정 가능 여부
+          submittedAt: Date; // 제출일시
+        } | null;
+        primaryDownwardEvaluation?: {
+          evaluatorName: string; // 1차 평가자명
+          score: number; // 점수
+          isCompleted: boolean; // 완료 여부
+          isEditable: boolean; // 수정 가능 여부
+        } | null;
+        secondaryDownwardEvaluation?: {
+          evaluatorName: string; // 2차 평가자명
+          score: number; // 점수
+          isCompleted: boolean; // 완료 여부
+          isEditable: boolean; // 수정 가능 여부
+        } | null;
+      }>;
     }>;
-    summary: {
-      totalProjects: number; // 전체 프로젝트 수
-      totalWbs: number; // 전체 WBS 수
-      completedPerformances: number; // 완료된 성과 수
-      completedSelfEvaluations: number; // 완료된 자기평가 수
-    };
   };
 }
 
@@ -536,9 +578,19 @@ EvaluatorAssignedEmployeesDataResponseDto;
 - `400`: 잘못된 UUID 형식
 - `404`: 평가기간, 평가자 또는 피평가자를 찾을 수 없거나 평가자가 담당하지 않는 피평가자
 
+**주요 특징:**
+
+- **평가자-피평가자 관계 확인**: EvaluationLineMapping 테이블에서 평가자 권한 검증
+- **프로젝트별 그룹화**: 피평가자의 프로젝트를 기준으로 WBS 목록 제공
+- **WBS별 상세 정보**: 평가기준, 성과, 자기평가, 하향평가 정보 포함
+- **가중치 정보**: 각 WBS의 가중치(0-100%) 제공
+- **평가 완료 현황**: isCompleted 필드로 각 평가 단계의 완료 여부 확인
+
 **성능 지표:**
 
 - 평균 응답 시간: ~100ms
+- 연속 조회: 평균 98ms로 안정적
+- 병렬 조회 (4명 동시): 평균 65ms/요청
 
 ---
 
@@ -578,9 +630,9 @@ interface DashboardFinalEvaluationsByPeriodResponseDto {
     };
     evaluation: {
       id: string; // 최종평가 ID
-      evaluationGrade: string; // 평가 등급
+      evaluationGrade: string; // 평가 등급 (S, A, B, C, D)
       jobGrade: string; // 직무 등급 (T1, T2, T3)
-      jobDetailedGrade: string; // 직무 상세 등급 (a, n, u)
+      jobDetailedGrade: string; // 직무 상세 등급 (u, n, a)
       finalComments: string | null; // 최종 코멘트
       isConfirmed: boolean; // 확정 여부
       confirmedAt: Date | null; // 확정 일시
@@ -601,9 +653,18 @@ DashboardFinalEvaluationsByPeriodResponseDto;
 - `400`: 잘못된 UUID 형식
 - `404`: 평가기간을 찾을 수 없음
 
+**주요 특징:**
+
+- **평가기간 정보 최상단 제공**: period 객체에 평가기간 정보를 한 번만 제공
+- **직원 사번 오름차순 정렬**: 직원 사번 기준으로 자동 정렬
+- **제외된 직원 자동 필터링**: isExcluded=true인 직원은 결과에서 제외
+- **삭제된 평가 제외**: 삭제된 최종평가는 조회되지 않음
+
 **성능 지표:**
 
-- 대용량 (100명): 평균 ~25ms
+- 대용량 (100명): 평균 ~25ms (목표 2,000ms 대비 98.8% 빠름)
+- 연속 조회: 평균 14ms로 매우 안정적
+- 병렬 조회 (5건 동시): 평균 11ms/요청 (56% 성능 향상)
 
 ---
 
@@ -649,9 +710,9 @@ interface EmployeeFinalEvaluationListResponseDto {
       startDate: Date; // 시작일
       endDate: Date | null; // 종료일
     };
-    evaluationGrade: string; // 평가 등급
+    evaluationGrade: string; // 평가 등급 (S, A, B, C, D)
     jobGrade: string; // 직무 등급 (T1, T2, T3)
-    jobDetailedGrade: string; // 직무 상세 등급
+    jobDetailedGrade: string; // 직무 상세 등급 (u, n, a)
     finalComments: string | null; // 최종 코멘트
     isConfirmed: boolean; // 확정 여부
     confirmedAt: Date | null; // 확정 일시
@@ -670,6 +731,20 @@ EmployeeFinalEvaluationListResponseDto;
 - `200`: 최종평가 목록 조회 성공
 - `400`: 잘못된 UUID 형식 또는 날짜 형식
 - `404`: 직원을 찾을 수 없음
+
+**주요 특징:**
+
+- **직원 정보 최상단 제공**: employee 객체에 직원 정보를 한 번만 제공
+- **평가기간 정보 포함**: 각 최종평가마다 평가기간 정보 포함
+- **최신순 정렬**: 평가기간 시작일 내림차순 정렬 (최신 평가가 먼저)
+- **날짜 범위 필터링**: startDate, endDate로 특정 기간의 평가만 조회 가능
+- **빈 배열 지원**: 평가가 없는 경우에도 직원 정보와 함께 빈 배열 반환
+
+**사용 시나리오:**
+
+1. **직원 평가 이력 조회**: 특정 직원의 모든 평가 이력 확인
+2. **기간별 평가 추이**: 날짜 필터를 사용하여 특정 기간의 평가 추이 분석
+3. **등급 변화 추적**: 시간에 따른 평가 등급 및 직무 등급 변화 확인
 
 ---
 
@@ -710,9 +785,9 @@ interface AllEmployeesFinalEvaluationsResponseDto {
     };
     finalEvaluations: Array<{
       id: string; // 최종평가 ID
-      evaluationGrade: string; // 평가 등급
+      evaluationGrade: string; // 평가 등급 (S, A, B, C, D)
       jobGrade: string; // 직무 등급 (T1, T2, T3)
-      jobDetailedGrade: string; // 직무 상세 등급
+      jobDetailedGrade: string; // 직무 상세 등급 (u, n, a)
       finalComments: string | null; // 최종 코멘트
       isConfirmed: boolean; // 확정 여부
       confirmedAt: Date | null; // 확정 일시
@@ -732,9 +807,44 @@ AllEmployeesFinalEvaluationsResponseDto;
 - `200`: 최종평가 목록 조회 성공
 - `400`: 잘못된 날짜 형식
 
+**주요 특징:**
+
+- **매트릭스 구조**: 평가기간 x 직원의 2차원 매트릭스 형태로 데이터 제공
+- **인덱스 매칭**: `finalEvaluations` 배열의 인덱스가 `evaluationPeriods` 배열의 인덱스와 일치
+- **null 처리**: 특정 평가기간에 평가가 없으면 해당 위치에 `null` 반환
+- **평가기간 시작일 내림차순**: 최신 평가기간이 먼저 나열 (최신순)
+- **직원 사번 오름차순**: 직원 사번 기준으로 정렬
+- **제외된 직원 자동 필터링**: isExcluded=true인 직원은 결과에서 제외
+
+**데이터 구조 예시:**
+
+```typescript
+// evaluationPeriods가 [2024년, 2023년, 2022년] 순서일 때
+// employees[0].finalEvaluations는 다음과 같은 구조:
+[
+  {
+    /* 2024년 평가 */
+  },
+  null, // 2023년 평가 없음
+  {
+    /* 2022년 평가 */
+  },
+];
+```
+
+**사용 시나리오:**
+
+1. **전사 평가 현황 대시보드**: 모든 직원의 여러 평가기간 평가를 한 눈에 확인
+2. **평가 완료율 추적**: 각 평가기간별 평가 완료 현황 파악
+3. **연도별 평가 비교**: 직원별 연도별 평가 등급 변화 추이 분석
+4. **조직별 평가 분석**: 부서별 평가 분포 및 추이 분석
+
 **성능 지표:**
 
-- 초대용량 (100명 x 10개 평가기간): 평균 ~55ms
+- 초대용량 (100명 x 10개 평가기간 = 1,000건): 평균 ~55ms (목표 5,000ms 대비 98.9% 빠름)
+- 연속 조회: 평균 48ms로 매우 안정적 (변동폭 8.3%)
+- 병렬 조회 (5건 동시): 평균 29ms/요청 (40% 성능 향상)
+- 날짜 필터링: 31ms로 매우 빠른 응답
 
 ---
 
@@ -890,6 +1000,55 @@ const result = await response.json();
 // result.employee: 직원 정보
 // result.finalEvaluations: 최종평가 목록 (최신순)
 console.log(`평가 횟수: ${result.finalEvaluations.length}`);
+
+// 각 평가 이력 출력
+result.finalEvaluations.forEach((evaluation) => {
+  console.log(
+    `${evaluation.period.name}: ${evaluation.evaluationGrade} / ${evaluation.jobGrade}`,
+  );
+});
+```
+
+### 8. 전체 직원별 최종평가 목록 조회 (매트릭스)
+
+```typescript
+const response = await fetch(
+  `http://localhost:4000/admin/dashboard/final-evaluations?startDate=2024-01-01`,
+  {
+    headers: {
+      Authorization: 'Bearer YOUR_JWT_TOKEN',
+    },
+  },
+);
+
+const result = await response.json();
+// result.evaluationPeriods: 평가기간 목록 (최신순)
+// result.employees: 직원별 최종평가 목록
+
+console.log(`평가기간 수: ${result.evaluationPeriods.length}`);
+console.log(`직원 수: ${result.employees.length}`);
+
+// 평가기간 헤더 출력
+const periodNames = result.evaluationPeriods.map((p) => p.name).join(' | ');
+console.log(`평가기간: ${periodNames}`);
+
+// 각 직원의 평가 매트릭스 출력
+result.employees.forEach((employeeData) => {
+  const grades = employeeData.finalEvaluations
+    .map((eval) => (eval ? eval.evaluationGrade : '-'))
+    .join(' | ');
+  console.log(`${employeeData.employee.name}: ${grades}`);
+});
+
+// 특정 평가기간의 평가 완료율 계산
+const periodIndex = 0; // 첫 번째(최신) 평가기간
+const completedCount = result.employees.filter(
+  (e) => e.finalEvaluations[periodIndex] !== null,
+).length;
+const completionRate = (completedCount / result.employees.length) * 100;
+console.log(
+  `${result.evaluationPeriods[periodIndex].name} 완료율: ${completionRate.toFixed(1)}%`,
+);
 ```
 
 ---
@@ -936,5 +1095,5 @@ console.log(`평가 횟수: ${result.finalEvaluations.length}`);
 ---
 
 **API 버전**: v1  
-**마지막 업데이트**: 2025-10-20  
-**문서 경로**: `docs/interface/admin/dashboard/dashboard-api-reference.md`
+**마지막 업데이트**: 2025-10-23  
+**문서 경로**: `public/api-docs/admin-dashboard.md`
