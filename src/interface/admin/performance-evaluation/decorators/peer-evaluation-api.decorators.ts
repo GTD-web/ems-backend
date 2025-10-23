@@ -523,12 +523,13 @@ export function GetEvaluatorAssignedEvaluatees() {
 - 피평가자 직원 정보 및 부서 정보 포함
 - 평가 진행 상태 정보 포함 (status, isCompleted, completedAt)
 - 요청 마감일 정보 포함 (requestDeadline)
+- 요청자(mappedBy) 정보 포함 (동료평가를 요청한 관리자 정보)
 - 기본적으로 완료되지 않은 평가만 조회 (includeCompleted=false)
 - periodId로 특정 평가기간 필터링 가능
 
 **응답 구조:**
 - 배열 형태의 직접 반환 (페이지네이션 없음)
-- 각 항목에 평가 정보 + 피평가자 정보 + 부서 정보 포함
+- 각 항목에 평가 정보 + 피평가자 정보 + 부서 정보 + 요청자 정보 포함
 
 **정렬 기준:**
 - 미완료 평가 우선
@@ -547,6 +548,7 @@ export function GetEvaluatorAssignedEvaluatees() {
 - 피평가자 항목에 필수 필드가 포함되어야 한다
 - 피평가자 정보에 직원 필드가 포함되어야 한다
 - 피평가자 부서 정보가 포함되어야 한다
+- 요청자(mappedBy) 정보가 포함되어야 한다
 - UUID 필드가 유효한 UUID 형식이어야 한다`,
     }),
     ApiParam({

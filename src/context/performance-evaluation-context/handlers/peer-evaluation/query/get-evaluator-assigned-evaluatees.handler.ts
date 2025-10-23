@@ -48,6 +48,16 @@ export interface EvaluatorAssignedEvaluatee {
     name: string;
     code: string;
   } | null;
+
+  // 요청자 정보
+  mappedBy: {
+    id: string;
+    name: string;
+    employeeNumber: string;
+    email: string;
+    departmentId: string;
+    status: string;
+  } | null;
 }
 
 /**
@@ -90,6 +100,11 @@ export class GetEvaluatorAssignedEvaluateesHandler
         'evaluateeDepartment',
         '"evaluateeDepartment"."externalId" = "evaluatee"."departmentId" AND "evaluateeDepartment"."deletedAt" IS NULL',
       )
+      .leftJoin(
+        Employee,
+        'mappedBy',
+        'mappedBy.id = evaluation.mappedBy AND mappedBy.deletedAt IS NULL',
+      )
       .select([
         // 평가 정보
         'evaluation.id AS evaluation_id',
@@ -112,6 +127,13 @@ export class GetEvaluatorAssignedEvaluateesHandler
         'evaluateeDepartment.id AS evaluateedepartment_id',
         'evaluateeDepartment.name AS evaluateedepartment_name',
         'evaluateeDepartment.code AS evaluateedepartment_code',
+        // 요청자 정보
+        'mappedBy.id AS mappedby_id',
+        'mappedBy.name AS mappedby_name',
+        'mappedBy.employeeNumber AS mappedby_employeenumber',
+        'mappedBy.email AS mappedby_email',
+        'mappedBy.departmentId AS mappedby_departmentid',
+        'mappedBy.status AS mappedby_status',
       ])
       .where('evaluation.evaluatorId = :evaluatorId', { evaluatorId })
       .andWhere('evaluation.deletedAt IS NULL')
@@ -167,6 +189,17 @@ export class GetEvaluatorAssignedEvaluateesHandler
             id: result.evaluateedepartment_id,
             name: result.evaluateedepartment_name,
             code: result.evaluateedepartment_code,
+          }
+        : null,
+
+      mappedBy: result.mappedby_id
+        ? {
+            id: result.mappedby_id,
+            name: result.mappedby_name,
+            employeeNumber: result.mappedby_employeenumber,
+            email: result.mappedby_email,
+            departmentId: result.mappedby_departmentid,
+            status: result.mappedby_status,
           }
         : null,
     }));

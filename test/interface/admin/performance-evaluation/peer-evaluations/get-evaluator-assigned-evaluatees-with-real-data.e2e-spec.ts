@@ -344,5 +344,133 @@ describe('GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluato
 
       console.log('\n✅ UUID 형식 확인');
     });
+
+    it('요청자(mappedBy) 정보가 포함되어야 한다', async () => {
+      const data = await getEvaluatorWithEvaluatees();
+      if (!data) {
+        console.log('데이터가 없어서 테스트 스킵');
+        return;
+      }
+
+      const response = await getAssignedEvaluatees(data.evaluatorId).expect(
+        HttpStatus.OK,
+      );
+
+      if (response.body.length > 0) {
+        const firstItem = response.body[0];
+        expect(firstItem).toHaveProperty('mappedBy');
+
+        // mappedBy가 null이 아닌 경우 필수 필드 검증
+        if (firstItem.mappedBy) {
+          expect(firstItem.mappedBy).toHaveProperty('id');
+          expect(firstItem.mappedBy).toHaveProperty('name');
+          expect(firstItem.mappedBy).toHaveProperty('employeeNumber');
+          expect(firstItem.mappedBy).toHaveProperty('email');
+          expect(firstItem.mappedBy).toHaveProperty('departmentId');
+          expect(firstItem.mappedBy).toHaveProperty('status');
+
+          // UUID 형식 검증
+          const uuidRegex =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          expect(uuidRegex.test(firstItem.mappedBy.id)).toBe(true);
+
+          console.log('\n✅ mappedBy 정보:', {
+            id: firstItem.mappedBy.id,
+            name: firstItem.mappedBy.name,
+            employeeNumber: firstItem.mappedBy.employeeNumber,
+            email: firstItem.mappedBy.email,
+          });
+        }
+      }
+
+      console.log('\n✅ 요청자(mappedBy) 정보 확인');
+    });
+
+    it('mappedBy의 모든 필드가 올바른 형식이어야 한다', async () => {
+      const data = await getEvaluatorWithEvaluatees();
+      if (!data) {
+        console.log('데이터가 없어서 테스트 스킵');
+        return;
+      }
+
+      const response = await getAssignedEvaluatees(data.evaluatorId).expect(
+        HttpStatus.OK,
+      );
+
+      if (response.body.length > 0) {
+        const firstItem = response.body[0];
+
+        if (firstItem.mappedBy) {
+          // id는 UUID 형식
+          const uuidRegex =
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          expect(uuidRegex.test(firstItem.mappedBy.id)).toBe(true);
+
+          // name은 문자열
+          expect(typeof firstItem.mappedBy.name).toBe('string');
+          expect(firstItem.mappedBy.name.length).toBeGreaterThan(0);
+
+          // employeeNumber는 문자열
+          expect(typeof firstItem.mappedBy.employeeNumber).toBe('string');
+          expect(firstItem.mappedBy.employeeNumber.length).toBeGreaterThan(0);
+
+          // email은 문자열이고 이메일 형식
+          expect(typeof firstItem.mappedBy.email).toBe('string');
+          expect(firstItem.mappedBy.email).toContain('@');
+
+          // status는 문자열
+          expect(typeof firstItem.mappedBy.status).toBe('string');
+          expect(firstItem.mappedBy.status.length).toBeGreaterThan(0);
+        }
+      }
+
+      console.log('\n✅ mappedBy 필드 형식 검증');
+    });
+
+    it('mappedBy 정보가 DB의 실제 직원 정보와 일치해야 한다', async () => {
+      const data = await getEvaluatorWithEvaluatees();
+      if (!data) {
+        console.log('데이터가 없어서 테스트 스킵');
+        return;
+      }
+
+      const response = await getAssignedEvaluatees(data.evaluatorId).expect(
+        HttpStatus.OK,
+      );
+
+      if (response.body.length > 0) {
+        const firstItem = response.body[0];
+
+        if (firstItem.mappedBy && firstItem.mappedBy.id) {
+          // DB에서 해당 직원 정보 조회
+          const employee = await dataSource.query(
+            `SELECT id, name, "employeeNumber", email, "departmentId", status
+             FROM employee
+             WHERE id = $1 AND "deletedAt" IS NULL`,
+            [firstItem.mappedBy.id],
+          );
+
+          if (employee.length > 0) {
+            expect(firstItem.mappedBy.id).toBe(employee[0].id);
+            expect(firstItem.mappedBy.name).toBe(employee[0].name);
+            expect(firstItem.mappedBy.employeeNumber).toBe(
+              employee[0].employeeNumber,
+            );
+            expect(firstItem.mappedBy.email).toBe(employee[0].email);
+            expect(firstItem.mappedBy.departmentId).toBe(
+              employee[0].departmentId,
+            );
+            expect(firstItem.mappedBy.status).toBe(employee[0].status);
+
+            console.log('\n✅ mappedBy 정보가 DB와 일치:', {
+              name: firstItem.mappedBy.name,
+              employeeNumber: firstItem.mappedBy.employeeNumber,
+            });
+          }
+        }
+      }
+
+      console.log('\n✅ mappedBy DB 일치 검증');
+    });
   });
 });

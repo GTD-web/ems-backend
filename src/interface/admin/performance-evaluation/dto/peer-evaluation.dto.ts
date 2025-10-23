@@ -701,6 +701,12 @@ export class AssignedEvaluateeDto {
     type: DepartmentInfoDto,
   })
   evaluateeDepartment: DepartmentInfoDto | null;
+
+  @ApiProperty({
+    description: '요청자 정보',
+    type: EmployeeInfoDto,
+  })
+  mappedBy: EmployeeInfoDto | null;
 }
 
 /**
