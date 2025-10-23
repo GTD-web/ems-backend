@@ -507,19 +507,30 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id (실제 데이�
       const answeredQuestions = response.body.questions.filter(
         (q: any) => q.answer !== null && q.answer !== undefined,
       );
-      expect(answeredQuestions.length).toBeGreaterThan(0);
+      expect(answeredQuestions.length).toBe(2);
 
-      // 첫 번째 답변 확인
-      const firstAnsweredQuestion = answeredQuestions[0];
-      expect(firstAnsweredQuestion).toHaveProperty('answer');
-      expect(firstAnsweredQuestion).toHaveProperty('answeredAt');
-      expect(firstAnsweredQuestion).toHaveProperty('answeredBy');
-      expect(typeof firstAnsweredQuestion.answer).toBe('string');
-      expect(firstAnsweredQuestion.answer.length).toBeGreaterThan(0);
+      // 각 질문의 답변이 저장한 내용과 일치하는지 확인
+      const question1 = response.body.questions.find(
+        (q: any) => q.id === questions[0].id,
+      );
+      const question2 = response.body.questions.find(
+        (q: any) => q.id === questions[1].id,
+      );
+
+      expect(question1).toBeDefined();
+      expect(question1.answer).toBe('첫 번째 질문에 대한 답변입니다.');
+      expect(question1.answeredAt).toBeDefined();
+      expect(question1.answeredBy).toBeDefined();
+
+      expect(question2).toBeDefined();
+      expect(question2.answer).toBe('두 번째 질문에 대한 답변입니다.');
+      expect(question2.answeredAt).toBeDefined();
+      expect(question2.answeredBy).toBeDefined();
 
       console.log('\n✅ 답변 정보 포함 확인');
       console.log('  - 답변된 질문 수:', answeredQuestions.length);
-      console.log('  - 첫 번째 답변:', firstAnsweredQuestion.answer);
+      console.log('  - 질문 1 답변:', question1.answer);
+      console.log('  - 질문 2 답변:', question2.answer);
     });
 
     it('답변이 없는 질문은 answer 필드가 null이어야 한다', async () => {
