@@ -237,13 +237,15 @@ export function GetEmployeeAssignedData() {
       description: `특정 직원의 평가기간 내 할당된 모든 정보를 조회합니다.
 
 **동작:**
-- 평가기간 정보 반환 (평가기간명, 시작/종료일, 상태, 설정 허용 여부, 자기평가 최대 달성률)
+- 평가기간 정보 반환 (평가기간명, 시작/종료일, 상태, 설정 허용 여부)
+  * maxSelfEvaluationRate: 자기평가 달성률 최대값 (%) - 자기평가 입력 시 사용
 - 직원 기본 정보 반환 (직원명, 직원번호, 이메일, 부서, 상태)
 - 할당된 프로젝트 목록을 프로젝트별로 그룹화하여 반환
 - 각 프로젝트에 속한 WBS 목록 반환 (WBS 정보, 평가기준, 성과, 자기평가, 하향평가 포함)
-- 데이터 요약 정보 제공 (총 프로젝트 수, 총 WBS 수, 완료된 성과 수, 완료된 자기평가 수)
+- 데이터 요약 정보 제공 (총 프로젝트 수, 총 WBS 수, 완료된 성과 수, 완료된 자기평가 수, 평가 점수 및 등급)
 - 할당이 없는 경우에도 빈 배열로 정상 응답
 - 등록되지 않은 직원이나 존재하지 않는 평가기간 조회 시 404 에러 반환
+
 
 **테스트 케이스:**
 - 유효한 평가기간과 직원ID로 할당 정보를 조회할 수 있어야 한다
@@ -311,11 +313,12 @@ export function GetMyAssignedData() {
 
 **동작:**
 - JWT 토큰에서 현재 로그인한 사용자 정보 추출
-- 평가기간 정보 반환 (평가기간명, 시작/종료일, 상태, 설정 허용 여부, 자기평가 최대 달성률)
+- 평가기간 정보 반환 (평가기간명, 시작/종료일, 상태, 설정 허용 여부)
+  * maxSelfEvaluationRate: 자기평가 달성률 최대값 (%) - 자기평가 입력 시 사용
 - 직원 기본 정보 반환 (직원명, 직원번호, 이메일, 부서, 상태)
 - 할당된 프로젝트 목록을 프로젝트별로 그룹화하여 반환
 - 각 프로젝트에 속한 WBS 목록 반환 (WBS 정보, 평가기준, 성과, 자기평가, 하향평가 포함)
-- 데이터 요약 정보 제공 (총 프로젝트 수, 총 WBS 수, 완료된 성과 수, 완료된 자기평가 수)
+- 데이터 요약 정보 제공 (총 프로젝트 수, 총 WBS 수, 완료된 성과 수, 완료된 자기평가 수, 평가 점수 및 등급)
 - 할당이 없는 경우에도 빈 배열로 정상 응답
 
 **테스트 케이스:**
@@ -369,93 +372,14 @@ export function GetEvaluatorAssignedEmployeesData() {
 **동작:**
 - 평가자-피평가자 관계를 EvaluationLineMapping 테이블에서 확인 (WBS별 평가자 매핑)
 - 평가자가 피평가자를 담당하는 경우에만 조회 가능
-- 평가기간 정보 반환 (평가기간명, 시작/종료일, 상태, 설정 허용 여부, 자기평가 최대 달성률)
+- 평가기간 정보 반환 (평가기간명, 시작/종료일, 상태, 설정 허용 여부)
+  * maxSelfEvaluationRate: 자기평가 달성률 최대값 (%) - 자기평가 입력 시 사용
 - 평가자 기본 정보 반환 (직원명, 직원번호, 이메일, 부서, 상태)
 - 피평가자의 할당된 프로젝트 목록을 프로젝트별로 그룹화하여 반환
 - 각 프로젝트에 속한 WBS 목록 반환 (WBS 정보, 평가기준, 성과, 자기평가, 하향평가 포함)
+- 데이터 요약 정보 제공 (총 프로젝트 수, 총 WBS 수, 완료된 성과 수, 완료된 자기평가 수, 평가 점수 및 등급)
 - 평가자가 담당하지 않는 피평가자 조회 시 404 에러 반환
 - 등록되지 않은 직원이나 존재하지 않는 평가기간 조회 시 404 에러 반환
-
-**반환 데이터 구조:**
-\`\`\`json
-{
-  "evaluationPeriod": {
-    "id": "평가기간 ID",
-    "name": "평가기간명",
-    "startDate": "시작일",
-    "endDate": "종료일",
-    "status": "상태",
-    "criteriaSettingEnabled": "평가기준 설정 가능 여부",
-    "selfEvaluationSettingEnabled": "자기평가 설정 가능 여부",
-    "finalEvaluationSettingEnabled": "최종평가 설정 가능 여부",
-    "maxSelfEvaluationRate": "자기평가 최대 달성률"
-  },
-  "evaluator": {
-    "id": "평가자 ID",
-    "name": "평가자명",
-    "employeeNumber": "사번",
-    "email": "이메일",
-    "departmentName": "부서명",
-    "rankName": "직책",
-    "status": "상태"
-  },
-  "evaluatee": {
-    "employee": { /* 피평가자 정보 (evaluator와 동일 구조) */ },
-    "projects": [
-      {
-        "projectId": "프로젝트 ID",
-        "projectName": "프로젝트명",
-        "projectCode": "프로젝트 코드",
-        "assignedAt": "할당일시",
-        "projectManager": {
-          "id": "PM ID",
-          "name": "PM명"
-        },
-        "wbsList": [
-          {
-            "wbsId": "WBS ID",
-            "wbsName": "WBS명",
-            "wbsCode": "WBS 코드",
-            "weight": "가중치(%)",
-            "assignedAt": "할당일시",
-            "criteria": [
-              {
-                "criterionId": "평가기준 ID",
-                "criteria": "평가기준 내용"
-              }
-            ],
-            "performance": {
-              "performanceResult": "성과 결과",
-              "isCompleted": "완료 여부",
-              "completedAt": "완료일시"
-            },
-            "selfEvaluation": {
-              "selfEvaluationId": "자기평가 ID",
-              "evaluationContent": "평가 내용",
-              "score": "점수",
-              "isCompleted": "완료 여부",
-              "isEditable": "수정 가능 여부",
-              "submittedAt": "제출일시"
-            },
-            "primaryDownwardEvaluation": {
-              "evaluatorName": "1차 평가자명",
-              "score": "점수",
-              "isCompleted": "완료 여부",
-              "isEditable": "수정 가능 여부"
-            },
-            "secondaryDownwardEvaluation": {
-              "evaluatorName": "2차 평가자명",
-              "score": "점수",
-              "isCompleted": "완료 여부",
-              "isEditable": "수정 가능 여부"
-            }
-          }
-        ]
-      }
-    ]
-  }
-}
-\`\`\`
 
 **테스트 케이스:**
 - 담당자의 피평가자 할당 정보 조회 성공
@@ -537,41 +461,6 @@ export function GetFinalEvaluationsByPeriod() {
 - 제외된 직원(isExcluded=true)은 결과에서 자동 제외
 - 삭제된 최종평가는 조회되지 않음
 
-**반환 데이터 구조:**
-\`\`\`json
-{
-  "period": {
-    "id": "평가기간 ID",
-    "name": "평가기간명",
-    "startDate": "시작일",
-    "endDate": "종료일"
-  },
-  "evaluations": [
-    {
-      "employee": {
-        "id": "직원 ID",
-        "name": "직원명",
-        "employeeNumber": "사번",
-        "email": "이메일",
-        "departmentName": "부서명",
-        "rankName": "직책"
-      },
-      "evaluation": {
-        "id": "최종평가 ID",
-        "evaluationGrade": "평가등급 (S, A, B, C, D)",
-        "jobGrade": "직무등급 (T1, T2, T3)",
-        "jobDetailedGrade": "직무 상세등급 (u, n, a)",
-        "finalComments": "최종 평가 의견",
-        "isConfirmed": "확정 여부",
-        "confirmedAt": "확정일시",
-        "confirmedBy": "확정자 ID",
-        "createdAt": "생성일시",
-        "updatedAt": "수정일시"
-      }
-    }
-  ]
-}
-\`\`\`
 
 **테스트 케이스:**
 - 첫 번째 평가기간의 최종평가 목록 조회 성공

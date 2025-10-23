@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Query } from '@nestjs/common';
+import { Body, Controller, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { ParseId } from '../../decorators/parse-uuid.decorator';
@@ -66,7 +66,7 @@ export class ProjectAssignmentManagementController {
    */
   @CancelProjectAssignment()
   async cancelProjectAssignment(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     const cancelledBy = user.id;
@@ -102,8 +102,8 @@ export class ProjectAssignmentManagementController {
    */
   @GetEmployeeProjectAssignments()
   async getEmployeeProjectAssignments(
-    @Param('employeeId') employeeId: string,
-    @Param('periodId') periodId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
   ): Promise<EmployeeProjectsResponseDto> {
     return await this.evaluationCriteriaManagementService.특정_평가기간에_직원에게_할당된_프로젝트를_조회한다(
       employeeId,
@@ -117,8 +117,8 @@ export class ProjectAssignmentManagementController {
    */
   @GetProjectAssignedEmployees()
   async getProjectAssignedEmployees(
-    @Param('projectId') projectId: string,
-    @Param('periodId') periodId: string,
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Param('periodId', ParseUUIDPipe) periodId: string,
   ): Promise<ProjectEmployeesResponseDto> {
     return await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트에_할당된_직원을_조회한다(
       projectId,
@@ -146,7 +146,9 @@ export class ProjectAssignmentManagementController {
    * 주의: 파라미터 경로(:id)는 구체적인 경로들 뒤에 배치해야 함
    */
   @GetProjectAssignmentDetail()
-  async getProjectAssignmentDetail(@Param('id') id: string): Promise<any> {
+  async getProjectAssignmentDetail(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<any> {
     return await this.evaluationCriteriaManagementService.프로젝트_할당_상세를_조회한다(
       id,
     );
