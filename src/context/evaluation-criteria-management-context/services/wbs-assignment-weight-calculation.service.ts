@@ -66,10 +66,14 @@ export class WbsAssignmentWeightCalculationService {
       .andWhere('criteria.deletedAt IS NULL')
       .getMany();
 
-    // 3. WBS별 중요도 맵 생성
+    // 3. WBS별 중요도 맵 생성 (여러 평가기준의 중요도 합계)
     const importanceMap = new Map<string, number>();
     criteriaList.forEach((criteria) => {
-      importanceMap.set(criteria.wbsItemId, criteria.importance);
+      const currentImportance = importanceMap.get(criteria.wbsItemId) || 0;
+      importanceMap.set(
+        criteria.wbsItemId,
+        currentImportance + criteria.importance,
+      );
     });
 
     // 4. 총 중요도 합계 계산 (중요도가 있는 WBS만)
@@ -126,12 +130,22 @@ export class WbsAssignmentWeightCalculationService {
       }
     }
 
-    // 6. 저장
-    await repository.save(assignments);
+    // 6. 저장 - 각 할당마다 개별 업데이트
+    for (const assignment of assignments) {
+      await repository
+        .createQueryBuilder()
+        .update()
+        .set({ weight: assignment.weight })
+        .where('id = :id', { id: assignment.id })
+        .execute();
+    }
 
+    // 저장 후 weight 값 로그
+    const weights = assignments.map((a) => a.weight);
     this.logger.log(
       `가중치 재계산 완료 - 직원: ${employeeId}, 기간: ${periodId}, ` +
-        `할당 수: ${assignments.length}, 총 중요도: ${totalImportance}`,
+        `할당 수: ${assignments.length}, 총 중요도: ${totalImportance}, ` +
+        `가중치: [${weights.join(', ')}]`,
     );
   }
 

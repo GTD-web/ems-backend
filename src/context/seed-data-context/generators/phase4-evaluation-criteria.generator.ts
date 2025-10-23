@@ -54,8 +54,21 @@ export class Phase4EvaluationCriteriaGenerator {
     const employeeIds = phase1Result.generatedIds.employeeIds as string[];
     const periodIds = phase2Result.generatedIds.periodIds as string[];
 
-    // 1. WBS 평가 기준 생성
-    const criteria = await this.생성_WBS평가기준들(wbsIds, dist, systemAdminId);
+    // Phase3에서 실제로 할당된 WBS만 평가기준 생성
+    const assignedWbsIds = await this.실제_할당된_WBS_ID를_조회한다(
+      periodIds[0],
+    );
+
+    this.logger.log(
+      `실제 할당된 WBS: ${assignedWbsIds.length}개 (전체 WBS: ${wbsIds.length}개)`,
+    );
+
+    // 1. WBS 평가 기준 생성 (실제 할당된 WBS만)
+    const criteria = await this.생성_WBS평가기준들(
+      assignedWbsIds,
+      dist,
+      systemAdminId,
+    );
     this.logger.log(`생성 완료: WbsEvaluationCriteria ${criteria.length}개`);
 
     // 2. 평가 라인 생성 (primary, secondary)
@@ -105,8 +118,11 @@ export class Phase4EvaluationCriteriaGenerator {
     const allCriteria: WbsEvaluationCriteria[] = [];
 
     for (const wbsId of wbsIds) {
-      // WBS별 평가기준 1개만 생성
-      const criteriaCount = 1;
+      // WBS별 평가기준 개수 (config 설정 사용)
+      const criteriaCount = faker.number.int({
+        min: dist.wbsCriteriaPerWbs.min,
+        max: dist.wbsCriteriaPerWbs.max,
+      });
 
       for (let i = 0; i < criteriaCount; i++) {
         const criteria = new WbsEvaluationCriteria();
@@ -329,9 +345,12 @@ export class Phase4EvaluationCriteriaGenerator {
     employeeIds: string[],
     periodIds: string[],
   ): Promise<void> {
-    this.logger.log('WBS 할당 가중치 재계산 시작');
+    this.logger.log(
+      `WBS 할당 가중치 재계산 시작 - 직원: ${employeeIds.length}명, 평가기간: ${periodIds.length}개`,
+    );
 
     let recalculatedCount = 0;
+    let totalAssignments = 0;
 
     // 모든 직원-평가기간 조합에 대해 가중치 재계산
     for (const employeeId of employeeIds) {
@@ -345,6 +364,7 @@ export class Phase4EvaluationCriteriaGenerator {
           .getCount();
 
         if (hasAssignment > 0) {
+          totalAssignments += hasAssignment;
           await this.weightCalculationService.직원_평가기간_가중치를_재계산한다(
             employeeId,
             periodId,
@@ -355,8 +375,38 @@ export class Phase4EvaluationCriteriaGenerator {
     }
 
     this.logger.log(
-      `WBS 할당 가중치 재계산 완료 - ${recalculatedCount}개 직원-평가기간 조합`,
+      `WBS 할당 가중치 재계산 완료 - ${recalculatedCount}개 직원-평가기간 조합, 총 ${totalAssignments}개 할당`,
     );
+
+    // 재계산 결과 확인
+    if (recalculatedCount > 0) {
+      const sampleAssignment = await this.wbsAssignmentRepository
+        .createQueryBuilder('assignment')
+        .where('assignment.deletedAt IS NULL')
+        .orderBy('assignment.createdAt', 'ASC')
+        .limit(5)
+        .getMany();
+
+      this.logger.log(
+        `샘플 WBS 할당 가중치: ${sampleAssignment.map((a) => `${a.weight}`).join(', ')}`,
+      );
+    }
+  }
+
+  /**
+   * 실제 할당된 WBS ID를 조회한다
+   */
+  private async 실제_할당된_WBS_ID를_조회한다(
+    periodId: string,
+  ): Promise<string[]> {
+    const assignments = await this.wbsAssignmentRepository
+      .createQueryBuilder('assignment')
+      .select('DISTINCT assignment.wbsItemId', 'wbsItemId')
+      .where('assignment.periodId = :periodId', { periodId })
+      .andWhere('assignment.deletedAt IS NULL')
+      .getRawMany();
+
+    return assignments.map((a) => a.wbsItemId);
   }
 
   // ==================== 유틸리티 메서드 ====================

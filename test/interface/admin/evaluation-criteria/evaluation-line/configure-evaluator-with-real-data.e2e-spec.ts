@@ -440,9 +440,9 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       );
 
       expect(primaryMapping).toBeDefined();
-      expect(primaryMapping.evaluatorId).toBe(primaryEvaluatorId);
+      expect(primaryMapping?.evaluatorId).toBe(primaryEvaluatorId);
       expect(secondaryMapping).toBeDefined();
-      expect(secondaryMapping.evaluatorId).toBe(secondaryEvaluatorId);
+      expect(secondaryMapping?.evaluatorId).toBe(secondaryEvaluatorId);
 
       console.log('\n✅ 1차 및 2차 평가자 모두 DB에 반영됨');
     });

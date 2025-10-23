@@ -70,6 +70,10 @@ export class EvaluationWbsAssignment
     scale: 2,
     comment: '가중치 (0~100, 직원별 WBS 중요도 기반 자동 계산)',
     default: 0,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string) => (value ? parseFloat(value) : 0),
+    },
   })
   weight: number;
 

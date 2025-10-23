@@ -368,6 +368,23 @@ export class AssignedWbsInfoDto {
 }
 
 /**
+ * 프로젝트 매니저 정보 DTO
+ */
+export class ProjectManagerDto {
+  @ApiProperty({
+    description: 'PM 직원 ID',
+    example: '123e4567-e89b-12d3-a456-426614174015',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: 'PM 이름',
+    example: '박프로',
+  })
+  name: string;
+}
+
+/**
  * 할당된 프로젝트 정보 DTO (WBS 목록 포함)
  */
 export class AssignedProjectWithWbsDto {
@@ -396,6 +413,14 @@ export class AssignedProjectWithWbsDto {
     example: '2024-01-01T09:00:00.000Z',
   })
   assignedAt: Date;
+
+  @ApiPropertyOptional({
+    description: '프로젝트 매니저 정보',
+    type: ProjectManagerDto,
+    nullable: true,
+  })
+  @Type(() => ProjectManagerDto)
+  projectManager?: ProjectManagerDto | null;
 
   @ApiProperty({
     description: '프로젝트에 할당된 WBS 목록',

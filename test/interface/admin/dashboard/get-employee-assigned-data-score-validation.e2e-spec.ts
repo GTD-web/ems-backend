@@ -160,6 +160,47 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
 
       console.log('\n✅ 자기평가만 점수/등급 계산됨 (예상대로)');
     });
+
+    it('프로젝트 매니저(PM) 정보가 포함되어야 한다', async () => {
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
+        )
+        .expect(HttpStatus.OK);
+
+      const { projects } = response.body;
+
+      expect(projects).toBeInstanceOf(Array);
+      expect(projects.length).toBeGreaterThan(0);
+
+      // 프로젝트들의 PM 정보 확인
+      let projectsWithPM = 0;
+      let projectsWithoutPM = 0;
+
+      for (const project of projects) {
+        expect(project).toHaveProperty('projectManager');
+
+        if (project.projectManager) {
+          expect(project.projectManager).toMatchObject({
+            id: expect.any(String),
+            name: expect.any(String),
+          });
+          projectsWithPM++;
+        } else {
+          expect(project.projectManager).toBeNull();
+          projectsWithoutPM++;
+        }
+      }
+
+      console.log('\n=== 프로젝트 매니저 정보 (시나리오 1) ===');
+      console.log('총 프로젝트 수:', projects.length);
+      console.log('PM이 할당된 프로젝트:', projectsWithPM);
+      console.log('PM이 없는 프로젝트:', projectsWithoutPM);
+
+      // PM 정보가 있는 경우, 구조가 올바른지 이미 검증됨
+      // 확률적으로 PM이 없을 수도 있음
+    });
   });
 
   describe('시나리오 2: 자기평가 + 1차 하향평가 100% 완료', () => {
@@ -307,6 +348,47 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
 
       console.log('\n✅ 자기평가 + 1차 하향평가 점수/등급 계산됨 (예상대로)');
     });
+
+    it('프로젝트 매니저(PM) 정보가 포함되어야 한다', async () => {
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
+        )
+        .expect(HttpStatus.OK);
+
+      const { projects } = response.body;
+
+      expect(projects).toBeInstanceOf(Array);
+      expect(projects.length).toBeGreaterThan(0);
+
+      // 프로젝트들의 PM 정보 확인
+      let projectsWithPM = 0;
+      let projectsWithoutPM = 0;
+
+      for (const project of projects) {
+        expect(project).toHaveProperty('projectManager');
+
+        if (project.projectManager) {
+          expect(project.projectManager).toMatchObject({
+            id: expect.any(String),
+            name: expect.any(String),
+          });
+          projectsWithPM++;
+        } else {
+          expect(project.projectManager).toBeNull();
+          projectsWithoutPM++;
+        }
+      }
+
+      console.log('\n=== 프로젝트 매니저 정보 (시나리오 2) ===');
+      console.log('총 프로젝트 수:', projects.length);
+      console.log('PM이 할당된 프로젝트:', projectsWithPM);
+      console.log('PM이 없는 프로젝트:', projectsWithoutPM);
+
+      // PM 정보가 있는 경우, 구조가 올바른지 이미 검증됨
+      // 확률적으로 PM이 없을 수도 있음
+    });
   });
 
   describe('시나리오 3: 모든 평가 100% 완료', () => {
@@ -345,6 +427,12 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
             periodCount: 1,
           },
           stateDistribution: {
+            // 모든 직원에게 1차, 2차 평가자 할당
+            evaluationLineMappingTypes: {
+              primaryOnly: 0.0,
+              primaryAndSecondary: 1.0, // 모든 직원에게 1,2차 평가자 할당
+              withAdditional: 0.0,
+            },
             selfEvaluationProgress: {
               completed: 1.0, // 100% 완료
               notStarted: 0.0,
@@ -493,6 +581,47 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
         `  2차 하향평가: ${summary.secondaryDownwardEvaluation.totalScore} → ${summary.secondaryDownwardEvaluation.grade}`,
       );
       console.log('\n✅ 모든 등급이 유효한 범위 내에 있음');
+    });
+
+    it('프로젝트 매니저(PM) 정보가 포함되어야 한다', async () => {
+      const response = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${employeeId}/assigned-data`,
+        )
+        .expect(HttpStatus.OK);
+
+      const { projects } = response.body;
+
+      expect(projects).toBeInstanceOf(Array);
+      expect(projects.length).toBeGreaterThan(0);
+
+      // 프로젝트들의 PM 정보 확인
+      let projectsWithPM = 0;
+      let projectsWithoutPM = 0;
+
+      for (const project of projects) {
+        expect(project).toHaveProperty('projectManager');
+
+        if (project.projectManager) {
+          expect(project.projectManager).toMatchObject({
+            id: expect.any(String),
+            name: expect.any(String),
+          });
+          projectsWithPM++;
+        } else {
+          expect(project.projectManager).toBeNull();
+          projectsWithoutPM++;
+        }
+      }
+
+      console.log('\n=== 프로젝트 매니저 정보 (시나리오 3) ===');
+      console.log('총 프로젝트 수:', projects.length);
+      console.log('PM이 할당된 프로젝트:', projectsWithPM);
+      console.log('PM이 없는 프로젝트:', projectsWithoutPM);
+
+      // PM 정보가 있는 경우, 구조가 올바른지 이미 검증됨
+      // 확률적으로 PM이 없을 수도 있음
     });
   });
 });

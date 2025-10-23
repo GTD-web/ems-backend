@@ -45,6 +45,10 @@ export interface AssignedProjectWithWbs {
   projectName: string;
   projectCode: string;
   assignedAt: Date;
+  projectManager?: {
+    id: string;
+    name: string;
+  } | null;
   wbsList: AssignedWbsInfo[];
 }
 
@@ -400,17 +404,25 @@ export class GetEmployeeAssignedDataHandler
         .getMany();
 
     if (secondaryEvaluatorMappings.length > 0) {
-      const secondaryEvaluatorIds = secondaryEvaluatorMappings.map(
-        (m) => m.evaluatorId,
-      );
+      // 중복 제거: 한 평가자가 여러 WBS를 평가할 수 있음
+      const secondaryEvaluatorIds = [
+        ...new Set(secondaryEvaluatorMappings.map((m) => m.evaluatorId)),
+      ];
 
-      // 2차 평가자들의 할당된 WBS 수 (모든 평가자가 동일한 WBS 평가)
-      const secondaryAssignedCount = totalWbs;
+      // 각 2차 평가자별 할당된 WBS 수와 완료된 평가 수 조회
+      const evaluatorStats = await Promise.all(
+        secondaryEvaluatorIds.map(async (evaluatorId) => {
+          const assignedCount = await this.downwardEvaluationRepository.count({
+            where: {
+              periodId: evaluationPeriodId,
+              employeeId: employeeId,
+              evaluatorId: evaluatorId,
+              evaluationType: DownwardEvaluationType.SECONDARY,
+              deletedAt: null as any,
+            },
+          });
 
-      // 각 평가자별 완료된 평가 수 조회
-      const completedCounts = await Promise.all(
-        secondaryEvaluatorIds.map((evaluatorId) =>
-          this.downwardEvaluationRepository.count({
+          const completedCount = await this.downwardEvaluationRepository.count({
             where: {
               periodId: evaluationPeriodId,
               employeeId: employeeId,
@@ -419,16 +431,20 @@ export class GetEmployeeAssignedDataHandler
               isCompleted: true,
               deletedAt: null as any,
             },
-          }),
-        ),
+          });
+
+          return { assignedCount, completedCount };
+        }),
       );
 
-      // 모든 평가자가 모든 WBS를 완료했는지 확인
-      const allCompleted = completedCounts.every(
-        (count) => count === secondaryAssignedCount,
+      // 모든 평가자가 할당된 모든 WBS를 완료했는지 확인
+      const allCompleted = evaluatorStats.every(
+        (stat) =>
+          stat.assignedCount > 0 && stat.completedCount === stat.assignedCount,
       );
 
-      if (secondaryAssignedCount > 0 && allCompleted) {
+      // 최소 한 명의 평가자가 할당되어 있고 모두 완료한 경우 점수 계산
+      if (evaluatorStats.length > 0 && allCompleted) {
         secondaryDownwardScore = await 가중치_기반_2차_하향평가_점수를_계산한다(
           evaluationPeriodId,
           employeeId,
@@ -506,13 +522,18 @@ export class GetEmployeeAssignedDataHandler
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<AssignedProjectWithWbs[]> {
-    // 1. 평가 프로젝트 할당 조회 (Project 엔티티 join)
+    // 1. 평가 프로젝트 할당 조회 (Project 엔티티와 PM 직원 정보 join)
     const projectAssignments = await this.projectAssignmentRepository
       .createQueryBuilder('assignment')
       .leftJoin(
         Project,
         'project',
         'project.id = assignment.projectId AND project.deletedAt IS NULL',
+      )
+      .leftJoin(
+        Employee,
+        'manager',
+        'manager.id::text = project.managerId AND manager.deletedAt IS NULL',
       )
       .select([
         'assignment.id AS assignment_id',
@@ -521,10 +542,13 @@ export class GetEmployeeAssignedDataHandler
         'assignment.displayOrder AS assignment_displayorder',
         'project.id AS project_id',
         'project.name AS project_name',
-        'project.projectCode AS project_projectcode', // 소문자로 변경
+        'project.projectCode AS project_projectcode',
         'project.status AS project_status',
         'project.startDate AS project_startdate',
         'project.endDate AS project_enddate',
+        'project.managerId AS project_managerid',
+        'manager.id AS manager_id',
+        'manager.name AS manager_name',
       ])
       .where('assignment.periodId = :periodId', {
         periodId: evaluationPeriodId,
@@ -555,8 +579,15 @@ export class GetEmployeeAssignedDataHandler
       projectsWithWbs.push({
         projectId,
         projectName: row.project_name || '',
-        projectCode: row.project_projectcode || '', // 소문자로 수정
-        assignedAt: row.assignment_assigneddate, // 소문자로 수정
+        projectCode: row.project_projectcode || '',
+        assignedAt: row.assignment_assigneddate,
+        projectManager:
+          row.manager_id && row.manager_name
+            ? {
+                id: row.manager_id,
+                name: row.manager_name,
+              }
+            : null,
         wbsList,
       });
     }
