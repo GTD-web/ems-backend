@@ -165,10 +165,7 @@ export async function getWbsListByProject(
     const wbsItemId = row.assignment_wbsitemid;
 
     // 평가기준 조회
-    const criteria = await getWbsCriteriaByWbsId(
-      wbsItemId,
-      criteriaRepository,
-    );
+    const criteria = await getWbsCriteriaByWbsId(wbsItemId, criteriaRepository);
 
     // 성과 및 자기평가 조회
     const selfEvaluationData = await getWbsSelfEvaluationByWbsId(
@@ -372,4 +369,3 @@ export async function getWbsDownwardEvaluationsByWbsId(
     secondary,
   };
 }
-
