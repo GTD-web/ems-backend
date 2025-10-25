@@ -93,6 +93,24 @@ export class DashboardController {
   }
 
   /**
+   * 현재 로그인한 사용자의 할당된 정보를 조회합니다.
+   * 피평가자는 상위 평가자의 하향평가를 볼 수 없습니다.
+   */
+  @GetMyAssignedData()
+  async getMyAssignedData(
+    @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<EmployeeAssignedDataResponseDto> {
+    const data = await this.dashboardService.사용자_할당_정보를_조회한다(
+      evaluationPeriodId,
+      user.id, // JWT에서 추출한 현재 로그인 사용자의 ID
+    );
+
+    // 피평가자는 상위 평가자의 하향평가를 볼 수 없음
+    return this.하향평가_정보를_제거한다(data);
+  }
+
+  /**
    * 사용자의 할당된 프로젝트, WBS, 평가기준, 성과, 자기평가 정보를 조회합니다.
    */
   @GetEmployeeAssignedData()
@@ -107,17 +125,40 @@ export class DashboardController {
   }
 
   /**
-   * 현재 로그인한 사용자의 할당된 정보를 조회합니다.
+   * 하향평가 정보를 제거합니다.
+   * 피평가자가 자신의 할당 정보를 조회할 때 사용됩니다.
    */
-  @GetMyAssignedData()
-  async getMyAssignedData(
-    @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<EmployeeAssignedDataResponseDto> {
-    return await this.dashboardService.사용자_할당_정보를_조회한다(
-      evaluationPeriodId,
-      user.id, // JWT에서 추출한 현재 로그인 사용자의 ID
-    );
+  private 하향평가_정보를_제거한다(
+    data: EmployeeAssignedDataResponseDto,
+  ): EmployeeAssignedDataResponseDto {
+    // 각 프로젝트의 WBS에서 하향평가 정보 제거
+    const projectsWithoutDownwardEvaluation = data.projects.map((project) => ({
+      ...project,
+      wbsList: project.wbsList.map((wbs) => ({
+        ...wbs,
+        primaryDownwardEvaluation: null,
+        secondaryDownwardEvaluation: null,
+      })),
+    }));
+
+    // summary에서 하향평가 정보 제거
+    const summaryWithoutDownwardEvaluation = {
+      ...data.summary,
+      primaryDownwardEvaluation: {
+        totalScore: null,
+        grade: null,
+      },
+      secondaryDownwardEvaluation: {
+        totalScore: null,
+        grade: null,
+      },
+    };
+
+    return {
+      ...data,
+      projects: projectsWithoutDownwardEvaluation,
+      summary: summaryWithoutDownwardEvaluation,
+    };
   }
 
   @GetEvaluatorAssignedEmployeesData()
