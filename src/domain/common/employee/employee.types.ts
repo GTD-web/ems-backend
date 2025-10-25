@@ -184,6 +184,7 @@ export interface CreateEmployeeDto {
   externalId: string;
   externalCreatedAt: Date;
   externalUpdatedAt: Date;
+  roles?: string[]; // EMS-PROD 시스템 역할 목록 (SSO 로그인 시 설정)
 }
 
 // 직원 업데이트 DTO
@@ -206,6 +207,7 @@ export interface UpdateEmployeeDto {
   rankLevel?: number;
   externalUpdatedAt?: Date;
   lastSyncAt?: Date;
+  roles?: string[]; // EMS-PROD 시스템 역할 목록
   isExcludedFromList?: boolean;
   excludeReason?: string | null;
   excludedBy?: string | null;

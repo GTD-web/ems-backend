@@ -23,10 +23,6 @@ export class GetUserWithRolesHandler {
     try {
       const employee =
         await this.employeeService.findByEmployeeNumber(employeeNumber);
-      console.log(
-        '🚀 ~ GetUserWithRolesHandler ~ execute ~ employee:',
-        employee,
-      );
 
       if (!employee) {
         return { user: null };
@@ -41,10 +37,6 @@ export class GetUserWithRolesHandler {
         roles: employee['roles'] || [],
         status: employee.status,
       };
-      console.log(
-        '🚀 ~ GetUserWithRolesHandler ~ execute ~ userInfo:',
-        userInfo,
-      );
 
       return { user: userInfo };
     } catch (error) {

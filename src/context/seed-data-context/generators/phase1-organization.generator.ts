@@ -1,7 +1,7 @@
 import { Department } from '@domain/common/department/department.entity';
 import { DepartmentSyncService } from '@domain/common/department/department-sync.service';
 import { Employee } from '@domain/common/employee/employee.entity';
-import { EmployeeSyncService } from '@domain/common/employee/employee-sync.service';
+import { EmployeeSyncService } from '@/context/organization-management-context/employee-sync.service';
 import { Project } from '@domain/common/project/project.entity';
 import { ProjectStatus } from '@domain/common/project/project.types';
 import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';

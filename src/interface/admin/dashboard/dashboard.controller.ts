@@ -5,7 +5,7 @@ import { ParseUUID } from '../../decorators/parse-uuid.decorator';
 import { CurrentUser } from '../../decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
 import { EvaluationPeriodService } from '../../../domain/core/evaluation-period/evaluation-period.service';
-import { EmployeeSyncService } from '../../../domain/common/employee/employee-sync.service';
+import { EmployeeSyncService } from '../../../context/organization-management-context/employee-sync.service';
 import {
   GetEmployeeEvaluationPeriodStatus,
   GetAllEmployeesEvaluationPeriodStatus,

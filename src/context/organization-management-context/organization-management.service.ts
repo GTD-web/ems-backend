@@ -26,12 +26,15 @@ import {
   ExcludeEmployeeFromListCommand,
   IncludeEmployeeInListCommand,
 } from './commands';
+import { SSOService } from '../../domain/common/sso/sso.service';
+import type { EmployeeInfo } from '../../domain/common/sso/interfaces';
 
 /**
  * 조직 관리 서비스
  *
  * 부서와 직원 정보 조회 기능을 제공하는 서비스입니다.
  * CQRS 패턴을 사용하여 쿼리를 처리합니다.
+ * SSO를 통한 외부 직원 정보 동기화 기능을 포함합니다.
  */
 @Injectable()
 export class OrganizationManagementService
@@ -40,6 +43,7 @@ export class OrganizationManagementService
   constructor(
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
+    private readonly ssoService: SSOService,
   ) {}
 
   /**
@@ -163,5 +167,37 @@ export class OrganizationManagementService
     return await this.queryBus.execute(
       new GetDepartmentHierarchyWithEmployeesQuery(),
     );
+  }
+
+  // ========== SSO 연동 메서드 ==========
+
+  /**
+   * SSO에서 모든 직원 정보를 조회합니다 (동기화용)
+   */
+  async SSO에서_직원정보를_조회한다(
+    includeTerminated: boolean = false,
+  ): Promise<EmployeeInfo[]> {
+    return await this.ssoService.여러직원정보를조회한다({
+      withDetail: true,
+      includeTerminated,
+    });
+  }
+
+  /**
+   * SSO에서 특정 직원 정보를 조회합니다
+   */
+  async SSO에서_사번으로_직원을_조회한다(
+    employeeNumber: string,
+  ): Promise<EmployeeInfo> {
+    return await this.ssoService.사번으로직원을조회한다(employeeNumber);
+  }
+
+  /**
+   * SSO에서 이메일로 직원 정보를 조회합니다
+   */
+  async SSO에서_이메일로_직원을_조회한다(
+    email: string,
+  ): Promise<EmployeeInfo | null> {
+    return await this.ssoService.이메일로직원을조회한다(email);
   }
 }

@@ -2,7 +2,10 @@ import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-// Common Domain Modules (for Sync Services)
+// Context Modules (for Sync Services)
+import { OrganizationManagementContextModule } from '@context/organization-management-context/organization-management-context.module';
+
+// Common Domain Modules
 import { DepartmentModule } from '@domain/common/department/department.module';
 import { EmployeeModule } from '@domain/common/employee/employee.module';
 
@@ -62,8 +65,9 @@ import { WbsAssignmentWeightCalculationService } from '@context/evaluation-crite
 @Module({
   imports: [
     CqrsModule,
+    OrganizationManagementContextModule, // For EmployeeSyncService
     DepartmentModule, // For DepartmentSyncService
-    EmployeeModule, // For EmployeeSyncService
+    EmployeeModule, // For Employee Repository
     TypeOrmModule.forFeature([
       // Common (Phase 1)
       Department,

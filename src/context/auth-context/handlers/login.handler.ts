@@ -97,16 +97,30 @@ export class LoginHandler {
     this.logger.log(
       `로그인 결과의 systemRoles: ${JSON.stringify(loginResult.systemRoles)}`,
     );
-    this.logger.log(`추출된 roles: [${roles.join(', ')}]`);
+    this.logger.log(`추출된 EMS-PROD roles: [${roles.join(', ')}]`);
 
-    // 4. 결과 반환 (역할 정보는 업데이트하지 않음)
+    // 4. Employee의 roles 업데이트
+    try {
+      await this.employeeService.updateRoles(employee.id, roles);
+      this.logger.log(
+        `직원 ${employee.employeeNumber}의 역할 정보를 업데이트했습니다.`,
+      );
+    } catch (error) {
+      // roles 업데이트 실패는 로그인을 막지 않음 (로그만 기록)
+      this.logger.error(
+        `직원 ${employee.employeeNumber}의 역할 업데이트 실패:`,
+        error.message,
+      );
+    }
+
+    // 5. 결과 반환 (업데이트된 역할 정보 포함)
     const userInfo: AuthenticatedUserInfo = {
       id: employee.id,
       externalId: employee.externalId,
       email: employee.email,
       name: employee.name,
       employeeNumber: employee.employeeNumber,
-      roles: employee['roles'] || roles,
+      roles: roles, // 로그인 시 받은 최신 roles 사용
       status: employee.status,
     };
 
