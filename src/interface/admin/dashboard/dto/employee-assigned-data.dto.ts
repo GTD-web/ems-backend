@@ -10,6 +10,7 @@ import type {
   WbsSelfEvaluationInfo,
   WbsDownwardEvaluationInfo,
   EmployeeAssignedDataResult,
+  DeliverableInfo,
 } from '@context/dashboard-context/handlers/queries/get-employee-assigned-data/types';
 
 // summary 타입은 Context의 EmployeeAssignedDataResult['summary'] 타입과 호환
@@ -257,6 +258,82 @@ export class WbsSelfEvaluationDto implements WbsSelfEvaluationInfo {
 }
 
 /**
+ * 산출물 정보 DTO
+ * Context의 DeliverableInfo 타입과 일치해야 함
+ */
+export class DeliverableInfoDto implements DeliverableInfo {
+  @ApiProperty({
+    description: '산출물 ID',
+    example: '123e4567-e89b-12d3-a456-426614174020',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '산출물명',
+    example: 'ERD 설계서',
+  })
+  name: string;
+
+  @ApiPropertyOptional({
+    description: '산출물 설명',
+    example: '데이터베이스 스키마 설계 문서',
+    nullable: true,
+  })
+  description?: string;
+
+  @ApiProperty({
+    description: '산출물 유형',
+    example: 'document',
+    enum: ['document', 'code', 'design', 'report', 'presentation', 'other'],
+  })
+  type: string;
+
+  @ApiPropertyOptional({
+    description: '파일 경로',
+    example: '/uploads/erd_schema_v1.pdf',
+    nullable: true,
+  })
+  filePath?: string;
+
+  @ApiPropertyOptional({
+    description: '담당 직원 ID',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+    nullable: true,
+  })
+  employeeId?: string;
+
+  @ApiPropertyOptional({
+    description: '매핑일',
+    type: 'string',
+    format: 'date-time',
+    example: '2024-01-05T09:00:00.000Z',
+    nullable: true,
+  })
+  mappedDate?: Date;
+
+  @ApiPropertyOptional({
+    description: '매핑자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+    nullable: true,
+  })
+  mappedBy?: string;
+
+  @ApiProperty({
+    description: '활성 상태',
+    example: true,
+  })
+  isActive: boolean;
+
+  @ApiProperty({
+    description: '생성일',
+    type: 'string',
+    format: 'date-time',
+    example: '2024-01-05T09:00:00.000Z',
+  })
+  createdAt: Date;
+}
+
+/**
  * WBS 하향평가 DTO
  * Context의 WbsDownwardEvaluationInfo 타입과 일치해야 함
  */
@@ -319,7 +396,7 @@ export class WbsDownwardEvaluationDto implements WbsDownwardEvaluationInfo {
 }
 
 /**
- * 할당된 WBS 정보 DTO (평가기준 포함)
+ * 할당된 WBS 정보 DTO (평가기준, 산출물 포함)
  * Context의 AssignedWbsInfo 타입과 일치해야 함
  */
 export class AssignedWbsInfoDto implements AssignedWbsInfo {
@@ -393,6 +470,13 @@ export class AssignedWbsInfoDto implements AssignedWbsInfo {
   })
   @Type(() => WbsDownwardEvaluationDto)
   secondaryDownwardEvaluation?: WbsDownwardEvaluationDto | null;
+
+  @ApiProperty({
+    description: 'WBS에 연결된 산출물 목록',
+    type: [DeliverableInfoDto],
+  })
+  @Type(() => DeliverableInfoDto)
+  deliverables: DeliverableInfoDto[];
 }
 
 /**

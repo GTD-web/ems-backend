@@ -17,6 +17,7 @@ import { WbsSelfEvaluation } from '../../domain/core/wbs-self-evaluation/wbs-sel
 import { DownwardEvaluation } from '../../domain/core/downward-evaluation/downward-evaluation.entity';
 import { PeerEvaluation } from '../../domain/core/peer-evaluation/peer-evaluation.entity';
 import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evaluation.entity';
+import { Deliverable } from '../../domain/core/deliverable/deliverable.entity';
 import { QUERY_HANDLERS } from './handlers/queries';
 
 /**
@@ -44,6 +45,7 @@ import { QUERY_HANDLERS } from './handlers/queries';
       DownwardEvaluation,
       PeerEvaluation,
       FinalEvaluation,
+      Deliverable,
     ]),
   ],
   providers: [DashboardService, ...QUERY_HANDLERS],

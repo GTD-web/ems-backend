@@ -1,4 +1,20 @@
 /**
+ * 산출물 정보
+ */
+export interface DeliverableInfo {
+  id: string;
+  name: string;
+  description?: string;
+  type: string;
+  filePath?: string;
+  employeeId?: string;
+  mappedDate?: Date;
+  mappedBy?: string;
+  isActive: boolean;
+  createdAt: Date;
+}
+
+/**
  * 할당된 프로젝트 정보 (WBS 목록 포함)
  */
 export interface AssignedProjectWithWbs {
@@ -58,7 +74,7 @@ export interface WbsDownwardEvaluationInfo {
 }
 
 /**
- * 할당된 WBS 정보 (평가기준, 성과, 자기평가 포함)
+ * 할당된 WBS 정보 (평가기준, 성과, 자기평가, 산출물 포함)
  */
 export interface AssignedWbsInfo {
   wbsId: string;
@@ -71,6 +87,7 @@ export interface AssignedWbsInfo {
   selfEvaluation?: WbsSelfEvaluationInfo | null;
   primaryDownwardEvaluation?: WbsDownwardEvaluationInfo | null;
   secondaryDownwardEvaluation?: WbsDownwardEvaluationInfo | null;
+  deliverables: DeliverableInfo[];
 }
 
 /**

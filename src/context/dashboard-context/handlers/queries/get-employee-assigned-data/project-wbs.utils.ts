@@ -8,6 +8,7 @@ import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
+import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 import {
   AssignedProjectWithWbs,
   AssignedWbsInfo,
@@ -15,6 +16,7 @@ import {
   WbsPerformance,
   WbsSelfEvaluationInfo,
   WbsDownwardEvaluationInfo,
+  DeliverableInfo,
 } from './types';
 
 const logger = new Logger('ProjectWbsUtils');
@@ -34,6 +36,7 @@ export async function getProjectsWithWbs(
   criteriaRepository: Repository<WbsEvaluationCriteria>,
   selfEvaluationRepository: Repository<WbsSelfEvaluation>,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
+  deliverableRepository: Repository<Deliverable>,
 ): Promise<AssignedProjectWithWbs[]> {
   // 1. 평가 프로젝트 할당 조회 (Project 엔티티와 PM 직원 정보 join)
   const projectAssignments = await projectAssignmentRepository
@@ -92,6 +95,7 @@ export async function getProjectsWithWbs(
       criteriaRepository,
       selfEvaluationRepository,
       downwardEvaluationRepository,
+      deliverableRepository,
     );
 
     projectsWithWbs.push({
@@ -114,10 +118,10 @@ export async function getProjectsWithWbs(
 }
 
 /**
- * 특정 프로젝트에 속한 WBS 목록 조회 (평가기준, 성과, 자기평가 포함)
+ * 특정 프로젝트에 속한 WBS 목록 조회 (평가기준, 성과, 자기평가, 산출물 포함)
  *
  * EvaluationWbsAssignment를 통해 특정 프로젝트의 WBS를 조회하고,
- * 각 WBS의 평가기준, 성과, 자기평가 정보를 함께 조회합니다.
+ * 각 WBS의 평가기준, 성과, 자기평가, 산출물 정보를 함께 조회합니다.
  */
 export async function getWbsListByProject(
   evaluationPeriodId: string,
@@ -128,6 +132,7 @@ export async function getWbsListByProject(
   criteriaRepository: Repository<WbsEvaluationCriteria>,
   selfEvaluationRepository: Repository<WbsSelfEvaluation>,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
+  deliverableRepository: Repository<Deliverable>,
 ): Promise<AssignedWbsInfo[]> {
   // 1. WBS 할당 조회 (WbsItem join)
   const wbsAssignments = await wbsAssignmentRepository
@@ -196,6 +201,12 @@ export async function getWbsListByProject(
       logger.warn(`WbsItemId가 없는 WBS: ${wbsItemId}`);
     }
 
+    // 산출물 목록 조회
+    const deliverables = await getDeliverablesByWbsId(
+      wbsItemId,
+      deliverableRepository,
+    );
+
     wbsInfos.push({
       wbsId: wbsItemId,
       wbsName: row.wbsitem_title || '',
@@ -207,6 +218,7 @@ export async function getWbsListByProject(
       selfEvaluation: selfEvaluationData?.selfEvaluation || null,
       primaryDownwardEvaluation: downwardEvaluations.primary || null,
       secondaryDownwardEvaluation: downwardEvaluations.secondary || null,
+      deliverables,
     });
   }
 
@@ -418,4 +430,47 @@ export async function getWbsDownwardEvaluationsByWbsId(
     primary,
     secondary,
   };
+}
+
+/**
+ * 특정 WBS에 연결된 산출물 목록 조회
+ *
+ * Deliverable 엔티티에서 특정 WBS에 매핑된 산출물을 조회합니다.
+ */
+export async function getDeliverablesByWbsId(
+  wbsItemId: string,
+  deliverableRepository: Repository<Deliverable>,
+): Promise<DeliverableInfo[]> {
+  const deliverables = await deliverableRepository
+    .createQueryBuilder('deliverable')
+    .select([
+      'deliverable.id AS deliverable_id',
+      'deliverable.name AS deliverable_name',
+      'deliverable.description AS deliverable_description',
+      'deliverable.type AS deliverable_type',
+      'deliverable.filePath AS deliverable_filePath',
+      'deliverable.employeeId AS deliverable_employeeId',
+      'deliverable.mappedDate AS deliverable_mappedDate',
+      'deliverable.mappedBy AS deliverable_mappedBy',
+      'deliverable.isActive AS deliverable_isActive',
+      'deliverable.createdAt AS deliverable_createdAt',
+    ])
+    .where('deliverable.wbsItemId = :wbsItemId', { wbsItemId })
+    .andWhere('deliverable.deletedAt IS NULL')
+    .andWhere('deliverable.isActive = :isActive', { isActive: true })
+    .orderBy('deliverable.createdAt', 'DESC')
+    .getRawMany();
+
+  return deliverables.map((row) => ({
+    id: row.deliverable_id,
+    name: row.deliverable_name,
+    description: row.deliverable_description,
+    type: row.deliverable_type,
+    filePath: row.deliverable_filepath,
+    employeeId: row.deliverable_employeeid,
+    mappedDate: row.deliverable_mappeddate,
+    mappedBy: row.deliverable_mappedby,
+    isActive: row.deliverable_isactive,
+    createdAt: row.deliverable_createdat,
+  }));
 }

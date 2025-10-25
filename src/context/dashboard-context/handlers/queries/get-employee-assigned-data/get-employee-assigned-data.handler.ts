@@ -14,6 +14,7 @@ import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-eva
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 import { EmployeeAssignedDataResult } from './types';
 import { getProjectsWithWbs } from './project-wbs.utils';
 import {
@@ -68,6 +69,8 @@ export class GetEmployeeAssignedDataHandler
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
     @InjectRepository(EvaluationLineMapping)
     private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
+    @InjectRepository(Deliverable)
+    private readonly deliverableRepository: Repository<Deliverable>,
   ) {}
 
   async execute(
@@ -133,7 +136,7 @@ export class GetEmployeeAssignedDataHandler
       );
     }
 
-    // 5. 프로젝트별 할당 정보 조회 (WBS 포함)
+    // 5. 프로젝트별 할당 정보 조회 (WBS 및 산출물 포함)
     const projects = await getProjectsWithWbs(
       evaluationPeriodId,
       employeeId,
@@ -143,6 +146,7 @@ export class GetEmployeeAssignedDataHandler
       this.criteriaRepository,
       this.selfEvaluationRepository,
       this.downwardEvaluationRepository,
+      this.deliverableRepository,
     );
 
     // 6. 요약 정보 계산
