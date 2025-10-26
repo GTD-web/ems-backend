@@ -37,9 +37,9 @@ describe('POST /admin/evaluation-periods/:id/start - 실제 데이터 기반', (
         },
         stateDistribution: {
           evaluationPeriodStatus: {
-            waiting: 0.6,
-            inProgress: 0.2,
-            completed: 0.2,
+            waiting: 0.8, // 80%는 대기 중
+            inProgress: 0, // 시작 테스트를 위해 진행 중인 평가기간 없음
+            completed: 0.2, // 20%는 완료
           },
         },
       })

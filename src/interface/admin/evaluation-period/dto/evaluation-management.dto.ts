@@ -133,6 +133,7 @@ export class CreateEvaluationPeriodApiDto {
     example: '2024-01-01',
   })
   @IsNotEmpty({ message: '평가 기간 시작일은 필수 입력 항목입니다.' })
+  @IsDate({ message: '평가 기간 시작일은 올바른 날짜 형식이어야 합니다.' })
   @DateToUTC()
   startDate: string;
 
@@ -141,6 +142,7 @@ export class CreateEvaluationPeriodApiDto {
     example: '2024-06-30',
   })
   @IsNotEmpty({ message: '하향/동료평가 마감일은 필수 입력 항목입니다.' })
+  @IsDate({ message: '하향/동료평가 마감일은 올바른 날짜 형식이어야 합니다.' })
   @DateToUTC()
   peerEvaluationDeadline: string;
 
@@ -269,6 +271,7 @@ export class UpdateEvaluationPeriodStartDateApiDto {
     example: '2024-01-01',
   })
   @IsNotEmpty({ message: '평가 기간 시작일은 필수 입력 항목입니다.' })
+  @IsDate({ message: '평가 기간 시작일은 올바른 날짜 형식이어야 합니다.' })
   @DateToUTC()
   startDate: string;
 }
@@ -282,6 +285,7 @@ export class UpdateEvaluationSetupDeadlineApiDto {
     example: '2024-01-15',
   })
   @IsNotEmpty({ message: '평가설정 단계 마감일은 필수 입력 항목입니다.' })
+  @IsDate({ message: '평가설정 단계 마감일은 올바른 날짜 형식이어야 합니다.' })
   @DateToUTC()
   evaluationSetupDeadline: string;
 }
@@ -295,6 +299,7 @@ export class UpdatePerformanceDeadlineApiDto {
     example: '2024-05-31',
   })
   @IsNotEmpty({ message: '업무 수행 단계 마감일은 필수 입력 항목입니다.' })
+  @IsDate({ message: '업무 수행 단계 마감일은 올바른 날짜 형식이어야 합니다.' })
   @DateToUTC()
   performanceDeadline: string;
 }
@@ -308,6 +313,7 @@ export class UpdateSelfEvaluationDeadlineApiDto {
     example: '2024-06-15',
   })
   @IsNotEmpty({ message: '자기 평가 단계 마감일은 필수 입력 항목입니다.' })
+  @IsDate({ message: '자기 평가 단계 마감일은 올바른 날짜 형식이어야 합니다.' })
   @DateToUTC()
   selfEvaluationDeadline: string;
 }
@@ -321,6 +327,9 @@ export class UpdatePeerEvaluationDeadlineApiDto {
     example: '2024-06-30',
   })
   @IsNotEmpty({ message: '하향/동료평가 단계 마감일은 필수 입력 항목입니다.' })
+  @IsDate({
+    message: '하향/동료평가 단계 마감일은 올바른 날짜 형식이어야 합니다.',
+  })
   @DateToUTC()
   peerEvaluationDeadline: string;
 }

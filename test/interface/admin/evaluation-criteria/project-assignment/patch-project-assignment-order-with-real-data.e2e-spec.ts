@@ -1,14 +1,15 @@
 /**
  * 프로젝트 할당 순서 변경 (PATCH) - 실제 데이터 기반 E2E 테스트
  *
- * 원본 테스트 케이스 12개를 모두 시드 데이터 기반으로 마이그레이션
+ * 현재 구현된 API: PATCH /admin/evaluation-criteria/project-assignments/:id/order?direction=up|down
+ * - 단일 할당의 순서를 인접 항목과 교환 (상대적 순서 변경)
  */
 
 import { HttpStatus } from '@nestjs/common';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { DataSource } from 'typeorm';
 
-describe('PATCH /admin/evaluation-criteria/project-assignments/order (실제 데이터)', () => {
+describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order (실제 데이터)', () => {
   let testSuite: BaseE2ETest;
   let dataSource: DataSource;
 
@@ -41,45 +42,51 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/order (실제 데
     await testSuite.closeApp();
   });
 
-  async function getTwoAssignments() {
+  async function getAssignmentWithOrder() {
     const result = await dataSource.query(
-      `SELECT id FROM evaluation_project_assignment WHERE "deletedAt" IS NULL LIMIT 2`,
+      `SELECT id, "displayOrder" FROM evaluation_project_assignment 
+       WHERE "deletedAt" IS NULL 
+       ORDER BY "displayOrder" ASC 
+       LIMIT 3`,
     );
-    return result.length >= 2
-      ? { assignment1: result[0], assignment2: result[1] }
-      : null;
+    return result.length >= 2 ? result : null;
   }
 
   describe('API 기본 동작', () => {
     it('순서 변경 API가 존재해야 한다', async () => {
-      const assignments = await getTwoAssignments();
+      const assignments = await getAssignmentWithOrder();
 
-      if (!assignments) {
+      if (!assignments || assignments.length < 2) {
+        console.log('데이터가 부족해서 테스트 스킵');
+        return;
+      }
+
+      const response = await testSuite
+        .request()
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[1].id}/order`,
+        )
+        .query({ direction: 'up' })
+        .expect(HttpStatus.OK);
+
+      expect(response.body.id).toBe(assignments[1].id);
+
+      console.log('\n✅ API 존재 확인 성공');
+    });
+
+    it('잘못된 경로로 요청 시 404 에러가 발생해야 한다', async () => {
+      const assignments = await getAssignmentWithOrder();
+
+      if (!assignments || assignments.length === 0) {
         console.log('데이터가 없어서 테스트 스킵');
         return;
       }
 
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [
-            { assignmentId: assignments.assignment1.id, order: 1 },
-            { assignmentId: assignments.assignment2.id, order: 2 },
-          ],
-        });
-
-      expect([HttpStatus.OK, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
-
-      console.log('\n✅ API 존재 확인 성공');
-    });
-
-    it('잘못된 경로로 요청 시 404 에러가 발생해야 한다', async () => {
-      const response = await testSuite
-        .request()
-        .patch('/admin/evaluation-criteria/project-assignments/invalid-order');
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[0].id}/invalid-order`,
+        );
 
       expect(response.status).toBe(HttpStatus.NOT_FOUND);
 
@@ -88,101 +95,119 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/order (실제 데
   });
 
   describe('정상 순서 변경', () => {
-    it('유효한 순서로 변경할 수 있어야 한다', async () => {
-      const assignments = await getTwoAssignments();
+    it('중간 항목을 위로 이동할 수 있어야 한다', async () => {
+      const assignments = await getAssignmentWithOrder();
 
-      if (!assignments) {
-        console.log('데이터가 없어서 테스트 스킵');
+      if (!assignments || assignments.length < 2) {
+        console.log('데이터가 부족해서 테스트 스킵');
         return;
       }
 
+      // 두 번째 항목을 위로 이동
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [
-            { assignmentId: assignments.assignment1.id, order: 2 },
-            { assignmentId: assignments.assignment2.id, order: 1 },
-          ],
-        });
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[1].id}/order`,
+        )
+        .query({ direction: 'up' })
+        .expect(HttpStatus.OK);
 
-      expect([HttpStatus.OK, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+      expect(response.body.id).toBe(assignments[1].id);
 
-      console.log('\n✅ 유효한 순서 변경 성공');
+      console.log('\n✅ 위로 이동 성공');
     });
 
-    it('단일 할당의 순서를 변경할 수 있어야 한다', async () => {
-      const assignments = await getTwoAssignments();
+    it('중간 항목을 아래로 이동할 수 있어야 한다', async () => {
+      const assignments = await getAssignmentWithOrder();
 
-      if (!assignments) {
-        console.log('데이터가 없어서 테스트 스킵');
+      if (!assignments || assignments.length < 2) {
+        console.log('데이터가 부족해서 테스트 스킵');
         return;
       }
 
+      // 첫 번째 항목을 아래로 이동
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [
-            { assignmentId: assignments.assignment1.id, order: 5 },
-          ],
-        });
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[0].id}/order`,
+        )
+        .query({ direction: 'down' })
+        .expect(HttpStatus.OK);
 
-      expect([HttpStatus.OK, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+      expect(response.body.id).toBe(assignments[0].id);
 
-      console.log('\n✅ 단일 할당 순서 변경 성공');
+      console.log('\n✅ 아래로 이동 성공');
     });
 
-    it('여러 할당의 순서를 동시에 변경할 수 있어야 한다', async () => {
-      const assignments = await getTwoAssignments();
+    it('첫 번째 항목을 위로 이동 시도해도 에러가 발생하지 않아야 한다', async () => {
+      const assignments = await getAssignmentWithOrder();
 
-      if (!assignments) {
+      if (!assignments || assignments.length === 0) {
         console.log('데이터가 없어서 테스트 스킵');
         return;
       }
 
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [
-            { assignmentId: assignments.assignment1.id, order: 1 },
-            { assignmentId: assignments.assignment2.id, order: 2 },
-          ],
-        });
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[0].id}/order`,
+        )
+        .query({ direction: 'up' })
+        .expect(HttpStatus.OK);
 
-      expect([HttpStatus.OK, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+      console.log('\n✅ 첫 번째 항목 위로 이동 처리 성공');
+    });
 
-      console.log('\n✅ 여러 할당 순서 변경 성공');
+    it('마지막 항목을 아래로 이동 시도해도 에러가 발생하지 않아야 한다', async () => {
+      const assignments = await getAssignmentWithOrder();
+
+      if (!assignments || assignments.length === 0) {
+        console.log('데이터가 없어서 테스트 스킵');
+        return;
+      }
+
+      const lastAssignment = assignments[assignments.length - 1];
+
+      const response = await testSuite
+        .request()
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${lastAssignment.id}/order`,
+        )
+        .query({ direction: 'down' })
+        .expect(HttpStatus.OK);
+
+      console.log('\n✅ 마지막 항목 아래로 이동 처리 성공');
     });
   });
 
   describe('유효성 검증', () => {
-    it('필수 필드 누락 시 400 에러가 발생해야 한다', async () => {
+    it('direction 파라미터 누락 시 400 에러가 발생해야 한다', async () => {
+      const assignments = await getAssignmentWithOrder();
+
+      if (!assignments || assignments.length === 0) {
+        console.log('데이터가 없어서 테스트 스킵');
+        return;
+      }
+
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({})
-        .expect(HttpStatus.BAD_REQUEST);
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[0].id}/order`,
+        );
 
+      expect(response.status).toBe(HttpStatus.BAD_REQUEST);
       expect(response.body.message).toBeDefined();
 
-      console.log('\n✅ 필수 필드 누락 400 에러 성공');
+      console.log('\n✅ direction 누락 400 에러 성공');
     });
 
     it('잘못된 UUID 형식으로 요청 시 400 에러가 발생해야 한다', async () => {
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [{ assignmentId: 'invalid-uuid', order: 1 }],
-        })
+        .patch(
+          '/admin/evaluation-criteria/project-assignments/invalid-uuid/order',
+        )
+        .query({ direction: 'up' })
         .expect(HttpStatus.BAD_REQUEST);
 
       expect(response.body.message).toBeDefined();
@@ -190,96 +215,78 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/order (실제 데
       console.log('\n✅ 잘못된 UUID 400 에러 성공');
     });
 
-    it('음수 순서로 요청 시 400 에러가 발생해야 한다', async () => {
-      const assignments = await getTwoAssignments();
+    it('잘못된 direction 값으로 요청 시 400 에러가 발생해야 한다', async () => {
+      const assignments = await getAssignmentWithOrder();
 
-      if (!assignments) {
+      if (!assignments || assignments.length === 0) {
         console.log('데이터가 없어서 테스트 스킵');
         return;
       }
 
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [
-            { assignmentId: assignments.assignment1.id, order: -1 },
-          ],
-        });
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[0].id}/order`,
+        )
+        .query({ direction: 'invalid' })
+        .expect(HttpStatus.BAD_REQUEST);
 
-      expect([HttpStatus.BAD_REQUEST, HttpStatus.OK]).toContain(
-        response.status,
-      );
+      expect(response.body.message).toBeDefined();
 
-      console.log('\n✅ 음수 순서 에러 성공');
-    });
-
-    it('빈 배열로 요청 시 400 에러가 발생해야 한다', async () => {
-      const response = await testSuite
-        .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [],
-        });
-
-      expect([HttpStatus.BAD_REQUEST, HttpStatus.OK]).toContain(
-        response.status,
-      );
-
-      console.log('\n✅ 빈 배열 에러 성공');
+      console.log('\n✅ 잘못된 direction 400 에러 성공');
     });
   });
 
   describe('에러 케이스', () => {
-    it('존재하지 않는 할당 ID로 요청 시 적절한 에러가 발생해야 한다', async () => {
+    it('존재하지 않는 할당 ID로 요청 시 404 에러가 발생해야 한다', async () => {
       const nonExistentId = '00000000-0000-0000-0000-000000000000';
 
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [{ assignmentId: nonExistentId, order: 1 }],
-        });
-
-      expect([HttpStatus.NOT_FOUND, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${nonExistentId}/order`,
+        )
+        .query({ direction: 'up' })
+        .expect(HttpStatus.NOT_FOUND);
 
       console.log('\n✅ 존재하지 않는 ID 에러 성공');
     });
 
-    it('중복된 할당 ID로 요청 시 적절한 에러가 발생해야 한다', async () => {
-      const assignments = await getTwoAssignments();
+    it('삭제된 할당의 순서를 변경하려고 하면 에러가 발생해야 한다', async () => {
+      // 먼저 할당을 생성하고 삭제
+      const assignments = await getAssignmentWithOrder();
 
-      if (!assignments) {
+      if (!assignments || assignments.length === 0) {
         console.log('데이터가 없어서 테스트 스킵');
         return;
       }
 
+      // 할당 삭제
+      await testSuite
+        .request()
+        .delete(
+          `/admin/evaluation-criteria/project-assignments/${assignments[0].id}`,
+        );
+
+      // 삭제된 할당의 순서 변경 시도
       const response = await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [
-            { assignmentId: assignments.assignment1.id, order: 1 },
-            { assignmentId: assignments.assignment1.id, order: 2 },
-          ],
-        });
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[0].id}/order`,
+        )
+        .query({ direction: 'up' })
+        .expect(HttpStatus.NOT_FOUND);
 
-      expect([HttpStatus.BAD_REQUEST, HttpStatus.OK]).toContain(
-        response.status,
-      );
-
-      console.log('\n✅ 중복 ID 에러 성공');
+      console.log('\n✅ 삭제된 할당 에러 성공');
     });
   });
 
   describe('성능 테스트', () => {
     it('응답 시간이 2초 이내여야 한다', async () => {
-      const assignments = await getTwoAssignments();
+      const assignments = await getAssignmentWithOrder();
 
-      if (!assignments) {
-        console.log('데이터가 없어서 테스트 스킵');
+      if (!assignments || assignments.length < 2) {
+        console.log('데이터가 부족해서 테스트 스킵');
         return;
       }
 
@@ -287,13 +294,10 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/order (실제 데
 
       await testSuite
         .request()
-        .patch('/admin/evaluation-criteria/project-assignments/order')
-        .send({
-          assignmentOrders: [
-            { assignmentId: assignments.assignment1.id, order: 1 },
-            { assignmentId: assignments.assignment2.id, order: 2 },
-          ],
-        });
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${assignments[1].id}/order`,
+        )
+        .query({ direction: 'up' });
 
       const endTime = Date.now();
       const responseTime = endTime - startTime;
@@ -301,6 +305,48 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/order (실제 데
       expect(responseTime).toBeLessThan(2000);
 
       console.log(`\n✅ 응답 시간: ${responseTime}ms`);
+    });
+  });
+
+  describe('순서 변경 로직 검증', () => {
+    it('연속된 up/down 이동으로 원래 위치로 돌아와야 한다', async () => {
+      const assignments = await getAssignmentWithOrder();
+
+      if (!assignments || assignments.length < 2) {
+        console.log('데이터가 부족해서 테스트 스킵');
+        return;
+      }
+
+      const targetId = assignments[1].id;
+      const originalOrder = assignments[1].displayOrder;
+
+      // 위로 이동
+      await testSuite
+        .request()
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${targetId}/order`,
+        )
+        .query({ direction: 'up' });
+
+      // 다시 아래로 이동
+      await testSuite
+        .request()
+        .patch(
+          `/admin/evaluation-criteria/project-assignments/${targetId}/order`,
+        )
+        .query({ direction: 'down' });
+
+      // 순서 확인
+      const updatedAssignment = await dataSource.query(
+        `SELECT "displayOrder" FROM evaluation_project_assignment WHERE id = $1`,
+        [targetId],
+      );
+
+      if (updatedAssignment.length > 0) {
+        expect(updatedAssignment[0].displayOrder).toBe(originalOrder);
+      }
+
+      console.log('\n✅ 연속 이동 후 원위치 복귀 성공');
     });
   });
 });
