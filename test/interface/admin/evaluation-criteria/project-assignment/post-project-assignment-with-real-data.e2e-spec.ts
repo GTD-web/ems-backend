@@ -98,7 +98,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -125,7 +124,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -136,7 +134,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee2.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee2.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -164,7 +161,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -175,7 +171,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project2.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -215,7 +210,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: 'invalid-uuid',
           projectId: 'invalid-uuid',
           periodId: period.id,
-          assignedBy: 'invalid-uuid',
         })
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -232,7 +226,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: '',
           projectId: '',
           periodId: '',
-          assignedBy: '',
         })
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -249,7 +242,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: null,
           projectId: null,
           periodId: null,
-          assignedBy: null,
         })
         .expect(HttpStatus.BAD_REQUEST);
 
@@ -277,7 +269,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -288,7 +279,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         });
 
       expect([HttpStatus.CONFLICT, HttpStatus.BAD_REQUEST]).toContain(
@@ -315,7 +305,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -326,7 +315,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project2.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -352,7 +340,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -363,7 +350,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee2.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee2.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -374,6 +360,26 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
   });
 
   describe('평가기간 상태별 할당 처리', () => {
+    beforeEach(async () => {
+      // 각 테스트 전에 waiting 및 in-progress 상태 평가기간의 프로젝트 할당을 모두 삭제
+      const waitingPeriod = await getEvaluationPeriod();
+      const inProgressPeriod = await getInProgressPeriod();
+      
+      if (waitingPeriod) {
+        await dataSource.query(
+          `DELETE FROM evaluation_project_assignment WHERE "periodId" = $1`,
+          [waitingPeriod.id],
+        );
+      }
+      
+      if (inProgressPeriod) {
+        await dataSource.query(
+          `DELETE FROM evaluation_project_assignment WHERE "periodId" = $1`,
+          [inProgressPeriod.id],
+        );
+      }
+    });
+
     it('완료된 평가기간에 할당 생성 시 422 에러가 발생해야 한다', async () => {
       const employees = await getTwoEmployees();
       const projects = await getTwoProjects();
@@ -391,7 +397,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         });
 
       expect([
@@ -419,7 +424,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -445,7 +449,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -456,6 +459,17 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
   });
 
   describe('할당 정보 검증', () => {
+    beforeEach(async () => {
+      // 각 테스트 전에 waiting 상태 평가기간의 프로젝트 할당을 모두 삭제
+      const period = await getEvaluationPeriod();
+      if (period) {
+        await dataSource.query(
+          `DELETE FROM evaluation_project_assignment WHERE "periodId" = $1`,
+          [period.id],
+        );
+      }
+    });
+
     it('할당 생성 시 할당일이 현재 시간으로 자동 설정되어야 한다', async () => {
       const employees = await getTwoEmployees();
       const projects = await getTwoProjects();
@@ -475,7 +489,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -508,7 +521,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee2.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -534,7 +546,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -561,7 +572,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 
@@ -636,7 +646,6 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-          assignedBy: employees.employee1.id,
         })
         .expect(HttpStatus.CREATED);
 

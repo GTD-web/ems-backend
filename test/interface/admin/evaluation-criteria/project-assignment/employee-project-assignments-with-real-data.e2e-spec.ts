@@ -107,7 +107,8 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         )
         .expect(HttpStatus.OK);
 
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveProperty('projects');
+      expect(Array.isArray(response.body.projects)).toBe(true);
 
       console.log('\n✅ 유효한 조회 성공');
     });
@@ -149,8 +150,9 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         )
         .expect(HttpStatus.OK);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBe(0);
+      expect(response.body).toHaveProperty('projects');
+      expect(Array.isArray(response.body.projects)).toBe(true);
+      expect(response.body.projects.length).toBe(0);
 
       console.log('\n✅ 빈 배열 반환 성공');
     });
@@ -171,7 +173,8 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         )
         .expect(HttpStatus.OK);
 
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body).toHaveProperty('projects');
+      expect(Array.isArray(response.body.projects)).toBe(true);
 
       console.log('\n✅ 배열 형식 확인 성공');
     });
@@ -222,8 +225,9 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         )
         .expect(HttpStatus.OK);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBe(0);
+      expect(response.body).toHaveProperty('projects');
+      expect(Array.isArray(response.body.projects)).toBe(true);
+      expect(response.body.projects.length).toBe(0);
 
       console.log('\n✅ 존재하지 않는 직원 빈 배열 반환 성공');
     });
@@ -245,8 +249,9 @@ describe('GET /admin/evaluation-criteria/project-assignments/employees/:employee
         )
         .expect(HttpStatus.OK);
 
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBe(0);
+      expect(response.body).toHaveProperty('projects');
+      expect(Array.isArray(response.body.projects)).toBe(true);
+      expect(response.body.projects.length).toBe(0);
 
       console.log('\n✅ 존재하지 않는 기간 빈 배열 반환 성공');
     });
