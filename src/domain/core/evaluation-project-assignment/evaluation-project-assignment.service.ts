@@ -1,7 +1,7 @@
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, EntityManager, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository, IsNull } from 'typeorm';
 import { EvaluationProjectAssignmentValidationService } from './evaluation-project-assignment-validation.service';
 import { EvaluationProjectAssignment } from './evaluation-project-assignment.entity';
 import { EvaluationProjectAssignmentNotFoundException } from './evaluation-project-assignment.exceptions';
@@ -355,7 +355,7 @@ export class EvaluationProjectAssignmentService
         where: {
           periodId: currentAssignment.periodId,
           employeeId: currentAssignment.employeeId,
-          deletedAt: null,
+          deletedAt: IsNull(),
         },
         order: { displayOrder: 'ASC' },
       });
@@ -421,7 +421,7 @@ export class EvaluationProjectAssignmentService
       // 같은 직원-평가기간의 모든 할당 조회 (현재 순서대로 정렬)
       // 삭제되지 않은 항목만 조회
       const assignments = await repository.find({
-        where: { periodId, employeeId, deletedAt: null },
+        where: { periodId, employeeId, deletedAt: IsNull() },
         order: { displayOrder: 'ASC', assignedDate: 'DESC' },
       });
 

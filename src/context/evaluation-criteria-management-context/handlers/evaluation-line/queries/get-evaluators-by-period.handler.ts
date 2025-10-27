@@ -213,7 +213,7 @@ export class GetEvaluatorsByPeriodHandler
       ),
     ];
 
-    let departments = [];
+    let departments: Department[] = [];
     if (departmentIds.length > 0) {
       departments = await this.departmentRepository
         .createQueryBuilder('department')

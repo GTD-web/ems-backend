@@ -135,10 +135,17 @@ export class ProjectAssignmentManagementController {
   async getUnassignedEmployees(
     @Query() query: GetUnassignedEmployeesQueryDto,
   ): Promise<UnassignedEmployeesResponseDto> {
-    return await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트가_할당되지_않은_직원_목록을_조회한다(
-      query.periodId,
-      query.projectId,
-    );
+    const result =
+      await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트가_할당되지_않은_직원_목록을_조회한다(
+        query.periodId,
+        query.projectId,
+      );
+
+    return {
+      periodId: query.periodId,
+      projectId: query.projectId,
+      employees: result.employees,
+    };
   }
 
   /**
