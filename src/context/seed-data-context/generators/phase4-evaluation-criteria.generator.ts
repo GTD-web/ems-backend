@@ -81,6 +81,7 @@ export class Phase4EvaluationCriteriaGenerator {
       evaluationLines,
       dist,
       systemAdminId,
+      config.currentUserId,
     );
     this.logger.log(
       `생성 완료: EvaluationLineMapping ${lineMappings.length}개`,
@@ -178,6 +179,7 @@ export class Phase4EvaluationCriteriaGenerator {
     evaluationLines: EvaluationLine[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
     systemAdminId: string,
+    currentUserId?: string,
   ): Promise<EvaluationLineMapping[]> {
     const mappings: EvaluationLineMapping[] = [];
     const primaryLine = evaluationLines.find(
@@ -209,6 +211,7 @@ export class Phase4EvaluationCriteriaGenerator {
         employeeId,
         employeeIds,
         departmentMap,
+        currentUserId,
       );
       if (!primaryEvaluator) continue;
 
@@ -232,8 +235,14 @@ export class Phase4EvaluationCriteriaGenerator {
           (id) => id !== employeeId && id !== primaryEvaluator,
         );
         if (otherEmployees.length > 0) {
-          const secondaryEvaluator =
-            otherEmployees[Math.floor(Math.random() * otherEmployees.length)];
+          // 현재 사용자가 있고, 1차 평가자가 아닌 경우 우선적으로 선택
+          let secondaryEvaluator: string;
+          if (currentUserId && currentUserId !== primaryEvaluator && otherEmployees.includes(currentUserId)) {
+            secondaryEvaluator = currentUserId;
+            this.logger.log(`현재 사용자를 2차 평가자로 선택: ${currentUserId}`);
+          } else {
+            secondaryEvaluator = otherEmployees[Math.floor(Math.random() * otherEmployees.length)];
+          }
           const secondaryMapping = new EvaluationLineMapping();
           secondaryMapping.employeeId = employeeId;
           secondaryMapping.evaluatorId = secondaryEvaluator;
@@ -284,6 +293,7 @@ export class Phase4EvaluationCriteriaGenerator {
 
   /**
    * 1차 평가자를 선택한다
+   * - 현재 사용자가 있으면 우선적으로 선택 (테스트용)
    * - 같은 부서의 첫 번째 직원(부서장)이 1차 평가자
    * - 부서장 본인은 다른 부서의 부서장이 평가
    * - 부서가 없는 경우 무작위 선택
@@ -292,7 +302,14 @@ export class Phase4EvaluationCriteriaGenerator {
     employeeId: string,
     allEmployeeIds: string[],
     departmentMap: Map<string, string[]>,
+    currentUserId?: string,
   ): Promise<string | null> {
+    // 현재 사용자가 있고, 본인이 아닌 경우 우선적으로 선택
+    if (currentUserId && currentUserId !== employeeId && allEmployeeIds.includes(currentUserId)) {
+      this.logger.log(`현재 사용자를 1차 평가자로 선택: ${currentUserId}`);
+      return currentUserId;
+    }
+
     // 해당 직원이 속한 부서 찾기
     let employeeDepartment: string | null = null;
     let isDepartmentHead = false;

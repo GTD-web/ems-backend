@@ -61,6 +61,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
           evaluationConfig: {
             periodCount: 1,
           },
+          includeCurrentUserAsEvaluator: true, // 현재 사용자를 평가자로 등록
           stateDistribution: {
             selfEvaluationProgress: {
               completed: 1.0,

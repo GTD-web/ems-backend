@@ -21,6 +21,7 @@ export interface SeedDataConfig {
   stateDistribution?: StateDistributionConfig;
   useRealDepartments?: boolean;
   useRealEmployees?: boolean;
+  currentUserId?: string; // 현재 사용자 ID (평가자로 등록할 때 사용)
 }
 
 export interface StateDistributionConfig {

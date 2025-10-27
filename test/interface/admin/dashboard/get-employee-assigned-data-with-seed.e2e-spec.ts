@@ -64,6 +64,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
           evaluationConfig: {
             periodCount: 1,
           },
+          includeCurrentUserAsEvaluator: true, // 현재 사용자를 평가자로 등록
           stateDistribution: {
             // 자기평가 완료율을 높게 설정
             selfEvaluationProgress: {

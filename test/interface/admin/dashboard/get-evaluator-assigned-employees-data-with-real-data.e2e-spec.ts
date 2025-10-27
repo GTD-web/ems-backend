@@ -565,10 +565,28 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
     });
 
     it('❌ 평가자가 담당하지 않는 피평가자 조회 시 404 에러', async () => {
-      // 다른 직원 찾기 (평가자가 담당하지 않는)
-      const otherEmployeeId = allEmployeeIds.find(
-        (id) => id !== employeeId && id !== evaluatorId,
+      // 실제로 평가자와 관계가 없는 직원 찾기
+      // 먼저 평가자가 담당하는 모든 피평가자 조회
+      const evaluatorMappingsResponse = await testSuite
+        .request()
+        .get(`/admin/dashboard/${evaluationPeriodId}/my-evaluation-targets/${evaluatorId}/status`)
+        .expect(HttpStatus.OK);
+
+      const assignedEmployeeIds = evaluatorMappingsResponse.body.map(
+        (emp: any) => emp.employeeId,
       );
+
+      console.log('\n🔍 평가자가 담당하는 피평가자들:');
+      assignedEmployeeIds.forEach((id: string) => {
+        console.log(`  - ${id.substring(0, 8)}...`);
+      });
+
+      // 평가자가 담당하지 않는 직원 찾기
+      const otherEmployeeId = allEmployeeIds.find(
+        (id) => !assignedEmployeeIds.includes(id) && id !== evaluatorId,
+      );
+
+      console.log(`\n🔍 선택된 다른 직원: ${otherEmployeeId?.substring(0, 8)}...`);
 
       if (otherEmployeeId) {
         const response = await testSuite
@@ -585,6 +603,9 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
         expect(response.body.message).toContain(
           '평가자가 해당 피평가자를 담당하지 않습니다',
         );
+      } else {
+        console.log('\n⚠️ 평가자가 담당하지 않는 직원을 찾을 수 없습니다.');
+        console.log('모든 직원이 평가자의 담당 대상이거나, 평가자 본인입니다.');
       }
     });
   });

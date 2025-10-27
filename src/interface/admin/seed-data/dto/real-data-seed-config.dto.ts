@@ -120,4 +120,16 @@ export class RealDataSeedConfigDto {
   @IsOptional()
   @IsObject()
   stateDistribution?: StateDistributionConfig;
+
+  @ApiPropertyOptional({
+    description:
+      '현재 사용자를 평가자로 등록할지 여부. ' +
+      'true인 경우 현재 로그인한 사용자가 1차/2차 평가자로 등록되어 ' +
+      '테스트 시 할당된 피평가자 목록을 조회할 수 있습니다.',
+    example: true,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  includeCurrentUserAsEvaluator?: boolean;
 }

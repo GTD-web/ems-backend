@@ -6,6 +6,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
+  Request,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SeedDataService } from '@context/seed-data-context/seed-data.service';
@@ -31,10 +32,17 @@ export class SeedDataController {
   @ApiGenerateSeedData()
   async generateSeedData(
     @Body() config: SeedDataConfigDto,
+    @Request() req: any,
   ): Promise<SeedDataResultDto> {
     const startTime = Date.now();
 
-    const results = await this.seedDataService.시드_데이터를_생성한다(config);
+    // 현재 사용자 정보를 설정에 추가
+    const configWithUser = {
+      ...config,
+      currentUserId: config.includeCurrentUserAsEvaluator ? req.user?.id : undefined,
+    };
+
+    const results = await this.seedDataService.시드_데이터를_생성한다(configWithUser);
 
     const totalDuration = Date.now() - startTime;
 
@@ -51,6 +59,7 @@ export class SeedDataController {
   @ApiGenerateSeedDataWithRealData()
   async generateSeedDataWithRealData(
     @Body() config: RealDataSeedConfigDto,
+    @Request() req: any,
   ): Promise<SeedDataResultDto> {
     const startTime = Date.now();
 
@@ -70,6 +79,7 @@ export class SeedDataController {
       stateDistribution: config.stateDistribution, // 상태 분포 설정 전달
       useRealDepartments: true, // 항상 true
       useRealEmployees: true, // 항상 true
+      currentUserId: config.includeCurrentUserAsEvaluator ? req.user?.id : undefined,
     };
 
     // 디버그: 설정 로깅
@@ -77,6 +87,13 @@ export class SeedDataController {
       console.log(
         '[Controller] stateDistribution.selfEvaluationProgress:',
         JSON.stringify(config.stateDistribution.selfEvaluationProgress),
+      );
+    }
+
+    if (config.includeCurrentUserAsEvaluator) {
+      console.log(
+        '[Controller] 현재 사용자를 평가자로 등록:',
+        req.user?.id,
       );
     }
 
