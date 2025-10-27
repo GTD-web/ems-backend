@@ -407,11 +407,10 @@ export class EvaluationCriteriaManagementService
 
   /**
    * 1차_평가자를_구성한다
-   * 직원, WBS, 평가기간에 따라 1차 평가자를 지정하여 평가라인을 구성한다
+   * 직원별 고정 담당자(1차 평가자)를 설정한다 (WBS와 무관)
    */
   async 일차_평가자를_구성한다(
     employeeId: string,
-    wbsItemId: string,
     periodId: string,
     evaluatorId: string,
     createdBy: string,
@@ -423,13 +422,12 @@ export class EvaluationCriteriaManagementService
       id: string;
       employeeId: string;
       evaluatorId: string;
-      wbsItemId: string;
+      wbsItemId: string | null;
       evaluationLineId: string;
     };
   }> {
     const command = new ConfigurePrimaryEvaluatorCommand(
       employeeId,
-      wbsItemId,
       periodId,
       evaluatorId,
       createdBy,

@@ -67,19 +67,17 @@ export class EvaluationLineManagementController {
   }
 
   /**
-   * 1차 평가자 구성
+   * 1차 평가자 구성 (직원별 고정 담당자)
    */
   @ConfigurePrimaryEvaluator()
   async configurePrimaryEvaluator(
     @Param('employeeId', ParseUUIDPipe) employeeId: string,
-    @Param('wbsItemId', ParseUUIDPipe) wbsItemId: string,
     @Param('periodId', ParseUUIDPipe) periodId: string,
     @Body() dto: ConfigurePrimaryEvaluatorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ConfigureEvaluatorResponseDto> {
     return await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(
       employeeId,
-      wbsItemId,
       periodId,
       dto.evaluatorId,
       user.id,

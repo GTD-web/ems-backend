@@ -330,30 +330,30 @@ export const GetEmployeeEvaluationSettings = () =>
   );
 
 /**
- * 1차 평가자 구성 API 데코레이터
+ * 1차 평가자 구성 API 데코레이터 (직원별 고정 담당자)
  */
 export const ConfigurePrimaryEvaluator = () =>
   applyDecorators(
-    Post(
-      'employee/:employeeId/wbs/:wbsItemId/period/:periodId/primary-evaluator',
-    ),
+    Post('employee/:employeeId/period/:periodId/primary-evaluator'),
     ApiOperation({
-      summary: '1차 평가자 구성 (Upsert)',
-      description: `특정 직원의 특정 WBS 항목에 대한 1차 평가자를 구성합니다.
+      summary: '1차 평가자 구성 (직원별 고정 담당자)',
+      description: `특정 직원의 1차 평가자(고정 담당자)를 구성합니다.
 
 **동작 방식:**
-- WBS 할당 시 자동으로 생성된 평가라인이 있는 경우: 평가자 업데이트
-- 평가라인이 없는 경우: 새로운 평가라인 및 매핑 생성
+- 직원별로 고정된 1차 평가자 설정 (WBS와 무관)
+- 기존 1차 평가자가 있는 경우: 평가자 업데이트
+- 1차 평가자가 없는 경우: 새로운 평가라인 및 매핑 생성
 - Upsert 방식으로 동작하여 중복 생성 방지
 
 **테스트 케이스:**
-- WBS 할당 시 자동 생성된 1차 평가자 업데이트: WBS 할당으로 자동 생성된 평가라인의 평가자를 새로운 평가자로 변경 (201)
+- 직원별 1차 평가자 설정: 특정 직원의 고정 담당자를 1차 평가자로 설정 (201)
+- 기존 1차 평가자 업데이트: 이미 설정된 1차 평가자를 다른 평가자로 변경 (201)
 - DB 업데이트 확인: 업데이트된 매핑 정보가 DB에 정상적으로 저장됨
-- 여러 직원 업데이트: 서로 다른 직원의 1차 평가자를 각각 업데이트 가능
+- 여러 직원 설정: 서로 다른 직원의 1차 평가자를 각각 설정 가능
 - 잘못된 UUID 형식 evaluatorId: 잘못된 UUID 형식의 evaluatorId로 요청 시 400 에러
 - evaluatorId 누락: evaluatorId가 누락된 경우 400 에러
 - 잘못된 UUID 형식 직원 ID: 잘못된 UUID 형식의 employeeId로 요청 시 400 에러
-- 잘못된 UUID 형식 WBS ID: 잘못된 UUID 형식의 wbsItemId로 요청 시 400 에러`,
+- 잘못된 UUID 형식 평가기간 ID: 잘못된 UUID 형식의 periodId로 요청 시 400 에러`,
     }),
     ApiParam({
       name: 'employeeId',
@@ -361,13 +361,6 @@ export const ConfigurePrimaryEvaluator = () =>
       type: 'string',
       format: 'uuid',
       example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
-    }),
-    ApiParam({
-      name: 'wbsItemId',
-      description: 'WBS 항목 ID',
-      type: 'string',
-      format: 'uuid',
-      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
     }),
     ApiParam({
       name: 'periodId',
@@ -395,7 +388,7 @@ export const ConfigurePrimaryEvaluator = () =>
               id: { type: 'string', format: 'uuid' },
               employeeId: { type: 'string', format: 'uuid' },
               evaluatorId: { type: 'string', format: 'uuid' },
-              wbsItemId: { type: 'string', format: 'uuid' },
+              wbsItemId: { type: 'string', format: 'uuid', nullable: true },
               evaluationLineId: { type: 'string', format: 'uuid' },
             },
           },
@@ -408,7 +401,7 @@ export const ConfigurePrimaryEvaluator = () =>
     }),
     ApiResponse({
       status: 404,
-      description: '직원, WBS 항목 또는 평가기간을 찾을 수 없습니다.',
+      description: '직원 또는 평가기간을 찾을 수 없습니다.',
     }),
   );
 

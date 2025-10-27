@@ -324,7 +324,7 @@ export class ConfigureEvaluatorResponseDto {
     id: string;
     employeeId: string;
     evaluatorId: string;
-    wbsItemId: string;
+    wbsItemId: string | null;
     evaluationLineId: string;
   };
 }

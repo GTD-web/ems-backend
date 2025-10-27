@@ -2,6 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { EmployeeService } from '@domain/common/employee/employee.service';
 import { ProjectService } from '@domain/common/project/project.service';
+import { EvaluationLineService } from '@domain/core/evaluation-line/evaluation-line.service';
+import { EvaluationLineMappingService } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.service';
+import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import type {
   CreateEvaluationWbsAssignmentData,
   OrderDirection,
@@ -24,6 +27,8 @@ export class WbsAssignmentBusinessService {
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
     private readonly employeeService: EmployeeService,
     private readonly projectService: ProjectService,
+    private readonly evaluationLineService: EvaluationLineService,
+    private readonly evaluationLineMappingService: EvaluationLineMappingService,
     // private readonly notificationService: NotificationService, // TODO: 알림 서비스 추가 시 주입
     // private readonly organizationManagementService: OrganizationManagementService, // TODO: 조직 관리 서비스 추가 시 주입
   ) {}
@@ -672,7 +677,7 @@ export class WbsAssignmentBusinessService {
 
   /**
    * 평가라인을 자동으로 구성한다
-   * - 1차 평가자: 피평가자의 담당 평가자 (Employee.managerId)
+   * - 1차 평가자: 기존에 할당된 1차 평가자 (없으면 Employee.managerId)
    * - 2차 평가자: 프로젝트 PM (Project.managerId)
    */
   private async 평가라인을_자동으로_구성한다(
@@ -703,30 +708,44 @@ export class WbsAssignmentBusinessService {
         return;
       }
 
-      // 3. 1차 평가자 구성 (담당 평가자) - Upsert 방식
-      if (employee.managerId) {
-        this.logger.log('1차 평가자(담당 평가자) 구성', {
+      // 3. 1차 평가자 구성 (기존 할당된 평가자 우선, 없으면 담당 평가자)
+      const existingPrimaryEvaluator = await this.기존_1차_평가자를_조회한다(
+        employeeId,
+        periodId,
+      );
+
+      let primaryEvaluatorId = existingPrimaryEvaluator;
+      if (!primaryEvaluatorId && employee.managerId) {
+        primaryEvaluatorId = employee.managerId;
+        this.logger.log('기존 1차 평가자가 없어 담당 평가자를 사용', {
           evaluatorId: employee.managerId,
         });
+      } else if (existingPrimaryEvaluator) {
+        this.logger.log('기존 1차 평가자를 사용', {
+          evaluatorId: existingPrimaryEvaluator,
+        });
+      }
 
+      if (primaryEvaluatorId) {
         try {
           await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(
             employeeId,
-            wbsItemId,
             periodId,
-            employee.managerId,
+            primaryEvaluatorId,
             createdBy,
           );
         } catch (error) {
           this.logger.error('1차 평가자 구성 실패', {
             error: error.message,
             employeeId,
-            evaluatorId: employee.managerId,
+            evaluatorId: primaryEvaluatorId,
           });
         }
       } else {
-        this.logger.warn('담당 평가자(managerId)가 설정되지 않았습니다', {
+        this.logger.warn('1차 평가자를 설정할 수 없습니다', {
           employeeId,
+          hasExistingEvaluator: !!existingPrimaryEvaluator,
+          hasManagerId: !!employee.managerId,
         });
       }
 
@@ -780,6 +799,55 @@ export class WbsAssignmentBusinessService {
         projectId,
       });
       // 평가라인 구성 실패는 치명적이지 않으므로 에러를 throw하지 않음
+    }
+  }
+
+  /**
+   * 기존에 할당된 1차 평가자를 조회한다
+   * 직원별 고정 담당자(wbsItemId가 null인 매핑)를 조회
+   */
+  private async 기존_1차_평가자를_조회한다(
+    employeeId: string,
+    periodId: string,
+  ): Promise<string | null> {
+    try {
+      // 1차 평가 라인 조회
+      const evaluationLines = await this.evaluationLineService.필터_조회한다({
+        evaluatorType: EvaluatorType.PRIMARY,
+        orderFrom: 1,
+        orderTo: 1,
+      });
+
+      if (evaluationLines.length === 0) {
+        return null;
+      }
+
+      const primaryEvaluationLineId = evaluationLines[0].DTO로_변환한다().id;
+
+      // 기존 매핑 조회 (직원별 고정 담당자)
+      const existingMappings =
+        await this.evaluationLineMappingService.필터_조회한다({
+          employeeId,
+          evaluationLineId: primaryEvaluationLineId,
+        });
+
+      // wbsItemId가 null인 매핑만 필터링 (직원별 고정 담당자)
+      const primaryMappings = existingMappings.filter(
+        (mapping) => !mapping.wbsItemId,
+      );
+
+      if (primaryMappings.length > 0) {
+        return primaryMappings[0].DTO로_변환한다().evaluatorId;
+      }
+
+      return null;
+    } catch (error) {
+      this.logger.error('기존 1차 평가자 조회 실패', {
+        error: error.message,
+        employeeId,
+        periodId,
+      });
+      return null;
     }
   }
 }

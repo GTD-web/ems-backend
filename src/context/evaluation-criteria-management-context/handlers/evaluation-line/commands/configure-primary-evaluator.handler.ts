@@ -5,12 +5,11 @@ import { EvaluationLineMappingService } from '../../../../../domain/core/evaluat
 import { EvaluatorType } from '../../../../../domain/core/evaluation-line/evaluation-line.types';
 
 /**
- * 1차 평가자 구성 커맨드
+ * 1차 평가자 구성 커맨드 (직원별 고정 담당자)
  */
 export class ConfigurePrimaryEvaluatorCommand {
   constructor(
     public readonly employeeId: string,
-    public readonly wbsItemId: string,
     public readonly periodId: string,
     public readonly evaluatorId: string,
     public readonly createdBy: string,
@@ -28,7 +27,7 @@ export interface ConfigurePrimaryEvaluatorResult {
     id: string;
     employeeId: string;
     evaluatorId: string;
-    wbsItemId: string;
+    wbsItemId: string | null;
     evaluationLineId: string;
   };
 }
@@ -36,7 +35,7 @@ export interface ConfigurePrimaryEvaluatorResult {
 /**
  * 1차 평가자 구성 커맨드 핸들러
  *
- * 직원, WBS, 평가기간에 따라 1차 평가자를 지정하여 평가라인을 구성한다
+ * 직원별 고정 담당자(1차 평가자)를 설정한다 (WBS와 무관)
  */
 @CommandHandler(ConfigurePrimaryEvaluatorCommand)
 export class ConfigurePrimaryEvaluatorHandler
@@ -56,10 +55,10 @@ export class ConfigurePrimaryEvaluatorHandler
   async execute(
     command: ConfigurePrimaryEvaluatorCommand,
   ): Promise<ConfigurePrimaryEvaluatorResult> {
-    const { employeeId, wbsItemId, periodId, evaluatorId, createdBy } = command;
+    const { employeeId, periodId, evaluatorId, createdBy } = command;
 
     this.logger.log(
-      `1차 평가자 구성 시작 - 직원: ${employeeId}, WBS: ${wbsItemId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+      `1차 평가자 구성 시작 - 직원: ${employeeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
     );
 
     try {
@@ -88,18 +87,22 @@ export class ConfigurePrimaryEvaluatorHandler
 
       const evaluationLineId = primaryEvaluationLine.DTO로_변환한다().id;
 
-      // 기존 매핑 조회 (employeeId, wbsItemId, evaluationLineId 기준)
+      // 기존 매핑 조회 (employeeId, evaluationLineId 기준, wbsItemId는 null)
       const existingMappings =
         await this.evaluationLineMappingService.필터_조회한다({
           employeeId,
-          wbsItemId,
           evaluationLineId,
         });
 
+      // wbsItemId가 null인 매핑만 필터링 (직원별 고정 담당자)
+      const primaryMappings = existingMappings.filter(
+        (mapping) => !mapping.wbsItemId,
+      );
+
       let mappingEntity;
-      if (existingMappings.length > 0) {
+      if (primaryMappings.length > 0) {
         // 기존 매핑이 있으면 업데이트
-        const existingMapping = existingMappings[0];
+        const existingMapping = primaryMappings[0];
         const mappingId = existingMapping.DTO로_변환한다().id;
 
         // 업데이트 메서드 사용
@@ -112,11 +115,11 @@ export class ConfigurePrimaryEvaluatorHandler
           `기존 1차 평가자 매핑 업데이트 - 매핑 ID: ${mappingId}, 새 평가자: ${evaluatorId}`,
         );
       } else {
-        // 새로 생성
+        // 새로 생성 (wbsItemId는 undefined로 설정)
         mappingEntity = await this.evaluationLineMappingService.생성한다({
           employeeId,
           evaluatorId,
-          wbsItemId,
+          wbsItemId: undefined, // 직원별 고정 담당자이므로 WBS와 무관
           evaluationLineId,
           createdBy,
         });
@@ -131,7 +134,7 @@ export class ConfigurePrimaryEvaluatorHandler
         id: mappingDto.id,
         employeeId: mappingDto.employeeId,
         evaluatorId: mappingDto.evaluatorId,
-        wbsItemId: mappingDto.wbsItemId || '',
+        wbsItemId: mappingDto.wbsItemId || null,
         evaluationLineId: mappingDto.evaluationLineId,
       };
 
@@ -140,7 +143,7 @@ export class ConfigurePrimaryEvaluatorHandler
       );
 
       const result = {
-        message: `직원 ${employeeId}의 WBS 항목 ${wbsItemId}에 대한 1차 평가자 구성이 완료되었습니다.`,
+        message: `직원 ${employeeId}의 1차 평가자(고정 담당자) 구성이 완료되었습니다.`,
         createdLines,
         createdMappings,
         mapping,
@@ -149,7 +152,7 @@ export class ConfigurePrimaryEvaluatorHandler
       return result;
     } catch (error) {
       this.logger.error(
-        `1차 평가자 구성 실패 - 직원: ${employeeId}, WBS: ${wbsItemId}, 평가자: ${evaluatorId}`,
+        `1차 평가자 구성 실패 - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
         error.stack,
       );
       throw error;
