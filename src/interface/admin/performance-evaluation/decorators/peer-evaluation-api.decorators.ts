@@ -344,7 +344,7 @@ export function SubmitPeerEvaluation() {
 }
 
 /**
- * 평가자의 동료평가 목록 조회 API 데코레이터
+ * 평가자의 동료평가 목록 조회 API 데코레이터 (특정 평가자)
  */
 export function GetEvaluatorPeerEvaluations() {
   return applyDecorators(
@@ -352,16 +352,16 @@ export function GetEvaluatorPeerEvaluations() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '평가자의 동료평가 목록 조회',
-      description: `특정 평가자의 동료평가 목록을 페이지네이션 형태로 조회합니다.
+      description: `특정 평가자의 동료평가 목록을 상세 정보와 함께 페이지네이션 형태로 조회합니다.
 
 **동작:**
 - 평가자에게 할당된 모든 동료평가 목록 조회
 - 다양한 필터 조건 지원 (피평가자, 평가기간, 상태)
 - 페이지네이션 지원 (기본값: page=1, limit=10)
-- 평가 기본 정보만 포함 (상세 정보는 detail 엔드포인트 사용)
+- 상세 정보 포함 (평가기간, 평가자, 피평가자, 부서, 매핑자, 질문 목록)
 
 **응답 구조:**
-- evaluations: 평가 목록 배열
+- evaluations: 평가 상세 목록 배열 (상세 조회와 동일한 구조)
 - page: 현재 페이지 번호
 - limit: 페이지당 항목 수
 - total: 전체 항목 수
@@ -439,6 +439,89 @@ export function GetEvaluatorPeerEvaluations() {
 }
 
 /**
+ * 모든 평가자의 동료평가 목록 조회 API 데코레이터
+ */
+export function GetAllPeerEvaluations() {
+  return applyDecorators(
+    Get('evaluator'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '모든 평가자의 동료평가 상세 목록 조회',
+      description: `모든 평가자의 동료평가 목록을 상세 정보와 함께 페이지네이션 형태로 조회합니다.
+
+**동작:**
+- 모든 평가자의 동료평가 목록 조회
+- 다양한 필터 조건 지원 (피평가자, 평가기간, 상태)
+- 페이지네이션 지원 (기본값: page=1, limit=10)
+- 상세 정보 포함 (평가기간, 평가자, 피평가자, 부서, 매핑자, 질문 목록)
+
+**응답 구조:**
+- evaluations: 평가 상세 목록 배열 (상세 조회와 동일한 구조)
+- page: 현재 페이지 번호
+- limit: 페이지당 항목 수
+- total: 전체 항목 수
+
+**테스트 케이스:**
+- evaluatorId 없이 모든 평가자의 목록을 조회할 수 있어야 한다
+- evaluateeId로 필터링할 수 있어야 한다
+- periodId로 필터링할 수 있어야 한다
+- 페이지네이션이 작동해야 한다
+- 응답에 필수 필드가 모두 포함되어야 한다
+- 평가 항목에 필수 필드가 포함되어야 한다
+- UUID 필드가 유효한 UUID 형식이어야 한다`,
+    }),
+    ApiQuery({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      required: false,
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiQuery({
+      name: 'periodId',
+      description: '평가기간 ID',
+      required: false,
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiQuery({
+      name: 'status',
+      description: '평가 상태',
+      required: false,
+      enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
+      example: 'DRAFT',
+    }),
+    ApiQuery({
+      name: 'page',
+      description: '페이지 번호 (1부터 시작)',
+      required: false,
+      example: 1,
+    }),
+    ApiQuery({
+      name: 'limit',
+      description: '페이지 크기',
+      required: false,
+      example: 10,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '모든 평가자의 동료평가 목록이 성공적으로 조회되었습니다.',
+      type: PeerEvaluationListResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 파라미터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+  );
+}
+
+/**
  * 동료평가 상세정보 조회 API 데코레이터
  */
 export function GetPeerEvaluationDetail() {
@@ -454,7 +537,7 @@ export function GetPeerEvaluationDetail() {
 - 평가기간 정보를 객체로 포함 (id, name, startDate, endDate, status)
 - 평가자와 피평가자의 직원 정보를 객체로 포함
 - 평가자와 피평가자의 부서 정보를 객체로 포함
-- 매핑자, 생성자, 수정자의 직원 정보를 객체로 포함
+- 매핑자의 직원 정보를 객체로 포함
 - 평가 상태 및 완료 여부 정보 포함
 - 할당된 평가질문 목록 포함 (표시 순서대로 정렬)
 - ID 중복 제거: 객체로 제공되는 정보의 ID는 별도 필드로 제공하지 않음

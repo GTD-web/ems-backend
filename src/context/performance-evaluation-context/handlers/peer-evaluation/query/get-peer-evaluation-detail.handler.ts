@@ -86,23 +86,6 @@ export interface PeerEvaluationDetailResult {
     status: string;
   } | null;
 
-  // 생성자 정보
-  createdBy: {
-    id: string;
-    name: string;
-    employeeNumber: string;
-    email: string;
-    status: string;
-  } | null;
-
-  // 수정자 정보
-  updatedBy: {
-    id: string;
-    name: string;
-    employeeNumber: string;
-    email: string;
-    status: string;
-  } | null;
 
   // 평가질문 목록
   questions: {
@@ -173,16 +156,6 @@ export class GetPeerEvaluationDetailHandler
         'mappedByEmployee',
         '"mappedByEmployee"."id" = "evaluation"."mappedBy"::UUID AND "mappedByEmployee"."deletedAt" IS NULL',
       )
-      .leftJoin(
-        Employee,
-        'createdByEmployee',
-        '"createdByEmployee"."id" = "evaluation"."createdBy"::UUID AND "createdByEmployee"."deletedAt" IS NULL',
-      )
-      .leftJoin(
-        Employee,
-        'updatedByEmployee',
-        '"updatedByEmployee"."id" = "evaluation"."updatedBy"::UUID AND "updatedByEmployee"."deletedAt" IS NULL',
-      )
       .select([
         // 평가 정보
         'evaluation.id AS evaluation_id',
@@ -231,18 +204,6 @@ export class GetPeerEvaluationDetailHandler
         'mappedByEmployee.employeeNumber AS mappedby_employeenumber',
         'mappedByEmployee.email AS mappedby_email',
         'mappedByEmployee.status AS mappedby_status',
-        // 생성자 정보
-        'createdByEmployee.id AS createdby_id',
-        'createdByEmployee.name AS createdby_name',
-        'createdByEmployee.employeeNumber AS createdby_employeenumber',
-        'createdByEmployee.email AS createdby_email',
-        'createdByEmployee.status AS createdby_status',
-        // 수정자 정보
-        'updatedByEmployee.id AS updatedby_id',
-        'updatedByEmployee.name AS updatedby_name',
-        'updatedByEmployee.employeeNumber AS updatedby_employeenumber',
-        'updatedByEmployee.email AS updatedby_email',
-        'updatedByEmployee.status AS updatedby_status',
       ])
       .where('evaluation.id = :evaluationId', { evaluationId })
       .andWhere('evaluation.deletedAt IS NULL')
@@ -352,25 +313,6 @@ export class GetPeerEvaluationDetailHandler
           }
         : null,
 
-      createdBy: result.createdby_id
-        ? {
-            id: result.createdby_id,
-            name: result.createdby_name,
-            employeeNumber: result.createdby_employeenumber,
-            email: result.createdby_email,
-            status: result.createdby_status,
-          }
-        : null,
-
-      updatedBy: result.updatedby_id
-        ? {
-            id: result.updatedby_id,
-            name: result.updatedby_name,
-            employeeNumber: result.updatedby_employeenumber,
-            email: result.updatedby_email,
-            status: result.updatedby_status,
-          }
-        : null,
 
       questions: questions.map((q) => ({
         id: q.question_id,

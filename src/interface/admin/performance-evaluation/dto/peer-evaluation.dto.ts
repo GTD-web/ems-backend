@@ -507,34 +507,6 @@ export class PeerEvaluationBasicDto {
   updatedAt: Date;
 }
 
-/**
- * 동료평가 목록 응답 DTO
- */
-export class PeerEvaluationListResponseDto {
-  @ApiProperty({
-    description: '동료평가 목록',
-    type: [PeerEvaluationBasicDto],
-  })
-  evaluations: PeerEvaluationBasicDto[];
-
-  @ApiProperty({
-    description: '전체 개수',
-    example: 25,
-  })
-  total: number;
-
-  @ApiProperty({
-    description: '현재 페이지',
-    example: 1,
-  })
-  page: number;
-
-  @ApiProperty({
-    description: '페이지 크기',
-    example: 10,
-  })
-  limit: number;
-}
 
 /**
  * 직원 정보 DTO
@@ -903,23 +875,41 @@ export class PeerEvaluationDetailResponseDto {
   })
   mappedBy?: EmployeeInfoDto | null;
 
-  @ApiPropertyOptional({
-    description: '생성자 정보',
-    type: EmployeeInfoDto,
-  })
-  createdBy?: EmployeeInfoDto | null;
-
-  @ApiPropertyOptional({
-    description: '수정자 정보',
-    type: EmployeeInfoDto,
-  })
-  updatedBy?: EmployeeInfoDto | null;
 
   @ApiProperty({
     description: '평가질문 목록',
     type: [EvaluationQuestionInDetailDto],
   })
   questions: EvaluationQuestionInDetailDto[];
+}
+
+/**
+ * 동료평가 목록 응답 DTO
+ */
+export class PeerEvaluationListResponseDto {
+  @ApiProperty({
+    description: '동료평가 목록 (상세 정보 포함)',
+    type: [PeerEvaluationDetailResponseDto],
+  })
+  evaluations: PeerEvaluationDetailResponseDto[];
+
+  @ApiProperty({
+    description: '전체 개수',
+    example: 25,
+  })
+  total: number;
+
+  @ApiProperty({
+    description: '현재 페이지',
+    example: 1,
+  })
+  page: number;
+
+  @ApiProperty({
+    description: '페이지 크기',
+    example: 10,
+  })
+  limit: number;
 }
 
 /**

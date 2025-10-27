@@ -11,6 +11,7 @@ import {
   RequestMultiplePeerEvaluations,
   SubmitPeerEvaluation,
   GetEvaluatorPeerEvaluations,
+  GetAllPeerEvaluations,
   GetPeerEvaluationDetail,
   GetEvaluatorAssignedEvaluatees,
   CancelPeerEvaluation,
@@ -164,6 +165,23 @@ export class PeerEvaluationManagementController {
   ): Promise<PeerEvaluationListResponseDto> {
     return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
       evaluatorId,
+      evaluateeId: filter.evaluateeId,
+      periodId: filter.periodId,
+      status: filter.status,
+      page: filter.page || 1,
+      limit: filter.limit || 10,
+    });
+  }
+
+  /**
+   * 모든 평가자의 동료평가 목록 조회
+   */
+  @GetAllPeerEvaluations()
+  async getAllPeerEvaluations(
+    @Query() filter: PeerEvaluationFilterDto,
+  ): Promise<PeerEvaluationListResponseDto> {
+    return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
+      evaluatorId: undefined,
       evaluateeId: filter.evaluateeId,
       periodId: filter.periodId,
       status: filter.status,
