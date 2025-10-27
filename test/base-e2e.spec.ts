@@ -121,8 +121,47 @@ export class BaseE2ETest {
         organization: {
           직원정보를조회한다: jest.fn(),
           직원목록을조회한다: jest.fn(),
+          여러직원정보를조회한다: jest.fn().mockResolvedValue([
+            {
+              id: 'emp-001',
+              employeeNumber: 'EMP001',
+              name: '김철수',
+              email: 'kim@company.com',
+              departmentId: 'dept-001',
+              status: '재직중',
+            },
+            {
+              id: 'emp-002',
+              employeeNumber: 'EMP002',
+              name: '이영희',
+              email: 'lee@company.com',
+              departmentId: 'dept-001',
+              status: '재직중',
+            },
+            {
+              id: 'emp-003',
+              employeeNumber: 'EMP003',
+              name: '박민수',
+              email: 'park@company.com',
+              departmentId: 'dept-002',
+              status: '재직중',
+            },
+          ]),
           부서정보를조회한다: jest.fn(),
-          부서목록을조회한다: jest.fn(),
+          부서목록을조회한다: jest.fn().mockResolvedValue([
+            {
+              id: 'dept-001',
+              name: '개발팀',
+              code: 'DEV',
+              parentDepartmentId: null,
+            },
+            {
+              id: 'dept-002',
+              name: '기획팀',
+              code: 'PLAN',
+              parentDepartmentId: null,
+            },
+          ]),
           부서트리를조회한다: jest.fn(),
         },
         fcm: {
@@ -137,8 +176,48 @@ export class BaseE2ETest {
         토큰을갱신한다: jest.fn(),
         직원정보를조회한다: jest.fn(),
         직원목록을조회한다: jest.fn(),
+        여러직원정보를조회한다: jest.fn().mockResolvedValue([
+          {
+            id: 'emp-001',
+            employeeNumber: 'EMP001',
+            name: '김철수',
+            email: 'kim@company.com',
+            departmentId: 'dept-001',
+            status: '재직중',
+          },
+          {
+            id: 'emp-002',
+            employeeNumber: 'EMP002',
+            name: '이영희',
+            email: 'lee@company.com',
+            departmentId: 'dept-001',
+            status: '재직중',
+          },
+          {
+            id: 'emp-003',
+            employeeNumber: 'EMP003',
+            name: '박민수',
+            email: 'park@company.com',
+            departmentId: 'dept-002',
+            status: '재직중',
+          },
+        ]),
         부서정보를조회한다: jest.fn(),
-        부서목록을조회한다: jest.fn(),
+        부서목록을조회한다: jest.fn().mockResolvedValue([
+          {
+            id: 'dept-001',
+            name: '개발팀',
+            code: 'DEV',
+            parentDepartmentId: null,
+          },
+          {
+            id: 'dept-002',
+            name: '기획팀',
+            code: 'PLAN',
+            parentDepartmentId: null,
+          },
+        ]),
+        부서트리를조회한다: jest.fn(),
         FCM토큰을등록한다: jest.fn(),
         FCM알림을전송한다: jest.fn(),
       })

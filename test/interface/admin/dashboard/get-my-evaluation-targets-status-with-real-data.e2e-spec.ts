@@ -109,6 +109,13 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
         .groupBy('mapping.evaluatorId')
         .getRawMany();
 
+      console.log('조회된 1차 평가자 수:', primaryEvaluators.length);
+      console.log('1차 평가자 데이터:', primaryEvaluators);
+
+      if (primaryEvaluators.length === 0) {
+        throw new Error('1차 평가자가 없습니다. 시드 데이터 생성에 문제가 있을 수 있습니다.');
+      }
+
       primaryEvaluatorId = primaryEvaluators[0].mapping_evaluatorId;
       console.log(`1차 평가자 ID: ${primaryEvaluatorId}`);
     });
@@ -324,6 +331,13 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
         .groupBy('mapping.evaluatorId')
         .getRawMany();
 
+      console.log('조회된 2차 평가자 수:', secondaryEvaluators.length);
+      console.log('2차 평가자 데이터:', secondaryEvaluators);
+
+      if (secondaryEvaluators.length === 0) {
+        throw new Error('2차 평가자가 없습니다. 시드 데이터 생성에 문제가 있을 수 있습니다.');
+      }
+
       secondaryEvaluatorId = secondaryEvaluators[0].mapping_evaluatorId;
       console.log(`2차 평가자 ID: ${secondaryEvaluatorId}`);
     });
@@ -505,6 +519,13 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
         .andWhere('mapping.deletedAt IS NULL')
         .select(['mapping.evaluatorId'])
         .getRawMany();
+
+      console.log('조회된 1차 평가자 수:', primaryEvaluators.length);
+      console.log('조회된 2차 평가자 수:', secondaryEvaluators.length);
+
+      if (primaryEvaluators.length === 0) {
+        throw new Error('1차 평가자가 없습니다. 시드 데이터 생성에 문제가 있을 수 있습니다.');
+      }
 
       const primarySet = new Set(
         primaryEvaluators.map((e) => e.mapping_evaluatorId),

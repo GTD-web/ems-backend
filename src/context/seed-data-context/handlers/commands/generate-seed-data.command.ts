@@ -41,6 +41,9 @@ export class GenerateSeedDataHandler
     this.logger.log(
       `시드 데이터 생성 시작 - 시나리오: ${config.scenario}, 삭제: ${config.clearExisting}`,
     );
+    this.logger.log(`shouldRunPhase(2, ${config.scenario}): ${this.shouldRunPhase(2, config.scenario)}`);
+    this.logger.log(`shouldRunPhase(3, ${config.scenario}): ${this.shouldRunPhase(3, config.scenario)}`);
+    this.logger.log(`shouldRunPhase(4, ${config.scenario}): ${this.shouldRunPhase(4, config.scenario)}`);
 
     try {
       // Phase 1: 조직 데이터 (모든 시나리오에서 실행)
@@ -49,23 +52,28 @@ export class GenerateSeedDataHandler
 
       // Phase 2: 평가기간 (WITH_PERIOD 이상)
       if (this.shouldRunPhase(2, config.scenario)) {
+        this.logger.log('Phase 2 실행 중...');
         const phase2Result = await this.phase2Generator.generate(
           config,
           phase1Result,
         );
         results.push(phase2Result);
+        this.logger.log('Phase 2 실행 완료');
 
         // Phase 3: 프로젝트 및 WBS 할당 (WITH_ASSIGNMENTS 이상)
         if (this.shouldRunPhase(3, config.scenario)) {
+          this.logger.log('Phase 3 실행 중...');
           const phase3Result = await this.phase3Generator.generate(
             config,
             phase1Result,
             phase2Result,
           );
           results.push(phase3Result);
+          this.logger.log('Phase 3 실행 완료');
 
           // Phase 4: 평가 기준 및 라인 (WITH_ASSIGNMENTS 이상)
           if (this.shouldRunPhase(4, config.scenario)) {
+            this.logger.log('Phase 4 실행 중...');
             const phase4Result = await this.phase4Generator.generate(
               config,
               phase1Result,
@@ -73,6 +81,7 @@ export class GenerateSeedDataHandler
               phase3Result,
             );
             results.push(phase4Result);
+            this.logger.log('Phase 4 실행 완료');
 
             // Phase 5: 산출물 (WITH_ASSIGNMENTS 이상)
             if (this.shouldRunPhase(5, config.scenario)) {

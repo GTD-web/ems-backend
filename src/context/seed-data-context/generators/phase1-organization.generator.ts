@@ -286,7 +286,7 @@ export class Phase1OrganizationGenerator {
       adminEmp.employeeNumber = `EMP${timestamp}001`;
       adminEmp.name = '시스템 관리자';
       adminEmp.email = 'admin@system.com';
-      adminEmp.phoneNumber = faker.phone.number('010-####-####');
+      adminEmp.phoneNumber = faker.string.numeric(3) + '-' + faker.string.numeric(4) + '-' + faker.string.numeric(4);
       adminEmp.dateOfBirth = faker.date.birthdate({
         min: 30,
         max: 50,
