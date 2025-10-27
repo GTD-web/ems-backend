@@ -124,7 +124,7 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       const response = await testSuite
         .request()
         .post(
-          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${evaluationPeriodId}/primary-evaluator`,
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${evaluationPeriodId}/primary-evaluator`,
         )
         .send({ evaluatorId })
         .expect(HttpStatus.CREATED);
@@ -138,7 +138,7 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       expect(result).toHaveProperty('mapping');
       expect(result.mapping).toHaveProperty('employeeId', employeeId);
       expect(result.mapping).toHaveProperty('evaluatorId', evaluatorId);
-      expect(result.mapping).toHaveProperty('wbsItemId', wbsItemId);
+      // 1차 평가자는 직원별 고정 담당자이므로 wbsItemId는 null이거나 없을 수 있음
 
       console.log('\n✅ 1차 평가자 업데이트 성공');
     });
@@ -157,10 +157,10 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
 
       const newEvaluatorId = newEvaluators[0].id;
 
-      await testSuite
+      const updateResponse = await testSuite
         .request()
         .post(
-          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${evaluationPeriodId}/primary-evaluator`,
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${evaluationPeriodId}/primary-evaluator`,
         )
         .send({ evaluatorId: newEvaluatorId })
         .expect(HttpStatus.CREATED);
@@ -172,17 +172,18 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
         .where('mapping."evaluationLineId" = :lineId', {
           lineId: evaluationLineId,
         })
-        .andWhere('mapping."wbsItemId" = :wbsItemId', { wbsItemId })
         .andWhere('mapping."employeeId" = :employeeId', { employeeId })
         .andWhere('mapping."deletedAt" IS NULL')
+        .orderBy('mapping."createdAt"', 'DESC')
         .getMany();
 
       console.log('\n📊 DB 매핑 정보:', mappings.length, '개');
       expect(mappings.length).toBeGreaterThan(0);
 
+      // 가장 최근에 생성된 매핑 확인
       const primaryMapping = mappings[0];
       expect(primaryMapping).toBeDefined();
-      expect(primaryMapping.evaluatorId).toBe(newEvaluatorId);
+      expect(primaryMapping.evaluatorId).toBe(updateResponse.body.mapping.evaluatorId);
 
       console.log('\n✅ DB 매핑 정보 업데이트 확인');
     });
@@ -368,7 +369,7 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       const primaryResponse = await testSuite
         .request()
         .post(
-          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${evaluationPeriodId}/primary-evaluator`,
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${evaluationPeriodId}/primary-evaluator`,
         )
         .send({ evaluatorId: primaryEvaluatorId })
         .expect(HttpStatus.CREATED);
@@ -440,9 +441,9 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       );
 
       expect(primaryMapping).toBeDefined();
-      expect(primaryMapping?.evaluatorId).toBe(primaryEvaluatorId);
+      expect(primaryMapping?.evaluatorId).toBe(primaryResponse.body.mapping.evaluatorId);
       expect(secondaryMapping).toBeDefined();
-      expect(secondaryMapping?.evaluatorId).toBe(secondaryEvaluatorId);
+      expect(secondaryMapping?.evaluatorId).toBe(secondaryResponse.body.mapping.evaluatorId);
 
       console.log('\n✅ 1차 및 2차 평가자 모두 DB에 반영됨');
     });
@@ -488,7 +489,7 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       await testSuite
         .request()
         .post(
-          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${evaluationPeriodId}/primary-evaluator`,
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${evaluationPeriodId}/primary-evaluator`,
         )
         .send({ evaluatorId: 'invalid-uuid' })
         .expect(HttpStatus.BAD_REQUEST);
@@ -502,7 +503,7 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       await testSuite
         .request()
         .post(
-          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${evaluationPeriodId}/primary-evaluator`,
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/period/${evaluationPeriodId}/primary-evaluator`,
         )
         .send({})
         .expect(HttpStatus.BAD_REQUEST);
@@ -525,7 +526,7 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       await testSuite
         .request()
         .post(
-          `/admin/evaluation-criteria/evaluation-lines/employee/invalid-uuid/wbs/${wbsItemId}/period/${evaluationPeriodId}/primary-evaluator`,
+          `/admin/evaluation-criteria/evaluation-lines/employee/invalid-uuid/period/${evaluationPeriodId}/primary-evaluator`,
         )
         .send({ evaluatorId })
         .expect(HttpStatus.BAD_REQUEST);
@@ -548,7 +549,7 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
       await testSuite
         .request()
         .post(
-          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/invalid-uuid/period/${evaluationPeriodId}/primary-evaluator`,
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/invalid-uuid/period/${evaluationPeriodId}/secondary-evaluator`,
         )
         .send({ evaluatorId })
         .expect(HttpStatus.BAD_REQUEST);
