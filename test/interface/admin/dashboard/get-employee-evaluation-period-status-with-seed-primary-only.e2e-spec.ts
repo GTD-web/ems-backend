@@ -320,7 +320,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       expect(status.selfEvaluation).toHaveProperty('grade');
 
       expect(status.downwardEvaluation).toHaveProperty('primary');
-      expect(status.downwardEvaluation.primary).toHaveProperty('evaluatorId');
+      expect(status.downwardEvaluation.primary).toHaveProperty('evaluator');
       expect(status.downwardEvaluation.primary).toHaveProperty('status');
       expect(status.downwardEvaluation.primary).toHaveProperty(
         'assignedWbsCount',
@@ -331,6 +331,22 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/status 
       expect(status.downwardEvaluation.primary).toHaveProperty('isEditable');
       expect(status.downwardEvaluation.primary).toHaveProperty('totalScore');
       expect(status.downwardEvaluation.primary).toHaveProperty('grade');
+
+      // 평가자 정보 구조 검증
+      if (status.downwardEvaluation.primary.evaluator) {
+        expect(status.downwardEvaluation.primary.evaluator).toHaveProperty(
+          'id',
+        );
+        expect(status.downwardEvaluation.primary.evaluator).toHaveProperty(
+          'name',
+        );
+        expect(status.downwardEvaluation.primary.evaluator).toHaveProperty(
+          'employeeNumber',
+        );
+        expect(status.downwardEvaluation.primary.evaluator).toHaveProperty(
+          'email',
+        );
+      }
 
       expect(status.downwardEvaluation).toHaveProperty('secondary');
       // secondary 객체 내부에 totalScore와 grade가 있어야 함
