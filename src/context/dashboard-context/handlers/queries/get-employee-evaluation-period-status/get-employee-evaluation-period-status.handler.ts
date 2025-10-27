@@ -193,15 +193,17 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         select: ['wbsItemId'],
       });
 
-      // 6. 평가기준이 있는 WBS 수 조회
+      // 6. 평가기준이 있는 WBS 수 조회 (고유한 WBS 개수)
       let wbsWithCriteriaCount = 0;
       if (assignedWbsList.length > 0) {
         const wbsItemIds = assignedWbsList.map((wbs) => wbs.wbsItemId);
-        wbsWithCriteriaCount = await this.wbsCriteriaRepository
+        const distinctWbsIdsWithCriteria = await this.wbsCriteriaRepository
           .createQueryBuilder('criteria')
+          .select('DISTINCT criteria.wbsItemId', 'wbsItemId')
           .where('criteria.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
           .andWhere('criteria.deletedAt IS NULL')
-          .getCount();
+          .getRawMany();
+        wbsWithCriteriaCount = distinctWbsIdsWithCriteria.length;
       }
 
       // 7. WBS 평가기준 상태 계산
