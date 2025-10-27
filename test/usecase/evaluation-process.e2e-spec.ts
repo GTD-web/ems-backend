@@ -3,6 +3,7 @@ import { SeedDataScenario } from './scenarios/seed-data.scenario';
 import { QueryOperationsScenario } from './scenarios/query-operations.scenario';
 import { EvaluationTargetScenario } from './scenarios/evaluation-target.scenario';
 import { EvaluationPeriodScenario } from './scenarios/evaluation-period.scenario';
+import { ProjectAssignmentScenario } from './scenarios/project-assignment.scenario';
 
 describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let testSuite: BaseE2ETest;
@@ -10,6 +11,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let queryOperationsScenario: QueryOperationsScenario;
   let evaluationTargetScenario: EvaluationTargetScenario;
   let evaluationPeriodScenario: EvaluationPeriodScenario;
+  let projectAssignmentScenario: ProjectAssignmentScenario;
 
   beforeAll(async () => {
     testSuite = new BaseE2ETest();
@@ -20,6 +22,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     queryOperationsScenario = new QueryOperationsScenario(testSuite);
     evaluationTargetScenario = new EvaluationTargetScenario(testSuite);
     evaluationPeriodScenario = new EvaluationPeriodScenario(testSuite);
+    projectAssignmentScenario = new ProjectAssignmentScenario(testSuite);
   });
 
   afterAll(async () => {
@@ -289,8 +292,161 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     });
   });
 
+  describe('프로젝트 할당 시나리오 (분리 테스트)', () => {
+    let createdPeriodIds: string[] = [];
+
+    afterAll(async () => {
+      // 테스트 후 정리 - 생성된 평가기간 삭제
+      for (const periodId of createdPeriodIds) {
+        try {
+          await evaluationPeriodScenario.평가기간을_삭제한다(periodId);
+        } catch (error) {
+          console.log(
+            `평가기간 삭제 실패 (이미 삭제되었을 수 있음): ${periodId}`,
+          );
+        }
+      }
+      // 시드 데이터 정리
+      await seedDataScenario.시드_데이터를_삭제한다();
+    });
+
+    it('모든 평가대상자에게 프로젝트를 할당하고 대시보드에서 검증한다', async () => {
+      // 1. MINIMAL 시나리오로 시드 데이터 생성
+      const { seedResponse } = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'minimal',
+        clearExisting: true,
+        projectCount: 2,
+        wbsPerProject: 3,
+      });
+
+      const employeeIds =
+        seedResponse.results[0].generatedIds?.employeeIds || [];
+      const projectIds = seedResponse.results[0].generatedIds?.projectIds || [];
+
+      expect(employeeIds.length).toBeGreaterThan(0);
+      expect(projectIds.length).toBeGreaterThan(0);
+
+      console.log(
+        `✅ MINIMAL 시드 데이터 생성 완료 - 프로젝트: ${projectIds.length}개, 직원: ${employeeIds.length}명`,
+      );
+
+      // 2. 평가기간 생성 후 대상자 등록
+      const { periodId } =
+        await evaluationPeriodScenario.평가기간_생성_후_대상자_등록_시나리오를_실행한다(
+          employeeIds,
+        );
+
+      createdPeriodIds.push(periodId);
+
+      // 3. 모든 평가대상자에게 프로젝트 할당
+      const result =
+        await projectAssignmentScenario.프로젝트_할당_후_대시보드_검증_시나리오를_실행한다(
+          periodId,
+          employeeIds,
+          projectIds,
+        );
+
+      expect(result.totalAssignments).toBe(
+        employeeIds.length * projectIds.length,
+      );
+      expect(result.verifiedEmployees).toBe(employeeIds.length);
+
+      console.log(
+        `✅ 프로젝트 할당 및 검증 완료 - 총 ${result.totalAssignments}건 할당, ${result.verifiedEmployees}명 검증`,
+      );
+    });
+
+    it('프로젝트 할당을 취소하고 대시보드에서 검증한다', async () => {
+      // 1. MINIMAL 시나리오로 시드 데이터 생성
+      const { seedResponse } = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'minimal',
+        clearExisting: true,
+        projectCount: 2,
+        wbsPerProject: 3,
+      });
+
+      const employeeIds =
+        seedResponse.results[0].generatedIds?.employeeIds || [];
+      const projectIds =
+        seedResponse.results[0].generatedIds?.projectIds || [];
+
+      // 2. 평가기간 생성 후 대상자 등록
+      const { periodId } =
+        await evaluationPeriodScenario.평가기간_생성_후_대상자_등록_시나리오를_실행한다(
+          employeeIds,
+        );
+
+      createdPeriodIds.push(periodId);
+
+      // 3. 프로젝트 할당
+      await projectAssignmentScenario.프로젝트를_대량으로_할당한다(
+        periodId,
+        projectIds,
+        employeeIds,
+      );
+
+      // 4. 첫 번째 직원의 프로젝트 할당 취소
+      const testEmployeeId = employeeIds[0];
+      const result =
+        await projectAssignmentScenario.프로젝트_할당_취소_시나리오를_실행한다(
+          periodId,
+          testEmployeeId,
+        );
+
+      expect(result.projectCountBefore).toBe(projectIds.length);
+      expect(result.projectCountAfter).toBe(projectIds.length - 1);
+      console.log(
+        `✅ 프로젝트 할당 취소 검증 완료: ${result.projectCountBefore}개 → ${result.projectCountAfter}개`,
+      );
+    });
+
+    it('프로젝트 할당 순서를 변경하고 검증한다', async () => {
+      // 1. MINIMAL 시나리오로 시드 데이터 생성
+      const { seedResponse } = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'minimal',
+        clearExisting: true,
+        projectCount: 3,
+        wbsPerProject: 3,
+      });
+
+      const employeeIds =
+        seedResponse.results[0].generatedIds?.employeeIds || [];
+      const projectIds =
+        seedResponse.results[0].generatedIds?.projectIds || [];
+
+      // 2. 평가기간 생성 후 대상자 등록
+      const { periodId } =
+        await evaluationPeriodScenario.평가기간_생성_후_대상자_등록_시나리오를_실행한다(
+          employeeIds,
+        );
+
+      createdPeriodIds.push(periodId);
+
+      // 3. 프로젝트 할당 (최소 3개 프로젝트)
+      await projectAssignmentScenario.프로젝트를_대량으로_할당한다(
+        periodId,
+        projectIds,
+        employeeIds,
+      );
+
+      // 4. 첫 번째 직원의 프로젝트 할당 순서 변경
+      const testEmployeeId = employeeIds[0];
+      const result =
+        await projectAssignmentScenario.프로젝트_할당_순서_변경_시나리오를_실행한다(
+          periodId,
+          testEmployeeId,
+        );
+
+      expect(result.orderAfterDown).toBeGreaterThan(result.orderBefore);
+      expect(result.orderAfterUp).toBe(result.orderBefore);
+      console.log(
+        `✅ 프로젝트 할당 순서 변경 검증 완료: down(${result.orderBefore} → ${result.orderAfterDown}), up(${result.orderAfterDown} → ${result.orderAfterUp})`,
+      );
+    });
+  });
+
   // TODO: 추가 프로세스 구현 예정
-  // - Step 5: 프로젝트/WBS 배정 (WITH_ASSIGNMENTS)
+  // - Step 5: WBS 배정 (WITH_ASSIGNMENTS)
   // - Step 6: 평가 기준 설정 (WITH_SETUP)
   // - Step 7: 평가 진행 (FULL)
   // - Step 8: 최종 평가 조회
