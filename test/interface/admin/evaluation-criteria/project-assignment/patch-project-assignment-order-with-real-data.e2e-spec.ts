@@ -43,10 +43,15 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order (실제
   });
 
   async function getAssignmentWithOrder() {
+    // 'waiting' 또는 'in-progress' 상태의 평가기간 할당만 조회
     const result = await dataSource.query(
-      `SELECT id, "displayOrder" FROM evaluation_project_assignment 
-       WHERE "deletedAt" IS NULL 
-       ORDER BY "displayOrder" ASC 
+      `SELECT pa.id, pa."displayOrder" 
+       FROM evaluation_project_assignment pa
+       JOIN evaluation_period ep ON ep.id = pa."periodId"
+       WHERE pa."deletedAt" IS NULL 
+         AND ep."deletedAt" IS NULL
+         AND ep.status IN ('waiting', 'in-progress')
+       ORDER BY pa."displayOrder" ASC 
        LIMIT 3`,
     );
     return result.length >= 2 ? result : null;
@@ -312,13 +317,15 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order (실제
     it('연속된 up/down 이동으로 원래 위치로 돌아와야 한다', async () => {
       const assignments = await getAssignmentWithOrder();
 
-      if (!assignments || assignments.length < 2) {
+      if (!assignments || assignments.length < 3) {
         console.log('데이터가 부족해서 테스트 스킵');
         return;
       }
 
+      // 중간 항목 선택 (인덱스 1)
       const targetId = assignments[1].id;
-      const originalOrder = assignments[1].displayOrder;
+      const expectedNeighborAbove = assignments[0].id;
+      const expectedNeighborBelow = assignments[2].id;
 
       // 위로 이동
       await testSuite
@@ -336,15 +343,33 @@ describe('PATCH /admin/evaluation-criteria/project-assignments/:id/order (실제
         )
         .query({ direction: 'down' });
 
-      // 순서 확인
-      const updatedAssignment = await dataSource.query(
-        `SELECT "displayOrder" FROM evaluation_project_assignment WHERE id = $1`,
+      // 최종 순서 확인 - 원래 위치로 돌아왔는지
+      // 같은 employeeId, periodId의 할당만 조회
+      const firstAssignment = await dataSource.query(
+        `SELECT "employeeId", "periodId" FROM evaluation_project_assignment WHERE id = $1`,
         [targetId],
       );
 
-      if (updatedAssignment.length > 0) {
-        expect(updatedAssignment[0].displayOrder).toBe(originalOrder);
+      if (firstAssignment.length === 0) {
+        console.log('대상 할당을 찾을 수 없어 테스트 스킵');
+        return;
       }
+
+      const finalAssignments = await dataSource.query(
+        `SELECT id, "displayOrder" FROM evaluation_project_assignment 
+         WHERE "deletedAt" IS NULL 
+           AND "employeeId" = $1
+           AND "periodId" = $2
+         ORDER BY "displayOrder" ASC`,
+        [firstAssignment[0].employeeId, firstAssignment[0].periodId],
+      );
+
+      // 원래 순서가 유지되었는지 확인 (ID 기준)
+      const finalIds = finalAssignments.map((a: any) => a.id);
+      const indexOfTarget = finalIds.indexOf(targetId);
+
+      // targetId가 여전히 인덱스 1에 있는지 확인
+      expect(indexOfTarget).toBe(1);
 
       console.log('\n✅ 연속 이동 후 원위치 복귀 성공');
     });

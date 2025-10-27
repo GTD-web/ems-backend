@@ -20,6 +20,7 @@ import {
   ChangeProjectAssignmentOrderBodyDto,
   CreateProjectAssignmentDto,
   EmployeeProjectsResponseDto,
+  GetUnassignedEmployeesQueryDto,
   ProjectAssignmentFilterDto,
   ProjectAssignmentResponseDto,
   ProjectEmployeesResponseDto,
@@ -132,12 +133,11 @@ export class ProjectAssignmentManagementController {
    */
   @GetUnassignedEmployees()
   async getUnassignedEmployees(
-    @Query('periodId') periodId: string,
-    @Query('projectId') projectId?: string,
+    @Query() query: GetUnassignedEmployeesQueryDto,
   ): Promise<UnassignedEmployeesResponseDto> {
     return await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트가_할당되지_않은_직원_목록을_조회한다(
-      periodId,
-      projectId,
+      query.periodId,
+      query.projectId,
     );
   }
 

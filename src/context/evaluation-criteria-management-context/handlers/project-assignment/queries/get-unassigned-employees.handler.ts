@@ -34,7 +34,11 @@ export class GetUnassignedEmployeesHandler
 
   async execute(
     query: GetUnassignedEmployeesQuery,
-  ): Promise<{ employees: EmployeeInfoDto[] }> {
+  ): Promise<{
+    periodId: string;
+    projectId?: string;
+    employees: EmployeeInfoDto[];
+  }> {
     const { periodId, projectId } = query;
 
     // 해당 평가기간에 할당된 직원 ID 조회
@@ -73,7 +77,7 @@ export class GetUnassignedEmployeesHandler
         'department.name AS department_name',
       ])
       .where('employee.deletedAt IS NULL')
-      .andWhere('employee.status = :status', { status: 'ACTIVE' });
+      .andWhere('employee.status = :status', { status: '재직중' });
 
     if (assignedEmployeeIds.length > 0) {
       unassignedEmployeesQuery.andWhere(
@@ -99,6 +103,10 @@ export class GetUnassignedEmployeesHandler
       departmentName: result.department_name,
     }));
 
-    return { employees };
+    return {
+      periodId,
+      projectId,
+      employees,
+    };
   }
 }

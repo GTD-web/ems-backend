@@ -86,14 +86,15 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: employees.employee1.id,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
           ],
         });
 
-      expect([HttpStatus.CREATED, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+      expect([
+        HttpStatus.CREATED,
+        HttpStatus.BAD_REQUEST,
+        HttpStatus.CONFLICT,
+      ]).toContain(response.status);
 
       console.log('\n✅ API 존재 확인 성공');
     });
@@ -129,7 +130,6 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: employees.employee1.id,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
           ],
         });
@@ -160,13 +160,11 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: employees.employee1.id,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
             {
               employeeId: employees.employee2.id,
               projectId: projects.project2.id,
               periodId: period.id,
-              assignedBy: employees.employee2.id,
             },
           ],
         });
@@ -197,13 +195,11 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: employees.employee1.id,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
             {
               employeeId: employees.employee1.id,
               projectId: projects.project2.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
           ],
         });
@@ -261,7 +257,6 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: 'invalid-uuid',
               projectId: 'invalid-uuid',
               periodId: period.id,
-              assignedBy: 'invalid-uuid',
             },
           ],
         })
@@ -293,13 +288,11 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: employees.employee1.id,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
             {
               employeeId: employees.employee1.id,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
           ],
         });
@@ -332,13 +325,11 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: employees.employee1.id,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
             {
               employeeId: 'invalid-uuid',
               projectId: projects.project2.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
           ],
         });
@@ -374,7 +365,6 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: nonExistentId,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: nonExistentId,
             },
           ],
         });
@@ -408,7 +398,6 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: employees.employee1.id,
               projectId: nonExistentId,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
           ],
         });
@@ -445,13 +434,11 @@ describe('POST /admin/evaluation-criteria/project-assignments/bulk (실제 데�
               employeeId: employees.employee1.id,
               projectId: projects.project1.id,
               periodId: period.id,
-              assignedBy: employees.employee1.id,
             },
             {
               employeeId: employees.employee2.id,
               projectId: projects.project2.id,
               periodId: period.id,
-              assignedBy: employees.employee2.id,
             },
           ],
         });

@@ -81,6 +81,17 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
   }
 
   describe('할당 생성 성공 시나리오', () => {
+    beforeEach(async () => {
+      // 각 테스트 전에 waiting 상태 평가기간의 프로젝트 할당을 모두 삭제
+      const period = await getEvaluationPeriod();
+      if (period) {
+        await dataSource.query(
+          `DELETE FROM evaluation_project_assignment WHERE "periodId" = $1`,
+          [period.id],
+        );
+      }
+    });
+
     it('실제 직원과 프로젝트로 할당 생성이 성공해야 한다', async () => {
       const employees = await getTwoEmployees();
       const projects = await getTwoProjects();
@@ -252,6 +263,17 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
   });
 
   describe('중복 할당 처리', () => {
+    beforeEach(async () => {
+      // 각 테스트 전에 waiting 상태 평가기간의 프로젝트 할당을 모두 삭제
+      const period = await getEvaluationPeriod();
+      if (period) {
+        await dataSource.query(
+          `DELETE FROM evaluation_project_assignment WHERE "periodId" = $1`,
+          [period.id],
+        );
+      }
+    });
+
     it('동일한 평가기간-직원-프로젝트 조합으로 중복 할당 시 409 에러가 발생해야 한다', async () => {
       const employees = await getTwoEmployees();
       const projects = await getTwoProjects();
@@ -262,6 +284,7 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
         return;
       }
 
+      // 첫 번째 할당 생성 - 성공해야 함
       await testSuite
         .request()
         .post('/admin/evaluation-criteria/project-assignments')
@@ -272,6 +295,7 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
         })
         .expect(HttpStatus.CREATED);
 
+      // 동일한 조합으로 다시 할당 시도 - 409 에러가 발생해야 함
       const response = await testSuite
         .request()
         .post('/admin/evaluation-criteria/project-assignments')
@@ -279,11 +303,8 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
           employeeId: employees.employee1.id,
           projectId: projects.project1.id,
           periodId: period.id,
-        });
-
-      expect([HttpStatus.CONFLICT, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+        })
+        .expect(HttpStatus.CONFLICT);
 
       console.log('\n✅ 중복 할당 409 에러 성공');
     });
@@ -364,14 +385,14 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
       // 각 테스트 전에 waiting 및 in-progress 상태 평가기간의 프로젝트 할당을 모두 삭제
       const waitingPeriod = await getEvaluationPeriod();
       const inProgressPeriod = await getInProgressPeriod();
-      
+
       if (waitingPeriod) {
         await dataSource.query(
           `DELETE FROM evaluation_project_assignment WHERE "periodId" = $1`,
           [waitingPeriod.id],
         );
       }
-      
+
       if (inProgressPeriod) {
         await dataSource.query(
           `DELETE FROM evaluation_project_assignment WHERE "periodId" = $1`,
@@ -524,7 +545,10 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
         })
         .expect(HttpStatus.CREATED);
 
-      expect(response.body.assignedBy).toBe(employees.employee2.id);
+      // assignedBy는 @CurrentUser()로 자동 설정 (Mock 사용자 ID)
+      expect(response.body.assignedBy).toBe(
+        '00000000-0000-0000-0000-000000000001',
+      );
 
       console.log('\n✅ 할당자 정보 설정 성공');
     });
@@ -579,7 +603,10 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
       expect(response.body.employeeId).toBe(employees.employee1.id);
       expect(response.body.projectId).toBe(projects.project1.id);
       expect(response.body.periodId).toBe(period.id);
-      expect(response.body.assignedBy).toBe(employees.employee1.id);
+      // assignedBy는 @CurrentUser()로 자동 설정 (Mock 사용자 ID)
+      expect(response.body.assignedBy).toBe(
+        '00000000-0000-0000-0000-000000000001',
+      );
       expect(response.body.assignedDate).toBeDefined();
 
       console.log('\n✅ 모든 필드 검증 성공');
@@ -587,6 +614,17 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
   });
 
   describe('동시성 및 통합 테스트', () => {
+    beforeEach(async () => {
+      // 각 테스트 전에 waiting 상태 평가기간의 프로젝트 할당을 모두 삭제
+      const period = await getEvaluationPeriod();
+      if (period) {
+        await dataSource.query(
+          `DELETE FROM evaluation_project_assignment WHERE "periodId" = $1`,
+          [period.id],
+        );
+      }
+    });
+
     it('동시에 여러 할당을 생성할 때 적절히 처리되어야 한다', async () => {
       const employees = await getTwoEmployees();
       const projects = await getTwoProjects();
@@ -620,13 +658,14 @@ describe('POST /admin/evaluation-criteria/project-assignments (실제 데이터)
 
       const responses = await Promise.all(promises);
 
+      // 동시 요청의 경우 일부는 성공(201), 일부는 중복(409)일 수 있음
       responses.forEach((response) => {
         expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
           response.status,
         );
       });
 
-      console.log('\n✅ 동시 생성 처리 성공');
+      console.log('\n✅ 동시 생성 처리 성공 (일부 성공, 일부 중복 가능)');
     });
 
     it('할당 생성 후 상세 조회가 가능해야 한다', async () => {

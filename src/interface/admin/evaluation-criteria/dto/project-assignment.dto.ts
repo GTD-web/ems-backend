@@ -10,6 +10,7 @@ import {
   IsArray,
   IsDateString,
   IsEnum,
+  IsNotEmpty,
   ValidateNested,
   ArrayMinSize,
 } from 'class-validator';
@@ -485,9 +486,43 @@ export class ProjectEmployeesResponseDto {
 }
 
 /**
+ * 할당되지 않은 직원 목록 조회 쿼리 DTO
+ */
+export class GetUnassignedEmployeesQueryDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsNotEmpty({ message: 'periodId는 필수 항목입니다.' })
+  @IsUUID('4', { message: 'periodId는 올바른 UUID 형식이어야 합니다.' })
+  periodId: string;
+
+  @ApiPropertyOptional({
+    description: '프로젝트 ID (선택적)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+  })
+  @IsOptional()
+  @IsUUID('4', { message: 'projectId는 올바른 UUID 형식이어야 합니다.' })
+  projectId?: string;
+}
+
+/**
  * 할당되지 않은 직원 목록 응답 DTO (직원 정보만 포함)
  */
 export class UnassignedEmployeesResponseDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '프로젝트 ID (선택적)',
+    example: '550e8400-e29b-41d4-a716-446655440001',
+    required: false,
+  })
+  projectId?: string;
+
   @ApiProperty({
     description: '할당되지 않은 직원 목록',
     type: [EmployeeInfoDto],

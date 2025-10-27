@@ -350,10 +350,12 @@ export class EvaluationProjectAssignmentService
       const currentOrder = currentAssignment.displayOrder;
 
       // 같은 직원-평가기간의 모든 할당 조회 (displayOrder 순으로 정렬)
+      // 삭제되지 않은 항목만 조회
       const allAssignments = await repository.find({
         where: {
           periodId: currentAssignment.periodId,
           employeeId: currentAssignment.employeeId,
+          deletedAt: null,
         },
         order: { displayOrder: 'ASC' },
       });
@@ -417,8 +419,9 @@ export class EvaluationProjectAssignmentService
       );
 
       // 같은 직원-평가기간의 모든 할당 조회 (현재 순서대로 정렬)
+      // 삭제되지 않은 항목만 조회
       const assignments = await repository.find({
-        where: { periodId, employeeId },
+        where: { periodId, employeeId, deletedAt: null },
         order: { displayOrder: 'ASC', assignedDate: 'DESC' },
       });
 

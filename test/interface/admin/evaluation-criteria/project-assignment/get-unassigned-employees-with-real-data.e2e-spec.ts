@@ -189,7 +189,7 @@ describe('GET /admin/evaluation-criteria/project-assignments/unassigned-employee
 
   describe('에러 처리', () => {
     it('존재하지 않는 평가기간 ID로 요청 시 빈 배열을 반환해야 한다', async () => {
-      const nonExistentPeriodId = '00000000-0000-0000-0000-000000000000';
+      const nonExistentPeriodId = '550e8400-e29b-41d4-a716-446655440099'; // 존재하지 않는 UUID
 
       const response = await testSuite
         .request()
