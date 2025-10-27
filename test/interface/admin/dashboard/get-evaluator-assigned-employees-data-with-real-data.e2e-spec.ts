@@ -84,17 +84,24 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
         .expect(HttpStatus.OK);
 
       console.log('\n🔍 평가 현황 데이터 확인 중...');
+      console.log(`전체 직원 수: ${statusResponse.body.length}명`);
 
       // 1차 평가자가 있는 직원 찾기
       let foundRelation = false;
       for (const employeeData of statusResponse.body) {
         const primaryEvaluator = employeeData.downwardEvaluation?.primary;
 
+        console.log(
+          `\n  직원: ${employeeData.employee?.name} (${employeeData.employee?.id?.substring(0, 8)}...)`,
+        );
+        console.log(
+          `  1차 평가자 데이터:`,
+          JSON.stringify(primaryEvaluator, null, 2),
+        );
+
         if (primaryEvaluator) {
-          console.log(
-            `\n  직원: ${employeeData.employee?.name} (${employeeData.employee?.id?.substring(0, 8)}...)`,
-          );
           console.log(`  1차 평가자 ID: ${primaryEvaluator.evaluatorId}`);
+          console.log(`  1차 평가자 정보:`, primaryEvaluator.evaluator);
           console.log(`  1차 평가 상태: ${primaryEvaluator.status}`);
           console.log(
             `  1차 평가 할당 WBS: ${primaryEvaluator.assignedWbsCount}`,
@@ -102,15 +109,16 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
         }
 
         if (
-          primaryEvaluator?.evaluatorId &&
-          primaryEvaluator.evaluatorId !== 'N/A' &&
-          primaryEvaluator.evaluatorId !== null
+          primaryEvaluator?.evaluator &&
+          primaryEvaluator.evaluator.id &&
+          primaryEvaluator.evaluator.id !== 'N/A'
         ) {
-          evaluatorId = primaryEvaluator.evaluatorId;
+          evaluatorId = primaryEvaluator.evaluator.id;
           employeeId = employeeData.employee.id;
           foundRelation = true;
           console.log('\n✅ 평가자-피평가자 관계 발견:');
           console.log(`  - 평가자 ID: ${evaluatorId.substring(0, 8)}...`);
+          console.log(`  - 평가자명: ${primaryEvaluator.evaluator.name}`);
           console.log(`  - 피평가자 ID: ${employeeId.substring(0, 8)}...`);
           console.log(`  - 피평가자명: ${employeeData.employee.name}`);
           break;
@@ -569,7 +577,9 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
       // 먼저 평가자가 담당하는 모든 피평가자 조회
       const evaluatorMappingsResponse = await testSuite
         .request()
-        .get(`/admin/dashboard/${evaluationPeriodId}/my-evaluation-targets/${evaluatorId}/status`)
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/my-evaluation-targets/${evaluatorId}/status`,
+        )
         .expect(HttpStatus.OK);
 
       const assignedEmployeeIds = evaluatorMappingsResponse.body.map(
@@ -586,7 +596,9 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
         (id) => !assignedEmployeeIds.includes(id) && id !== evaluatorId,
       );
 
-      console.log(`\n🔍 선택된 다른 직원: ${otherEmployeeId?.substring(0, 8)}...`);
+      console.log(
+        `\n🔍 선택된 다른 직원: ${otherEmployeeId?.substring(0, 8)}...`,
+      );
 
       if (otherEmployeeId) {
         const response = await testSuite

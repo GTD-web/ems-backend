@@ -69,15 +69,21 @@ export async function 하향평가_상태를_조회한다(
   });
 
   // 2. PRIMARY 평가자 조회
+  // 한 직원이 여러 WBS를 가질 경우, 여러 평가라인 매핑이 존재할 수 있음
+  // 가장 먼저 생성된 매핑의 평가자를 대표 평가자로 선택
   let primaryEvaluatorId: string | null = null;
   if (primaryLine) {
-    const primaryMapping = await evaluationLineMappingRepository.findOne({
-      where: {
-        employeeId: employeeId,
-        evaluationLineId: primaryLine.id,
-        deletedAt: IsNull(),
-      },
-    });
+    const primaryMapping = await evaluationLineMappingRepository
+      .createQueryBuilder('mapping')
+      .where('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('mapping.evaluationLineId = :lineId', {
+        lineId: primaryLine.id,
+      })
+      .andWhere('mapping.deletedAt IS NULL')
+      .orderBy('mapping.createdAt', 'ASC') // 가장 먼저 생성된 매핑 선택
+      .limit(1)
+      .getOne();
+
     if (primaryMapping) {
       primaryEvaluatorId = primaryMapping.evaluatorId;
     }
@@ -105,7 +111,14 @@ export async function 하향평가_상태를_조회한다(
   if (primaryEvaluatorId && employeeRepository) {
     const evaluator = await employeeRepository.findOne({
       where: { id: primaryEvaluatorId, deletedAt: IsNull() },
-      select: ['id', 'name', 'employeeNumber', 'email', 'departmentName', 'rankName'],
+      select: [
+        'id',
+        'name',
+        'employeeNumber',
+        'email',
+        'departmentName',
+        'rankName',
+      ],
     });
     if (evaluator) {
       primaryEvaluatorInfo = {
@@ -128,18 +141,27 @@ export async function 하향평가_상태를_조회한다(
   });
 
   // 5. SECONDARY 평가자들 조회 (여러 명 가능)
+  // 한 직원이 여러 WBS를 가질 경우, 여러 평가라인 매핑이 존재할 수 있음
+  // 중복 제거하여 고유한 평가자 ID 목록을 반환
   const secondaryEvaluators: string[] = [];
   if (secondaryLine) {
-    const secondaryMappings = await evaluationLineMappingRepository.find({
-      where: {
-        employeeId: employeeId,
-        evaluationLineId: secondaryLine.id,
-        deletedAt: IsNull(),
-      },
-    });
-    secondaryEvaluators.push(
-      ...secondaryMappings.map((m) => m.evaluatorId).filter((id) => !!id),
-    );
+    const secondaryMappings = await evaluationLineMappingRepository
+      .createQueryBuilder('mapping')
+      .where('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('mapping.evaluationLineId = :lineId', {
+        lineId: secondaryLine.id,
+      })
+      .andWhere('mapping.deletedAt IS NULL')
+      .orderBy('mapping.createdAt', 'ASC')
+      .getMany();
+
+    // 중복된 evaluatorId 제거
+    const uniqueEvaluatorIds = [
+      ...new Set(
+        secondaryMappings.map((m) => m.evaluatorId).filter((id) => !!id),
+      ),
+    ];
+    secondaryEvaluators.push(...uniqueEvaluatorIds);
   }
 
   // 6. 각 SECONDARY 평가자별 하향평가 상태 조회
@@ -153,7 +175,7 @@ export async function 하향평가_상태를_조회한다(
         downwardEvaluationRepository,
         wbsAssignmentRepository,
       );
-      
+
       // 평가자 정보 조회
       let evaluatorInfo: {
         id: string;
@@ -166,7 +188,14 @@ export async function 하향평가_상태를_조회한다(
       if (employeeRepository) {
         const evaluator = await employeeRepository.findOne({
           where: { id: evaluatorId, deletedAt: IsNull() },
-          select: ['id', 'name', 'employeeNumber', 'email', 'departmentName', 'rankName'],
+          select: [
+            'id',
+            'name',
+            'employeeNumber',
+            'email',
+            'departmentName',
+            'rankName',
+          ],
         });
         if (evaluator) {
           evaluatorInfo = {
@@ -179,7 +208,7 @@ export async function 하향평가_상태를_조회한다(
           };
         }
       }
-      
+
       return {
         evaluator: evaluatorInfo || {
           id: evaluatorId,
