@@ -3,6 +3,7 @@ import { IQuery, IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
 import { EmployeeEvaluationPeriodStatusDto } from '../../interfaces/dashboard-context.interface';
 import {
   GetEmployeeEvaluationPeriodStatusQuery,
@@ -47,14 +48,24 @@ export class GetAllEmployeesEvaluationPeriodStatusHandler
 
     try {
       // 1. 평가기간의 모든 피평가자 맵핑 조회 (제외되지 않고 삭제되지 않은 직원만)
-      const mappings = await this.mappingRepository.find({
-        where: {
+      // Employee와 JOIN하여 isExcludedFromList도 체크
+      const mappings = await this.mappingRepository
+        .createQueryBuilder('mapping')
+        .leftJoin(
+          Employee,
+          'employee',
+          'employee.id = mapping.employeeId AND employee.deletedAt IS NULL',
+        )
+        .select('mapping.employeeId', 'employeeId')
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
           evaluationPeriodId,
-          isExcluded: false, // 제외되지 않은 직원만
-          deletedAt: IsNull(), // 삭제되지 않은 맵핑만
-        },
-        select: ['employeeId'], // employeeId만 조회
-      });
+        })
+        .andWhere('mapping.isExcluded = :isExcluded', { isExcluded: false }) // 평가 대상 제외되지 않은 직원만
+        .andWhere('mapping.deletedAt IS NULL') // 삭제되지 않은 맵핑만
+        .andWhere('employee.isExcludedFromList = :isExcludedFromList', {
+          isExcludedFromList: false,
+        }) // 직원 조회 제외되지 않은 직원만
+        .getRawMany();
 
       this.logger.debug(
         `조회된 피평가자 수: ${mappings.length} - 평가기간: ${evaluationPeriodId}`,
