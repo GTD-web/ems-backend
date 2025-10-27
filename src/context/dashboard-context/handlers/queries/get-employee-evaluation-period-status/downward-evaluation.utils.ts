@@ -25,9 +25,17 @@ export async function 하향평가_상태를_조회한다(
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   periodRepository: Repository<EvaluationPeriod>,
+  employeeRepository?: Repository<any>, // Employee 엔티티를 위한 Repository
 ): Promise<{
   primary: {
-    evaluatorId: string | null;
+    evaluator: {
+      id: string;
+      name: string;
+      employeeNumber: string;
+      email: string;
+      departmentName?: string;
+      rankName?: string;
+    } | null;
     status: DownwardEvaluationStatus;
     assignedWbsCount: number;
     completedEvaluationCount: number;
@@ -36,7 +44,14 @@ export async function 하향평가_상태를_조회한다(
   };
   secondary: {
     evaluators: Array<{
-      evaluatorId: string;
+      evaluator: {
+        id: string;
+        name: string;
+        employeeNumber: string;
+        email: string;
+        departmentName?: string;
+        rankName?: string;
+      };
       status: DownwardEvaluationStatus;
       assignedWbsCount: number;
       completedEvaluationCount: number;
@@ -78,6 +93,25 @@ export async function 하향평가_상태를_조회한다(
     wbsAssignmentRepository,
   );
 
+  // 3-1. PRIMARY 평가자 정보 조회
+  let primaryEvaluatorInfo = null;
+  if (primaryEvaluatorId && employeeRepository) {
+    const evaluator = await employeeRepository.findOne({
+      where: { id: primaryEvaluatorId, deletedAt: IsNull() },
+      select: ['id', 'name', 'employeeNumber', 'email', 'departmentName', 'rankName'],
+    });
+    if (evaluator) {
+      primaryEvaluatorInfo = {
+        id: evaluator.id,
+        name: evaluator.name,
+        employeeNumber: evaluator.employeeNumber,
+        email: evaluator.email,
+        departmentName: evaluator.departmentName,
+        rankName: evaluator.rankName,
+      };
+    }
+  }
+
   // 4. SECONDARY 평가라인 조회
   const secondaryLine = await evaluationLineRepository.findOne({
     where: {
@@ -112,8 +146,35 @@ export async function 하향평가_상태를_조회한다(
         downwardEvaluationRepository,
         wbsAssignmentRepository,
       );
+      
+      // 평가자 정보 조회
+      let evaluatorInfo = null;
+      if (employeeRepository) {
+        const evaluator = await employeeRepository.findOne({
+          where: { id: evaluatorId, deletedAt: IsNull() },
+          select: ['id', 'name', 'employeeNumber', 'email', 'departmentName', 'rankName'],
+        });
+        if (evaluator) {
+          evaluatorInfo = {
+            id: evaluator.id,
+            name: evaluator.name,
+            employeeNumber: evaluator.employeeNumber,
+            email: evaluator.email,
+            departmentName: evaluator.departmentName,
+            rankName: evaluator.rankName,
+          };
+        }
+      }
+      
       return {
-        evaluatorId,
+        evaluator: evaluatorInfo || {
+          id: evaluatorId,
+          name: '알 수 없음',
+          employeeNumber: 'N/A',
+          email: 'N/A',
+          departmentName: null,
+          rankName: null,
+        },
         status: status.status,
         assignedWbsCount: status.assignedWbsCount,
         completedEvaluationCount: status.completedEvaluationCount,
@@ -182,7 +243,7 @@ export async function 하향평가_상태를_조회한다(
 
   return {
     primary: {
-      evaluatorId: primaryEvaluatorId,
+      evaluator: primaryEvaluatorInfo,
       status: primaryStatus.status,
       assignedWbsCount: primaryStatus.assignedWbsCount,
       completedEvaluationCount: primaryStatus.completedEvaluationCount,

@@ -115,6 +115,49 @@ export class EmployeeInfoDto {
 }
 
 /**
+ * 평가자 정보 DTO
+ */
+export class EvaluatorInfoDto {
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '평가자명',
+    example: '김평가',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '평가자 사번',
+    example: 'EMP002',
+  })
+  employeeNumber: string;
+
+  @ApiProperty({
+    description: '이메일',
+    example: 'kim@example.com',
+  })
+  email: string;
+
+  @ApiPropertyOptional({
+    description: '부서명',
+    example: '개발팀',
+    nullable: true,
+  })
+  departmentName?: string;
+
+  @ApiPropertyOptional({
+    description: '직책명',
+    example: '과장',
+    nullable: true,
+  })
+  rankName?: string;
+}
+
+/**
  * 평가항목 설정 정보 DTO
  */
 export class EvaluationCriteriaInfoDto {
@@ -253,11 +296,11 @@ export class SelfEvaluationInfoDto {
  */
 export class PrimaryDownwardEvaluationDto {
   @ApiPropertyOptional({
-    description: '1차 평가자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174003',
+    description: '1차 평가자 정보',
+    type: () => EvaluatorInfoDto,
     nullable: true,
   })
-  evaluatorId: string | null;
+  evaluator: EvaluatorInfoDto | null;
 
   @ApiProperty({
     description: '1차 하향평가 진행 상태',
@@ -305,10 +348,10 @@ export class PrimaryDownwardEvaluationDto {
  */
 export class SecondaryEvaluatorDto {
   @ApiProperty({
-    description: '2차 평가자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174004',
+    description: '2차 평가자 정보',
+    type: () => EvaluatorInfoDto,
   })
-  evaluatorId: string;
+  evaluator: EvaluatorInfoDto;
 
   @ApiProperty({
     description: '2차 하향평가 진행 상태',

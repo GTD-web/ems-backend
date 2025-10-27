@@ -183,8 +183,15 @@ export interface EmployeeEvaluationPeriodStatusDto {
   downwardEvaluation: {
     /** 1차 평가 정보 (1명) */
     primary: {
-      /** 평가자 ID */
-      evaluatorId: string | null;
+      /** 평가자 정보 */
+      evaluator: {
+        id: string;
+        name: string;
+        employeeNumber: string;
+        email: string;
+        departmentName?: string;
+        rankName?: string;
+      } | null;
       /** 하향평가 상태 */
       status: DownwardEvaluationStatus;
       /** 할당된 WBS 수 */
@@ -202,8 +209,15 @@ export interface EmployeeEvaluationPeriodStatusDto {
     secondary: {
       /** 2차 평가자 목록 */
       evaluators: Array<{
-        /** 평가자 ID */
-        evaluatorId: string;
+        /** 평가자 정보 */
+        evaluator: {
+          id: string;
+          name: string;
+          employeeNumber: string;
+          email: string;
+          departmentName?: string;
+          rankName?: string;
+        };
         /** 하향평가 상태 */
         status: DownwardEvaluationStatus;
         /** 할당된 WBS 수 */

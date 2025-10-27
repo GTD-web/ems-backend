@@ -265,6 +265,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         this.downwardEvaluationRepository,
         this.wbsAssignmentRepository,
         this.periodRepository,
+        this.employeeRepository,
       );
 
       // 15. 동료평가 상태 조회
@@ -383,8 +384,13 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         // 하향평가 진행 정보
         downwardEvaluation: {
           primary: {
-            ...primary,
+            evaluator: primary.evaluator,
+            status: primary.status,
+            assignedWbsCount: primary.assignedWbsCount,
+            completedEvaluationCount: primary.completedEvaluationCount,
             isEditable: isPrimaryEvaluationEditable,
+            totalScore: primary.totalScore,
+            grade: primary.grade,
           },
           secondary: {
             evaluators: secondary.evaluators,
