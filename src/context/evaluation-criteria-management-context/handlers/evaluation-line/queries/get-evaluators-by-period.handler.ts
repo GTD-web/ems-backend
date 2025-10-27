@@ -212,11 +212,15 @@ export class GetEvaluatorsByPeriodHandler
           .filter((id): id is string => !!id),
       ),
     ];
-    const departments = await this.departmentRepository
-      .createQueryBuilder('department')
-      .where('department.externalId IN (:...ids)', { ids: departmentIds })
-      .andWhere('department.deletedAt IS NULL')
-      .getMany();
+
+    let departments = [];
+    if (departmentIds.length > 0) {
+      departments = await this.departmentRepository
+        .createQueryBuilder('department')
+        .where('department.externalId IN (:...ids)', { ids: departmentIds })
+        .andWhere('department.deletedAt IS NULL')
+        .getMany();
+    }
 
     const departmentMap = new Map(
       departments.map((dept) => [dept.externalId, dept.name]),

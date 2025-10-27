@@ -300,8 +300,8 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/p
         // 프로젝트만 할당된 직원이 없으면 새로 생성
         const newEmployee = await dataSource.manager.query(
           `INSERT INTO employee 
-          (id, name, "departmentId", "employeeNumber", email, version, "createdAt", "updatedAt")
-          SELECT gen_random_uuid(), '프로젝트만할당', id, 'PROJ-ONLY', 'projonly@test.com', 1, NOW(), NOW()
+          (id, name, "departmentId", "employeeNumber", email, "externalId", "externalCreatedAt", "externalUpdatedAt", version, "createdAt", "updatedAt")
+          SELECT gen_random_uuid(), '프로젝트만할당', id, 'PROJ-ONLY', 'projonly@test.com', 'EXT-PROJ-ONLY', NOW(), NOW(), 1, NOW(), NOW()
           FROM department
           WHERE "deletedAt" IS NULL
           LIMIT 1
@@ -464,11 +464,20 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/p
 
       evaluationPeriodId = evaluationPeriods[0].id;
 
-      // 할당이 없는 직원 조회
+      // 할당이 없는 직원 조회 (프로젝트, WBS 할당 모두 없어야 함)
       const employees = await dataSource
         .getRepository('Employee')
         .createQueryBuilder('employee')
         .where('employee.deletedAt IS NULL')
+        .andWhere(
+          `NOT EXISTS (
+            SELECT 1 FROM evaluation_project_assignment 
+            WHERE "employeeId" = employee.id 
+            AND "periodId" = :periodId 
+            AND "deletedAt" IS NULL
+          )`,
+          { periodId: evaluationPeriodId },
+        )
         .andWhere(
           `NOT EXISTS (
             SELECT 1 FROM evaluation_wbs_assignment 
@@ -488,8 +497,8 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/p
         // 할당 없는 직원이 없으면 새로 생성
         const newEmployee = await dataSource.manager.query(
           `INSERT INTO employee 
-          (id, name, "departmentId", "employeeNumber", email, version, "createdAt", "updatedAt")
-          SELECT gen_random_uuid(), '테스트직원', id, 'TEST999', 'test@test.com', 1, NOW(), NOW()
+          (id, name, "departmentId", "employeeNumber", email, "externalId", "externalCreatedAt", "externalUpdatedAt", version, "createdAt", "updatedAt")
+          SELECT gen_random_uuid(), '테스트직원', id, 'TEST999', 'test@test.com', 'EXT-TEST999', NOW(), NOW(), 1, NOW(), NOW()
           FROM department
           WHERE "deletedAt" IS NULL
           LIMIT 1

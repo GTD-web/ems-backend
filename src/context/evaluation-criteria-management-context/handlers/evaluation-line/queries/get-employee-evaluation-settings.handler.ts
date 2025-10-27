@@ -62,21 +62,32 @@ export class GetEmployeeEvaluationSettingsHandler
     );
 
     try {
-      const [projectAssignments, wbsAssignments, evaluationLineMappings] =
-        await Promise.all([
-          this.evaluationProjectAssignmentRepository.find({
-            where: { employeeId, periodId },
-            order: { createdAt: 'DESC' },
-          }),
-          this.evaluationWbsAssignmentRepository.find({
-            where: { employeeId, periodId },
-            order: { createdAt: 'DESC' },
-          }),
-          this.evaluationLineMappingRepository.find({
-            where: { employeeId },
-            order: { createdAt: 'DESC' },
-          }),
-        ]);
+      // 1. 프로젝트 할당과 WBS 할당 조회
+      const [projectAssignments, wbsAssignments] = await Promise.all([
+        this.evaluationProjectAssignmentRepository.find({
+          where: { employeeId, periodId },
+          order: { createdAt: 'DESC' },
+        }),
+        this.evaluationWbsAssignmentRepository.find({
+          where: { employeeId, periodId },
+          order: { createdAt: 'DESC' },
+        }),
+      ]);
+
+      // 2. 평가라인 매핑 조회 (해당 평가기간의 WBS에만 해당)
+      let evaluationLineMappings: EvaluationLineMapping[] = [];
+      if (wbsAssignments.length > 0) {
+        const wbsItemIds = wbsAssignments.map(
+          (assignment) => assignment.wbsItemId,
+        );
+        evaluationLineMappings = await this.evaluationLineMappingRepository
+          .createQueryBuilder('mapping')
+          .where('mapping.employeeId = :employeeId', { employeeId })
+          .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
+          .andWhere('mapping.deletedAt IS NULL')
+          .orderBy('mapping.createdAt', 'DESC')
+          .getMany();
+      }
 
       const result = {
         projectAssignments: projectAssignments.map((assignment) =>

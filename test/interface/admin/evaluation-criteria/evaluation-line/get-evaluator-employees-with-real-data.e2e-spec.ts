@@ -443,8 +443,8 @@ describe('GET /admin/evaluation-criteria/evaluation-lines/evaluator/:evaluatorId
         // 평가자 미구성 직원이 없으면 새로 생성
         const newEmployee = await dataSource.manager.query(
           `INSERT INTO employee 
-          (id, name, "departmentId", "employeeNumber", email, version, "createdAt", "updatedAt")
-          SELECT gen_random_uuid(), '비평가자', id, 'NON-EVAL', 'nonevaluator@test.com', 1, NOW(), NOW()
+          (id, name, "departmentId", "employeeNumber", email, "externalId", "externalCreatedAt", "externalUpdatedAt", version, "createdAt", "updatedAt")
+          SELECT gen_random_uuid(), '비평가자', id, 'NON-EVAL', 'nonevaluator@test.com', 'EXT-NON-EVAL', NOW(), NOW(), 1, NOW(), NOW()
           FROM department
           WHERE "deletedAt" IS NULL
           LIMIT 1
