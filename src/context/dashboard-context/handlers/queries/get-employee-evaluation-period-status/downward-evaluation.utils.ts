@@ -94,7 +94,14 @@ export async function 하향평가_상태를_조회한다(
   );
 
   // 3-1. PRIMARY 평가자 정보 조회
-  let primaryEvaluatorInfo = null;
+  let primaryEvaluatorInfo: {
+    id: string;
+    name: string;
+    employeeNumber: string;
+    email: string;
+    departmentName?: string;
+    rankName?: string;
+  } | null = null;
   if (primaryEvaluatorId && employeeRepository) {
     const evaluator = await employeeRepository.findOne({
       where: { id: primaryEvaluatorId, deletedAt: IsNull() },
@@ -106,8 +113,8 @@ export async function 하향평가_상태를_조회한다(
         name: evaluator.name,
         employeeNumber: evaluator.employeeNumber,
         email: evaluator.email,
-        departmentName: evaluator.departmentName,
-        rankName: evaluator.rankName,
+        departmentName: evaluator.departmentName || undefined,
+        rankName: evaluator.rankName || undefined,
       };
     }
   }
@@ -148,7 +155,14 @@ export async function 하향평가_상태를_조회한다(
       );
       
       // 평가자 정보 조회
-      let evaluatorInfo = null;
+      let evaluatorInfo: {
+        id: string;
+        name: string;
+        employeeNumber: string;
+        email: string;
+        departmentName?: string;
+        rankName?: string;
+      } | null = null;
       if (employeeRepository) {
         const evaluator = await employeeRepository.findOne({
           where: { id: evaluatorId, deletedAt: IsNull() },
@@ -160,8 +174,8 @@ export async function 하향평가_상태를_조회한다(
             name: evaluator.name,
             employeeNumber: evaluator.employeeNumber,
             email: evaluator.email,
-            departmentName: evaluator.departmentName,
-            rankName: evaluator.rankName,
+            departmentName: evaluator.departmentName || undefined,
+            rankName: evaluator.rankName || undefined,
           };
         }
       }
@@ -172,8 +186,8 @@ export async function 하향평가_상태를_조회한다(
           name: '알 수 없음',
           employeeNumber: 'N/A',
           email: 'N/A',
-          departmentName: null,
-          rankName: null,
+          departmentName: undefined,
+          rankName: undefined,
         },
         status: status.status,
         assignedWbsCount: status.assignedWbsCount,

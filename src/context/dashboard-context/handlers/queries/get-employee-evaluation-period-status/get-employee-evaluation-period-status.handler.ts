@@ -423,7 +423,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           ? secondary.evaluators
               .map(
                 (s) =>
-                  `평가자${s.evaluatorId}: ${s.completedEvaluationCount}/${s.assignedWbsCount} (${s.status})`,
+                  `평가자${s.evaluator.id}: ${s.completedEvaluationCount}/${s.assignedWbsCount} (${s.status})`,
               )
               .join(', ')
           : '없음';
@@ -439,7 +439,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           `PRIMARY평가자: ${hasPrimaryEvaluator}, SECONDARY평가자: ${hasSecondaryEvaluator}, 평가라인상태: ${evaluationLineStatus}, ` +
           `성과입력: ${inputCompletedCount}/${perfTotalWbsCount} (${performanceInputStatus}), ` +
           `자기평가: ${completedMappingCount}/${totalMappingCount} (${selfEvaluationStatus}, 총점: ${totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${grade ?? 'N/A'}, 수정가능: ${isSelfEvaluationEditable}), ` +
-          `1차하향평가(${primary.evaluatorId}): ${primary.completedEvaluationCount}/${primary.assignedWbsCount} (${primary.status}, 총점: ${primary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${primary.grade ?? 'N/A'}, 수정가능: ${isPrimaryEvaluationEditable}), ` +
+          `1차하향평가(${primary.evaluator?.id ?? 'N/A'}): ${primary.completedEvaluationCount}/${primary.assignedWbsCount} (${primary.status}, 총점: ${primary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${primary.grade ?? 'N/A'}, 수정가능: ${isPrimaryEvaluationEditable}), ` +
           `2차하향평가: [${secondaryLog}] (총점: ${secondary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${secondary.grade ?? 'N/A'}, 수정가능: ${isSecondaryEvaluationEditable}), ` +
           `동료평가: ${completedRequestCount}/${totalRequestCount} (${peerEvaluationStatus}), ` +
           `최종평가: ${finalEvaluationLog} (${finalEvaluationStatus})`,
