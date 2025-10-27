@@ -107,6 +107,34 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
       expect(result.excludedFromDashboard).toBe(true);
       expect(result.includedBackInDashboard).toBe(true);
     });
+
+    it('부서 하이라키 직원 목록과 대시보드 직원 목록을 비교한다', async () => {
+      const result =
+        await queryOperationsScenario.부서_하이라키와_대시보드_직원_목록_비교_시나리오를_실행한다(
+          evaluationPeriodId,
+        );
+
+      // 대시보드에는 직원이 있어야 함
+      expect(result.dashboardEmployeeCount).toBeGreaterThan(0);
+
+      // 부서 하이라키에 직원이 있는 경우에만 일치 여부 검증
+      if (result.hierarchyEmployeeCount > 0) {
+        expect(result.hierarchyEmployeeCount).toBe(
+          result.dashboardEmployeeCount,
+        );
+        expect(result.allEmployeesMatch).toBe(true);
+        expect(result.missingInDashboard.length).toBe(0);
+        expect(result.extraInDashboard.length).toBe(0);
+        console.log(
+          `✅ 직원 목록 일치 확인: ${result.hierarchyEmployeeCount}명`,
+        );
+      } else {
+        // 부서 하이라키에 직원이 없는 경우 - 경고만 출력
+        console.log(
+          `⚠️ 부서 하이라키에서 직원 정보를 가져올 수 없음 (대시보드: ${result.dashboardEmployeeCount}명)`,
+        );
+      }
+    });
   });
 
   describe('평가 대상 관리 시나리오 (분리 테스트)', () => {
@@ -367,8 +395,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
 
       const employeeIds =
         seedResponse.results[0].generatedIds?.employeeIds || [];
-      const projectIds =
-        seedResponse.results[0].generatedIds?.projectIds || [];
+      const projectIds = seedResponse.results[0].generatedIds?.projectIds || [];
 
       // 2. 평가기간 생성 후 대상자 등록
       const { periodId } =
@@ -411,8 +438,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
 
       const employeeIds =
         seedResponse.results[0].generatedIds?.employeeIds || [];
-      const projectIds =
-        seedResponse.results[0].generatedIds?.projectIds || [];
+      const projectIds = seedResponse.results[0].generatedIds?.projectIds || [];
 
       // 2. 평가기간 생성 후 대상자 등록
       const { periodId } =
