@@ -535,39 +535,7 @@ export function GetFinalEvaluationsByEmployee() {
 - startDate, endDate로 날짜 범위 필터링 가능 (평가기간 시작일 기준)
 - 날짜 범위를 지정하지 않으면 모든 평가기간의 최종평가 조회
 
-**반환 데이터 구조:**
-\`\`\`json
-{
-  "employee": {
-    "id": "직원 ID",
-    "name": "직원명",
-    "employeeNumber": "사번",
-    "email": "이메일",
-    "departmentName": "부서명",
-    "rankName": "직책"
-  },
-  "finalEvaluations": [
-    {
-      "id": "최종평가 ID",
-      "period": {
-        "id": "평가기간 ID",
-        "name": "평가기간명",
-        "startDate": "시작일",
-        "endDate": "종료일"
-      },
-      "evaluationGrade": "평가등급 (S, A, B, C, D)",
-      "jobGrade": "직무등급 (T1, T2, T3)",
-      "jobDetailedGrade": "직무 상세등급 (u, n, a)",
-      "finalComments": "최종 평가 의견",
-      "isConfirmed": "확정 여부",
-      "confirmedAt": "확정일시",
-      "confirmedBy": "확정자 ID",
-      "createdAt": "생성일시",
-      "updatedAt": "수정일시"
-    }
-  ]
-}
-\`\`\`
+
 
 **테스트 케이스:**
 - 직원의 모든 평가기간 최종평가 조회 성공
@@ -636,46 +604,6 @@ export function GetAllEmployeesFinalEvaluations() {
 - 제외된 직원(isExcluded=true)은 결과에서 자동 제외
 - 삭제된 최종평가는 조회되지 않음
 
-**반환 데이터 구조:**
-\`\`\`json
-{
-  "evaluationPeriods": [
-    {
-      "id": "평가기간 ID",
-      "name": "평가기간명",
-      "startDate": "시작일",
-      "endDate": "종료일"
-    }
-  ],
-  "employees": [
-    {
-      "employee": {
-        "id": "직원 ID",
-        "name": "직원명",
-        "employeeNumber": "사번",
-        "email": "이메일",
-        "departmentName": "부서명",
-        "rankName": "직책"
-      },
-      "finalEvaluations": [
-        {
-          "id": "최종평가 ID",
-          "evaluationGrade": "평가등급 (S, A, B, C, D)",
-          "jobGrade": "직무등급 (T1, T2, T3)",
-          "jobDetailedGrade": "직무 상세등급 (u, n, a)",
-          "finalComments": "최종 평가 의견",
-          "isConfirmed": "확정 여부",
-          "confirmedAt": "확정일시",
-          "confirmedBy": "확정자 ID",
-          "createdAt": "생성일시",
-          "updatedAt": "수정일시"
-        },
-        null
-      ]
-    }
-  ]
-}
-\`\`\`
 **참고:** finalEvaluations 배열의 인덱스는 evaluationPeriods 배열의 인덱스와 일치합니다. 특정 평가기간에 평가가 없으면 해당 위치에 null이 들어갑니다.
 
 **테스트 케이스:**
