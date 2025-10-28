@@ -94,7 +94,26 @@ export class WbsAssignmentBusinessService {
       params.assignedBy,
     );
 
-    // 4. 알림 발송 (추후 구현)
+    // 4. WBS별 평가라인 구성 (동료평가를 위한 평가라인)
+    this.logger.log('WBS별 평가라인 구성 시작', {
+      employeeId: params.employeeId,
+      wbsItemId: params.wbsItemId,
+      periodId: params.periodId,
+    });
+    
+    const wbsEvaluationLineResult = await this.evaluationCriteriaManagementService.직원_WBS별_평가라인을_구성한다(
+      params.employeeId,
+      params.wbsItemId,
+      params.periodId,
+      params.assignedBy,
+    );
+    
+    this.logger.log('WBS별 평가라인 구성 완료', {
+      createdLines: wbsEvaluationLineResult.createdLines,
+      createdMappings: wbsEvaluationLineResult.createdMappings,
+    });
+
+    // 5. 알림 발송 (추후 구현)
     // TODO: WBS 할당 알림 발송
     // await this.notificationService.send({
     //   type: 'WBS_ASSIGNED',
@@ -700,6 +719,13 @@ export class WbsAssignmentBusinessService {
         this.logger.warn('직원을 찾을 수 없습니다', { employeeId });
         return;
       }
+      
+      console.log('🔍 직원 정보:', {
+        id: employee.id,
+        name: employee.name,
+        managerId: employee.managerId,
+        departmentId: employee.departmentId,
+      });
 
       // 2. 프로젝트 정보 조회 (PM 확인)
       const project = await this.projectService.ID로_조회한다(projectId);

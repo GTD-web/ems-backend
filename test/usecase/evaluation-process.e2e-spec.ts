@@ -4,6 +4,7 @@ import { QueryOperationsScenario } from './scenarios/query-operations.scenario';
 import { EvaluationTargetScenario } from './scenarios/evaluation-target.scenario';
 import { EvaluationPeriodScenario } from './scenarios/evaluation-period.scenario';
 import { ProjectAssignmentScenario } from './scenarios/project-assignment.scenario';
+import { WbsAssignmentScenario } from './scenarios/wbs-assignment.scenario';
 
 describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let testSuite: BaseE2ETest;
@@ -12,6 +13,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let evaluationTargetScenario: EvaluationTargetScenario;
   let evaluationPeriodScenario: EvaluationPeriodScenario;
   let projectAssignmentScenario: ProjectAssignmentScenario;
+  let wbsAssignmentScenario: WbsAssignmentScenario;
 
   beforeAll(async () => {
     testSuite = new BaseE2ETest();
@@ -23,6 +25,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     evaluationTargetScenario = new EvaluationTargetScenario(testSuite);
     evaluationPeriodScenario = new EvaluationPeriodScenario(testSuite);
     projectAssignmentScenario = new ProjectAssignmentScenario(testSuite);
+    wbsAssignmentScenario = new WbsAssignmentScenario(testSuite);
   });
 
   afterAll(async () => {
@@ -524,8 +527,125 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     });
   });
 
+  // ==================== WBS 할당 시나리오 ====================
+
+  describe('WBS 할당 시나리오 (분리 테스트)', () => {
+    let evaluationPeriodId: string;
+    let employeeIds: string[];
+    let projectIds: string[];
+    let wbsItemIds: string[];
+
+    beforeEach(async () => {
+      // 각 테스트마다 새로운 데이터 생성
+      const { evaluationPeriodId: periodId } =
+        await seedDataScenario.시드_데이터를_생성한다({
+          scenario: 'with_period',
+          clearExisting: true,
+          projectCount: 2,
+          wbsPerProject: 3,
+          useRealDepartments: false,
+          useRealEmployees: false,
+        });
+
+      evaluationPeriodId = periodId!;
+
+      // 직원 및 프로젝트 ID 조회
+      const employees = await testSuite.getRepository('Employee').find({
+        where: { status: '재직중' },
+        take: 3,
+      });
+      employeeIds = employees.map((emp) => emp.id);
+
+      const projects = await testSuite.getRepository('Project').find({
+        take: 2,
+      });
+      projectIds = projects.map((proj) => proj.id);
+
+      const wbsItems = await testSuite.getRepository('WbsItem').find({
+        where: { projectId: projectIds[0] },
+        take: 3,
+      });
+      wbsItemIds = wbsItems.map((wbs) => wbs.id);
+    });
+
+    it('모든 평가대상자에게 WBS를 할당하고 대시보드에서 검증한다', async () => {
+      const result =
+        await wbsAssignmentScenario.WBS_할당_후_대시보드_검증_시나리오를_실행한다(
+          evaluationPeriodId,
+          employeeIds,
+          wbsItemIds,
+          projectIds[0],
+        );
+
+      expect(result.assignments.length).toBe(employeeIds.length * wbsItemIds.length);
+      expect(result.verifiedDashboardEndpoints).toBe(employeeIds.length);
+    });
+
+    it('WBS 할당을 취소하고 대시보드에서 검증한다', async () => {
+      // 먼저 WBS 할당 생성
+      await wbsAssignmentScenario.WBS_할당_후_대시보드_검증_시나리오를_실행한다(
+        evaluationPeriodId,
+        [employeeIds[0]],
+        wbsItemIds,
+        projectIds[0],
+      );
+
+      // WBS 할당 취소
+      const result =
+        await wbsAssignmentScenario.WBS_할당_취소_시나리오를_실행한다(
+          evaluationPeriodId,
+          employeeIds[0],
+          projectIds[0],
+        );
+
+      expect(result.cancelledAssignments).toBeGreaterThan(0);
+      expect(result.verifiedDashboardEndpoints).toBe(1);
+    });
+
+    it('WBS 할당 순서를 변경하고 검증한다', async () => {
+      // 먼저 WBS 할당 생성 (최소 2개)
+      await wbsAssignmentScenario.WBS_할당_후_대시보드_검증_시나리오를_실행한다(
+        evaluationPeriodId,
+        [employeeIds[0]],
+        wbsItemIds.slice(0, 2), // 최소 2개 WBS
+        projectIds[0],
+      );
+
+      // WBS 할당 순서 변경
+      const result =
+        await wbsAssignmentScenario.WBS_할당_순서_변경_시나리오를_실행한다(
+          evaluationPeriodId,
+          employeeIds[0],
+          projectIds[0],
+        );
+
+      expect(result.orderChanges).toBeGreaterThan(0);
+      expect(result.verifiedDashboardEndpoints).toBe(1);
+    });
+
+    it('WBS 할당을 초기화하고 대시보드에서 검증한다', async () => {
+      // 먼저 WBS 할당 생성
+      await wbsAssignmentScenario.WBS_할당_후_대시보드_검증_시나리오를_실행한다(
+        evaluationPeriodId,
+        [employeeIds[0]],
+        wbsItemIds,
+        projectIds[0],
+      );
+
+      // WBS 할당 초기화
+      const result =
+        await wbsAssignmentScenario.WBS_할당_초기화_시나리오를_실행한다(
+          evaluationPeriodId,
+          employeeIds[0],
+          projectIds[0],
+        );
+
+      expect(result.resetType).toBe('employee');
+      expect(result.verifiedDashboardEndpoints).toBe(1);
+    });
+  });
+
   // TODO: 추가 프로세스 구현 예정
-  // - Step 5: WBS 배정 (WITH_ASSIGNMENTS)
   // - Step 6: 평가 기준 설정 (WITH_SETUP)
   // - Step 7: 평가 진행 (FULL)
   // - Step 8: 최종 평가 조회

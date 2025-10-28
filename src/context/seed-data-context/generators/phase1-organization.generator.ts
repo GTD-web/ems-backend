@@ -323,7 +323,7 @@ export class Phase1OrganizationGenerator {
       emp.employeeNumber = `EMP${timestamp}${String(i + 1).padStart(3, '0')}`;
       emp.name = faker.person.fullName();
       emp.email = faker.internet.email();
-      emp.phoneNumber = faker.phone.number('010-####-####');
+      emp.phoneNumber = faker.string.numeric(3) + '-' + faker.string.numeric(4) + '-' + faker.string.numeric(4);
       emp.dateOfBirth = faker.date.birthdate({ min: 25, max: 55, mode: 'age' });
       emp.gender = Math.random() > 0.5 ? 'MALE' : 'FEMALE';
       emp.hireDate = DateGeneratorUtil.generatePastDate(3650); // 최대 10년 전
@@ -372,7 +372,9 @@ export class Phase1OrganizationGenerator {
       return [existingAdminId, ...saved.map((e) => e.id)];
     }
 
-    return saved.map((e) => e.id);
+    const employeeIds = saved.map((e) => e.id);
+
+    return employeeIds;
   }
 
   /**
@@ -812,6 +814,16 @@ export class Phase1OrganizationGenerator {
           this.logger.debug(
             `부서장 설정: 부서 ${department.name} → 직원 ${managerId}`,
           );
+        }
+
+        // 해당 부서의 직원들에게 managerId 설정 (부서장 본인 제외)
+        for (const employeeId of employeeIdsInDept) {
+          if (employeeId !== managerId) {
+            await this.employeeRepository.update(employeeId, {
+              managerId: managerId,
+              updatedAt: new Date(),
+            });
+          }
         }
       }
     }

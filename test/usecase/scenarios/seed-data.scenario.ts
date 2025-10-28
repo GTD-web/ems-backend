@@ -20,6 +20,9 @@ export class SeedDataScenario {
   }): Promise<{
     seedResponse: any;
     evaluationPeriodId?: string;
+    employeeIds?: string[];
+    projectIds?: string[];
+    wbsItemIds?: string[];
   }> {
     const requestBody = {
       scenario: config.scenario,
@@ -63,9 +66,17 @@ export class SeedDataScenario {
       }
     }
 
+    // 생성된 ID들 추출
+    const employeeIds = phase1Result.generatedIds.employeeIds || [];
+    const projectIds = phase1Result.generatedIds.projectIds || [];
+    const wbsItemIds = phase1Result.generatedIds.wbsIds || [];
+
     return {
       seedResponse: response.body,
       evaluationPeriodId,
+      employeeIds,
+      projectIds,
+      wbsItemIds,
     };
   }
 
