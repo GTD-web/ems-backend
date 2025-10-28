@@ -1,4 +1,5 @@
 import { BaseE2ETest } from '../../base-e2e.spec';
+import { DashboardApiClient } from './api-clients/dashboard.api-client';
 
 /**
  * 조회 처리 시나리오
@@ -7,7 +8,11 @@ import { BaseE2ETest } from '../../base-e2e.spec';
  * - 평가 대상 제외/포함 및 필터링 확인
  */
 export class QueryOperationsScenario {
-  constructor(private readonly testSuite: BaseE2ETest) {}
+  private dashboardApiClient: DashboardApiClient;
+
+  constructor(private readonly testSuite: BaseE2ETest) {
+    this.dashboardApiClient = new DashboardApiClient(testSuite);
+  }
 
   /**
    * 부서 하이라키 조회 및 검증
@@ -73,14 +78,12 @@ export class QueryOperationsScenario {
   async 대시보드_직원_상태를_조회한다(
     evaluationPeriodId: string,
   ): Promise<any[]> {
-    const response = await this.testSuite
-      .request()
-      .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
-      .expect(200);
+    const result =
+      await this.dashboardApiClient.getEmployeesStatus(evaluationPeriodId);
 
-    expect(Array.isArray(response.body)).toBe(true);
+    expect(Array.isArray(result)).toBe(true);
 
-    return response.body;
+    return result;
   }
 
   /**

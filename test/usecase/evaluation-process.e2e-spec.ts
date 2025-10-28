@@ -6,6 +6,7 @@ import { EvaluationPeriodScenario } from './scenarios/evaluation-period.scenario
 import { ProjectAssignmentScenario } from './scenarios/project-assignment.scenario';
 import { WbsAssignmentScenario } from './scenarios/wbs-assignment.scenario';
 import { SelfEvaluationScenario } from './scenarios/self-evaluation.scenario';
+import { DeliverableScenario } from './scenarios/deliverable.scenario';
 
 describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let testSuite: BaseE2ETest;
@@ -16,6 +17,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let projectAssignmentScenario: ProjectAssignmentScenario;
   let wbsAssignmentScenario: WbsAssignmentScenario;
   let selfEvaluationScenario: SelfEvaluationScenario;
+  let deliverableScenario: DeliverableScenario;
 
   beforeAll(async () => {
     testSuite = new BaseE2ETest();
@@ -29,6 +31,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     projectAssignmentScenario = new ProjectAssignmentScenario(testSuite);
     wbsAssignmentScenario = new WbsAssignmentScenario(testSuite);
     selfEvaluationScenario = new SelfEvaluationScenario(testSuite);
+    deliverableScenario = new DeliverableScenario(testSuite);
   });
 
   afterAll(async () => {
@@ -68,31 +71,33 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
   it('평가기간 생성 시 1차 평가자 자동 할당을 검증한다', async () => {
     // ========== Step 1: 시드 데이터 생성 ==========
     console.log('시드데이터 생성 시작...');
-    const { evaluationPeriodId } = await seedDataScenario.시드_데이터를_생성한다({
-      scenario: 'with_period',
-      clearExisting: true,
-      projectCount: 2,
-      wbsPerProject: 3,
-      includeCurrentUserAsEvaluator: false,
-      useRealDepartments: false,
-      useRealEmployees: false,
-    });
+    const { evaluationPeriodId } =
+      await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'with_period',
+        clearExisting: true,
+        projectCount: 2,
+        wbsPerProject: 3,
+        includeCurrentUserAsEvaluator: false,
+        useRealDepartments: false,
+        useRealEmployees: false,
+      });
     console.log('시드데이터 생성 완료');
 
     // ========== Step 2: 새로운 평가기간 생성 및 1차 평가자 자동 할당 검증 ==========
-    const result = await evaluationPeriodScenario.평가기간을_생성하고_1차평가자를_검증한다({
-      name: '2024년 하반기 평가 (Usecase 검증)',
-      startDate: '2024-07-01',
-      peerEvaluationDeadline: '2024-12-31',
-      description: 'Usecase 시나리오에서 1차 평가자 자동 할당 검증',
-      maxSelfEvaluationRate: 120,
-      gradeRanges: [
-        { grade: 'S', minRange: 95, maxRange: 100 },
-        { grade: 'A', minRange: 85, maxRange: 94 },
-        { grade: 'B', minRange: 70, maxRange: 84 },
-        { grade: 'C', minRange: 60, maxRange: 69 },
-      ],
-    });
+    const result =
+      await evaluationPeriodScenario.평가기간을_생성하고_1차평가자를_검증한다({
+        name: '2024년 하반기 평가 (Usecase 검증)',
+        startDate: '2024-07-01',
+        peerEvaluationDeadline: '2024-12-31',
+        description: 'Usecase 시나리오에서 1차 평가자 자동 할당 검증',
+        maxSelfEvaluationRate: 120,
+        gradeRanges: [
+          { grade: 'S', minRange: 95, maxRange: 100 },
+          { grade: 'A', minRange: 85, maxRange: 94 },
+          { grade: 'B', minRange: 70, maxRange: 84 },
+          { grade: 'C', minRange: 60, maxRange: 69 },
+        ],
+      });
 
     // ========== Step 3: 검증 결과 확인 ==========
     expect(result.evaluationPeriod).toBeDefined();
@@ -104,7 +109,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
 
     console.log(
       `✅ 1차 평가자 자동 할당 검증 완료 - 평가기간: ${result.evaluationPeriod.name}, ` +
-      `총 대상자: ${result.totalTargets}명, 자동 할당: ${result.autoAssignedCount}명`,
+        `총 대상자: ${result.totalTargets}명, 자동 할당: ${result.autoAssignedCount}명`,
     );
 
     // ========== Step 4: 시드 데이터 정리 ==========
@@ -580,7 +585,9 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
           projectIds[0],
         );
 
-      expect(result.assignments.length).toBe(employeeIds.length * wbsItemIds.length);
+      expect(result.assignments.length).toBe(
+        employeeIds.length * wbsItemIds.length,
+      );
       expect(result.verifiedDashboardEndpoints).toBe(employeeIds.length);
     });
 
@@ -665,9 +672,9 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
         wbsPerProject: 3,
         includeCurrentUserAsEvaluator: false,
         selfEvaluationProgress: {
-          notStarted: 0.4,    // 40% - 시작 안함
-          inProgress: 0.6,    // 60% - 진행 중
-          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+          notStarted: 0.4, // 40% - 시작 안함
+          inProgress: 0.6, // 60% - 진행 중
+          completed: 0.0, // 0% - 완료됨 (완료되지 않은 상태로)
         },
       });
 
@@ -685,21 +692,23 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
       );
 
       // 평가기간-직원 맵핑 ID 조회 (자기평가 수정 가능 상태 변경을 위해)
-      const dashboardResponse = await queryOperationsScenario.대시보드_직원_상태를_조회한다(
-        evaluationPeriodId,
-      );
+      const dashboardResponse =
+        await queryOperationsScenario.대시보드_직원_상태를_조회한다(
+          evaluationPeriodId,
+        );
       mappingIds = dashboardResponse
         .filter((emp: any) => emp.employee.id === employeeIds[0])
         .map((emp: any) => emp.mappingId);
     });
 
     it('자기평가 전체 시나리오를 실행한다', async () => {
-      const result = await selfEvaluationScenario.자기평가_전체_시나리오를_실행한다({
-        employeeId: employeeIds[0],
-        wbsItemId: wbsItemIds[0],
-        periodId: evaluationPeriodId,
-        mappingId: mappingIds[0],
-      });
+      const result =
+        await selfEvaluationScenario.자기평가_전체_시나리오를_실행한다({
+          employeeId: employeeIds[0],
+          wbsItemId: wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          mappingId: mappingIds[0],
+        });
 
       // 검증
       expect(result.저장결과.id).toBeDefined();
@@ -719,18 +728,19 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
         wbsPerProject: 2,
         includeCurrentUserAsEvaluator: false,
         selfEvaluationProgress: {
-          notStarted: 0.4,    // 40% - 시작 안함
-          inProgress: 0.6,    // 60% - 진행 중
-          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+          notStarted: 0.4, // 40% - 시작 안함
+          inProgress: 0.6, // 60% - 진행 중
+          completed: 0.0, // 0% - 완료됨 (완료되지 않은 상태로)
         },
       });
 
-      const result = await selfEvaluationScenario.프로젝트별_자기평가_시나리오를_실행한다({
-        employeeId: selfEvalSeedResult.employeeIds![0],
-        periodId: selfEvalSeedResult.evaluationPeriodId!,
-        projectId: selfEvalSeedResult.projectIds![0],
-        wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 2),
-      });
+      const result =
+        await selfEvaluationScenario.프로젝트별_자기평가_시나리오를_실행한다({
+          employeeId: selfEvalSeedResult.employeeIds![0],
+          periodId: selfEvalSeedResult.evaluationPeriodId!,
+          projectId: selfEvalSeedResult.projectIds![0],
+          wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 2),
+        });
 
       // 검증
       expect(result.저장결과들).toHaveLength(2);
@@ -739,11 +749,12 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     });
 
     it('자기평가 내용 초기화 시나리오를 실행한다', async () => {
-      const result = await selfEvaluationScenario.자기평가_내용_초기화_시나리오를_실행한다({
-        employeeId: employeeIds[0],
-        wbsItemId: wbsItemIds[1],
-        periodId: evaluationPeriodId,
-      });
+      const result =
+        await selfEvaluationScenario.자기평가_내용_초기화_시나리오를_실행한다({
+          employeeId: employeeIds[0],
+          wbsItemId: wbsItemIds[1],
+          periodId: evaluationPeriodId,
+        });
 
       // 검증
       expect(result.저장결과.id).toBeDefined();
@@ -753,11 +764,12 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     });
 
     it('자기평가 수정 가능 상태를 변경한다', async () => {
-      const result = await selfEvaluationScenario.자기평가_수정_가능_상태를_변경한다({
-        mappingId: mappingIds[0],
-        evaluationType: 'self',
-        isEditable: false,
-      });
+      const result =
+        await selfEvaluationScenario.자기평가_수정_가능_상태를_변경한다({
+          mappingId: mappingIds[0],
+          evaluationType: 'self',
+          isEditable: false,
+        });
 
       // 검증
       expect(result.id).toBe(mappingIds[0]);
@@ -765,12 +777,13 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     });
 
     it('직원의 자기평가 목록을 조회한다', async () => {
-      const result = await selfEvaluationScenario.직원의_자기평가_목록을_조회한다({
-        employeeId: employeeIds[0],
-        periodId: evaluationPeriodId,
-        page: 1,
-        limit: 10,
-      });
+      const result =
+        await selfEvaluationScenario.직원의_자기평가_목록을_조회한다({
+          employeeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          page: 1,
+          limit: 10,
+        });
 
       // 검증
       expect(result.evaluations).toBeDefined();
@@ -789,9 +802,9 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
         wbsPerProject: 2,
         includeCurrentUserAsEvaluator: false,
         selfEvaluationProgress: {
-          notStarted: 0.4,    // 40% - 시작 안함
-          inProgress: 0.6,    // 60% - 진행 중
-          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+          notStarted: 0.4, // 40% - 시작 안함
+          inProgress: 0.6, // 60% - 진행 중
+          completed: 0.0, // 0% - 완료됨 (완료되지 않은 상태로)
         },
       });
 
@@ -813,10 +826,11 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
       });
 
       // 전체 제출
-      const result = await selfEvaluationScenario.직원의_전체_WBS자기평가를_제출한다({
-        employeeId: selfEvalSeedResult.employeeIds![0],
-        periodId: selfEvalSeedResult.evaluationPeriodId!,
-      });
+      const result =
+        await selfEvaluationScenario.직원의_전체_WBS자기평가를_제출한다({
+          employeeId: selfEvalSeedResult.employeeIds![0],
+          periodId: selfEvalSeedResult.evaluationPeriodId!,
+        });
 
       // 검증
       expect(result.submittedCount).toBeGreaterThan(0);
@@ -826,10 +840,11 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     });
 
     it('직원의 전체 WBS 자기평가 내용을 초기화한다', async () => {
-      const result = await selfEvaluationScenario.직원의_전체_WBS자기평가_내용을_초기화한다({
-        employeeId: employeeIds[0],
-        periodId: evaluationPeriodId,
-      });
+      const result =
+        await selfEvaluationScenario.직원의_전체_WBS자기평가_내용을_초기화한다({
+          employeeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+        });
 
       // 검증
       expect(result.employeeId).toBe(employeeIds[0]);
@@ -848,17 +863,20 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
         wbsPerProject: 3,
         includeCurrentUserAsEvaluator: false,
         selfEvaluationProgress: {
-          notStarted: 0.4,    // 40% - 시작 안함
-          inProgress: 0.6,    // 60% - 진행 중
-          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+          notStarted: 0.4, // 40% - 시작 안함
+          inProgress: 0.6, // 60% - 진행 중
+          completed: 0.0, // 0% - 완료됨 (완료되지 않은 상태로)
         },
       });
 
-      const result = await selfEvaluationScenario.자기평가_제출_후_대시보드_검증_시나리오를_실행한다({
-        employeeId: selfEvalSeedResult.employeeIds![0],
-        periodId: selfEvalSeedResult.evaluationPeriodId!,
-        wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 3),
-      });
+      const result =
+        await selfEvaluationScenario.자기평가_제출_후_대시보드_검증_시나리오를_실행한다(
+          {
+            employeeId: selfEvalSeedResult.employeeIds![0],
+            periodId: selfEvalSeedResult.evaluationPeriodId!,
+            wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 3),
+          },
+        );
 
       // 검증
       expect(result.저장결과들).toHaveLength(3);
@@ -877,27 +895,34 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
         wbsPerProject: 4,
         includeCurrentUserAsEvaluator: false,
         selfEvaluationProgress: {
-          notStarted: 0.4,    // 40% - 시작 안함
-          inProgress: 0.6,    // 60% - 진행 중
-          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+          notStarted: 0.4, // 40% - 시작 안함
+          inProgress: 0.6, // 60% - 진행 중
+          completed: 0.0, // 0% - 완료됨 (완료되지 않은 상태로)
         },
       });
 
-      const result = await selfEvaluationScenario.자기평가_진행중_상태_대시보드_검증_시나리오를_실행한다({
-        employeeId: selfEvalSeedResult.employeeIds![0],
-        periodId: selfEvalSeedResult.evaluationPeriodId!,
-        wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 4),
-      });
+      const result =
+        await selfEvaluationScenario.자기평가_진행중_상태_대시보드_검증_시나리오를_실행한다(
+          {
+            employeeId: selfEvalSeedResult.employeeIds![0],
+            periodId: selfEvalSeedResult.evaluationPeriodId!,
+            wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 4),
+          },
+        );
 
       // 검증
       expect(result.저장결과들).toHaveLength(2); // 절반만 저장
       expect(result.대시보드데이터).toBeDefined();
       expect(result.대시보드데이터.performanceInput).toBeDefined();
       expect(result.대시보드데이터.selfEvaluation).toBeDefined();
-      
+
       // 진행중 상태 검증
-      expect(['complete', 'in_progress', 'none']).toContain(result.대시보드데이터.performanceInput.status);
-      expect(['complete', 'in_progress', 'none']).toContain(result.대시보드데이터.selfEvaluation.status);
+      expect(['complete', 'in_progress', 'none']).toContain(
+        result.대시보드데이터.performanceInput.status,
+      );
+      expect(['complete', 'in_progress', 'none']).toContain(
+        result.대시보드데이터.selfEvaluation.status,
+      );
     });
 
     it('자기평가 없는 상태에서 대시보드 검증을 수행한다', async () => {
@@ -909,26 +934,33 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
         wbsPerProject: 3,
         includeCurrentUserAsEvaluator: false,
         selfEvaluationProgress: {
-          notStarted: 0.4,    // 40% - 시작 안함
-          inProgress: 0.6,    // 60% - 진행 중
-          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+          notStarted: 0.4, // 40% - 시작 안함
+          inProgress: 0.6, // 60% - 진행 중
+          completed: 0.0, // 0% - 완료됨 (완료되지 않은 상태로)
         },
       });
 
-      const result = await selfEvaluationScenario.자기평가_없는_상태_대시보드_검증_시나리오를_실행한다({
-        employeeId: selfEvalSeedResult.employeeIds![0],
-        periodId: selfEvalSeedResult.evaluationPeriodId!,
-        wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 3),
-      });
+      const result =
+        await selfEvaluationScenario.자기평가_없는_상태_대시보드_검증_시나리오를_실행한다(
+          {
+            employeeId: selfEvalSeedResult.employeeIds![0],
+            periodId: selfEvalSeedResult.evaluationPeriodId!,
+            wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 3),
+          },
+        );
 
       // 검증
       expect(result.대시보드데이터).toBeDefined();
       expect(result.대시보드데이터.performanceInput).toBeDefined();
       expect(result.대시보드데이터.selfEvaluation).toBeDefined();
-      
+
       // 없는 상태 검증
-      expect(['complete', 'in_progress', 'none']).toContain(result.대시보드데이터.performanceInput.status);
-      expect(['complete', 'in_progress', 'none']).toContain(result.대시보드데이터.selfEvaluation.status);
+      expect(['complete', 'in_progress', 'none']).toContain(
+        result.대시보드데이터.performanceInput.status,
+      );
+      expect(['complete', 'in_progress', 'none']).toContain(
+        result.대시보드데이터.selfEvaluation.status,
+      );
       expect(result.대시보드데이터.selfEvaluation.totalScore).toBeNull();
     });
   });
@@ -937,4 +969,156 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
   // - Step 7: 평가 기준 설정 (WITH_SETUP)
   // - Step 8: 평가 진행 (FULL)
   // - Step 9: 최종 평가 조회
+
+  /**
+   * 산출물 관리 시나리오
+   *
+   * WBS 자기평가를 제출한 후 산출물을 등록하는 실제 사용자 워크플로우를 테스트합니다.
+   */
+  describe('산출물 관리 시나리오', () => {
+    let evaluationPeriodId: string;
+    let employeeIds: string[];
+    let wbsItemIds: string[];
+    let projectIds: string[];
+
+    beforeAll(async () => {
+      // 산출물 시나리오를 위한 시드 데이터 생성 (독립적인 환경, 미완료 상태)
+      const seedResult = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'with_period',
+        clearExisting: true,
+        projectCount: 2,
+        wbsPerProject: 3,
+        selfEvaluationProgress: {
+          notStarted: 1.0, // 100% - 시작 안함
+          inProgress: 0.0, // 0% - 진행 중
+          completed: 0.0, // 0% - 완료됨
+        },
+      });
+
+      evaluationPeriodId = seedResult.evaluationPeriodId!;
+      employeeIds = seedResult.employeeIds!;
+      wbsItemIds = seedResult.wbsItemIds!;
+      projectIds = seedResult.projectIds!;
+    });
+
+    it('WBS 자기평가 이후 산출물을 등록한다', async () => {
+      const result =
+        await deliverableScenario.자기평가_후_산출물_등록_전체_시나리오를_실행한다(
+          {
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[0],
+            periodId: evaluationPeriodId,
+            selfEvaluationScenario,
+          },
+        );
+
+      // 검증
+      expect(result.자기평가제출.isCompleted).toBe(true);
+      expect(result.산출물결과.자기평가상태.isCompleted).toBe(true);
+      expect(result.산출물결과.산출물생성결과.id).toBeDefined();
+      expect(result.산출물결과.산출물생성결과.name).toBe('API 설계 문서');
+      expect(result.산출물결과.산출물생성결과.type).toBe('document');
+      expect(
+        result.산출물결과.산출물조회결과.deliverables.length,
+      ).toBeGreaterThan(0);
+      expect(result.산출물결과.산출물수정결과.description).toContain('v2.0');
+      expect(result.산출물결과.최종산출물.filePath).toContain('v2.0');
+    });
+
+    it('여러 WBS에 산출물을 벌크 등록한다', async () => {
+      const result =
+        await deliverableScenario.여러_WBS_자기평가_후_벌크_산출물_등록_시나리오를_실행한다(
+          {
+            employeeId: employeeIds[1],
+            wbsItemIds: wbsItemIds.slice(3, 6),
+            periodId: evaluationPeriodId,
+            selfEvaluationScenario,
+          },
+        );
+
+      // 검증
+      expect(result.자기평가저장결과들.length).toBe(3);
+      expect(result.벌크산출물결과.벌크생성결과.successCount).toBe(3);
+      expect(result.벌크산출물결과.벌크생성결과.failedCount).toBe(0);
+      expect(result.벌크산출물결과.벌크생성결과.createdIds.length).toBe(3);
+      expect(result.벌크산출물결과.직원별조회결과.total).toBeGreaterThanOrEqual(
+        3,
+      );
+      expect(
+        result.벌크산출물결과.직원별조회결과.deliverables.length,
+      ).toBeGreaterThanOrEqual(3);
+    });
+
+    it('산출물을 비활성화하고 삭제한다', async () => {
+      const result =
+        await deliverableScenario.자기평가_후_산출물_비활성화_시나리오를_실행한다(
+          {
+            employeeId: employeeIds[2],
+            wbsItemId: wbsItemIds[2],
+            periodId: evaluationPeriodId,
+            selfEvaluationScenario,
+          },
+        );
+
+      // 검증
+      expect(result.자기평가제출.isCompleted).toBe(true);
+      expect(result.산출물결과.생성결과.isActive).toBe(true);
+      expect(result.산출물결과.비활성화결과.isActive).toBe(false);
+      expect(
+        result.산출물결과.비활성화조회결과.deliverables.length,
+      ).toBeGreaterThan(0);
+
+      // activeOnly=false일 때는 비활성 산출물이 포함됨
+      const 비활성산출물 = result.산출물결과.비활성화조회결과.deliverables.find(
+        (d: any) => d.id === result.산출물결과.생성결과.id,
+      );
+      expect(비활성산출물).toBeDefined();
+      expect(비활성산출물.isActive).toBe(false);
+
+      // activeOnly=true일 때는 비활성 산출물이 제외됨
+      const 활성산출물 = result.산출물결과.활성조회결과.deliverables.find(
+        (d: any) => d.id === result.산출물결과.생성결과.id,
+      );
+      expect(활성산출물).toBeUndefined();
+    });
+
+    it('산출물 생성 시 필수 필드 누락 시 에러가 발생한다', async () => {
+      await deliverableScenario.산출물_생성_필수_필드_누락_에러_시나리오를_실행한다(
+        {
+          employeeId: employeeIds[0],
+          wbsItemId: wbsItemIds[0],
+        },
+      );
+    });
+
+    it('존재하지 않는 산출물 조회 시 에러가 발생한다', async () => {
+      await deliverableScenario.존재하지않는_산출물_조회_에러_시나리오를_실행한다();
+    });
+
+    it('잘못된 UUID 형식의 산출물 ID로 조회 시 에러가 발생한다', async () => {
+      await deliverableScenario.잘못된_UUID_형식_에러_시나리오를_실행한다();
+    });
+
+    it('산출물 등록 후 대시보드에서 deliverables가 반환된다', async () => {
+      const result =
+        await deliverableScenario.산출물_등록_후_대시보드_deliverables_검증_시나리오를_실행한다(
+          {
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[1],
+            projectId: projectIds[0],
+            periodId: evaluationPeriodId,
+            selfEvaluationScenario,
+          },
+        );
+
+      // 시나리오 내부에서 모든 검증을 수행하므로, 여기서는 최소한의 검증만 수행
+      // WBS 할당이 이미 되어 있으면 null일 수 있음
+      if (result.WBS할당결과) {
+        expect(result.WBS할당결과.id).toBeDefined();
+      }
+      expect(result.자기평가제출.isCompleted).toBe(true);
+      expect(result.산출물생성결과들.length).toBe(3);
+      expect(result.대시보드응답.projects).toBeDefined();
+    });
+  });
 });
