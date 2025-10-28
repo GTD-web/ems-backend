@@ -261,10 +261,33 @@ describe('하향평가 관리 시나리오', () => {
   });
 
   it('1차/2차 하향평가 작성 후 대시보드에서 primary/secondary가 반환된다', async () => {
+    // 새로운 평가기간 생성 (중복 방지)
+    console.log('🆕 새로운 평가기간 생성 중...');
+    const newPeriodResponse = await testSuite
+      .request()
+      .post('/admin/evaluation-periods')
+      .send({
+        name: '대시보드 검증용 평가기간',
+        startDate: '2025-01-01',
+        endDate: '2025-12-31',
+        downwardEvaluationDeadline: '2025-12-15',
+        peerEvaluationDeadline: '2025-12-20',
+        isActive: true,
+        autoGenerateEvaluationLines: true,
+      });
+    
+    if (newPeriodResponse.status !== 201) {
+      console.log('❌ 평가기간 생성 실패:', newPeriodResponse.status, newPeriodResponse.body);
+      throw new Error(`평가기간 생성 실패: ${newPeriodResponse.status} - ${JSON.stringify(newPeriodResponse.body)}`);
+    }
+    
+    const newEvaluationPeriodId = newPeriodResponse.body.id;
+    console.log(`✅ 새로운 평가기간 생성 완료: ${newEvaluationPeriodId}`);
+
     const result =
       await downwardEvaluationScenario.대시보드_검증_포함_하향평가_시나리오를_실행한다(
         {
-          evaluationPeriodId,
+          evaluationPeriodId: newEvaluationPeriodId,
           employeeIds,
           wbsItemIds,
           projectIds,
@@ -294,5 +317,151 @@ describe('하향평가 관리 시나리오', () => {
         result.하향평가결과.대시보드검증결과.대시보드검증결과.secondary하향평가,
       ).toBeDefined();
     }
+  });
+
+  it('하향평가 상태별 검증 - none, in-process, complete', async () => {
+    // 새로운 평가기간 생성
+    console.log('🆕 상태별 검증용 평가기간 생성 중...');
+    const newPeriodResponse = await testSuite
+      .request()
+      .post('/admin/evaluation-periods')
+      .send({
+        name: '상태별 검증용 평가기간',
+        startDate: '2026-01-01',
+        endDate: '2026-12-31',
+        downwardEvaluationDeadline: '2026-12-15',
+        peerEvaluationDeadline: '2026-12-20',
+        isActive: true,
+        autoGenerateEvaluationLines: true,
+      });
+    
+    if (newPeriodResponse.status !== 201) {
+      console.log('❌ 평가기간 생성 실패:', newPeriodResponse.status, newPeriodResponse.body);
+      throw new Error(`평가기간 생성 실패: ${newPeriodResponse.status} - ${JSON.stringify(newPeriodResponse.body)}`);
+    }
+    
+    const newEvaluationPeriodId = newPeriodResponse.body.id;
+    console.log(`✅ 새로운 평가기간 생성 완료: ${newEvaluationPeriodId}`);
+
+    // 테스트용 직원 선택 (아직 사용하지 않은 직원, managerId가 있는 직원만)
+    // 먼저 직원 정보를 조회해서 managerId가 있는 직원을 찾습니다
+    const employeesResponse = await testSuite
+      .request()
+      .get('/admin/employees')
+      .expect(200);
+    
+    const employeesWithManager = employeesResponse.body.filter((emp: any) => 
+      emp.managerId !== null && 
+      !usedEmployeeIds.includes(emp.id) && 
+      emp.id !== evaluatorId
+    );
+    
+    if (employeesWithManager.length === 0) {
+      throw new Error('테스트용 직원(managerId가 있는 직원)을 찾을 수 없습니다.');
+    }
+    
+    const testEmployeeId = employeesWithManager[0].id;
+    console.log(`🎯 테스트 직원: ${testEmployeeId} (${employeesWithManager[0].name})`);
+
+    // 1단계: none 상태 검증 (하향평가 생성 전)
+    console.log('\n📋 1단계: none 상태 검증 (하향평가 생성 전)');
+    const noneStatusResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
+      evaluationPeriodId: newEvaluationPeriodId,
+      employeeId: testEmployeeId,
+      expectedPrimaryStatus: 'none',
+      expectedSecondaryStatus: 'none',
+    });
+
+    expect(noneStatusResult.primaryStatus).toBe('none');
+    expect(noneStatusResult.secondaryStatus).toBe('none');
+    console.log('✅ none 상태 검증 완료');
+
+    // 2단계: in-process 상태 검증 (저장 후 제출 전)
+    console.log('\n📋 2단계: in-process 상태 검증 (저장 후 제출 전)');
+    
+    // WBS 할당 및 자기평가 완료
+    await downwardEvaluationScenario.WBS할당_및_평가라인_매핑_확인({
+      employeeId: testEmployeeId,
+      wbsItemId: wbsItemIds[0],
+      projectId: projectIds[0],
+      periodId: newEvaluationPeriodId,
+    });
+
+    await downwardEvaluationScenario.하향평가를_위한_자기평가_완료({
+      employeeId: testEmployeeId,
+      wbsItemId: wbsItemIds[0],
+      periodId: newEvaluationPeriodId,
+      selfEvaluationContent: '자기평가 내용',
+      selfEvaluationScore: 90,
+      performanceResult: '성과 결과',
+    });
+
+    // 1차 하향평가 저장 (제출하지 않음)
+    const primaryEvaluationResult = await downwardEvaluationScenario.일차하향평가를_저장한다({
+      evaluateeId: testEmployeeId,
+      evaluatorId: evaluatorId,
+      wbsId: wbsItemIds[0],
+      periodId: newEvaluationPeriodId,
+      downwardEvaluationContent: '1차 하향평가 내용',
+      downwardEvaluationScore: 85,
+    });
+
+    // 2차 하향평가 저장 (제출하지 않음)
+    const secondaryEvaluationResult = await downwardEvaluationScenario.이차하향평가를_저장한다({
+      evaluateeId: testEmployeeId,
+      evaluatorId: testEmployeeId, // 자기 자신이 2차 평가자
+      wbsId: wbsItemIds[0],
+      periodId: newEvaluationPeriodId,
+      downwardEvaluationContent: '2차 하향평가 내용',
+      downwardEvaluationScore: 80,
+    });
+
+    // in-process 상태 검증
+    const inProcessStatusResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
+      evaluationPeriodId: newEvaluationPeriodId,
+      employeeId: testEmployeeId,
+      expectedPrimaryStatus: 'in_progress',
+      expectedSecondaryStatus: 'in_progress',
+    });
+
+    expect(inProcessStatusResult.primaryStatus).toBe('in_progress');
+    expect(inProcessStatusResult.secondaryStatus).toBe('in_progress');
+    console.log('✅ in-process 상태 검증 완료');
+
+    // 3단계: complete 상태 검증 (제출 후)
+    console.log('\n📋 3단계: complete 상태 검증 (제출 후)');
+    
+    // 1차 하향평가 제출
+    await downwardEvaluationScenario.일차하향평가를_제출한다({
+      evaluateeId: testEmployeeId,
+      periodId: newEvaluationPeriodId,
+      wbsId: wbsItemIds[0],
+      evaluatorId: evaluatorId,
+    });
+    
+    // 2차 하향평가 제출
+    await downwardEvaluationScenario.이차하향평가를_제출한다({
+      evaluateeId: testEmployeeId,
+      periodId: newEvaluationPeriodId,
+      wbsId: wbsItemIds[0],
+      evaluatorId: testEmployeeId, // 자기 자신이 2차 평가자
+    });
+
+    // complete 상태 검증
+    const completeStatusResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
+      evaluationPeriodId: newEvaluationPeriodId,
+      employeeId: testEmployeeId,
+      expectedPrimaryStatus: 'complete',
+      expectedSecondaryStatus: 'complete',
+    });
+
+    expect(completeStatusResult.primaryStatus).toBe('complete');
+    expect(completeStatusResult.secondaryStatus).toBe('complete');
+    console.log('✅ complete 상태 검증 완료');
+
+    // 평가기간 정리
+    await evaluationPeriodScenario.평가기간을_삭제한다(newEvaluationPeriodId);
+    
+    console.log('✅ 하향평가 상태별 검증 완료 - none → in-process → complete');
   });
 });

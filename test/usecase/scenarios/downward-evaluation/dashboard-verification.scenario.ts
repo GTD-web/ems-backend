@@ -79,6 +79,18 @@ export class DownwardEvaluationDashboardScenario {
       // 검증
       expect(primary하향평가).toBeDefined();
       expect(primary하향평가.assignedWbsCount).toBeGreaterThan(0);
+      
+      // 상태 검증 - 하향평가가 완료된 경우 상태가 'complete'이어야 함
+      if (primary하향평가.completedEvaluationCount >= primary하향평가.assignedWbsCount) {
+        expect(primary하향평가.status).toBe('complete');
+        console.log('  ✓ 1차 하향평가 상태가 올바르게 완료됨');
+      } else if (primary하향평가.completedEvaluationCount > 0) {
+        expect(primary하향평가.status).toBe('in_progress');
+        console.log('  ✓ 1차 하향평가 상태가 올바르게 진행중');
+      } else {
+        expect(primary하향평가.status).toBe('none');
+        console.log('  ✓ 1차 하향평가 상태가 올바르게 없음');
+      }
     }
 
     // 2차 하향평가 확인
@@ -101,6 +113,23 @@ export class DownwardEvaluationDashboardScenario {
         expect(
           secondary하향평가.evaluators[0].assignedWbsCount,
         ).toBeGreaterThan(0);
+        
+        // 2차 하향평가 상태 검증
+        const firstEvaluator = secondary하향평가.evaluators[0];
+        console.log(`    - 첫 번째 평가자 상태: ${firstEvaluator.status}`);
+        console.log(`    - 첫 번째 평가자 할당 WBS 수: ${firstEvaluator.assignedWbsCount}`);
+        console.log(`    - 첫 번째 평가자 완료된 평가 수: ${firstEvaluator.completedEvaluationCount}`);
+        
+        if (firstEvaluator.completedEvaluationCount >= firstEvaluator.assignedWbsCount) {
+          expect(firstEvaluator.status).toBe('complete');
+          console.log('  ✓ 2차 하향평가 첫 번째 평가자 상태가 올바르게 완료됨');
+        } else if (firstEvaluator.completedEvaluationCount > 0) {
+          expect(firstEvaluator.status).toBe('in_progress');
+          console.log('  ✓ 2차 하향평가 첫 번째 평가자 상태가 올바르게 진행중');
+        } else {
+          expect(firstEvaluator.status).toBe('none');
+          console.log('  ✓ 2차 하향평가 첫 번째 평가자 상태가 올바르게 없음');
+        }
       }
     }
 
