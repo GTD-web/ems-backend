@@ -121,11 +121,21 @@ export interface EmployeeInfo {
 }
 
 /**
+ * 수정가능 상태 정보
+ */
+export interface EditableStatus {
+  isSelfEvaluationEditable: boolean;
+  isPrimaryEvaluationEditable: boolean;
+  isSecondaryEvaluationEditable: boolean;
+}
+
+/**
  * 사용자 할당 정보 조회 결과
  */
 export interface EmployeeAssignedDataResult {
   evaluationPeriod: EvaluationPeriodInfo;
   employee: EmployeeInfo;
+  editableStatus: EditableStatus;
   projects: AssignedProjectWithWbs[];
   summary: {
     totalProjects: number;

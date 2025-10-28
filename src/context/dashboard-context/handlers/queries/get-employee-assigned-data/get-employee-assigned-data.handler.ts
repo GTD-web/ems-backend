@@ -140,6 +140,7 @@ export class GetEmployeeAssignedDataHandler
     const projects = await getProjectsWithWbs(
       evaluationPeriodId,
       employeeId,
+      mapping,
       this.projectAssignmentRepository,
       this.wbsAssignmentRepository,
       this.wbsItemRepository,
@@ -226,6 +227,11 @@ export class GetEmployeeAssignedDataHandler
         departmentId: employee.departmentId || '',
         departmentName,
         status: employee.status,
+      },
+      editableStatus: {
+        isSelfEvaluationEditable: mapping.isSelfEvaluationEditable,
+        isPrimaryEvaluationEditable: mapping.isPrimaryEvaluationEditable,
+        isSecondaryEvaluationEditable: mapping.isSecondaryEvaluationEditable,
       },
       projects,
       summary,

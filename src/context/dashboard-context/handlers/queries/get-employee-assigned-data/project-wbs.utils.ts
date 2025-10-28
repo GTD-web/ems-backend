@@ -9,6 +9,7 @@ import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import {
   AssignedProjectWithWbs,
   AssignedWbsInfo,
@@ -30,6 +31,7 @@ const logger = new Logger('ProjectWbsUtils');
 export async function getProjectsWithWbs(
   evaluationPeriodId: string,
   employeeId: string,
+  mapping: EvaluationPeriodEmployeeMapping,
   projectAssignmentRepository: Repository<EvaluationProjectAssignment>,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   wbsItemRepository: Repository<WbsItem>,
@@ -90,6 +92,7 @@ export async function getProjectsWithWbs(
       evaluationPeriodId,
       employeeId,
       projectId,
+      mapping,
       wbsAssignmentRepository,
       wbsItemRepository,
       criteriaRepository,
@@ -127,6 +130,7 @@ export async function getWbsListByProject(
   evaluationPeriodId: string,
   employeeId: string,
   projectId: string,
+  mapping: EvaluationPeriodEmployeeMapping,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   wbsItemRepository: Repository<WbsItem>,
   criteriaRepository: Repository<WbsEvaluationCriteria>,
@@ -178,6 +182,7 @@ export async function getWbsListByProject(
       evaluationPeriodId,
       employeeId,
       wbsItemId,
+      mapping,
       selfEvaluationRepository,
     );
 
@@ -195,6 +200,7 @@ export async function getWbsListByProject(
         evaluationPeriodId,
         employeeId,
         wbsItemId,
+        mapping,
         downwardEvaluationRepository,
       );
     } else {
@@ -263,6 +269,7 @@ export async function getWbsSelfEvaluationByWbsId(
   evaluationPeriodId: string,
   employeeId: string,
   wbsItemId: string,
+  mapping: EvaluationPeriodEmployeeMapping,
   selfEvaluationRepository: Repository<WbsSelfEvaluation>,
 ): Promise<{
   performance: WbsPerformance | null;
@@ -303,7 +310,7 @@ export async function getWbsSelfEvaluationByWbsId(
     evaluationContent: selfEvaluation.evaluation_selfEvaluationContent,
     score: selfEvaluation.evaluation_selfEvaluationScore,
     isCompleted: selfEvaluation.evaluation_isCompleted,
-    isEditable: true, // WbsSelfEvaluation 엔티티에 isEditable 필드가 없으므로 기본값
+    isEditable: mapping.isSelfEvaluationEditable, // 실제 mapping 상태 사용
     submittedAt: selfEvaluation.evaluation_completedAt,
   };
 
@@ -323,6 +330,7 @@ export async function getWbsDownwardEvaluationsByWbsId(
   evaluationPeriodId: string,
   employeeId: string,
   wbsId: string, // wbsId 사용 (하향평가는 WBS 단위)
+  mapping: EvaluationPeriodEmployeeMapping,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
 ): Promise<{
   primary: WbsDownwardEvaluationInfo | null;
@@ -389,7 +397,7 @@ export async function getWbsDownwardEvaluationsByWbsId(
         evaluationContent: undefined, // 여러 평가의 평균이므로 내용 없음
         score: Math.round(averageScore * 100) / 100, // 소수점 2자리
         isCompleted: true,
-        isEditable: false,
+        isEditable: mapping.isPrimaryEvaluationEditable, // 실제 mapping 상태 사용
         submittedAt: completedPrimary[0].downward_completedat,
       };
     }
@@ -420,7 +428,7 @@ export async function getWbsDownwardEvaluationsByWbsId(
         evaluationContent: undefined, // 여러 평가의 평균이므로 내용 없음
         score: Math.round(averageScore * 100) / 100, // 소수점 2자리
         isCompleted: true,
-        isEditable: false,
+        isEditable: mapping.isSecondaryEvaluationEditable, // 실제 mapping 상태 사용
         submittedAt: completedSecondary[0].downward_completedat,
       };
     }
