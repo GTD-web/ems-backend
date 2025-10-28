@@ -66,10 +66,11 @@ export class Phase7EvaluationGenerator {
     };
 
     this.logger.log('Phase 7: 평가 실행 생성');
-
+    this.logger.log(`자기평가 진행 상태 설정: ${JSON.stringify(dist.selfEvaluationProgress)}`);
     const systemAdminId = phase1Result.generatedIds.systemAdminId as string;
     const employeeIds = phase1Result.generatedIds.employeeIds as string[];
     const periodIds = phase2Result.generatedIds.periodIds as string[];
+
 
     // 평가기간별 maxSelfEvaluationRate 조회 (점수 범위 결정을 위해)
     const periodMaxRates = await this.평가기간_최대달성률을_조회한다(periodIds);

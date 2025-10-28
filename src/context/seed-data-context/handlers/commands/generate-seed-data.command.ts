@@ -146,7 +146,7 @@ export class GenerateSeedDataHandler
   private shouldRunPhase(phase: number, scenario: SeedScenario): boolean {
     const phaseMap = {
       [SeedScenario.MINIMAL]: 1,
-      [SeedScenario.WITH_PERIOD]: 2,
+      [SeedScenario.WITH_PERIOD]: 7, // Phase 7까지 실행하여 자기평가 생성
       [SeedScenario.WITH_ASSIGNMENTS]: 5,
       [SeedScenario.WITH_SETUP]: 6,
       [SeedScenario.FULL]: 8,

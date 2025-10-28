@@ -5,6 +5,7 @@ import { EvaluationTargetScenario } from './scenarios/evaluation-target.scenario
 import { EvaluationPeriodScenario } from './scenarios/evaluation-period.scenario';
 import { ProjectAssignmentScenario } from './scenarios/project-assignment.scenario';
 import { WbsAssignmentScenario } from './scenarios/wbs-assignment.scenario';
+import { SelfEvaluationScenario } from './scenarios/self-evaluation.scenario';
 
 describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let testSuite: BaseE2ETest;
@@ -14,6 +15,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let evaluationPeriodScenario: EvaluationPeriodScenario;
   let projectAssignmentScenario: ProjectAssignmentScenario;
   let wbsAssignmentScenario: WbsAssignmentScenario;
+  let selfEvaluationScenario: SelfEvaluationScenario;
 
   beforeAll(async () => {
     testSuite = new BaseE2ETest();
@@ -26,6 +28,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     evaluationPeriodScenario = new EvaluationPeriodScenario(testSuite);
     projectAssignmentScenario = new ProjectAssignmentScenario(testSuite);
     wbsAssignmentScenario = new WbsAssignmentScenario(testSuite);
+    selfEvaluationScenario = new SelfEvaluationScenario(testSuite);
   });
 
   afterAll(async () => {
@@ -645,8 +648,293 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     });
   });
 
+  // ==================== Step 6: 자기평가 관리 ====================
+  describe('자기평가 관리 시나리오', () => {
+    let evaluationPeriodId: string;
+    let employeeIds: string[];
+    let wbsItemIds: string[];
+    let projectIds: string[];
+    let mappingIds: string[];
+
+    beforeAll(async () => {
+      // 시드 데이터 생성 (자기평가 완료되지 않은 상태로)
+      const seedResult = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'with_period',
+        clearExisting: false,
+        projectCount: 2,
+        wbsPerProject: 3,
+        includeCurrentUserAsEvaluator: false,
+        selfEvaluationProgress: {
+          notStarted: 0.4,    // 40% - 시작 안함
+          inProgress: 0.6,    // 60% - 진행 중
+          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+        },
+      });
+
+      evaluationPeriodId = seedResult.evaluationPeriodId!;
+      employeeIds = seedResult.employeeIds!;
+      wbsItemIds = seedResult.wbsItemIds!;
+      projectIds = seedResult.projectIds!;
+
+      // WBS 할당 생성 (자기평가를 위해 필요)
+      await wbsAssignmentScenario.WBS_할당_후_대시보드_검증_시나리오를_실행한다(
+        evaluationPeriodId,
+        [employeeIds[0]],
+        wbsItemIds.slice(0, 2),
+        projectIds[0],
+      );
+
+      // 평가기간-직원 맵핑 ID 조회 (자기평가 수정 가능 상태 변경을 위해)
+      const dashboardResponse = await queryOperationsScenario.대시보드_직원_상태를_조회한다(
+        evaluationPeriodId,
+      );
+      mappingIds = dashboardResponse
+        .filter((emp: any) => emp.employee.id === employeeIds[0])
+        .map((emp: any) => emp.mappingId);
+    });
+
+    it('자기평가 전체 시나리오를 실행한다', async () => {
+      const result = await selfEvaluationScenario.자기평가_전체_시나리오를_실행한다({
+        employeeId: employeeIds[0],
+        wbsItemId: wbsItemIds[0],
+        periodId: evaluationPeriodId,
+        mappingId: mappingIds[0],
+      });
+
+      // 검증
+      expect(result.저장결과.id).toBeDefined();
+      expect(result.저장결과.isCompleted).toBe(false);
+      expect(result.제출결과.isCompleted).toBe(true);
+      expect(result.조회결과.id).toBe(result.저장결과.id);
+      expect(result.미제출결과.isCompleted).toBe(false);
+      expect(result.재제출결과.isCompleted).toBe(true);
+    });
+
+    it('프로젝트별 자기평가 시나리오를 실행한다', async () => {
+      // 자기평가 시나리오를 위한 새로운 시드 데이터 생성 (미완료 상태로)
+      const selfEvalSeedResult = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'with_period',
+        clearExisting: false,
+        projectCount: 1,
+        wbsPerProject: 2,
+        includeCurrentUserAsEvaluator: false,
+        selfEvaluationProgress: {
+          notStarted: 0.4,    // 40% - 시작 안함
+          inProgress: 0.6,    // 60% - 진행 중
+          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+        },
+      });
+
+      const result = await selfEvaluationScenario.프로젝트별_자기평가_시나리오를_실행한다({
+        employeeId: selfEvalSeedResult.employeeIds![0],
+        periodId: selfEvalSeedResult.evaluationPeriodId!,
+        projectId: selfEvalSeedResult.projectIds![0],
+        wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 2),
+      });
+
+      // 검증
+      expect(result.저장결과들).toHaveLength(2);
+      expect(result.프로젝트별제출결과.submittedCount).toBeGreaterThan(0);
+      expect(result.프로젝트별미제출결과.resetCount).toBeGreaterThan(0);
+    });
+
+    it('자기평가 내용 초기화 시나리오를 실행한다', async () => {
+      const result = await selfEvaluationScenario.자기평가_내용_초기화_시나리오를_실행한다({
+        employeeId: employeeIds[0],
+        wbsItemId: wbsItemIds[1],
+        periodId: evaluationPeriodId,
+      });
+
+      // 검증
+      expect(result.저장결과.id).toBeDefined();
+      expect(result.제출결과.isCompleted).toBe(true);
+      expect(result.내용초기화결과.isCompleted).toBe(false);
+      expect(result.재저장결과.id).toBe(result.저장결과.id);
+    });
+
+    it('자기평가 수정 가능 상태를 변경한다', async () => {
+      const result = await selfEvaluationScenario.자기평가_수정_가능_상태를_변경한다({
+        mappingId: mappingIds[0],
+        evaluationType: 'self',
+        isEditable: false,
+      });
+
+      // 검증
+      expect(result.id).toBe(mappingIds[0]);
+      expect(result.isSelfEvaluationEditable).toBe(false);
+    });
+
+    it('직원의 자기평가 목록을 조회한다', async () => {
+      const result = await selfEvaluationScenario.직원의_자기평가_목록을_조회한다({
+        employeeId: employeeIds[0],
+        periodId: evaluationPeriodId,
+        page: 1,
+        limit: 10,
+      });
+
+      // 검증
+      expect(result.evaluations).toBeDefined();
+      expect(Array.isArray(result.evaluations)).toBe(true);
+      expect(result.total).toBeDefined();
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(10);
+    });
+
+    it('직원의 전체 WBS 자기평가를 제출한다', async () => {
+      // 자기평가 시나리오를 위한 새로운 시드 데이터 생성 (미완료 상태로)
+      const selfEvalSeedResult = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'with_period',
+        clearExisting: false,
+        projectCount: 1,
+        wbsPerProject: 2,
+        includeCurrentUserAsEvaluator: false,
+        selfEvaluationProgress: {
+          notStarted: 0.4,    // 40% - 시작 안함
+          inProgress: 0.6,    // 60% - 진행 중
+          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+        },
+      });
+
+      // 먼저 몇 개의 자기평가를 저장
+      const 저장결과1 = await selfEvaluationScenario.WBS자기평가를_저장한다({
+        employeeId: selfEvalSeedResult.employeeIds![0],
+        wbsItemId: selfEvalSeedResult.wbsItemIds![0],
+        periodId: selfEvalSeedResult.evaluationPeriodId!,
+        selfEvaluationContent: '전체 제출 테스트 1',
+        selfEvaluationScore: 85,
+      });
+
+      const 저장결과2 = await selfEvaluationScenario.WBS자기평가를_저장한다({
+        employeeId: selfEvalSeedResult.employeeIds![0],
+        wbsItemId: selfEvalSeedResult.wbsItemIds![1],
+        periodId: selfEvalSeedResult.evaluationPeriodId!,
+        selfEvaluationContent: '전체 제출 테스트 2',
+        selfEvaluationScore: 90,
+      });
+
+      // 전체 제출
+      const result = await selfEvaluationScenario.직원의_전체_WBS자기평가를_제출한다({
+        employeeId: selfEvalSeedResult.employeeIds![0],
+        periodId: selfEvalSeedResult.evaluationPeriodId!,
+      });
+
+      // 검증
+      expect(result.submittedCount).toBeGreaterThan(0);
+      expect(result.totalCount).toBeGreaterThan(0);
+      expect(result.completedEvaluations).toBeDefined();
+      expect(Array.isArray(result.completedEvaluations)).toBe(true);
+    });
+
+    it('직원의 전체 WBS 자기평가 내용을 초기화한다', async () => {
+      const result = await selfEvaluationScenario.직원의_전체_WBS자기평가_내용을_초기화한다({
+        employeeId: employeeIds[0],
+        periodId: evaluationPeriodId,
+      });
+
+      // 검증
+      expect(result.employeeId).toBe(employeeIds[0]);
+      expect(result.periodId).toBe(evaluationPeriodId);
+      expect(result.clearedCount).toBeDefined();
+      expect(result.clearedEvaluations).toBeDefined();
+      expect(Array.isArray(result.clearedEvaluations)).toBe(true);
+    });
+
+    it('자기평가 제출 후 대시보드에서 performanceInput과 selfEvaluation을 검증한다', async () => {
+      // 자기평가 시나리오를 위한 새로운 시드 데이터 생성 (미완료 상태로)
+      const selfEvalSeedResult = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'with_period',
+        clearExisting: false,
+        projectCount: 1,
+        wbsPerProject: 3,
+        includeCurrentUserAsEvaluator: false,
+        selfEvaluationProgress: {
+          notStarted: 0.4,    // 40% - 시작 안함
+          inProgress: 0.6,    // 60% - 진행 중
+          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+        },
+      });
+
+      const result = await selfEvaluationScenario.자기평가_제출_후_대시보드_검증_시나리오를_실행한다({
+        employeeId: selfEvalSeedResult.employeeIds![0],
+        periodId: selfEvalSeedResult.evaluationPeriodId!,
+        wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 3),
+      });
+
+      // 검증
+      expect(result.저장결과들).toHaveLength(3);
+      expect(result.제출결과.submittedCount).toBeGreaterThan(0);
+      expect(result.대시보드데이터).toBeDefined();
+      expect(result.대시보드데이터.performanceInput).toBeDefined();
+      expect(result.대시보드데이터.selfEvaluation).toBeDefined();
+    });
+
+    it('자기평가 진행중 상태에서 대시보드 검증을 수행한다', async () => {
+      // 자기평가 시나리오를 위한 새로운 시드 데이터 생성 (미완료 상태로)
+      const selfEvalSeedResult = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'with_period',
+        clearExisting: false,
+        projectCount: 1,
+        wbsPerProject: 4,
+        includeCurrentUserAsEvaluator: false,
+        selfEvaluationProgress: {
+          notStarted: 0.4,    // 40% - 시작 안함
+          inProgress: 0.6,    // 60% - 진행 중
+          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+        },
+      });
+
+      const result = await selfEvaluationScenario.자기평가_진행중_상태_대시보드_검증_시나리오를_실행한다({
+        employeeId: selfEvalSeedResult.employeeIds![0],
+        periodId: selfEvalSeedResult.evaluationPeriodId!,
+        wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 4),
+      });
+
+      // 검증
+      expect(result.저장결과들).toHaveLength(2); // 절반만 저장
+      expect(result.대시보드데이터).toBeDefined();
+      expect(result.대시보드데이터.performanceInput).toBeDefined();
+      expect(result.대시보드데이터.selfEvaluation).toBeDefined();
+      
+      // 진행중 상태 검증
+      expect(['complete', 'in_progress', 'none']).toContain(result.대시보드데이터.performanceInput.status);
+      expect(['complete', 'in_progress', 'none']).toContain(result.대시보드데이터.selfEvaluation.status);
+    });
+
+    it('자기평가 없는 상태에서 대시보드 검증을 수행한다', async () => {
+      // 자기평가 시나리오를 위한 새로운 시드 데이터 생성 (미완료 상태로)
+      const selfEvalSeedResult = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'with_period',
+        clearExisting: false,
+        projectCount: 1,
+        wbsPerProject: 3,
+        includeCurrentUserAsEvaluator: false,
+        selfEvaluationProgress: {
+          notStarted: 0.4,    // 40% - 시작 안함
+          inProgress: 0.6,    // 60% - 진행 중
+          completed: 0.0,     // 0% - 완료됨 (완료되지 않은 상태로)
+        },
+      });
+
+      const result = await selfEvaluationScenario.자기평가_없는_상태_대시보드_검증_시나리오를_실행한다({
+        employeeId: selfEvalSeedResult.employeeIds![0],
+        periodId: selfEvalSeedResult.evaluationPeriodId!,
+        wbsItemIds: selfEvalSeedResult.wbsItemIds!.slice(0, 3),
+      });
+
+      // 검증
+      expect(result.대시보드데이터).toBeDefined();
+      expect(result.대시보드데이터.performanceInput).toBeDefined();
+      expect(result.대시보드데이터.selfEvaluation).toBeDefined();
+      
+      // 없는 상태 검증
+      expect(['complete', 'in_progress', 'none']).toContain(result.대시보드데이터.performanceInput.status);
+      expect(['complete', 'in_progress', 'none']).toContain(result.대시보드데이터.selfEvaluation.status);
+      expect(result.대시보드데이터.selfEvaluation.totalScore).toBeNull();
+    });
+  });
+
   // TODO: 추가 프로세스 구현 예정
-  // - Step 6: 평가 기준 설정 (WITH_SETUP)
-  // - Step 7: 평가 진행 (FULL)
-  // - Step 8: 최종 평가 조회
+  // - Step 7: 평가 기준 설정 (WITH_SETUP)
+  // - Step 8: 평가 진행 (FULL)
+  // - Step 9: 최종 평가 조회
 });

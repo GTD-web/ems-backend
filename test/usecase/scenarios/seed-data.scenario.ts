@@ -17,6 +17,11 @@ export class SeedDataScenario {
     includeCurrentUserAsEvaluator?: boolean;
     useRealDepartments?: boolean;
     useRealEmployees?: boolean;
+    selfEvaluationProgress?: {
+      notStarted: number;
+      inProgress: number;
+      completed: number;
+    };
   }): Promise<{
     seedResponse: any;
     evaluationPeriodId?: string;
@@ -24,7 +29,7 @@ export class SeedDataScenario {
     projectIds?: string[];
     wbsItemIds?: string[];
   }> {
-    const requestBody = {
+    const requestBody: any = {
       scenario: config.scenario,
       clearExisting: config.clearExisting,
       dataScale: {
@@ -37,6 +42,13 @@ export class SeedDataScenario {
       useRealDepartments: config.useRealDepartments ?? false,
       useRealEmployees: config.useRealEmployees ?? false,
     };
+
+    // 자기평가 완료률 옵션이 제공된 경우 추가
+    if (config.selfEvaluationProgress) {
+      requestBody.stateDistribution = {
+        selfEvaluationProgress: config.selfEvaluationProgress,
+      };
+    }
 
     const response = await this.testSuite
       .request()
