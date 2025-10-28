@@ -407,6 +407,15 @@ export class WbsAssignmentBasicScenario {
       const criteriaCount = wbs.evaluationCriteria?.length || 0;
       const hasCriteria = criteriaCount > 0;
       
+      // 평가기준 상세 내용 검증
+      const criteriaDetails = wbs.evaluationCriteria?.map((criteria: any) => ({
+        id: criteria.id,
+        criteria: criteria.criteria,
+        importance: criteria.importance,
+        createdAt: criteria.createdAt,
+        updatedAt: criteria.updatedAt,
+      })) || [];
+      
       wbsCriteriaDetails.push({
         wbsId: wbs.wbsId,
         criteriaCount,
@@ -418,6 +427,10 @@ export class WbsAssignmentBasicScenario {
         console.log(`❌ WBS ${wbs.wbsId}: 평가기준이 없습니다`);
       } else {
         console.log(`✅ WBS ${wbs.wbsId}: 평가기준 ${criteriaCount}개 확인`);
+        console.log(`📝 WBS ${wbs.wbsId} 평가기준 상세:`);
+        criteriaDetails.forEach((criteria: any, index: number) => {
+          console.log(`  ${index + 1}. ID: ${criteria.id}, 내용: "${criteria.criteria}", 중요도: ${criteria.importance}`);
+        });
         totalCriteriaCount += criteriaCount;
       }
     }
@@ -603,5 +616,112 @@ export class WbsAssignmentBasicScenario {
       }
     }
     return assignments;
+  }
+
+  /**
+   * 평가기준 변경 사항을 대시보드에서 검증합니다.
+   */
+  async 평가기준_변경사항을_대시보드에서_검증한다(
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    expectedCriteriaChanges: {
+      beforeCount: number;
+      afterCount: number;
+      expectedCriteria?: string;
+      expectedImportance?: number;
+    },
+  ): Promise<{
+    criteriaChangeVerified: boolean;
+    criteriaContentVerified: boolean;
+    criteriaCountMatch: boolean;
+    verifiedEndpoints: number;
+    actualCriteriaDetails?: {
+      count: number;
+      criteria: string[];
+      importance: number[];
+    };
+  }> {
+    console.log('📝 평가기준 변경사항 대시보드 검증 시작');
+
+    let verifiedEndpoints = 0;
+
+    // 1. 직원 할당 데이터 조회
+    console.log('📝 1. 직원 할당 데이터 조회');
+    const assignedData = await this.직원_할당_데이터를_조회한다(periodId, employeeId);
+    verifiedEndpoints++;
+
+    // 2. 해당 WBS의 평가기준 정보 추출
+    const targetWbs = assignedData.projects
+      .flatMap((project: any) => project.wbsList || [])
+      .find((wbs: any) => wbs.wbsId === wbsItemId);
+
+    if (!targetWbs) {
+      console.log(`❌ WBS ${wbsItemId}를 찾을 수 없습니다`);
+      return {
+        criteriaChangeVerified: false,
+        criteriaContentVerified: false,
+        criteriaCountMatch: false,
+        verifiedEndpoints,
+      };
+    }
+
+    // 3. 평가기준 개수 검증
+    const actualCount = targetWbs.evaluationCriteria?.length || 0;
+    const criteriaCountMatch = actualCount === expectedCriteriaChanges.afterCount;
+    
+    console.log(`📝 평가기준 개수 검증:`);
+    console.log(`  - 예상 변경: ${expectedCriteriaChanges.beforeCount}개 → ${expectedCriteriaChanges.afterCount}개`);
+    console.log(`  - 실제 개수: ${actualCount}개`);
+    console.log(`  - 개수 일치: ${criteriaCountMatch ? '✅' : '❌'}`);
+
+    // 4. 평가기준 내용 검증
+    let criteriaContentVerified = true;
+    const actualCriteriaDetails = {
+      count: actualCount,
+      criteria: [] as string[],
+      importance: [] as number[],
+    };
+
+    if (actualCount > 0 && targetWbs.evaluationCriteria) {
+      console.log(`📝 평가기준 내용 검증:`);
+      targetWbs.evaluationCriteria.forEach((criteria: any, index: number) => {
+        actualCriteriaDetails.criteria.push(criteria.criteria);
+        actualCriteriaDetails.importance.push(criteria.importance);
+        
+        console.log(`  ${index + 1}. ID: ${criteria.id}`);
+        console.log(`     내용: "${criteria.criteria}"`);
+        console.log(`     중요도: ${criteria.importance}`);
+        console.log(`     생성일: ${criteria.createdAt}`);
+        console.log(`     수정일: ${criteria.updatedAt}`);
+
+        // 특정 내용이 예상되는 경우 검증
+        if (expectedCriteriaChanges.expectedCriteria && 
+            criteria.criteria === expectedCriteriaChanges.expectedCriteria) {
+          console.log(`    ✅ 예상 내용과 일치: "${criteria.criteria}"`);
+        }
+        
+        if (expectedCriteriaChanges.expectedImportance && 
+            criteria.importance === expectedCriteriaChanges.expectedImportance) {
+          console.log(`    ✅ 예상 중요도와 일치: ${criteria.importance}`);
+        }
+      });
+    }
+
+    // 5. 변경사항 종합 검증
+    const criteriaChangeVerified = criteriaCountMatch && criteriaContentVerified;
+    
+    console.log(`📊 평가기준 변경사항 검증 결과:`);
+    console.log(`  - 개수 변경: ${criteriaCountMatch ? '✅' : '❌'}`);
+    console.log(`  - 내용 검증: ${criteriaContentVerified ? '✅' : '❌'}`);
+    console.log(`  - 전체 검증: ${criteriaChangeVerified ? '✅' : '❌'}`);
+
+    return {
+      criteriaChangeVerified,
+      criteriaContentVerified,
+      criteriaCountMatch,
+      verifiedEndpoints,
+      actualCriteriaDetails,
+    };
   }
 }
