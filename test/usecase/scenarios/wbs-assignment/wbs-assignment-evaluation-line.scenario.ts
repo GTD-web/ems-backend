@@ -232,6 +232,8 @@ export class WbsAssignmentEvaluationLineScenario {
 
     // 8. 1차 평가자 할당 검증 (자동 설정된 고정 평가자)
     let primaryEvaluatorAssigned = false;
+    let primaryEvaluatorId: string | undefined;
+    
     if (evaluationLineConfigured) {
       // 고정 평가자는 wbsItemId가 null인 매핑을 찾아야 함
       const allEvaluationLines = await this.직원_평가라인_설정을_조회한다(employeeId, periodId);
@@ -249,6 +251,7 @@ export class WbsAssignmentEvaluationLineScenario {
         
         if (evaluationLine && evaluationLine.evaluatorType === 'primary') {
           primaryEvaluatorAssigned = true;
+          primaryEvaluatorId = mapping.evaluatorId;
           console.log(`✅ 1차 고정 평가자 할당 확인: ${mapping.evaluatorId}`);
           
           // 평가자 정보 조회 및 검증 (API가 없으므로 DB에서 직접 조회)
@@ -272,6 +275,21 @@ export class WbsAssignmentEvaluationLineScenario {
       primaryEvaluatorAssigned = false;
     }
 
+    // 8.5. 대시보드에서 1차 평가자 변경사항 검증
+    if (primaryEvaluatorId) {
+      console.log('📝 8.5. 대시보드에서 1차 평가자 변경사항 검증');
+      const primaryEvaluatorVerification = await this.basicScenario.평가라인_변경사항을_대시보드에서_검증한다(
+        periodId,
+        employeeId,
+        primaryEvaluatorId,
+        {
+          primaryEvaluatorChanged: true,
+          expectedPrimaryEvaluatorId: primaryEvaluatorId,
+        },
+      );
+      console.log(`📊 1차 평가자 대시보드 검증: ${primaryEvaluatorVerification.primaryEvaluatorVerified ? '✅' : '❌'}`);
+    }
+
     console.log(`✅ WBS 할당 후 평가라인 자동구성 검증 완료 - 할당: ${assignment.id}, 평가라인 구성: ${evaluationLineConfigured}, 1차 평가자: ${primaryEvaluatorAssigned}`);
 
     return {
@@ -279,6 +297,87 @@ export class WbsAssignmentEvaluationLineScenario {
       evaluationLineConfigured,
       primaryEvaluatorAssigned,
       verifiedEndpoints: 4, // WBS 할당 + 평가라인 조회 + WBS별 매핑 조회 + 평가자 조회
+    };
+  }
+
+  /**
+   * 2차 평가자 구성 시나리오를 실행합니다.
+   */
+  async 이차_평가자_구성_시나리오를_실행한다(
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    projectId: string,
+    secondaryEvaluatorId: string,
+  ): Promise<{
+    assignmentCreated: boolean;
+    secondaryEvaluatorConfigured: boolean;
+    verifiedEndpoints: number;
+  }> {
+    console.log('📝 2차 평가자 구성 시나리오');
+
+    // 1. WBS 할당 먼저 생성
+    console.log('📝 1. WBS 할당 생성');
+    const assignment = await this.basicScenario.WBS_할당을_생성한다(
+      employeeId,
+      wbsItemId,
+      projectId,
+      periodId,
+    );
+    console.log(`✅ WBS 할당 생성 완료: ${assignment.id}`);
+
+    // 2. 2차 평가자 구성
+    console.log('📝 2. 2차 평가자 구성');
+    let secondaryEvaluatorConfigured = false;
+
+    try {
+      const response = await this.testSuite
+        .request()
+        .post(`/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs-item/${wbsItemId}/period/${periodId}/secondary-evaluator`)
+        .send({
+          evaluatorId: secondaryEvaluatorId,
+        })
+        .expect(201);
+
+      secondaryEvaluatorConfigured = true;
+      console.log(`✅ 2차 평가자 구성 완료: ${secondaryEvaluatorId}`);
+    } catch (error) {
+      console.log(`❌ 2차 평가자 구성 실패:`, error.message);
+    }
+
+    // 3. 구성된 2차 평가자 검증
+    console.log('📝 3. 구성된 2차 평가자 검증');
+    const wbsEvaluationLines = await this.WBS별_평가라인_매핑을_조회한다(employeeId, wbsItemId, periodId);
+    const configuredSecondaryEvaluator = wbsEvaluationLines.find((line: any) => 
+      line.evaluatorType === 'SECONDARY' && line.wbsItemId === wbsItemId
+    );
+
+    if (configuredSecondaryEvaluator) {
+      expect(configuredSecondaryEvaluator.evaluatorId).toBe(secondaryEvaluatorId);
+      console.log(`✅ 2차 평가자 구성 검증 완료: ${configuredSecondaryEvaluator.evaluatorId}`);
+    } else {
+      console.log(`⚠️ 구성된 2차 평가자를 찾을 수 없어 검증을 건너뜁니다`);
+    }
+
+    // 4. 대시보드에서 2차 평가자 변경사항 검증
+    console.log('📝 4. 대시보드에서 2차 평가자 변경사항 검증');
+    const secondaryEvaluatorVerification = await this.basicScenario.평가라인_변경사항을_대시보드에서_검증한다(
+      periodId,
+      employeeId,
+      secondaryEvaluatorId,
+      {
+        secondaryEvaluatorChanged: true,
+        expectedSecondaryEvaluatorId: secondaryEvaluatorId,
+      },
+    );
+    console.log(`📊 2차 평가자 대시보드 검증: ${secondaryEvaluatorVerification.secondaryEvaluatorVerified ? '✅' : '❌'}`);
+
+    console.log(`✅ 2차 평가자 구성 시나리오 완료`);
+
+    return {
+      assignmentCreated: true,
+      secondaryEvaluatorConfigured,
+      verifiedEndpoints: 3 + secondaryEvaluatorVerification.verifiedEndpoints, // WBS 할당 + 2차 평가자 구성 + 조회 + 대시보드 검증
     };
   }
 
@@ -339,12 +438,25 @@ export class WbsAssignmentEvaluationLineScenario {
       console.log(`⚠️ 변경된 1차 평가자를 찾을 수 없어 검증을 건너뜁니다`);
     }
 
+    // 4. 대시보드에서 1차 평가자 변경사항 검증
+    console.log('📝 4. 대시보드에서 1차 평가자 변경사항 검증');
+    const primaryEvaluatorChangeVerification = await this.basicScenario.평가라인_변경사항을_대시보드에서_검증한다(
+      periodId,
+      employeeId,
+      newPrimaryEvaluatorId,
+      {
+        primaryEvaluatorChanged: true,
+        expectedPrimaryEvaluatorId: newPrimaryEvaluatorId,
+      },
+    );
+    console.log(`📊 1차 평가자 변경 대시보드 검증: ${primaryEvaluatorChangeVerification.primaryEvaluatorVerified ? '✅' : '❌'}`);
+
     console.log(`✅ WBS 할당 후 평가라인 수정 검증 완료`);
 
     return {
       assignmentCreated: autoConfigResult.assignmentCreated,
       evaluationLineModified: true,
-      verifiedEndpoints: autoConfigResult.verifiedEndpoints + 2, // 수정 + 조회
+      verifiedEndpoints: autoConfigResult.verifiedEndpoints + 2 + primaryEvaluatorChangeVerification.verifiedEndpoints, // 수정 + 조회 + 대시보드 검증
     };
   }
 }

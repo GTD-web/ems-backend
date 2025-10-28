@@ -619,6 +619,287 @@ export class WbsAssignmentBasicScenario {
   }
 
   /**
+   * 평가라인 변경 사항을 대시보드에서 검증합니다.
+   */
+  async 평가라인_변경사항을_대시보드에서_검증한다(
+    periodId: string,
+    employeeId: string,
+    evaluatorId: string,
+    expectedChanges: {
+      primaryEvaluatorChanged?: boolean;
+      secondaryEvaluatorChanged?: boolean;
+      expectedPrimaryEvaluatorId?: string;
+      expectedSecondaryEvaluatorId?: string;
+    },
+  ): Promise<{
+    primaryEvaluatorVerified: boolean;
+    secondaryEvaluatorVerified: boolean;
+    evaluatorTargetsVerified: boolean;
+    verifiedEndpoints: number;
+    actualEvaluatorDetails?: {
+      primaryEvaluatorId?: string;
+      secondaryEvaluatorId?: string;
+      evaluatorTargetsCount: number;
+    };
+  }> {
+    console.log('📝 평가라인 변경사항 대시보드 검증 시작');
+
+    let verifiedEndpoints = 0;
+
+    // 1. 직원 할당 데이터 조회 (1차 평가자 확인)
+    console.log('📝 1. 직원 할당 데이터 조회 (1차 평가자 확인)');
+    const assignedData = await this.직원_할당_데이터를_조회한다(periodId, employeeId);
+    verifiedEndpoints++;
+
+    // 2. 평가자 평가 대상자 현황 조회 (2차 평가자 확인)
+    console.log('📝 2. 평가자 평가 대상자 현황 조회 (2차 평가자 확인)');
+    const evaluatorTargets = await this.평가자_평가대상자_현황을_조회한다(periodId, evaluatorId);
+    verifiedEndpoints++;
+
+    // 3. 1차 평가자 검증
+    console.log('📝 3. 1차 평가자 검증');
+    let primaryEvaluatorVerified = false;
+    let primaryEvaluatorId: string | undefined;
+
+    // 직원 할당 데이터에서 1차 평가자 확인
+    const targetEmployee = assignedData.projects
+      .flatMap((project: any) => project.wbsList || [])
+      .find((wbs: any) => wbs.primaryDownwardEvaluation?.id);
+
+    if (targetEmployee?.primaryDownwardEvaluation) {
+      primaryEvaluatorId = targetEmployee.primaryDownwardEvaluation.id;
+      console.log(`📝 직원 할당 데이터에서 1차 평가자 ID: ${primaryEvaluatorId}`);
+      
+      if (expectedChanges.expectedPrimaryEvaluatorId) {
+        primaryEvaluatorVerified = primaryEvaluatorId === expectedChanges.expectedPrimaryEvaluatorId;
+        console.log(`📝 1차 평가자 ID 검증: ${primaryEvaluatorVerified ? '✅' : '❌'} (예상: ${expectedChanges.expectedPrimaryEvaluatorId}, 실제: ${primaryEvaluatorId})`);
+      } else {
+        primaryEvaluatorVerified = !!primaryEvaluatorId;
+        console.log(`📝 1차 평가자 존재 여부: ${primaryEvaluatorVerified ? '✅' : '❌'}`);
+      }
+    } else {
+      console.log(`❌ 1차 평가자 정보를 찾을 수 없습니다`);
+    }
+
+    // 4. 2차 평가자 검증
+    console.log('📝 4. 2차 평가자 검증');
+    let secondaryEvaluatorVerified = false;
+    let secondaryEvaluatorId: string | undefined;
+
+    // 평가자 평가 대상자 현황에서 2차 평가자 확인
+    const targetInEvaluatorList = evaluatorTargets.find((target: any) => target.employeeId === employeeId);
+    
+    if (targetInEvaluatorList?.evaluationLine) {
+      // evaluationLine이 배열인지 확인
+      const evaluationLines = Array.isArray(targetInEvaluatorList.evaluationLine) 
+        ? targetInEvaluatorList.evaluationLine 
+        : [targetInEvaluatorList.evaluationLine];
+      
+      const secondaryEvaluationLine = evaluationLines.find(
+        (line: any) => line.evaluatorType === 'secondary'
+      );
+      
+      if (secondaryEvaluationLine) {
+        secondaryEvaluatorId = secondaryEvaluationLine.evaluatorId;
+        console.log(`📝 평가자 평가 대상자 현황에서 2차 평가자 ID: ${secondaryEvaluatorId}`);
+        
+        if (expectedChanges.expectedSecondaryEvaluatorId) {
+          secondaryEvaluatorVerified = secondaryEvaluatorId === expectedChanges.expectedSecondaryEvaluatorId;
+          console.log(`📝 2차 평가자 ID 검증: ${secondaryEvaluatorVerified ? '✅' : '❌'} (예상: ${expectedChanges.expectedSecondaryEvaluatorId}, 실제: ${secondaryEvaluatorId})`);
+        } else {
+          secondaryEvaluatorVerified = !!secondaryEvaluatorId;
+          console.log(`📝 2차 평가자 존재 여부: ${secondaryEvaluatorVerified ? '✅' : '❌'}`);
+        }
+      } else {
+        console.log(`❌ 2차 평가자 정보를 찾을 수 없습니다`);
+        console.log(`📝 사용 가능한 평가라인:`, evaluationLines.map((line: any) => ({ type: line.evaluatorType, id: line.evaluatorId })));
+      }
+    } else {
+      console.log(`❌ 평가자 평가 대상자 현황에서 해당 직원을 찾을 수 없습니다`);
+    }
+
+    // 5. 평가자 평가 대상자 현황 검증
+    console.log('📝 5. 평가자 평가 대상자 현황 검증');
+    const evaluatorTargetsVerified = evaluatorTargets.length > 0;
+    console.log(`📝 평가자 평가 대상자 수: ${evaluatorTargets.length}명`);
+    console.log(`📝 평가자 평가 대상자 현황 검증: ${evaluatorTargetsVerified ? '✅' : '❌'}`);
+
+    // 6. 변경사항 종합 검증
+    const actualEvaluatorDetails = {
+      primaryEvaluatorId,
+      secondaryEvaluatorId,
+      evaluatorTargetsCount: evaluatorTargets.length,
+    };
+
+    console.log(`📊 평가라인 변경사항 검증 결과:`);
+    console.log(`  - 1차 평가자 변경: ${primaryEvaluatorVerified ? '✅' : '❌'}`);
+    console.log(`  - 2차 평가자 변경: ${secondaryEvaluatorVerified ? '✅' : '❌'}`);
+    console.log(`  - 평가자 평가 대상자 현황: ${evaluatorTargetsVerified ? '✅' : '❌'}`);
+
+    return {
+      primaryEvaluatorVerified,
+      secondaryEvaluatorVerified,
+      evaluatorTargetsVerified,
+      verifiedEndpoints,
+      actualEvaluatorDetails,
+    };
+  }
+
+  /**
+   * 모든 직원 평가기간 현황을 조회합니다.
+   */
+  async 모든_직원_평가기간_현황을_조회한다(evaluationPeriodId: string): Promise<any[]> {
+    const response = await this.testSuite
+      .request()
+      .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * 모든 직원 평가기간 현황에서 평가기준 및 평가라인 검증을 수행합니다.
+   */
+  async 모든_직원_평가기간_현황_검증을_수행한다(
+    periodId: string,
+    expectedEmployeeIds: string[],
+  ): Promise<{
+    employeesStatusVerified: boolean;
+    evaluationCriteriaVerified: boolean;
+    wbsCriteriaVerified: boolean;
+    evaluationLineVerified: boolean;
+    verifiedEndpoints: number;
+    statusDetails?: {
+      totalEmployees: number;
+      employeesWithEvaluationCriteria: number;
+      employeesWithWbsCriteria: number;
+      employeesWithEvaluationLine: number;
+      employeeDetails: {
+        employeeId: string;
+        hasEvaluationCriteria: boolean;
+        hasWbsCriteria: boolean;
+        hasEvaluationLine: boolean;
+        evaluationCriteriaCount: number;
+        wbsCriteriaCount: number;
+        evaluationLineCount: number;
+      }[];
+    };
+  }> {
+    console.log('📝 모든 직원 평가기간 현황 검증 시작');
+
+    let verifiedEndpoints = 0;
+
+    // 1. 모든 직원 평가기간 현황 조회
+    console.log('📝 1. 모든 직원 평가기간 현황 조회');
+    const allEmployeesStatus = await this.모든_직원_평가기간_현황을_조회한다(periodId);
+    verifiedEndpoints++;
+
+    // 2. 기본 검증
+    const employeesStatusVerified = allEmployeesStatus.length > 0;
+    console.log(`📝 전체 직원 수: ${allEmployeesStatus.length}명`);
+    console.log(`📝 직원 현황 조회: ${employeesStatusVerified ? '✅' : '❌'}`);
+
+    // 3. 예상 직원들이 모두 포함되어 있는지 확인
+    const foundEmployeeIds = allEmployeesStatus.map((employee: any) => employee.employeeId);
+    const missingEmployees = expectedEmployeeIds.filter(id => !foundEmployeeIds.includes(id));
+    
+    if (missingEmployees.length > 0) {
+      console.log(`⚠️ 예상 직원 중 누락된 직원: ${missingEmployees.join(', ')}`);
+    } else {
+      console.log(`✅ 예상 직원 모두 포함됨`);
+    }
+
+    // 4. 각 직원별 상세 검증
+    console.log('📝 4. 각 직원별 상세 검증');
+    let evaluationCriteriaVerified = true;
+    let wbsCriteriaVerified = true;
+    let evaluationLineVerified = true;
+
+    const employeeDetails: {
+      employeeId: string;
+      hasEvaluationCriteria: boolean;
+      hasWbsCriteria: boolean;
+      hasEvaluationLine: boolean;
+      evaluationCriteriaCount: number;
+      wbsCriteriaCount: number;
+      evaluationLineCount: number;
+    }[] = [];
+
+    for (const employee of allEmployeesStatus) {
+      const hasEvaluationCriteria = employee.evaluationCriteria && Array.isArray(employee.evaluationCriteria) && employee.evaluationCriteria.length > 0;
+      const hasWbsCriteria = employee.wbsCriteria && Array.isArray(employee.wbsCriteria) && employee.wbsCriteria.length > 0;
+      const hasEvaluationLine = employee.evaluationLine && Array.isArray(employee.evaluationLine) && employee.evaluationLine.length > 0;
+      
+      const evaluationCriteriaCount = hasEvaluationCriteria ? employee.evaluationCriteria.length : 0;
+      const wbsCriteriaCount = hasWbsCriteria ? employee.wbsCriteria.length : 0;
+      const evaluationLineCount = hasEvaluationLine ? employee.evaluationLine.length : 0;
+
+      employeeDetails.push({
+        employeeId: employee.employeeId,
+        hasEvaluationCriteria,
+        hasWbsCriteria,
+        hasEvaluationLine,
+        evaluationCriteriaCount,
+        wbsCriteriaCount,
+        evaluationLineCount,
+      });
+
+      console.log(`📝 직원 ${employee.employeeId}:`);
+      console.log(`  - evaluationCriteria: ${evaluationCriteriaCount}개 ${hasEvaluationCriteria ? '✅' : '❌'}`);
+      console.log(`  - wbsCriteria: ${wbsCriteriaCount}개 ${hasWbsCriteria ? '✅' : '❌'}`);
+      console.log(`  - evaluationLine: ${evaluationLineCount}개 ${hasEvaluationLine ? '✅' : '❌'}`);
+
+      // 예상 직원들에 대해서만 검증
+      if (expectedEmployeeIds.includes(employee.employeeId)) {
+        if (!hasEvaluationCriteria) {
+          evaluationCriteriaVerified = false;
+          console.log(`❌ 직원 ${employee.employeeId}: evaluationCriteria 없음`);
+        }
+        if (!hasWbsCriteria) {
+          wbsCriteriaVerified = false;
+          console.log(`❌ 직원 ${employee.employeeId}: wbsCriteria 없음`);
+        }
+        if (!hasEvaluationLine) {
+          evaluationLineVerified = false;
+          console.log(`❌ 직원 ${employee.employeeId}: evaluationLine 없음`);
+        }
+      }
+    }
+
+    // 5. 통계 계산
+    const totalEmployees = allEmployeesStatus.length;
+    const employeesWithEvaluationCriteria = employeeDetails.filter(d => d.hasEvaluationCriteria).length;
+    const employeesWithWbsCriteria = employeeDetails.filter(d => d.hasWbsCriteria).length;
+    const employeesWithEvaluationLine = employeeDetails.filter(d => d.hasEvaluationLine).length;
+
+    const statusDetails = {
+      totalEmployees,
+      employeesWithEvaluationCriteria,
+      employeesWithWbsCriteria,
+      employeesWithEvaluationLine,
+      employeeDetails,
+    };
+
+    console.log(`📊 모든 직원 평가기간 현황 검증 결과:`);
+    console.log(`  - 전체 직원: ${totalEmployees}명`);
+    console.log(`  - evaluationCriteria가 있는 직원: ${employeesWithEvaluationCriteria}명`);
+    console.log(`  - wbsCriteria가 있는 직원: ${employeesWithWbsCriteria}명`);
+    console.log(`  - evaluationLine이 있는 직원: ${employeesWithEvaluationLine}명`);
+    console.log(`  - evaluationCriteria 검증: ${evaluationCriteriaVerified ? '✅' : '❌'}`);
+    console.log(`  - wbsCriteria 검증: ${wbsCriteriaVerified ? '✅' : '❌'}`);
+    console.log(`  - evaluationLine 검증: ${evaluationLineVerified ? '✅' : '❌'}`);
+
+    return {
+      employeesStatusVerified,
+      evaluationCriteriaVerified,
+      wbsCriteriaVerified,
+      evaluationLineVerified,
+      verifiedEndpoints,
+      statusDetails,
+    };
+  }
+
+  /**
    * 평가기준 변경 사항을 대시보드에서 검증합니다.
    */
   async 평가기준_변경사항을_대시보드에서_검증한다(

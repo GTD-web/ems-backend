@@ -328,6 +328,86 @@ export class WbsAssignmentIntegrationScenario {
   }
 
   /**
+   * WBS 할당 후 평가라인 수정 검증 시나리오를 실행합니다.
+   */
+  async WBS_할당_후_평가라인_수정_검증_시나리오를_실행한다(
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    projectId: string,
+    newPrimaryEvaluatorId: string,
+  ): Promise<{
+    assignmentCreated: boolean;
+    evaluationLineModified: boolean;
+    verifiedEndpoints: number;
+  }> {
+    return await this.evaluationLineScenario.WBS_할당_후_평가라인_수정_검증_시나리오를_실행한다(
+      periodId,
+      employeeId,
+      wbsItemId,
+      projectId,
+      newPrimaryEvaluatorId,
+    );
+  }
+
+  /**
+   * 2차 평가자 구성 시나리오를 실행합니다.
+   */
+  async 이차_평가자_구성_시나리오를_실행한다(
+    periodId: string,
+    employeeId: string,
+    wbsItemId: string,
+    projectId: string,
+    secondaryEvaluatorId: string,
+  ): Promise<{
+    assignmentCreated: boolean;
+    secondaryEvaluatorConfigured: boolean;
+    verifiedEndpoints: number;
+  }> {
+    return await this.evaluationLineScenario.이차_평가자_구성_시나리오를_실행한다(
+      periodId,
+      employeeId,
+      wbsItemId,
+      projectId,
+      secondaryEvaluatorId,
+    );
+  }
+
+  /**
+   * 모든 직원 평가기간 현황 검증 시나리오를 실행합니다.
+   */
+  async 모든_직원_평가기간_현황_검증_시나리오를_실행한다(
+    periodId: string,
+    expectedEmployeeIds: string[],
+  ): Promise<{
+    employeesStatusVerified: boolean;
+    evaluationCriteriaVerified: boolean;
+    wbsCriteriaVerified: boolean;
+    evaluationLineVerified: boolean;
+    verifiedEndpoints: number;
+    statusDetails?: {
+      totalEmployees: number;
+      employeesWithEvaluationCriteria: number;
+      employeesWithWbsCriteria: number;
+      employeesWithEvaluationLine: number;
+      employeeDetails: {
+        employeeId: string;
+        hasEvaluationCriteria: boolean;
+        hasWbsCriteria: boolean;
+        hasEvaluationLine: boolean;
+        evaluationCriteriaCount: number;
+        wbsCriteriaCount: number;
+        evaluationLineCount: number;
+      }[];
+    };
+  }> {
+    return await this.basicScenario.모든_직원_평가기간_현황_검증을_수행한다(
+      periodId,
+      expectedEmployeeIds,
+    );
+  }
+
+  /**
    * WBS 항목 평가기준 전체 삭제 시나리오를 실행합니다.
    */
   async WBS_항목_평가기준_전체삭제_시나리오를_실행한다(
