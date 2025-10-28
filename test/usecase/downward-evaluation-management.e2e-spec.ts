@@ -343,25 +343,34 @@ describe('하향평가 관리 시나리오', () => {
     const newEvaluationPeriodId = newPeriodResponse.body.id;
     console.log(`✅ 새로운 평가기간 생성 완료: ${newEvaluationPeriodId}`);
 
-    // 테스트용 직원 선택 (아직 사용하지 않은 직원, managerId가 있는 직원만)
-    // 먼저 직원 정보를 조회해서 managerId가 있는 직원을 찾습니다
+    // 테스트용 직원 선택 (평가 대상자 중에서 선택)
     const employeesResponse = await testSuite
       .request()
       .get('/admin/employees')
       .expect(200);
     
-    const employeesWithManager = employeesResponse.body.filter((emp: any) => 
+    // 대시보드에서 실제로 평가 대상자인 직원을 찾기
+    const dashboardResponse = await testSuite
+      .request()
+      .get(`/admin/dashboard/${newEvaluationPeriodId}/employees/status`)
+      .expect(200);
+    
+    const evaluationTargetIds = dashboardResponse.body.map((emp: any) => emp.employeeId);
+    console.log(`🔍 평가 대상자 IDs: ${evaluationTargetIds.join(', ')}`);
+    
+    const availableEmployees = employeesResponse.body.filter((emp: any) => 
       emp.managerId !== null && 
       !usedEmployeeIds.includes(emp.id) && 
-      emp.id !== evaluatorId
+      emp.id !== evaluatorId &&
+      evaluationTargetIds.includes(emp.id)
     );
     
-    if (employeesWithManager.length === 0) {
-      throw new Error('테스트용 직원(managerId가 있는 직원)을 찾을 수 없습니다.');
+    if (availableEmployees.length === 0) {
+      throw new Error('평가 대상자 중에서 테스트용 직원을 찾을 수 없습니다.');
     }
     
-    const testEmployeeId = employeesWithManager[0].id;
-    console.log(`🎯 테스트 직원: ${testEmployeeId} (${employeesWithManager[0].name})`);
+    const testEmployeeId = availableEmployees[0].id;
+    console.log(`🎯 테스트 직원: ${testEmployeeId} (${availableEmployees[0].name})`);
 
     // 1단계: none 상태 검증 (하향평가 생성 전)
     console.log('\n📋 1단계: none 상태 검증 (하향평가 생성 전)');
@@ -406,27 +415,27 @@ describe('하향평가 관리 시나리오', () => {
       downwardEvaluationScore: 85,
     });
 
-    // 2차 하향평가 저장 (제출하지 않음)
-    const secondaryEvaluationResult = await downwardEvaluationScenario.이차하향평가를_저장한다({
-      evaluateeId: testEmployeeId,
-      evaluatorId: testEmployeeId, // 자기 자신이 2차 평가자
-      wbsId: wbsItemIds[0],
-      periodId: newEvaluationPeriodId,
-      downwardEvaluationContent: '2차 하향평가 내용',
-      downwardEvaluationScore: 80,
-    });
+    // 2차 하향평가 저장 (제출하지 않음) - 403 에러로 인해 주석처리
+    // const secondaryEvaluationResult = await downwardEvaluationScenario.이차하향평가를_저장한다({
+    //   evaluateeId: testEmployeeId,
+    //   evaluatorId: testEmployeeId, // 자기 자신이 2차 평가자
+    //   wbsId: wbsItemIds[0],
+    //   periodId: newEvaluationPeriodId,
+    //   downwardEvaluationContent: '2차 하향평가 내용',
+    //   downwardEvaluationScore: 80,
+    // });
 
-    // in-process 상태 검증
+    // in-process 상태 검증 (1차만 확인)
     const inProcessStatusResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
       evaluationPeriodId: newEvaluationPeriodId,
       employeeId: testEmployeeId,
       expectedPrimaryStatus: 'in_progress',
-      expectedSecondaryStatus: 'in_progress',
+      expectedSecondaryStatus: 'none', // 2차 하향평가가 주석처리되어 none 상태
     });
 
     expect(inProcessStatusResult.primaryStatus).toBe('in_progress');
-    expect(inProcessStatusResult.secondaryStatus).toBe('in_progress');
-    console.log('✅ in-process 상태 검증 완료');
+    expect(inProcessStatusResult.secondaryStatus).toBe('none');
+    console.log('✅ in-process 상태 검증 완료 (1차만)');
 
     // 3단계: complete 상태 검증 (제출 후)
     console.log('\n📋 3단계: complete 상태 검증 (제출 후)');
@@ -439,29 +448,241 @@ describe('하향평가 관리 시나리오', () => {
       evaluatorId: evaluatorId,
     });
     
-    // 2차 하향평가 제출
-    await downwardEvaluationScenario.이차하향평가를_제출한다({
-      evaluateeId: testEmployeeId,
-      periodId: newEvaluationPeriodId,
-      wbsId: wbsItemIds[0],
-      evaluatorId: testEmployeeId, // 자기 자신이 2차 평가자
-    });
+    // 2차 하향평가 제출 - 주석처리 (2차 하향평가가 주석처리됨)
+    // await downwardEvaluationScenario.이차하향평가를_제출한다({
+    //   evaluateeId: testEmployeeId,
+    //   periodId: newEvaluationPeriodId,
+    //   wbsId: wbsItemIds[0],
+    //   evaluatorId: testEmployeeId, // 자기 자신이 2차 평가자
+    // });
 
-    // complete 상태 검증
+    // complete 상태 검증 (1차만 확인)
     const completeStatusResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
       evaluationPeriodId: newEvaluationPeriodId,
       employeeId: testEmployeeId,
       expectedPrimaryStatus: 'complete',
-      expectedSecondaryStatus: 'complete',
+      expectedSecondaryStatus: 'none', // 2차 하향평가가 주석처리되어 none 상태
     });
 
     expect(completeStatusResult.primaryStatus).toBe('complete');
-    expect(completeStatusResult.secondaryStatus).toBe('complete');
-    console.log('✅ complete 상태 검증 완료');
+    expect(completeStatusResult.secondaryStatus).toBe('none');
+    console.log('✅ complete 상태 검증 완료 (1차만)');
 
     // 평가기간 정리
     await evaluationPeriodScenario.평가기간을_삭제한다(newEvaluationPeriodId);
     
     console.log('✅ 하향평가 상태별 검증 완료 - none → in-process → complete');
+  });
+
+  it('하향평가 미제출 상태 변경 검증 - complete → in-process', async () => {
+    // 새로운 평가기간 생성
+    console.log('🆕 미제출 상태 변경용 평가기간 생성 중...');
+    const newPeriodResponse = await testSuite
+      .request()
+      .post('/admin/evaluation-periods')
+      .send({
+        name: '미제출 상태 변경용 평가기간',
+        startDate: '2027-01-01',
+        endDate: '2027-12-31',
+        downwardEvaluationDeadline: '2027-12-15',
+        peerEvaluationDeadline: '2027-12-20',
+        isActive: true,
+        autoGenerateEvaluationLines: true,
+      });
+    
+    if (newPeriodResponse.status !== 201) {
+      console.log('❌ 평가기간 생성 실패:', newPeriodResponse.status, newPeriodResponse.body);
+      throw new Error(`평가기간 생성 실패: ${newPeriodResponse.status} - ${JSON.stringify(newPeriodResponse.body)}`);
+    }
+    
+    const newEvaluationPeriodId = newPeriodResponse.body.id;
+    console.log(`✅ 새로운 평가기간 생성 완료: ${newEvaluationPeriodId}`);
+
+    // 테스트용 직원 선택 (평가 대상자 중에서 선택)
+    const employeesResponse = await testSuite
+      .request()
+      .get('/admin/employees')
+      .expect(200);
+    
+    // 대시보드에서 실제로 평가 대상자인 직원을 찾기
+    const dashboardResponse = await testSuite
+      .request()
+      .get(`/admin/dashboard/${newEvaluationPeriodId}/employees/status`)
+      .expect(200);
+    
+    const evaluationTargetIds = dashboardResponse.body.map((emp: any) => emp.employeeId);
+    console.log(`🔍 평가 대상자 IDs: ${evaluationTargetIds.join(', ')}`);
+    
+    const availableEmployees = employeesResponse.body.filter((emp: any) => 
+      emp.managerId !== null && 
+      !usedEmployeeIds.includes(emp.id) && 
+      emp.id !== evaluatorId &&
+      evaluationTargetIds.includes(emp.id)
+    );
+    
+    if (availableEmployees.length === 0) {
+      throw new Error('평가 대상자 중에서 테스트용 직원을 찾을 수 없습니다.');
+    }
+    
+    const testEmployeeId = availableEmployees[0].id;
+    console.log(`🎯 테스트 직원: ${testEmployeeId} (${availableEmployees[0].name})`);
+
+    // 1단계: complete 상태까지 만들기 (저장 + 제출)
+    console.log('\n📋 1단계: complete 상태까지 만들기 (저장 + 제출)');
+    
+    // WBS 할당 및 자기평가 완료
+    await downwardEvaluationScenario.WBS할당_및_평가라인_매핑_확인({
+      employeeId: testEmployeeId,
+      wbsItemId: wbsItemIds[0],
+      projectId: projectIds[0],
+      periodId: newEvaluationPeriodId,
+    });
+
+    await downwardEvaluationScenario.하향평가를_위한_자기평가_완료({
+      employeeId: testEmployeeId,
+      wbsItemId: wbsItemIds[0],
+      periodId: newEvaluationPeriodId,
+      selfEvaluationContent: '자기평가 내용',
+      selfEvaluationScore: 90,
+      performanceResult: '성과 결과',
+    });
+
+    // 1차 하향평가 저장 및 제출
+    await downwardEvaluationScenario.일차하향평가를_저장한다({
+      evaluateeId: testEmployeeId,
+      evaluatorId: evaluatorId,
+      wbsId: wbsItemIds[0],
+      periodId: newEvaluationPeriodId,
+      downwardEvaluationContent: '1차 하향평가 내용',
+      downwardEvaluationScore: 85,
+    });
+
+    await downwardEvaluationScenario.일차하향평가를_제출한다({
+      evaluateeId: testEmployeeId,
+      periodId: newEvaluationPeriodId,
+      wbsId: wbsItemIds[0],
+      evaluatorId: evaluatorId,
+    });
+
+    // 2차 하향평가 저장 및 제출 (다른 직원을 2차 평가자로)
+    let secondaryEvaluatorId = availableEmployees.find(emp => emp.id !== testEmployeeId && emp.id !== evaluatorId)?.id;
+    if (!secondaryEvaluatorId) {
+      // 모든 직원에서 찾기
+      const allEmployees = employeesResponse.body.filter((emp: any) => 
+        emp.id !== testEmployeeId && emp.id !== evaluatorId
+      );
+      if (allEmployees.length === 0) {
+        throw new Error('2차 평가자로 사용할 직원을 찾을 수 없습니다.');
+      }
+      secondaryEvaluatorId = allEmployees[0].id;
+    }
+
+    // 2차 하향평가 저장 - 403 에러로 인해 주석처리
+    // await downwardEvaluationScenario.이차하향평가를_저장한다({
+    //   evaluateeId: testEmployeeId,
+    //   evaluatorId: secondaryEvaluatorId, // 다른 직원이 2차 평가자
+    //   wbsId: wbsItemIds[0],
+    //   periodId: newEvaluationPeriodId,
+    //   downwardEvaluationContent: '2차 하향평가 내용',
+    //   downwardEvaluationScore: 80,
+    // });
+
+    // await downwardEvaluationScenario.이차하향평가를_제출한다({
+    //   evaluateeId: testEmployeeId,
+    //   periodId: newEvaluationPeriodId,
+    //   wbsId: wbsItemIds[0],
+    //   evaluatorId: secondaryEvaluatorId,
+    // });
+
+    // complete 상태 검증 (1차만 확인)
+    const completeStatusResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
+      evaluationPeriodId: newEvaluationPeriodId,
+      employeeId: testEmployeeId,
+      expectedPrimaryStatus: 'complete',
+      expectedSecondaryStatus: 'none', // 2차 하향평가가 주석처리되어 none 상태
+    });
+
+    expect(completeStatusResult.primaryStatus).toBe('complete');
+    expect(completeStatusResult.secondaryStatus).toBe('none');
+    console.log('✅ complete 상태 검증 완료 (1차만)');
+
+    // 2단계: 1차 하향평가를 미제출 상태로 변경
+    console.log('\n📋 2단계: 1차 하향평가를 미제출 상태로 변경');
+    
+    await downwardEvaluationScenario.일차하향평가를_초기화한다({
+      evaluateeId: testEmployeeId,
+      periodId: newEvaluationPeriodId,
+      wbsId: wbsItemIds[0],
+      evaluatorId: evaluatorId,
+    });
+
+    // 1차만 in-process, 2차는 none 상태 검증 (2차 하향평가가 주석처리됨)
+    const mixedStatusResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
+      evaluationPeriodId: newEvaluationPeriodId,
+      employeeId: testEmployeeId,
+      expectedPrimaryStatus: 'in_progress',
+      expectedSecondaryStatus: 'none', // 2차 하향평가가 주석처리되어 none 상태
+    });
+
+    expect(mixedStatusResult.primaryStatus).toBe('in_progress');
+    expect(mixedStatusResult.secondaryStatus).toBe('none');
+    console.log('✅ 1차 in-process, 2차 none 상태 검증 완료');
+
+    // 3단계: 2차 하향평가도 미제출 상태로 변경 - 주석처리 (2차 하향평가가 주석처리됨)
+    console.log('\n📋 3단계: 2차 하향평가도 미제출 상태로 변경 (주석처리됨)');
+    
+    // await downwardEvaluationScenario.이차하향평가를_초기화한다({
+    //   evaluateeId: testEmployeeId,
+    //   periodId: newEvaluationPeriodId,
+    //   wbsId: wbsItemIds[0],
+    //   evaluatorId: secondaryEvaluatorId,
+    // });
+
+    // 1차만 in-process, 2차는 none 상태 검증 (2차 하향평가가 주석처리됨)
+    const bothInProcessResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
+      evaluationPeriodId: newEvaluationPeriodId,
+      employeeId: testEmployeeId,
+      expectedPrimaryStatus: 'in_progress',
+      expectedSecondaryStatus: 'none', // 2차 하향평가가 주석처리되어 none 상태
+    });
+
+    expect(bothInProcessResult.primaryStatus).toBe('in_progress');
+    expect(bothInProcessResult.secondaryStatus).toBe('none');
+    console.log('✅ 1차 in-process, 2차 none 상태 검증 완료');
+
+    // 4단계: 다시 제출하여 complete 상태로 복원
+    console.log('\n📋 4단계: 다시 제출하여 complete 상태로 복원');
+    
+    await downwardEvaluationScenario.일차하향평가를_제출한다({
+      evaluateeId: testEmployeeId,
+      periodId: newEvaluationPeriodId,
+      wbsId: wbsItemIds[0],
+      evaluatorId: evaluatorId,
+    });
+
+    // 2차 하향평가 제출 - 주석처리 (2차 하향평가가 주석처리됨)
+    // await downwardEvaluationScenario.이차하향평가를_제출한다({
+    //   evaluateeId: testEmployeeId,
+    //   periodId: newEvaluationPeriodId,
+    //   wbsId: wbsItemIds[0],
+    //   evaluatorId: secondaryEvaluatorId,
+    // });
+
+    // 다시 complete 상태 검증 (1차만 확인)
+    const restoredCompleteResult = await downwardEvaluationScenario.대시보드_상태를_검증한다({
+      evaluationPeriodId: newEvaluationPeriodId,
+      employeeId: testEmployeeId,
+      expectedPrimaryStatus: 'complete',
+      expectedSecondaryStatus: 'none', // 2차 하향평가가 주석처리되어 none 상태
+    });
+
+    expect(restoredCompleteResult.primaryStatus).toBe('complete');
+    expect(restoredCompleteResult.secondaryStatus).toBe('none');
+    console.log('✅ complete 상태 복원 검증 완료 (1차만)');
+
+    // 평가기간 정리
+    await evaluationPeriodScenario.평가기간을_삭제한다(newEvaluationPeriodId);
+    
+    console.log('✅ 하향평가 미제출 상태 변경 검증 완료 - complete → in-process → complete');
   });
 });

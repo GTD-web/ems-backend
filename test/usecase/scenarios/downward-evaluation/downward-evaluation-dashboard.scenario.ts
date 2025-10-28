@@ -223,7 +223,7 @@ export class DownwardEvaluationDashboardScenario {
 
     // 해당 직원의 데이터 찾기
     const 대시보드데이터 = response.find(
-      (emp: any) => emp.employee.id === config.employeeId,
+      (emp: any) => emp.employeeId === config.employeeId,
     );
 
     if (!대시보드데이터) {

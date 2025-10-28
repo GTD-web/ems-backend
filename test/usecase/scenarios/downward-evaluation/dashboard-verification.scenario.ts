@@ -39,11 +39,11 @@ export class DownwardEvaluationDashboardScenario {
 
     console.log(`  🔍 대시보드 응답 직원 수: ${response.body.length}`);
     console.log(
-      `  🔍 대시보드 응답 직원 IDs: ${response.body.map((emp: any) => emp.employee?.id || 'undefined').join(', ')}`,
+      `  🔍 대시보드 응답 직원 IDs: ${response.body.map((emp: any) => emp.employeeId || 'undefined').join(', ')}`,
     );
 
     const 대시보드데이터 = response.body.find(
-      (emp: any) => emp.employee.id === config.employeeId,
+      (emp: any) => emp.employeeId === config.employeeId,
     );
 
     if (!대시보드데이터) {
