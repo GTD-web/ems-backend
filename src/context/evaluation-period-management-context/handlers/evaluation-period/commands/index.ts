@@ -17,6 +17,7 @@ export * from './update-evaluation-period-grade-ranges.handler';
 // 수동 허용 설정 커맨드 핸들러
 export * from './update-criteria-setting-permission.handler';
 export * from './update-self-evaluation-setting-permission.handler';
+export * from './create-evaluation-period-with-auto-targets.handler';
 export * from './update-final-evaluation-setting-permission.handler';
 export * from './update-manual-setting-permissions.handler';
 
@@ -36,10 +37,12 @@ import { UpdateCriteriaSettingPermissionCommandHandler } from './update-criteria
 import { UpdateSelfEvaluationSettingPermissionCommandHandler } from './update-self-evaluation-setting-permission.handler';
 import { UpdateFinalEvaluationSettingPermissionCommandHandler } from './update-final-evaluation-setting-permission.handler';
 import { UpdateManualSettingPermissionsCommandHandler } from './update-manual-setting-permissions.handler';
+import { CreateEvaluationPeriodWithAutoTargetsHandler } from './create-evaluation-period-with-auto-targets.handler';
 
 export const EVALUATION_PERIOD_COMMAND_HANDLERS = [
   // 평가 기간 생명주기
   CreateEvaluationPeriodCommandHandler,
+  CreateEvaluationPeriodWithAutoTargetsHandler,
   StartEvaluationPeriodCommandHandler,
   CompleteEvaluationPeriodCommandHandler,
   DeleteEvaluationPeriodCommandHandler,

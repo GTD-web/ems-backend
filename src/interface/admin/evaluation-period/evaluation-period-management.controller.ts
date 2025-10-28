@@ -1,6 +1,7 @@
-import { Body, Controller, Query } from '@nestjs/common';
+import { Body, Controller, Query, Logger } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationPeriodManagementContextService } from '../../../context/evaluation-period-management-context/evaluation-period-management.service';
+import { EvaluationPeriodBusinessService } from '../../../business/evaluation-period/evaluation-period-business.service';
 import type {
   CreateEvaluationPeriodMinimalDto,
   UpdateCriteriaSettingPermissionDto,
@@ -66,8 +67,11 @@ import {
 @Controller('admin/evaluation-periods')
 // @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EvaluationPeriodManagementController {
+  private readonly logger = new Logger(EvaluationPeriodManagementController.name);
+
   constructor(
-    private readonly evaluationPeriodManagementService: EvaluationPeriodManagementContextService,
+    private readonly evaluationPeriodBusinessService: EvaluationPeriodBusinessService,
+    private readonly evaluationPeriodManagementService: EvaluationPeriodManagementContextService, // 조회용
   ) {}
 
   // ==================== GET: 조회 ====================
@@ -129,10 +133,11 @@ export class EvaluationPeriodManagementController {
           maxRange: range.maxRange,
         })) || [],
     };
-    return await this.evaluationPeriodManagementService.평가기간_생성한다(
+    const result = await this.evaluationPeriodBusinessService.평가기간을_생성한다(
       contextDto,
       createdBy,
     );
+    return result.evaluationPeriod;
   }
 
   /**

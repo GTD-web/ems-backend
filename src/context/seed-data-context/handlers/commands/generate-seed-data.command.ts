@@ -41,6 +41,15 @@ export class GenerateSeedDataHandler
     this.logger.log(
       `시드 데이터 생성 시작 - 시나리오: ${config.scenario}, 삭제: ${config.clearExisting}`,
     );
+    this.logger.log(
+      `설정 확인 - useRealDepartments: ${config.useRealDepartments}, useRealEmployees: ${config.useRealEmployees}`,
+    );
+    console.log(
+      `시드 데이터 생성 시작 - 시나리오: ${config.scenario}, 삭제: ${config.clearExisting}`,
+    );
+    console.log(
+      `설정 확인 - useRealDepartments: ${config.useRealDepartments}, useRealEmployees: ${config.useRealEmployees}`,
+    );
     this.logger.log(`shouldRunPhase(2, ${config.scenario}): ${this.shouldRunPhase(2, config.scenario)}`);
     this.logger.log(`shouldRunPhase(3, ${config.scenario}): ${this.shouldRunPhase(3, config.scenario)}`);
     this.logger.log(`shouldRunPhase(4, ${config.scenario}): ${this.shouldRunPhase(4, config.scenario)}`);

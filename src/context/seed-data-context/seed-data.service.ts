@@ -27,6 +27,7 @@ export class SeedDataService implements ISeedDataContext {
     config: SeedDataConfig,
   ): Promise<GeneratorResult[]> {
     this.logger.log(`시드 데이터 생성 요청 - 시나리오: ${config.scenario}`);
+    console.log(`시드 데이터 생성 요청 - 시나리오: ${config.scenario}`);
 
     // clearExisting이 true면 먼저 삭제
     if (config.clearExisting) {

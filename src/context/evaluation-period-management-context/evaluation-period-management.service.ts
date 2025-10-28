@@ -25,6 +25,8 @@ import {
   IncludeEvaluationTargetCommand,
   UnregisterEvaluationTargetCommand,
   UnregisterAllEvaluationTargetsCommand,
+  RegisterEvaluationTargetWithAutoEvaluatorCommand,
+  CreateEvaluationPeriodWithAutoTargetsCommand,
 } from './handlers';
 import {
   CreateEvaluationPeriodMinimalDto,
@@ -525,5 +527,30 @@ export class EvaluationPeriodManagementContextService
     }
 
     this.logger.debug('평가 점수 검증 완료', { periodId, score, maxRate });
+  }
+
+  /**
+   * 평가기간을 생성하고 평가 대상자 및 1차 평가자를 자동 할당합니다
+   */
+  async 평가기간을_대상자와_함께_생성한다(
+    createData: CreateEvaluationPeriodMinimalDto,
+    createdBy: string,
+  ) {
+    return await this.commandBus.execute(
+      new CreateEvaluationPeriodWithAutoTargetsCommand(createData, createdBy),
+    );
+  }
+
+  /**
+   * 평가 대상자를 등록하고 1차 평가자를 자동 할당합니다
+   */
+  async 평가대상자를_자동평가자와_함께_등록한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    createdBy: string,
+  ) {
+    return await this.commandBus.execute(
+      new RegisterEvaluationTargetWithAutoEvaluatorCommand(evaluationPeriodId, employeeId, createdBy),
+    );
   }
 }

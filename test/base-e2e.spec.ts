@@ -51,6 +51,13 @@ export class BaseE2ETest {
   }
 
   /**
+   * Repository 접근을 위한 public 메서드
+   */
+  getRepository(entityName: string) {
+    return this.dataSource.getRepository(entityName);
+  }
+
+  /**
    * 테스트 애플리케이션 초기화
    */
   async initializeApp(): Promise<void> {

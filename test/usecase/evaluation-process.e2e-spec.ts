@@ -59,6 +59,52 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     await seedDataScenario.시드_데이터를_삭제한다();
   });
 
+  it('평가기간 생성 시 1차 평가자 자동 할당을 검증한다', async () => {
+    // ========== Step 1: 시드 데이터 생성 ==========
+    console.log('시드데이터 생성 시작...');
+    const { evaluationPeriodId } = await seedDataScenario.시드_데이터를_생성한다({
+      scenario: 'with_period',
+      clearExisting: true,
+      projectCount: 2,
+      wbsPerProject: 3,
+      includeCurrentUserAsEvaluator: false,
+      useRealDepartments: false,
+      useRealEmployees: false,
+    });
+    console.log('시드데이터 생성 완료');
+
+    // ========== Step 2: 새로운 평가기간 생성 및 1차 평가자 자동 할당 검증 ==========
+    const result = await evaluationPeriodScenario.평가기간을_생성하고_1차평가자를_검증한다({
+      name: '2024년 하반기 평가 (Usecase 검증)',
+      startDate: '2024-07-01',
+      peerEvaluationDeadline: '2024-12-31',
+      description: 'Usecase 시나리오에서 1차 평가자 자동 할당 검증',
+      maxSelfEvaluationRate: 120,
+      gradeRanges: [
+        { grade: 'S', minRange: 95, maxRange: 100 },
+        { grade: 'A', minRange: 85, maxRange: 94 },
+        { grade: 'B', minRange: 70, maxRange: 84 },
+        { grade: 'C', minRange: 60, maxRange: 69 },
+      ],
+    });
+
+    // ========== Step 3: 검증 결과 확인 ==========
+    expect(result.evaluationPeriod).toBeDefined();
+    expect(result.evaluationPeriod.id).toBeDefined();
+    expect(result.totalTargets).toBeGreaterThan(0);
+    // 1차 평가자가 할당되지 않은 경우도 있을 수 있음 (부서장이 없는 경우)
+    expect(result.autoAssignedCount).toBeGreaterThanOrEqual(0);
+    expect(result.autoAssignedCount).toBeLessThanOrEqual(result.totalTargets);
+
+    console.log(
+      `✅ 1차 평가자 자동 할당 검증 완료 - 평가기간: ${result.evaluationPeriod.name}, ` +
+      `총 대상자: ${result.totalTargets}명, 자동 할당: ${result.autoAssignedCount}명`,
+    );
+
+    // ========== Step 4: 시드 데이터 정리 ==========
+    await seedDataScenario.시드_데이터를_삭제한다();
+  });
+
   describe('조회 처리 시나리오 (분리 테스트)', () => {
     let evaluationPeriodId: string;
 

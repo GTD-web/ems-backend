@@ -11,6 +11,7 @@ export * from './get-parent-department.handler';
 export * from './get-active-employees.handler';
 export * from './get-department-hierarchy.handler';
 export * from './get-department-hierarchy-with-employees.handler';
+export * from './find-department-manager.handler';
 
 // 핸들러 import
 import { GetAllDepartmentsQueryHandler } from './get-all-departments.handler';
@@ -25,6 +26,7 @@ import { GetParentDepartmentQueryHandler } from './get-parent-department.handler
 import { GetActiveEmployeesQueryHandler } from './get-active-employees.handler';
 import { GetDepartmentHierarchyQueryHandler } from './get-department-hierarchy.handler';
 import { GetDepartmentHierarchyWithEmployeesQueryHandler } from './get-department-hierarchy-with-employees.handler';
+import { FindDepartmentManagerHandler } from './find-department-manager.handler';
 
 export const QUERY_HANDLERS = [
   GetAllDepartmentsQueryHandler,
@@ -39,4 +41,5 @@ export const QUERY_HANDLERS = [
   GetActiveEmployeesQueryHandler,
   GetDepartmentHierarchyQueryHandler,
   GetDepartmentHierarchyWithEmployeesQueryHandler,
+  FindDepartmentManagerHandler,
 ];

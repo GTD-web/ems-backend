@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PeerEvaluationBusinessModule } from './peer-evaluation/peer-evaluation-business.module';
 import { WbsAssignmentBusinessModule } from './wbs-assignment/wbs-assignment-business.module';
+import { EvaluationPeriodBusinessModule } from './evaluation-period/evaluation-period-business.module';
 import { DownwardEvaluationBusinessModule } from './downward-evaluation/downward-evaluation-business.module';
 
 /**
@@ -13,11 +14,13 @@ import { DownwardEvaluationBusinessModule } from './downward-evaluation/downward
     PeerEvaluationBusinessModule,
     WbsAssignmentBusinessModule,
     DownwardEvaluationBusinessModule,
+    EvaluationPeriodBusinessModule,
   ],
   exports: [
     PeerEvaluationBusinessModule,
     WbsAssignmentBusinessModule,
     DownwardEvaluationBusinessModule,
+    EvaluationPeriodBusinessModule,
   ],
 })
 export class BusinessModule {}

@@ -1,5 +1,6 @@
 export * from './evaluation-period';
 export * from './evaluation-target';
+export * from './evaluation-target/commands/register-evaluation-target-with-auto-evaluator.handler';
 
 import {
   EVALUATION_PERIOD_COMMAND_HANDLERS,

@@ -15,14 +15,30 @@ export class SeedDataScenario {
     projectCount: number;
     wbsPerProject: number;
     includeCurrentUserAsEvaluator?: boolean;
+    useRealDepartments?: boolean;
+    useRealEmployees?: boolean;
   }): Promise<{
     seedResponse: any;
     evaluationPeriodId?: string;
   }> {
+    const requestBody = {
+      scenario: config.scenario,
+      clearExisting: config.clearExisting,
+      dataScale: {
+        departmentCount: 3,
+        employeeCount: 3,
+        projectCount: config.projectCount,
+        wbsPerProject: config.wbsPerProject,
+      },
+      includeCurrentUserAsEvaluator: config.includeCurrentUserAsEvaluator,
+      useRealDepartments: config.useRealDepartments ?? false,
+      useRealEmployees: config.useRealEmployees ?? false,
+    };
+
     const response = await this.testSuite
       .request()
-      .post('/admin/seed/generate-with-real-data')
-      .send(config)
+      .post('/admin/seed/generate')
+      .send(requestBody)
       .expect(201);
 
     expect(response.body.success).toBe(true);

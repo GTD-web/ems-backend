@@ -11,7 +11,7 @@ export class EvaluationPeriodScenario {
   constructor(private readonly testSuite: BaseE2ETest) {}
 
   /**
-   * 평가기간 생성
+   * 평가기간 생성 (1차 평가자 자동 할당 포함)
    */
   async 평가기간을_생성한다(createData: {
     name: string;
@@ -46,6 +46,163 @@ export class EvaluationPeriodScenario {
     );
 
     return response.body;
+  }
+
+  /**
+   * 평가기간 생성 및 1차 평가자 자동 할당 검증
+   */
+  async 평가기간을_생성하고_1차평가자를_검증한다(createData: {
+    name: string;
+    startDate: string;
+    peerEvaluationDeadline: string;
+    description?: string;
+    maxSelfEvaluationRate?: number;
+    gradeRanges?: Array<{
+      grade: string;
+      minRange: number;
+      maxRange: number;
+    }>;
+  }): Promise<{
+    evaluationPeriod: {
+      id: string;
+      name: string;
+      status: string;
+      currentPhase: string;
+    };
+    autoAssignedCount: number;
+    totalTargets: number;
+  }> {
+    // 1. 평가기간 생성 (시드데이터에 부서장이 설정되어 있음)
+    const evaluationPeriod = await this.평가기간을_생성한다(createData);
+
+
+    // 2. 평가 대상자 등록 확인
+    const targetsResponse = await this.testSuite
+      .request()
+      .get(`/admin/evaluation-periods/${evaluationPeriod.id}/targets`)
+      .expect(200);
+
+    expect(targetsResponse.body).toBeDefined();
+    expect(targetsResponse.body.targets).toBeDefined();
+    expect(Array.isArray(targetsResponse.body.targets)).toBe(true);
+
+    const totalTargets = targetsResponse.body.targets.length;
+
+    // 3. 1차 평가자 자동 할당 확인
+    let autoAssignedCount = 0;
+    for (const target of targetsResponse.body.targets) {
+      const evaluationLineResponse = await this.testSuite
+        .request()
+        .get(`/admin/evaluation-criteria/evaluation-lines/employee/${target.employee.id}/period/${evaluationPeriod.id}/settings`)
+        .expect(200);
+
+      // wbsItemId가 null인 매핑은 직원별 고정 담당자(1차 평가자)
+      const primaryEvaluator = evaluationLineResponse.body.evaluationLineMappings.find(
+        (line: any) => line.wbsItemId === null
+      );
+
+      if (primaryEvaluator) {
+        autoAssignedCount++;
+      }
+    }
+
+    // 4. 대시보드 API 검증
+    await this.대시보드_API를_검증한다(evaluationPeriod.id, targetsResponse.body.targets);
+
+    console.log(
+      `✅ 1차 평가자 자동 할당 검증 완료: ${autoAssignedCount}/${totalTargets}명 할당됨`,
+    );
+
+    return {
+      evaluationPeriod,
+      autoAssignedCount,
+      totalTargets,
+    };
+  }
+
+
+  /**
+   * 대시보드 API 검증
+   */
+  private async 대시보드_API를_검증한다(
+    evaluationPeriodId: string,
+    targets: any[],
+  ): Promise<void> {
+    // 1. 모든 직원 현황 조회 API 검증
+    const employeesStatusResponse = await this.testSuite
+      .request()
+      .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
+      .expect(200);
+
+    expect(employeesStatusResponse.body).toBeDefined();
+    expect(Array.isArray(employeesStatusResponse.body)).toBe(true);
+    expect(employeesStatusResponse.body.length).toBe(targets.length);
+
+    // 각 직원의 현황 검증
+    for (const status of employeesStatusResponse.body) {
+      expect(status).toHaveProperty('evaluationPeriod');
+      expect(status).toHaveProperty('employee');
+      expect(status).toHaveProperty('isEvaluationTarget');
+      expect(status).toHaveProperty('exclusionInfo');
+      expect(status).toHaveProperty('evaluationCriteria');
+      expect(status).toHaveProperty('wbsCriteria');
+      expect(status).toHaveProperty('evaluationLine');
+
+      // 평가기간 정보 검증
+      expect(status.evaluationPeriod.id).toBe(evaluationPeriodId);
+
+      // 직원 정보 검증
+      expect(status.employee).toHaveProperty('id');
+      expect(status.employee).toHaveProperty('name');
+      expect(status.employee).toHaveProperty('employeeNumber');
+
+      // 평가 대상자 여부 검증
+      expect(status.isEvaluationTarget).toBe(true);
+
+      // 제외 정보 검증
+      expect(status.exclusionInfo).toHaveProperty('isExcluded');
+      expect(status.exclusionInfo.isExcluded).toBe(false);
+
+      // 상태 값 검증
+      expect(['complete', 'in_progress', 'none']).toContain(status.evaluationCriteria.status);
+      expect(['complete', 'in_progress', 'none']).toContain(status.wbsCriteria.status);
+      expect(['complete', 'in_progress', 'none']).toContain(status.evaluationLine.status);
+    }
+
+    // 2. 평가자별 담당 대상자 조회 API 검증
+    for (const target of targets) {
+      const myTargetsResponse = await this.testSuite
+        .request()
+        .get(`/admin/dashboard/${evaluationPeriodId}/my-evaluation-targets/${target.employee.id}/status`)
+        .expect(200);
+
+      expect(myTargetsResponse.body).toBeDefined();
+      expect(Array.isArray(myTargetsResponse.body)).toBe(true);
+
+      // 담당 대상자들의 정보 검증
+      for (const myTarget of myTargetsResponse.body) {
+        expect(myTarget).toHaveProperty('employeeId');
+        expect(myTarget).toHaveProperty('isEvaluationTarget');
+        expect(myTarget).toHaveProperty('exclusionInfo');
+        expect(myTarget).toHaveProperty('evaluationCriteria');
+        expect(myTarget).toHaveProperty('wbsCriteria');
+        expect(myTarget).toHaveProperty('evaluationLine');
+        expect(myTarget).toHaveProperty('myEvaluatorTypes');
+        expect(myTarget).toHaveProperty('downwardEvaluation');
+
+        // 평가 대상자 여부 검증
+        expect(myTarget.isEvaluationTarget).toBe(true);
+
+        // 제외 정보 검증
+        expect(myTarget.exclusionInfo).toHaveProperty('isExcluded');
+        expect(myTarget.exclusionInfo.isExcluded).toBe(false);
+
+        // 평가자 유형 검증 (배열이 비어있을 수 있음)
+        expect(Array.isArray(myTarget.myEvaluatorTypes)).toBe(true);
+      }
+    }
+
+    console.log(`✅ 대시보드 API 검증 완료: ${employeesStatusResponse.body.length}명 직원 현황 조회`);
   }
 
   /**

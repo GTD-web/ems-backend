@@ -70,6 +70,13 @@ export interface IOrganizationManagementContext {
   상위부서조회(departmentId: string): Promise<DepartmentDto | null>;
 
   /**
+   * 직원의 부서장을 조회합니다
+   * @param employeeId 직원 ID
+   * @returns 부서장 ID 또는 null
+   */
+  부서장조회(employeeId: string): Promise<string | null>;
+
+  /**
    * 활성 직원 목록을 조회합니다
    * @returns 활성 상태의 직원 목록
    */

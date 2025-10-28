@@ -74,20 +74,35 @@ export class GetEmployeeEvaluationSettingsHandler
         }),
       ]);
 
-      // 2. 평가라인 매핑 조회 (해당 평가기간의 WBS에만 해당)
+      // 2. 평가라인 매핑 조회 (WBS 관련 + 직원별 고정 담당자)
       let evaluationLineMappings: EvaluationLineMapping[] = [];
+      
       if (wbsAssignments.length > 0) {
+        // WBS 관련 평가라인 매핑 조회
         const wbsItemIds = wbsAssignments.map(
           (assignment) => assignment.wbsItemId,
         );
-        evaluationLineMappings = await this.evaluationLineMappingRepository
+        const wbsMappings = await this.evaluationLineMappingRepository
           .createQueryBuilder('mapping')
           .where('mapping.employeeId = :employeeId', { employeeId })
           .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
           .andWhere('mapping.deletedAt IS NULL')
           .orderBy('mapping.createdAt', 'DESC')
           .getMany();
+        
+        evaluationLineMappings.push(...wbsMappings);
       }
+      
+      // 직원별 고정 담당자(1차 평가자) 매핑 조회 (WBS와 무관)
+      const primaryMappings = await this.evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .where('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.wbsItemId IS NULL') // WBS와 무관한 고정 담당자
+        .andWhere('mapping.deletedAt IS NULL')
+        .orderBy('mapping.createdAt', 'DESC')
+        .getMany();
+      
+      evaluationLineMappings.push(...primaryMappings);
 
       const result = {
         projectAssignments: projectAssignments.map((assignment) =>

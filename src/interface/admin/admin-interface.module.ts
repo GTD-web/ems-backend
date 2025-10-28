@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DomainContextModule } from '../../context/domain-context.module';
+import { BusinessModule } from '../../business/business.module';
 import { AuthContextModule } from '../../context/auth-context/auth-context.module';
 import { EvaluationPeriodManagementContextModule } from '../../context/evaluation-period-management-context/evaluation-period-management-context.module';
 import { EvaluationCriteriaManagementContextModule } from '../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
@@ -8,7 +9,6 @@ import { OrganizationManagementContextModule } from '../../context/organization-
 import { DashboardContextModule } from '../../context/dashboard-context/dashboard-context.module';
 import { EvaluationQuestionManagementContextModule } from '../../context/evaluation-question-management-context/evaluation-question-management-context.module';
 import { SeedDataContextModule } from '../../context/seed-data-context/seed-data-context.module';
-import { BusinessModule } from '../../business/business.module';
 import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
 import { EmployeeModule } from '../../domain/common/employee/employee.module';
 import { AuthController } from './auth/auth.controller';

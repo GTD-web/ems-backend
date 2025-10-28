@@ -21,6 +21,7 @@ import {
   GetActiveEmployeesQuery,
   GetDepartmentHierarchyQuery,
   GetDepartmentHierarchyWithEmployeesQuery,
+  FindDepartmentManagerQuery,
 } from './queries';
 import {
   ExcludeEmployeeFromListCommand,
@@ -199,5 +200,12 @@ export class OrganizationManagementService
     email: string,
   ): Promise<EmployeeInfo | null> {
     return await this.ssoService.이메일로직원을조회한다(email);
+  }
+
+  /**
+   * 직원의 부서장을 조회합니다
+   */
+  async 부서장조회(employeeId: string): Promise<string | null> {
+    return await this.queryBus.execute(new FindDepartmentManagerQuery(employeeId));
   }
 }

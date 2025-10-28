@@ -107,6 +107,12 @@ export class Phase1OrganizationGenerator {
       this.logger.log(`Employee createdBy/excludedBy 업데이트 완료`);
     }
 
+    // 3.5. 부서장 설정 (실제 데이터가 아닌 경우에만)
+    if (!config.useRealDepartments && !config.useRealEmployees) {
+      await this.부서장을_설정한다(employeeIds, allDepartments);
+      this.logger.log(`부서장 설정 완료`);
+    }
+
     // 4. Project 생성
     const projectIds = await this.생성_Project들(
       config.dataScale.projectCount,
@@ -343,10 +349,10 @@ export class Phase1OrganizationGenerator {
         emp.excludedAt = new Date();
       }
 
-      // 랜덤 부서 할당 (externalId 사용)
+      // 랜덤 부서 할당 (id 사용)
       const randomDept =
         departments[Math.floor(Math.random() * departments.length)];
-      emp.departmentId = randomDept.externalId; // externalId로 매칭
+      emp.departmentId = randomDept.id; // id로 매칭
       emp.externalId = faker.string.uuid();
       emp.externalCreatedAt = new Date();
       emp.externalUpdatedAt = new Date();
@@ -756,5 +762,60 @@ export class Phase1OrganizationGenerator {
       );
     }
     return saved;
+  }
+
+  /**
+   * 부서장을 설정한다
+   * 각 부서의 첫 번째 직원을 부서장으로 설정
+   */
+  private async 부서장을_설정한다(
+    employeeIds: string[],
+    departments: Department[],
+  ): Promise<void> {
+    this.logger.log('부서장 설정 시작');
+
+    // 부서별로 직원을 그룹화
+    const departmentEmployeeMap = new Map<string, string[]>();
+    
+    // 모든 직원의 부서 정보 조회
+    const employees = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .select(['employee.id', 'employee.departmentId'])
+      .where('employee.id IN (:...employeeIds)', { employeeIds })
+      .andWhere('employee.deletedAt IS NULL')
+      .orderBy('employee.createdAt', 'ASC') // 생성 순서대로 정렬
+      .getMany();
+
+    // 부서별로 직원 그룹화
+    for (const employee of employees) {
+      if (employee.departmentId) {
+        if (!departmentEmployeeMap.has(employee.departmentId)) {
+          departmentEmployeeMap.set(employee.departmentId, []);
+        }
+        departmentEmployeeMap.get(employee.departmentId)!.push(employee.id);
+      }
+    }
+
+    // 각 부서의 첫 번째 직원을 부서장으로 설정
+    for (const [departmentId, employeeIdsInDept] of departmentEmployeeMap) {
+      if (employeeIdsInDept.length > 0) {
+        const managerId = employeeIdsInDept[0]; // 첫 번째 직원을 부서장으로
+        
+        // Department 테이블에서 id로 매칭하여 managerId 업데이트
+        const department = departments.find(dept => dept.id === departmentId);
+        if (department) {
+          await this.departmentRepository.update(department.id, {
+            managerId: managerId,
+            updatedAt: new Date(),
+          });
+          
+          this.logger.debug(
+            `부서장 설정: 부서 ${department.name} → 직원 ${managerId}`,
+          );
+        }
+      }
+    }
+
+    this.logger.log(`부서장 설정 완료: ${departmentEmployeeMap.size}개 부서`);
   }
 }
