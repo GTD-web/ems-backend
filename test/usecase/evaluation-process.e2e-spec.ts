@@ -412,21 +412,24 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
 
       createdPeriodIds.push(periodId);
 
-      // 3. 모든 평가대상자에게 프로젝트 할당
+      // 3. 모든 평가대상자에게 프로젝트 할당 (평가자 엔드포인트 검증 포함)
+      const evaluatorId = employeeIds[0]; // 첫 번째 직원을 평가자로 사용
       const result =
         await projectAssignmentScenario.프로젝트_할당_후_대시보드_검증_시나리오를_실행한다(
           periodId,
           employeeIds,
           projectIds,
+          evaluatorId, // 평가자 ID 추가
         );
 
       expect(result.totalAssignments).toBe(
         employeeIds.length * projectIds.length,
       );
       expect(result.verifiedEmployees).toBe(employeeIds.length);
+      expect(result.verifiedEvaluatorEndpoints).toBe(employeeIds.length);
 
       console.log(
-        `✅ 프로젝트 할당 및 검증 완료 - 총 ${result.totalAssignments}건 할당, ${result.verifiedEmployees}명 검증`,
+        `✅ 프로젝트 할당 및 검증 완료 - 총 ${result.totalAssignments}건 할당, ${result.verifiedEmployees}명 검증, ${result.verifiedEvaluatorEndpoints}개 평가자 엔드포인트 검증`,
       );
     });
 
@@ -458,18 +461,20 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
         employeeIds,
       );
 
-      // 4. 첫 번째 직원의 프로젝트 할당 취소
+      // 4. 첫 번째 직원의 프로젝트 할당 취소 (평가자 엔드포인트 검증 포함)
       const testEmployeeId = employeeIds[0];
+      const evaluatorId = employeeIds[1] || employeeIds[0]; // 두 번째 직원을 평가자로 사용 (없으면 첫 번째)
       const result =
         await projectAssignmentScenario.프로젝트_할당_취소_시나리오를_실행한다(
           periodId,
           testEmployeeId,
+          evaluatorId, // 평가자 ID 추가
         );
 
       expect(result.projectCountBefore).toBe(projectIds.length);
       expect(result.projectCountAfter).toBe(projectIds.length - 1);
       console.log(
-        `✅ 프로젝트 할당 취소 검증 완료: ${result.projectCountBefore}개 → ${result.projectCountAfter}개`,
+        `✅ 프로젝트 할당 취소 검증 완료: ${result.projectCountBefore}개 → ${result.projectCountAfter}개 (평가자 엔드포인트 검증 포함)`,
       );
     });
 
@@ -501,18 +506,20 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
         employeeIds,
       );
 
-      // 4. 첫 번째 직원의 프로젝트 할당 순서 변경
+      // 4. 첫 번째 직원의 프로젝트 할당 순서 변경 (평가자 엔드포인트 검증 포함)
       const testEmployeeId = employeeIds[0];
+      const evaluatorId = employeeIds[1] || employeeIds[0]; // 두 번째 직원을 평가자로 사용 (없으면 첫 번째)
       const result =
         await projectAssignmentScenario.프로젝트_할당_순서_변경_시나리오를_실행한다(
           periodId,
           testEmployeeId,
+          evaluatorId, // 평가자 ID 추가
         );
 
       expect(result.orderAfterDown).toBeGreaterThan(result.orderBefore);
       expect(result.orderAfterUp).toBe(result.orderBefore);
       console.log(
-        `✅ 프로젝트 할당 순서 변경 검증 완료: down(${result.orderBefore} → ${result.orderAfterDown}), up(${result.orderAfterDown} → ${result.orderAfterUp})`,
+        `✅ 프로젝트 할당 순서 변경 검증 완료: down(${result.orderBefore} → ${result.orderAfterDown}), up(${result.orderAfterDown} → ${result.orderAfterUp}) (평가자 엔드포인트 검증 포함)`,
       );
     });
   });

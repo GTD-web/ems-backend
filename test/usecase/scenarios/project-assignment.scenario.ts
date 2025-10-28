@@ -64,6 +64,31 @@ export class ProjectAssignmentScenario {
   }
 
   /**
+   * 평가자가 담당하는 피평가자의 할당 데이터를 조회합니다.
+   * (evaluatorId를 통한 조회)
+   */
+  async 평가자_피평가자_할당_데이터를_조회한다(
+    periodId: string,
+    evaluatorId: string,
+    employeeId: string,
+  ): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get(`/admin/dashboard/${periodId}/evaluators/${evaluatorId}/employees/${employeeId}/assigned-data`)
+      .expect(200);
+
+    expect(response.body.evaluationPeriod).toBeDefined();
+    expect(response.body.evaluationPeriod.id).toBe(periodId);
+    expect(response.body.employee).toBeDefined();
+    expect(response.body.employee.id).toBe(employeeId);
+    expect(response.body.projects).toBeDefined();
+    expect(Array.isArray(response.body.projects)).toBe(true);
+    expect(response.body.summary).toBeDefined();
+
+    return response.body;
+  }
+
+  /**
    * 프로젝트 할당 목록을 조회합니다.
    */
   async 프로젝트_할당_목록을_조회한다(
@@ -126,9 +151,11 @@ export class ProjectAssignmentScenario {
     periodId: string,
     employeeIds: string[],
     projectIds: string[],
+    evaluatorId?: string,
   ): Promise<{
     totalAssignments: number;
     verifiedEmployees: number;
+    verifiedEvaluatorEndpoints: number;
   }> {
     console.log('\n📝 프로젝트 할당 후 대시보드 검증 시나리오');
 
@@ -139,7 +166,7 @@ export class ProjectAssignmentScenario {
       employeeIds,
     );
 
-    // 2. 각 직원별로 할당 데이터 검증
+    // 2. 각 직원별로 할당 데이터 검증 (직원 직접 조회)
     console.log(`📝 ${employeeIds.length}명의 직원 할당 데이터 검증 시작`);
 
     for (const employeeId of employeeIds) {
@@ -174,9 +201,50 @@ export class ProjectAssignmentScenario {
 
     console.log('✅ 모든 직원의 프로젝트 할당 데이터 검증 완료');
 
+    // 3. 평가자 엔드포인트 검증 (evaluatorId가 제공된 경우)
+    let verifiedEvaluatorEndpoints = 0;
+    if (evaluatorId) {
+      console.log(`📝 평가자 엔드포인트 검증 시작 (evaluatorId: ${evaluatorId})`);
+
+      for (const employeeId of employeeIds) {
+        const evaluatorAssignedData = await this.평가자_피평가자_할당_데이터를_조회한다(
+          periodId,
+          evaluatorId,
+          employeeId,
+        );
+
+        // 프로젝트 배정 확인
+        expect(evaluatorAssignedData.projects.length).toBe(projectIds.length);
+
+        // 각 프로젝트 정보 검증
+        evaluatorAssignedData.projects.forEach((project: any) => {
+          expect(project.projectId).toBeDefined();
+          expect(project.projectName).toBeDefined();
+          expect(project.projectCode).toBeDefined();
+          expect(project.assignedAt).toBeDefined();
+          expect(project.wbsList).toBeDefined();
+          expect(Array.isArray(project.wbsList)).toBe(true);
+
+          // 할당한 프로젝트 ID에 포함되는지 확인
+          expect(projectIds).toContain(project.projectId);
+        });
+
+        // summary 검증
+        expect(evaluatorAssignedData.summary.totalProjects).toBe(projectIds.length);
+
+        console.log(
+          `  ✅ 평가자 엔드포인트: ${evaluatorAssignedData.employee.name} - ${evaluatorAssignedData.projects.length}개 프로젝트 배정 확인`,
+        );
+        verifiedEvaluatorEndpoints++;
+      }
+
+      console.log('✅ 모든 평가자 엔드포인트 검증 완료');
+    }
+
     return {
       totalAssignments: assignments.length,
       verifiedEmployees: employeeIds.length,
+      verifiedEvaluatorEndpoints,
     };
   }
 
@@ -186,6 +254,7 @@ export class ProjectAssignmentScenario {
   async 프로젝트_할당_취소_시나리오를_실행한다(
     periodId: string,
     employeeId: string,
+    evaluatorId?: string,
   ): Promise<{
     assignmentId: string;
     projectCountBefore: number;
@@ -221,7 +290,7 @@ export class ProjectAssignmentScenario {
       `✅ 프로젝트 할당 취소 확인: ${assignmentCountBefore}개 → ${assignmentCountAfter}개`,
     );
 
-    // 4. 대시보드에서도 확인
+    // 4. 대시보드에서도 확인 (직원 직접 조회)
     const dashboardData = await this.직원_할당_데이터를_조회한다(
       periodId,
       employeeId,
@@ -230,6 +299,19 @@ export class ProjectAssignmentScenario {
     expect(dashboardData.projects.length).toBe(assignmentCountAfter);
     expect(dashboardData.summary.totalProjects).toBe(assignmentCountAfter);
     console.log('✅ 대시보드에서 프로젝트 수 감소 확인');
+
+    // 5. 평가자 엔드포인트에서도 확인 (evaluatorId가 제공된 경우)
+    if (evaluatorId) {
+      const evaluatorDashboardData = await this.평가자_피평가자_할당_데이터를_조회한다(
+        periodId,
+        evaluatorId,
+        employeeId,
+      );
+
+      expect(evaluatorDashboardData.projects.length).toBe(assignmentCountAfter);
+      expect(evaluatorDashboardData.summary.totalProjects).toBe(assignmentCountAfter);
+      console.log('✅ 평가자 엔드포인트에서 프로젝트 수 감소 확인');
+    }
 
     return {
       assignmentId,
@@ -244,6 +326,7 @@ export class ProjectAssignmentScenario {
   async 프로젝트_할당_순서_변경_시나리오를_실행한다(
     periodId: string,
     employeeId: string,
+    evaluatorId?: string,
   ): Promise<{
     assignmentId: string;
     orderBefore: number;
@@ -295,7 +378,7 @@ export class ProjectAssignmentScenario {
     expect(orderAfterUp).toBe(orderBefore);
     console.log(`✅ 위로 이동 확인: 순서 ${orderAfterDown} → ${orderAfterUp}`);
 
-    // 5. 대시보드에서 순서 확인
+    // 5. 대시보드에서 순서 확인 (직원 직접 조회)
     const dashboardData = await this.직원_할당_데이터를_조회한다(
       periodId,
       employeeId,
@@ -305,6 +388,19 @@ export class ProjectAssignmentScenario {
     const projects = dashboardData.projects;
     expect(projects.length).toBeGreaterThan(0);
     console.log('✅ 대시보드에서 프로젝트 순서 확인');
+
+    // 6. 평가자 엔드포인트에서도 순서 확인 (evaluatorId가 제공된 경우)
+    if (evaluatorId) {
+      const evaluatorDashboardData = await this.평가자_피평가자_할당_데이터를_조회한다(
+        periodId,
+        evaluatorId,
+        employeeId,
+      );
+
+      const evaluatorProjects = evaluatorDashboardData.projects;
+      expect(evaluatorProjects.length).toBeGreaterThan(0);
+      console.log('✅ 평가자 엔드포인트에서 프로젝트 순서 확인');
+    }
 
     return {
       assignmentId,
