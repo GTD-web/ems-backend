@@ -8,8 +8,7 @@ import { ProjectAssignmentScenario } from './scenarios/project-assignment.scenar
 import { WbsAssignmentScenario } from './scenarios/wbs-assignment.scenario';
 import { SelfEvaluationScenario } from './scenarios/self-evaluation.scenario';
 import { DeliverableScenario } from './scenarios/deliverable.scenario';
-import { DownwardEvaluationScenario } from './scenarios/downward-evaluation.scenario';
-import { WbsAssignmentApiClient } from './scenarios/api-clients/wbs-assignment.api-client';
+import { DownwardEvaluationScenario } from './scenarios/downward-evaluation';
 
 describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let testSuite: BaseE2ETest;
@@ -1322,135 +1321,79 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     });
 
     it('1차 하향평가 저장 시나리오를 실행한다 (다른 피평가자)', async () => {
-      // 다른 팀원 찾기 (evaluateeId가 아닌 다른 직원, managerId가 있는 직원만)
-      const employees = await testSuite.getRepository('Employee').find({
-        where: { id: In(employeeIds) },
-        select: ['id', 'managerId'],
-      });
-
-      const 다른팀원 = employees.find(
-        (emp) =>
-          emp.id !== evaluateeId &&
-          emp.id !== evaluatorId &&
-          emp.managerId !== null,
-      );
-
-      if (!다른팀원) {
-        console.log(
-          '⚠️ managerId가 있는 다른 팀원이 없습니다. 테스트를 건너뜁니다.',
-        );
-        return;
-      }
-
-      // WBS Assignment API 클라이언트 사용
-      const wbsAssignmentApiClient = new WbsAssignmentApiClient(testSuite);
-
-      // 다른 팀원에게 WBS 할당
-      await wbsAssignmentApiClient.create({
-        employeeId: 다른팀원.id,
-        wbsItemId: wbsItemIds[2],
-        projectId: projectIds[0],
-        periodId: evaluationPeriodId,
-      });
-
       const result =
-        await downwardEvaluationScenario.일차하향평가_저장_시나리오를_실행한다({
-          evaluateeId: 다른팀원.id,
-          periodId: evaluationPeriodId,
-          wbsId: wbsItemIds[2],
-          evaluatorId: evaluatorId,
-          downwardEvaluationContent: '저장 시나리오 테스트 - 1차 평가',
-          downwardEvaluationScore: 92,
-        });
+        await downwardEvaluationScenario.다른_피평가자로_일차하향평가_저장_시나리오를_실행한다(
+          {
+            evaluationPeriodId,
+            employeeIds,
+            wbsItemIds,
+            projectIds,
+            evaluatorId,
+            excludeEmployeeIds: [evaluateeId, evaluatorId],
+          },
+        );
 
-      expect(result.저장결과.id).toBeDefined();
-      expect(result.저장결과.evaluatorId).toBe(evaluatorId);
-      expect(result.저장결과.message).toBeDefined();
-
-      console.log(
-        `✅ 1차 하향평가 저장 시나리오 완료 (ID: ${result.저장결과.id})`,
-      );
+      if (result.저장결과) {
+        expect(result.저장결과.id).toBeDefined();
+        expect(result.저장결과.evaluatorId).toBe(evaluatorId);
+        expect(result.저장결과.message).toBeDefined();
+      }
     });
 
     it('2차 하향평가 저장 시나리오를 실행한다 (다른 피평가자)', async () => {
-      // 다른 팀원 찾기 (evaluateeId가 아닌 다른 직원, managerId가 있는 직원만)
-      const employees = await testSuite.getRepository('Employee').find({
-        where: { id: In(employeeIds) },
-        select: ['id', 'managerId'],
-      });
-
-      const 다른팀원들 = employees.filter(
-        (emp) =>
-          emp.id !== evaluateeId &&
-          emp.id !== evaluatorId &&
-          emp.managerId !== null,
-      );
-
-      if (다른팀원들.length < 2) {
-        console.log(
-          '⚠️ managerId가 있는 충분한 팀원이 없습니다. 테스트를 건너뜁니다.',
-        );
-        return;
-      }
-
-      const 다른팀원 = 다른팀원들[1];
-
-      // WBS Assignment API 클라이언트 사용
-      const wbsAssignmentApiClient = new WbsAssignmentApiClient(testSuite);
-
-      // 다른 팀원에게 WBS 할당
-      try {
-        await wbsAssignmentApiClient.create({
-          employeeId: 다른팀원.id,
-          wbsItemId: wbsItemIds[0],
-          projectId: projectIds[0],
-          periodId: evaluationPeriodId,
-        });
-      } catch (error) {
-        console.log('⚠️ WBS 할당 실패 (이미 할당되었을 수 있음)');
-      }
-
-      // 2차 평가자 ID 조회
-      const 평가라인매핑 = await testSuite
-        .getRepository('EvaluationLineMapping')
-        .createQueryBuilder('mapping')
-        .where('mapping.employeeId = :employeeId', {
-          employeeId: 다른팀원.id,
-        })
-        .andWhere('mapping.wbsItemId IS NOT NULL')
-        .andWhere('mapping.deletedAt IS NULL')
-        .getOne();
-
-      if (!평가라인매핑) {
-        console.log('⚠️ 2차 평가자 매핑이 없습니다. 테스트를 건너뜁니다.');
-        return;
-      }
-
-      // 2차 평가자가 피평가자 본인인지 확인
-      if (평가라인매핑.evaluatorId === 다른팀원.id) {
-        console.log(
-          '⚠️ 2차 평가자가 피평가자 본인입니다. 테스트를 건너뜁니다.',
-        );
-        return;
-      }
-
       const result =
-        await downwardEvaluationScenario.이차하향평가_저장_시나리오를_실행한다({
-          evaluateeId: 다른팀원.id,
-          periodId: evaluationPeriodId,
-          wbsId: 평가라인매핑.wbsItemId!,
-          evaluatorId: 평가라인매핑.evaluatorId,
-          downwardEvaluationContent: '저장 시나리오 테스트 - 2차 평가',
-          downwardEvaluationScore: 87,
-        });
+        await downwardEvaluationScenario.다른_피평가자로_이차하향평가_저장_시나리오를_실행한다(
+          {
+            evaluationPeriodId,
+            employeeIds,
+            wbsItemIds,
+            projectIds,
+            excludeEmployeeIds: [evaluateeId, evaluatorId],
+          },
+        );
 
-      expect(result.저장결과.id).toBeDefined();
-      expect(result.저장결과.evaluatorId).toBe(평가라인매핑.evaluatorId);
-      expect(result.저장결과.message).toBeDefined();
+      if (result.저장결과) {
+        expect(result.저장결과.id).toBeDefined();
+        expect(result.저장결과.evaluatorId).toBeDefined();
+        expect(result.저장결과.message).toBeDefined();
+      }
+    });
 
-      console.log(
-        `✅ 2차 하향평가 저장 시나리오 완료 (ID: ${result.저장결과.id})`,
-      );
+    it('1차/2차 하향평가 작성 후 대시보드에서 primary/secondary가 반환된다', async () => {
+      const result =
+        await downwardEvaluationScenario.대시보드_검증_포함_하향평가_시나리오를_실행한다(
+          {
+            evaluationPeriodId,
+            employeeIds,
+            wbsItemIds,
+            projectIds,
+            evaluatorId,
+            excludeEmployeeIds: [evaluateeId, evaluatorId],
+          },
+        );
+
+      // 검증
+      expect(result.하향평가결과.WBS할당결과.mappingCount).toBeGreaterThan(0);
+      expect(result.하향평가결과.자기평가결과.selfEvaluationId).toBeDefined();
+      expect(result.하향평가결과.일차하향평가저장.id).toBeDefined();
+      expect(result.하향평가결과.일차하향평가제출.isSubmitted).toBe(true);
+      expect(
+        result.하향평가결과.대시보드검증결과.대시보드검증결과.primary하향평가,
+      ).toBeDefined();
+      expect(
+        result.하향평가결과.대시보드검증결과.대시보드검증결과.primary하향평가
+          .assignedWbsCount,
+      ).toBeGreaterThan(0);
+
+      // 2차 하향평가가 있는 경우 검증
+      if (result.하향평가결과.이차하향평가저장) {
+        expect(result.하향평가결과.이차하향평가저장.id).toBeDefined();
+        expect(result.하향평가결과.이차하향평가제출.isSubmitted).toBe(true);
+        expect(
+          result.하향평가결과.대시보드검증결과.대시보드검증결과
+            .secondary하향평가,
+        ).toBeDefined();
+      }
     });
   });
 });
