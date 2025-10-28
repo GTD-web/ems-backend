@@ -46,6 +46,12 @@ export {
   GetUnassignedEmployeesHandler,
 } from './queries/get-unassigned-employees.handler';
 
+export {
+  GetAvailableProjectsQuery,
+  GetAvailableProjectsHandler,
+  type AvailableProjectsResult,
+} from './queries/get-available-projects.handler';
+
 // Handler 배열 export (Module에서 사용)
 import { CreateProjectAssignmentHandler } from './commands/create-project-assignment.handler';
 import { CancelProjectAssignmentHandler } from './commands/cancel-project-assignment.handler';
@@ -56,6 +62,7 @@ import { GetEmployeeProjectAssignmentsHandler } from './queries/get-employee-pro
 import { GetProjectAssignedEmployeesHandler } from './queries/get-project-assigned-employees.handler';
 import { GetProjectAssignmentDetailHandler } from './queries/get-project-assignment-detail.handler';
 import { GetUnassignedEmployeesHandler } from './queries/get-unassigned-employees.handler';
+import { GetAvailableProjectsHandler } from './queries/get-available-projects.handler';
 
 export const PROJECT_ASSIGNMENT_COMMAND_HANDLERS = [
   CreateProjectAssignmentHandler,
@@ -70,6 +77,7 @@ export const PROJECT_ASSIGNMENT_QUERY_HANDLERS = [
   GetProjectAssignedEmployeesHandler,
   GetProjectAssignmentDetailHandler,
   GetUnassignedEmployeesHandler,
+  GetAvailableProjectsHandler,
 ];
 
 export const PROJECT_ASSIGNMENT_HANDLERS = [

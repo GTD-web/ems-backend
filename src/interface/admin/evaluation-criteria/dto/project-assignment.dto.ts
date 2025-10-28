@@ -13,6 +13,8 @@ import {
   IsNotEmpty,
   ValidateNested,
   ArrayMinSize,
+  Min,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderDirection } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
@@ -563,4 +565,229 @@ export class ProjectAssignmentListResponseDto {
     example: 10,
   })
   totalPages: number;
+}
+
+/**
+ * 할당 가능한 프로젝트 목록 조회 쿼리 DTO
+ */
+export class GetAvailableProjectsQueryDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  @IsNotEmpty({ message: 'periodId는 필수 항목입니다.' })
+  @IsUUID('4', { message: 'periodId는 올바른 UUID 형식이어야 합니다.' })
+  periodId: string;
+
+  @ApiPropertyOptional({
+    description: '프로젝트 상태 필터',
+    example: 'ACTIVE',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({
+    description: '검색어 (프로젝트명, 프로젝트코드, 매니저명으로 검색)',
+    example: '루미르',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @ApiPropertyOptional({
+    description: '페이지 번호',
+    example: 1,
+    default: 1,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1, { message: '페이지 번호는 1 이상이어야 합니다.' })
+  page?: number = 1;
+
+  @ApiPropertyOptional({
+    description: '페이지 크기',
+    example: 20,
+    default: 20,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @Min(1, { message: '페이지 크기는 1 이상이어야 합니다.' })
+  limit?: number = 20;
+
+  @ApiPropertyOptional({
+    description: '정렬 기준',
+    example: 'name',
+    enum: ['name', 'projectCode', 'startDate', 'endDate', 'managerName'],
+    default: 'name',
+    required: false,
+  })
+  @IsOptional()
+  @IsIn(['name', 'projectCode', 'startDate', 'endDate', 'managerName'], {
+    message: '정렬 기준은 name, projectCode, startDate, endDate, managerName 중 하나여야 합니다.',
+  })
+  sortBy?: string = 'name';
+
+  @ApiPropertyOptional({
+    description: '정렬 방향',
+    example: 'ASC',
+    enum: ['ASC', 'DESC'],
+    default: 'ASC',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(['ASC', 'DESC'])
+  sortOrder?: 'ASC' | 'DESC' = 'ASC';
+}
+
+/**
+ * 매니저 정보 DTO (프로젝트에서 사용)
+ */
+export class ProjectManagerInfoDto {
+  @ApiProperty({
+    description: '매니저 ID',
+    example: '123e4567-e89b-12d3-a456-426614174005',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '매니저 이름',
+    example: '김매니저',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '매니저 이메일',
+    example: 'manager@company.com',
+    required: false,
+  })
+  email?: string;
+
+  @ApiProperty({
+    description: '매니저 전화번호',
+    example: '010-1234-5678',
+    required: false,
+  })
+  phoneNumber?: string;
+
+  @ApiProperty({
+    description: '매니저 부서명',
+    example: '개발팀',
+    required: false,
+  })
+  departmentName?: string;
+}
+
+/**
+ * 할당 가능한 프로젝트 정보 DTO (매니저 정보 포함)
+ */
+export class AvailableProjectInfoDto {
+  @ApiProperty({
+    description: '프로젝트 ID',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '프로젝트명',
+    example: '루미르 통합 포털 개발',
+  })
+  name: string;
+
+  @ApiProperty({
+    description: '프로젝트 코드',
+    example: 'PROJ001',
+    required: false,
+  })
+  projectCode?: string;
+
+  @ApiProperty({
+    description: '상태',
+    example: 'ACTIVE',
+  })
+  status: string;
+
+  @ApiProperty({
+    description: '시작일',
+    example: '2024-01-01T00:00:00.000Z',
+    required: false,
+  })
+  startDate?: Date;
+
+  @ApiProperty({
+    description: '종료일',
+    example: '2024-12-31T23:59:59.999Z',
+    required: false,
+  })
+  endDate?: Date;
+
+  @ApiPropertyOptional({
+    description: '프로젝트 매니저 정보',
+    type: ProjectManagerInfoDto,
+  })
+  manager?: ProjectManagerInfoDto | null;
+}
+
+/**
+ * 할당 가능한 프로젝트 목록 응답 DTO
+ */
+export class AvailableProjectsResponseDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '할당 가능한 프로젝트 목록',
+    type: [AvailableProjectInfoDto],
+  })
+  projects: AvailableProjectInfoDto[];
+
+  @ApiProperty({
+    description: '총 개수',
+    example: 15,
+  })
+  total: number;
+
+  @ApiProperty({
+    description: '페이지 번호',
+    example: 1,
+  })
+  page: number;
+
+  @ApiProperty({
+    description: '페이지 크기',
+    example: 20,
+  })
+  limit: number;
+
+  @ApiProperty({
+    description: '총 페이지 수',
+    example: 1,
+  })
+  totalPages: number;
+
+  @ApiProperty({
+    description: '검색어',
+    example: '루미르',
+    required: false,
+  })
+  search?: string;
+
+  @ApiProperty({
+    description: '정렬 기준',
+    example: 'name',
+  })
+  sortBy: string;
+
+  @ApiProperty({
+    description: '정렬 방향',
+    example: 'ASC',
+  })
+  sortOrder: string;
 }

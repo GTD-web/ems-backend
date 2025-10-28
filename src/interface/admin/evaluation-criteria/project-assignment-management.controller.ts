@@ -8,6 +8,7 @@ import {
   CancelProjectAssignment,
   ChangeProjectAssignmentOrder,
   CreateProjectAssignment,
+  GetAvailableProjects,
   GetEmployeeProjectAssignments,
   GetProjectAssignedEmployees,
   GetProjectAssignmentDetail,
@@ -20,11 +21,13 @@ import {
   ChangeProjectAssignmentOrderBodyDto,
   CreateProjectAssignmentDto,
   EmployeeProjectsResponseDto,
+  GetAvailableProjectsQueryDto,
   GetUnassignedEmployeesQueryDto,
   ProjectAssignmentFilterDto,
   ProjectAssignmentResponseDto,
   ProjectEmployeesResponseDto,
   UnassignedEmployeesResponseDto,
+  AvailableProjectsResponseDto,
 } from './dto/project-assignment.dto';
 import { CurrentUser } from '../../decorators';
 import type { AuthenticatedUser } from '../../decorators';
@@ -145,6 +148,40 @@ export class ProjectAssignmentManagementController {
       periodId: query.periodId,
       projectId: query.projectId,
       employees: result.employees,
+    };
+  }
+
+  /**
+   * 할당 가능한 프로젝트 목록 조회 (매니저 정보 포함, 검색/페이징/정렬 지원)
+   * 주의: 구체적인 경로를 :id 경로보다 먼저 정의해야 함
+   */
+  @GetAvailableProjects()
+  async getAvailableProjects(
+    @Query() query: GetAvailableProjectsQueryDto,
+  ): Promise<AvailableProjectsResponseDto> {
+    const result =
+      await this.evaluationCriteriaManagementService.할당_가능한_프로젝트_목록을_조회한다(
+        query.periodId,
+        {
+          status: query.status,
+          search: query.search,
+          page: query.page,
+          limit: query.limit,
+          sortBy: query.sortBy,
+          sortOrder: query.sortOrder,
+        },
+      );
+
+    return {
+      periodId: result.periodId,
+      projects: result.projects,
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+      search: result.search,
+      sortBy: result.sortBy,
+      sortOrder: result.sortOrder,
     };
   }
 

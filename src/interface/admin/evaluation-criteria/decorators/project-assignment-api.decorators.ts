@@ -22,6 +22,7 @@ import {
   EmployeeProjectsResponseDto,
   ProjectEmployeesResponseDto,
   UnassignedEmployeesResponseDto,
+  AvailableProjectsResponseDto,
 } from '../dto/project-assignment.dto';
 
 // ==================== GET 엔드포인트 데코레이터 ====================
@@ -295,6 +296,102 @@ export function GetUnassignedEmployees() {
       status: 200,
       description: '할당되지 않은 직원 목록이 성공적으로 조회되었습니다.',
       type: UnassignedEmployeesResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 (필수 파라미터 누락, 잘못된 UUID 형식 등)',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '평가기간을 찾을 수 없습니다.',
+    }),
+    ApiResponse({ status: 500, description: '서버 내부 오류' }),
+  );
+}
+
+/**
+ * 할당 가능한 프로젝트 목록 조회 엔드포인트 데코레이터
+ */
+export function GetAvailableProjects() {
+  return applyDecorators(
+    Get('available-projects'),
+    ApiOperation({
+      summary: '할당 가능한 프로젝트 목록 조회',
+      description: `**중요**: 특정 평가기간에 할당 가능한 모든 프로젝트 목록을 조회합니다. 각 프로젝트의 매니저 정보도 함께 반환됩니다.
+
+**동작:**
+- 평가기간에 할당 가능한 모든 활성 프로젝트 조회
+- 각 프로젝트의 매니저 정보를 직원 테이블에서 조회하여 포함
+- 프로젝트 상태 필터링 지원 (기본값: ACTIVE)
+- 프로젝트명 기준 오름차순 정렬
+
+**테스트 케이스:**
+- 기본 조회: 특정 평가기간의 모든 활성 프로젝트 조회
+- 매니저 정보 포함: 각 프로젝트의 매니저 이름, 이메일, 부서명 포함
+- 상태 필터: 특정 상태의 프로젝트만 조회 (ACTIVE, INACTIVE 등)
+- 빈 결과: 할당 가능한 프로젝트가 없을 때 빈 배열 반환
+- 매니저 없는 프로젝트: 매니저가 설정되지 않은 프로젝트도 조회
+- 필수 파라미터: periodId 누락 시 400 에러
+- 존재하지 않는 평가기간: 유효하지 않은 평가기간 ID로 요청 시 404 에러
+- 잘못된 UUID: UUID 형식이 올바르지 않을 때 400 에러
+- 대용량 프로젝트: 100개 이상 프로젝트 조회 성능 테스트
+- 동시 조회: 동일한 평가기간에 대한 동시 조회 요청 처리
+- 정렬 순서: 프로젝트명 기준 오름차순 정렬 확인
+- 매니저 정보 정확성: 매니저 정보가 올바르게 조회되는지 검증`,
+    }),
+    ApiQuery({
+      name: 'periodId',
+      required: true,
+      description: '평가기간 ID (UUID 형식)',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiQuery({
+      name: 'status',
+      required: false,
+      description: '프로젝트 상태 필터 (기본값: ACTIVE)',
+      example: 'ACTIVE',
+      schema: { type: 'string' },
+    }),
+    ApiQuery({
+      name: 'search',
+      required: false,
+      description: '검색어 (프로젝트명, 프로젝트코드, 매니저명으로 검색)',
+      example: '루미르',
+      schema: { type: 'string' },
+    }),
+    ApiQuery({
+      name: 'page',
+      required: false,
+      description: '페이지 번호 (기본값: 1)',
+      example: 1,
+      schema: { type: 'number', minimum: 1 },
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: false,
+      description: '페이지 크기 (기본값: 20)',
+      example: 20,
+      schema: { type: 'number', minimum: 1, maximum: 100 },
+    }),
+    ApiQuery({
+      name: 'sortBy',
+      required: false,
+      description: '정렬 기준 (기본값: name)',
+      example: 'name',
+      enum: ['name', 'projectCode', 'startDate', 'endDate', 'managerName'],
+    }),
+    ApiQuery({
+      name: 'sortOrder',
+      required: false,
+      description: '정렬 방향 (기본값: ASC)',
+      example: 'ASC',
+      enum: ['ASC', 'DESC'],
+    }),
+    ApiResponse({
+      status: 200,
+      description: '할당 가능한 프로젝트 목록이 성공적으로 조회되었습니다.',
+      type: AvailableProjectsResponseDto,
     }),
     ApiResponse({
       status: 400,

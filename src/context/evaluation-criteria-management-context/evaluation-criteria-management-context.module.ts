@@ -1,5 +1,6 @@
 import { Department } from '@domain/common/department/department.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
+import { EmployeeModule } from '@domain/common/employee/employee.module';
 import { Project } from '@domain/common/project/project.entity';
 import { ProjectModule } from '@domain/common/project/project.module';
 import { EvaluationLineMappingModule } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.module';
@@ -68,6 +69,7 @@ import { WbsAssignmentWeightCalculationService } from './services/wbs-assignment
     EvaluationLineMappingModule,
     WbsEvaluationCriteriaModule,
     ProjectModule,
+    EmployeeModule,
     EvaluationPeriodModule,
     WbsItemModule,
   ],

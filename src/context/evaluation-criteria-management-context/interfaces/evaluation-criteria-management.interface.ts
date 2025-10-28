@@ -356,4 +356,47 @@ export interface IEvaluationCriteriaManagementService {
     wbsAssignments: EvaluationWbsAssignmentDto[];
     evaluationLineMappings: EvaluationLineMappingDto[];
   }>;
+
+  // ============================================================================
+  // 할당 가능한 프로젝트 관리
+  // ============================================================================
+
+  /**
+   * 할당 가능한 프로젝트 목록을 조회한다 (매니저 정보 포함, 검색/페이징/정렬 지원)
+   */
+  할당_가능한_프로젝트_목록을_조회한다(
+    periodId: string,
+    options?: {
+      status?: string;
+      search?: string;
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: 'ASC' | 'DESC';
+    },
+  ): Promise<{
+    periodId: string;
+    projects: Array<{
+      id: string;
+      name: string;
+      projectCode?: string;
+      status: string;
+      startDate?: Date;
+      endDate?: Date;
+      manager?: {
+        id: string;
+        name: string;
+        email?: string;
+        phoneNumber?: string;
+        departmentName?: string;
+      } | null;
+    }>;
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+    search?: string;
+    sortBy: string;
+    sortOrder: string;
+  }>;
 }

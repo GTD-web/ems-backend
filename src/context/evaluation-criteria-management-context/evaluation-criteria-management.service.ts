@@ -18,7 +18,9 @@ import {
   GetProjectAssignmentDetailQuery,
   GetProjectAssignmentListQuery,
   GetUnassignedEmployeesQuery,
+  GetAvailableProjectsQuery,
   type ProjectAssignmentListResult,
+  type AvailableProjectsResult,
 } from './handlers/project-assignment';
 
 // WBS Assignment Commands & Queries
@@ -671,5 +673,24 @@ export class EvaluationCriteriaManagementService
       evaluationType,
       evaluationLineId: evaluationLine.id,
     });
+  }
+
+  // ============================================================================
+  // 할당 가능한 프로젝트 관리
+  // ============================================================================
+
+  async 할당_가능한_프로젝트_목록을_조회한다(
+    periodId: string,
+    options: {
+      status?: string;
+      search?: string;
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: 'ASC' | 'DESC';
+    } = {},
+  ): Promise<AvailableProjectsResult> {
+    const query = new GetAvailableProjectsQuery(periodId, options);
+    return await this.queryBus.execute(query);
   }
 }
