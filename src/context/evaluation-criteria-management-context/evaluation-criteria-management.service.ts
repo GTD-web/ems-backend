@@ -643,15 +643,32 @@ export class EvaluationCriteriaManagementService
     }
 
     // 2. 평가라인 ID를 포함하여 평가라인 매핑 조회
-    const mapping = await this.evaluationLineMappingRepository.findOne({
-      where: {
-        employeeId: evaluateeId,
-        evaluatorId: evaluatorId,
-        wbsItemId: wbsId,
-        evaluationLineId: evaluationLine.id,
-        deletedAt: IsNull(),
-      },
-    });
+    // 1차 평가자의 경우 wbsItemId가 null (직원별 고정 담당자)
+    // 2차 평가자의 경우 wbsItemId가 있음 (WBS별 평가자)
+    let mapping;
+    if (evaluationType === 'primary') {
+      // 1차 평가자: wbsItemId가 null인 매핑을 조회
+      mapping = await this.evaluationLineMappingRepository.findOne({
+        where: {
+          employeeId: evaluateeId,
+          evaluatorId: evaluatorId,
+          wbsItemId: IsNull(),
+          evaluationLineId: evaluationLine.id,
+          deletedAt: IsNull(),
+        },
+      });
+    } else {
+      // 2차 평가자: wbsItemId가 있는 매핑을 조회
+      mapping = await this.evaluationLineMappingRepository.findOne({
+        where: {
+          employeeId: evaluateeId,
+          evaluatorId: evaluatorId,
+          wbsItemId: wbsId,
+          evaluationLineId: evaluationLine.id,
+          deletedAt: IsNull(),
+        },
+      });
+    }
 
     if (!mapping) {
       this.logger.warn('평가라인 매핑을 찾을 수 없습니다', {

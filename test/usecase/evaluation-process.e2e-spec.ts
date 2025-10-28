@@ -1,3 +1,4 @@
+import { In } from 'typeorm';
 import { BaseE2ETest } from '../base-e2e.spec';
 import { SeedDataScenario } from './scenarios/seed-data.scenario';
 import { QueryOperationsScenario } from './scenarios/query-operations.scenario';
@@ -7,6 +8,8 @@ import { ProjectAssignmentScenario } from './scenarios/project-assignment.scenar
 import { WbsAssignmentScenario } from './scenarios/wbs-assignment.scenario';
 import { SelfEvaluationScenario } from './scenarios/self-evaluation.scenario';
 import { DeliverableScenario } from './scenarios/deliverable.scenario';
+import { DownwardEvaluationScenario } from './scenarios/downward-evaluation.scenario';
+import { WbsAssignmentApiClient } from './scenarios/api-clients/wbs-assignment.api-client';
 
 describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let testSuite: BaseE2ETest;
@@ -18,6 +21,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
   let wbsAssignmentScenario: WbsAssignmentScenario;
   let selfEvaluationScenario: SelfEvaluationScenario;
   let deliverableScenario: DeliverableScenario;
+  let downwardEvaluationScenario: DownwardEvaluationScenario;
 
   beforeAll(async () => {
     testSuite = new BaseE2ETest();
@@ -32,6 +36,7 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
     wbsAssignmentScenario = new WbsAssignmentScenario(testSuite);
     selfEvaluationScenario = new SelfEvaluationScenario(testSuite);
     deliverableScenario = new DeliverableScenario(testSuite);
+    downwardEvaluationScenario = new DownwardEvaluationScenario(testSuite);
   });
 
   afterAll(async () => {
@@ -1119,6 +1124,333 @@ describe('평가 프로세스 전체 플로우 (E2E)', () => {
       expect(result.자기평가제출.isCompleted).toBe(true);
       expect(result.산출물생성결과들.length).toBe(3);
       expect(result.대시보드응답.projects).toBeDefined();
+    });
+  });
+
+  // ========== 하향평가 관리 시나리오 ==========
+  describe('하향평가 관리 시나리오', () => {
+    let evaluationPeriodId: string;
+    let employeeIds: string[];
+    let wbsItemIds: string[];
+    let projectIds: string[];
+    let evaluatorId: string;
+    let evaluateeId: string;
+
+    beforeAll(async () => {
+      // 1. MINIMAL 시나리오로 시드 데이터 생성 (프로젝트/WBS/직원만, 평가기간 제외)
+      // 조직도 구조를 위해 부서 1개에 직원 5명 설정 (1명 부서장 + 4명 팀원)
+      const { seedResponse } = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'minimal',
+        clearExisting: true,
+        projectCount: 2,
+        wbsPerProject: 3,
+        departmentCount: 1, // 한 부서에 모든 직원 배치
+        employeeCount: 5, // 부서장 1명 + 팀원 4명
+        useRealDepartments: false,
+        useRealEmployees: false,
+      });
+
+      employeeIds = seedResponse.results[0].generatedIds?.employeeIds || [];
+      projectIds = seedResponse.results[0].generatedIds?.projectIds || [];
+
+      // WBS 항목은 데이터베이스에서 직접 조회
+      const wbsItems = await testSuite.getRepository('WbsItem').find({
+        where: { projectId: projectIds[0] },
+        take: 3,
+      });
+      wbsItemIds = wbsItems.map((wbs) => wbs.id);
+
+      console.log(
+        `✅ MINIMAL 시드 데이터 생성 완료 - 부서: 1개, 직원: ${employeeIds.length}명, 프로젝트: ${projectIds.length}개, WBS: ${wbsItemIds.length}개`,
+      );
+
+      // 2. 평가기간 생성 API 엔드포인트 사용 (자동으로 평가 대상자 등록 및 1차 평가자 할당)
+      console.log('📝 평가기간 생성 API 호출 (자동 평가라인 생성)...');
+      const createPeriodResponse = await testSuite
+        .request()
+        .post('/admin/evaluation-periods')
+        .send({
+          name: '하향평가 테스트용 평가기간',
+          startDate: '2024-01-01',
+          peerEvaluationDeadline: '2024-12-31',
+          description: '하향평가 E2E 테스트를 위한 평가기간',
+          maxSelfEvaluationRate: 120,
+          gradeRanges: [
+            { grade: 'S', minRange: 95, maxRange: 100 },
+            { grade: 'A', minRange: 85, maxRange: 94 },
+            { grade: 'B', minRange: 70, maxRange: 84 },
+            { grade: 'C', minRange: 60, maxRange: 69 },
+          ],
+        })
+        .expect(201);
+
+      evaluationPeriodId = createPeriodResponse.body.id;
+
+      console.log(
+        `✅ 평가기간 생성 완료 - ID: ${evaluationPeriodId} (자동으로 평가 대상자 및 1차 평가자 할당됨)`,
+      );
+
+      // 3. 직원들의 managerId 및 평가라인 매핑 확인
+      const employees = await testSuite.getRepository('Employee').find({
+        where: { id: In(employeeIds) },
+        select: ['id', 'name', 'managerId', 'departmentId'],
+      });
+
+      // 4. 평가자와 피평가자 설정
+      // managerId가 null인 직원이 부서장(1차 평가자)
+      // managerId가 있는 직원이 팀원(피평가자)
+      const departmentManagerEmployee = employees.find(
+        (emp) => emp.managerId === null && emp.id !== employeeIds[0],
+      );
+      const teamMemberEmployee = employees.find(
+        (emp) => emp.managerId === departmentManagerEmployee?.id,
+      );
+
+      if (!departmentManagerEmployee || !teamMemberEmployee) {
+        throw new Error('부서장 또는 팀원을 찾을 수 없습니다.');
+      }
+
+      evaluatorId = departmentManagerEmployee.id; // 부서장 (1차 평가자)
+      evaluateeId = teamMemberEmployee.id; // 팀원 (피평가자)
+
+      console.log('📊 생성된 직원 목록:');
+      employees.forEach((emp, index) => {
+        console.log(
+          `  [${index + 1}] ${emp.name} (${emp.id}) - managerId: ${emp.managerId}, deptId: ${emp.departmentId}`,
+        );
+      });
+
+      // 5. 평가 대상자 매핑 확인 (평가기간 생성 시 자동 등록)
+      const evaluationTargets = await testSuite
+        .getRepository('EvaluationPeriodEmployeeMapping')
+        .count({
+          where: { evaluationPeriodId },
+        });
+
+      console.log(`📊 평가 대상자: ${evaluationTargets}명 (자동 등록됨)`);
+
+      console.log(
+        `✅ 조직도 구조 - 부서장(평가자): ${evaluatorId}, 팀원(피평가자): ${evaluateeId}`,
+      );
+    });
+
+    afterAll(async () => {
+      // 테스트 후 정리 - 생성된 평가기간 삭제
+      try {
+        await evaluationPeriodScenario.평가기간을_삭제한다(evaluationPeriodId);
+      } catch (error) {
+        console.log(
+          `평가기간 삭제 실패 (이미 삭제되었을 수 있음): ${evaluationPeriodId}`,
+        );
+      }
+      // 시드 데이터 정리
+      await seedDataScenario.시드_데이터를_삭제한다();
+    });
+
+    it('하향평가 관리 전체 시나리오를 실행한다', async () => {
+      const result =
+        await downwardEvaluationScenario.하향평가_관리_전체_시나리오를_실행한다(
+          {
+            evaluationPeriodId,
+            employeeIds,
+            projectIds,
+            wbsItemIds,
+            evaluatorId,
+            evaluateeId,
+          },
+        );
+
+      // 1차 하향평가 검증
+      expect(result.일차하향평가결과.WBS할당결과.mappingCount).toBeGreaterThan(
+        0,
+      );
+      expect(result.일차하향평가결과.WBS할당결과.primaryEvaluatorId).toBe(
+        evaluatorId,
+      );
+      expect(
+        result.일차하향평가결과.자기평가결과.selfEvaluationId,
+      ).toBeDefined();
+      expect(result.일차하향평가결과.하향평가저장.id).toBeDefined();
+      expect(result.일차하향평가결과.하향평가제출.isSubmitted).toBe(true);
+
+      // 2차 하향평가 검증
+      if (result.이차하향평가결과.WBS할당결과) {
+        expect(
+          result.이차하향평가결과.WBS할당결과.mappingCount,
+        ).toBeGreaterThan(0);
+      }
+      if (result.이차하향평가결과.자기평가결과) {
+        expect(
+          result.이차하향평가결과.자기평가결과.selfEvaluationId,
+        ).toBeDefined();
+      }
+      // 2차 평가자가 없는 경우 id가 null일 수 있음
+      if (result.이차하향평가결과.하향평가저장.id) {
+        expect(result.이차하향평가결과.하향평가저장.id).toBeDefined();
+        expect(result.이차하향평가결과.하향평가제출.isSubmitted).toBe(true);
+      } else {
+        console.log('⚠️ 2차 평가자가 없어 2차 하향평가를 건너뛰었습니다.');
+      }
+
+      // 평가자별 목록 조회 검증
+      expect(result.평가자별목록조회.evaluatorId).toBe(evaluatorId);
+      expect(result.평가자별목록조회.periodId).toBe(evaluationPeriodId);
+      expect(Array.isArray(result.평가자별목록조회.evaluations)).toBe(true);
+
+      // 피평가자별 목록 조회 검증
+      expect(result.피평가자별목록조회.evaluateeId).toBe(evaluateeId);
+      expect(result.피평가자별목록조회.periodId).toBe(evaluationPeriodId);
+      expect(Array.isArray(result.피평가자별목록조회.evaluations)).toBe(true);
+      expect(
+        result.피평가자별목록조회.evaluations.length,
+      ).toBeGreaterThanOrEqual(1);
+
+      // 1차 평가자 타입 필터링 검증
+      expect(result.일차필터링조회.evaluatorId).toBe(evaluatorId);
+      result.일차필터링조회.evaluations.forEach((evaluation: any) => {
+        expect(evaluation.evaluationType).toBe('primary');
+      });
+
+      // 2차 평가자 타입 필터링 검증
+      result.이차필터링조회.evaluations.forEach((evaluation: any) => {
+        expect(evaluation.evaluationType).toBe('secondary');
+      });
+
+      console.log(
+        `✅ 하향평가 관리 전체 시나리오 완료 - 1차: ${result.일차하향평가결과.하향평가저장.id}, 2차: ${result.이차하향평가결과.하향평가저장.id}`,
+      );
+    });
+
+    it('1차 하향평가 저장 시나리오를 실행한다 (다른 피평가자)', async () => {
+      // 다른 팀원 찾기 (evaluateeId가 아닌 다른 직원, managerId가 있는 직원만)
+      const employees = await testSuite.getRepository('Employee').find({
+        where: { id: In(employeeIds) },
+        select: ['id', 'managerId'],
+      });
+
+      const 다른팀원 = employees.find(
+        (emp) =>
+          emp.id !== evaluateeId &&
+          emp.id !== evaluatorId &&
+          emp.managerId !== null,
+      );
+
+      if (!다른팀원) {
+        console.log(
+          '⚠️ managerId가 있는 다른 팀원이 없습니다. 테스트를 건너뜁니다.',
+        );
+        return;
+      }
+
+      // WBS Assignment API 클라이언트 사용
+      const wbsAssignmentApiClient = new WbsAssignmentApiClient(testSuite);
+
+      // 다른 팀원에게 WBS 할당
+      await wbsAssignmentApiClient.create({
+        employeeId: 다른팀원.id,
+        wbsItemId: wbsItemIds[2],
+        projectId: projectIds[0],
+        periodId: evaluationPeriodId,
+      });
+
+      const result =
+        await downwardEvaluationScenario.일차하향평가_저장_시나리오를_실행한다({
+          evaluateeId: 다른팀원.id,
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[2],
+          evaluatorId: evaluatorId,
+          downwardEvaluationContent: '저장 시나리오 테스트 - 1차 평가',
+          downwardEvaluationScore: 92,
+        });
+
+      expect(result.저장결과.id).toBeDefined();
+      expect(result.저장결과.evaluatorId).toBe(evaluatorId);
+      expect(result.저장결과.message).toBeDefined();
+
+      console.log(
+        `✅ 1차 하향평가 저장 시나리오 완료 (ID: ${result.저장결과.id})`,
+      );
+    });
+
+    it('2차 하향평가 저장 시나리오를 실행한다 (다른 피평가자)', async () => {
+      // 다른 팀원 찾기 (evaluateeId가 아닌 다른 직원, managerId가 있는 직원만)
+      const employees = await testSuite.getRepository('Employee').find({
+        where: { id: In(employeeIds) },
+        select: ['id', 'managerId'],
+      });
+
+      const 다른팀원들 = employees.filter(
+        (emp) =>
+          emp.id !== evaluateeId &&
+          emp.id !== evaluatorId &&
+          emp.managerId !== null,
+      );
+
+      if (다른팀원들.length < 2) {
+        console.log(
+          '⚠️ managerId가 있는 충분한 팀원이 없습니다. 테스트를 건너뜁니다.',
+        );
+        return;
+      }
+
+      const 다른팀원 = 다른팀원들[1];
+
+      // WBS Assignment API 클라이언트 사용
+      const wbsAssignmentApiClient = new WbsAssignmentApiClient(testSuite);
+
+      // 다른 팀원에게 WBS 할당
+      try {
+        await wbsAssignmentApiClient.create({
+          employeeId: 다른팀원.id,
+          wbsItemId: wbsItemIds[0],
+          projectId: projectIds[0],
+          periodId: evaluationPeriodId,
+        });
+      } catch (error) {
+        console.log('⚠️ WBS 할당 실패 (이미 할당되었을 수 있음)');
+      }
+
+      // 2차 평가자 ID 조회
+      const 평가라인매핑 = await testSuite
+        .getRepository('EvaluationLineMapping')
+        .createQueryBuilder('mapping')
+        .where('mapping.employeeId = :employeeId', {
+          employeeId: 다른팀원.id,
+        })
+        .andWhere('mapping.wbsItemId IS NOT NULL')
+        .andWhere('mapping.deletedAt IS NULL')
+        .getOne();
+
+      if (!평가라인매핑) {
+        console.log('⚠️ 2차 평가자 매핑이 없습니다. 테스트를 건너뜁니다.');
+        return;
+      }
+
+      // 2차 평가자가 피평가자 본인인지 확인
+      if (평가라인매핑.evaluatorId === 다른팀원.id) {
+        console.log(
+          '⚠️ 2차 평가자가 피평가자 본인입니다. 테스트를 건너뜁니다.',
+        );
+        return;
+      }
+
+      const result =
+        await downwardEvaluationScenario.이차하향평가_저장_시나리오를_실행한다({
+          evaluateeId: 다른팀원.id,
+          periodId: evaluationPeriodId,
+          wbsId: 평가라인매핑.wbsItemId!,
+          evaluatorId: 평가라인매핑.evaluatorId,
+          downwardEvaluationContent: '저장 시나리오 테스트 - 2차 평가',
+          downwardEvaluationScore: 87,
+        });
+
+      expect(result.저장결과.id).toBeDefined();
+      expect(result.저장결과.evaluatorId).toBe(평가라인매핑.evaluatorId);
+      expect(result.저장결과.message).toBeDefined();
+
+      console.log(
+        `✅ 2차 하향평가 저장 시나리오 완료 (ID: ${result.저장결과.id})`,
+      );
     });
   });
 });

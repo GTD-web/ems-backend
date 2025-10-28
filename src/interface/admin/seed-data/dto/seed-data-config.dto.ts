@@ -118,4 +118,26 @@ export class SeedDataConfigDto {
   @IsOptional()
   @IsBoolean()
   includeCurrentUserAsEvaluator?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      '실제 부서 데이터 사용 여부. ' +
+      'false인 경우 Faker로 생성된 더미 부서를 사용합니다.',
+    example: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  useRealDepartments?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      '실제 직원 데이터 사용 여부. ' +
+      'false인 경우 Faker로 생성된 더미 직원을 사용합니다.',
+    example: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  useRealEmployees?: boolean;
 }

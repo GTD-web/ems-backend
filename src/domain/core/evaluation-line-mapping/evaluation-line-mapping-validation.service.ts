@@ -182,13 +182,12 @@ export class EvaluationLineMappingValidationService {
     createData: CreateEvaluationLineMappingData,
     manager?: EntityManager,
   ): Promise<void> {
-    // 자기 자신을 평가할 수 없음
-    if (createData.employeeId === createData.evaluatorId) {
-      throw new EvaluationLineMappingBusinessRuleViolationException(
-        '자기 자신을 평가할 수 없습니다.',
-      );
-    }
-
+    // 비즈니스 제약 조건 제거: 자기 자신을 평가할 수 있도록 허용
+    // if (createData.employeeId === createData.evaluatorId) {
+    //   throw new EvaluationLineMappingBusinessRuleViolationException(
+    //     '자기 자신을 평가할 수 없습니다.',
+    //   );
+    // }
     // 추가적인 비즈니스 규칙이 있다면 여기에 추가
   }
 

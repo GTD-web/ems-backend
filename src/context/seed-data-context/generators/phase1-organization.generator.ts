@@ -46,6 +46,9 @@ export class Phase1OrganizationGenerator {
     };
 
     this.logger.log('Phase 1 시작: 조직 데이터 생성');
+    this.logger.log(
+      `Phase 1 설정: useRealDepartments=${config.useRealDepartments}, useRealEmployees=${config.useRealEmployees}, departmentCount=${config.dataScale.departmentCount}, employeeCount=${config.dataScale.employeeCount}`,
+    );
 
     // 1. Department 계층 생성
     let departmentIds: string[];
@@ -108,9 +111,23 @@ export class Phase1OrganizationGenerator {
     }
 
     // 3.5. 부서장 설정 (실제 데이터가 아닌 경우에만)
+    this.logger.log(
+      `🔍 부서장 설정 조건 확인 - useRealDepartments: ${config.useRealDepartments}, useRealEmployees: ${config.useRealEmployees}`,
+    );
     if (!config.useRealDepartments && !config.useRealEmployees) {
-      await this.부서장을_설정한다(employeeIds, allDepartments);
-      this.logger.log(`부서장 설정 완료`);
+      this.logger.log('✅ 부서장 설정 시작');
+      // 최신 부서 목록을 다시 조회 (새로 생성된 부서 포함)
+      const latestDepartments = await this.departmentRepository
+        .createQueryBuilder('department')
+        .where('department.deletedAt IS NULL')
+        .getMany();
+      this.logger.log(
+        `📊 조회된 부서: ${latestDepartments.length}개, 직원: ${employeeIds.length}명`,
+      );
+      await this.부서장을_설정한다(employeeIds, latestDepartments);
+      this.logger.log(`✅ 부서장 설정 완료`);
+    } else {
+      this.logger.log('⏭️ 부서장 설정 건너뜀 (실제 데이터 사용 중)');
     }
 
     // 4. Project 생성
@@ -292,7 +309,12 @@ export class Phase1OrganizationGenerator {
       adminEmp.employeeNumber = `EMP${timestamp}001`;
       adminEmp.name = '시스템 관리자';
       adminEmp.email = 'admin@system.com';
-      adminEmp.phoneNumber = faker.string.numeric(3) + '-' + faker.string.numeric(4) + '-' + faker.string.numeric(4);
+      adminEmp.phoneNumber =
+        faker.string.numeric(3) +
+        '-' +
+        faker.string.numeric(4) +
+        '-' +
+        faker.string.numeric(4);
       adminEmp.dateOfBirth = faker.date.birthdate({
         min: 30,
         max: 50,
@@ -323,7 +345,12 @@ export class Phase1OrganizationGenerator {
       emp.employeeNumber = `EMP${timestamp}${String(i + 1).padStart(3, '0')}`;
       emp.name = faker.person.fullName();
       emp.email = faker.internet.email();
-      emp.phoneNumber = faker.string.numeric(3) + '-' + faker.string.numeric(4) + '-' + faker.string.numeric(4);
+      emp.phoneNumber =
+        faker.string.numeric(3) +
+        '-' +
+        faker.string.numeric(4) +
+        '-' +
+        faker.string.numeric(4);
       emp.dateOfBirth = faker.date.birthdate({ min: 25, max: 55, mode: 'age' });
       emp.gender = Math.random() > 0.5 ? 'MALE' : 'FEMALE';
       emp.hireDate = DateGeneratorUtil.generatePastDate(3650); // 최대 10년 전
@@ -466,10 +493,24 @@ export class Phase1OrganizationGenerator {
       project.startDate = startDate;
       project.endDate = endDate;
 
-      // 매니저 할당
-      if (ProbabilityUtil.rollDice(dist.projectManagerAssignmentRatio)) {
+      // 매니저 할당 (생성된 직원 중에서 랜덤 선택, 시스템 관리자는 제외)
+      // 시스템 관리자가 아닌 직원들만 필터링
+      const nonSystemAdminEmployees = employeeIds.filter(
+        (id) => id !== systemAdminId,
+      );
+
+      if (nonSystemAdminEmployees.length > 0) {
+        // 일반 직원이 있으면 그 중에서 선택
         project.managerId =
-          employeeIds[Math.floor(Math.random() * employeeIds.length)];
+          nonSystemAdminEmployees[
+            Math.floor(Math.random() * nonSystemAdminEmployees.length)
+          ];
+      } else {
+        // 일반 직원이 없으면 확률 기반으로 할당
+        if (ProbabilityUtil.rollDice(dist.projectManagerAssignmentRatio)) {
+          project.managerId =
+            employeeIds[Math.floor(Math.random() * employeeIds.length)];
+        }
       }
 
       project.createdBy = systemAdminId;
@@ -778,7 +819,7 @@ export class Phase1OrganizationGenerator {
 
     // 부서별로 직원을 그룹화
     const departmentEmployeeMap = new Map<string, string[]>();
-    
+
     // 모든 직원의 부서 정보 조회
     const employees = await this.employeeRepository
       .createQueryBuilder('employee')
@@ -802,15 +843,15 @@ export class Phase1OrganizationGenerator {
     for (const [departmentId, employeeIdsInDept] of departmentEmployeeMap) {
       if (employeeIdsInDept.length > 0) {
         const managerId = employeeIdsInDept[0]; // 첫 번째 직원을 부서장으로
-        
+
         // Department 테이블에서 id로 매칭하여 managerId 업데이트
-        const department = departments.find(dept => dept.id === departmentId);
+        const department = departments.find((dept) => dept.id === departmentId);
         if (department) {
           await this.departmentRepository.update(department.id, {
             managerId: managerId,
             updatedAt: new Date(),
           });
-          
+
           this.logger.debug(
             `부서장 설정: 부서 ${department.name} → 직원 ${managerId}`,
           );

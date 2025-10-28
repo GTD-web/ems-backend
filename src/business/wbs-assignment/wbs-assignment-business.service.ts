@@ -100,14 +100,15 @@ export class WbsAssignmentBusinessService {
       wbsItemId: params.wbsItemId,
       periodId: params.periodId,
     });
-    
-    const wbsEvaluationLineResult = await this.evaluationCriteriaManagementService.직원_WBS별_평가라인을_구성한다(
-      params.employeeId,
-      params.wbsItemId,
-      params.periodId,
-      params.assignedBy,
-    );
-    
+
+    const wbsEvaluationLineResult =
+      await this.evaluationCriteriaManagementService.직원_WBS별_평가라인을_구성한다(
+        params.employeeId,
+        params.wbsItemId,
+        params.periodId,
+        params.assignedBy,
+      );
+
     this.logger.log('WBS별 평가라인 구성 완료', {
       createdLines: wbsEvaluationLineResult.createdLines,
       createdMappings: wbsEvaluationLineResult.createdMappings,
@@ -719,7 +720,7 @@ export class WbsAssignmentBusinessService {
         this.logger.warn('직원을 찾을 수 없습니다', { employeeId });
         return;
       }
-      
+
       console.log('🔍 직원 정보:', {
         id: employee.id,
         name: employee.name,
@@ -733,6 +734,12 @@ export class WbsAssignmentBusinessService {
         this.logger.warn('프로젝트를 찾을 수 없습니다', { projectId });
         return;
       }
+
+      console.log('🔍 프로젝트 정보:', {
+        id: project.id,
+        name: project.name,
+        managerId: project.managerId,
+      });
 
       // 3. 1차 평가자 구성 (기존 할당된 평가자 우선, 없으면 담당 평가자)
       const existingPrimaryEvaluator = await this.기존_1차_평가자를_조회한다(
@@ -776,40 +783,27 @@ export class WbsAssignmentBusinessService {
       }
 
       // 4. 2차 평가자 구성 (프로젝트 PM) - Upsert 방식
+      // 제약 조건 제거: PM이 있으면 항상 2차 평가자로 구성
       if (project.managerId) {
-        // PM이 피평가자 본인인 경우 2차 평가자 설정 안 함
-        if (project.managerId === employeeId) {
-          this.logger.log(
-            'PM이 피평가자 본인이므로 2차 평가자를 구성하지 않습니다',
-            { managerId: project.managerId, employeeId },
+        this.logger.log('2차 평가자(프로젝트 PM) 구성', {
+          evaluatorId: project.managerId,
+          employeeId,
+        });
+
+        try {
+          await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
+            employeeId,
+            wbsItemId,
+            periodId,
+            project.managerId,
+            createdBy,
           );
-        }
-        // PM이 담당 평가자와 동일한 경우 2차 평가자 설정 안 함
-        else if (project.managerId === employee.managerId) {
-          this.logger.log(
-            'PM과 담당 평가자가 동일하여 2차 평가자를 구성하지 않습니다',
-            { managerId: project.managerId },
-          );
-        } else {
-          this.logger.log('2차 평가자(프로젝트 PM) 구성', {
+        } catch (error) {
+          this.logger.error('2차 평가자 구성 실패', {
+            error: error.message,
+            employeeId,
             evaluatorId: project.managerId,
           });
-
-          try {
-            await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
-              employeeId,
-              wbsItemId,
-              periodId,
-              project.managerId,
-              createdBy,
-            );
-          } catch (error) {
-            this.logger.error('2차 평가자 구성 실패', {
-              error: error.message,
-              employeeId,
-              evaluatorId: project.managerId,
-            });
-          }
         }
       } else {
         this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {

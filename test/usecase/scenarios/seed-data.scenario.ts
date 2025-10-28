@@ -17,6 +17,8 @@ export class SeedDataScenario {
     includeCurrentUserAsEvaluator?: boolean;
     useRealDepartments?: boolean;
     useRealEmployees?: boolean;
+    departmentCount?: number;
+    employeeCount?: number;
     selfEvaluationProgress?: {
       notStarted: number;
       inProgress: number;
@@ -33,15 +35,20 @@ export class SeedDataScenario {
       scenario: config.scenario,
       clearExisting: config.clearExisting,
       dataScale: {
-        departmentCount: 3,
-        employeeCount: 3,
+        departmentCount: config.departmentCount ?? 3,
+        employeeCount: config.employeeCount ?? 3,
         projectCount: config.projectCount,
         wbsPerProject: config.wbsPerProject,
       },
-      includeCurrentUserAsEvaluator: config.includeCurrentUserAsEvaluator,
+      includeCurrentUserAsEvaluator:
+        config.includeCurrentUserAsEvaluator ?? false,
       useRealDepartments: config.useRealDepartments ?? false,
       useRealEmployees: config.useRealEmployees ?? false,
     };
+
+    console.log(
+      `📤 시드 데이터 생성 요청 - useRealDepartments: ${requestBody.useRealDepartments}, useRealEmployees: ${requestBody.useRealEmployees}`,
+    );
 
     // 자기평가 완료률 옵션이 제공된 경우 추가
     if (config.selfEvaluationProgress) {
