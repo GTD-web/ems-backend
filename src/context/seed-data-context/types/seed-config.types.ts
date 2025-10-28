@@ -19,7 +19,7 @@ export const DEFAULT_STATE_DISTRIBUTION: Required<StateDistributionConfig> = {
   wbsAssignmentRatio: 0.9,
 
   // Phase 2
-  evaluationPeriodStatus: { waiting: 0.2, inProgress: 0.7, completed: 0.1 },
+  evaluationPeriodStatus: { waiting: 0.3, inProgress: 0.7, completed: 0.0 },
   evaluationPeriodPhase: {
     evaluationSetup: 0.2,
     performance: 0.2,

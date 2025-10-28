@@ -777,8 +777,15 @@ export class WbsAssignmentBusinessService {
 
       // 4. 2차 평가자 구성 (프로젝트 PM) - Upsert 방식
       if (project.managerId) {
+        // PM이 피평가자 본인인 경우 2차 평가자 설정 안 함
+        if (project.managerId === employeeId) {
+          this.logger.log(
+            'PM이 피평가자 본인이므로 2차 평가자를 구성하지 않습니다',
+            { managerId: project.managerId, employeeId },
+          );
+        }
         // PM이 담당 평가자와 동일한 경우 2차 평가자 설정 안 함
-        if (project.managerId === employee.managerId) {
+        else if (project.managerId === employee.managerId) {
           this.logger.log(
             'PM과 담당 평가자가 동일하여 2차 평가자를 구성하지 않습니다',
             { managerId: project.managerId },

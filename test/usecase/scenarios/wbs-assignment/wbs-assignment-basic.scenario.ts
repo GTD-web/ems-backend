@@ -65,6 +65,16 @@ export class WbsAssignmentBasicScenario {
       
       throw new Error(`Unexpected response status: ${response.status}`);
     } catch (error) {
+      console.error(`❌ WBS 할당 생성 실패:`, {
+        employeeId,
+        wbsItemId,
+        projectId,
+        periodId,
+        error: error.message,
+        status: error.response?.status,
+        body: error.response?.body,
+      });
+
       if (error.response?.status === 409) {
         console.log(`⚠️ WBS 할당 충돌 - 기존 할당을 조회합니다`);
         const existingAssignment = await this.testSuite.getRepository('EvaluationWbsAssignment').findOne({
@@ -80,6 +90,17 @@ export class WbsAssignmentBasicScenario {
           return existingAssignment;
         }
       }
+
+      // 404 오류의 경우 리소스가 존재하지 않음을 의미
+      if (error.response?.status === 404) {
+        throw new Error(`필요한 리소스를 찾을 수 없습니다. employeeId: ${employeeId}, wbsItemId: ${wbsItemId}, projectId: ${projectId}, periodId: ${periodId}`);
+      }
+
+      // 422 오류의 경우 유효성 검증 실패
+      if (error.response?.status === 422) {
+        throw new Error(`유효성 검증 실패: ${JSON.stringify(error.response?.body)}`);
+      }
+
       throw error;
     }
   }
@@ -251,6 +272,279 @@ export class WbsAssignmentBasicScenario {
       .expect(200);
 
     return response.body;
+  }
+
+  /**
+   * 평가자의 평가 대상자 현황을 대시보드에서 조회합니다.
+   */
+  async 평가자_평가대상자_현황을_조회한다(
+    periodId: string,
+    evaluatorId: string,
+  ): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get(`/admin/dashboard/${periodId}/my-evaluation-targets/${evaluatorId}/status`)
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * WBS 할당 후 대시보드 종합 검증을 수행합니다.
+   */
+  async WBS_할당_대시보드_종합_검증을_수행한다(
+    periodId: string,
+    employeeId: string,
+    evaluatorId: string,
+    wbsItemIds: string[],
+  ): Promise<{
+    wbsAssignmentsVerified: boolean;
+    evaluationCriteriaVerified: boolean;
+    primaryEvaluatorVerified: boolean;
+    verifiedEndpoints: number;
+    wbsCriteriaDetails?: { wbsId: string; criteriaCount: number; hasCriteria: boolean }[];
+    totalCriteriaCount?: number;
+    // WBS별 하향평가 검증 결과
+    wbsDownwardEvaluationVerified?: boolean;
+    wbsDownwardEvaluationDetails?: {
+      wbsId: string;
+      hasPrimaryDownwardEvaluation: boolean;
+      hasSecondaryDownwardEvaluation: boolean;
+      primaryDownwardEvaluationId?: string;
+      secondaryDownwardEvaluationId?: string;
+    }[];
+    // 평가자 평가 대상자 현황 검증 결과
+    evaluatorTargetsEvaluationCriteriaVerified?: boolean;
+    evaluatorTargetsWbsCriteriaVerified?: boolean;
+    evaluatorTargetsEvaluationLineVerified?: boolean;
+    evaluatorTargetsDetails?: {
+      employeeId: string;
+      hasEvaluationCriteria: boolean;
+      hasWbsCriteria: boolean;
+      hasEvaluationLine: boolean;
+      evaluationCriteriaCount: number;
+      wbsCriteriaCount: number;
+      evaluationLineCount: number;
+    }[];
+  }> {
+    console.log('📝 WBS 할당 대시보드 종합 검증 시작');
+
+    let verifiedEndpoints = 0;
+
+    // 1. 직원 할당 데이터 조회 및 WBS 할당 검증
+    console.log('📝 1. 직원 할당 데이터 조회');
+    const assignedData = await this.직원_할당_데이터를_조회한다(periodId, employeeId);
+    verifiedEndpoints++;
+
+    // WBS 할당 검증
+    const wbsAssignments = assignedData.projects
+      .flatMap((project: any) => project.wbsList || [])
+      .filter((wbs: any) => wbsItemIds.includes(wbs.wbsId));
+
+    const wbsAssignmentsVerified = wbsAssignments.length === wbsItemIds.length;
+    console.log(`📝 WBS 할당 검증: ${wbsAssignments.length}/${wbsItemIds.length}개 - ${wbsAssignmentsVerified ? '성공' : '실패'}`);
+
+    // WBS별 하향평가 검증
+    console.log('📝 1.5. WBS별 하향평가 검증');
+    let wbsDownwardEvaluationVerified = true;
+    const wbsDownwardEvaluationDetails: {
+      wbsId: string;
+      hasPrimaryDownwardEvaluation: boolean;
+      hasSecondaryDownwardEvaluation: boolean;
+      primaryDownwardEvaluationId?: string;
+      secondaryDownwardEvaluationId?: string;
+    }[] = [];
+
+    for (const wbs of wbsAssignments) {
+      const hasPrimaryDownwardEvaluation = wbs.primaryDownwardEvaluation && wbs.primaryDownwardEvaluation.id;
+      const hasSecondaryDownwardEvaluation = wbs.secondaryDownwardEvaluation && wbs.secondaryDownwardEvaluation.id;
+      
+      wbsDownwardEvaluationDetails.push({
+        wbsId: wbs.wbsId,
+        hasPrimaryDownwardEvaluation,
+        hasSecondaryDownwardEvaluation,
+        primaryDownwardEvaluationId: hasPrimaryDownwardEvaluation ? wbs.primaryDownwardEvaluation.id : undefined,
+        secondaryDownwardEvaluationId: hasSecondaryDownwardEvaluation ? wbs.secondaryDownwardEvaluation.id : undefined,
+      });
+
+      if (!hasPrimaryDownwardEvaluation) {
+        console.log(`❌ WBS ${wbs.wbsId}: primaryDownwardEvaluation 없음`);
+        wbsDownwardEvaluationVerified = false;
+      } else {
+        console.log(`✅ WBS ${wbs.wbsId}: primaryDownwardEvaluation 확인 - ID: ${wbs.primaryDownwardEvaluation.id}`);
+      }
+
+      if (!hasSecondaryDownwardEvaluation) {
+        console.log(`❌ WBS ${wbs.wbsId}: secondaryDownwardEvaluation 없음`);
+        wbsDownwardEvaluationVerified = false;
+      } else {
+        console.log(`✅ WBS ${wbs.wbsId}: secondaryDownwardEvaluation 확인 - ID: ${wbs.secondaryDownwardEvaluation.id}`);
+      }
+    }
+
+    // 하향평가 검증 통계
+    const totalWithPrimaryDownwardEvaluation = wbsDownwardEvaluationDetails.filter(d => d.hasPrimaryDownwardEvaluation).length;
+    const totalWithSecondaryDownwardEvaluation = wbsDownwardEvaluationDetails.filter(d => d.hasSecondaryDownwardEvaluation).length;
+    
+    console.log(`📊 WBS별 하향평가 검증 통계:`);
+    console.log(`  - 전체 WBS 수: ${wbsAssignments.length}개`);
+    console.log(`  - primaryDownwardEvaluation이 있는 WBS: ${totalWithPrimaryDownwardEvaluation}개`);
+    console.log(`  - secondaryDownwardEvaluation이 있는 WBS: ${totalWithSecondaryDownwardEvaluation}개`);
+    console.log(`  - 검증 결과: ${wbsDownwardEvaluationVerified ? '성공' : '실패'}`);
+
+    if (!wbsDownwardEvaluationVerified) {
+      console.log(`⚠️ 일부 WBS에 하향평가가 설정되지 않았습니다`);
+      console.log(`📝 WBS별 하향평가 상세:`, JSON.stringify(wbsDownwardEvaluationDetails, null, 2));
+    }
+
+    // 2. 평가기준 검증 (모든 WBS에 대해 상세 검증)
+    console.log('📝 2. 평가기준 검증');
+    let evaluationCriteriaVerified = true;
+    let totalCriteriaCount = 0;
+    const wbsCriteriaDetails: { wbsId: string; criteriaCount: number; hasCriteria: boolean }[] = [];
+
+    for (const wbs of wbsAssignments) {
+      const criteriaCount = wbs.evaluationCriteria?.length || 0;
+      const hasCriteria = criteriaCount > 0;
+      
+      wbsCriteriaDetails.push({
+        wbsId: wbs.wbsId,
+        criteriaCount,
+        hasCriteria,
+      });
+
+      if (!hasCriteria) {
+        evaluationCriteriaVerified = false;
+        console.log(`❌ WBS ${wbs.wbsId}: 평가기준이 없습니다`);
+      } else {
+        console.log(`✅ WBS ${wbs.wbsId}: 평가기준 ${criteriaCount}개 확인`);
+        totalCriteriaCount += criteriaCount;
+      }
+    }
+
+    // 전체 평가기준 검증 결과
+    const expectedWbsCount = wbsItemIds.length;
+    const wbsWithCriteria = wbsCriteriaDetails.filter(detail => detail.hasCriteria).length;
+    
+    console.log(`📊 평가기준 검증 상세 결과:`);
+    console.log(`  - 전체 WBS 수: ${expectedWbsCount}개`);
+    console.log(`  - 평가기준이 있는 WBS: ${wbsWithCriteria}개`);
+    console.log(`  - 전체 평가기준 수: ${totalCriteriaCount}개`);
+    console.log(`  - 검증 결과: ${evaluationCriteriaVerified ? '성공' : '실패'}`);
+
+    if (!evaluationCriteriaVerified) {
+      console.log(`⚠️ 일부 WBS에 평가기준이 설정되지 않았습니다`);
+      console.log(`📝 WBS별 평가기준 상세:`, JSON.stringify(wbsCriteriaDetails, null, 2));
+    }
+
+    // 3. 평가자 평가 대상자 현황 조회 및 상세 검증
+    console.log('📝 3. 평가자 평가 대상자 현황 조회');
+    const evaluatorTargets = await this.평가자_평가대상자_현황을_조회한다(periodId, evaluatorId);
+    verifiedEndpoints++;
+
+    // 평가자 평가 대상자 현황 상세 검증
+    console.log(`📝 평가자 평가 대상자 현황 상세 검증 시작`);
+    console.log(`📝 평가 대상자 수: ${evaluatorTargets.length}명`);
+    
+    let primaryEvaluatorVerified = false;
+    let evaluatorTargetsEvaluationCriteriaVerified = false;
+    let evaluatorTargetsWbsCriteriaVerified = false;
+    let evaluatorTargetsEvaluationLineVerified = false;
+    
+    const targetDetails: {
+      employeeId: string;
+      hasEvaluationCriteria: boolean;
+      hasWbsCriteria: boolean;
+      hasEvaluationLine: boolean;
+      evaluationCriteriaCount: number;
+      wbsCriteriaCount: number;
+      evaluationLineCount: number;
+    }[] = [];
+
+    for (const target of evaluatorTargets) {
+      const hasEvaluationCriteria = target.evaluationCriteria && Array.isArray(target.evaluationCriteria) && target.evaluationCriteria.length > 0;
+      const hasWbsCriteria = target.wbsCriteria && Array.isArray(target.wbsCriteria) && target.wbsCriteria.length > 0;
+      const hasEvaluationLine = target.evaluationLine && Array.isArray(target.evaluationLine) && target.evaluationLine.length > 0;
+      
+      const evaluationCriteriaCount = hasEvaluationCriteria ? target.evaluationCriteria.length : 0;
+      const wbsCriteriaCount = hasWbsCriteria ? target.wbsCriteria.length : 0;
+      const evaluationLineCount = hasEvaluationLine ? target.evaluationLine.length : 0;
+
+      targetDetails.push({
+        employeeId: target.employeeId,
+        hasEvaluationCriteria,
+        hasWbsCriteria,
+        hasEvaluationLine,
+        evaluationCriteriaCount,
+        wbsCriteriaCount,
+        evaluationLineCount,
+      });
+
+      // 해당 직원이 평가 대상자 목록에 있는지 확인
+      if (target.employeeId === employeeId) {
+        primaryEvaluatorVerified = true;
+        console.log(`✅ 평가 대상자 목록에서 직원 ${employeeId} 확인`);
+        
+        // 해당 직원의 상세 정보 검증
+        if (hasEvaluationCriteria) {
+          evaluatorTargetsEvaluationCriteriaVerified = true;
+          console.log(`✅ 직원 ${employeeId} evaluationCriteria 확인: ${evaluationCriteriaCount}개`);
+        } else {
+          console.log(`❌ 직원 ${employeeId} evaluationCriteria 없음`);
+        }
+        
+        if (hasWbsCriteria) {
+          evaluatorTargetsWbsCriteriaVerified = true;
+          console.log(`✅ 직원 ${employeeId} wbsCriteria 확인: ${wbsCriteriaCount}개`);
+        } else {
+          console.log(`❌ 직원 ${employeeId} wbsCriteria 없음`);
+        }
+        
+        if (hasEvaluationLine) {
+          evaluatorTargetsEvaluationLineVerified = true;
+          console.log(`✅ 직원 ${employeeId} evaluationLine 확인: ${evaluationLineCount}개`);
+        } else {
+          console.log(`❌ 직원 ${employeeId} evaluationLine 없음`);
+        }
+      }
+    }
+
+    // 전체 평가 대상자 현황 통계
+    const totalWithEvaluationCriteria = targetDetails.filter(d => d.hasEvaluationCriteria).length;
+    const totalWithWbsCriteria = targetDetails.filter(d => d.hasWbsCriteria).length;
+    const totalWithEvaluationLine = targetDetails.filter(d => d.hasEvaluationLine).length;
+    
+    console.log(`📊 평가자 평가 대상자 현황 통계:`);
+    console.log(`  - 전체 평가 대상자: ${evaluatorTargets.length}명`);
+    console.log(`  - evaluationCriteria가 있는 대상자: ${totalWithEvaluationCriteria}명`);
+    console.log(`  - wbsCriteria가 있는 대상자: ${totalWithWbsCriteria}명`);
+    console.log(`  - evaluationLine이 있는 대상자: ${totalWithEvaluationLine}명`);
+    
+    if (targetDetails.length > 0) {
+      console.log(`📝 평가 대상자별 상세 정보:`);
+      targetDetails.forEach(detail => {
+        console.log(`  - ${detail.employeeId}: evaluationCriteria=${detail.evaluationCriteriaCount}개, wbsCriteria=${detail.wbsCriteriaCount}개, evaluationLine=${detail.evaluationLineCount}개`);
+      });
+    }
+
+    console.log(`✅ 대시보드 종합 검증 완료 - WBS: ${wbsAssignmentsVerified}, 평가기준: ${evaluationCriteriaVerified}, 1차평가자: ${primaryEvaluatorVerified}, 엔드포인트: ${verifiedEndpoints}개`);
+    console.log(`📊 WBS별 하향평가 검증 - primaryDownwardEvaluation: ${wbsDownwardEvaluationVerified}, secondaryDownwardEvaluation: ${wbsDownwardEvaluationVerified}`);
+    console.log(`📊 평가자 평가 대상자 현황 검증 - evaluationCriteria: ${evaluatorTargetsEvaluationCriteriaVerified}, wbsCriteria: ${evaluatorTargetsWbsCriteriaVerified}, evaluationLine: ${evaluatorTargetsEvaluationLineVerified}`);
+
+    return {
+      wbsAssignmentsVerified,
+      evaluationCriteriaVerified,
+      primaryEvaluatorVerified,
+      verifiedEndpoints,
+      wbsCriteriaDetails,
+      totalCriteriaCount,
+      wbsDownwardEvaluationVerified,
+      wbsDownwardEvaluationDetails,
+      evaluatorTargetsEvaluationCriteriaVerified,
+      evaluatorTargetsWbsCriteriaVerified,
+      evaluatorTargetsEvaluationLineVerified,
+      evaluatorTargetsDetails: targetDetails,
+    };
   }
 
   /**

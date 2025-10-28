@@ -67,26 +67,47 @@ export class ConfigureEmployeeWbsEvaluationLineHandler
           wbsItemId,
         });
 
-      // 2. 이 직원-WBS 조합을 위한 평가라인들 생성
+      // 2. 이 직원-WBS 조합을 위한 평가라인들 조회 또는 생성
 
-      // 동료 평가 라인 생성 (1차 평가자)
-      const peerEvaluationLine = await this.evaluationLineService.생성한다({
+      // 동료 평가 라인 조회 또는 생성 (1차 평가자)
+      const existingPeerLines = await this.evaluationLineService.필터_조회한다({
         evaluatorType: EvaluatorType.PRIMARY,
-        order: 1,
-        isRequired: true,
-        isAutoAssigned: true,
+        orderFrom: 1,
+        orderTo: 1,
       });
-      createdLines++;
 
-      // 상급자 평가 라인 생성 (2차 평가자)
-      const supervisorEvaluationLine =
-        await this.evaluationLineService.생성한다({
+      let peerEvaluationLine;
+      if (existingPeerLines.length > 0) {
+        peerEvaluationLine = existingPeerLines[0];
+      } else {
+        peerEvaluationLine = await this.evaluationLineService.생성한다({
+          evaluatorType: EvaluatorType.PRIMARY,
+          order: 1,
+          isRequired: true,
+          isAutoAssigned: true,
+        });
+        createdLines++;
+      }
+
+      // 상급자 평가 라인 조회 또는 생성 (2차 평가자)
+      const existingSupervisorLines = await this.evaluationLineService.필터_조회한다({
+        evaluatorType: EvaluatorType.SECONDARY,
+        orderFrom: 2,
+        orderTo: 2,
+      });
+
+      let supervisorEvaluationLine;
+      if (existingSupervisorLines.length > 0) {
+        supervisorEvaluationLine = existingSupervisorLines[0];
+      } else {
+        supervisorEvaluationLine = await this.evaluationLineService.생성한다({
           evaluatorType: EvaluatorType.SECONDARY,
           order: 2,
           isRequired: true,
           isAutoAssigned: false,
         });
-      createdLines++;
+        createdLines++;
+      }
 
       // 3. 동료 평가 매핑 생성 (같은 WBS 항목에 할당된 다른 직원들)
       for (const assignment of wbsAssignments) {

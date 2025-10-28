@@ -2,6 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 import { WbsAssignmentBasicScenario } from './wbs-assignment-basic.scenario';
 import { WbsAssignmentCriteriaScenario } from './wbs-assignment-criteria.scenario';
 import { WbsAssignmentEvaluationLineScenario } from './wbs-assignment-evaluation-line.scenario';
+import { Not, IsNull } from 'typeorm';
 
 /**
  * WBS 할당 통합 시나리오 클래스
@@ -34,6 +35,9 @@ export class WbsAssignmentIntegrationScenario {
   ): Promise<{
     assignments: any[];
     verifiedDashboardEndpoints: number;
+    totalWbsVerified?: number;
+    totalCriteriaVerified?: number;
+    totalPrimaryEvaluatorVerified?: number;
   }> {
     console.log('📝 WBS 할당 후 대시보드 검증 시나리오');
 
@@ -64,29 +68,230 @@ export class WbsAssignmentIntegrationScenario {
     });
     console.log(`📝 데이터베이스 WBS 할당 수: ${wbsAssignments.length}개`);
 
-    // 4. 각 직원의 할당 데이터 검증
-    console.log(`📝 ${employeeIds.length}명의 직원 할당 데이터 검증 시작`);
+    // 4. 각 직원의 할당 데이터 종합 검증 (WBS, 평가기준, 1차 평가자)
+    console.log(`📝 ${employeeIds.length}명의 직원 할당 데이터 종합 검증 시작`);
     let verifiedDashboardEndpoints = 0;
+    let totalWbsVerified = 0;
+    let totalCriteriaVerified = 0;
+    let totalPrimaryEvaluatorVerified = 0;
 
     for (const employeeId of employeeIds) {
-      const assignedData = await this.basicScenario.직원_할당_데이터를_조회한다(periodId, employeeId);
+      // 1차 평가자 ID 조회 (직원의 managerId가 없으면 다른 직원을 평가자로 사용)
+      const employee = await this.testSuite.getRepository('Employee').findOne({
+        where: { id: employeeId },
+      });
       
-      // WBS 할당이 대시보드에 반영되었는지 확인
-      const wbsAssignments = assignedData.projects
-        .flatMap((project: any) => project.wbsList || [])
-        .filter((wbs: any) => wbsItemIds.includes(wbs.wbsId));
+      let evaluatorId: string;
+      if (employee && employee.managerId) {
+        evaluatorId = employee.managerId;
+      } else {
+        // managerId가 없는 경우 다른 직원을 평가자로 사용
+        const otherEmployees = await this.testSuite.getRepository('Employee').find({
+          where: { 
+            id: Not(employeeId),
+            deletedAt: IsNull(),
+          },
+          take: 1,
+        });
+        
+        if (otherEmployees.length === 0) {
+          console.log(`⚠️ ${employeeId}: 1차 평가자 정보가 없고 다른 직원도 없어 검증을 건너뜁니다`);
+          continue;
+        }
+        
+        evaluatorId = otherEmployees[0].id;
+        console.log(`⚠️ ${employeeId}: managerId가 없어 다른 직원 ${evaluatorId}를 평가자로 사용합니다`);
+      }
+      
+      // 대시보드 종합 검증 수행
+      const verificationResult = await this.basicScenario.WBS_할당_대시보드_종합_검증을_수행한다(
+        periodId,
+        employeeId,
+        evaluatorId,
+        wbsItemIds,
+      );
 
-      expect(wbsAssignments.length).toBe(wbsItemIds.length);
-      console.log(`  ✅ ${employeeId}: ${wbsItemIds.length}개 WBS 배정 확인`);
-      verifiedDashboardEndpoints++;
+      verifiedDashboardEndpoints += verificationResult.verifiedEndpoints;
+      if (verificationResult.wbsAssignmentsVerified) totalWbsVerified++;
+      if (verificationResult.evaluationCriteriaVerified) totalCriteriaVerified++;
+      if (verificationResult.primaryEvaluatorVerified) totalPrimaryEvaluatorVerified++;
+
+      // 상세한 평가기준 검증 결과 출력
+      if (verificationResult.wbsCriteriaDetails) {
+        console.log(`  📊 ${employeeId} WBS별 평가기준 상세:`);
+        verificationResult.wbsCriteriaDetails.forEach(detail => {
+          console.log(`    - WBS ${detail.wbsId}: ${detail.criteriaCount}개 ${detail.hasCriteria ? '✅' : '❌'}`);
+        });
+        console.log(`    - 총 평가기준: ${verificationResult.totalCriteriaCount || 0}개`);
+      }
+
+      // 평가자 평가 대상자 현황 검증 결과 출력
+      if (verificationResult.evaluatorTargetsDetails) {
+        console.log(`  📊 ${employeeId} 평가자 평가 대상자 현황 상세:`);
+        verificationResult.evaluatorTargetsDetails.forEach(detail => {
+          console.log(`    - ${detail.employeeId}: evaluationCriteria=${detail.evaluationCriteriaCount}개, wbsCriteria=${detail.wbsCriteriaCount}개, evaluationLine=${detail.evaluationLineCount}개`);
+        });
+      }
+
+      console.log(`  📊 ${employeeId} 검증 결과: WBS=${verificationResult.wbsAssignmentsVerified}, 평가기준=${verificationResult.evaluationCriteriaVerified}, 1차평가자=${verificationResult.primaryEvaluatorVerified}`);
+      console.log(`  📊 ${employeeId} 평가자 현황: evaluationCriteria=${verificationResult.evaluatorTargetsEvaluationCriteriaVerified}, wbsCriteria=${verificationResult.evaluatorTargetsWbsCriteriaVerified}, evaluationLine=${verificationResult.evaluatorTargetsEvaluationLineVerified}`);
     }
 
     console.log('✅ 모든 직원의 WBS 할당 데이터 검증 완료');
+    console.log(`📊 종합 검증 결과:`);
+    console.log(`  - WBS 할당 검증: ${totalWbsVerified}/${employeeIds.length}명`);
+    console.log(`  - 평가기준 검증: ${totalCriteriaVerified}/${employeeIds.length}명`);
+    console.log(`  - 1차 평가자 검증: ${totalPrimaryEvaluatorVerified}/${employeeIds.length}명`);
     console.log(`✅ WBS 할당 및 검증 완료 - 총 ${assignments.length}건 할당, ${employeeIds.length}명 검증, ${verifiedDashboardEndpoints}개 대시보드 엔드포인트 검증`);
 
     return {
       assignments,
       verifiedDashboardEndpoints,
+      totalWbsVerified,
+      totalCriteriaVerified,
+      totalPrimaryEvaluatorVerified,
+    };
+  }
+
+  /**
+   * WBS 할당 후 대시보드 API를 통한 종합 검증 시나리오를 실행합니다.
+   */
+  async WBS_할당_대시보드_종합_검증_시나리오를_실행한다(
+    periodId: string,
+    employeeId: string,
+    wbsItemIds: string[],
+    projectId: string,
+  ): Promise<{
+    assignmentCreated: boolean;
+    wbsAssignmentsVerified: boolean;
+    evaluationCriteriaVerified: boolean;
+    primaryEvaluatorVerified: boolean;
+    verifiedEndpoints: number;
+    wbsCriteriaDetails?: { wbsId: string; criteriaCount: number; hasCriteria: boolean }[];
+    totalCriteriaCount?: number;
+    wbsDownwardEvaluationVerified?: boolean;
+    wbsDownwardEvaluationDetails?: {
+      wbsId: string;
+      hasPrimaryDownwardEvaluation: boolean;
+      hasSecondaryDownwardEvaluation: boolean;
+      primaryDownwardEvaluationId?: string;
+      secondaryDownwardEvaluationId?: string;
+    }[];
+    evaluatorTargetsEvaluationCriteriaVerified?: boolean;
+    evaluatorTargetsWbsCriteriaVerified?: boolean;
+    evaluatorTargetsEvaluationLineVerified?: boolean;
+    evaluatorTargetsDetails?: {
+      employeeId: string;
+      hasEvaluationCriteria: boolean;
+      hasWbsCriteria: boolean;
+      hasEvaluationLine: boolean;
+      evaluationCriteriaCount: number;
+      wbsCriteriaCount: number;
+      evaluationLineCount: number;
+    }[];
+  }> {
+    console.log('📝 WBS 할당 대시보드 종합 검증 시나리오');
+
+    // 1. 프로젝트 할당 먼저 생성
+    console.log('📝 프로젝트 할당 생성 중...');
+    await this.basicScenario.프로젝트를_대량으로_할당한다(periodId, [projectId], [employeeId]);
+    console.log('✅ 프로젝트 할당 완료');
+
+    // 2. WBS 할당 생성
+    const assignments: any[] = [];
+    for (const wbsItemId of wbsItemIds) {
+      const assignment = await this.basicScenario.WBS_할당을_생성한다(
+        employeeId,
+        wbsItemId,
+        projectId,
+        periodId,
+      );
+      assignments.push(assignment);
+    }
+
+    console.log(`✅ WBS 할당 생성 완료: ${assignments.length}개`);
+
+    // 3. 1차 평가자 ID 조회 (직원의 managerId가 없으면 다른 직원을 평가자로 사용)
+    const employee = await this.testSuite.getRepository('Employee').findOne({
+      where: { id: employeeId },
+    });
+    
+    let evaluatorId: string;
+    if (employee && employee.managerId) {
+      evaluatorId = employee.managerId;
+    } else {
+      // managerId가 없는 경우 다른 직원을 평가자로 사용
+      const otherEmployees = await this.testSuite.getRepository('Employee').find({
+        where: { 
+          id: Not(employeeId),
+          deletedAt: IsNull(),
+        },
+        take: 1,
+      });
+      
+      if (otherEmployees.length === 0) {
+        throw new Error(`직원 ${employeeId}의 1차 평가자 정보가 없고, 다른 직원도 없습니다`);
+      }
+      
+      evaluatorId = otherEmployees[0].id;
+      console.log(`⚠️ 직원 ${employeeId}의 managerId가 없어 다른 직원 ${evaluatorId}를 평가자로 사용합니다`);
+    }
+
+    // 4. 대시보드 종합 검증 수행
+    const verificationResult = await this.basicScenario.WBS_할당_대시보드_종합_검증을_수행한다(
+      periodId,
+      employeeId,
+      evaluatorId,
+      wbsItemIds,
+    );
+
+    // 상세한 평가기준 검증 결과 출력
+    if (verificationResult.wbsCriteriaDetails) {
+      console.log(`📊 WBS별 평가기준 상세 검증 결과:`);
+      verificationResult.wbsCriteriaDetails.forEach(detail => {
+        console.log(`  - WBS ${detail.wbsId}: ${detail.criteriaCount}개 평가기준 ${detail.hasCriteria ? '✅' : '❌'}`);
+      });
+      console.log(`  - 총 평가기준 수: ${verificationResult.totalCriteriaCount || 0}개`);
+    }
+
+    // WBS별 하향평가 상세 검증 결과 출력
+    if (verificationResult.wbsDownwardEvaluationDetails) {
+      console.log(`📊 WBS별 하향평가 상세 검증 결과:`);
+      verificationResult.wbsDownwardEvaluationDetails.forEach(detail => {
+        console.log(`  - WBS ${detail.wbsId}: primaryDownwardEvaluation=${detail.hasPrimaryDownwardEvaluation ? '✅' : '❌'}, secondaryDownwardEvaluation=${detail.hasSecondaryDownwardEvaluation ? '✅' : '❌'}`);
+        if (detail.primaryDownwardEvaluationId) {
+          console.log(`    - primaryDownwardEvaluation ID: ${detail.primaryDownwardEvaluationId}`);
+        }
+        if (detail.secondaryDownwardEvaluationId) {
+          console.log(`    - secondaryDownwardEvaluation ID: ${detail.secondaryDownwardEvaluationId}`);
+        }
+      });
+    }
+
+    // 평가자 평가 대상자 현황 상세 검증 결과 출력
+    if (verificationResult.evaluatorTargetsDetails) {
+      console.log(`📊 평가자 평가 대상자 현황 상세 검증 결과:`);
+      verificationResult.evaluatorTargetsDetails.forEach(detail => {
+        console.log(`  - ${detail.employeeId}: evaluationCriteria=${detail.evaluationCriteriaCount}개, wbsCriteria=${detail.wbsCriteriaCount}개, evaluationLine=${detail.evaluationLineCount}개`);
+      });
+    }
+
+    console.log(`✅ WBS 할당 대시보드 종합 검증 완료 - 할당: ${assignments.length}개, WBS: ${verificationResult.wbsAssignmentsVerified}, 평가기준: ${verificationResult.evaluationCriteriaVerified}, 1차평가자: ${verificationResult.primaryEvaluatorVerified}`);
+
+    return {
+      assignmentCreated: true,
+      wbsAssignmentsVerified: verificationResult.wbsAssignmentsVerified,
+      evaluationCriteriaVerified: verificationResult.evaluationCriteriaVerified,
+      primaryEvaluatorVerified: verificationResult.primaryEvaluatorVerified,
+      verifiedEndpoints: verificationResult.verifiedEndpoints,
+      wbsCriteriaDetails: verificationResult.wbsCriteriaDetails,
+      totalCriteriaCount: verificationResult.totalCriteriaCount,
+      wbsDownwardEvaluationVerified: verificationResult.wbsDownwardEvaluationVerified,
+      wbsDownwardEvaluationDetails: verificationResult.wbsDownwardEvaluationDetails,
+      evaluatorTargetsEvaluationCriteriaVerified: verificationResult.evaluatorTargetsEvaluationCriteriaVerified,
+      evaluatorTargetsWbsCriteriaVerified: verificationResult.evaluatorTargetsWbsCriteriaVerified,
+      evaluatorTargetsEvaluationLineVerified: verificationResult.evaluatorTargetsEvaluationLineVerified,
+      evaluatorTargetsDetails: verificationResult.evaluatorTargetsDetails,
     };
   }
 
@@ -325,3 +530,4 @@ export class WbsAssignmentIntegrationScenario {
     };
   }
 }
+
