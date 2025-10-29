@@ -48,6 +48,17 @@ export const ApiGenerateSeedDataWithRealData = () =>
             evaluationConfig: {
               periodCount: 1,
             },
+            stateDistribution: {
+              evaluationPeriodStatus: { waiting: 0.2, inProgress: 0.8, completed: 0.0 },
+              evaluationPeriodPhase: {
+                evaluationSetup: 0.2,
+                performance: 0.2,
+                selfEvaluation: 0.3,
+                peerEvaluation: 0.2,
+                closure: 0.1,
+              },
+              excludedFromEvaluation: 0.01, // 1%로 제한
+            },
           },
         },
         withPeriodMulti: {
@@ -62,6 +73,17 @@ export const ApiGenerateSeedDataWithRealData = () =>
             evaluationConfig: {
               periodCount: 3,
             },
+            stateDistribution: {
+              evaluationPeriodStatus: { waiting: 0.2, inProgress: 0.8, completed: 0.0 },
+              evaluationPeriodPhase: {
+                evaluationSetup: 0.2,
+                performance: 0.2,
+                selfEvaluation: 0.3,
+                peerEvaluation: 0.2,
+                closure: 0.1,
+              },
+              excludedFromEvaluation: 0.01, // 1%로 제한
+            },
           },
         },
         withAssignments: {
@@ -75,6 +97,17 @@ export const ApiGenerateSeedDataWithRealData = () =>
             evaluationConfig: {
               periodCount: 1,
             },
+            stateDistribution: {
+              evaluationPeriodStatus: { waiting: 0.2, inProgress: 0.8, completed: 0.0 },
+              evaluationPeriodPhase: {
+                evaluationSetup: 0.2,
+                performance: 0.2,
+                selfEvaluation: 0.3,
+                peerEvaluation: 0.2,
+                closure: 0.1,
+              },
+              excludedFromEvaluation: 0.01, // 1%로 제한
+            },
           },
         },
         withSetup: {
@@ -87,6 +120,17 @@ export const ApiGenerateSeedDataWithRealData = () =>
             wbsPerProject: 15,
             evaluationConfig: {
               periodCount: 1,
+            },
+            stateDistribution: {
+              evaluationPeriodStatus: { waiting: 0.1, inProgress: 0.9, completed: 0.0 },
+              evaluationPeriodPhase: {
+                evaluationSetup: 0.0,
+                performance: 0.0,
+                selfEvaluation: 0.4,
+                peerEvaluation: 0.4,
+                closure: 0.2,
+              },
+              excludedFromEvaluation: 0.01, // 1%로 제한
             },
           },
         },
@@ -103,6 +147,14 @@ export const ApiGenerateSeedDataWithRealData = () =>
               periodCount: 1,
             },
             stateDistribution: {
+              evaluationPeriodStatus: { waiting: 0.1, inProgress: 0.9, completed: 0.0 },
+              evaluationPeriodPhase: {
+                evaluationSetup: 0.0,
+                performance: 0.0,
+                selfEvaluation: 1.0, // 자기평가 단계
+                peerEvaluation: 0.0,
+                closure: 0.0,
+              },
               selfEvaluationProgress: {
                 completed: 1.0,
                 notStarted: 0.0,
@@ -126,6 +178,7 @@ export const ApiGenerateSeedDataWithRealData = () =>
                 completed: 0.0,
                 notStarted: 1.0,
               },
+              excludedFromEvaluation: 0.01, // 1%로 제한
             },
           },
         },
@@ -141,6 +194,14 @@ export const ApiGenerateSeedDataWithRealData = () =>
               periodCount: 1,
             },
             stateDistribution: {
+              evaluationPeriodStatus: { waiting: 0.1, inProgress: 0.9, completed: 0.0 },
+              evaluationPeriodPhase: {
+                evaluationSetup: 0.0,
+                performance: 0.0,
+                selfEvaluation: 0.0,
+                peerEvaluation: 0.0,
+                closure: 1.0, // 마감 단계
+              },
               selfEvaluationProgress: {
                 completed: 1.0,
                 notStarted: 0.0,
@@ -164,6 +225,7 @@ export const ApiGenerateSeedDataWithRealData = () =>
                 completed: 0.0,
                 notStarted: 1.0,
               },
+              excludedFromEvaluation: 0.01, // 1%로 제한
             },
           },
         },
@@ -179,6 +241,14 @@ export const ApiGenerateSeedDataWithRealData = () =>
               periodCount: 1,
             },
             stateDistribution: {
+              evaluationPeriodStatus: { waiting: 0.1, inProgress: 0.9, completed: 0.0 },
+              evaluationPeriodPhase: {
+                evaluationSetup: 0.0,
+                performance: 0.0,
+                selfEvaluation: 0.0,
+                peerEvaluation: 0.0,
+                closure: 1.0, // 마감 단계
+              },
               evaluationLineMappingTypes: {
                 primaryOnly: 0.0,
                 primaryAndSecondary: 1.0,
@@ -207,6 +277,7 @@ export const ApiGenerateSeedDataWithRealData = () =>
                 completed: 0.0,
                 notStarted: 1.0,
               },
+              excludedFromEvaluation: 0.01, // 1%로 제한
             },
           },
         },
@@ -221,6 +292,17 @@ export const ApiGenerateSeedDataWithRealData = () =>
             wbsPerProject: 15,
             evaluationConfig: {
               periodCount: 1,
+            },
+            stateDistribution: {
+              evaluationPeriodStatus: { waiting: 0.0, inProgress: 0.0, completed: 1.0 },
+              evaluationPeriodPhase: {
+                evaluationSetup: 0.0,
+                performance: 0.0,
+                selfEvaluation: 0.0,
+                peerEvaluation: 0.0,
+                closure: 1.0, // 완료된 마감 단계
+              },
+              excludedFromEvaluation: 0.01, // 1%로 제한
             },
           },
         },

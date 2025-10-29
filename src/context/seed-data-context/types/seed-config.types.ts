@@ -27,7 +27,7 @@ export const DEFAULT_STATE_DISTRIBUTION: Required<StateDistributionConfig> = {
     peerEvaluation: 0.25,
     closure: 0.1,
   },
-  excludedFromEvaluation: 0.05,
+  excludedFromEvaluation: 0.01, // 5% → 1%로 감소
 
   // Phase 4
   wbsCriteriaPerWbs: { min: 2, max: 5 },
