@@ -435,6 +435,35 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       expect(response.body.wbsItemId).toBe(wbsItem.id);
     });
 
+    it('importance 값이 제대로 저장되고 조회되어야 한다', async () => {
+      // Given
+      const wbsItem = getRandomWbsItem();
+      const testImportance = 8;
+
+      // When - importance 값과 함께 평가기준 생성
+      const response = await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+        )
+        .send({
+          criteria: '중요도 테스트 평가기준',
+          importance: testImportance,
+        })
+        .expect(200);
+
+      // Then - 응답에서 importance 값 확인
+      expect(response.body.importance).toBe(testImportance);
+      expect(response.body.criteria).toBe('중요도 테스트 평가기준');
+      expect(response.body.wbsItemId).toBe(wbsItem.id);
+
+      // DB에서 직접 조회하여 importance 값 확인
+      const dbRecord = await getWbsEvaluationCriteria(response.body.id);
+      expect(dbRecord).toBeDefined();
+      expect(dbRecord.importance).toBe(testImportance);
+      expect(dbRecord.criteria).toBe('중요도 테스트 평가기준');
+    });
+
     it('기존 평가기준 내용을 더 짧은 내용으로 수정할 수 있어야 한다', async () => {
       // Given
       const wbsItem = getRandomWbsItem();

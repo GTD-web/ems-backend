@@ -328,6 +328,7 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       expect(wbs.criteria[0]).toMatchObject({
         criterionId: expect.any(String),
         criteria: expect.any(String),
+        importance: expect.any(Number),
       });
 
       console.log('=== WBS 정보 ===');
@@ -335,6 +336,11 @@ describe('GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/assigne
       console.log('가중치:', wbs.weight, '%');
       console.log('평가기준 수:', wbs.criteria.length);
       console.log('첫 번째 평가기준:', wbs.criteria[0].criteria);
+      console.log('첫 번째 평가기준 중요도:', wbs.criteria[0].importance);
+      
+      // importance 값 검증
+      expect(wbs.criteria[0].importance).toBeGreaterThanOrEqual(1);
+      expect(wbs.criteria[0].importance).toBeLessThanOrEqual(10);
 
       // TODO: 가중치 계산 문제 해결 필요
       // 가중치가 0보다 커야 함 (평가기준이 있으므로)

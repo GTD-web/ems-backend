@@ -35,6 +35,7 @@ export interface AssignedProjectWithWbs {
 export interface WbsEvaluationCriterion {
   criterionId: string;
   criteria: string;
+  importance: number;
   createdAt: Date;
 }
 

@@ -250,6 +250,7 @@ export async function getWbsCriteriaByWbsId(
     .select([
       'criteria.id AS criteria_id',
       'criteria.criteria AS criteria_criteria',
+      'criteria.importance AS criteria_importance',
       'criteria.createdAt AS criteria_createdAt',
     ])
     .where('criteria.wbsItemId = :wbsItemId', { wbsItemId })
@@ -260,6 +261,7 @@ export async function getWbsCriteriaByWbsId(
   return criteria.map((row) => ({
     criterionId: row.criteria_id,
     criteria: row.criteria_criteria || '',
+    importance: row.criteria_importance || 5,
     createdAt: row.criteria_createdAt,
   }));
 }

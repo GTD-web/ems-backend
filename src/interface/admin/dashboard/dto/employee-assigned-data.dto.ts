@@ -198,6 +198,14 @@ export class WbsEvaluationCriterionDto implements WbsEvaluationCriterion {
   criteria: string;
 
   @ApiProperty({
+    description: '중요도 (1~10)',
+    example: 5,
+    minimum: 1,
+    maximum: 10,
+  })
+  importance: number;
+
+  @ApiProperty({
     description: '생성일',
     type: 'string',
     format: 'date-time',
