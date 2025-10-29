@@ -41,12 +41,13 @@ export class CreateWbsEvaluationCriteriaDto {
  * - wbsItemId에 평가기준이 없으면 생성
  * - wbsItemId에 평가기준이 있으면 수정
  * - WBS 항목당 하나의 평가기준만 존재
+ * - 빈 문자열도 허용하여 평가기준 내용을 초기화할 수 있음
  *
  * Note: actionBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
  */
 export class UpsertWbsEvaluationCriteriaBodyDto {
   @ApiProperty({
-    description: '평가기준 내용',
+    description: '평가기준 내용 (빈 문자열 허용)',
     example: '코드 품질 및 성능 최적화',
   })
   @IsString()

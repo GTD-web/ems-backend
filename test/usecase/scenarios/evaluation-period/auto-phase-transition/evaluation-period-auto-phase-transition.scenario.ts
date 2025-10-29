@@ -1,4 +1,5 @@
 import { BaseE2ETest } from '../../../../base-e2e.spec';
+import { EvaluationPeriodPhase } from '../../../../../src/domain/core/evaluation-period/evaluation-period.types';
 
 /**
  * 평가기간 자동 단계 전이 시나리오 클래스
@@ -14,7 +15,7 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
   async 평가기간을_생성하고_시작한다(config: {
     name: string;
     startDate: string;
-    peerEvaluationDeadline: string;
+    peerEvaluationDeadline?: string;
   }): Promise<{ periodId: string }> {
     // 1. 기존 데이터 정리
     await this.testSuite
@@ -28,11 +29,17 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
         }
       });
 
-    // 2. 평가기간 생성
+    // 2. 평가기간 생성 (peerEvaluationDeadline은 선택사항)
+    const createConfig = {
+      name: config.name,
+      startDate: config.startDate,
+      ...(config.peerEvaluationDeadline && { peerEvaluationDeadline: config.peerEvaluationDeadline })
+    };
+    
     const createResponse = await this.testSuite
       .request()
       .post('/admin/evaluation-periods')
-      .send(config)
+      .send(createConfig)
       .expect(201);
 
     const periodId = createResponse.body.id;
@@ -47,7 +54,7 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
   }
 
   /**
-   * 단계별 마감일을 설정한다
+   * 단계별 마감일을 설정한다 (시간 순서대로)
    */
   async 단계별_마감일을_설정한다(config: {
     periodId: string;
@@ -58,36 +65,64 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
   }): Promise<void> {
     const { periodId, ...deadlines } = config;
 
+    // 1. evaluationSetupDeadline 설정 (가장 이른 날짜)
     if (deadlines.evaluationSetupDeadline) {
-      await this.testSuite
+      console.log(`평가기간 ${periodId} evaluationSetupDeadline 설정 시도:`, deadlines.evaluationSetupDeadline);
+      const response = await this.testSuite
         .request()
         .patch(`/admin/evaluation-periods/${periodId}/evaluation-setup-deadline`)
-        .send({ evaluationSetupDeadline: deadlines.evaluationSetupDeadline })
-        .expect(200);
+        .send({ evaluationSetupDeadline: deadlines.evaluationSetupDeadline });
+      
+      console.log(`evaluationSetupDeadline 설정 응답:`, response.status, response.body);
+      
+      if (response.status !== 200) {
+        throw new Error(`evaluationSetupDeadline 설정 실패: ${response.status} ${response.text}`);
+      }
     }
 
+    // 2. performanceDeadline 설정
     if (deadlines.performanceDeadline) {
-      await this.testSuite
+      console.log(`평가기간 ${periodId} performanceDeadline 설정 시도:`, deadlines.performanceDeadline);
+      const response = await this.testSuite
         .request()
         .patch(`/admin/evaluation-periods/${periodId}/performance-deadline`)
-        .send({ performanceDeadline: deadlines.performanceDeadline })
-        .expect(200);
+        .send({ performanceDeadline: deadlines.performanceDeadline });
+      
+      console.log(`performanceDeadline 설정 응답:`, response.status, response.body);
+      
+      if (response.status !== 200) {
+        throw new Error(`performanceDeadline 설정 실패: ${response.status} ${response.text}`);
+      }
     }
 
+    // 3. selfEvaluationDeadline 설정
     if (deadlines.selfEvaluationDeadline) {
-      await this.testSuite
+      console.log(`평가기간 ${periodId} selfEvaluationDeadline 설정 시도:`, deadlines.selfEvaluationDeadline);
+      const response = await this.testSuite
         .request()
         .patch(`/admin/evaluation-periods/${periodId}/self-evaluation-deadline`)
-        .send({ selfEvaluationDeadline: deadlines.selfEvaluationDeadline })
-        .expect(200);
+        .send({ selfEvaluationDeadline: deadlines.selfEvaluationDeadline });
+      
+      console.log(`selfEvaluationDeadline 설정 응답:`, response.status, response.body);
+      
+      if (response.status !== 200) {
+        throw new Error(`selfEvaluationDeadline 설정 실패: ${response.status} ${response.text}`);
+      }
     }
 
+    // 4. peerEvaluationDeadline 설정 (가장 늦은 날짜)
     if (deadlines.peerEvaluationDeadline) {
-      await this.testSuite
+      console.log(`평가기간 ${periodId} peerEvaluationDeadline 설정 시도:`, deadlines.peerEvaluationDeadline);
+      const response = await this.testSuite
         .request()
         .patch(`/admin/evaluation-periods/${periodId}/peer-evaluation-deadline`)
-        .send({ peerEvaluationDeadline: deadlines.peerEvaluationDeadline })
-        .expect(200);
+        .send({ peerEvaluationDeadline: deadlines.peerEvaluationDeadline });
+      
+      console.log(`peerEvaluationDeadline 설정 응답:`, response.status, response.body);
+      
+      if (response.status !== 200) {
+        throw new Error(`peerEvaluationDeadline 설정 실패: ${response.status} ${response.text}`);
+      }
     }
   }
 
@@ -100,8 +135,13 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
   }> {
     const response = await this.testSuite
       .request()
-      .get(`/admin/evaluation-periods/${periodId}`)
-      .expect(200);
+      .get(`/admin/evaluation-periods/${periodId}`);
+
+    console.log(`평가기간 ${periodId} 조회 응답:`, response.status, response.body);
+
+    if (response.status !== 200) {
+      throw new Error(`평가기간 조회 실패: ${response.status} ${response.text}`);
+    }
 
     return {
       currentPhase: response.body.currentPhase,
@@ -135,7 +175,7 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
   /**
    * 수동으로 단계를 변경한다
    */
-  async 수동으로_단계를_변경한다(periodId: string, targetPhase: string): Promise<void> {
+  async 수동으로_단계를_변경한다(periodId: string, targetPhase: string | EvaluationPeriodPhase): Promise<void> {
     await this.testSuite
       .request()
       .post(`/admin/evaluation-periods/${periodId}/phase-change`)
@@ -151,7 +191,7 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
     const response = await this.testSuite
       .request()
       .post('/admin/evaluation-periods/auto-phase-transition')
-      .expect(200);
+      .expect(201); // 201 Created로 변경
 
     return response.body.transitionedCount || 0;
   }
@@ -160,13 +200,8 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
    * 시간을 조작한다 (테스트용)
    */
   async 시간을_조작한다(milliseconds: number): Promise<void> {
-    // Jest의 시간 조작을 사용
-    if (typeof jest !== 'undefined' && jest.advanceTimersByTime) {
-      jest.advanceTimersByTime(milliseconds);
-    } else {
-      // 실제 환경에서는 대기
-      await new Promise(resolve => setTimeout(resolve, Math.min(milliseconds, 1000)));
-    }
+    // E2E 테스트에서는 실제 대기 (최대 1초로 제한)
+    await new Promise(resolve => setTimeout(resolve, Math.min(milliseconds, 1000)));
   }
 
   /**

@@ -80,18 +80,20 @@ export class WbsEvaluationCriteria
 
   /**
    * 평가 기준이 유효한지 확인한다
+   * - wbsItemId는 필수
+   * - criteria는 빈 문자열도 허용 (초기화 목적)
    */
   유효한가(): boolean {
     return (
       this.wbsItemId !== undefined &&
       this.wbsItemId.trim() !== '' &&
-      this.criteria !== undefined &&
-      this.criteria.trim() !== ''
+      this.criteria !== undefined
     );
   }
 
   /**
    * 평가 기준 내용이 비어있지 않은지 확인한다
+   * - 빈 문자열은 유효하지 않음 (내용이 있는 경우만 true)
    */
   기준내용이_유효한가(): boolean {
     return this.criteria !== undefined && this.criteria.trim().length > 0;

@@ -93,7 +93,7 @@
                     - evaluationPeriod.finalEvaluationSettingEnabled 확인 (true)
                     - evaluationPeriod.editableStatus.isPrimaryEvaluationEditable 확인 (true)
                     - evaluationPeriod.editableStatus.isSecondaryEvaluationEditable 확인 (true)
-- **평가기간 자동 단계 전이**
+- **평가기간 자동 단계 전이** ✅ **구현 완료**
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
     - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
@@ -122,7 +122,7 @@
             - 대시보드
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                     - evaluationPeriod.currentPhase 확인 (closure)
-- **평가기간 자동 단계 전이 (마감일 미설정 케이스)**
+- **평가기간 자동 단계 전이 (마감일 미설정 케이스)** ✅ **구현 완료**
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
     - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
@@ -136,7 +136,7 @@
         - 2분 경과 후 자동 전이 확인
             - GET /admin/evaluation-periods/{id} (현재 단계: performance, 전이되지 않음)
             - **마감일이 설정되지 않은 단계는 자동 전이되지 않음을 확인**
-- **평가기간 자동 단계 전이 (수동 단계 변경 후 자동 전이)**
+- **평가기간 자동 단계 전이 (수동 단계 변경 후 자동 전이)** ✅ **구현 완료**
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
     - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)

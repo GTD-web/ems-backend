@@ -140,23 +140,24 @@ export class EvaluationPeriodAutoPhaseService {
     nextPhase: EvaluationPeriodPhase,
     now: Date,
   ): boolean {
-    // 다음 단계의 마감일을 확인
-    const nextPhaseDeadline = this.getPhaseDeadline(period, nextPhase);
+    // 현재 단계의 마감일을 확인 (현재 단계가 끝나야 다음 단계로 전이)
+    const currentPhase = period.currentPhase;
+    const currentPhaseDeadline = this.getPhaseDeadline(period, currentPhase as EvaluationPeriodPhase);
     
-    if (!nextPhaseDeadline) {
+    if (!currentPhaseDeadline) {
       // 마감일이 설정되지 않은 경우, 전이하지 않음
       this.logger.debug(
-        `평가기간 ${period.id}의 ${nextPhase} 단계 마감일이 설정되지 않았습니다.`
+        `평가기간 ${period.id}의 ${currentPhase} 단계 마감일이 설정되지 않았습니다.`
       );
       return false;
     }
 
-    // 현재 시간이 마감일을 지났는지 확인
-    const shouldTransition = now >= nextPhaseDeadline;
+    // 현재 시간이 현재 단계의 마감일을 지났는지 확인
+    const shouldTransition = now >= currentPhaseDeadline;
     
     if (shouldTransition) {
       this.logger.debug(
-        `평가기간 ${period.id}: ${nextPhase} 단계 마감일 도달 (마감일: ${nextPhaseDeadline.toISOString()}, 현재: ${now.toISOString()})`
+        `평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${currentPhaseDeadline.toISOString()}, 현재: ${now.toISOString()})`
       );
     }
 

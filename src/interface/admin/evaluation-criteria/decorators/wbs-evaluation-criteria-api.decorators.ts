@@ -300,10 +300,12 @@ export const UpsertWbsEvaluationCriteria = () =>
 - wbsItemId에 평가기준이 없으면: 새로운 평가기준 생성
 - wbsItemId에 평가기준이 있으면: 기존 평가기준 수정
 - Body에 id 값을 보낼 필요 없음 (내부적으로 wbsItemId로 조회)
+- 빈 문자열 criteria 전송 시: 평가기준 내용을 빈 문자열로 초기화
 
 **사용 사례:**
 - 평가기준 최초 작성 시: criteria만 전송
 - 평가기준 수정 시: criteria만 전송 (시스템이 자동으로 기존 평가기준 찾아 수정)
+- 평가기준 내용 초기화: 빈 문자열 criteria 전송으로 내용 초기화
 - WBS 항목당 단일 평가기준 관리
 
 **테스트 케이스:**
@@ -316,7 +318,8 @@ export const UpsertWbsEvaluationCriteria = () =>
 - updatedAt 갱신: 수정 시 updatedAt이 자동으로 갱신됨
 - 동일 내용 수정: 동일한 내용으로도 수정 가능
 - createdAt 불변: 수정 시 createdAt은 변경되지 않음 (10ms 이내 오차 허용)
-- 빈 문자열 허용: 시스템이 빈 문자열 criteria를 허용함
+- 빈 문자열 허용: 시스템이 빈 문자열 criteria를 허용하여 내용 초기화 가능
+- 빈 문자열로 초기화: 기존 내용을 빈 문자열로 덮어쓰기하여 초기화
 - criteria 필드 필수: criteria 필드 누락 시 400 에러
 - 존재하지 않는 wbsItemId: 존재하지 않는 WBS 항목 ID로 요청 시 400 또는 404 에러
 - 잘못된 UUID - wbsItemId: 잘못된 UUID 형식의 wbsItemId 전달 시 400 에러

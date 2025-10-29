@@ -225,7 +225,10 @@ export class WbsEvaluationCriteriaService
         updateData.criteria !== undefined ||
         updateData.importance !== undefined
       ) {
-        const newCriteria = updateData.criteria ?? criteria.criteria;
+        // criteria가 undefined가 아닌 경우 (빈 문자열 포함) 업데이트
+        const newCriteria = updateData.criteria !== undefined 
+          ? updateData.criteria 
+          : criteria.criteria;
         const newImportance = updateData.importance ?? criteria.importance;
         criteria.기준내용업데이트한다(newCriteria, newImportance, updatedBy);
       }
