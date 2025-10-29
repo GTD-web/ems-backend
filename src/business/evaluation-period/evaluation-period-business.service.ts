@@ -102,4 +102,17 @@ export class EvaluationPeriodBusinessService {
 
     return result;
   }
+
+  /**
+   * 자동 단계 전이를 실행한다
+   */
+  async 자동_단계_전이를_실행한다(): Promise<number> {
+    this.logger.log('자동 단계 전이 비즈니스 로직 시작');
+
+    const result = await this.evaluationPeriodManagementService.자동_단계_전이를_실행한다();
+
+    this.logger.log(`자동 단계 전이 완료 - 전이된 평가기간 수: ${result}`);
+
+    return result;
+  }
 }

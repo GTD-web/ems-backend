@@ -1,4 +1,4 @@
-import { Body, Controller, Query, Logger } from '@nestjs/common';
+import { Body, Controller, Query, Logger, Post } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationPeriodManagementContextService } from '../../../context/evaluation-period-management-context/evaluation-period-management.service';
 import { EvaluationPeriodBusinessService } from '../../../business/evaluation-period/evaluation-period-business.service';
@@ -480,5 +480,23 @@ export class EvaluationPeriodManagementController {
     );
     
     return result;
+  }
+
+  /**
+   * 자동 단계 전이를 수동으로 트리거합니다.
+   */
+  @Post('auto-phase-transition')
+  async triggerAutoPhaseTransition(): Promise<{
+    success: boolean;
+    transitionedCount: number;
+    message: string;
+  }> {
+    const result = await this.evaluationPeriodBusinessService.자동_단계_전이를_실행한다();
+    
+    return {
+      success: true,
+      transitionedCount: result,
+      message: `${result}개의 평가기간이 자동 단계 전이되었습니다.`,
+    };
   }
 }

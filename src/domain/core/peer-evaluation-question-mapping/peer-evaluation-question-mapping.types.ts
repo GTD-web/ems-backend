@@ -36,6 +36,8 @@ export interface PeerEvaluationQuestionMappingDto {
   displayOrder: number;
   /** 답변 내용 */
   answer?: string;
+  /** 답변 점수 */
+  score?: number;
   /** 답변일 */
   answeredAt?: Date;
   /** 답변자 ID */

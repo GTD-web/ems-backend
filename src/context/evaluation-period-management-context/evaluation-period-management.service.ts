@@ -3,6 +3,7 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { InvalidDownwardEvaluationScoreException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 import { EvaluationPeriodDto, EvaluationPeriodPhase } from '../../domain/core/evaluation-period/evaluation-period.types';
 import { EvaluationPeriodService } from '../../domain/core/evaluation-period/evaluation-period.service';
+import { EvaluationPeriodAutoPhaseService } from '../../domain/core/evaluation-period/evaluation-period-auto-phase.service';
 import {
   CompleteEvaluationPeriodCommand,
   CreateEvaluationPeriodCommand,
@@ -73,6 +74,7 @@ export class EvaluationPeriodManagementContextService
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
     private readonly evaluationPeriodService: EvaluationPeriodService,
+    private readonly evaluationPeriodAutoPhaseService: EvaluationPeriodAutoPhaseService,
   ) {}
   /**
    * 평가 기간을 생성한다 (최소 필수 정보만)
@@ -578,6 +580,20 @@ export class EvaluationPeriodManagementContextService
     this.logger.log(
       `평가기간 단계 변경 컨텍스트 로직 완료 - 평가기간: ${periodId}, 변경된 단계: ${result.currentPhase}`,
     );
+
+    return result;
+  }
+
+  /**
+   * 자동 단계 전이를 실행한다
+   */
+  async 자동_단계_전이를_실행한다(): Promise<number> {
+    this.logger.log('자동 단계 전이 컨텍스트 로직 시작');
+
+    // 자동 단계 전이 서비스를 직접 호출
+    const result = await this.evaluationPeriodAutoPhaseService.autoPhaseTransition();
+
+    this.logger.log(`자동 단계 전이 컨텍스트 로직 완료 - 전이된 평가기간 수: ${result}`);
 
     return result;
   }

@@ -50,6 +50,13 @@ export class PeerEvaluationQuestionMapping
   answer?: string;
 
   @Column({
+    type: 'int',
+    nullable: true,
+    comment: '답변 점수',
+  })
+  score?: number;
+
+  @Column({
     type: 'timestamp with time zone',
     nullable: true,
     comment: '답변일',
@@ -126,8 +133,9 @@ export class PeerEvaluationQuestionMapping
   /**
    * 답변을 저장한다
    */
-  답변을_저장한다(answer: string, answeredBy: string): void {
+  답변을_저장한다(answer: string, answeredBy: string, score?: number): void {
     this.answer = answer;
+    this.score = score;
     this.answeredAt = new Date();
     this.answeredBy = answeredBy;
     this.메타데이터를_업데이트한다(answeredBy);
@@ -138,6 +146,7 @@ export class PeerEvaluationQuestionMapping
    */
   답변을_삭제한다(deletedBy: string): void {
     this.answer = undefined;
+    this.score = undefined;
     this.answeredAt = undefined;
     this.answeredBy = undefined;
     this.메타데이터를_업데이트한다(deletedBy);
@@ -154,6 +163,7 @@ export class PeerEvaluationQuestionMapping
       questionGroupId: this.questionGroupId,
       displayOrder: this.displayOrder,
       answer: this.answer,
+      score: this.score,
       answeredAt: this.answeredAt,
       answeredBy: this.answeredBy,
       createdAt: this.createdAt,

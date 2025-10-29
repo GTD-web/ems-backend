@@ -92,6 +92,7 @@ export interface PeerEvaluationDetailResult {
     maxScore?: number;
     displayOrder: number;
     answer?: string;
+    score?: number;
     answeredAt?: Date;
     answeredBy?: string;
   }[];
@@ -277,6 +278,7 @@ export class GetPeerEvaluationListHandler
         .select([
           'mapping.displayOrder AS displayorder',
           'mapping.answer AS mapping_answer',
+          'mapping.score AS mapping_score',
           'mapping.answeredAt AS mapping_answeredat',
           'mapping.answeredBy AS mapping_answeredby',
           'question.id AS question_id',
@@ -371,6 +373,7 @@ export class GetPeerEvaluationListHandler
           maxScore: q.question_maxscore,
           displayOrder: q.displayorder,
           answer: q.mapping_answer,
+          score: q.mapping_score,
           answeredAt: q.mapping_answeredat,
           answeredBy: q.mapping_answeredby,
         })),

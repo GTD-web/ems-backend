@@ -929,6 +929,18 @@ export class PeerEvaluationAnswerItemDto {
   })
   @IsString()
   answer: string;
+
+  @ApiPropertyOptional({
+    description: '답변 점수',
+    example: 4,
+    minimum: 1,
+    maximum: 5,
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Max(5)
+  score?: number;
 }
 
 /**
@@ -943,16 +955,18 @@ export class UpsertPeerEvaluationAnswersDto {
   peerEvaluationId: string;
 
   @ApiProperty({
-    description: '답변 목록 (questionId와 answer 쌍)',
+    description: '답변 목록 (questionId, answer, score 쌍)',
     type: [PeerEvaluationAnswerItemDto],
     example: [
       {
         questionId: '550e8400-e29b-41d4-a716-446655440010',
         answer: '팀원과의 협업 능력이 뛰어나며, 적극적으로 의견을 나눕니다.',
+        score: 4,
       },
       {
         questionId: '550e8400-e29b-41d4-a716-446655440011',
         answer: '업무 처리 속도가 빠르고 정확합니다.',
+        score: 5,
       },
     ],
   })

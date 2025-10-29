@@ -276,6 +276,7 @@ export class PeerEvaluationManagementController {
         answers: dto.answers.map((a) => ({
           questionId: a.questionId,
           answer: a.answer,
+          score: a.score,
         })),
         answeredBy,
       });

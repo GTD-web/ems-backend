@@ -545,6 +545,7 @@ export class PeerEvaluationBusinessService {
     answers: Array<{
       questionId: string;
       answer: string;
+      score?: number;
     }>;
     answeredBy: string;
   }): Promise<{ savedCount: number }> {

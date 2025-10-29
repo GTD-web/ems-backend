@@ -12,6 +12,7 @@ import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.ent
 export interface AnswerItem {
   questionId: string;
   answer: string;
+  score?: number;
 }
 
 /**
@@ -89,7 +90,7 @@ export class UpsertPeerEvaluationAnswersHandler
         }
 
         // 답변 저장/업데이트
-        mapping.답변을_저장한다(answerItem.answer, command.answeredBy);
+        mapping.답변을_저장한다(answerItem.answer, command.answeredBy, answerItem.score);
         await this.peerEvaluationQuestionMappingService.저장한다(mapping);
 
         savedCount++;

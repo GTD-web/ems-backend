@@ -25,7 +25,7 @@ export class EvaluationPeriodAutoPhaseService {
    * 매 시간마다 실행되는 자동 단계 변경 스케줄러
    */
   @Cron(CronExpression.EVERY_HOUR)
-  async autoPhaseTransition(): Promise<void> {
+  async autoPhaseTransition(): Promise<number> {
     this.logger.log('평가기간 자동 단계 변경을 시작합니다...');
     
     try {
@@ -40,13 +40,19 @@ export class EvaluationPeriodAutoPhaseService {
 
       this.logger.log(`진행 중인 평가기간 수: ${activePeriods.length}개`);
 
+      let transitionedCount = 0;
       for (const period of activePeriods) {
-        await this.checkAndTransitionPhase(period, now);
+        const wasTransitioned = await this.checkAndTransitionPhase(period, now);
+        if (wasTransitioned) {
+          transitionedCount++;
+        }
       }
 
-      this.logger.log('평가기간 자동 단계 변경이 완료되었습니다.');
+      this.logger.log(`평가기간 자동 단계 변경이 완료되었습니다. 전이된 평가기간 수: ${transitionedCount}개`);
+      return transitionedCount;
     } catch (error) {
       this.logger.error('평가기간 자동 단계 변경 중 오류 발생:', error);
+      return 0;
     }
   }
 
@@ -56,19 +62,19 @@ export class EvaluationPeriodAutoPhaseService {
    * @param period 평가기간 엔티티
    * @param now 현재 시간
    */
-  private async checkAndTransitionPhase(period: EvaluationPeriod, now: Date): Promise<void> {
+  private async checkAndTransitionPhase(period: EvaluationPeriod, now: Date): Promise<boolean> {
     const currentPhase = period.currentPhase;
     
     if (!currentPhase) {
       this.logger.warn(`평가기간 ${period.id}의 현재 단계가 설정되지 않았습니다.`);
-      return;
+      return false;
     }
 
     // 다음 단계로 전이해야 하는지 확인
     const nextPhase = this.getNextPhase(currentPhase);
     if (!nextPhase) {
       this.logger.debug(`평가기간 ${period.id}는 더 이상 전이할 단계가 없습니다. (현재: ${currentPhase})`);
-      return;
+      return false;
     }
 
     // 다음 단계의 마감일이 지났는지 확인
@@ -89,13 +95,17 @@ export class EvaluationPeriodAutoPhaseService {
         this.logger.log(
           `평가기간 ${period.id} 단계 변경 완료: ${currentPhase} → ${nextPhase}`
         );
+        return true;
       } catch (error) {
         this.logger.error(
           `평가기간 ${period.id} 단계 변경 실패: ${error.message}`,
           error.stack
         );
+        return false;
       }
     }
+    
+    return false;
   }
 
   /**
