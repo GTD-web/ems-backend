@@ -147,6 +147,7 @@ export class GetEmployeeAssignedDataHandler
       this.criteriaRepository,
       this.selfEvaluationRepository,
       this.downwardEvaluationRepository,
+      this.evaluationLineMappingRepository,
       this.deliverableRepository,
     );
 

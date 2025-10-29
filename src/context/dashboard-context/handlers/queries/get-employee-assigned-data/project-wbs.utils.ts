@@ -19,6 +19,7 @@ import {
   WbsDownwardEvaluationInfo,
   DeliverableInfo,
 } from './types';
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 
 const logger = new Logger('ProjectWbsUtils');
 
@@ -38,6 +39,7 @@ export async function getProjectsWithWbs(
   criteriaRepository: Repository<WbsEvaluationCriteria>,
   selfEvaluationRepository: Repository<WbsSelfEvaluation>,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
+  evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
   deliverableRepository: Repository<Deliverable>,
 ): Promise<AssignedProjectWithWbs[]> {
   // 1. 평가 프로젝트 할당 조회 (Project 엔티티와 PM 직원 정보 join)
@@ -98,6 +100,7 @@ export async function getProjectsWithWbs(
       criteriaRepository,
       selfEvaluationRepository,
       downwardEvaluationRepository,
+      evaluationLineMappingRepository,
       deliverableRepository,
     );
 
@@ -136,6 +139,7 @@ export async function getWbsListByProject(
   criteriaRepository: Repository<WbsEvaluationCriteria>,
   selfEvaluationRepository: Repository<WbsSelfEvaluation>,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
+  evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
   deliverableRepository: Repository<Deliverable>,
 ): Promise<AssignedWbsInfo[]> {
   // 1. WBS 할당 조회 (WbsItem join)
@@ -202,6 +206,7 @@ export async function getWbsListByProject(
         wbsItemId,
         mapping,
         downwardEvaluationRepository,
+        evaluationLineMappingRepository,
       );
     } else {
       logger.warn(`WbsItemId가 없는 WBS: ${wbsItemId}`);
@@ -323,7 +328,8 @@ export async function getWbsSelfEvaluationByWbsId(
 /**
  * 특정 WBS의 하향평가 조회 (1차, 2차)
  *
- * DownwardEvaluation 엔티티에서 PRIMARY와 SECONDARY 평가자의 하향평가 정보를 조회합니다.
+ * 1차 평가자: EvaluationLineMapping에서 직원별 고정 담당자 조회 (wbsItemId = null)
+ * 2차 평가자: DownwardEvaluation에서 WBS별 평가자 조회
  * 여러 평가자의 평가가 있을 경우 평균 점수를 계산합니다.
  */
 export async function getWbsDownwardEvaluationsByWbsId(
@@ -332,17 +338,35 @@ export async function getWbsDownwardEvaluationsByWbsId(
   wbsId: string, // wbsId 사용 (하향평가는 WBS 단위)
   mapping: EvaluationPeriodEmployeeMapping,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
+  evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
 ): Promise<{
   primary: WbsDownwardEvaluationInfo | null;
   secondary: WbsDownwardEvaluationInfo | null;
 }> {
-  // 하향평가 조회 (PRIMARY, SECONDARY 구분)
-  const downwardEvaluations = await downwardEvaluationRepository
+  // 1. 1차 평가자 정보 조회 (EvaluationLineMapping에서 직원별 고정 담당자)
+  const primaryEvaluatorMapping = await evaluationLineMappingRepository
+    .createQueryBuilder('mapping')
+    .select([
+      'mapping.id AS mapping_id',
+      'mapping.evaluatorId AS mapping_evaluatorId',
+      'evaluator.name AS evaluator_name',
+    ])
+    .leftJoin(
+      Employee,
+      'evaluator',
+      'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL',
+    )
+    .where('mapping.employeeId = :employeeId', { employeeId })
+    .andWhere('mapping.wbsItemId IS NULL') // 직원별 고정 담당자
+    .andWhere('mapping.deletedAt IS NULL')
+    .getRawOne();
+
+  // 2. 2차 평가자 정보 조회 (DownwardEvaluation에서 WBS별 평가자)
+  const secondaryEvaluations = await downwardEvaluationRepository
     .createQueryBuilder('downward')
     .select([
       '"downward"."id" AS downward_id',
       '"downward"."evaluatorId" AS downward_evaluatorId',
-      '"downward"."evaluationType" AS downward_evaluatorType',
       '"downward"."downwardEvaluationContent" AS downward_evaluationContent',
       '"downward"."downwardEvaluationScore" AS downward_score',
       '"downward"."isCompleted" AS downward_isCompleted',
@@ -361,49 +385,54 @@ export async function getWbsDownwardEvaluationsByWbsId(
       employeeId: employeeId,
     })
     .andWhere('"downward"."wbsId" = :wbsId', { wbsId })
+    .andWhere('"downward"."evaluationType" = :evaluationType', {
+      evaluationType: 'secondary',
+    })
     .andWhere('"downward"."deletedAt" IS NULL')
     .getRawMany();
 
-  // 평가 타입별로 그룹화
-  const primaryEvaluations = downwardEvaluations.filter(
-    (row) => row.downward_evaluatortype === 'primary',
-  );
-  const secondaryEvaluations = downwardEvaluations.filter(
-    (row) => row.downward_evaluatortype === 'secondary',
-  );
-
-  // 1차 평가 평균 계산
+  // 3. 1차 평가자 정보 구성
   let primary: WbsDownwardEvaluationInfo | null = null;
-  if (primaryEvaluations.length > 0) {
-    const completedPrimary = primaryEvaluations.filter(
-      (row) => row.downward_iscompleted === true,
-    );
+  if (primaryEvaluatorMapping) {
+    // 1차 평가자의 실제 평가 데이터 조회 (해당 WBS에 대한 평가)
+    const primaryEvaluation = await downwardEvaluationRepository
+      .createQueryBuilder('downward')
+      .select([
+        '"downward"."id" AS downward_id',
+        '"downward"."downwardEvaluationContent" AS downward_evaluationContent',
+        '"downward"."downwardEvaluationScore" AS downward_score',
+        '"downward"."isCompleted" AS downward_isCompleted',
+        '"downward"."completedAt" AS downward_completedAt',
+      ])
+      .where('"downward"."periodId" = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
+      .andWhere('"downward"."employeeId" = :employeeId', {
+        employeeId: employeeId,
+      })
+      .andWhere('"downward"."wbsId" = :wbsId', { wbsId })
+      .andWhere('"downward"."evaluatorId" = :evaluatorId', {
+        evaluatorId: primaryEvaluatorMapping.mapping_evaluatorId,
+      })
+      .andWhere('"downward"."evaluationType" = :evaluationType', {
+        evaluationType: 'primary',
+      })
+      .andWhere('"downward"."deletedAt" IS NULL')
+      .getRawOne();
 
-    if (completedPrimary.length === primaryEvaluations.length) {
-      // 모두 완료된 경우에만 평균 점수 계산
-      const averageScore =
-        completedPrimary.reduce(
-          (sum, row) => sum + (row.downward_score || 0),
-          0,
-        ) / completedPrimary.length;
-
-      primary = {
-        downwardEvaluationId: undefined, // 여러 평가의 평균이므로 ID 없음
-        evaluatorId: undefined,
-        evaluatorName:
-          completedPrimary.length > 1
-            ? `${completedPrimary.length}명의 1차 평가자`
-            : completedPrimary[0].evaluator_name,
-        evaluationContent: undefined, // 여러 평가의 평균이므로 내용 없음
-        score: Math.round(averageScore * 100) / 100, // 소수점 2자리
-        isCompleted: true,
-        isEditable: mapping.isPrimaryEvaluationEditable, // 실제 mapping 상태 사용
-        submittedAt: completedPrimary[0].downward_completedat,
-      };
-    }
+    primary = {
+      downwardEvaluationId: primaryEvaluation?.downward_id,
+      evaluatorId: primaryEvaluatorMapping.mapping_evaluatorId,
+      evaluatorName: primaryEvaluatorMapping.evaluator_name,
+      evaluationContent: primaryEvaluation?.downward_evaluationContent,
+      score: primaryEvaluation?.downward_score,
+      isCompleted: primaryEvaluation?.downward_iscompleted || false,
+      isEditable: mapping.isPrimaryEvaluationEditable,
+      submittedAt: primaryEvaluation?.downward_completedat,
+    };
   }
 
-  // 2차 평가 평균 계산
+  // 4. 2차 평가자 정보 구성
   let secondary: WbsDownwardEvaluationInfo | null = null;
   if (secondaryEvaluations.length > 0) {
     const completedSecondary = secondaryEvaluations.filter(
@@ -428,8 +457,29 @@ export async function getWbsDownwardEvaluationsByWbsId(
         evaluationContent: undefined, // 여러 평가의 평균이므로 내용 없음
         score: Math.round(averageScore * 100) / 100, // 소수점 2자리
         isCompleted: true,
-        isEditable: mapping.isSecondaryEvaluationEditable, // 실제 mapping 상태 사용
+        isEditable: mapping.isSecondaryEvaluationEditable,
         submittedAt: completedSecondary[0].downward_completedat,
+      };
+    } else if (completedSecondary.length > 0) {
+      // 일부만 완료된 경우
+      const averageScore =
+        completedSecondary.reduce(
+          (sum, row) => sum + (row.downward_score || 0),
+          0,
+        ) / completedSecondary.length;
+
+      secondary = {
+        downwardEvaluationId: undefined,
+        evaluatorId: undefined,
+        evaluatorName:
+          completedSecondary.length > 1
+            ? `${completedSecondary.length}명의 2차 평가자 (진행중)`
+            : `${completedSecondary[0].evaluator_name} (진행중)`,
+        evaluationContent: undefined,
+        score: Math.round(averageScore * 100) / 100,
+        isCompleted: false,
+        isEditable: mapping.isSecondaryEvaluationEditable,
+        submittedAt: undefined,
       };
     }
   }
