@@ -278,7 +278,7 @@ export function GetDefaultQuestionGroup() {
  */
 export function CreateEvaluationQuestion() {
   return applyDecorators(
-    Post('evaluation-questions'),
+    Post(),
     HttpCode(HttpStatus.CREATED),
     ApiOperation({
       summary: '평가 질문 생성',
@@ -326,7 +326,7 @@ export function CreateEvaluationQuestion() {
  */
 export function UpdateEvaluationQuestion() {
   return applyDecorators(
-    Patch('evaluation-questions/:id'),
+    Patch(':id'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '평가 질문 수정',
@@ -380,7 +380,7 @@ export function UpdateEvaluationQuestion() {
  */
 export function DeleteEvaluationQuestion() {
   return applyDecorators(
-    Delete('evaluation-questions/:id'),
+    Delete(':id'),
     HttpCode(HttpStatus.NO_CONTENT),
     ApiOperation({
       summary: '평가 질문 삭제',
@@ -421,7 +421,7 @@ export function DeleteEvaluationQuestion() {
  */
 export function GetEvaluationQuestion() {
   return applyDecorators(
-    Get('evaluation-questions/:id'),
+    Get(':id'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '평가 질문 조회',
@@ -463,7 +463,7 @@ export function GetEvaluationQuestion() {
  */
 export function GetEvaluationQuestions() {
   return applyDecorators(
-    Get('evaluation-questions'),
+    Get(),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '평가 질문 목록 조회',
@@ -491,7 +491,7 @@ export function GetEvaluationQuestions() {
  */
 export function CopyEvaluationQuestion() {
   return applyDecorators(
-    Post('evaluation-questions/:id/copy'),
+    Post(':id/copy'),
     HttpCode(HttpStatus.CREATED),
     ApiOperation({
       summary: '평가 질문 복사',
@@ -636,7 +636,7 @@ export function AddMultipleQuestionsToGroup() {
  */
 export function ReorderGroupQuestions() {
   return applyDecorators(
-    Put('question-group-mappings/reorder'),
+    Patch('question-group-mappings/reorder'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '그룹 내 질문 순서 재정의',
@@ -759,7 +759,7 @@ export function GetGroupQuestions() {
  */
 export function GetQuestionGroupsByQuestion() {
   return applyDecorators(
-    Get('evaluation-questions/:questionId/groups'),
+    Get('questions/:questionId/groups'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '질문이 속한 그룹 목록 조회',
