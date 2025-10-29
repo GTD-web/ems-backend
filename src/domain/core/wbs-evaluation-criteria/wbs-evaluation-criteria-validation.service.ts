@@ -131,12 +131,7 @@ export class WbsEvaluationCriteriaValidationService {
     updateData: UpdateWbsEvaluationCriteriaData,
   ): void {
     if (updateData.criteria !== undefined) {
-      if (updateData.criteria.trim().length === 0) {
-        throw new InvalidWbsEvaluationCriteriaDataFormatException(
-          '평가 기준 내용은 비어있을 수 없습니다.',
-        );
-      }
-
+      // 빈 문자열은 허용 (초기화 목적)
       if (updateData.criteria.length > 1000) {
         throw new InvalidWbsEvaluationCriteriaDataFormatException(
           '평가 기준 내용은 1000자를 초과할 수 없습니다.',

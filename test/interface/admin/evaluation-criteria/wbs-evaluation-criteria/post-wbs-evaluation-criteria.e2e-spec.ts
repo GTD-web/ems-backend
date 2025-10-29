@@ -399,6 +399,79 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       expect(response.body.criteria).toBe('');
     });
 
+    it('기존 평가기준 내용을 빈 문자열로 초기화할 수 있어야 한다', async () => {
+      // Given
+      const wbsItem = getRandomWbsItem();
+      const actionBy = getRandomEmployee().id;
+      const originalCriteria = '기존 평가기준 내용입니다.';
+
+      // 먼저 기존 평가기준 생성
+      await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+        )
+        .send({
+          criteria: originalCriteria,
+          importance: 7,
+        })
+        .expect(200);
+
+      // When - 빈 문자열로 초기화
+      const response = await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+        )
+        .send({
+          criteria: '',
+          importance: 5,
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body.criteria).toBe('');
+      expect(response.body.importance).toBe(5);
+      expect(response.body.wbsItemId).toBe(wbsItem.id);
+    });
+
+    it('기존 평가기준 내용을 더 짧은 내용으로 수정할 수 있어야 한다', async () => {
+      // Given
+      const wbsItem = getRandomWbsItem();
+      const actionBy = getRandomEmployee().id;
+      const originalCriteria = '매우 긴 평가기준 내용입니다. 이 내용은 여러 줄에 걸쳐 있고 복잡한 내용을 포함하고 있습니다.';
+      const shorterCriteria = '간단한 기준';
+
+      // 먼저 긴 평가기준 생성
+      await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+        )
+        .send({
+          criteria: originalCriteria,
+          importance: 8,
+        })
+        .expect(200);
+
+      // When - 더 짧은 내용으로 수정
+      const response = await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+        )
+        .send({
+          criteria: shorterCriteria,
+          importance: 3,
+        })
+        .expect(200);
+
+      // Then
+      expect(response.body.criteria).toBe(shorterCriteria);
+      expect(response.body.importance).toBe(3);
+      expect(response.body.wbsItemId).toBe(wbsItem.id);
+    });
+
     it('존재하지 않는 wbsItemId로 요청 시 400 또는 404 에러가 발생해야 한다', async () => {
       // Given
       const nonExistentWbsItemId = '00000000-0000-0000-0000-000000000000';
@@ -550,6 +623,75 @@ describe('POST /admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/:wbsI
       expect(dbRecord).toBeDefined();
       expect(dbRecord.criteria).toBe(updatedCriteria);
       expect(dbRecord.criteria).not.toBe(originalCriteria);
+    });
+
+    it('빈 문자열로 초기화된 평가기준이 DB에 올바르게 저장되어야 한다', async () => {
+      // Given
+      const wbsItem = getRandomWbsItem();
+      const originalCriteria = '기존 평가기준 내용';
+      const actionBy = getRandomEmployee().id;
+
+      // 먼저 기존 평가기준 생성
+      const created = await createWbsEvaluationCriteria(
+        wbsItem.id,
+        originalCriteria,
+      );
+
+      // When - 빈 문자열로 초기화
+      await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+        )
+        .send({
+          criteria: '',
+          importance: 2,
+        })
+        .expect(200);
+
+      // Then
+      const dbRecord = await getWbsEvaluationCriteria(created.id);
+      expect(dbRecord).toBeDefined();
+      expect(dbRecord.wbsItemId).toBe(wbsItem.id);
+      expect(dbRecord.criteria).toBe(''); // 빈 문자열로 저장되어야 함
+      expect(dbRecord.importance).toBe(2);
+      expect(dbRecord.id).toBe(created.id); // 동일한 ID여야 함 (수정)
+      expect(dbRecord.deletedAt).toBeNull(); // 삭제되지 않아야 함
+    });
+
+    it('내용을 줄인 평가기준이 DB에 올바르게 저장되어야 한다', async () => {
+      // Given
+      const wbsItem = getRandomWbsItem();
+      const originalCriteria = '매우 긴 평가기준 내용입니다. 이 내용은 여러 줄에 걸쳐 있고 복잡한 내용을 포함하고 있습니다.';
+      const shorterCriteria = '간단한 기준';
+      const actionBy = getRandomEmployee().id;
+
+      // 먼저 긴 평가기준 생성
+      const created = await createWbsEvaluationCriteria(
+        wbsItem.id,
+        originalCriteria,
+      );
+
+      // When - 더 짧은 내용으로 수정
+      await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/wbs-evaluation-criteria/wbs-item/${wbsItem.id}`,
+        )
+        .send({
+          criteria: shorterCriteria,
+          importance: 4,
+        })
+        .expect(200);
+
+      // Then
+      const dbRecord = await getWbsEvaluationCriteria(created.id);
+      expect(dbRecord).toBeDefined();
+      expect(dbRecord.wbsItemId).toBe(wbsItem.id);
+      expect(dbRecord.criteria).toBe(shorterCriteria); // 짧은 내용으로 저장되어야 함
+      expect(dbRecord.importance).toBe(4);
+      expect(dbRecord.id).toBe(created.id); // 동일한 ID여야 함 (수정)
+      expect(dbRecord.deletedAt).toBeNull(); // 삭제되지 않아야 함
     });
 
     it('평가기준 수정 시 createdAt은 변경되지 않는다 (1초 이내 허용)', async () => {

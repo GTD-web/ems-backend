@@ -30,7 +30,7 @@ export const DEFAULT_STATE_DISTRIBUTION: Required<StateDistributionConfig> = {
   excludedFromEvaluation: 0.01, // 5% → 1%로 감소
 
   // Phase 4
-  wbsCriteriaPerWbs: { min: 2, max: 5 },
+  wbsCriteriaPerWbs: { min: 1, max: 1 }, // WBS별로 하나의 평가기준만 생성
   evaluationLineCount: {
     primary: 1,
     secondary: 1,

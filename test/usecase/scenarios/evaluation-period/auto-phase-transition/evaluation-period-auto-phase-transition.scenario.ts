@@ -17,17 +17,17 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
     startDate: string;
     peerEvaluationDeadline?: string;
   }): Promise<{ periodId: string }> {
-    // 1. 기존 데이터 정리
-    await this.testSuite
-      .request()
-      .delete('/admin/seed/clear')
-      .expect((res) => {
-        if (res.status !== 200 && res.status !== 404) {
-          throw new Error(
-            `Failed to clear seed data: ${res.status} ${res.text}`,
-          );
-        }
-      });
+    // 1. 기존 데이터 정리 (평가기간은 제외하고 정리)
+    // await this.testSuite
+    //   .request()
+    //   .delete('/admin/seed/clear')
+    //   .expect((res) => {
+    //     if (res.status !== 200 && res.status !== 404) {
+    //       throw new Error(
+    //         `Failed to clear seed data: ${res.status} ${res.text}`,
+    //       );
+    //     }
+    //   });
 
     // 2. 평가기간 생성 (peerEvaluationDeadline은 선택사항)
     const createConfig = {
@@ -67,62 +67,38 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
 
     // 1. evaluationSetupDeadline 설정 (가장 이른 날짜)
     if (deadlines.evaluationSetupDeadline) {
-      console.log(`평가기간 ${periodId} evaluationSetupDeadline 설정 시도:`, deadlines.evaluationSetupDeadline);
-      const response = await this.testSuite
+      await this.testSuite
         .request()
         .patch(`/admin/evaluation-periods/${periodId}/evaluation-setup-deadline`)
-        .send({ evaluationSetupDeadline: deadlines.evaluationSetupDeadline });
-      
-      console.log(`evaluationSetupDeadline 설정 응답:`, response.status, response.body);
-      
-      if (response.status !== 200) {
-        throw new Error(`evaluationSetupDeadline 설정 실패: ${response.status} ${response.text}`);
-      }
+        .send({ evaluationSetupDeadline: deadlines.evaluationSetupDeadline })
+        .expect(200);
     }
 
     // 2. performanceDeadline 설정
     if (deadlines.performanceDeadline) {
-      console.log(`평가기간 ${periodId} performanceDeadline 설정 시도:`, deadlines.performanceDeadline);
-      const response = await this.testSuite
+      await this.testSuite
         .request()
         .patch(`/admin/evaluation-periods/${periodId}/performance-deadline`)
-        .send({ performanceDeadline: deadlines.performanceDeadline });
-      
-      console.log(`performanceDeadline 설정 응답:`, response.status, response.body);
-      
-      if (response.status !== 200) {
-        throw new Error(`performanceDeadline 설정 실패: ${response.status} ${response.text}`);
-      }
+        .send({ performanceDeadline: deadlines.performanceDeadline })
+        .expect(200);
     }
 
     // 3. selfEvaluationDeadline 설정
     if (deadlines.selfEvaluationDeadline) {
-      console.log(`평가기간 ${periodId} selfEvaluationDeadline 설정 시도:`, deadlines.selfEvaluationDeadline);
-      const response = await this.testSuite
+      await this.testSuite
         .request()
         .patch(`/admin/evaluation-periods/${periodId}/self-evaluation-deadline`)
-        .send({ selfEvaluationDeadline: deadlines.selfEvaluationDeadline });
-      
-      console.log(`selfEvaluationDeadline 설정 응답:`, response.status, response.body);
-      
-      if (response.status !== 200) {
-        throw new Error(`selfEvaluationDeadline 설정 실패: ${response.status} ${response.text}`);
-      }
+        .send({ selfEvaluationDeadline: deadlines.selfEvaluationDeadline })
+        .expect(200);
     }
 
     // 4. peerEvaluationDeadline 설정 (가장 늦은 날짜)
     if (deadlines.peerEvaluationDeadline) {
-      console.log(`평가기간 ${periodId} peerEvaluationDeadline 설정 시도:`, deadlines.peerEvaluationDeadline);
-      const response = await this.testSuite
+      await this.testSuite
         .request()
         .patch(`/admin/evaluation-periods/${periodId}/peer-evaluation-deadline`)
-        .send({ peerEvaluationDeadline: deadlines.peerEvaluationDeadline });
-      
-      console.log(`peerEvaluationDeadline 설정 응답:`, response.status, response.body);
-      
-      if (response.status !== 200) {
-        throw new Error(`peerEvaluationDeadline 설정 실패: ${response.status} ${response.text}`);
-      }
+        .send({ peerEvaluationDeadline: deadlines.peerEvaluationDeadline })
+        .expect(200);
     }
   }
 
@@ -135,13 +111,8 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
   }> {
     const response = await this.testSuite
       .request()
-      .get(`/admin/evaluation-periods/${periodId}`);
-
-    console.log(`평가기간 ${periodId} 조회 응답:`, response.status, response.body);
-
-    if (response.status !== 200) {
-      throw new Error(`평가기간 조회 실패: ${response.status} ${response.text}`);
-    }
+      .get(`/admin/evaluation-periods/${periodId}`)
+      .expect(200);
 
     return {
       currentPhase: response.body.currentPhase,

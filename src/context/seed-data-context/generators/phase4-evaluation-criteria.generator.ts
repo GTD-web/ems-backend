@@ -119,20 +119,13 @@ export class Phase4EvaluationCriteriaGenerator {
     const allCriteria: WbsEvaluationCriteria[] = [];
 
     for (const wbsId of wbsIds) {
-      // WBS별 평가기준 개수 (config 설정 사용)
-      const criteriaCount = faker.number.int({
-        min: dist.wbsCriteriaPerWbs.min,
-        max: dist.wbsCriteriaPerWbs.max,
-      });
-
-      for (let i = 0; i < criteriaCount; i++) {
-        const criteria = new WbsEvaluationCriteria();
-        criteria.wbsItemId = wbsId;
-        criteria.criteria = faker.lorem.sentence();
-        criteria.importance = faker.number.int({ min: 1, max: 10 });
-        criteria.createdBy = systemAdminId;
-        allCriteria.push(criteria);
-      }
+      // WBS별로 하나의 평가기준만 생성 (기존 여러 개 생성 로직 제거)
+      const criteria = new WbsEvaluationCriteria();
+      criteria.wbsItemId = wbsId;
+      criteria.criteria = faker.lorem.sentence();
+      criteria.importance = faker.number.int({ min: 1, max: 10 });
+      criteria.createdBy = systemAdminId;
+      allCriteria.push(criteria);
     }
 
     this.logger.log(`평가기준 저장 전 - 생성된 개수: ${allCriteria.length}`);
