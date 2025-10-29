@@ -420,15 +420,17 @@ export async function getWbsDownwardEvaluationsByWbsId(
     };
   }
 
-  // 4. 2차 평가자 정보 구성
+  // 4. 2차 평가자 정보 구성 (WBS별 1명씩)
   let secondary: WbsDownwardEvaluationInfo | null = null;
   if (secondaryEvaluatorMappings.length > 0) {
-    // 2차 평가자들의 실제 평가 데이터 조회
-    const secondaryEvaluations = await downwardEvaluationRepository
+    // WBS별로 2차 평가자는 1명씩만 할당됨
+    const secondaryMapping = secondaryEvaluatorMappings[0];
+    
+    // 해당 2차 평가자의 실제 평가 데이터 조회
+    const secondaryEvaluation = await downwardEvaluationRepository
       .createQueryBuilder('downward')
       .select([
         '"downward"."id" AS downward_id',
-        '"downward"."evaluatorId" AS downward_evaluatorId',
         '"downward"."downwardEvaluationContent" AS downward_evaluationContent',
         '"downward"."downwardEvaluationScore" AS downward_score',
         '"downward"."isCompleted" AS downward_isCompleted',
@@ -441,74 +443,25 @@ export async function getWbsDownwardEvaluationsByWbsId(
         employeeId: employeeId,
       })
       .andWhere('"downward"."wbsId" = :wbsId', { wbsId })
+      .andWhere('"downward"."evaluatorId" = :evaluatorId', {
+        evaluatorId: secondaryMapping.mapping_evaluatorId,
+      })
       .andWhere('"downward"."evaluationType" = :evaluationType', {
         evaluationType: 'secondary',
       })
       .andWhere('"downward"."deletedAt" IS NULL')
-      .getRawMany();
+      .getRawOne();
 
-    const completedSecondary = secondaryEvaluations.filter(
-      (row) => row.downward_iscompleted === true,
-    );
-
-    if (completedSecondary.length === secondaryEvaluatorMappings.length) {
-      // 모든 2차 평가자가 완료된 경우 평균 점수 계산
-      const averageScore =
-        completedSecondary.reduce(
-          (sum, row) => sum + (row.downward_score || 0),
-          0,
-        ) / completedSecondary.length;
-
-      secondary = {
-        downwardEvaluationId: undefined, // 여러 평가의 평균이므로 ID 없음
-        evaluatorId: undefined,
-        evaluatorName:
-          secondaryEvaluatorMappings.length > 1
-            ? `${secondaryEvaluatorMappings.length}명의 2차 평가자`
-            : secondaryEvaluatorMappings[0].evaluator_name,
-        evaluationContent: undefined, // 여러 평가의 평균이므로 내용 없음
-        score: Math.round(averageScore * 100) / 100, // 소수점 2자리
-        isCompleted: true,
-        isEditable: mapping.isSecondaryEvaluationEditable,
-        submittedAt: completedSecondary[0].downward_completedat,
-      };
-    } else if (completedSecondary.length > 0) {
-      // 일부만 완료된 경우
-      const averageScore =
-        completedSecondary.reduce(
-          (sum, row) => sum + (row.downward_score || 0),
-          0,
-        ) / completedSecondary.length;
-
-      secondary = {
-        downwardEvaluationId: undefined,
-        evaluatorId: undefined,
-        evaluatorName:
-          secondaryEvaluatorMappings.length > 1
-            ? `${secondaryEvaluatorMappings.length}명의 2차 평가자 (진행중)`
-            : secondaryEvaluatorMappings[0].evaluator_name,
-        evaluationContent: undefined,
-        score: Math.round(averageScore * 100) / 100,
-        isCompleted: false,
-        isEditable: mapping.isSecondaryEvaluationEditable,
-        submittedAt: undefined,
-      };
-    } else {
-      // 아직 평가가 시작되지 않은 경우 (평가자만 설정됨)
-      secondary = {
-        downwardEvaluationId: undefined,
-        evaluatorId: undefined,
-        evaluatorName:
-          secondaryEvaluatorMappings.length > 1
-            ? `${secondaryEvaluatorMappings.length}명의 2차 평가자`
-            : secondaryEvaluatorMappings[0].evaluator_name,
-        evaluationContent: undefined,
-        score: undefined,
-        isCompleted: false,
-        isEditable: mapping.isSecondaryEvaluationEditable,
-        submittedAt: undefined,
-      };
-    }
+    secondary = {
+      downwardEvaluationId: secondaryEvaluation?.downward_id,
+      evaluatorId: secondaryMapping.mapping_evaluatorId,
+      evaluatorName: secondaryMapping.evaluator_name,
+      evaluationContent: secondaryEvaluation?.downward_evaluationContent,
+      score: secondaryEvaluation?.downward_score,
+      isCompleted: secondaryEvaluation?.downward_iscompleted || false,
+      isEditable: mapping.isSecondaryEvaluationEditable,
+      submittedAt: secondaryEvaluation?.downward_completedat,
+    };
   }
 
   return {
