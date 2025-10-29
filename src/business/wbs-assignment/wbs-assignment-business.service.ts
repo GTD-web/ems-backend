@@ -5,6 +5,7 @@ import { ProjectService } from '@domain/common/project/project.service';
 import { EvaluationLineService } from '@domain/core/evaluation-line/evaluation-line.service';
 import { EvaluationLineMappingService } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.service';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
+import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
 import type {
   CreateEvaluationWbsAssignmentData,
   OrderDirection,
@@ -707,126 +708,100 @@ export class WbsAssignmentBusinessService {
     periodId: string,
     createdBy: string,
   ): Promise<void> {
-    try {
-      this.logger.log('평가라인 자동 구성 시작', {
-        employeeId,
-        wbsItemId,
-        projectId,
+    this.logger.log('평가라인 자동 구성 시작', {
+      employeeId,
+      wbsItemId,
+      projectId,
+    });
+
+    // 1. 직원 정보 조회 (담당 평가자 확인)
+    const employee = await this.employeeService.ID로_조회한다(employeeId);
+    if (!employee) {
+      this.logger.warn('직원을 찾을 수 없습니다', { employeeId });
+      return;
+    }
+
+    console.log('🔍 직원 정보:', {
+      id: employee.id,
+      name: employee.name,
+      managerId: employee.managerId,
+      departmentId: employee.departmentId,
+    });
+
+    // 2. 프로젝트 정보 조회 (PM 확인)
+    const project = await this.projectService.ID로_조회한다(projectId);
+    if (!project) {
+      this.logger.warn('프로젝트를 찾을 수 없습니다', { projectId });
+      return;
+    }
+
+    console.log('🔍 프로젝트 정보:', {
+      id: project.id,
+      name: project.name,
+      managerId: project.managerId,
+    });
+
+    // 3. 1차 평가자 구성 (기존 할당된 평가자 우선, 없으면 담당 평가자)
+    const existingPrimaryEvaluator = await this.기존_1차_평가자를_조회한다(
+      employeeId,
+      periodId,
+    );
+
+    let primaryEvaluatorId = existingPrimaryEvaluator;
+    if (!primaryEvaluatorId && employee.managerId) {
+      primaryEvaluatorId = employee.managerId;
+      this.logger.log('기존 1차 평가자가 없어 담당 평가자를 사용', {
+        evaluatorId: employee.managerId,
       });
-
-      // 1. 직원 정보 조회 (담당 평가자 확인)
-      const employee = await this.employeeService.ID로_조회한다(employeeId);
-      if (!employee) {
-        this.logger.warn('직원을 찾을 수 없습니다', { employeeId });
-        return;
-      }
-
-      console.log('🔍 직원 정보:', {
-        id: employee.id,
-        name: employee.name,
-        managerId: employee.managerId,
-        departmentId: employee.departmentId,
+    } else if (existingPrimaryEvaluator) {
+      this.logger.log('기존 1차 평가자를 사용', {
+        evaluatorId: existingPrimaryEvaluator,
       });
+    }
 
-      // 2. 프로젝트 정보 조회 (PM 확인)
-      const project = await this.projectService.ID로_조회한다(projectId);
-      if (!project) {
-        this.logger.warn('프로젝트를 찾을 수 없습니다', { projectId });
-        return;
-      }
-
-      console.log('🔍 프로젝트 정보:', {
-        id: project.id,
-        name: project.name,
-        managerId: project.managerId,
-      });
-
-      // 3. 1차 평가자 구성 (기존 할당된 평가자 우선, 없으면 담당 평가자)
-      const existingPrimaryEvaluator = await this.기존_1차_평가자를_조회한다(
+    if (primaryEvaluatorId) {
+      await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(
         employeeId,
         periodId,
+        primaryEvaluatorId,
+        createdBy,
       );
-
-      let primaryEvaluatorId = existingPrimaryEvaluator;
-      if (!primaryEvaluatorId && employee.managerId) {
-        primaryEvaluatorId = employee.managerId;
-        this.logger.log('기존 1차 평가자가 없어 담당 평가자를 사용', {
-          evaluatorId: employee.managerId,
-        });
-      } else if (existingPrimaryEvaluator) {
-        this.logger.log('기존 1차 평가자를 사용', {
-          evaluatorId: existingPrimaryEvaluator,
-        });
-      }
-
-      if (primaryEvaluatorId) {
-        try {
-          await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(
-            employeeId,
-            periodId,
-            primaryEvaluatorId,
-            createdBy,
-          );
-        } catch (error) {
-          this.logger.error('1차 평가자 구성 실패', {
-            error: error.message,
-            employeeId,
-            evaluatorId: primaryEvaluatorId,
-          });
-        }
-      } else {
-        this.logger.warn('1차 평가자를 설정할 수 없습니다', {
-          employeeId,
-          hasExistingEvaluator: !!existingPrimaryEvaluator,
-          hasManagerId: !!employee.managerId,
-        });
-      }
-
-      // 4. 2차 평가자 구성 (프로젝트 PM) - Upsert 방식
-      // 제약 조건 제거: PM이 있으면 항상 2차 평가자로 구성
-      if (project.managerId) {
-        this.logger.log('2차 평가자(프로젝트 PM) 구성', {
-          evaluatorId: project.managerId,
-          employeeId,
-        });
-
-        try {
-          await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
-            employeeId,
-            wbsItemId,
-            periodId,
-            project.managerId,
-            createdBy,
-          );
-        } catch (error) {
-          this.logger.error('2차 평가자 구성 실패', {
-            error: error.message,
-            employeeId,
-            evaluatorId: project.managerId,
-          });
-        }
-      } else {
-        this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {
-          projectId,
-        });
-      }
-
-      this.logger.log('평가라인 자동 구성 완료', {
+    } else {
+      this.logger.warn('1차 평가자를 설정할 수 없습니다', {
         employeeId,
-        wbsItemId,
-        primaryEvaluator: employee.managerId,
-        secondaryEvaluator:
-          project.managerId !== employee.managerId ? project.managerId : null,
+        hasExistingEvaluator: !!existingPrimaryEvaluator,
+        hasManagerId: !!employee.managerId,
       });
-    } catch (error) {
-      this.logger.error('평가라인 자동 구성 중 오류 발생', {
-        error: error.message,
+    }
+
+    // 4. 2차 평가자 구성 (프로젝트 PM) - Upsert 방식
+    // 제약 조건 제거: PM이 있으면 항상 2차 평가자로 구성
+    if (project.managerId) {
+      this.logger.log('2차 평가자(프로젝트 PM) 구성', {
+        evaluatorId: project.managerId,
+        employeeId,
+      });
+
+      await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
         employeeId,
         wbsItemId,
+        periodId,
+        project.managerId,
+        createdBy,
+      );
+    } else {
+      this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {
         projectId,
       });
-      // 평가라인 구성 실패는 치명적이지 않으므로 에러를 throw하지 않음
     }
+
+    this.logger.log('평가라인 자동 구성 완료', {
+      employeeId,
+      wbsItemId,
+      primaryEvaluator: employee.managerId,
+      secondaryEvaluator:
+        project.managerId !== employee.managerId ? project.managerId : null,
+    });
   }
 
   /**
@@ -837,44 +812,123 @@ export class WbsAssignmentBusinessService {
     employeeId: string,
     periodId: string,
   ): Promise<string | null> {
-    try {
-      // 1차 평가 라인 조회
-      const evaluationLines = await this.evaluationLineService.필터_조회한다({
-        evaluatorType: EvaluatorType.PRIMARY,
-        orderFrom: 1,
-        orderTo: 1,
-      });
+    // 1차 평가 라인 조회
+    const evaluationLines = await this.evaluationLineService.필터_조회한다({
+      evaluatorType: EvaluatorType.PRIMARY,
+      orderFrom: 1,
+      orderTo: 1,
+    });
 
-      if (evaluationLines.length === 0) {
-        return null;
-      }
-
-      const primaryEvaluationLineId = evaluationLines[0].DTO로_변환한다().id;
-
-      // 기존 매핑 조회 (직원별 고정 담당자)
-      const existingMappings =
-        await this.evaluationLineMappingService.필터_조회한다({
-          employeeId,
-          evaluationLineId: primaryEvaluationLineId,
-        });
-
-      // wbsItemId가 null인 매핑만 필터링 (직원별 고정 담당자)
-      const primaryMappings = existingMappings.filter(
-        (mapping) => !mapping.wbsItemId,
-      );
-
-      if (primaryMappings.length > 0) {
-        return primaryMappings[0].DTO로_변환한다().evaluatorId;
-      }
-
-      return null;
-    } catch (error) {
-      this.logger.error('기존 1차 평가자 조회 실패', {
-        error: error.message,
-        employeeId,
-        periodId,
-      });
+    if (evaluationLines.length === 0) {
       return null;
     }
+
+    const primaryEvaluationLineId = evaluationLines[0].DTO로_변환한다().id;
+
+    // 기존 매핑 조회 (직원별 고정 담당자)
+    const existingMappings =
+      await this.evaluationLineMappingService.필터_조회한다({
+        employeeId,
+        evaluationLineId: primaryEvaluationLineId,
+      });
+
+    // wbsItemId가 null인 매핑만 필터링 (직원별 고정 담당자)
+    const primaryMappings = existingMappings.filter(
+      (mapping) => !mapping.wbsItemId,
+    );
+
+    if (primaryMappings.length > 0) {
+      return primaryMappings[0].DTO로_변환한다().evaluatorId;
+    }
+
+    return null;
   }
+
+  /**
+   * WBS를 생성하고 직원에게 할당한다
+   */
+  async WBS를_생성하고_할당한다(params: {
+    title: string;
+    projectId: string;
+    employeeId: string;
+    periodId: string;
+    createdBy: string;
+  }): Promise<{
+    wbsItem: WbsItemDto;
+    assignment: any;
+  }> {
+    this.logger.log('WBS 생성 및 할당 비즈니스 로직 시작', {
+      title: params.title,
+      projectId: params.projectId,
+      employeeId: params.employeeId,
+    });
+
+    // 1. WBS 항목 생성 (코드 자동 생성 포함)
+    const wbsItem = await this.evaluationCriteriaManagementService.WBS_항목을_생성하고_코드를_자동_생성한다(
+      {
+        title: params.title,
+        status: WbsItemStatus.PENDING,
+        level: 1, // 최상위 항목
+        assignedToId: params.employeeId,
+        projectId: params.projectId,
+        parentWbsId: undefined,
+        startDate: undefined,
+        endDate: undefined,
+        progressPercentage: 0,
+      },
+      params.createdBy,
+    );
+
+    this.logger.log('WBS 항목 생성 완료', {
+      wbsItemId: wbsItem.id,
+      wbsCode: wbsItem.wbsCode,
+    });
+
+    // 2. WBS 할당 생성
+    const assignment = await this.WBS를_할당한다({
+      employeeId: params.employeeId,
+      wbsItemId: wbsItem.id,
+      projectId: params.projectId,
+      periodId: params.periodId,
+      assignedBy: params.createdBy,
+    });
+
+    this.logger.log('WBS 생성 및 할당 완료', {
+      wbsItemId: wbsItem.id,
+      assignmentId: assignment.id,
+    });
+
+    return {
+      wbsItem,
+      assignment,
+    };
+  }
+
+  /**
+   * WBS 항목 이름을 수정한다
+   */
+  async WBS_항목_이름을_수정한다(params: {
+    wbsItemId: string;
+    title: string;
+    updatedBy: string;
+  }): Promise<WbsItemDto> {
+    this.logger.log('WBS 항목 이름 수정 시작', {
+      wbsItemId: params.wbsItemId,
+      title: params.title,
+    });
+
+    const updatedWbsItem = await this.evaluationCriteriaManagementService.WBS_항목을_수정한다(
+      params.wbsItemId,
+      { title: params.title },
+      params.updatedBy,
+    );
+
+    this.logger.log('WBS 항목 이름 수정 완료', {
+      wbsItemId: params.wbsItemId,
+      newTitle: params.title,
+    });
+
+    return updatedWbsItem;
+  }
+
 }

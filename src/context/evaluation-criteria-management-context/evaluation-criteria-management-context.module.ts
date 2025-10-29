@@ -30,6 +30,9 @@ import { EVALUATION_LINE_HANDLERS } from './handlers/evaluation-line';
 // WBS Evaluation Criteria Handlers
 import { WBS_EVALUATION_CRITERIA_HANDLERS } from './handlers/wbs-evaluation-criteria';
 
+// WBS Item Handlers
+import { WBS_ITEM_HANDLERS } from './handlers/wbs-item';
+
 // Domain Modules
 import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
@@ -85,6 +88,8 @@ import { WbsAssignmentWeightCalculationService } from './services/wbs-assignment
     ...EVALUATION_LINE_HANDLERS,
     // WBS Evaluation Criteria Handlers
     ...WBS_EVALUATION_CRITERIA_HANDLERS,
+    // WBS Item Handlers
+    ...WBS_ITEM_HANDLERS,
   ],
   exports: [EvaluationCriteriaManagementService],
 })

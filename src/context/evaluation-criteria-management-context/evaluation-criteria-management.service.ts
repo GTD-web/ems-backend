@@ -53,6 +53,16 @@ import {
   GetWbsItemEvaluationCriteriaQuery,
 } from './handlers/wbs-evaluation-criteria';
 
+// WBS Item Commands & Queries
+import {
+  CreateWbsItemCommand,
+  UpdateWbsItemCommand,
+  GetWbsItemsByProjectQuery,
+  type CreateWbsItemResult,
+  type UpdateWbsItemResult,
+  type GetWbsItemsByProjectResult,
+} from './handlers/wbs-item';
+
 // Evaluation Line Commands & Queries
 import {
   ConfigureEmployeeWbsEvaluationLineCommand,
@@ -92,6 +102,7 @@ import type {
   WbsEvaluationCriteriaFilter,
 } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
 import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
+import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
 
 /**
  * 평가기준관리 서비스 (MVP 버전)
@@ -529,6 +540,115 @@ export class EvaluationCriteriaManagementService
   ): Promise<boolean> {
     const command = new DeleteWbsEvaluationCriteriaCommand(id, deletedBy);
     return await this.commandBus.execute(command);
+  }
+
+  // ============================================================================
+  // WBS 항목 관리
+  // ============================================================================
+
+  /**
+   * WBS 항목을 생성한다
+   */
+  async WBS_항목을_생성한다(
+    data: {
+      wbsCode: string;
+      title: string;
+      status: WbsItemStatus;
+      level: number;
+      assignedToId?: string;
+      projectId: string;
+      parentWbsId?: string;
+      startDate?: Date;
+      endDate?: Date;
+      progressPercentage?: number;
+    },
+    createdBy: string,
+  ): Promise<WbsItemDto> {
+    const command = new CreateWbsItemCommand(data, createdBy);
+    const result = await this.commandBus.execute(command);
+    return result.wbsItem;
+  }
+
+  /**
+   * WBS 항목을 생성하면서 자동으로 WBS 코드를 생성한다
+   */
+  async WBS_항목을_생성하고_코드를_자동_생성한다(
+    data: {
+      title: string;
+      status: WbsItemStatus;
+      level: number;
+      assignedToId?: string;
+      projectId: string;
+      parentWbsId?: string;
+      startDate?: Date;
+      endDate?: Date;
+      progressPercentage?: number;
+    },
+    createdBy: string,
+  ): Promise<WbsItemDto> {
+    // 1. WBS 코드 자동 생성
+    const wbsCode = await this.WBS_코드를_자동_생성한다(data.projectId);
+
+    // 2. WBS 항목 생성 데이터에 코드 추가
+    const wbsItemData = {
+      ...data,
+      wbsCode,
+    };
+
+    // 3. WBS 항목 생성
+    return await this.WBS_항목을_생성한다(wbsItemData, createdBy);
+  }
+
+  /**
+   * 프로젝트 내 WBS 코드를 자동 생성한다
+   */
+  private async WBS_코드를_자동_생성한다(projectId: string): Promise<string> {
+    // 프로젝트 내 기존 WBS 개수 조회
+    const existingWbsItems = await this.프로젝트별_WBS_목록을_조회한다(projectId);
+
+    // 다음 순번 계산 (1부터 시작)
+    const nextNumber = existingWbsItems.length + 1;
+
+    // WBS 코드 생성 (3자리 제로 패딩)
+    const wbsCode = `WBS-${nextNumber.toString().padStart(3, '0')}`;
+
+    this.logger.log('WBS 코드 자동 생성', {
+      projectId,
+      existingCount: existingWbsItems.length,
+      generatedCode: wbsCode,
+    });
+
+    return wbsCode;
+  }
+
+  /**
+   * WBS 항목을 수정한다
+   */
+  async WBS_항목을_수정한다(
+    id: string,
+    data: {
+      title?: string;
+      status?: WbsItemStatus;
+      startDate?: Date;
+      endDate?: Date;
+      progressPercentage?: number;
+    },
+    updatedBy: string,
+  ): Promise<WbsItemDto> {
+    const command = new UpdateWbsItemCommand(id, data, updatedBy);
+    const result = await this.commandBus.execute(command);
+    return result.wbsItem;
+  }
+
+  /**
+   * 프로젝트별 WBS 목록을 조회한다
+   */
+  async 프로젝트별_WBS_목록을_조회한다(
+    projectId: string,
+  ): Promise<WbsItemDto[]> {
+    const query = new GetWbsItemsByProjectQuery(projectId);
+    const result = await this.queryBus.execute(query);
+    return result.wbsItems;
   }
 
   async WBS_항목의_평가기준을_전체삭제한다(

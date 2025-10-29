@@ -13,6 +13,7 @@ import {
   BulkCreateWbsAssignments,
   CancelWbsAssignment,
   ChangeWbsAssignmentOrder,
+  CreateAndAssignWbs,
   CreateWbsAssignment,
   GetEmployeeWbsAssignments,
   GetProjectWbsAssignments,
@@ -23,17 +24,20 @@ import {
   ResetEmployeeWbsAssignments,
   ResetPeriodWbsAssignments,
   ResetProjectWbsAssignments,
+  UpdateWbsItemTitle,
 } from './decorators/wbs-assignment-api.decorators';
 import {
   BulkCreateWbsAssignmentDto,
   ChangeWbsAssignmentOrderBodyDto,
   ChangeWbsAssignmentOrderQueryDto,
+  CreateAndAssignWbsDto,
   CreateWbsAssignmentDto,
   EmployeeWbsAssignmentsResponseDto,
   GetUnassignedWbsItemsDto,
   ProjectWbsAssignmentsResponseDto,
   ResetWbsAssignmentsDto,
   UnassignedWbsItemsResponseDto,
+  UpdateWbsItemTitleDto,
   WbsAssignmentDetailResponseDto,
   WbsAssignmentFilterDto,
   WbsItemAssignmentsResponseDto,
@@ -287,6 +291,41 @@ export class WbsAssignmentManagementController {
       assignmentId: id,
       direction: queryDto.direction,
       updatedBy,
+    });
+  }
+
+  /**
+   * WBS 생성하면서 할당
+   */
+  @CreateAndAssignWbs()
+  async createAndAssignWbs(
+    @Body() createDto: CreateAndAssignWbsDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<any> {
+    const createdBy = user.id;
+    return await this.wbsAssignmentBusinessService.WBS를_생성하고_할당한다({
+      title: createDto.title,
+      projectId: createDto.projectId,
+      employeeId: createDto.employeeId,
+      periodId: createDto.periodId,
+      createdBy: createdBy,
+    });
+  }
+
+  /**
+   * WBS 항목 이름 수정
+   */
+  @UpdateWbsItemTitle()
+  async updateWbsItemTitle(
+    @Param('wbsItemId', ParseUUIDPipe) wbsItemId: string,
+    @Body() updateDto: UpdateWbsItemTitleDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<any> {
+    const updatedBy = user.id;
+    return await this.wbsAssignmentBusinessService.WBS_항목_이름을_수정한다({
+      wbsItemId: wbsItemId,
+      title: updateDto.title,
+      updatedBy: updatedBy,
     });
   }
 }

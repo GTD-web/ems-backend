@@ -19,6 +19,8 @@ import {
 import {
   CreateWbsAssignmentDto,
   BulkCreateWbsAssignmentDto,
+  CreateAndAssignWbsDto,
+  UpdateWbsItemTitleDto,
 } from '../dto/wbs-assignment.dto';
 
 /**
@@ -1469,5 +1471,177 @@ export const ChangeWbsAssignmentOrder = () =>
     ApiResponse({
       status: 500,
       description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+
+/**
+ * WBS 생성하면서 할당 API 데코레이터
+ */
+export const CreateAndAssignWbs = () =>
+  applyDecorators(
+    Post('create-and-assign'),
+    HttpCode(HttpStatus.CREATED),
+    ApiOperation({
+      summary: 'WBS 생성하면서 할당',
+      description: `**중요**: WBS 항목을 새로 생성하면서 동시에 직원에게 할당합니다. WBS 코드는 자동으로 생성되며, 평가기준과 평가라인도 자동으로 구성됩니다.
+
+**자동 수행 작업:**
+- WBS 코드 자동 생성: 프로젝트 내 기존 WBS 개수를 조회하여 "WBS-001", "WBS-002" 형식으로 순차 생성
+- WBS 기본값 설정: status는 PENDING, level은 1(최상위), assignedToId는 employeeId와 동일
+- WBS 평가기준 자동 생성: 해당 WBS 항목에 빈 평가기준을 자동으로 생성
+- 평가라인 자동 구성: 직원의 관리자를 1차 평가자, 프로젝트 PM을 2차 평가자로 자동 설정
+- 중복 검증: 동일한 직원-WBS-프로젝트-평가기간 조합의 중복 할당 방지
+
+**테스트 케이스:**
+- 기본 생성 및 할당: WBS 제목, 프로젝트, 직원, 평가기간을 지정하여 WBS 생성 및 할당
+- WBS 코드 자동 생성: 프로젝트 내 기존 WBS 개수에 따라 순차적으로 코드 생성 확인
+- WBS 기본값 설정: status, level, assignedToId 등 기본값이 올바르게 설정됨
+- 평가기준 자동 생성: WBS 항목에 평가기준이 없는 경우 빈 평가기준 자동 생성 확인
+- 평가라인 자동 구성: 1차 평가자(관리자), 2차 평가자(PM) 자동 설정 확인
+- PM과 관리자 동일: PM이 관리자와 같은 경우 2차 평가자 미설정
+- 평가라인 중복 방지: 이미 평가라인이 있는 경우 중복 생성하지 않음
+- 중복 할당 방지: 동일한 직원-WBS-프로젝트-평가기간 조합 중복 생성 시 409 에러
+- 필수 필드 검증: title, projectId, employeeId, periodId 누락 시 400 에러
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 직원 존재 검증: 존재하지 않는 직원 ID 시 404 에러
+- 프로젝트 존재 검증: 존재하지 않는 프로젝트 ID 시 404 에러
+- 평가기간 존재 검증: 존재하지 않는 평가기간 ID 시 404 에러
+- 완료된 평가기간 제한: 완료된 평가기간에 할당 생성 시 422 에러
+- 진행 중 평가기간 허용: 진행 중인 평가기간에는 할당 생성 가능
+- 트랜잭션 처리: WBS 생성 실패 시 할당도 롤백됨
+- 감사 정보: 생성일시, 수정일시, 생성자, 수정자 정보 자동 기록`,
+    }),
+    ApiBody({
+      type: CreateAndAssignWbsDto,
+      description: 'WBS 생성 및 할당 데이터',
+    }),
+    ApiResponse({
+      status: 201,
+      description: 'WBS가 성공적으로 생성되고 할당되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          wbsItem: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              wbsCode: { type: 'string', example: 'WBS-001' },
+              title: { type: 'string', example: 'API 개발' },
+              status: { type: 'string', example: 'PENDING' },
+              level: { type: 'number', example: 1 },
+              projectId: { type: 'string', format: 'uuid' },
+              assignedToId: { type: 'string', format: 'uuid' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+          assignment: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              employeeId: { type: 'string', format: 'uuid' },
+              wbsItemId: { type: 'string', format: 'uuid' },
+              projectId: { type: 'string', format: 'uuid' },
+              periodId: { type: 'string', format: 'uuid' },
+              assignedBy: { type: 'string', format: 'uuid' },
+              assignedDate: { type: 'string', format: 'date-time' },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터 (필수 필드 누락, UUID 형식 오류 등)',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '직원, 프로젝트 또는 평가기간을 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: 409,
+      description: '중복된 할당입니다. (동일한 직원-WBS-프로젝트-평가기간 조합)',
+    }),
+    ApiResponse({
+      status: 422,
+      description: '비즈니스 로직 오류 (완료된 평가기간에 할당 생성 불가 등)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류',
+    }),
+  );
+
+/**
+ * WBS 항목 이름 수정 API 데코레이터
+ */
+export const UpdateWbsItemTitle = () =>
+  applyDecorators(
+    Patch('wbs-item/:wbsItemId/title'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: 'WBS 항목 이름 수정',
+      description: `**중요**: 기존 WBS 항목의 제목(title)을 수정합니다. 할당 관계는 유지되며, WBS 항목의 다른 속성은 변경되지 않습니다.
+
+**동작:**
+- WBS 항목 ID로 조회하여 존재 여부 확인
+- title 필드만 업데이트하고 나머지 속성은 유지
+- 수정자 정보 자동 기록
+
+**테스트 케이스:**
+- 기본 이름 수정: 유효한 WBS 항목 ID로 제목 수정 성공
+- 수정자 정보: updatedBy, updatedAt 정보가 올바르게 설정됨
+- 할당 관계 유지: 기존 할당 관계는 변경되지 않음
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 존재하지 않는 WBS: 존재하지 않는 WBS 항목 ID 시 404 에러
+- 빈 문자열 검증: 빈 문자열로 수정 시도 시 400 에러
+- 공백 문자열 검증: 공백만 있는 문자열로 수정 시도 시 400 에러
+- 동일한 제목: 기존과 동일한 제목으로 수정 시도 시 성공 (업데이트됨)
+- 긴 제목: 255자 제한 내에서 긴 제목으로 수정 가능
+- 특수문자 포함: 특수문자가 포함된 제목으로 수정 가능`,
+    }),
+    ApiParam({
+      name: 'wbsItemId',
+      description: 'WBS 항목 ID (UUID 형식)',
+      type: 'string',
+      format: 'uuid',
+      example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+    }),
+    ApiBody({
+      type: UpdateWbsItemTitleDto,
+      description: 'WBS 제목 수정 데이터',
+    }),
+    ApiResponse({
+      status: 200,
+      description: 'WBS 항목 이름이 성공적으로 수정되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          wbsCode: { type: 'string', example: 'WBS-001' },
+          title: { type: 'string', example: '수정된 API 개발' },
+          status: { type: 'string', example: 'PENDING' },
+          level: { type: 'number', example: 1 },
+          projectId: { type: 'string', format: 'uuid' },
+          assignedToId: { type: 'string', format: 'uuid' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+          updatedBy: { type: 'string', format: 'uuid' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터 (UUID 형식 오류, 빈 문자열 등)',
+    }),
+    ApiResponse({
+      status: 404,
+      description: 'WBS 항목을 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류',
     }),
   );
