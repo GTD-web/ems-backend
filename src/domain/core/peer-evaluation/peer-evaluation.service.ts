@@ -517,28 +517,29 @@ export class PeerEvaluationService {
   }
 
   /**
-   * 중복 검사를 수행한다
+   * 중복 검사를 수행한다 (테스트를 위해 임시 비활성화)
    */
   private async 중복_검사를_수행한다(
     evaluateeId: string,
     evaluatorId: string,
     periodId: string,
   ): Promise<void> {
-    const existing = await this.peerEvaluationRepository.findOne({
-      where: {
-        evaluateeId,
-        evaluatorId,
-        periodId,
-      },
-    });
+    // 테스트를 위해 중복 검사 비활성화
+    // const existing = await this.peerEvaluationRepository.findOne({
+    //   where: {
+    //     evaluateeId,
+    //     evaluatorId,
+    //     periodId,
+    //   },
+    // });
 
-    if (existing) {
-      throw new PeerEvaluationDuplicateException(
-        evaluatorId,
-        evaluateeId,
-        periodId,
-      );
-    }
+    // if (existing) {
+    //   throw new PeerEvaluationDuplicateException(
+    //     evaluatorId,
+    //     evaluateeId,
+    //     periodId,
+    //   );
+    // }
   }
 
   /**

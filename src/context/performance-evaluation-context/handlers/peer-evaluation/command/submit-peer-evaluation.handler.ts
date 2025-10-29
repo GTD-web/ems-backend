@@ -2,8 +2,6 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { PeerEvaluationService } from '@domain/core/peer-evaluation/peer-evaluation.service';
 import { PeerEvaluationQuestionMappingService } from '@domain/core/peer-evaluation-question-mapping/peer-evaluation-question-mapping.service';
-import { EvaluationResponseService } from '@domain/sub/evaluation-response/evaluation-response.service';
-import { EvaluationResponseType } from '@domain/sub/evaluation-response/evaluation-response.types';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
@@ -29,7 +27,6 @@ export class SubmitPeerEvaluationHandler
   constructor(
     private readonly peerEvaluationService: PeerEvaluationService,
     private readonly peerEvaluationQuestionMappingService: PeerEvaluationQuestionMappingService,
-    private readonly evaluationResponseService: EvaluationResponseService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -68,37 +65,19 @@ export class SubmitPeerEvaluationHandler
         );
       }
 
-      // 5. 모든 질문에 대한 응답 조회
-      const responses =
-        await this.evaluationResponseService.평가유형조합조회한다(
-          evaluationId,
-          EvaluationResponseType.PEER,
-        );
-
-      // 6. 응답이 있는 질문 ID 집합 생성
-      const answeredQuestionIds = new Set(
-        responses
-          .filter((response) => {
-            // answer와 score 둘 다 있어야 응답한 것으로 간주
-            return (
-              response.answer !== null &&
-              response.answer !== undefined &&
-              response.answer.trim() !== '' &&
-              response.score !== null &&
-              response.score !== undefined
-            );
-          })
-          .map((response) => response.questionId),
+      // 5. 매핑된 질문들에서 답변이 있는지 확인
+      const answeredQuestions = mappedQuestions.filter((mapping) => 
+        mapping.답변이_있는가()
       );
 
       this.logger.log(
-        `응답한 질문 수: ${answeredQuestionIds.size} / ${mappedQuestions.length}`,
+        `응답한 질문 수: ${answeredQuestions.length} / ${mappedQuestions.length}`,
         { evaluationId },
       );
 
-      // 7. 미응답 질문 확인
-      const unansweredQuestions = mappedQuestions.filter(
-        (mapping) => !answeredQuestionIds.has(mapping.questionId),
+      // 6. 미응답 질문 확인
+      const unansweredQuestions = mappedQuestions.filter((mapping) => 
+        !mapping.답변이_있는가()
       );
 
       if (unansweredQuestions.length > 0) {
@@ -126,7 +105,7 @@ export class SubmitPeerEvaluationHandler
       this.logger.log('동료평가 제출 완료 - 모든 질문 응답 확인됨', {
         evaluationId,
         mappedQuestions: mappedQuestions.length,
-        answeredQuestions: answeredQuestionIds.size,
+        answeredQuestions: answeredQuestions.length,
       });
     });
   }

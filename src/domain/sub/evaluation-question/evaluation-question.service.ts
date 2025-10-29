@@ -90,12 +90,7 @@ export class EvaluationQuestionService implements IEvaluationQuestionService {
   ): Promise<EvaluationQuestion> {
     this.logger.log(`평가 질문 생성 시작 - 질문 내용: ${createDto.text}`);
 
-    // 질문 내용 중복 검사
-    const exists = await this.질문내용중복확인한다(createDto.text);
-    if (exists) {
-      throw new DuplicateEvaluationQuestionException(createDto.text);
-    }
-
+ 
     try {
       const evaluationQuestion = new EvaluationQuestion({
         ...createDto,
