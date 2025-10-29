@@ -1,10 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PeerEvaluationQuestionMappingService } from '@domain/core/peer-evaluation-question-mapping/peer-evaluation-question-mapping.service';
 import { PeerEvaluationService } from '@domain/core/peer-evaluation/peer-evaluation.service';
 import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.entity';
+import { isUUID } from 'class-validator';
 
 /**
  * 동료평가 답변 항목
@@ -75,6 +76,13 @@ export class UpsertPeerEvaluationAnswersHandler
       let savedCount = 0;
 
       for (const answerItem of command.answers) {
+        // questionId UUID 형식 검증
+        if (!isUUID(answerItem.questionId)) {
+          throw new BadRequestException(
+            `잘못된 UUID 형식의 questionId입니다: ${answerItem.questionId}`,
+          );
+        }
+
         // 해당 동료평가의 질문 매핑 조회
         const mapping =
           await this.peerEvaluationQuestionMappingService.동료평가와_질문으로_조회한다(

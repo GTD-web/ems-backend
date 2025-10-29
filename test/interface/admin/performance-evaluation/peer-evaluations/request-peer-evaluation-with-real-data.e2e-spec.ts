@@ -104,9 +104,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         periodId: period.id,
       });
 
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response.status,
-      );
+      expect(response.status).toBe(HttpStatus.CREATED);
 
       if (response.status === HttpStatus.CREATED) {
         expect(response.body).toHaveProperty('id');
@@ -127,12 +125,10 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         evaluatorId: employees.evaluator.id,
         evaluateeId: employees.evaluatee.id,
         periodId: period.id,
-        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        requestDeadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       });
 
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response.status,
-      );
+      expect(response.status).toBe(HttpStatus.CREATED);
 
       console.log('\n✅ 마감일 포함 요청 성공');
     });
@@ -153,9 +149,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         questionIds: [question.id],
       });
 
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response.status,
-      );
+      expect(response.status).toBe(HttpStatus.CREATED);
 
       console.log('\n✅ 질문 ID 포함 요청 성공');
     });
@@ -175,9 +169,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         requestedBy: uuidv4(),
       });
 
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response.status,
-      );
+      expect(response.status).toBe(HttpStatus.CREATED);
 
       console.log('\n✅ requestedBy 포함 요청 성공');
     });
@@ -196,9 +188,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         periodId: period.id,
       });
 
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response.status,
-      );
+      expect(response.status).toBe(HttpStatus.CREATED);
 
       console.log('\n✅ requestedBy 없이 요청 성공');
     });
@@ -223,12 +213,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         periodId: period.id,
       });
 
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response1.status,
-      );
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response2.status,
-      );
+      expect(response1.status).toBe(HttpStatus.CREATED);
+      expect(response2.status).toBe(HttpStatus.CREATED);
 
       console.log('\n✅ 여러 피평가자로부터 요청 성공');
     });
@@ -264,12 +250,8 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         periodId: period.id,
       });
 
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response1.status,
-      );
-      expect([HttpStatus.CREATED, HttpStatus.CONFLICT]).toContain(
-        response2.status,
-      );
+      expect(response1.status).toBe(HttpStatus.CREATED);
+      expect(response2.status).toBe(HttpStatus.CREATED);
 
       console.log('\n✅ 여러 평가자에게 요청 성공');
     });
@@ -455,9 +437,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         periodId: period.id,
       });
 
-      expect([HttpStatus.NOT_FOUND, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
 
       console.log('\n✅ 존재하지 않는 evaluatorId 처리');
     });
@@ -476,9 +456,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         periodId: period.id,
       });
 
-      expect([HttpStatus.NOT_FOUND, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
 
       console.log('\n✅ 존재하지 않는 evaluateeId 처리');
     });
@@ -496,9 +474,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/requests (실제 �
         periodId: uuidv4(),
       });
 
-      expect([HttpStatus.NOT_FOUND, HttpStatus.BAD_REQUEST]).toContain(
-        response.status,
-      );
+      expect(response.status).toBe(HttpStatus.NOT_FOUND);
 
       console.log('\n✅ 존재하지 않는 periodId 처리');
     });

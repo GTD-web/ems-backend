@@ -207,9 +207,10 @@ describe('POST /admin/performance-evaluation/peer-evaluations/:id/answers (실�
         {
           questionId: setup.questionIds[0],
           answer: '첫 번째 답변입니다.',
+          score: 4,
         },
       ]);
-      expect(firstResponse.status).toBe(HttpStatus.OK);
+      expect(firstResponse.status).toBe(HttpStatus.CREATED);
 
       // DB에서 첫 번째 답변 확인
       let mappings = await getQuestionMappingsFromDb(setup.peerEvaluationId);
@@ -226,9 +227,10 @@ describe('POST /admin/performance-evaluation/peer-evaluations/:id/answers (실�
         {
           questionId: setup.questionIds[0],
           answer: '업데이트된 답변입니다.',
+          score: 5,
         },
       ]);
-      expect(secondResponse.status).toBe(HttpStatus.OK);
+      expect(secondResponse.status).toBe(HttpStatus.CREATED);
       expect(secondResponse.body).toHaveProperty('savedCount', 1);
 
       // DB에서 업데이트된 답변 확인
@@ -237,6 +239,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/:id/answers (실�
         (m: any) => m.questionId === setup.questionIds[0],
       );
       expect(firstMapping.answer).toBe('업데이트된 답변입니다.');
+      expect(firstMapping.score).toBe(5);
       expect(new Date(firstMapping.answeredAt).getTime()).toBeGreaterThan(
         new Date(firstAnsweredAt).getTime(),
       );
@@ -260,6 +263,7 @@ describe('POST /admin/performance-evaluation/peer-evaluations/:id/answers (실�
         {
           questionId: setup.questionIds[0],
           answer: '답변을 작성합니다.',
+          score: 3,
         },
       ]);
       expect(response.status).toBe(HttpStatus.CREATED);
@@ -282,10 +286,12 @@ describe('POST /admin/performance-evaluation/peer-evaluations/:id/answers (실�
         {
           questionId: setup.questionIds[0],
           answer: '매핑된 질문에 대한 답변입니다.',
+          score: 4,
         },
         {
           questionId: randomQuestionId,
           answer: '매핑되지 않은 질문에 대한 답변입니다.',
+          score: 2,
         },
       ]);
 

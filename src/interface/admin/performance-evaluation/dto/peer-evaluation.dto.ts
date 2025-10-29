@@ -10,9 +10,12 @@ import {
   IsUUID,
   IsEnum,
   IsBoolean,
+  IsNotEmpty,
   ArrayNotEmpty,
   Min,
   Max,
+  IsDefined,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ToBoolean } from '@interface/decorators';
@@ -714,6 +717,14 @@ export class EvaluationQuestionInDetailDto {
   answer?: string;
 
   @ApiPropertyOptional({
+    description: '답변 점수',
+    example: 4,
+    minimum: 1,
+    maximum: 5,
+  })
+  score?: number;
+
+  @ApiPropertyOptional({
     description: '답변 작성일',
     example: '2024-01-15T10:30:00Z',
   })
@@ -920,6 +931,7 @@ export class PeerEvaluationAnswerItemDto {
     description: '질문 ID',
     example: '550e8400-e29b-41d4-a716-446655440010',
   })
+  @IsNotEmpty()
   @IsUUID()
   questionId: string;
 
@@ -971,6 +983,7 @@ export class UpsertPeerEvaluationAnswersDto {
     ],
   })
   @ArrayNotEmpty({ message: '답변 목록은 최소 1개 이상이어야 합니다.' })
+  @ValidateNested({ each: true })
   @Type(() => PeerEvaluationAnswerItemDto)
   answers: PeerEvaluationAnswerItemDto[];
 }

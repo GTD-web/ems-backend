@@ -125,6 +125,21 @@ describe('GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluato
 
       expect(response.body.evaluations.length).toBeGreaterThanOrEqual(0);
 
+      // 점수 필드 검증
+      if (response.body.evaluations.length > 0) {
+        const evaluation = response.body.evaluations[0];
+        if (evaluation.questions && evaluation.questions.length > 0) {
+          const question = evaluation.questions[0];
+          expect(question).toHaveProperty('score');
+          // score는 optional이므로 undefined일 수도 있음
+          if (question.score !== undefined) {
+            expect(typeof question.score).toBe('number');
+            expect(question.score).toBeGreaterThanOrEqual(1);
+            expect(question.score).toBeLessThanOrEqual(5);
+          }
+        }
+      }
+
       console.log('\n✅ 여러 평가 목록 조회 성공');
     });
 

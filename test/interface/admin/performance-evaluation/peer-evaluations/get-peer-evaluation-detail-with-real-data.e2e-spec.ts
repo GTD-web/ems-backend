@@ -272,6 +272,18 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id (실제 데이�
       expect(response.body).toHaveProperty('createdAt');
       expect(response.body).toHaveProperty('updatedAt');
 
+      // 점수 필드 검증
+      if (response.body.questions && response.body.questions.length > 0) {
+        const question = response.body.questions[0];
+        expect(question).toHaveProperty('score');
+        // score는 optional이므로 undefined일 수도 있음
+        if (question.score !== undefined) {
+          expect(typeof question.score).toBe('number');
+          expect(question.score).toBeGreaterThanOrEqual(1);
+          expect(question.score).toBeLessThanOrEqual(5);
+        }
+      }
+
       console.log('\n✅ 응답 필수 필드 확인');
     });
 
@@ -578,9 +590,9 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id (실제 데이�
       expect(response.body.questions.length).toBeGreaterThan(0);
 
       response.body.questions.forEach((question: any) => {
-        expect(question.answer).toBeUndefined();
-        expect(question.answeredAt).toBeUndefined();
-        expect(question.answeredBy).toBeUndefined();
+        expect(question.answer).toBeNull();
+        expect(question.answeredAt).toBeNull();
+        expect(question.answeredBy).toBeNull();
       });
 
       console.log('\n✅ 답변 없는 질문 확인');
