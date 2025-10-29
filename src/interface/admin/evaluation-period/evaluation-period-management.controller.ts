@@ -21,6 +21,7 @@ import type { EvaluationPeriodDto } from '../../../domain/core/evaluation-period
 import { ParseId, CurrentUser } from '../../decorators';
 import type { AuthenticatedUser } from '../../decorators';
 import {
+  ChangeEvaluationPeriodPhase,
   CompleteEvaluationPeriod,
   CreateEvaluationPeriod,
   DeleteEvaluationPeriod,
@@ -42,6 +43,7 @@ import {
   UpdateSelfEvaluationSettingPermission,
 } from './decorators/evaluation-period-api.decorators';
 import {
+  ChangeEvaluationPeriodPhaseApiDto,
   CreateEvaluationPeriodApiDto,
   ManualPermissionSettingDto,
   PaginationQueryDto,
@@ -457,5 +459,26 @@ export class EvaluationPeriodManagementController {
         deletedBy,
       );
     return { success: result };
+  }
+
+  /**
+   * 평가기간 단계를 변경합니다.
+   */
+  @ChangeEvaluationPeriodPhase()
+  async changeEvaluationPeriodPhase(
+    @ParseId() periodId: string,
+    @Body() changePhaseDto: ChangeEvaluationPeriodPhaseApiDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<EvaluationPeriodDto> {
+    const changedBy = user.id;
+    const targetPhase = changePhaseDto.targetPhase as any; // 타입 변환
+    
+    const result = await this.evaluationPeriodBusinessService.단계_변경한다(
+      periodId,
+      targetPhase,
+      changedBy,
+    );
+    
+    return result;
   }
 }

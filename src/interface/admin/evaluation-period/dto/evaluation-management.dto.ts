@@ -390,6 +390,20 @@ export class UpdateManualSettingPermissionsApiDto {
 }
 
 /**
+ * 평가기간 단계 변경 API DTO
+ */
+export class ChangeEvaluationPeriodPhaseApiDto {
+  @ApiProperty({
+    description: '변경할 단계',
+    example: 'performance',
+    enum: ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'],
+  })
+  @IsString({ message: '단계는 문자열이어야 합니다.' })
+  @IsNotEmpty({ message: '단계는 필수 입력 항목입니다.' })
+  targetPhase: string;
+}
+
+/**
  * API 응답 기본 형태
  */
 export class ApiResponseDto<T = any> {

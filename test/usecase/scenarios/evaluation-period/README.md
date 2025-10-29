@@ -1,0 +1,155 @@
+
+
+
+## 식별된 검증해야하는 시나리오 
+
+각 하이라키별 시나리오 엔드포인트 순서대로 검증이 되어야 함. 
+
+사용되는 컨트롤러 
+- dashboard
+- evaluation-period
+
+- **평가기간 생성**
+    - POST /admin/evaluation-periods 
+    - GET /admin/evaluation-periods
+        - **대시보드 조회 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                - evaluationPeriod.currentPhase 확인 (waiting)
+- **평기기간 수정**
+    - PATCH /admin/evaluation-periods/{id}/basic-info 
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/start-date 
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/performance-deadline 
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline 
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline 
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/grade-ranges 
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission 
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/settings/self-evaluation-permission 
+    - GET /admin/evaluation-periods/{id} 
+    - PATCH /admin/evaluation-periods/{id}/settings/final-evaluation-permission
+    - GET /admin/evaluation-periods/{id}
+    - PATCH /admin/evaluation-periods/{id}/settings/manual-permissions
+    - GET /admin/evaluation-periods/{id}
+- **평가기간 삭제**
+    - POST /admin/evaluation-periods 
+    - GET /admin/evaluation-periods 
+    - DELETE /admin/evaluation-periods/{id} 
+    - GET /admin/evaluation-periods 
+- **평가기간 시작**
+    - POST /admin/evaluation-periods 
+    - POST /admin/evaluation-periods/{id}/start 
+    - GET /admin/evaluation-periods/active
+        - **대시보드 조회 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                - evaluationPeriod.status 확인 (in-progress)
+                - evaluationPeriod.currentPhase 확인 (evaluation-setup) 
+- **평가기간 완료**
+    - POST /admin/evaluation-periods 
+    - POST /admin/evaluation-periods/{id}/start 
+    - GET /admin/evaluation-periods/active
+        - **대시보드 조회 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                - evaluationPeriod.status 확인 (in-progress)
+                - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+    - POST /admin/evaluation-periods/{id}/complete
+    - GET /admin/evaluation-periods/active (조회되지 않아야함)
+        - **대시보드 조회 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                - evaluationPeriod.status 확인 (completed)
+                - evaluationPeriod.currentPhase 확인 (closure)
+- **설정 변경**
+    - **평가기간 기준 설정 수동허용**
+        - POST /admin/evaluation-periods 
+        - GET /admin/evaluation-periods/active 
+        - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission
+            - **대시보드 조회 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                    - evaluationPeriod.editableStatus.criteriaSettingEnabled 확인 (true)
+    - **평가기간 자기 평가 설정 수동 허용**
+        - POST /admin/evaluation-periods 
+        - GET /admin/evaluation-periods/active 
+        - PATCH /admin/evaluation-periods/{id}/settings/self-evaluation-permission
+            - **대시보드 조회 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                    - evaluationPeriod.selfEvaluationSettingEnabled 확인 (true)
+                    - evaluationPeriod.editableStatus.isSelfEvaluationEditable 확인 (true)
+    - **평가기간 최종 평가 설정 수동 허용**
+        - POST /admin/evaluation-periods 
+        - GET /admin/evaluation-periods/active 
+        - PATCH /admin/evaluation-periods/{id}/settings/final-evaluation-permission
+            - **대시보드 조회 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                    - evaluationPeriod.finalEvaluationSettingEnabled 확인 (true)
+                    - evaluationPeriod.editableStatus.isPrimaryEvaluationEditable 확인 (true)
+                    - evaluationPeriod.editableStatus.isSecondaryEvaluationEditable 확인 (true)
+- **평가기간 자동 단계 전이**
+    - POST /admin/evaluation-periods 
+    - POST /admin/evaluation-periods/{id}/start 
+    - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+    - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+    - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+    - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+    - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+    - **자동 단계 전이 테스트**
+        - 1분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+            - 대시보드
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (performance)
+        - 2분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
+            - 대시보드
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (self-evaluation)
+        - 3분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: peer-evaluation)
+            - 대시보드
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (peer-evaluation)
+        - 4분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: closure)
+            - 대시보드
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (closure)
+- **평가기간 자동 단계 전이 (마감일 미설정 케이스)**
+    - POST /admin/evaluation-periods 
+    - POST /admin/evaluation-periods/{id}/start 
+    - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+    - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+    - **자기평가 마감일 미설정** (selfEvaluationDeadline 설정하지 않음)
+    - **동료평가 마감일 미설정** (peerEvaluationDeadline 설정하지 않음)
+    - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+    - **자동 단계 전이 테스트**
+        - 1분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+        - 2분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: performance, 전이되지 않음)
+            - **마감일이 설정되지 않은 단계는 자동 전이되지 않음을 확인**
+- **평가기간 자동 단계 전이 (수동 단계 변경 후 자동 전이)**
+    - POST /admin/evaluation-periods 
+    - POST /admin/evaluation-periods/{id}/start 
+    - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+    - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+    - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+    - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+    - **수동으로 단계 변경**
+        - POST /admin/evaluation-periods/{id}/phase-change (targetPhase: performance)
+        - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+    - **자동 단계 전이 테스트**
+        - 3분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
+        - 4분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: peer-evaluation)
+        - 5분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: closure)

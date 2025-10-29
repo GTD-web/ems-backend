@@ -97,6 +97,15 @@ export interface EmployeeEvaluationPeriodStatusDto {
     startDate: Date;
     /** 평가 종료일 */
     endDate?: Date;
+    /** 수정 가능 상태 정보 */
+    editableStatus: {
+      /** 자기평가 수정 가능 여부 */
+      isSelfEvaluationEditable: boolean;
+      /** 1차 평가 수정 가능 여부 */
+      isPrimaryEvaluationEditable: boolean;
+      /** 2차 평가 수정 가능 여부 */
+      isSecondaryEvaluationEditable: boolean;
+    };
   } | null;
 
   /** 직원 정보 */
@@ -124,6 +133,7 @@ export interface EmployeeEvaluationPeriodStatusDto {
     /** 제외 처리 일시 */
     excludedAt?: Date | null;
   };
+
 
   /** 평가항목 설정 정보 */
   evaluationCriteria: {

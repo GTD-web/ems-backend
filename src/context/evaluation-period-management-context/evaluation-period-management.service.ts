@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { InvalidDownwardEvaluationScoreException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
-import { EvaluationPeriodDto } from '../../domain/core/evaluation-period/evaluation-period.types';
+import { EvaluationPeriodDto, EvaluationPeriodPhase } from '../../domain/core/evaluation-period/evaluation-period.types';
+import { EvaluationPeriodService } from '../../domain/core/evaluation-period/evaluation-period.service';
 import {
   CompleteEvaluationPeriodCommand,
   CreateEvaluationPeriodCommand,
@@ -71,6 +72,7 @@ export class EvaluationPeriodManagementContextService
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    private readonly evaluationPeriodService: EvaluationPeriodService,
   ) {}
   /**
    * 평가 기간을 생성한다 (최소 필수 정보만)
@@ -552,5 +554,31 @@ export class EvaluationPeriodManagementContextService
     return await this.commandBus.execute(
       new RegisterEvaluationTargetWithAutoEvaluatorCommand(evaluationPeriodId, employeeId, createdBy),
     );
+  }
+
+  /**
+   * 평가기간의 단계를 변경한다
+   */
+  async 단계_변경한다(
+    periodId: string,
+    targetPhase: EvaluationPeriodPhase,
+    changedBy: string,
+  ): Promise<EvaluationPeriodDto> {
+    this.logger.log(
+      `평가기간 단계 변경 컨텍스트 로직 시작 - 평가기간: ${periodId}, 대상 단계: ${targetPhase}`,
+    );
+
+    // 도메인 서비스를 직접 호출하여 단계 변경
+    const result = await this.evaluationPeriodService.단계_변경한다(
+      periodId,
+      targetPhase,
+      changedBy,
+    );
+
+    this.logger.log(
+      `평가기간 단계 변경 컨텍스트 로직 완료 - 평가기간: ${periodId}, 변경된 단계: ${result.currentPhase}`,
+    );
+
+    return result;
   }
 }

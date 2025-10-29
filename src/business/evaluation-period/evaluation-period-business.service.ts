@@ -3,6 +3,8 @@ import { EvaluationPeriodManagementContextService } from '../../context/evaluati
 import { CreateEvaluationPeriodMinimalDto } from '../../context/evaluation-period-management-context/interfaces/evaluation-period-creation.interface';
 import { CreateEvaluationPeriodWithTargetsResult } from '../../context/evaluation-period-management-context/handlers/evaluation-period/commands/create-evaluation-period-with-auto-targets.handler';
 import { RegisterWithAutoEvaluatorResult } from '../../context/evaluation-period-management-context/handlers/evaluation-target/commands/register-evaluation-target-with-auto-evaluator.handler';
+import { EvaluationPeriodPhase } from '../../domain/core/evaluation-period/evaluation-period.types';
+import type { EvaluationPeriodDto } from '../../domain/core/evaluation-period/evaluation-period.types';
 
 /**
  * 평가기간 비즈니스 서비스
@@ -74,5 +76,30 @@ export class EvaluationPeriodBusinessService {
     );
 
     return results;
+  }
+
+  /**
+   * 평가기간의 단계를 변경한다
+   */
+  async 단계_변경한다(
+    periodId: string,
+    targetPhase: EvaluationPeriodPhase,
+    changedBy: string,
+  ): Promise<EvaluationPeriodDto> {
+    this.logger.log(
+      `평가기간 단계 변경 비즈니스 로직 시작 - 평가기간: ${periodId}, 대상 단계: ${targetPhase}`,
+    );
+
+    const result = await this.evaluationPeriodManagementService.단계_변경한다(
+      periodId,
+      targetPhase,
+      changedBy,
+    );
+
+    this.logger.log(
+      `평가기간 단계 변경 완료 - 평가기간: ${periodId}, 변경된 단계: ${result.currentPhase}`,
+    );
+
+    return result;
   }
 }

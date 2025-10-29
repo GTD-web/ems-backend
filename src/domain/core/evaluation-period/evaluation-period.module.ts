@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EvaluationPeriod } from './evaluation-period.entity';
 import { EvaluationPeriodService } from './evaluation-period.service';
 import { EvaluationPeriodValidationService } from './evaluation-period-validation.service';
+import { EvaluationPeriodAutoPhaseService } from './evaluation-period-auto-phase.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
@@ -14,6 +15,7 @@ import { TransactionManagerService } from '@libs/database/transaction-manager.se
   providers: [
     EvaluationPeriodService,
     EvaluationPeriodValidationService,
+    EvaluationPeriodAutoPhaseService,
     TransactionManagerService,
     {
       provide: 'IEvaluationPeriodService',
@@ -23,6 +25,7 @@ import { TransactionManagerService } from '@libs/database/transaction-manager.se
   exports: [
     EvaluationPeriodService,
     EvaluationPeriodValidationService,
+    EvaluationPeriodAutoPhaseService,
     'IEvaluationPeriodService',
   ],
 })

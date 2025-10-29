@@ -322,6 +322,12 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               currentPhase: result.period_currentphase,
               startDate: result.period_startdate,
               endDate: result.period_enddate,
+              // 수정 가능 상태 정보를 evaluationPeriod 안에 포함
+              editableStatus: {
+                isSelfEvaluationEditable: isSelfEvaluationEditable,
+                isPrimaryEvaluationEditable: isPrimaryEvaluationEditable,
+                isSecondaryEvaluationEditable: isSecondaryEvaluationEditable,
+              },
             }
           : null,
 
@@ -343,6 +349,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           excludeReason: result.mapping_excludereason,
           excludedAt: result.mapping_excludedat,
         },
+
 
         // 평가항목 설정 정보
         evaluationCriteria: {

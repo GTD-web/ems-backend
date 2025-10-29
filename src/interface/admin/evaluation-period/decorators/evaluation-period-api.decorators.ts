@@ -850,6 +850,68 @@ export function UpdateManualSettingPermissions() {
   );
 }
 
+// ==================== POST 엔드포인트 데코레이터 ====================
+
+/**
+ * 평가기간 단계 변경 엔드포인트 데코레이터
+ */
+export function ChangeEvaluationPeriodPhase() {
+  return applyDecorators(
+    Post(':id/phase-change'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '평가기간 단계 변경',
+      description: `**중요**: 평가기간의 현재 단계를 다음 단계로 변경합니다. 단계는 순차적으로만 변경 가능하며, 건너뛰기나 역방향 변경은 허용되지 않습니다.
+
+**단계 순서:**
+1. waiting → evaluation-setup
+2. evaluation-setup → performance  
+3. performance → self-evaluation
+4. self-evaluation → peer-evaluation
+5. peer-evaluation → closure
+
+**테스트 케이스:**
+- 정상 단계 변경: 유효한 단계 순서로 변경 시 성공
+- 순차적 변경: 다음 단계로만 변경 가능 (건너뛰기 불가)
+- 역방향 변경: 이전 단계로 되돌리기 불가
+- 잘못된 단계: 지원하지 않는 단계로 변경 시 400 에러
+- 존재하지 않는 ID: 유효하지 않은 평가기간 ID 시 404 에러
+- 비활성 상태: 대기 중이거나 완료된 평가기간은 단계 변경 불가
+- 권한 확인: 관리자 권한이 필요한 작업`,
+    }),
+    ApiParam({
+      name: 'id',
+      description: '평가기간 ID (UUID 형식)',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiResponse({
+      status: 200,
+      description: '단계가 성공적으로 변경되었습니다.',
+      type: EvaluationPeriodResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: false },
+          message: { type: 'string', example: '잘못된 단계 변경 요청입니다.' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 404,
+      description: '평가기간을 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: 403,
+      description: '단계 변경 권한이 없습니다.',
+    }),
+  );
+}
+
 // ==================== DELETE 엔드포인트 데코레이터 ====================
 
 /**
