@@ -311,6 +311,83 @@ describe('POST /admin/evaluation-criteria/evaluation-lines/employee/:employeeId/
 
       console.log('\n✅ DB 매핑 정보 업데이트 확인');
     });
+
+    it('WBS별로 유일한 2차 평가자만 허용되어야 한다', async () => {
+      console.log('\n=== WBS별 유일한 2차 평가자 검증 ===');
+
+      // 1. 첫 번째 2차 평가자 설정
+      const firstEvaluators = await dataSource
+        .getRepository('Employee')
+        .createQueryBuilder('employee')
+        .where('employee.id != :employeeId', { employeeId })
+        .andWhere('employee.deletedAt IS NULL')
+        .limit(1)
+        .getMany();
+
+      const firstEvaluatorId = firstEvaluators[0].id;
+
+      await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${evaluationPeriodId}/secondary-evaluator`,
+        )
+        .send({ evaluatorId: firstEvaluatorId })
+        .expect(HttpStatus.CREATED);
+
+      console.log('✅ 첫 번째 2차 평가자 설정:', firstEvaluatorId);
+
+      // 2. 두 번째 2차 평가자 설정 (같은 WBS)
+      const secondEvaluators = await dataSource
+        .getRepository('Employee')
+        .createQueryBuilder('employee')
+        .where('employee.id NOT IN (:...ids)', {
+          ids: [employeeId, firstEvaluatorId],
+        })
+        .andWhere('employee.deletedAt IS NULL')
+        .limit(1)
+        .getMany();
+
+      const secondEvaluatorId = secondEvaluators[0].id;
+
+      await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${evaluationPeriodId}/secondary-evaluator`,
+        )
+        .send({ evaluatorId: secondEvaluatorId })
+        .expect(HttpStatus.CREATED);
+
+      console.log('✅ 두 번째 2차 평가자 설정:', secondEvaluatorId);
+
+      // 3. DB에서 해당 WBS의 2차 평가자 매핑 확인 (유일성 검증)
+      const evaluationLines = await dataSource
+        .getRepository('EvaluationLine')
+        .createQueryBuilder('line')
+        .where('line."evaluatorType" = :type', { type: 'secondary' })
+        .andWhere('line."deletedAt" IS NULL')
+        .getMany();
+
+      const secondaryEvaluationLine = evaluationLines[0];
+
+      const mappings = await dataSource
+        .getRepository('EvaluationLineMapping')
+        .createQueryBuilder('mapping')
+        .where('mapping."employeeId" = :employeeId', { employeeId })
+        .andWhere('mapping."wbsItemId" = :wbsItemId', { wbsItemId })
+        .andWhere('mapping."evaluationLineId" = :evaluationLineId', {
+          evaluationLineId: secondaryEvaluationLine.id,
+        })
+        .andWhere('mapping."deletedAt" IS NULL')
+        .getMany();
+
+      console.log('\n📊 WBS별 2차 평가자 매핑 수:', mappings.length, '개');
+      
+      // WBS별로 유일한 2차 평가자만 존재해야 함
+      expect(mappings.length).toBe(1);
+      expect(mappings[0].evaluatorId).toBe(secondEvaluatorId);
+
+      console.log('✅ WBS별 유일한 2차 평가자 검증 완료');
+    });
   });
 
   describe('시나리오 3: 통합 시나리오 - 1차 및 2차 평가자 순차 구성', () => {

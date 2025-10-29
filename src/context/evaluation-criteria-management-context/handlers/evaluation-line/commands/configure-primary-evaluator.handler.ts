@@ -108,7 +108,10 @@ export class ConfigurePrimaryEvaluatorHandler
         // 업데이트 메서드 사용
         mappingEntity = await this.evaluationLineMappingService.업데이트한다(
           mappingId,
-          { evaluatorId },
+          { 
+            evaluatorId,
+            updatedBy: createdBy || evaluatorId,
+          },
           createdBy || evaluatorId,
         );
         this.logger.log(

@@ -43,7 +43,7 @@ export class WbsAssignmentEvaluationLineManagementScenario {
   ): Promise<any> {
     const response = await this.testSuite
       .request()
-      .post(`/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs-item/${wbsItemId}/period/${periodId}/secondary-evaluator`)
+      .post(`/admin/evaluation-criteria/evaluation-lines/employee/${employeeId}/wbs/${wbsItemId}/period/${periodId}/secondary-evaluator`)
       .send({
         evaluatorId,
       })

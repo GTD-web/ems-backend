@@ -88,7 +88,7 @@ export class ConfigureSecondaryEvaluatorHandler
 
       const evaluationLineId = secondaryEvaluationLine.DTO로_변환한다().id;
 
-      // 기존 매핑 조회 (employeeId, wbsItemId, evaluationLineId 기준)
+      // WBS별 유일한 2차 평가자 보장을 위해 기존 매핑들 조회
       const existingMappings =
         await this.evaluationLineMappingService.필터_조회한다({
           employeeId,
@@ -96,35 +96,32 @@ export class ConfigureSecondaryEvaluatorHandler
           evaluationLineId,
         });
 
-      let mappingEntity;
+      // 기존 2차 평가자 매핑이 있으면 모두 삭제 (WBS별로 한 명만 허용)
       if (existingMappings.length > 0) {
-        // 기존 매핑이 있으면 업데이트
-        const existingMapping = existingMappings[0];
-        const mappingId = existingMapping.DTO로_변환한다().id;
-
-        // 업데이트 메서드 사용
-        mappingEntity = await this.evaluationLineMappingService.업데이트한다(
-          mappingId,
-          { evaluatorId },
-          createdBy || evaluatorId,
-        );
-        this.logger.log(
-          `기존 2차 평가자 매핑 업데이트 - 매핑 ID: ${mappingId}, 새 평가자: ${evaluatorId}`,
-        );
-      } else {
-        // 새로 생성
-        mappingEntity = await this.evaluationLineMappingService.생성한다({
-          employeeId,
-          evaluatorId,
-          wbsItemId,
-          evaluationLineId,
-          createdBy,
-        });
-        createdMappings++;
-        this.logger.log(
-          `새 2차 평가자 매핑 생성 - 매핑 ID: ${mappingEntity.DTO로_변환한다().id}`,
-        );
+        for (const existingMapping of existingMappings) {
+          const mappingId = existingMapping.DTO로_변환한다().id;
+          await this.evaluationLineMappingService.삭제한다(
+            mappingId,
+            createdBy || evaluatorId,
+          );
+          this.logger.log(
+            `기존 2차 평가자 매핑 삭제 - 매핑 ID: ${mappingId}, 기존 평가자: ${existingMapping.evaluatorId}`,
+          );
+        }
       }
+
+      // 새로운 2차 평가자 매핑 생성
+      const mappingEntity = await this.evaluationLineMappingService.생성한다({
+        employeeId,
+        evaluatorId,
+        wbsItemId,
+        evaluationLineId,
+        createdBy,
+      });
+      createdMappings++;
+      this.logger.log(
+        `새 2차 평가자 매핑 생성 - 매핑 ID: ${mappingEntity.DTO로_변환한다().id}, 평가자: ${evaluatorId}`,
+      );
 
       const mappingDto = mappingEntity.DTO로_변환한다();
       const mapping = {
