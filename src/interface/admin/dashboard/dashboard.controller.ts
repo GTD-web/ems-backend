@@ -16,6 +16,7 @@ import {
   GetFinalEvaluationsByPeriod,
   GetFinalEvaluationsByEmployee,
   GetAllEmployeesFinalEvaluations,
+  GetEmployeeCompleteStatus,
 } from './decorators/dashboard-api.decorators';
 import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/employee-evaluation-period-status.dto';
 import { MyEvaluationTargetStatusResponseDto } from './dto/my-evaluation-targets-status.dto';
@@ -32,6 +33,7 @@ import {
   AllEmployeesFinalEvaluationsResponseDto,
   GetAllEmployeesFinalEvaluationsQueryDto,
 } from './dto/all-employees-final-evaluations.dto';
+import { EmployeeCompleteStatusResponseDto } from './dto/employee-complete-status.dto';
 
 /**
  * 관리자용 대시보드 컨트롤러
@@ -437,6 +439,98 @@ export class DashboardController {
     return {
       employee: employeeInfo,
       finalEvaluations,
+    };
+  }
+
+  /**
+   * 직원의 평가 현황 및 할당 데이터를 통합 조회합니다.
+   */
+  @GetEmployeeCompleteStatus()
+  async getEmployeeCompleteStatus(
+    @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
+    @ParseUUID('employeeId') employeeId: string,
+  ): Promise<EmployeeCompleteStatusResponseDto> {
+    // 기존 두 메서드를 병렬로 호출
+    const [statusData, assignedData] = await Promise.all([
+      this.dashboardService.직원의_평가기간_현황을_조회한다(
+        evaluationPeriodId,
+        employeeId,
+      ),
+      this.dashboardService.사용자_할당_정보를_조회한다(
+        evaluationPeriodId,
+        employeeId,
+      ),
+    ]);
+
+    // 데이터가 없는 경우 처리
+    if (!statusData || !assignedData) {
+      throw new NotFoundException(
+        `직원을 찾을 수 없습니다. (평가기간: ${evaluationPeriodId}, 직원: ${employeeId})`,
+      );
+    }
+
+    // 데이터 매핑 및 통합
+    return {
+      evaluationPeriod: assignedData.evaluationPeriod,
+      employee: assignedData.employee,
+      isEvaluationTarget: statusData.isEvaluationTarget,
+      exclusionInfo: statusData.exclusionInfo,
+      evaluationLine: {
+        status: statusData.evaluationLine.status,
+        hasPrimaryEvaluator: statusData.evaluationLine.hasPrimaryEvaluator,
+        hasSecondaryEvaluator: statusData.evaluationLine.hasSecondaryEvaluator,
+        primaryEvaluator: statusData.downwardEvaluation.primary.evaluator,
+        secondaryEvaluators: statusData.downwardEvaluation.secondary.evaluators.map(
+          (e) => e.evaluator,
+        ),
+      },
+      wbsCriteria: {
+        status: statusData.wbsCriteria.status,
+        totalWbsCount: statusData.evaluationCriteria.assignedWbsCount,
+        wbsWithCriteriaCount: statusData.wbsCriteria.wbsWithCriteriaCount,
+      },
+      performance: {
+        status: statusData.performanceInput.status,
+        totalWbsCount: statusData.performanceInput.totalWbsCount,
+        completedCount: statusData.performanceInput.inputCompletedCount,
+      },
+      selfEvaluation: {
+        status: statusData.selfEvaluation.status,
+        totalCount: statusData.selfEvaluation.totalMappingCount,
+        completedCount: statusData.selfEvaluation.completedMappingCount,
+        isEditable: assignedData.editableStatus.isSelfEvaluationEditable,
+        totalScore: statusData.selfEvaluation.totalScore,
+        grade: statusData.selfEvaluation.grade,
+      },
+      primaryDownwardEvaluation: {
+        status: statusData.downwardEvaluation.primary.status,
+        totalWbsCount: statusData.downwardEvaluation.primary.assignedWbsCount,
+        completedCount:
+          statusData.downwardEvaluation.primary.completedEvaluationCount,
+        isEditable: assignedData.editableStatus.isPrimaryEvaluationEditable,
+        totalScore: statusData.downwardEvaluation.primary.totalScore,
+        grade: statusData.downwardEvaluation.primary.grade,
+      },
+      secondaryDownwardEvaluation: {
+        status:
+          statusData.downwardEvaluation.secondary.evaluators[0]?.status ||
+          'none',
+        totalWbsCount:
+          statusData.downwardEvaluation.secondary.evaluators[0]
+            ?.assignedWbsCount || 0,
+        completedCount:
+          statusData.downwardEvaluation.secondary.evaluators[0]
+            ?.completedEvaluationCount || 0,
+        isEditable: assignedData.editableStatus.isSecondaryEvaluationEditable,
+        totalScore: statusData.downwardEvaluation.secondary.totalScore,
+        grade: statusData.downwardEvaluation.secondary.grade,
+      },
+      peerEvaluation: statusData.peerEvaluation,
+      finalEvaluation: statusData.finalEvaluation,
+      projects: {
+        totalCount: assignedData.summary.totalProjects,
+        items: assignedData.projects,
+      },
     };
   }
 }

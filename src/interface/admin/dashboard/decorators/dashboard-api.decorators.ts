@@ -16,6 +16,7 @@ import {
 import { DashboardFinalEvaluationsByPeriodResponseDto } from '../dto/final-evaluation-list.dto';
 import { EmployeeFinalEvaluationListResponseDto } from '../dto/employee-final-evaluation-list.dto';
 import { AllEmployeesFinalEvaluationsResponseDto } from '../dto/all-employees-final-evaluations.dto';
+import { EmployeeCompleteStatusResponseDto } from '../dto/employee-complete-status.dto';
 
 /**
  * 직원의 평가기간 현황 조회 API 데코레이터
@@ -653,6 +654,66 @@ export function GetAllEmployeesFinalEvaluations() {
     }),
     ApiBadRequestResponse({
       description: '잘못된 요청 (날짜 형식 오류 등)',
+    }),
+  );
+}
+
+/**
+ * 직원의 평가 현황 및 할당 데이터 통합 조회 API 데코레이터
+ */
+export function GetEmployeeCompleteStatus() {
+  return applyDecorators(
+    Get(':evaluationPeriodId/employees/:employeeId/complete-status'),
+    ApiOperation({
+      summary: '직원의 평가 현황 및 할당 데이터 통합 조회',
+      description: `직원의 평가 진행 현황과 실제 할당 데이터를 한 번에 조회합니다.
+
+**동작:**
+- 평가기간 및 직원 기본 정보 제공
+- 평가 대상 여부 및 제외 정보
+- 평가라인, WBS 평가기준, 성과, 자기평가, 하향평가, 동료평가, 최종평가 상태
+- 프로젝트별 WBS 목록 (평가기준, 성과, 자기평가, 하향평가 상세 내용 포함)
+- 중복 필드 제거로 최적화된 구조 제공
+
+**기존 엔드포인트와의 차이:**
+- /status + /assigned-data 두 엔드포인트를 하나로 통합
+- 중복 필드 제거 (summary, editableStatus)
+- 일관된 데이터 구조 (모든 평가 항목이 동일한 패턴)
+
+**테스트 케이스:**
+- 정상 조회: 유효한 평가기간과 직원ID로 통합 현황 조회
+- 응답 구조 검증: 모든 필수 필드 포함 확인
+- 데이터 일관성: status와 assigned-data 정보가 올바르게 통합됨
+- 평가라인 정보: 평가자 정보가 포함되어 반환됨
+- 프로젝트 카운트: totalCount와 items 배열 길이 일치
+- 점수/등급 통합: 각 평가 항목에 점수와 등급이 포함됨
+- 중복 제거 확인: summary, editableStatus 필드가 없음
+- 404 에러: 존재하지 않는 평가기간/직원 조회
+- 400 에러: 잘못된 UUID 형식`,
+    }),
+    ApiParam({
+      name: 'evaluationPeriodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174001',
+    }),
+    ApiOkResponse({
+      description: '직원의 평가 현황 및 할당 데이터 통합 조회 성공',
+      type: EmployeeCompleteStatusResponseDto,
+    }),
+    ApiNotFoundResponse({
+      description: '평가기간에 등록되지 않은 직원 또는 평가기간을 찾을 수 없음',
+    }),
+    ApiBadRequestResponse({
+      description: '잘못된 요청 (UUID 형식 오류 등)',
     }),
   );
 }

@@ -16,6 +16,7 @@
 - [사용자 할당 정보 조회](#사용자-할당-정보-조회)
 - [나의 할당 정보 조회](#나의-할당-정보-조회)
 - [담당자의 피평가자 할당 정보 조회](#담당자의-피평가자-할당-정보-조회)
+- [직원의 평가 현황 및 할당 데이터 통합 조회](#직원의-평가-현황-및-할당-데이터-통합-조회)
 - [평가기간별 최종평가 목록 조회](#평가기간별-최종평가-목록-조회)
 - [직원별 최종평가 목록 조회](#직원별-최종평가-목록-조회)
 - [전체 직원별 최종평가 목록 조회](#전체-직원별-최종평가-목록-조회)
@@ -399,6 +400,218 @@ EmployeeAssignedDataResponseDto;
 
 - 소규모 (WBS ~11개): 평균 ~18ms
 - 대용량 (WBS ~119개): 평균 ~252ms
+
+---
+
+### 직원의 평가 현황 및 할당 데이터 통합 조회
+
+```typescript
+GET /admin/dashboard/:evaluationPeriodId/employees/:employeeId/complete-status
+```
+
+직원의 평가 진행 현황과 실제 할당 데이터를 한 번에 조회합니다. 기존의 `/status`와 `/assigned-data` 엔드포인트를 통합하여 중복 필드를 제거하고 최적화된 구조로 제공합니다.
+
+**Path Parameters:**
+
+| 파라미터             | 타입          | 필수 | 설명        |
+| -------------------- | ------------- | ---- | ----------- |
+| `evaluationPeriodId` | string (UUID) | O    | 평가기간 ID |
+| `employeeId`         | string (UUID) | O    | 직원 ID     |
+
+**Response:**
+
+```typescript
+interface EmployeeCompleteStatusResponseDto {
+  evaluationPeriod: {
+    id: string; // 평가기간 ID
+    name: string; // 평가기간 이름
+    startDate: Date; // 시작일
+    endDate?: Date; // 종료일
+    status: string; // 상태
+    description?: string; // 설명
+    criteriaSettingEnabled: boolean; // 평가기준 설정 가능 여부
+    selfEvaluationSettingEnabled: boolean; // 자기평가 설정 가능 여부
+    finalEvaluationSettingEnabled: boolean; // 최종평가 설정 가능 여부
+    maxSelfEvaluationRate: number; // 최대 자기평가 비율
+  };
+
+  employee: {
+    id: string; // 직원 ID
+    employeeNumber: string; // 사번
+    name: string; // 직원명
+    email: string; // 이메일
+    phoneNumber?: string; // 전화번호
+    departmentId: string; // 부서 ID
+    departmentName?: string; // 부서명
+    status: string; // 상태
+  };
+
+  isEvaluationTarget: boolean; // 평가 대상 여부
+
+  exclusionInfo: {
+    isExcluded: boolean; // 제외 여부
+    excludeReason?: string; // 제외 사유
+    excludedBy?: string; // 제외한 사람
+    excludedAt?: Date; // 제외 일시
+  };
+
+  evaluationLine: {
+    status: 'complete' | 'in_progress' | 'none'; // 평가라인 지정 완료 상태
+    hasPrimaryEvaluator: boolean; // PRIMARY 라인 평가자 지정 여부
+    hasSecondaryEvaluator: boolean; // SECONDARY 라인 평가자 지정 여부
+    primaryEvaluator?: {
+      id: string; // 평가자 ID
+      name: string; // 평가자명
+      employeeNumber: string; // 평가자 사번
+      email: string; // 이메일
+      departmentName?: string; // 부서명
+      rankName?: string; // 직책명
+    } | null;
+    secondaryEvaluators: Array<{
+      id: string; // 평가자 ID
+      name: string; // 평가자명
+      employeeNumber: string; // 평가자 사번
+      email: string; // 이메일
+      departmentName?: string; // 부서명
+      rankName?: string; // 직책명
+    }>;
+  };
+
+  wbsCriteria: {
+    status: 'complete' | 'in_progress' | 'none'; // WBS 평가기준 설정 상태
+    totalWbsCount: number; // 전체 WBS 수
+    wbsWithCriteriaCount: number; // 평가기준이 설정된 WBS 수
+  };
+
+  performance: {
+    status: 'complete' | 'in_progress' | 'none'; // 성과 입력 상태
+    totalWbsCount: number; // 전체 WBS 수
+    completedCount: number; // 성과가 입력된 WBS 수
+  };
+
+  selfEvaluation: {
+    status: 'complete' | 'in_progress' | 'none'; // 자기평가 진행 상태
+    totalCount: number; // 전체 WBS 자기평가 수
+    completedCount: number; // 완료된 WBS 자기평가 수
+    isEditable: boolean; // 자기평가 수정 가능 여부
+    totalScore: number | null; // 가중치 기반 자기평가 총점 (0-100)
+    grade: string | null; // 평가기간 등급 기준에 따른 자기평가 등급
+  };
+
+  primaryDownwardEvaluation: {
+    status: 'complete' | 'in_progress' | 'none'; // 하향평가 진행 상태
+    totalWbsCount: number; // 평가 대상 WBS 수
+    completedCount: number; // 완료된 평가 수
+    isEditable: boolean; // 평가 수정 가능 여부
+    totalScore: number | null; // 가중치 기반 하향평가 총점 (0-100)
+    grade: string | null; // 평가기간 등급 기준에 따른 하향평가 등급
+  };
+
+  secondaryDownwardEvaluation: {
+    status: 'complete' | 'in_progress' | 'none'; // 하향평가 진행 상태
+    totalWbsCount: number; // 평가 대상 WBS 수
+    completedCount: number; // 완료된 평가 수
+    isEditable: boolean; // 평가 수정 가능 여부
+    totalScore: number | null; // 가중치 기반 하향평가 총점 (0-100)
+    grade: string | null; // 평가기간 등급 기준에 따른 하향평가 등급
+  };
+
+  peerEvaluation: {
+    status: 'complete' | 'in_progress' | 'none'; // 동료평가 진행 상태
+    totalRequestCount: number; // 전체 동료평가 요청 수
+    completedRequestCount: number; // 완료된 동료평가 요청 수
+  };
+
+  finalEvaluation: {
+    status: 'complete' | 'in_progress' | 'none'; // 최종평가 진행 상태
+    isConfirmed: boolean; // 최종평가 확정 여부
+  };
+
+  projects: {
+    totalCount: number; // 총 프로젝트 수
+    items: Array<{
+      projectId: string; // 프로젝트 ID
+      projectName: string; // 프로젝트 이름
+      projectCode: string; // 프로젝트 코드
+      assignedAt: Date; // 할당 일시
+      wbsList: Array<{
+        wbsId: string; // WBS ID
+        wbsName: string; // WBS 이름
+        wbsCode: string; // WBS 코드
+        projectId: string; // 프로젝트 ID
+        projectName: string; // 프로젝트 이름
+        weight: number; // 가중치
+        assignedAt: Date; // 할당 일시
+        criteria: Array<{
+          criterionId: string; // 평가기준 ID
+          criteria: string; // 평가기준 내용
+          createdAt: Date; // 생성 일시
+        }>;
+        performance?: {
+          performanceResult?: string; // 성과 실적
+          isCompleted: boolean; // 완료 여부
+          completedAt?: Date; // 완료 일시
+        } | null;
+        selfEvaluation?: {
+          selfEvaluationId?: string; // 자기평가 ID
+          evaluationContent?: string; // 평가 내용
+          score?: number; // 점수
+          isCompleted: boolean; // 완료 여부
+          isEditable: boolean; // 수정 가능 여부
+          submittedAt?: Date; // 제출 일시
+        } | null;
+        primaryDownwardEvaluation?: {
+          downwardEvaluationId?: string; // 하향평가 ID
+          evaluatorId?: string; // 평가자 ID
+          evaluatorName?: string; // 평가자 이름
+          evaluationContent?: string; // 평가 내용
+          score?: number; // 점수
+          isCompleted: boolean; // 완료 여부
+          isEditable: boolean; // 수정 가능 여부
+          submittedAt?: Date; // 제출 일시
+        } | null;
+        secondaryDownwardEvaluation?: {
+          downwardEvaluationId?: string; // 하향평가 ID
+          evaluatorId?: string; // 평가자 ID
+          evaluatorName?: string; // 평가자 이름
+          evaluationContent?: string; // 평가 내용
+          score?: number; // 점수
+          isCompleted: boolean; // 완료 여부
+          isEditable: boolean; // 수정 가능 여부
+          submittedAt?: Date; // 제출 일시
+        } | null;
+        deliverables: Array<{
+          deliverableId: string; // 산출물 ID
+          deliverableName: string; // 산출물 이름
+          deliverableType: string; // 산출물 유형
+          fileUrl?: string; // 파일 URL
+          submittedAt?: Date; // 제출 일시
+        }>;
+      }>;
+    }>;
+  };
+}
+```
+
+**주요 특징:**
+
+1. **통합된 데이터 구조**: 기존 `/status`와 `/assigned-data` 엔드포인트의 데이터를 하나로 통합
+2. **중복 필드 제거**: `summary`, `editableStatus` 등의 중복 필드를 제거하고 각 평가 항목에 `isEditable` 통합
+3. **일관된 구조**: 모든 평가 항목이 동일한 패턴 (status, count, score, grade, isEditable)을 따름
+4. **평가자 정보 포함**: 평가라인에 평가자 상세 정보가 포함됨
+5. **최적화된 성능**: Promise.all을 사용한 병렬 처리로 기존 두 엔드포인트보다 빠른 응답
+
+**에러 응답:**
+
+- `400 Bad Request`: 잘못된 UUID 형식
+- `404 Not Found`: 존재하지 않는 평가기간 또는 직원
+
+**사용 예시:**
+
+```bash
+curl -X GET "https://api.example.com/admin/dashboard/123e4567-e89b-12d3-a456-426614174000/employees/123e4567-e89b-12d3-a456-426614174001/complete-status" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
 
 ---
 
