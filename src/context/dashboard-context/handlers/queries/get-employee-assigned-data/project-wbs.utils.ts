@@ -358,10 +358,27 @@ export async function getWbsDownwardEvaluationsByWbsId(
       'evaluator',
       'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL',
     )
+    .leftJoin(
+      'evaluation_lines',
+      'line',
+      'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+    )
     .where('mapping.employeeId = :employeeId', { employeeId })
     .andWhere('mapping.wbsItemId IS NULL') // 직원별 고정 담당자
     .andWhere('mapping.deletedAt IS NULL')
+    .andWhere('line.evaluatorType = :evaluatorType', {
+      evaluatorType: 'primary',
+    }) // 1차 평가자만 조회
     .getRawOne();
+
+  // 디버깅: 조회된 매핑 정보 확인
+  if (primaryEvaluatorMapping) {
+    logger.debug(
+      `primaryEvaluatorMapping 조회: ${JSON.stringify(primaryEvaluatorMapping)}`,
+    );
+  } else {
+    logger.debug(`primaryEvaluatorMapping이 null입니다. employeeId: ${employeeId}`);
+  }
 
   // 2. 2차 평가자 정보 조회 (EvaluationLineMapping에서 WBS별 평가자)
   const secondaryEvaluatorMappings = await evaluationLineMappingRepository
@@ -384,6 +401,22 @@ export async function getWbsDownwardEvaluationsByWbsId(
   // 3. 1차 평가자 정보 구성
   let primary: WbsDownwardEvaluationInfo | null = null;
   if (primaryEvaluatorMapping) {
+    // evaluatorId 값 확인 및 로깅
+    // TypeORM raw query 결과는 alias가 그대로 유지되지만, 일부 경우 소문자로 변환될 수 있음
+    const evaluatorIdValue =
+      primaryEvaluatorMapping.mapping_evaluatorId ||
+      primaryEvaluatorMapping.mapping_evaluatorid;
+    
+    if (!evaluatorIdValue) {
+      logger.warn(
+        `primaryEvaluatorMapping.mapping_evaluatorId가 없습니다. employeeId: ${employeeId}, wbsId: ${wbsId}, mapping: ${JSON.stringify(primaryEvaluatorMapping)}`,
+      );
+    } else {
+      logger.debug(
+        `1차 평가자 매핑 조회 성공: evaluatorId=${evaluatorIdValue}, employeeId=${employeeId}, wbsId=${wbsId}`,
+      );
+    }
+
     // 1차 평가자의 실제 평가 데이터 조회 (해당 WBS에 대한 평가)
     const primaryEvaluation = await downwardEvaluationRepository
       .createQueryBuilder('downward')
@@ -402,7 +435,7 @@ export async function getWbsDownwardEvaluationsByWbsId(
       })
       .andWhere('"downward"."wbsId" = :wbsId', { wbsId })
       .andWhere('"downward"."evaluatorId" = :evaluatorId', {
-        evaluatorId: primaryEvaluatorMapping.mapping_evaluatorId,
+        evaluatorId: evaluatorIdValue,
       })
       .andWhere('"downward"."evaluationType" = :evaluationType', {
         evaluationType: 'primary',
@@ -410,16 +443,34 @@ export async function getWbsDownwardEvaluationsByWbsId(
       .andWhere('"downward"."deletedAt" IS NULL')
       .getRawOne();
 
+    // TypeORM raw query 결과는 컬럼명이 소문자로 변환될 수 있음
+    // 따라서 여러 가능성을 모두 확인
+    const evaluationContentValue =
+      primaryEvaluation?.downward_evaluationContent ??
+      primaryEvaluation?.downward_evaluationcontent;
+    
+    // isCompleted는 평가 데이터가 있을 때 해당 값 사용, 없으면 false
+    const isCompletedValue = primaryEvaluation
+      ? primaryEvaluation.downward_isCompleted ??
+        primaryEvaluation.downward_iscompleted ??
+        false
+      : false;
+    
     primary = {
       downwardEvaluationId: primaryEvaluation?.downward_id,
-      evaluatorId: primaryEvaluatorMapping.mapping_evaluatorId,
-      evaluatorName: primaryEvaluatorMapping.evaluator_name,
-      evaluationContent: primaryEvaluation?.downward_evaluationContent,
+      evaluatorId: evaluatorIdValue, // 항상 포함 (mapping에서 조회한 값)
+      evaluatorName: primaryEvaluatorMapping.evaluator_name || '', // null일 경우 빈 문자열
+      evaluationContent: evaluationContentValue,
       score: primaryEvaluation?.downward_score,
-      isCompleted: primaryEvaluation?.downward_iscompleted || false,
+      isCompleted: isCompletedValue, // 평가 데이터가 있을 때 해당 값, 없으면 false
       isEditable: mapping.isPrimaryEvaluationEditable,
       submittedAt: primaryEvaluation?.downward_completedat,
     };
+
+    // 디버깅: 생성된 primary 객체 확인
+    logger.debug(
+      `primary 객체 생성: evaluatorId=${evaluatorIdValue}, isCompleted=${isCompletedValue}, primaryEvaluation=${JSON.stringify(primaryEvaluation)}`,
+    );
   }
 
   // 4. 2차 평가자 정보 구성 (WBS별 1명씩)
@@ -454,13 +505,20 @@ export async function getWbsDownwardEvaluationsByWbsId(
       .andWhere('"downward"."deletedAt" IS NULL')
       .getRawOne();
 
+    // isCompleted는 평가 데이터가 있을 때 해당 값 사용, 없으면 false
+    const secondaryIsCompletedValue = secondaryEvaluation
+      ? secondaryEvaluation.downward_isCompleted ??
+        secondaryEvaluation.downward_iscompleted ??
+        false
+      : false;
+    
     secondary = {
       downwardEvaluationId: secondaryEvaluation?.downward_id,
       evaluatorId: secondaryMapping.mapping_evaluatorId,
-      evaluatorName: secondaryMapping.evaluator_name,
+      evaluatorName: secondaryMapping.evaluator_name || '', // null일 경우 빈 문자열
       evaluationContent: secondaryEvaluation?.downward_evaluationContent,
       score: secondaryEvaluation?.downward_score,
-      isCompleted: secondaryEvaluation?.downward_iscompleted || false,
+      isCompleted: secondaryIsCompletedValue, // 평가 데이터가 있을 때 해당 값, 없으면 false
       isEditable: mapping.isSecondaryEvaluationEditable,
       submittedAt: secondaryEvaluation?.downward_completedat,
     };
