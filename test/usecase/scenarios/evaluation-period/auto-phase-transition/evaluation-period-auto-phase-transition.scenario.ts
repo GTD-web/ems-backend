@@ -117,6 +117,11 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
     evaluationPeriod: {
       status: string;
       currentPhase: string;
+      manualSettings: {
+        criteriaSettingEnabled: boolean;
+        selfEvaluationSettingEnabled: boolean;
+        finalEvaluationSettingEnabled: boolean;
+      };
     };
   }> {
     const response = await this.testSuite

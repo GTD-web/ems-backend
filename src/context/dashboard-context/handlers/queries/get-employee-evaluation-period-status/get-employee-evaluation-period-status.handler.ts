@@ -138,6 +138,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'period.currentPhase AS period_currentphase',
           'period.startDate AS period_startdate',
           'period.endDate AS period_enddate',
+          'period.criteriaSettingEnabled AS period_criteriasettingenabled',
+          'period.selfEvaluationSettingEnabled AS period_selfevaluationsettingenabled',
+          'period.finalEvaluationSettingEnabled AS period_finalevaluationsettingenabled',
           // 직원 정보
           'employee.name AS employee_name',
           'employee.employeeNumber AS employee_employeenumber',
@@ -327,6 +330,12 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                 isSelfEvaluationEditable: isSelfEvaluationEditable,
                 isPrimaryEvaluationEditable: isPrimaryEvaluationEditable,
                 isSecondaryEvaluationEditable: isSecondaryEvaluationEditable,
+              },
+              // 수동 설정 상태 정보를 evaluationPeriod 안에 포함
+              manualSettings: {
+                criteriaSettingEnabled: result.period_criteriasettingenabled || false,
+                selfEvaluationSettingEnabled: result.period_selfevaluationsettingenabled || false,
+                finalEvaluationSettingEnabled: result.period_finalevaluationsettingenabled || false,
               },
             }
           : null,

@@ -135,28 +135,20 @@ describe('평가기간 최종 평가 설정 수동허용 E2E 테스트', () => {
       expect(firstEmployee.evaluationPeriod.status).toBe('in-progress');
       expect(firstEmployee.evaluationPeriod.currentPhase).toBe('evaluation-setup');
       
-      // finalEvaluationSettingEnabled가 있는지 확인
-      if (firstEmployee.evaluationPeriod.finalEvaluationSettingEnabled !== undefined) {
-        expect(firstEmployee.evaluationPeriod.finalEvaluationSettingEnabled).toBe(true);
-      } else {
-        console.log('⚠️ finalEvaluationSettingEnabled가 응답에 포함되지 않음');
-      }
-      
       // currentPhase가 EvaluationPeriodPhase enum 값인지 확인
       const validPhases = ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'];
       expect(validPhases).toContain(firstEmployee.evaluationPeriod.currentPhase);
       
-      // editableStatus 확인 (evaluationPeriod 안에 포함됨)
-      expect(firstEmployee.evaluationPeriod.editableStatus).toBeDefined();
-      expect(typeof firstEmployee.evaluationPeriod.editableStatus.isSelfEvaluationEditable).toBe('boolean');
-      expect(typeof firstEmployee.evaluationPeriod.editableStatus.isPrimaryEvaluationEditable).toBe('boolean');
-      expect(typeof firstEmployee.evaluationPeriod.editableStatus.isSecondaryEvaluationEditable).toBe('boolean');
+      // README.md 요구사항: evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (true)
+      expect(firstEmployee.evaluationPeriod.manualSettings).toBeDefined();
+      expect(firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(true);
+      expect(firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
+      expect(firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(true);
       
-      // 1차, 2차 평가 수정 가능 여부가 true인지 확인
-      expect(firstEmployee.evaluationPeriod.editableStatus.isPrimaryEvaluationEditable).toBe(true);
-      expect(firstEmployee.evaluationPeriod.editableStatus.isSecondaryEvaluationEditable).toBe(true);
-      
-      console.log(`✅ 대시보드 직원 현황 조회 완료: ${result.length}명, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}, finalEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.finalEvaluationSettingEnabled}, isPrimaryEvaluationEditable: ${firstEmployee.evaluationPeriod.editableStatus.isPrimaryEvaluationEditable}, isSecondaryEvaluationEditable: ${firstEmployee.evaluationPeriod.editableStatus.isSecondaryEvaluationEditable}`);
+      console.log(`✅ 대시보드 직원 현황 조회 완료: ${result.length}명, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}`);
+      console.log(`   - criteriaSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled} (기대값: true)`);
+      console.log(`   - selfEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled} (기대값: false)`);
+      console.log(`   - finalEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled} (기대값: true)`);
     });
   });
 

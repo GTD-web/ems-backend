@@ -106,6 +106,15 @@ export interface EmployeeEvaluationPeriodStatusDto {
       /** 2차 평가 수정 가능 여부 */
       isSecondaryEvaluationEditable: boolean;
     };
+    /** 수동 설정 상태 정보 */
+    manualSettings: {
+      /** 평가 기준 설정 수동 허용 여부 */
+      criteriaSettingEnabled: boolean;
+      /** 자기 평가 설정 수동 허용 여부 */
+      selfEvaluationSettingEnabled: boolean;
+      /** 하향/동료평가 설정 수동 허용 여부 */
+      finalEvaluationSettingEnabled: boolean;
+    };
   } | null;
 
   /** 직원 정보 */

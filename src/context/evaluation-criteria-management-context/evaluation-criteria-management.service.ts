@@ -101,6 +101,7 @@ import type {
   WbsEvaluationCriteriaDto,
   WbsEvaluationCriteriaFilter,
 } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
+import type { WbsEvaluationCriteriaListResponseDto } from '@interface/admin/evaluation-criteria/dto/wbs-evaluation-criteria.dto';
 import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
 
@@ -664,7 +665,7 @@ export class EvaluationCriteriaManagementService
 
   async WBS_평가기준_목록을_조회한다(
     filter: WbsEvaluationCriteriaFilter,
-  ): Promise<WbsEvaluationCriteriaDto[]> {
+  ): Promise<WbsEvaluationCriteriaListResponseDto> {
     const query = new GetWbsEvaluationCriteriaListQuery(filter);
     return await this.queryBus.execute(query);
   }

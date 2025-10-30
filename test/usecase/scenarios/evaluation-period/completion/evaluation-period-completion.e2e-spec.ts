@@ -142,7 +142,16 @@ describe('평가기간 완료 E2E 테스트', () => {
       // README.md 요구사항: evaluationPeriod.currentPhase 확인 (evaluation-setup)
       expect(firstEmployee.evaluationPeriod.currentPhase).toBe('evaluation-setup');
       
+      // README.md 요구사항: evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+      expect(firstEmployee.evaluationPeriod.manualSettings).toBeDefined();
+      expect(firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(true);
+      expect(firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
+      expect(firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(false);
+      
       console.log(`✅ 시작 후 대시보드 직원 현황 조회 완료: ${result.length}명, status: ${firstEmployee.evaluationPeriod.status}, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}`);
+      console.log(`   - criteriaSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled} (기대값: true)`);
+      console.log(`   - selfEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled} (기대값: false)`);
+      console.log(`   - finalEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled} (기대값: false)`);
     });
 
     it('평가기간을 완료한다', async () => {
@@ -183,7 +192,16 @@ describe('평가기간 완료 E2E 테스트', () => {
       // README.md 요구사항: evaluationPeriod.currentPhase 확인 (closure)
       expect(firstEmployee.evaluationPeriod.currentPhase).toBe('closure');
       
+      // 완료된 평가기간에서는 수동 설정이 비활성화되어야 함
+      expect(firstEmployee.evaluationPeriod.manualSettings).toBeDefined();
+      expect(firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(false);
+      expect(firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
+      expect(firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(false);
+      
       console.log(`✅ 완료 후 대시보드 직원 현황 조회 완료: ${result.length}명, status: ${firstEmployee.evaluationPeriod.status}, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}`);
+      console.log(`   - criteriaSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled} (기대값: false)`);
+      console.log(`   - selfEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled} (기대값: false)`);
+      console.log(`   - finalEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled} (기대값: false)`);
     });
 
     it('평가기간 완료 후 상태와 단계가 올바르게 설정되었는지 확인한다', async () => {

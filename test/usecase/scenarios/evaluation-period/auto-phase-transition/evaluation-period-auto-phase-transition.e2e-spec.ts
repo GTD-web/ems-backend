@@ -6,15 +6,18 @@
 
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { EvaluationPeriodAutoPhaseTransitionScenario } from './evaluation-period-auto-phase-transition.scenario';
+import { SeedDataScenario } from '../../seed-data.scenario';
 
 describe('평가기간 자동 단계 전이 E2E 테스트', () => {
   let testSuite: BaseE2ETest;
   let scenario: EvaluationPeriodAutoPhaseTransitionScenario;
+  let seedDataScenario: SeedDataScenario;
 
   beforeAll(async () => {
     testSuite = new BaseE2ETest();
     await testSuite.initializeApp();
     scenario = new EvaluationPeriodAutoPhaseTransitionScenario(testSuite);
+    seedDataScenario = new SeedDataScenario(testSuite);
 
     // 기존 데이터 정리
     await testSuite
@@ -72,6 +75,16 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
   describe('기본 자동 단계 전이 시나리오', () => {
 
     it('평가기간 자동 단계 전이 전체 시나리오를 실행한다', async () => {
+      // Given: 시드 데이터 생성 (직원 데이터 포함)
+      const seedResult = await seedDataScenario.시드_데이터를_생성한다({
+        scenario: 'minimal',
+        clearExisting: true,
+        projectCount: 1,
+        wbsPerProject: 2,
+        departmentCount: 1,
+        employeeCount: 3,
+      });
+
       // Given: 평가기간 생성 및 시작
       const result = await scenario.평가기간을_생성하고_시작한다({
         name: '자동 전이 테스트용 평가기간',
@@ -85,10 +98,18 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
       (global as any).createdEvaluationPeriods.push(result.periodId);
       const periodId = result.periodId;
 
-      // 초기 상태 확인
+      // 초기 상태 확인 (evaluation-setup 단계)
       const initialState = await scenario.현재_단계를_조회한다(periodId);
       expect(initialState.currentPhase).toBe('evaluation-setup');
       expect(initialState.status).toBe('in-progress');
+
+      // evaluation-setup 단계에서 수동 설정 상태 확인 (criteriaSettingEnabled만 true)
+      const initialDashboard = await scenario.대시보드_상태를_조회한다(periodId);
+      expect(initialDashboard.evaluationPeriod.currentPhase).toBe('evaluation-setup');
+      expect(initialDashboard.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(true);
+      expect(initialDashboard.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
+      expect(initialDashboard.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(false);
+      console.log(`   - evaluation-setup 단계 수동 설정: criteria=${initialDashboard.evaluationPeriod.manualSettings.criteriaSettingEnabled}, self=${initialDashboard.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled}, final=${initialDashboard.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled}`);
 
       // 단계별 마감일 설정 (과거 시간으로 설정하여 즉시 전이되도록)
       const now = scenario.getCurrentTime();
@@ -123,13 +144,13 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
       console.log(`자동 전이 후 상태: ${phase1State.currentPhase}`);
       expect(phase1State.currentPhase).toBe('performance');
 
-      // 대시보드에서도 동일한 단계 확인 (직원 데이터가 없을 수 있으므로 스킵)
-      try {
-        const dashboard1 = await scenario.대시보드_상태를_조회한다(periodId);
-        expect(dashboard1.evaluationPeriod.currentPhase).toBe('performance');
-      } catch (error) {
-        console.log('대시보드 조회 스킵 (직원 데이터 없음):', error.message);
-      }
+      // 대시보드에서 수동 설정 상태 확인 (performance 단계에서는 모두 false)
+      const dashboard1 = await scenario.대시보드_상태를_조회한다(periodId);
+      expect(dashboard1.evaluationPeriod.currentPhase).toBe('performance');
+      expect(dashboard1.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(false);
+      expect(dashboard1.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
+      expect(dashboard1.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(false);
+      console.log(`   - performance 단계 수동 설정: criteria=${dashboard1.evaluationPeriod.manualSettings.criteriaSettingEnabled}, self=${dashboard1.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled}, final=${dashboard1.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled}`);
 
       // 2분 경과 후 자동 전이 확인 (performance → self-evaluation)
       // performance 마감일을 과거로 설정
@@ -147,13 +168,13 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
       console.log(`2단계 전이 후 상태: ${phase2State.currentPhase}`);
       expect(phase2State.currentPhase).toBe('self-evaluation');
 
-      // 대시보드에서도 동일한 단계 확인 (스킵)
-      try {
-        const dashboard2 = await scenario.대시보드_상태를_조회한다(periodId);
-        expect(dashboard2.evaluationPeriod.currentPhase).toBe('self-evaluation');
-      } catch (error) {
-        console.log('대시보드 조회 스킵 (직원 데이터 없음):', error.message);
-      }
+      // 대시보드에서 수동 설정 상태 확인 (self-evaluation 단계에서는 selfEvaluationSettingEnabled만 true)
+      const dashboard2 = await scenario.대시보드_상태를_조회한다(periodId);
+      expect(dashboard2.evaluationPeriod.currentPhase).toBe('self-evaluation');
+      expect(dashboard2.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(false);
+      expect(dashboard2.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(true);
+      expect(dashboard2.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(false);
+      console.log(`   - self-evaluation 단계 수동 설정: criteria=${dashboard2.evaluationPeriod.manualSettings.criteriaSettingEnabled}, self=${dashboard2.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled}, final=${dashboard2.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled}`);
 
       // 3분 경과 후 자동 전이 확인 (self-evaluation → peer-evaluation)
       // self-evaluation 마감일을 과거로 설정
@@ -171,13 +192,13 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
       console.log(`3단계 전이 후 상태: ${phase3State.currentPhase}`);
       expect(phase3State.currentPhase).toBe('peer-evaluation');
 
-      // 대시보드에서도 동일한 단계 확인 (스킵)
-      try {
-        const dashboard3 = await scenario.대시보드_상태를_조회한다(periodId);
-        expect(dashboard3.evaluationPeriod.currentPhase).toBe('peer-evaluation');
-      } catch (error) {
-        console.log('대시보드 조회 스킵 (직원 데이터 없음):', error.message);
-      }
+      // 대시보드에서 수동 설정 상태 확인 (peer-evaluation 단계에서는 finalEvaluationSettingEnabled만 true)
+      const dashboard3 = await scenario.대시보드_상태를_조회한다(periodId);
+      expect(dashboard3.evaluationPeriod.currentPhase).toBe('peer-evaluation');
+      expect(dashboard3.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(false);
+      expect(dashboard3.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
+      expect(dashboard3.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(true);
+      console.log(`   - peer-evaluation 단계 수동 설정: criteria=${dashboard3.evaluationPeriod.manualSettings.criteriaSettingEnabled}, self=${dashboard3.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled}, final=${dashboard3.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled}`);
 
       // 4분 경과 후 자동 전이 확인 (peer-evaluation → closure)
       // peer-evaluation 마감일을 과거로 설정
@@ -195,13 +216,13 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
       console.log(`4단계 전이 후 상태: ${phase4State.currentPhase}`);
       expect(phase4State.currentPhase).toBe('closure');
 
-      // 대시보드에서도 동일한 단계 확인 (스킵)
-      try {
-        const dashboard4 = await scenario.대시보드_상태를_조회한다(periodId);
-        expect(dashboard4.evaluationPeriod.currentPhase).toBe('closure');
-      } catch (error) {
-        console.log('대시보드 조회 스킵 (직원 데이터 없음):', error.message);
-      }
+      // 대시보드에서 수동 설정 상태 확인 (closure 단계에서는 모두 false)
+      const dashboard4 = await scenario.대시보드_상태를_조회한다(periodId);
+      expect(dashboard4.evaluationPeriod.currentPhase).toBe('closure');
+      expect(dashboard4.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(false);
+      expect(dashboard4.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
+      expect(dashboard4.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(false);
+      console.log(`   - closure 단계 수동 설정: criteria=${dashboard4.evaluationPeriod.manualSettings.criteriaSettingEnabled}, self=${dashboard4.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled}, final=${dashboard4.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled}`);
 
       console.log('✅ 자동 단계 전이 전체 시나리오 완료');
       console.log(`   - 최종 단계: ${phase4State.currentPhase}`);

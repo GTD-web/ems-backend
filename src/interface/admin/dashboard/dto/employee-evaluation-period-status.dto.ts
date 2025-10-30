@@ -26,6 +26,52 @@ export class GetEmployeeEvaluationPeriodStatusDto {
 // ==================== 응답 DTO ====================
 
 /**
+ * 평가기간 수정 가능 상태 DTO
+ */
+export class EvaluationPeriodEditableStatusDto {
+  @ApiProperty({
+    description: '자기평가 수정 가능 여부',
+    example: true,
+  })
+  isSelfEvaluationEditable: boolean;
+
+  @ApiProperty({
+    description: '1차 평가 수정 가능 여부',
+    example: true,
+  })
+  isPrimaryEvaluationEditable: boolean;
+
+  @ApiProperty({
+    description: '2차 평가 수정 가능 여부',
+    example: true,
+  })
+  isSecondaryEvaluationEditable: boolean;
+}
+
+/**
+ * 평가기간 수동 설정 상태 DTO
+ */
+export class EvaluationPeriodManualSettingsDto {
+  @ApiProperty({
+    description: '평가 기준 설정 수동 허용 여부',
+    example: true,
+  })
+  criteriaSettingEnabled: boolean;
+
+  @ApiProperty({
+    description: '자기 평가 설정 수동 허용 여부',
+    example: false,
+  })
+  selfEvaluationSettingEnabled: boolean;
+
+  @ApiProperty({
+    description: '하향/동료평가 설정 수동 허용 여부',
+    example: false,
+  })
+  finalEvaluationSettingEnabled: boolean;
+}
+
+/**
  * 평가기간 정보 DTO
  */
 export class EvaluationPeriodInfoDto {
@@ -69,6 +115,18 @@ export class EvaluationPeriodInfoDto {
     nullable: true,
   })
   endDate?: Date;
+
+  @ApiProperty({
+    description: '수정 가능 상태 정보',
+    type: () => EvaluationPeriodEditableStatusDto,
+  })
+  editableStatus: EvaluationPeriodEditableStatusDto;
+
+  @ApiProperty({
+    description: '수동 설정 상태 정보',
+    type: () => EvaluationPeriodManualSettingsDto,
+  })
+  manualSettings: EvaluationPeriodManualSettingsDto;
 }
 
 /**

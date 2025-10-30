@@ -184,6 +184,8 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.EVALUATION_SETUP;
+    // 평가기간 시작 시 평가 기준 설정 수동 허용을 자동으로 활성화
+    this.criteriaSettingEnabled = true;
     this.updatedBy = startedBy;
     this.updatedAt = new Date();
   }
@@ -205,6 +207,10 @@ export class EvaluationPeriod
     this.status = EvaluationPeriodStatus.COMPLETED;
     this.currentPhase = EvaluationPeriodPhase.CLOSURE;
     this.completedDate = new Date();
+    // 평가기간 완료 시 모든 수동 설정을 비활성화
+    this.criteriaSettingEnabled = false;
+    this.selfEvaluationSettingEnabled = false;
+    this.finalEvaluationSettingEnabled = false;
     this.updatedBy = completedBy;
     this.updatedAt = new Date();
   }
@@ -244,6 +250,10 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.EVALUATION_SETUP;
+    // 평가설정 단계에서는 평가 기준 설정만 활성화
+    this.criteriaSettingEnabled = true;
+    this.selfEvaluationSettingEnabled = false;
+    this.finalEvaluationSettingEnabled = false;
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -263,6 +273,10 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.PERFORMANCE;
+    // 업무 수행 단계에서는 모든 수동 설정을 비활성화
+    this.criteriaSettingEnabled = false;
+    this.selfEvaluationSettingEnabled = false;
+    this.finalEvaluationSettingEnabled = false;
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -282,6 +296,10 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.SELF_EVALUATION;
+    // 자기 평가 단계에서는 자기 평가 설정만 활성화
+    this.criteriaSettingEnabled = false;
+    this.selfEvaluationSettingEnabled = true;
+    this.finalEvaluationSettingEnabled = false;
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -301,6 +319,10 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.PEER_EVALUATION;
+    // 하향/동료 평가 단계에서는 최종 평가 설정만 활성화
+    this.criteriaSettingEnabled = false;
+    this.selfEvaluationSettingEnabled = false;
+    this.finalEvaluationSettingEnabled = true;
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -320,6 +342,10 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.CLOSURE;
+    // 종결 단계에서는 모든 수동 설정을 비활성화
+    this.criteriaSettingEnabled = false;
+    this.selfEvaluationSettingEnabled = false;
+    this.finalEvaluationSettingEnabled = false;
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }

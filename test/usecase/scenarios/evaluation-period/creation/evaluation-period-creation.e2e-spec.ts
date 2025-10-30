@@ -141,7 +141,13 @@ describe('평가기간 생성 E2E 테스트', () => {
       const validPhases = ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'];
       expect(validPhases).toContain(firstEmployee.evaluationPeriod.currentPhase);
       
-      console.log(`✅ 대시보드 직원 현황 조회 완료: ${result.length}명, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}`);
+      // 수동 설정 상태 정보 확인 (대기 상태에서는 false)
+      expect(firstEmployee.evaluationPeriod.manualSettings).toBeDefined();
+      expect(firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(false);
+      expect(firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
+      expect(firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(false);
+      
+      console.log(`✅ 대시보드 직원 현황 조회 완료: ${result.length}명, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}, criteriaSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled}`);
     });
   });
 

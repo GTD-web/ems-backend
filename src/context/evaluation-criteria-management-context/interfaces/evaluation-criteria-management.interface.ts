@@ -29,6 +29,7 @@ import type { WbsItemDto } from '../../../domain/common/wbs-item/wbs-item.types'
 import type { ProjectAssignmentListResult } from '../handlers/project-assignment/queries/get-project-assignment-list.handler';
 import type { WbsAssignmentListResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 import type { WbsAssignmentDetailResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
+import { WbsEvaluationCriteriaListResponseDto } from '@/interface/admin/evaluation-criteria/dto/wbs-evaluation-criteria.dto';
 
 /**
  * 평가기준관리 서비스 인터페이스 (MVP 버전)
@@ -312,7 +313,7 @@ export interface IEvaluationCriteriaManagementService {
    */
   WBS_평가기준_목록을_조회한다(
     filter: WbsEvaluationCriteriaFilter,
-  ): Promise<WbsEvaluationCriteriaDto[]>;
+  ): Promise<WbsEvaluationCriteriaListResponseDto>;
 
   /**
    * WBS 평가기준 상세를 조회한다 (WBS 항목 정보 포함)

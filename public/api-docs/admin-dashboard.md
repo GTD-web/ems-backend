@@ -56,6 +56,16 @@ interface EmployeeEvaluationPeriodStatusResponseDto {
     currentPhase: string; // 현재 단계
     startDate: Date; // 시작일
     endDate?: Date; // 종료일
+    editableStatus: {
+      isSelfEvaluationEditable: boolean; // 자기평가 수정 가능 여부
+      isPrimaryEvaluationEditable: boolean; // 1차 평가 수정 가능 여부
+      isSecondaryEvaluationEditable: boolean; // 2차 평가 수정 가능 여부
+    };
+    manualSettings: {
+      criteriaSettingEnabled: boolean; // 평가 기준 설정 수동 허용 여부
+      selfEvaluationSettingEnabled: boolean; // 자기 평가 설정 수동 허용 여부
+      finalEvaluationSettingEnabled: boolean; // 하향/동료평가 설정 수동 허용 여부
+    };
   } | null;
 
   employee: {

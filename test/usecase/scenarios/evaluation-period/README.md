@@ -15,6 +15,9 @@
         - **대시보드 조회 검증**
             - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                 - evaluationPeriod.currentPhase 확인 (waiting)
+                - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
 - **평기기간 수정**
     - PATCH /admin/evaluation-periods/{id}/basic-info 
     - GET /admin/evaluation-periods/{id} 
@@ -50,7 +53,10 @@
         - **대시보드 조회 검증**
             - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                 - evaluationPeriod.status 확인 (in-progress)
-                - evaluationPeriod.currentPhase 확인 (evaluation-setup) 
+                - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+                - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false) 
 - **평가기간 완료**
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
@@ -59,12 +65,18 @@
             - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                 - evaluationPeriod.status 확인 (in-progress)
                 - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+                - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
     - POST /admin/evaluation-periods/{id}/complete
     - GET /admin/evaluation-periods/active (조회되지 않아야함)
         - **대시보드 조회 검증**
             - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                 - evaluationPeriod.status 확인 (completed)
                 - evaluationPeriod.currentPhase 확인 (closure)
+                - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
 - **설정 변경**
     - **평가기간 기준 설정 수동허용**
         - POST /admin/evaluation-periods 
@@ -73,7 +85,9 @@
             - **대시보드 조회 검증**
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                     - evaluationPeriod.currentPhase 확인 (evaluation-setup)
-                    - evaluationPeriod.editableStatus.criteriaSettingEnabled 확인 (true)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
     - **평가기간 자기 평가 설정 수동 허용**
         - POST /admin/evaluation-periods 
         - GET /admin/evaluation-periods/active 
@@ -81,8 +95,9 @@
             - **대시보드 조회 검증**
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                     - evaluationPeriod.currentPhase 확인 (evaluation-setup)
-                    - evaluationPeriod.selfEvaluationSettingEnabled 확인 (true)
-                    - evaluationPeriod.editableStatus.isSelfEvaluationEditable 확인 (true)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
     - **평가기간 최종 평가 설정 수동 허용**
         - POST /admin/evaluation-periods 
         - GET /admin/evaluation-periods/active 
@@ -90,9 +105,9 @@
             - **대시보드 조회 검증**
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                     - evaluationPeriod.currentPhase 확인 (evaluation-setup)
-                    - evaluationPeriod.finalEvaluationSettingEnabled 확인 (true)
-                    - evaluationPeriod.editableStatus.isPrimaryEvaluationEditable 확인 (true)
-                    - evaluationPeriod.editableStatus.isSecondaryEvaluationEditable 확인 (true)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (true)
 - **평가기간 자동 단계 전이** ✅ **구현 완료**
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
@@ -101,27 +116,45 @@
     - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
     - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
     - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+        - **대시보드 조회 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+                - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
     - **자동 단계 전이 테스트**
         - 1분 경과 후 자동 전이 확인
             - GET /admin/evaluation-periods/{id} (현재 단계: performance)
             - 대시보드
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                     - evaluationPeriod.currentPhase 확인 (performance)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
         - 2분 경과 후 자동 전이 확인
             - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
             - 대시보드
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                     - evaluationPeriod.currentPhase 확인 (self-evaluation)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
         - 3분 경과 후 자동 전이 확인
             - GET /admin/evaluation-periods/{id} (현재 단계: peer-evaluation)
             - 대시보드
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                     - evaluationPeriod.currentPhase 확인 (peer-evaluation)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (true)
         - 4분 경과 후 자동 전이 확인
             - GET /admin/evaluation-periods/{id} (현재 단계: closure)
             - 대시보드
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
                     - evaluationPeriod.currentPhase 확인 (closure)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
 - **평가기간 자동 단계 전이 (마감일 미설정 케이스)** ✅ **구현 완료**
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
