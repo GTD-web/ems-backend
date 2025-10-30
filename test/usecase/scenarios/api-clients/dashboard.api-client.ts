@@ -33,12 +33,17 @@ export class DashboardApiClient {
    * 직원 현황 조회 API 호출
    *
    * @param periodId - 평가기간 ID
+   * @param includeUnregistered - 등록 해제된 직원 포함 여부
    * @returns 평가기간의 모든 직원 현황 목록
    */
-  async getEmployeesStatus(periodId: string): Promise<any> {
+  async getEmployeesStatus(
+    periodId: string,
+    includeUnregistered: boolean = false,
+  ): Promise<any> {
     const response = await this.testSuite
       .request()
       .get(`/admin/dashboard/${periodId}/employees/status`)
+      .query({ includeUnregistered: includeUnregistered.toString() })
       .expect(200);
 
     return response.body;

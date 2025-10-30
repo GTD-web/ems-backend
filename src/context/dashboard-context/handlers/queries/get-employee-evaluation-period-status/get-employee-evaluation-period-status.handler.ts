@@ -55,6 +55,7 @@ export class GetEmployeeEvaluationPeriodStatusQuery implements IQuery {
   constructor(
     public readonly evaluationPeriodId: string,
     public readonly employeeId: string,
+    public readonly includeUnregistered: boolean = false,
   ) {}
 }
 
@@ -100,7 +101,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
   async execute(
     query: GetEmployeeEvaluationPeriodStatusQuery,
   ): Promise<EmployeeEvaluationPeriodStatusDto | null> {
-    const { evaluationPeriodId, employeeId } = query;
+    const { evaluationPeriodId, employeeId, includeUnregistered } = query;
 
     this.logger.debug(
       `직원의 평가기간 현황 조회 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
@@ -108,7 +109,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
 
     try {
       // 1. 맵핑 정보 조회 (LEFT JOIN으로 평가기간과 직원 정보 함께 조회)
-      const result = await this.mappingRepository
+      const queryBuilder = this.mappingRepository
         .createQueryBuilder('mapping')
         .leftJoin(
           EvaluationPeriod,
@@ -151,9 +152,16 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
           evaluationPeriodId,
         })
-        .andWhere('mapping.employeeId = :employeeId', { employeeId })
-        .andWhere('mapping.deletedAt IS NULL')
-        .getRawOne();
+        .andWhere('mapping.employeeId = :employeeId', { employeeId });
+        // 등록 해제된 직원도 조회하도록 조건 제거
+        // .andWhere('mapping.deletedAt IS NULL')
+
+      // includeUnregistered가 true면 소프트 삭제된 엔티티도 포함
+      if (includeUnregistered) {
+        queryBuilder.withDeleted();
+      }
+
+      const result = await queryBuilder.getRawOne();
 
       if (!result) {
         this.logger.debug(
@@ -311,7 +319,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       const dto: EmployeeEvaluationPeriodStatusDto = {
         // 맵핑 기본 정보
         mappingId: result.mapping_id,
-        evaluationPeriodId: result.mapping_evaluationperiodid,
         employeeId: result.mapping_employeeid,
         // 평가 대상 여부 (최상위)
         isEvaluationTarget,

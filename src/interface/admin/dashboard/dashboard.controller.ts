@@ -6,6 +6,7 @@ import { CurrentUser } from '../../decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
 import { EvaluationPeriodService } from '../../../domain/core/evaluation-period/evaluation-period.service';
 import { EmployeeSyncService } from '../../../context/organization-management-context/employee-sync.service';
+import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from './dto/get-all-employees-evaluation-period-status-query.dto';
 import {
   GetEmployeeEvaluationPeriodStatus,
   GetAllEmployeesEvaluationPeriodStatus,
@@ -60,9 +61,11 @@ export class DashboardController {
   @GetAllEmployeesEvaluationPeriodStatus()
   async getAllEmployeesEvaluationPeriodStatus(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
+    @Query() queryDto: GetAllEmployeesEvaluationPeriodStatusQueryDto,
   ): Promise<EmployeeEvaluationPeriodStatusResponseDto[]> {
     return await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(
       evaluationPeriodId,
+      queryDto.includeUnregistered,
     );
   }
 

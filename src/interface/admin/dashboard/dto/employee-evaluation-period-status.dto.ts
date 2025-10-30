@@ -590,12 +590,6 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
   mappingId: string;
 
   @ApiProperty({
-    description: '평가기간 ID',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  evaluationPeriodId: string;
-
-  @ApiProperty({
     description: '직원 ID',
     example: '123e4567-e89b-12d3-a456-426614174001',
   })

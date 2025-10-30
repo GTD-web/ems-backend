@@ -8,7 +8,7 @@
 - dashboard
 - evaluation-period
 
-- **평가기간 자동 단계 전이** ✅ **구현 완료**
+- **평가기간 자동 단계 전이** 
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
     - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
@@ -55,7 +55,7 @@
                     - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
                     - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
                     - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
-- **평가기간 자동 단계 전이 (마감일 미설정 케이스)** ✅ **구현 완료**
+- **평가기간 자동 단계 전이 (마감일 미설정 케이스)** 
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
     - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
@@ -69,7 +69,7 @@
         - 2분 경과 후 자동 전이 확인
             - GET /admin/evaluation-periods/{id} (현재 단계: performance, 전이되지 않음)
             - **마감일이 설정되지 않은 단계는 자동 전이되지 않음을 확인**
-- **평가기간 자동 단계 전이 (수동 단계 변경 후 자동 전이)** ✅ **구현 완료**
+- **평가기간 자동 단계 전이 (수동 단계 변경 후 자동 전이)** 
     - POST /admin/evaluation-periods 
     - POST /admin/evaluation-periods/{id}/start 
     - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
@@ -86,7 +86,7 @@
             - GET /admin/evaluation-periods/{id} (현재 단계: peer-evaluation)
         - 5분 경과 후 자동 전이 확인
             - GET /admin/evaluation-periods/{id} (현재 단계: closure)
-- **평가기간 자동 단계 전이 에러 케이스** ✅ **구현 완료**
+- **평가기간 자동 단계 전이 에러 케이스** 
     - **대기 중인 평가기간은 자동 전이되지 않는다**
         - POST /admin/evaluation-periods 
         - POST /admin/evaluation-periods/{id}/start 
@@ -104,7 +104,7 @@
             - 자동 전이 실행 후 상태 확인
                 - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup, 전이되지 않음)
                 - **마감일이 지나지 않은 단계는 자동 전이되지 않음을 확인**
-- **평가기간 자동 단계 전이 성능 테스트** ✅ **구현 완료**
+- **평가기간 자동 단계 전이 성능 테스트** 
     - **여러 평가기간의 자동 단계 전이가 동시에 처리된다**
         - POST /admin/evaluation-periods (단일 평가기간 생성)
         - POST /admin/evaluation-periods/{id}/start 

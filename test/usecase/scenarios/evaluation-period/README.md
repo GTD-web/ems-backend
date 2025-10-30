@@ -41,7 +41,7 @@
 - 자기평가 설정 수동 허용
 - 최종평가 설정 수동 허용
 
-### 7. [자동 단계 전이](./auto-phase-transition/README.md) ✅ **구현 완료**
+### 7. [자동 단계 전이](./auto-phase-transition/README.md) 
 - 기본 자동 단계 전이
 - 마감일 미설정 케이스
 - 수동 단계 변경 후 자동 전이

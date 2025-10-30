@@ -74,9 +74,6 @@ export interface EmployeeEvaluationPeriodStatusDto {
   /** 맵핑 ID */
   mappingId: string;
 
-  /** 평가기간 ID */
-  evaluationPeriodId: string;
-
   /** 직원 ID */
   employeeId: string;
 
