@@ -53,6 +53,34 @@ describe('GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluato
     return result.length > 0 ? result[0].evaluatorId : null;
   }
 
+  async function getEvaluationWithQuestions() {
+    const result = await dataSource.query(
+      `SELECT pe.id, pe."evaluatorId"
+       FROM peer_evaluation pe
+       INNER JOIN peer_evaluation_question_mapping pem 
+         ON pem."peerEvaluationId" = pe.id 
+         AND pem."deletedAt" IS NULL
+       WHERE pe."deletedAt" IS NULL
+       LIMIT 1`,
+    );
+    return result.length > 0 ? result[0] : null;
+  }
+
+  async function getEvaluationWithAnswersAndScore() {
+    const result = await dataSource.query(
+      `SELECT pe.id, pe."evaluatorId", pem."questionId"
+       FROM peer_evaluation pe
+       INNER JOIN peer_evaluation_question_mapping pem 
+         ON pem."peerEvaluationId" = pe.id 
+         AND pem."deletedAt" IS NULL
+         AND pem.answer IS NOT NULL
+         AND pem.score IS NOT NULL
+       WHERE pe."deletedAt" IS NULL
+       LIMIT 1`,
+    );
+    return result.length > 0 ? result[0] : null;
+  }
+
   async function getPeriodId() {
     const periods = await dataSource.query(
       `SELECT id FROM evaluation_period WHERE "deletedAt" IS NULL LIMIT 1`,
@@ -353,14 +381,17 @@ describe('GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluato
 
         // 평가자 정보 검증
         expect(firstItem.evaluator).toBeDefined();
-        if (firstItem.evaluator) {
-          expect(firstItem.evaluator).toHaveProperty('id');
-          expect(firstItem.evaluator).toHaveProperty('name');
-          expect(firstItem.evaluator).toHaveProperty('employeeNumber');
-          expect(firstItem.evaluator).toHaveProperty('email');
-          expect(firstItem.evaluator).toHaveProperty('departmentId');
-          expect(firstItem.evaluator).toHaveProperty('status');
-        }
+        expect(firstItem.evaluator).not.toBeNull();
+        expect(firstItem.evaluator).toHaveProperty('id');
+        expect(firstItem.evaluator).toHaveProperty('name');
+        expect(firstItem.evaluator).toHaveProperty('employeeNumber');
+        expect(firstItem.evaluator).toHaveProperty('email');
+        expect(firstItem.evaluator).toHaveProperty('departmentId');
+        expect(firstItem.evaluator).toHaveProperty('status');
+        expect(firstItem.evaluator).toHaveProperty('rankName');
+        expect(firstItem.evaluator).toHaveProperty('roles');
+        expect(typeof firstItem.evaluator.rankName).toBe('string');
+        expect(Array.isArray(firstItem.evaluator.roles)).toBe(true);
 
         // 평가자 부서 정보 검증
         if (firstItem.evaluatorDepartment) {
@@ -420,7 +451,64 @@ describe('GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluato
     });
 
     it('데이터 타입 검증: 모든 필드의 타입이 올바른지 확인한다', async () => {
-      const evaluatorId = await getEvaluatorWithPeerEvaluations();
+      // score가 있는 평가를 찾거나 생성
+      let evaluationWithScore = await getEvaluationWithAnswersAndScore();
+      let evaluatorId: string | null = null;
+      let evaluationId: string | null = null;
+
+      if (evaluationWithScore) {
+        evaluatorId = evaluationWithScore.evaluatorId;
+        evaluationId = evaluationWithScore.id;
+      } else {
+        // score가 있는 평가가 없으면 새로 생성하고 답변 저장
+        const employees = await dataSource.query(
+          `SELECT id FROM employee WHERE "deletedAt" IS NULL LIMIT 2`,
+        );
+        const period = await getPeriodId();
+        const questions = await dataSource.query(
+          `SELECT id FROM evaluation_question WHERE "deletedAt" IS NULL LIMIT 1`,
+        );
+
+        if (employees.length >= 2 && period && questions.length > 0) {
+          const createResponse = await testSuite
+            .request()
+            .post('/admin/performance-evaluation/peer-evaluations/requests')
+            .send({
+              evaluatorId: employees[0].id,
+              evaluateeId: employees[1].id,
+              periodId: period,
+              questionIds: [questions[0].id],
+            });
+
+          if (createResponse.status === 201) {
+            evaluationId = createResponse.body.id;
+            evaluatorId = employees[0].id;
+
+            // 답변과 score 저장 (score는 1-5 범위)
+            const answerResponse = await testSuite
+              .request()
+              .post(
+                `/admin/performance-evaluation/peer-evaluations/${evaluationId}/answers`,
+              )
+              .send({
+                peerEvaluationId: evaluationId,
+                answers: [
+                  {
+                    questionId: questions[0].id,
+                    answer: '테스트 답변입니다.',
+                    score: 4,
+                  },
+                ],
+              });
+            
+            // 400 에러인 경우 로그 출력
+            if (answerResponse.status !== HttpStatus.CREATED) {
+              console.log('답변 저장 실패:', answerResponse.status, answerResponse.body);
+            }
+          }
+        }
+      }
+
       if (!evaluatorId) {
         console.log('동료평가가 없어서 테스트 스킵');
         return;
@@ -433,70 +521,148 @@ describe('GET /admin/performance-evaluation/peer-evaluations/evaluator/:evaluato
         )
         .expect(HttpStatus.OK);
 
-      if (response.body.evaluations.length > 0) {
-        const firstItem = response.body.evaluations[0];
+      // 질문이 있는 평가를 찾기
+      const evaluationWithQuestion = response.body.evaluations.find(
+        (e: any) => e.questions && e.questions.length > 0,
+      );
 
-        // 기본 타입 검증
-        expect(typeof firstItem.id).toBe('string');
-        expect(typeof firstItem.status).toBe('string');
-        expect(typeof firstItem.isCompleted).toBe('boolean');
-        expect(typeof firstItem.isActive).toBe('boolean');
-        expect(typeof firstItem.version).toBe('number');
-        expect(typeof firstItem.evaluationDate).toBe('string');
-        expect(typeof firstItem.mappedDate).toBe('string');
-        expect(typeof firstItem.createdAt).toBe('string');
-        expect(typeof firstItem.updatedAt).toBe('string');
+      if (!evaluationWithQuestion) {
+        console.log('질문이 있는 평가를 찾을 수 없어 테스트 스킵');
+        return;
+      }
+
+      // score가 있는 질문 찾기
+      const questionWithScoreForDisplay = evaluationWithQuestion.questions.find(
+        (q: any) => q.score !== null && q.score !== undefined,
+      );
+
+      // 실제 반환값 확인을 위한 검증 및 JSON 출력
+      const actualData = {
+        evaluator: {
+          rankName: evaluationWithQuestion.evaluator.rankName,
+          roles: evaluationWithQuestion.evaluator.roles,
+          fullEvaluator: evaluationWithQuestion.evaluator,
+        },
+        question: questionWithScoreForDisplay || (evaluationWithQuestion.questions && evaluationWithQuestion.questions.length > 0
+          ? {
+              score: evaluationWithQuestion.questions[0].score,
+              fullQuestion: evaluationWithQuestion.questions[0],
+            }
+          : null),
+      };
+
+      // JSON 값을 출력 (silent 모드에서도 보이도록 process.stdout 사용)
+      const jsonOutput = JSON.stringify(actualData, null, 2);
+      process.stdout.write('\n📊 실제 반환 데이터:\n');
+      process.stdout.write(jsonOutput);
+      process.stdout.write('\n\n');
+
+      // evaluator 객체 구조 확인
+      expect(evaluationWithQuestion.evaluator).toHaveProperty('rankName');
+      expect(evaluationWithQuestion.evaluator).toHaveProperty('roles');
+      
+      // rankName 값 확인 (빈 문자열 또는 실제 값)
+      const rankNameValue = evaluationWithQuestion.evaluator.rankName;
+      expect(rankNameValue).toBeDefined();
+      expect(rankNameValue === '' || typeof rankNameValue === 'string').toBe(true);
+      
+      // roles 값 확인 (빈 배열 또는 실제 배열)
+      const rolesValue = evaluationWithQuestion.evaluator.roles;
+      expect(rolesValue).toBeDefined();
+      expect(Array.isArray(rolesValue)).toBe(true);
+      
+      // 질문의 score 필드 확인
+      if (evaluationWithQuestion.questions && evaluationWithQuestion.questions.length > 0) {
+        const firstQuestion = evaluationWithQuestion.questions[0];
+        expect(firstQuestion).toHaveProperty('score');
+        // score는 null, undefined, 또는 number 타입일 수 있음
+        if (firstQuestion.score !== null && firstQuestion.score !== undefined) {
+          expect(typeof firstQuestion.score).toBe('number');
+        }
+      }
+
+      // 기본 타입 검증
+      expect(typeof evaluationWithQuestion.id).toBe('string');
+      expect(typeof evaluationWithQuestion.status).toBe('string');
+      expect(typeof evaluationWithQuestion.isCompleted).toBe('boolean');
+      expect(typeof evaluationWithQuestion.isActive).toBe('boolean');
+      expect(typeof evaluationWithQuestion.version).toBe('number');
+      expect(typeof evaluationWithQuestion.evaluationDate).toBe('string');
+      expect(typeof evaluationWithQuestion.mappedDate).toBe('string');
+      expect(typeof evaluationWithQuestion.createdAt).toBe('string');
+      expect(typeof evaluationWithQuestion.updatedAt).toBe('string');
+      
+      // 날짜 형식 검증 (ISO 8601)
+      expect(evaluationWithQuestion.evaluationDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(evaluationWithQuestion.mappedDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(evaluationWithQuestion.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(evaluationWithQuestion.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+
+      // 평가기간 타입 검증
+      if (evaluationWithQuestion.period) {
+        expect(typeof evaluationWithQuestion.period.id).toBe('string');
+        expect(typeof evaluationWithQuestion.period.name).toBe('string');
+        expect(typeof evaluationWithQuestion.period.status).toBe('string');
+        expect(typeof evaluationWithQuestion.period.startDate).toBe('string');
+        expect(typeof evaluationWithQuestion.period.endDate).toBe('string');
         
-        // 날짜 형식 검증 (ISO 8601)
-        expect(firstItem.evaluationDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-        expect(firstItem.mappedDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-        expect(firstItem.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-        expect(firstItem.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        // 날짜 형식 검증
+        expect(evaluationWithQuestion.period.startDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        expect(evaluationWithQuestion.period.endDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      }
 
-        // 평가기간 타입 검증
-        if (firstItem.period) {
-          expect(typeof firstItem.period.id).toBe('string');
-          expect(typeof firstItem.period.name).toBe('string');
-          expect(typeof firstItem.period.status).toBe('string');
-          expect(typeof firstItem.period.startDate).toBe('string');
-          expect(typeof firstItem.period.endDate).toBe('string');
-          
-          // 날짜 형식 검증
-          expect(firstItem.period.startDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-          expect(firstItem.period.endDate).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-        }
+      // 평가자 타입 검증
+      expect(evaluationWithQuestion.evaluator).toBeDefined();
+      expect(typeof evaluationWithQuestion.evaluator.id).toBe('string');
+      expect(typeof evaluationWithQuestion.evaluator.name).toBe('string');
+      expect(typeof evaluationWithQuestion.evaluator.employeeNumber).toBe('string');
+      expect(typeof evaluationWithQuestion.evaluator.email).toBe('string');
+      expect(typeof evaluationWithQuestion.evaluator.status).toBe('string');
+      expect(typeof evaluationWithQuestion.evaluator.rankName).toBe('string');
+      expect(Array.isArray(evaluationWithQuestion.evaluator.roles)).toBe(true);
+      evaluationWithQuestion.evaluator.roles.forEach((role: any) => {
+        expect(typeof role).toBe('string');
+      });
 
-        // 평가자 타입 검증
-        if (firstItem.evaluator) {
-          expect(typeof firstItem.evaluator.id).toBe('string');
-          expect(typeof firstItem.evaluator.name).toBe('string');
-          expect(typeof firstItem.evaluator.employeeNumber).toBe('string');
-          expect(typeof firstItem.evaluator.email).toBe('string');
-          expect(typeof firstItem.evaluator.status).toBe('string');
-        }
+      // 피평가자 타입 검증
+      if (evaluationWithQuestion.evaluatee) {
+        expect(typeof evaluationWithQuestion.evaluatee.id).toBe('string');
+        expect(typeof evaluationWithQuestion.evaluatee.name).toBe('string');
+        expect(typeof evaluationWithQuestion.evaluatee.employeeNumber).toBe('string');
+        expect(typeof evaluationWithQuestion.evaluatee.email).toBe('string');
+        expect(typeof evaluationWithQuestion.evaluatee.status).toBe('string');
+      }
 
-        // 피평가자 타입 검증
-        if (firstItem.evaluatee) {
-          expect(typeof firstItem.evaluatee.id).toBe('string');
-          expect(typeof firstItem.evaluatee.name).toBe('string');
-          expect(typeof firstItem.evaluatee.employeeNumber).toBe('string');
-          expect(typeof firstItem.evaluatee.email).toBe('string');
-          expect(typeof firstItem.evaluatee.status).toBe('string');
-        }
+      // 질문 타입 검증 (질문이 있는 경우)
+      expect(Array.isArray(evaluationWithQuestion.questions)).toBe(true);
+      expect(evaluationWithQuestion.questions.length).toBeGreaterThan(0);
+      
+      // score가 있는 질문 찾기
+      const questionWithScore = evaluationWithQuestion.questions.find(
+        (q: any) => q.score !== null && q.score !== undefined,
+      );
 
-        // 질문 타입 검증
-        if (firstItem.questions.length > 0) {
-          const firstQuestion = firstItem.questions[0];
-          expect(typeof firstQuestion.id).toBe('string');
-          expect(typeof firstQuestion.text).toBe('string');
-          expect(typeof firstQuestion.displayOrder).toBe('number');
-          if (firstQuestion.minScore !== undefined) {
-            expect(typeof firstQuestion.minScore).toBe('number');
-          }
-          if (firstQuestion.maxScore !== undefined) {
-            expect(typeof firstQuestion.maxScore).toBe('number');
-          }
+      if (questionWithScore) {
+        expect(typeof questionWithScore.id).toBe('string');
+        expect(typeof questionWithScore.text).toBe('string');
+        expect(typeof questionWithScore.displayOrder).toBe('number');
+        if (questionWithScore.minScore !== undefined) {
+          expect(typeof questionWithScore.minScore).toBe('number');
         }
+        if (questionWithScore.maxScore !== undefined) {
+          expect(typeof questionWithScore.maxScore).toBe('number');
+        }
+        // score 필드 타입 검증 (score가 있는 경우)
+        expect(questionWithScore).toHaveProperty('score');
+        expect(typeof questionWithScore.score).toBe('number');
+        expect(questionWithScore.score).toBeGreaterThanOrEqual(1);
+      } else {
+        // score가 없는 경우도 확인 (기본 검증)
+        const firstQuestion = evaluationWithQuestion.questions[0];
+        expect(typeof firstQuestion.id).toBe('string');
+        expect(typeof firstQuestion.text).toBe('string');
+        expect(typeof firstQuestion.displayOrder).toBe('number');
+        expect(firstQuestion).toHaveProperty('score');
       }
 
       console.log('\n✅ 데이터 타입 검증 완료');

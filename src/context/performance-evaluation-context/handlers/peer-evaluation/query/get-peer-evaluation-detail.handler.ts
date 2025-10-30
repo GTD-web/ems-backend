@@ -51,6 +51,8 @@ export interface PeerEvaluationDetailResult {
     email: string;
     departmentId: string;
     status: string;
+    rankName?: string;
+    roles?: string[];
   } | null;
 
   // 평가자 부서 정보
@@ -95,6 +97,7 @@ export interface PeerEvaluationDetailResult {
     maxScore?: number;
     displayOrder: number;
     answer?: string;
+    score?: number;
     answeredAt?: Date;
     answeredBy?: string;
   }[];
@@ -183,6 +186,8 @@ export class GetPeerEvaluationDetailHandler
         'evaluator.email AS evaluator_email',
         'evaluator.departmentId AS evaluator_departmentid',
         'evaluator.status AS evaluator_status',
+        'evaluator.rankName AS evaluator_rankname',
+        'evaluator.roles AS evaluator_roles',
         // 평가자 부서 정보
         'evaluatorDepartment.id AS evaluatordepartment_id',
         'evaluatorDepartment.name AS evaluatordepartment_name',
@@ -224,6 +229,7 @@ export class GetPeerEvaluationDetailHandler
       .select([
         'mapping.displayOrder AS displayorder',
         'mapping.answer AS mapping_answer',
+        'mapping.score AS mapping_score',
         'mapping.answeredAt AS mapping_answeredat',
         'mapping.answeredBy AS mapping_answeredby',
         'question.id AS question_id',
@@ -273,6 +279,8 @@ export class GetPeerEvaluationDetailHandler
             email: result.evaluator_email,
             departmentId: result.evaluator_departmentid,
             status: result.evaluator_status,
+            rankName: result.evaluator_rankname || '',
+            roles: result.evaluator_roles || [],
           }
         : null,
 
@@ -321,6 +329,7 @@ export class GetPeerEvaluationDetailHandler
         maxScore: q.question_maxscore,
         displayOrder: q.displayorder,
         answer: q.mapping_answer,
+        score: q.mapping_score,
         answeredAt: q.mapping_answeredat,
         answeredBy: q.mapping_answeredby,
       })),

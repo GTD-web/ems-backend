@@ -550,6 +550,19 @@ export class EmployeeInfoDto {
     example: 'ACTIVE',
   })
   status: string;
+
+  @ApiPropertyOptional({
+    description: '직급명',
+    example: '과장',
+  })
+  rankName?: string;
+
+  @ApiPropertyOptional({
+    description: '역할 목록',
+    example: ['ROLE_USER', 'ROLE_ADMIN'],
+    type: [String],
+  })
+  roles?: string[];
 }
 
 /**

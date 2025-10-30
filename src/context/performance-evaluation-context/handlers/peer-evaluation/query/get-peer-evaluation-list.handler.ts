@@ -48,6 +48,8 @@ export interface PeerEvaluationDetailResult {
     email: string;
     departmentId: string;
     status: string;
+    rankName?: string;
+    roles?: string[];
   } | null;
 
   // 평가자 부서 정보
@@ -206,6 +208,8 @@ export class GetPeerEvaluationListHandler
         'evaluator.email AS evaluator_email',
         'evaluator.departmentId AS evaluator_departmentid',
         'evaluator.status AS evaluator_status',
+        'evaluator.rankName AS evaluator_rankname',
+        'evaluator.roles AS evaluator_roles',
         // 평가자 부서 정보
         'evaluatorDepartment.id AS evaluatordepartment_id',
         'evaluatorDepartment.name AS evaluatordepartment_name',
@@ -325,6 +329,8 @@ export class GetPeerEvaluationListHandler
               email: evaluation.evaluator_email,
               departmentId: evaluation.evaluator_departmentid,
               status: evaluation.evaluator_status,
+              rankName: evaluation.evaluator_rankname || '',
+              roles: evaluation.evaluator_roles || [],
             }
           : null,
 

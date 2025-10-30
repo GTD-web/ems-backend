@@ -247,16 +247,31 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id (실제 데이�
         return;
       }
 
-      const evaluationId = await createPeerEvaluation({
-        evaluatorId: employees.evaluator.id,
-        evaluateeId: employees.evaluatee.id,
-        periodId: period.id,
-      });
+      // 질문이 있는 평가를 생성
+      const questions = await dataSource.query(
+        `SELECT id FROM evaluation_question WHERE "deletedAt" IS NULL LIMIT 1`,
+      );
+      if (questions.length === 0) {
+        console.log('질문이 없어서 테스트 스킵');
+        return;
+      }
 
-      if (!evaluationId) {
+      const createResponse = await testSuite
+        .request()
+        .post('/admin/performance-evaluation/peer-evaluations/requests')
+        .send({
+          evaluatorId: employees.evaluator.id,
+          evaluateeId: employees.evaluatee.id,
+          periodId: period.id,
+          questionIds: [questions[0].id],
+        });
+
+      if (createResponse.status !== 201) {
         console.log('평가 생성 실패, 테스트 스킵');
         return;
       }
+
+      const evaluationId = createResponse.body.id;
 
       const response = await testSuite
         .request()
@@ -272,16 +287,33 @@ describe('GET /admin/performance-evaluation/peer-evaluations/:id (실제 데이�
       expect(response.body).toHaveProperty('createdAt');
       expect(response.body).toHaveProperty('updatedAt');
 
-      // 점수 필드 검증
-      if (response.body.questions && response.body.questions.length > 0) {
-        const question = response.body.questions[0];
-        expect(question).toHaveProperty('score');
-        // score는 optional이므로 undefined일 수도 있음
-        if (question.score !== undefined) {
-          expect(typeof question.score).toBe('number');
-          expect(question.score).toBeGreaterThanOrEqual(1);
-          expect(question.score).toBeLessThanOrEqual(5);
-        }
+      // 평가자 정보 검증 (rankName, roles 포함)
+      expect(response.body.evaluator).toBeDefined();
+      expect(response.body.evaluator).not.toBeNull();
+      expect(response.body.evaluator).toHaveProperty('id');
+      expect(response.body.evaluator).toHaveProperty('name');
+      expect(response.body.evaluator).toHaveProperty('employeeNumber');
+      expect(response.body.evaluator).toHaveProperty('email');
+      expect(response.body.evaluator).toHaveProperty('departmentId');
+      expect(response.body.evaluator).toHaveProperty('status');
+      expect(response.body.evaluator).toHaveProperty('rankName');
+      expect(response.body.evaluator).toHaveProperty('roles');
+      expect(typeof response.body.evaluator.rankName).toBe('string');
+      expect(Array.isArray(response.body.evaluator.roles)).toBe(true);
+      response.body.evaluator.roles.forEach((role: any) => {
+        expect(typeof role).toBe('string');
+      });
+
+      // 점수 필드 검증 (질문이 있는 경우)
+      expect(response.body.questions).toBeDefined();
+      expect(Array.isArray(response.body.questions)).toBe(true);
+      expect(response.body.questions.length).toBeGreaterThan(0);
+      const question = response.body.questions[0];
+      expect(question).toHaveProperty('score');
+      if (question.score !== null && question.score !== undefined) {
+        expect(typeof question.score).toBe('number');
+        expect(question.score).toBeGreaterThanOrEqual(1);
+        expect(question.score).toBeLessThanOrEqual(5);
       }
 
       console.log('\n✅ 응답 필수 필드 확인');
