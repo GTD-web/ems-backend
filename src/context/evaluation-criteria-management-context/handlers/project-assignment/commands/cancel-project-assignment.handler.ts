@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { EvaluationProjectAssignmentService } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.service';
 import { ProjectService } from '@domain/common/project/project.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
 
 /**
  * 프로젝트 할당 취소 커맨드
@@ -25,6 +26,7 @@ export class CancelProjectAssignmentHandler
   constructor(
     private readonly projectAssignmentService: EvaluationProjectAssignmentService,
     private readonly projectService: ProjectService,
+    private readonly evaluationPeriodService: EvaluationPeriodService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -51,6 +53,24 @@ export class CancelProjectAssignmentHandler
       if (!project) {
         throw new NotFoundException(
           `프로젝트 ID ${assignmentDto.projectId}에 해당하는 프로젝트를 찾을 수 없습니다.`,
+        );
+      }
+
+      // 평가기간 존재 여부 및 상태 검증 (Context 레벨)
+      const evaluationPeriod = await this.evaluationPeriodService.ID로_조회한다(
+        assignment.periodId,
+        manager,
+      );
+      if (!evaluationPeriod) {
+        throw new NotFoundException(
+          `평가기간 ID ${assignment.periodId}에 해당하는 평가기간을 찾을 수 없습니다.`,
+        );
+      }
+
+      // 완료된 평가기간에는 할당 취소 불가
+      if (evaluationPeriod.완료된_상태인가()) {
+        throw new UnprocessableEntityException(
+          '완료된 평가기간에는 프로젝트 할당을 취소할 수 없습니다.',
         );
       }
 

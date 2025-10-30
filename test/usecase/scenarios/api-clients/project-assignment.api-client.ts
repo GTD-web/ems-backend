@@ -63,7 +63,7 @@ export class ProjectAssignmentApiClient {
     await this.testSuite
       .request()
       .delete(`/admin/evaluation-criteria/project-assignments/${assignmentId}`)
-      .expect(204);
+      .expect(200);
   }
 
   /**
@@ -133,7 +133,7 @@ export class ProjectAssignmentApiClient {
     const response = await this.testSuite
       .request()
       .get(
-        `/admin/evaluation-criteria/project-assignments/employee/${config.employeeId}/period/${config.periodId}`,
+        `/admin/evaluation-criteria/project-assignments/employees/${config.employeeId}/periods/${config.periodId}`,
       )
       .expect(200);
 
@@ -150,7 +150,7 @@ export class ProjectAssignmentApiClient {
     const response = await this.testSuite
       .request()
       .get(
-        `/admin/evaluation-criteria/project-assignments/project/${config.projectId}/period/${config.periodId}`,
+        `/admin/evaluation-criteria/project-assignments/projects/${config.projectId}/periods/${config.periodId}`,
       )
       .expect(200);
 
@@ -373,4 +373,5 @@ export class ProjectAssignmentApiClient {
 
     return response.body;
   }
+
 }

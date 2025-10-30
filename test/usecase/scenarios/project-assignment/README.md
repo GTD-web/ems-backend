@@ -1,0 +1,113 @@
+# 프로젝트 할당 관리 시나리오
+
+## 식별된 검증해야하는 시나리오
+
+각 하이라키별 시나리오 엔드포인트 순서대로 검증이 되어야 함.
+
+사용되는 컨트롤러
+- project-assignment-management
+- evaluation-period
+- dashboard
+
+- **프로젝트 할당 기본 관리** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성) 
+                - **할당 생성 검증** 
+                    - employeeId, projectId, periodId로 할당 생성
+                    - assignedBy 자동 설정 (현재 사용자)
+                    - 할당 ID 반환 확인
+                - **대시보드 할당 검증** 
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
+                        - evaluationCriteria.status 확인 (프로젝트 할당 상태)
+                        - evaluationCriteria.assignedProjectCount 확인 (할당된 프로젝트 수)
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                        - employee 정보 확인
+                        - projects 배열 확인 (할당된 프로젝트 목록)
+                        - summary.totalProjects 확인 (총 프로젝트 수)
+                        - **할당된 프로젝트 ID 검증** 
+                            - projectId로 의도한 프로젝트가 할당되었는지 확인
+                            - projectName, projectCode 정보 검증
+                            - assignedAt 할당 시점 정보 확인
+                            - projectManager 정보 확인
+    - GET /admin/evaluation-criteria/project-assignments (프로젝트 할당 목록 조회) 
+        - periodId, employeeId, projectId로 필터링 가능
+        - 페이징 및 정렬 지원
+    - GET /admin/evaluation-criteria/project-assignments/employees/{employeeId}/periods/{periodId} (직원별 할당 프로젝트 조회) 
+        - 특정 직원의 특정 평가기간 할당 프로젝트 목록
+        - 프로젝트 할당 후 조회하여 데이터 검증
+        - **대시보드 API 추가 검증** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                - 할당된 프로젝트의 projectId 검증
+                - 프로젝트 정보 일치 확인
+    - GET /admin/evaluation-criteria/project-assignments/projects/{projectId}/periods/{periodId} (프로젝트별 할당 직원 조회) 
+        - 특정 프로젝트의 특정 평가기간 할당 직원 목록
+        - 프로젝트 할당 후 조회하여 데이터 검증
+        - **대시보드 API 추가 검증** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                - 할당된 프로젝트의 projectId 검증
+                - 프로젝트 정보 일치 확인
+    - GET /admin/evaluation-criteria/project-assignments/unassigned-employees (미할당 직원 조회) 
+        - periodId, projectId로 미할당 직원 목록 조회
+    - GET /admin/evaluation-criteria/project-assignments/available-projects (할당 가능한 프로젝트 조회) 
+        - periodId로 할당 가능한 프로젝트 목록 조회
+        - 검색, 페이징, 정렬 지원
+    - GET /admin/evaluation-criteria/project-assignments/{id} (프로젝트 할당 상세 조회) 
+        - 할당 ID로 상세 정보 조회
+        - employee, project, evaluationPeriod 중첩 객체 구조 검증
+    - **프로젝트 대량 할당 관리** 
+        - POST /admin/evaluation-criteria/project-assignments/bulk (프로젝트 대량 할당) 
+            - 여러 직원을 여러 프로젝트에 한 번에 할당
+            - assignments 배열로 다중 할당 처리
+            - **대시보드 API 대량 할당 검증** 
+                - 각 할당에 대해 GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data 호출
+                - 할당된 프로젝트의 projectId, projectName, projectCode 검증
+                - 할당 시점(assignedAt) 및 프로젝트 매니저 정보 확인
+        - PATCH /admin/evaluation-criteria/project-assignments/{id}/order (프로젝트 할당 순서 변경) 
+            - direction: "up" | "down"으로 순서 변경
+            - **순서 변경 검증** 
+                - 여러 프로젝트 할당 후 순서 변경 테스트
+                - 변경 전후 프로젝트 순서 비교 검증
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - projects 배열의 실제 순서 변경 확인
+                    - summary.totalProjects 확인
+                    - 첫 번째 프로젝트가 변경되었는지 검증
+                    - **대시보드 API 순서 변경 검증** 
+                        - 할당된 프로젝트의 projectId로 정확한 프로젝트가 순서 변경되었는지 확인
+                        - 프로젝트 정보(projectName, projectCode) 일치 확인
+        - DELETE /admin/evaluation-criteria/project-assignments/{id} (프로젝트 할당 취소) 
+            - 할당 ID로 할당 취소
+            - HTTP 200 응답으로 성공 확인
+            - **할당 취소 후 검증** 
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - 취소 전후 프로젝트 수 비교 검증
+                    - **대시보드 API 할당 취소 검증** 
+                        - 취소된 프로젝트가 더 이상 할당 목록에 없는지 확인
+                        - 남은 프로젝트들의 projectId 검증
+                        - 프로젝트 정보 일치 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
+                    - evaluationCriteria.assignedProjectCount 감소 확인
+
+- **프로젝트 할당 정책 검증** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/evaluation-periods/{id}/complete (평가기간 완료) 
+    - POST /admin/evaluation-criteria/project-assignments (완료된 평가기간에 할당 시도) 
+        - **완료된 평가기간 할당 불가 검증** 
+            - 평가기간을 완료 상태로 변경
+            - 완료된 평가기간에 프로젝트 할당 시도
+            - HTTP 422 UnprocessableEntity 응답 확인
+            - "완료된 평가기간에는 프로젝트 할당을 생성할 수 없습니다." 에러 메시지 검증
+        - **대량 할당도 동일한 정책 적용** 
+            - POST /admin/evaluation-criteria/project-assignments/bulk (완료된 평가기간에 대량 할당 시도)
+            - HTTP 422 UnprocessableEntity 응답 확인
+            - 대량 할당도 완료된 평가기간에서는 불가능함을 검증
+        - **할당 취소도 동일한 정책 적용** 
+            - DELETE /admin/evaluation-criteria/project-assignments/{id} (완료된 평가기간에 할당 취소 시도)
+            - HTTP 422 UnprocessableEntity 응답 확인
+            - "완료된 평가기간에는 프로젝트 할당을 취소할 수 없습니다." 에러 메시지 검증
+        - **순서 변경도 동일한 정책 적용** 
+            - PATCH /admin/evaluation-criteria/project-assignments/{id}/order (완료된 평가기간에 순서 변경 시도)
+            - HTTP 422 UnprocessableEntity 응답 확인
+            - "완료된 평가기간에는 프로젝트 할당 순서를 변경할 수 없습니다." 에러 메시지 검증
+

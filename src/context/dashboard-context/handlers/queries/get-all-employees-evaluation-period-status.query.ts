@@ -93,7 +93,7 @@ export class GetAllEmployeesEvaluationPeriodStatusHandler
       if (mappings.length === 0) {
         this.logger.debug(
           `등록 해제 포함 조회에서 매핑이 조회되지 않음 - 평가기간: ${evaluationPeriodId}, 등록해제포함: ${includeUnregistered}`,
-        );
+      );
         this.logger.debug(`실행된 SQL: ${sql}`);
       }
 
@@ -102,12 +102,12 @@ export class GetAllEmployeesEvaluationPeriodStatusHandler
       // 참고: 100명 이상 시 배치 처리(10-20명씩) 또는 배치 쿼리 최적화 권장
       const statusPromises = mappings.map(async (mapping) => {
         try {
-                  // 기존 단일 직원 조회 쿼리 재사용
-                  const singleQuery = new GetEmployeeEvaluationPeriodStatusQuery(
-                    evaluationPeriodId,
-                    mapping.employeeId,
+          // 기존 단일 직원 조회 쿼리 재사용
+          const singleQuery = new GetEmployeeEvaluationPeriodStatusQuery(
+            evaluationPeriodId,
+            mapping.employeeId,
                     includeUnregistered,
-                  );
+          );
 
           const status = await this.singleStatusHandler.execute(singleQuery);
           return status;
