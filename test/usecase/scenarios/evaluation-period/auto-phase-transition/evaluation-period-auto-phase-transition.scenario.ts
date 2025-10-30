@@ -17,17 +17,7 @@ export class EvaluationPeriodAutoPhaseTransitionScenario {
     startDate: string;
     peerEvaluationDeadline?: string;
   }): Promise<{ periodId: string }> {
-    // 1. 기존 데이터 정리 (평가기간은 제외하고 정리)
-    // await this.testSuite
-    //   .request()
-    //   .delete('/admin/seed/clear')
-    //   .expect((res) => {
-    //     if (res.status !== 200 && res.status !== 404) {
-    //       throw new Error(
-    //         `Failed to clear seed data: ${res.status} ${res.text}`,
-    //       );
-    //     }
-    //   });
+    // 1. 기존 평가기간 정리 (개별 삭제 API는 없으므로 날짜 범위로 겹침 방지)
 
     // 2. 평가기간 생성 (peerEvaluationDeadline은 선택사항)
     const createConfig = {

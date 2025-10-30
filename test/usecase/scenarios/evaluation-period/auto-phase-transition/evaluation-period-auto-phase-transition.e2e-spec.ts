@@ -33,14 +33,57 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
     await testSuite.closeApp();
   });
 
+  afterEach(async () => {
+    // 각 테스트에서 생성된 평가기간들을 정리
+    const createdPeriods = (global as any).createdEvaluationPeriods || [];
+    
+    for (const periodId of createdPeriods) {
+      if (periodId) {
+        try {
+          // 먼저 평가기간을 완료 상태로 만든 후 삭제
+          await testSuite
+            .request()
+            .post(`/admin/evaluation-periods/${periodId}/complete`)
+            .expect((res) => {
+              if (res.status !== 200 && res.status !== 404) {
+                console.warn(`평가기간 완료 실패: ${res.status} ${res.text}`);
+              }
+            });
+          
+          // 완료 후 삭제
+          await testSuite
+            .request()
+            .delete(`/admin/evaluation-periods/${periodId}`)
+            .expect((res) => {
+              if (res.status !== 200 && res.status !== 404) {
+                console.warn(`평가기간 삭제 실패: ${res.status} ${res.text}`);
+              }
+            });
+        } catch (error) {
+          console.warn(`평가기간 정리 실패: ${error.message}`);
+        }
+      }
+    }
+    
+    // 정리 후 배열 초기화
+    (global as any).createdEvaluationPeriods = [];
+  });
+
   describe('기본 자동 단계 전이 시나리오', () => {
+
     it('평가기간 자동 단계 전이 전체 시나리오를 실행한다', async () => {
       // Given: 평가기간 생성 및 시작
-      const { periodId } = await scenario.평가기간을_생성하고_시작한다({
+      const result = await scenario.평가기간을_생성하고_시작한다({
         name: '자동 전이 테스트용 평가기간',
         startDate: '2024-01-01',
         peerEvaluationDeadline: '2025-12-31', // 더 늦은 날짜로 설정
       });
+      // 전역 배열에 평가기간 ID 추가
+      if (!(global as any).createdEvaluationPeriods) {
+        (global as any).createdEvaluationPeriods = [];
+      }
+      (global as any).createdEvaluationPeriods.push(result.periodId);
+      const periodId = result.periodId;
 
       // 초기 상태 확인
       const initialState = await scenario.현재_단계를_조회한다(periodId);
@@ -166,13 +209,20 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
   });
 
   describe('평가기간 자동 단계 전이 (마감일 미설정 케이스)', () => {
+
     it('마감일이 설정되지 않은 단계는 자동 전이되지 않는다', async () => {
       // Given: 평가기간 생성 및 시작
-      const { periodId } = await scenario.평가기간을_생성하고_시작한다({
+      const result = await scenario.평가기간을_생성하고_시작한다({
         name: '마감일 미설정 테스트용 평가기간',
-        startDate: '2024-02-01',
+        startDate: '2024-07-01',
         peerEvaluationDeadline: '2025-12-31', // 더 늦은 날짜로 설정
       });
+      // 전역 배열에 평가기간 ID 추가
+      if (!(global as any).createdEvaluationPeriods) {
+        (global as any).createdEvaluationPeriods = [];
+      }
+      (global as any).createdEvaluationPeriods.push(result.periodId);
+      const periodId = result.periodId;
 
       // 현재 단계 확인 (evaluation-setup)
       const initialState = await scenario.현재_단계를_조회한다(periodId);
@@ -211,18 +261,25 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
   });
 
   describe('평가기간 자동 단계 전이 (수동 단계 변경 후 자동 전이)', () => {
+
     it('수동으로 단계를 변경한 후 자동 전이가 계속 진행된다', async () => {
       // Given: 평가기간 생성 및 시작
-      const { periodId } = await scenario.평가기간을_생성하고_시작한다({
+      const result = await scenario.평가기간을_생성하고_시작한다({
         name: '수동 변경 후 자동 전이 테스트용 평가기간',
-        startDate: '2024-03-01',
+        startDate: '2024-08-01',
         peerEvaluationDeadline: '2025-12-31', // 더 늦은 날짜로 설정
       });
+      // 전역 배열에 평가기간 ID 추가
+      if (!(global as any).createdEvaluationPeriods) {
+        (global as any).createdEvaluationPeriods = [];
+      }
+      (global as any).createdEvaluationPeriods.push(result.periodId);
+      const periodId = result.periodId;
 
       // 단계별 마감일 설정 (README.md 시나리오에 따라)
       // peerEvaluationDeadline (2025-12-31)보다 이른 시간으로 설정
-      const earlyTime1 = '2024-03-15T00:00:00.000Z'; // evaluationSetupDeadline
-      const earlyTime2 = '2024-03-16T00:00:00.000Z'; // performanceDeadline
+      const earlyTime1 = '2024-08-15T00:00:00.000Z'; // evaluationSetupDeadline
+      const earlyTime2 = '2024-08-16T00:00:00.000Z'; // performanceDeadline
       
       await scenario.단계별_마감일을_설정한다({
         periodId,
@@ -288,13 +345,20 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
   });
 
   describe('자동 단계 전이 에러 케이스', () => {
+
     it('대기 중인 평가기간은 자동 전이되지 않는다', async () => {
       // Given: 대기 중인 평가기간 생성
-      const { periodId } = await scenario.평가기간을_생성하고_시작한다({
+      const result = await scenario.평가기간을_생성하고_시작한다({
         name: '대기 상태 테스트용 평가기간',
-        startDate: '2024-04-01',
+        startDate: '2024-09-01',
         peerEvaluationDeadline: '2025-12-31', // 더 늦은 날짜로 설정
       });
+      // 전역 배열에 평가기간 ID 추가
+      if (!(global as any).createdEvaluationPeriods) {
+        (global as any).createdEvaluationPeriods = [];
+      }
+      (global as any).createdEvaluationPeriods.push(result.periodId);
+      const periodId = result.periodId;
 
       // 평가기간을 완료하여 대기 상태로 만들기
       await testSuite
@@ -314,11 +378,17 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
 
     it('마감일이 지나지 않은 단계는 자동 전이되지 않는다', async () => {
       // Given: 평가기간 생성 및 시작
-      const { periodId } = await scenario.평가기간을_생성하고_시작한다({
+      const result = await scenario.평가기간을_생성하고_시작한다({
         name: '마감일 미도달 테스트용 평가기간',
-        startDate: '2024-05-01',
+        startDate: '2024-10-01',
         peerEvaluationDeadline: '2025-12-31', // 더 늦은 날짜로 설정
       });
+      // 전역 배열에 평가기간 ID 추가
+      if (!(global as any).createdEvaluationPeriods) {
+        (global as any).createdEvaluationPeriods = [];
+      }
+      (global as any).createdEvaluationPeriods.push(result.periodId);
+      const periodId = result.periodId;
 
       // 마감일을 현재 시간보다 훨씬 미래로 설정
       const now = scenario.getCurrentTime();
@@ -343,13 +413,20 @@ describe('평가기간 자동 단계 전이 E2E 테스트', () => {
   });
 
   describe('자동 단계 전이 성능 테스트', () => {
+
     it('여러 평가기간의 자동 단계 전이가 동시에 처리된다', async () => {
       // Given: 단일 평가기간 생성 (단순화)
-      const { periodId } = await scenario.평가기간을_생성하고_시작한다({
+      const result = await scenario.평가기간을_생성하고_시작한다({
         name: '자동 단계 전이 테스트용 평가기간',
-        startDate: '2024-06-01',
+        startDate: '2024-11-01',
         peerEvaluationDeadline: '2024-12-31', // 충분히 늦은 마감일
       });
+      // 전역 배열에 평가기간 ID 추가
+      if (!(global as any).createdEvaluationPeriods) {
+        (global as any).createdEvaluationPeriods = [];
+      }
+      (global as any).createdEvaluationPeriods.push(result.periodId);
+      const periodId = result.periodId;
 
       console.log(`생성된 평가기간 ID:`, periodId);
 
