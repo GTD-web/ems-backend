@@ -16,6 +16,7 @@ import {
   WbsEvaluationCriteriaDetailDto,
   WbsEvaluationCriteriaFilterDto,
   WbsItemEvaluationCriteriaResponseDto,
+  WbsEvaluationCriteriaListResponseDto,
 } from './dto/wbs-evaluation-criteria.dto';
 import { CurrentUser } from '../../decorators';
 import type { AuthenticatedUser } from '../../decorators';
@@ -39,7 +40,7 @@ export class WbsEvaluationCriteriaManagementController {
   @GetWbsEvaluationCriteriaList()
   async getWbsEvaluationCriteriaList(
     @Query() filter: WbsEvaluationCriteriaFilterDto,
-  ): Promise<WbsEvaluationCriteriaDto[]> {
+  ): Promise<WbsEvaluationCriteriaListResponseDto> {
     return await this.evaluationCriteriaManagementService.WBS_평가기준_목록을_조회한다(
       {
         wbsItemId: filter.wbsItemId,

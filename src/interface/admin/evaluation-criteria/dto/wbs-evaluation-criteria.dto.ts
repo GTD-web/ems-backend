@@ -121,6 +121,29 @@ export class WbsEvaluationCriteriaFilterDto {
 }
 
 /**
+ * 평가기간 수동 설정 상태 DTO
+ */
+export class EvaluationPeriodManualSettingsDto {
+  @ApiProperty({
+    description: '평가 기준 설정 수동 허용 여부',
+    example: true,
+  })
+  criteriaSettingEnabled: boolean;
+
+  @ApiProperty({
+    description: '자기 평가 설정 수동 허용 여부',
+    example: false,
+  })
+  selfEvaluationSettingEnabled: boolean;
+
+  @ApiProperty({
+    description: '하향/동료평가 설정 수동 허용 여부',
+    example: false,
+  })
+  finalEvaluationSettingEnabled: boolean;
+}
+
+/**
  * WBS 평가기준 DTO
  */
 export class WbsEvaluationCriteriaDto {
@@ -153,6 +176,23 @@ export class WbsEvaluationCriteriaDto {
 
   @ApiProperty({ description: '수정일시', example: '2024-10-01T09:00:00Z' })
   updatedAt: Date;
+}
+
+/**
+ * WBS 평가기준 목록 조회 응답 DTO (평가기간 수동 설정 상태 포함)
+ */
+export class WbsEvaluationCriteriaListResponseDto {
+  @ApiProperty({
+    description: '평가기준 목록',
+    type: [WbsEvaluationCriteriaDto],
+  })
+  criteria: WbsEvaluationCriteriaDto[];
+
+  @ApiProperty({
+    description: '평가기간 수동 설정 상태 정보',
+    type: EvaluationPeriodManualSettingsDto,
+  })
+  evaluationPeriodSettings: EvaluationPeriodManualSettingsDto;
 }
 
 /**

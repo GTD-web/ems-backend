@@ -40,6 +40,12 @@ export const GetWbsEvaluationCriteriaList = () =>
 - 삭제된 평가기준은 목록에 포함되지 않음
 - 빈 배열 반환 가능 (평가기준이 없는 경우)
 - 생성일시 기준 내림차순 정렬
+- 평가기간 수동 설정 상태 정보 포함
+
+**평가기간 수동 설정 상태:**
+- criteriaSettingEnabled: 평가 기준 설정 수동 허용 여부
+- selfEvaluationSettingEnabled: 자기 평가 설정 수동 허용 여부
+- finalEvaluationSettingEnabled: 하향/동료평가 설정 수동 허용 여부
 
 **테스트 케이스:**
 - 전체 조회: 모든 WBS 평가기준 조회 성공
@@ -80,26 +86,59 @@ export const GetWbsEvaluationCriteriaList = () =>
       status: 200,
       description: 'WBS 평가기준 목록이 성공적으로 조회되었습니다.',
       schema: {
+        type: 'object',
+        properties: {
+          criteria: {
         type: 'array',
+            description: 'WBS 평가기준 목록',
         items: {
           type: 'object',
           properties: {
             id: { type: 'string', format: 'uuid' },
             wbsItemId: { type: 'string', format: 'uuid' },
             criteria: { type: 'string' },
+                importance: { type: 'number' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
           },
+            },
+          },
+          evaluationPeriodSettings: {
+            type: 'object',
+            description: '평가기간 수동 설정 상태 정보',
+            properties: {
+              criteriaSettingEnabled: { 
+                type: 'boolean', 
+                description: '평가 기준 설정 수동 허용 여부' 
+              },
+              selfEvaluationSettingEnabled: { 
+                type: 'boolean', 
+                description: '자기 평가 설정 수동 허용 여부' 
+              },
+              finalEvaluationSettingEnabled: { 
+                type: 'boolean', 
+                description: '하향/동료평가 설정 수동 허용 여부' 
+              },
+            },
+          },
         },
-        example: [
+        example: {
+          criteria: [
           {
             id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
             wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
             criteria: '코드 품질 및 성능 최적화',
+              importance: 5,
             createdAt: '2024-01-15T10:30:00.000Z',
             updatedAt: '2024-01-15T10:30:00.000Z',
           },
         ],
+          evaluationPeriodSettings: {
+            criteriaSettingEnabled: true,
+            selfEvaluationSettingEnabled: false,
+            finalEvaluationSettingEnabled: false,
+          },
+        },
       },
     }),
     ApiResponse({
