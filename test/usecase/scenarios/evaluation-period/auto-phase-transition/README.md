@@ -1,0 +1,118 @@
+# 평가기간 자동 단계 전이 시나리오
+
+## 식별된 검증해야하는 시나리오
+
+각 하이라키별 시나리오 엔드포인트 순서대로 검증이 되어야 함.
+
+사용되는 컨트롤러
+- dashboard
+- evaluation-period
+
+- **평가기간 자동 단계 전이** ✅ **구현 완료**
+    - POST /admin/evaluation-periods 
+    - POST /admin/evaluation-periods/{id}/start 
+    - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+    - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+    - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+    - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+    - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+        - **대시보드 조회 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+                - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
+    - **자동 단계 전이 테스트**
+        - 1분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+            - 대시보드
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (performance)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
+        - 2분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
+            - 대시보드
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (self-evaluation)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
+        - 3분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: peer-evaluation)
+            - 대시보드
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (peer-evaluation)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (true)
+        - 4분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: closure)
+            - 대시보드
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (closure)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false)
+- **평가기간 자동 단계 전이 (마감일 미설정 케이스)** ✅ **구현 완료**
+    - POST /admin/evaluation-periods 
+    - POST /admin/evaluation-periods/{id}/start 
+    - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+    - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+    - **자기평가 마감일 미설정** (selfEvaluationDeadline 설정하지 않음)
+    - **동료평가 마감일 미설정** (peerEvaluationDeadline 설정하지 않음)
+    - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+    - **자동 단계 전이 테스트**
+        - 1분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+        - 2분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: performance, 전이되지 않음)
+            - **마감일이 설정되지 않은 단계는 자동 전이되지 않음을 확인**
+- **평가기간 자동 단계 전이 (수동 단계 변경 후 자동 전이)** ✅ **구현 완료**
+    - POST /admin/evaluation-periods 
+    - POST /admin/evaluation-periods/{id}/start 
+    - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+    - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+    - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+    - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+    - **수동으로 단계 변경**
+        - POST /admin/evaluation-periods/{id}/phase-change (targetPhase: performance)
+        - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+    - **자동 단계 전이 테스트**
+        - 3분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
+        - 4분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: peer-evaluation)
+        - 5분 경과 후 자동 전이 확인
+            - GET /admin/evaluation-periods/{id} (현재 단계: closure)
+- **평가기간 자동 단계 전이 에러 케이스** ✅ **구현 완료**
+    - **대기 중인 평가기간은 자동 전이되지 않는다**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - POST /admin/evaluation-periods/{id}/complete (평가기간 완료)
+        - **자동 단계 전이 테스트**
+            - 자동 전이 실행 후 상태 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: closure, 전이되지 않음)
+                - **대기/완료 상태의 평가기간은 자동 전이되지 않음을 확인**
+    - **마감일이 지나지 않은 단계는 자동 전이되지 않는다**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 60분)
+        - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 120분)
+        - **자동 단계 전이 테스트**
+            - 자동 전이 실행 후 상태 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup, 전이되지 않음)
+                - **마감일이 지나지 않은 단계는 자동 전이되지 않음을 확인**
+- **평가기간 자동 단계 전이 성능 테스트** ✅ **구현 완료**
+    - **여러 평가기간의 자동 단계 전이가 동시에 처리된다**
+        - POST /admin/evaluation-periods (단일 평가기간 생성)
+        - POST /admin/evaluation-periods/{id}/start 
+        - **자동 단계 전이 테스트**
+            - 마감일 설정 없이 자동 단계 전이 실행
+                - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+                - **마감일이 설정되지 않은 경우 자동 전이되지 않음을 확인**
+            - 다중 자동 전이 실행 후 상태 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup 유지)
+                - **여러 평가기간의 자동 단계 전이가 동시에 처리됨을 확인**
+
