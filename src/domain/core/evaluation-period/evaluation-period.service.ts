@@ -539,7 +539,9 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
             changedBy || 'system',
           );
         } else {
-          evaluationPeriod.criteriaSettingEnabled = false;
+          evaluationPeriod.평가기준설정_수동허용_비활성화한다(
+            changedBy || 'system',
+          );
         }
       }
 
@@ -549,17 +551,21 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
             changedBy || 'system',
           );
         } else {
-          evaluationPeriod.selfEvaluationSettingEnabled = false;
+          evaluationPeriod.자기평가설정_수동허용_비활성화한다(
+            changedBy || 'system',
+          );
         }
       }
 
       if (finalEvaluationSettingEnabled !== undefined) {
         if (finalEvaluationSettingEnabled) {
-          evaluationPeriod.최종평가설정_수동허용_활성화한다(
+          evaluationPeriod.하향동료평가설정_수동허용_활성화한다(
             changedBy || 'system',
           );
         } else {
-          evaluationPeriod.finalEvaluationSettingEnabled = false;
+          evaluationPeriod.하향동료평가설정_수동허용_비활성화한다(
+            changedBy || 'system',
+          );
         }
       }
 

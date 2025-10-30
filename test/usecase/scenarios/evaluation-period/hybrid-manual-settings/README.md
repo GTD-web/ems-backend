@@ -1,0 +1,220 @@
+
+
+## 하이브리드 수동 설정 관리 시나리오
+
+**핵심 개념**: 자동 단계 전이 시 수동으로 설정된 값은 보존하고, 자동 설정된 값만 기본값으로 변경
+
+### **하이브리드 방식 동작 원리**
+- **자동 전이**: 각 단계별 기본값 설정
+- **수동 설정**: 사용자 의도 보존 (manuallySetFields로 추적)
+- **하이브리드**: 수동 설정이 없는 경우에만 기본값 적용
+
+### **테스트 시나리오**
+
+- **하이브리드 수동 설정 기본 시나리오** 🔄 **구현 예정**
+    - **시나리오 1: 기본 자동 전이 (수동 설정 없음)**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+        - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+        - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+        - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+        - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+            - **대시보드 조회 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 자동 설정)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false, 자동 설정)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+        - **자동 단계 전이 테스트**
+            - 1분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (performance)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false, 자동 설정)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false, 자동 설정)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+            - 2분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (self-evaluation)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false, 자동 설정)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true, 자동 설정)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+
+    - **시나리오 2: 수동 설정 후 자동 전이 (수동 설정 보존)**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+        - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+        - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+        - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+        - **수동 설정 변경**
+            - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission (criteriaSettingEnabled: true)
+            - PATCH /admin/evaluation-periods/{id}/settings/self-evaluation-permission (selfEvaluationSettingEnabled: true)
+        - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+            - **대시보드 조회 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true, 수동 설정)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+        - **자동 단계 전이 테스트**
+            - 1분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (performance)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+            - 2분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (self-evaluation)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+
+    - **시나리오 3: 부분적 수동 설정 (일부만 수동 설정)**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+        - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+        - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+        - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+        - **부분적 수동 설정 변경**
+            - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission (criteriaSettingEnabled: true)
+            - **selfEvaluationSettingEnabled는 수동 설정하지 않음**
+        - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+            - **대시보드 조회 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false, 자동 설정)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+        - **자동 단계 전이 테스트**
+            - 1분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (performance)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false, 자동 설정)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+            - 2분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (self-evaluation)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true, 자동 설정)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+
+    - **시나리오 4: 수동 설정 해제 후 자동 전이**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+        - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+        - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+        - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+        - **수동 설정 변경**
+            - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission (criteriaSettingEnabled: true)
+        - **수동 설정 해제**
+            - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission (criteriaSettingEnabled: false)
+        - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+            - **대시보드 조회 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                    - evaluationPeriod.currentPhase 확인 (evaluation-setup)
+                    - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false, 수동 설정 해제)
+                    - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false, 자동 설정)
+                    - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+        - **자동 단계 전이 테스트**
+            - 1분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (performance)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (false, 자동 설정)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false, 자동 설정)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+
+    - **시나리오 5: 복합 수동 설정 (여러 단계에서 수동 설정)**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - PATCH /admin/evaluation-periods/{id}/evaluation-setup-deadline (현재 시간 + 1분)
+        - PATCH /admin/evaluation-periods/{id}/performance-deadline (현재 시간 + 2분)
+        - PATCH /admin/evaluation-periods/{id}/self-evaluation-deadline (현재 시간 + 3분)
+        - PATCH /admin/evaluation-periods/{id}/peer-evaluation-deadline (현재 시간 + 4분)
+        - **초기 수동 설정**
+            - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission (criteriaSettingEnabled: true)
+        - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup)
+        - **자동 단계 전이 테스트**
+            - 1분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: performance)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (performance)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false, 자동 설정)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (false, 자동 설정)
+            - 2분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: self-evaluation)
+                - **추가 수동 설정**
+                    - PATCH /admin/evaluation-periods/{id}/settings/final-evaluation-permission (finalEvaluationSettingEnabled: true)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (self-evaluation)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true, 자동 설정)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (true, 수동 설정)
+            - 3분 경과 후 자동 전이 확인
+                - GET /admin/evaluation-periods/{id} (현재 단계: peer-evaluation)
+                - **대시보드 조회 검증**
+                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                        - evaluationPeriod.currentPhase 확인 (peer-evaluation)
+                        - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true, 수동 설정 보존)
+                        - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (false, 자동 설정)
+                        - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (true, 수동 설정 보존)
+
+- **하이브리드 수동 설정 에러 케이스** 🔄 **구현 예정**
+    - **시나리오 1: 완료된 평가기간에서 수동 설정 변경**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - POST /admin/evaluation-periods/{id}/complete
+        - **완료된 평가기간에서 수동 설정 변경 시도**
+            - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission (criteriaSettingEnabled: true)
+            - **에러 응답 확인**: 400 Bad Request
+            - **에러 메시지 확인**: "완료된 평가기간에서는 설정을 변경할 수 없습니다"
+
+- **하이브리드 수동 설정 성능 테스트** 🔄 **구현 예정**
+    - **시나리오 1: 대량 수동 설정 변경**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - **대량 수동 설정 변경**
+            - PATCH /admin/evaluation-periods/{id}/settings/criteria-permission (criteriaSettingEnabled: true)
+            - PATCH /admin/evaluation-periods/{id}/settings/self-evaluation-permission (selfEvaluationSettingEnabled: true)
+            - PATCH /admin/evaluation-periods/{id}/settings/final-evaluation-permission (finalEvaluationSettingEnabled: true)
+        - **응답 시간 측정**: 각 요청이 1초 이내에 완료되는지 확인
+        - **대시보드 조회 성능 테스트**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+            - **응답 시간 측정**: 500ms 이내에 완료되는지 확인
+
+    - **시나리오 2: 동시 수동 설정 변경**
+        - POST /admin/evaluation-periods 
+        - POST /admin/evaluation-periods/{id}/start 
+        - **동시 수동 설정 변경**
+            - Promise.all([
+                PATCH /admin/evaluation-periods/{id}/settings/criteria-permission (criteriaSettingEnabled: true),
+                PATCH /admin/evaluation-periods/{id}/settings/self-evaluation-permission (selfEvaluationSettingEnabled: true),
+                PATCH /admin/evaluation-periods/{id}/settings/final-evaluation-permission (finalEvaluationSettingEnabled: true)
+            ])
+        - **모든 요청이 성공적으로 완료되는지 확인**
+        - **대시보드 조회 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status 
+                - evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+                - evaluationPeriod.manualSettings.selfEvaluationSettingEnabled 확인 (true)
+                - evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (true)

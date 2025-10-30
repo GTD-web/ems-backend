@@ -215,3 +215,7 @@
             - 다중 자동 전이 실행 후 상태 확인
                 - GET /admin/evaluation-periods/{id} (현재 단계: evaluation-setup 유지)
                 - **여러 평가기간의 자동 단계 전이가 동시에 처리됨을 확인**
+
+
+### **상세 시나리오 문서**
+- [하이브리드 수동 설정 관리 상세 시나리오](./hybrid-manual-settings/README.md)

@@ -155,6 +155,13 @@ export class EvaluationPeriod
   finalEvaluationSettingEnabled: boolean;
 
   @Column({
+    type: 'json',
+    nullable: true,
+    comment: '수동으로 설정된 항목들',
+  })
+  manuallySetFields: string[] = [];
+
+  @Column({
     type: 'int',
     default: 120,
     comment: '자기평가 달성률 최대값 (%)',
@@ -211,6 +218,7 @@ export class EvaluationPeriod
     this.criteriaSettingEnabled = false;
     this.selfEvaluationSettingEnabled = false;
     this.finalEvaluationSettingEnabled = false;
+    this.manuallySetFields = [];
     this.updatedBy = completedBy;
     this.updatedAt = new Date();
   }
@@ -273,10 +281,18 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.PERFORMANCE;
-    // 업무 수행 단계에서는 모든 수동 설정을 비활성화
-    this.criteriaSettingEnabled = false;
-    this.selfEvaluationSettingEnabled = false;
-    this.finalEvaluationSettingEnabled = false;
+    
+    // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
+    if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
+      this.criteriaSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('selfEvaluationSettingEnabled')) {
+      this.selfEvaluationSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
+      this.finalEvaluationSettingEnabled = false;
+    }
+    
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -296,10 +312,18 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.SELF_EVALUATION;
-    // 자기 평가 단계에서는 자기 평가 설정만 활성화
-    this.criteriaSettingEnabled = false;
-    this.selfEvaluationSettingEnabled = true;
-    this.finalEvaluationSettingEnabled = false;
+    
+    // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
+    if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
+      this.criteriaSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('selfEvaluationSettingEnabled')) {
+      this.selfEvaluationSettingEnabled = true;
+    }
+    if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
+      this.finalEvaluationSettingEnabled = false;
+    }
+    
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -319,10 +343,18 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.PEER_EVALUATION;
-    // 하향/동료 평가 단계에서는 최종 평가 설정만 활성화
-    this.criteriaSettingEnabled = false;
-    this.selfEvaluationSettingEnabled = false;
-    this.finalEvaluationSettingEnabled = true;
+    
+    // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
+    if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
+      this.criteriaSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('selfEvaluationSettingEnabled')) {
+      this.selfEvaluationSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
+      this.finalEvaluationSettingEnabled = true;
+    }
+    
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -342,43 +374,22 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.CLOSURE;
-    // 종결 단계에서는 모든 수동 설정을 비활성화
-    this.criteriaSettingEnabled = false;
-    this.selfEvaluationSettingEnabled = false;
-    this.finalEvaluationSettingEnabled = false;
+    
+    // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
+    if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
+      this.criteriaSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('selfEvaluationSettingEnabled')) {
+      this.selfEvaluationSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
+      this.finalEvaluationSettingEnabled = false;
+    }
+    
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
 
-  /**
-   * 평가 기준 설정 수동 허용을 활성화한다
-   * @param enabledBy 활성화한 사용자 ID
-   */
-  평가기준설정_수동허용_활성화한다(enabledBy: string): void {
-    this.criteriaSettingEnabled = true;
-    this.updatedBy = enabledBy;
-    this.updatedAt = new Date();
-  }
-
-  /**
-   * 자기 평가 설정 수동 허용을 활성화한다
-   * @param enabledBy 활성화한 사용자 ID
-   */
-  자기평가설정_수동허용_활성화한다(enabledBy: string): void {
-    this.selfEvaluationSettingEnabled = true;
-    this.updatedBy = enabledBy;
-    this.updatedAt = new Date();
-  }
-
-  /**
-   * 최종 평가 설정 수동 허용을 활성화한다
-   * @param enabledBy 활성화한 사용자 ID
-   */
-  최종평가설정_수동허용_활성화한다(enabledBy: string): void {
-    this.finalEvaluationSettingEnabled = true;
-    this.updatedBy = enabledBy;
-    this.updatedAt = new Date();
-  }
 
   /**
    * 자기평가 달성률 최대값을 설정한다
@@ -885,5 +896,94 @@ export class EvaluationPeriod
    */
   DTO로_변환한다(): EvaluationPeriodDto {
     return this.DTO_변환한다();
+  }
+
+  // ==================== 하이브리드 수동 설정 관리 메서드 ====================
+
+  /**
+   * 수동 설정 여부를 확인한다
+   * @param field 확인할 필드명
+   * @returns 수동 설정 여부
+   */
+  수동설정이_있는가(field: string): boolean {
+    return this.manuallySetFields.includes(field);
+  }
+
+  /**
+   * 평가 기준 설정 수동 허용을 활성화한다
+   * @param enabledBy 활성화한 사용자 ID
+   */
+  평가기준설정_수동허용_활성화한다(enabledBy: string): void {
+    this.criteriaSettingEnabled = true;
+    if (!this.manuallySetFields.includes('criteriaSettingEnabled')) {
+      this.manuallySetFields.push('criteriaSettingEnabled');
+    }
+    this.updatedBy = enabledBy;
+    this.updatedAt = new Date();
+  }
+
+  /**
+   * 평가 기준 설정 수동 허용을 비활성화한다
+   * @param disabledBy 비활성화한 사용자 ID
+   */
+  평가기준설정_수동허용_비활성화한다(disabledBy: string): void {
+    this.criteriaSettingEnabled = false;
+    if (!this.manuallySetFields.includes('criteriaSettingEnabled')) {
+      this.manuallySetFields.push('criteriaSettingEnabled');
+    }
+    this.updatedBy = disabledBy;
+    this.updatedAt = new Date();
+  }
+
+  /**
+   * 자기 평가 설정 수동 허용을 활성화한다
+   * @param enabledBy 활성화한 사용자 ID
+   */
+  자기평가설정_수동허용_활성화한다(enabledBy: string): void {
+    this.selfEvaluationSettingEnabled = true;
+    if (!this.manuallySetFields.includes('selfEvaluationSettingEnabled')) {
+      this.manuallySetFields.push('selfEvaluationSettingEnabled');
+    }
+    this.updatedBy = enabledBy;
+    this.updatedAt = new Date();
+  }
+
+  /**
+   * 자기 평가 설정 수동 허용을 비활성화한다
+   * @param disabledBy 비활성화한 사용자 ID
+   */
+  자기평가설정_수동허용_비활성화한다(disabledBy: string): void {
+    this.selfEvaluationSettingEnabled = false;
+    if (!this.manuallySetFields.includes('selfEvaluationSettingEnabled')) {
+      this.manuallySetFields.push('selfEvaluationSettingEnabled');
+    }
+    this.updatedBy = disabledBy;
+    this.updatedAt = new Date();
+  }
+
+  /**
+   * 하향/동료평가 설정 수동 허용을 활성화한다
+   * @param enabledBy 활성화한 사용자 ID
+   */
+  하향동료평가설정_수동허용_활성화한다(enabledBy: string): void {
+    this.finalEvaluationSettingEnabled = true;
+    if (!this.manuallySetFields.includes('finalEvaluationSettingEnabled')) {
+      this.manuallySetFields.push('finalEvaluationSettingEnabled');
+    }
+    this.updatedBy = enabledBy;
+    this.updatedAt = new Date();
+  }
+
+  /**
+   * 하향/동료평가 설정 수동 허용을 비활성화한다
+   * @param disabledBy 비활성화한 사용자 ID
+   */
+  하향동료평가설정_수동허용_비활성화한다(disabledBy: string): void {
+    this.finalEvaluationSettingEnabled = false;
+    if (!this.manuallySetFields.includes('finalEvaluationSettingEnabled')) {
+      this.manuallySetFields.push('finalEvaluationSettingEnabled');
+    }
+    this.updatedBy = disabledBy;
+    this.updatedAt = new Date();
   }
 }

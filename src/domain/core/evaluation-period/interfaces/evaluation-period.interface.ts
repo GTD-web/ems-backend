@@ -112,10 +112,10 @@ export interface IEvaluationPeriod extends IBaseEntity {
   자기평가설정_수동허용_활성화한다(enabledBy: string): void;
 
   /**
-   * 최종 평가 설정 수동 허용을 활성화한다
+   * 하향/동료평가 설정 수동 허용을 활성화한다
    * @param enabledBy 활성화한 사용자 ID
    */
-  최종평가설정_수동허용_활성화한다(enabledBy: string): void;
+  하향동료평가설정_수동허용_활성화한다(enabledBy: string): void;
 
   /**
    * 자기평가 달성률 최대값을 설정한다
