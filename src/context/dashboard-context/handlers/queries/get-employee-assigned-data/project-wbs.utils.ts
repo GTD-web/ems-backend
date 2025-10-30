@@ -26,8 +26,8 @@ const logger = new Logger('ProjectWbsUtils');
 /**
  * 프로젝트별 할당 정보 조회 (WBS 목록 포함)
  *
- * EvaluationProjectAssignment를 통해 할당된 프로젝트를 조회하고,
- * 각 프로젝트에 속한 WBS 목록을 함께 조회합니다.
+ * 루프 안 쿼리를 제거하고 배치 조회로 최적화했습니다.
+ * 모든 관련 데이터를 한 번에 조회한 후 메모리에서 그룹핑합니다.
  */
 export async function getProjectsWithWbs(
   evaluationPeriodId: string,
@@ -42,7 +42,7 @@ export async function getProjectsWithWbs(
   evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
   deliverableRepository: Repository<Deliverable>,
 ): Promise<AssignedProjectWithWbs[]> {
-  // 1. 평가 프로젝트 할당 조회 (Project 엔티티와 PM 직원 정보 join)
+  // 1. 평가 프로젝트 할당 조회 (Project와 PM 직원 정보 join)
   const projectAssignments = await projectAssignmentRepository
     .createQueryBuilder('assignment')
     .leftJoin(
@@ -53,20 +53,20 @@ export async function getProjectsWithWbs(
     .leftJoin(
       Employee,
       'manager',
-      'manager.id::text = project.managerId AND manager.deletedAt IS NULL',
+      "manager.id::text = project.managerId AND manager.deletedAt IS NULL",
     )
     .select([
       'assignment.id AS assignment_id',
-      'assignment.projectId AS assignment_projectid',
-      'assignment.assignedDate AS assignment_assigneddate',
-      'assignment.displayOrder AS assignment_displayorder',
+      'assignment.projectId AS assignment_project_id',
+      'assignment.assignedDate AS assignment_assigned_date',
+      'assignment.displayOrder AS assignment_display_order',
       'project.id AS project_id',
       'project.name AS project_name',
-      'project.projectCode AS project_projectcode',
+      'project.projectCode AS project_project_code',
       'project.status AS project_status',
-      'project.startDate AS project_startdate',
-      'project.endDate AS project_enddate',
-      'project.managerId AS project_managerid',
+      'project.startDate AS project_start_date',
+      'project.endDate AS project_end_date',
+      'project.managerId AS project_manager_id',
       'manager.id AS manager_id',
       'manager.name AS manager_name',
     ])
@@ -79,70 +79,20 @@ export async function getProjectsWithWbs(
     .addOrderBy('assignment.assignedDate', 'DESC')
     .getRawMany();
 
-  // 2. 각 프로젝트에 속한 WBS 목록 조회
-  const projectsWithWbs: AssignedProjectWithWbs[] = [];
-
-  for (const row of projectAssignments) {
-    const projectId = row.assignment_projectid || row.project_id;
-
-    if (!projectId) {
-      logger.warn('프로젝트 ID가 없는 할당 발견', { row });
-      continue;
-    }
-
-    const wbsList = await getWbsListByProject(
-      evaluationPeriodId,
-      employeeId,
-      projectId,
-      mapping,
-      wbsAssignmentRepository,
-      wbsItemRepository,
-      criteriaRepository,
-      selfEvaluationRepository,
-      downwardEvaluationRepository,
-      evaluationLineMappingRepository,
-      deliverableRepository,
-    );
-
-    projectsWithWbs.push({
-      projectId,
-      projectName: row.project_name || '',
-      projectCode: row.project_projectcode || '',
-      assignedAt: row.assignment_assigneddate,
-      projectManager:
-        row.manager_id && row.manager_name
-          ? {
-              id: row.manager_id,
-              name: row.manager_name,
-            }
-          : null,
-      wbsList,
-    });
+  if (projectAssignments.length === 0) {
+    return [];
   }
 
-  return projectsWithWbs;
-}
+  // 2. 모든 프로젝트 ID 수집
+  const projectIds = [
+    ...new Set(
+      projectAssignments.map(
+        (row) => row.assignment_project_id || row.project_id,
+      ),
+    ),
+  ].filter((id): id is string => !!id);
 
-/**
- * 특정 프로젝트에 속한 WBS 목록 조회 (평가기준, 성과, 자기평가, 산출물 포함)
- *
- * EvaluationWbsAssignment를 통해 특정 프로젝트의 WBS를 조회하고,
- * 각 WBS의 평가기준, 성과, 자기평가, 산출물 정보를 함께 조회합니다.
- */
-export async function getWbsListByProject(
-  evaluationPeriodId: string,
-  employeeId: string,
-  projectId: string,
-  mapping: EvaluationPeriodEmployeeMapping,
-  wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
-  wbsItemRepository: Repository<WbsItem>,
-  criteriaRepository: Repository<WbsEvaluationCriteria>,
-  selfEvaluationRepository: Repository<WbsSelfEvaluation>,
-  downwardEvaluationRepository: Repository<DownwardEvaluation>,
-  evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
-  deliverableRepository: Repository<Deliverable>,
-): Promise<AssignedWbsInfo[]> {
-  // 1. WBS 할당 조회 (WbsItem join)
+  // 3. 모든 WBS 할당 조회 (한 번에 모든 프로젝트의 WBS 조회)
   const wbsAssignments = await wbsAssignmentRepository
     .createQueryBuilder('assignment')
     .leftJoin(
@@ -152,205 +102,133 @@ export async function getWbsListByProject(
     )
     .select([
       'assignment.id AS assignment_id',
-      'assignment.wbsItemId AS assignment_wbsitemid',
-      'assignment.projectId AS assignment_projectid',
-      'assignment.assignedDate AS assignment_assigneddate',
-      'assignment.displayOrder AS assignment_displayorder',
+      'assignment.wbsItemId AS assignment_wbs_item_id',
+      'assignment.projectId AS assignment_project_id',
+      'assignment.assignedDate AS assignment_assigned_date',
+      'assignment.displayOrder AS assignment_display_order',
       'assignment.weight AS assignment_weight',
-      'wbsItem.id AS wbsitem_id',
-      'wbsItem.wbsCode AS wbsitem_wbscode',
-      'wbsItem.title AS wbsitem_title',
-      'wbsItem.projectId AS wbsitem_projectid',
+      'wbsItem.id AS wbs_item_id',
+      'wbsItem.wbsCode AS wbs_item_wbs_code',
+      'wbsItem.title AS wbs_item_title',
+      'wbsItem.projectId AS wbs_item_project_id',
     ])
     .where('assignment.periodId = :periodId', {
       periodId: evaluationPeriodId,
     })
     .andWhere('assignment.employeeId = :employeeId', { employeeId })
-    .andWhere('assignment.projectId = :projectId', { projectId })
+    .andWhere('assignment.projectId IN (:...projectIds)', { projectIds })
     .andWhere('assignment.deletedAt IS NULL')
     .orderBy('assignment.displayOrder', 'ASC')
     .addOrderBy('assignment.assignedDate', 'DESC')
     .getRawMany();
 
-  // 2. 각 WBS의 평가기준, 성과, 자기평가 조회
-  const wbsInfos: AssignedWbsInfo[] = [];
+  // 4. 모든 WBS ID 수집
+  const wbsItemIds = [
+    ...new Set(
+      wbsAssignments.map((row) => row.assignment_wbs_item_id || row.wbs_item_id),
+    ),
+  ].filter((id): id is string => !!id);
 
-  for (const row of wbsAssignments) {
-    const wbsItemId = row.assignment_wbsitemid;
+  // 5. 배치 조회: 평가기준 (WHERE wbsItemId IN (:...wbsItemIds))
+  const criteriaMap = new Map<string, WbsEvaluationCriterion[]>();
+  if (wbsItemIds.length > 0) {
+    const criteriaRows = await criteriaRepository
+      .createQueryBuilder('criteria')
+      .select([
+        'criteria.id AS criteria_id',
+        'criteria.wbsItemId AS criteria_wbs_item_id',
+        'criteria.criteria AS criteria_criteria',
+        'criteria.importance AS criteria_importance',
+        'criteria.createdAt AS criteria_created_at',
+      ])
+      .where('criteria.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
+      .andWhere('criteria.deletedAt IS NULL')
+      .orderBy('criteria.createdAt', 'ASC')
+      .getRawMany();
 
-    // 평가기준 조회
-    const criteria = await getWbsCriteriaByWbsId(wbsItemId, criteriaRepository);
+    for (const row of criteriaRows) {
+      const wbsId = row.criteria_wbs_item_id;
+      if (!wbsId) continue;
 
-    // 성과 및 자기평가 조회
-    const selfEvaluationData = await getWbsSelfEvaluationByWbsId(
-      evaluationPeriodId,
-      employeeId,
-      wbsItemId,
-      mapping,
-      selfEvaluationRepository,
-    );
+      if (!criteriaMap.has(wbsId)) {
+        criteriaMap.set(wbsId, []);
+      }
 
-    // 하향평가 조회 (1차, 2차) - WBS 단위
-    let downwardEvaluations: {
-      primary: WbsDownwardEvaluationInfo | null;
-      secondary: WbsDownwardEvaluationInfo | null;
-    } = {
-      primary: null,
-      secondary: null,
-    };
-
-    if (wbsItemId) {
-      downwardEvaluations = await getWbsDownwardEvaluationsByWbsId(
-        evaluationPeriodId,
-        employeeId,
-        wbsItemId,
-        mapping,
-        downwardEvaluationRepository,
-        evaluationLineMappingRepository,
-      );
-    } else {
-      logger.warn(`WbsItemId가 없는 WBS: ${wbsItemId}`);
+      criteriaMap.get(wbsId)!.push({
+        criterionId: row.criteria_id,
+        criteria: row.criteria_criteria || '',
+        importance: row.criteria_importance || 5,
+        createdAt: row.criteria_created_at,
+      });
     }
-
-    // 산출물 목록 조회
-    const deliverables = await getDeliverablesByWbsId(
-      wbsItemId,
-      deliverableRepository,
-    );
-
-    wbsInfos.push({
-      wbsId: wbsItemId,
-      wbsName: row.wbsitem_title || '',
-      wbsCode: row.wbsitem_wbscode || '',
-      weight: parseFloat(row.assignment_weight) || 0, // DB에서 조회한 weight 값 사용
-      assignedAt: row.assignment_assigneddate,
-      criteria,
-      performance: selfEvaluationData?.performance || null,
-      selfEvaluation: selfEvaluationData?.selfEvaluation || null,
-      primaryDownwardEvaluation: downwardEvaluations.primary || null,
-      secondaryDownwardEvaluation: downwardEvaluations.secondary || null,
-      deliverables,
-    });
   }
 
-  return wbsInfos;
-}
+  // 6. 배치 조회: 자기평가 (WHERE periodId = :p AND employeeId = :e AND wbsItemId IN (:...wbsItemIds))
+  const selfEvaluationMap = new Map<
+    string,
+    {
+      performance: WbsPerformance | null;
+      selfEvaluation: WbsSelfEvaluationInfo | null;
+    }
+  >();
+  if (wbsItemIds.length > 0) {
+    const selfEvaluationRows = await selfEvaluationRepository
+      .createQueryBuilder('evaluation')
+      .select([
+        'evaluation.id AS evaluation_id',
+        'evaluation.wbsItemId AS evaluation_wbs_item_id',
+        'evaluation.performanceResult AS evaluation_performance_result',
+        'evaluation.selfEvaluationContent AS evaluation_self_evaluation_content',
+        'evaluation.selfEvaluationScore AS evaluation_self_evaluation_score',
+        'evaluation.isCompleted AS evaluation_is_completed',
+        'evaluation.completedAt AS evaluation_completed_at',
+      ])
+      .where('evaluation.periodId = :periodId', {
+        periodId: evaluationPeriodId,
+      })
+      .andWhere('evaluation.employeeId = :employeeId', { employeeId })
+      .andWhere('evaluation.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
+      .andWhere('evaluation.deletedAt IS NULL')
+      .getRawMany();
 
-/**
- * 특정 WBS의 평가기준 목록 조회
- *
- * WbsEvaluationCriteria를 조회합니다.
- */
-export async function getWbsCriteriaByWbsId(
-  wbsItemId: string,
-  criteriaRepository: Repository<WbsEvaluationCriteria>,
-): Promise<WbsEvaluationCriterion[]> {
-  const criteria = await criteriaRepository
-    .createQueryBuilder('criteria')
-    .select([
-      'criteria.id AS criteria_id',
-      'criteria.criteria AS criteria_criteria',
-      'criteria.importance AS criteria_importance',
-      'criteria.createdAt AS criteria_createdAt',
-    ])
-    .where('criteria.wbsItemId = :wbsItemId', { wbsItemId })
-    .andWhere('criteria.deletedAt IS NULL')
-    .orderBy('criteria.createdAt', 'ASC')
-    .getRawMany();
+    for (const row of selfEvaluationRows) {
+      const wbsId = row.evaluation_wbs_item_id;
+      if (!wbsId) continue;
 
-  return criteria.map((row) => ({
-    criterionId: row.criteria_id,
-    criteria: row.criteria_criteria || '',
-    importance: row.criteria_importance || 5,
-    createdAt: row.criteria_createdAt,
-  }));
-}
+      const performance: WbsPerformance = {
+        performanceResult: row.evaluation_performance_result,
+        isCompleted: row.evaluation_is_completed,
+        completedAt: row.evaluation_completed_at,
+      };
 
-/**
- * 특정 WBS의 성과 및 자기평가 조회
- *
- * WbsSelfEvaluation 엔티티에서 성과(performanceResult)와
- * 자기평가(selfEvaluationContent, selfEvaluationScore) 정보를 조회합니다.
- */
-export async function getWbsSelfEvaluationByWbsId(
-  evaluationPeriodId: string,
-  employeeId: string,
-  wbsItemId: string,
-  mapping: EvaluationPeriodEmployeeMapping,
-  selfEvaluationRepository: Repository<WbsSelfEvaluation>,
-): Promise<{
-  performance: WbsPerformance | null;
-  selfEvaluation: WbsSelfEvaluationInfo | null;
-} | null> {
-  const selfEvaluation = await selfEvaluationRepository
-    .createQueryBuilder('evaluation')
-    .select([
-      '"evaluation"."id" AS "evaluation_id"',
-      '"evaluation"."performanceResult" AS "evaluation_performanceResult"',
-      '"evaluation"."selfEvaluationContent" AS "evaluation_selfEvaluationContent"',
-      '"evaluation"."selfEvaluationScore" AS "evaluation_selfEvaluationScore"',
-      '"evaluation"."isCompleted" AS "evaluation_isCompleted"',
-      '"evaluation"."completedAt" AS "evaluation_completedAt"',
-    ])
-    .where('"evaluation"."periodId" = :periodId', {
-      periodId: evaluationPeriodId,
-    })
-    .andWhere('"evaluation"."employeeId" = :employeeId', { employeeId })
-    .andWhere('"evaluation"."wbsItemId" = :wbsItemId', { wbsItemId })
-    .andWhere('"evaluation"."deletedAt" IS NULL')
-    .getRawOne();
+      const selfEvaluation: WbsSelfEvaluationInfo = {
+        selfEvaluationId: row.evaluation_id,
+        evaluationContent: row.evaluation_self_evaluation_content,
+        score: row.evaluation_self_evaluation_score,
+        isCompleted: row.evaluation_is_completed,
+        isEditable: mapping.isSelfEvaluationEditable,
+        submittedAt: row.evaluation_completed_at,
+      };
 
-  if (!selfEvaluation) {
-    return null;
+      selfEvaluationMap.set(wbsId, {
+        performance,
+        selfEvaluation,
+      });
+    }
   }
 
-  // 성과 정보
-  const performance: WbsPerformance = {
-    performanceResult: selfEvaluation.evaluation_performanceResult,
-    isCompleted: selfEvaluation.evaluation_isCompleted,
-    completedAt: selfEvaluation.evaluation_completedAt,
-  };
+  // 7. 배치 조회: 하향평가 평가자 매핑 (1차, 2차)
+  const primaryEvaluatorMap = new Map<string, { evaluatorId: string; evaluatorName: string }>();
+  const secondaryEvaluatorMap = new Map<
+    string,
+    { evaluatorId: string; evaluatorName: string }
+  >();
 
-  // 자기평가 정보
-  const evaluation: WbsSelfEvaluationInfo = {
-    selfEvaluationId: selfEvaluation.evaluation_id,
-    evaluationContent: selfEvaluation.evaluation_selfEvaluationContent,
-    score: selfEvaluation.evaluation_selfEvaluationScore,
-    isCompleted: selfEvaluation.evaluation_isCompleted,
-    isEditable: mapping.isSelfEvaluationEditable, // 실제 mapping 상태 사용
-    submittedAt: selfEvaluation.evaluation_completedAt,
-  };
-
-  return {
-    performance,
-    selfEvaluation: evaluation,
-  };
-}
-
-/**
- * 특정 WBS의 하향평가 조회 (1차, 2차)
- *
- * 1차 평가자: EvaluationLineMapping에서 직원별 고정 담당자 조회 (wbsItemId = null)
- * 2차 평가자: DownwardEvaluation에서 WBS별 평가자 조회
- * 여러 평가자의 평가가 있을 경우 평균 점수를 계산합니다.
- */
-export async function getWbsDownwardEvaluationsByWbsId(
-  evaluationPeriodId: string,
-  employeeId: string,
-  wbsId: string, // wbsId 사용 (하향평가는 WBS 단위)
-  mapping: EvaluationPeriodEmployeeMapping,
-  downwardEvaluationRepository: Repository<DownwardEvaluation>,
-  evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
-): Promise<{
-  primary: WbsDownwardEvaluationInfo | null;
-  secondary: WbsDownwardEvaluationInfo | null;
-}> {
-  // 1. 1차 평가자 정보 조회 (EvaluationLineMapping에서 직원별 고정 담당자)
+  // 7-1. 1차 평가자 (직원별 고정 담당자)
   const primaryEvaluatorMapping = await evaluationLineMappingRepository
     .createQueryBuilder('mapping')
     .select([
-      'mapping.id AS mapping_id',
-      'mapping.evaluatorId AS mapping_evaluatorId',
+      'mapping.evaluatorId AS mapping_evaluator_id',
       'evaluator.name AS evaluator_name',
     ])
     .leftJoin(
@@ -364,211 +242,299 @@ export async function getWbsDownwardEvaluationsByWbsId(
       'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
     )
     .where('mapping.employeeId = :employeeId', { employeeId })
-    .andWhere('mapping.wbsItemId IS NULL') // 직원별 고정 담당자
+    .andWhere('mapping.wbsItemId IS NULL')
     .andWhere('mapping.deletedAt IS NULL')
     .andWhere('line.evaluatorType = :evaluatorType', {
       evaluatorType: 'primary',
-    }) // 1차 평가자만 조회
+    })
     .getRawOne();
 
-  // 디버깅: 조회된 매핑 정보 확인
-  if (primaryEvaluatorMapping) {
-    logger.debug(
-      `primaryEvaluatorMapping 조회: ${JSON.stringify(primaryEvaluatorMapping)}`,
-    );
-  } else {
-    logger.debug(`primaryEvaluatorMapping이 null입니다. employeeId: ${employeeId}`);
+  if (primaryEvaluatorMapping?.mapping_evaluator_id) {
+    const evaluatorId = primaryEvaluatorMapping.mapping_evaluator_id;
+    // 모든 WBS에 대해 1차 평가자 동일 (직원별 고정)
+    wbsItemIds.forEach((wbsId) => {
+      primaryEvaluatorMap.set(wbsId, {
+        evaluatorId,
+        evaluatorName: primaryEvaluatorMapping.evaluator_name || '',
+      });
+    });
   }
 
-  // 2. 2차 평가자 정보 조회 (EvaluationLineMapping에서 WBS별 평가자)
-  const secondaryEvaluatorMappings = await evaluationLineMappingRepository
-    .createQueryBuilder('mapping')
-    .select([
-      'mapping.id AS mapping_id',
-      'mapping.evaluatorId AS mapping_evaluatorId',
-      'evaluator.name AS evaluator_name',
-    ])
-    .leftJoin(
-      Employee,
-      'evaluator',
-      'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL',
-    )
-    .where('mapping.employeeId = :employeeId', { employeeId })
-    .andWhere('mapping.wbsItemId = :wbsId', { wbsId }) // 특정 WBS의 2차 평가자
-    .andWhere('mapping.deletedAt IS NULL')
-    .getRawMany();
+  // 7-2. 2차 평가자 (WBS별 평가자)
+  if (wbsItemIds.length > 0) {
+    const secondaryEvaluatorMappings = await evaluationLineMappingRepository
+      .createQueryBuilder('mapping')
+      .select([
+        'mapping.wbsItemId AS mapping_wbs_item_id',
+        'mapping.evaluatorId AS mapping_evaluator_id',
+        'evaluator.name AS evaluator_name',
+      ])
+      .leftJoin(
+        Employee,
+        'evaluator',
+        'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL',
+      )
+      .where('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
+      .andWhere('mapping.deletedAt IS NULL')
+      .getRawMany();
 
-  // 3. 1차 평가자 정보 구성
-  let primary: WbsDownwardEvaluationInfo | null = null;
-  if (primaryEvaluatorMapping) {
-    // evaluatorId 값 확인 및 로깅
-    // TypeORM raw query 결과는 alias가 그대로 유지되지만, 일부 경우 소문자로 변환될 수 있음
-    const evaluatorIdValue =
-      primaryEvaluatorMapping.mapping_evaluatorId ||
-      primaryEvaluatorMapping.mapping_evaluatorid;
-    
-    if (!evaluatorIdValue) {
-      logger.warn(
-        `primaryEvaluatorMapping.mapping_evaluatorId가 없습니다. employeeId: ${employeeId}, wbsId: ${wbsId}, mapping: ${JSON.stringify(primaryEvaluatorMapping)}`,
-      );
-    } else {
-      logger.debug(
-        `1차 평가자 매핑 조회 성공: evaluatorId=${evaluatorIdValue}, employeeId=${employeeId}, wbsId=${wbsId}`,
-      );
+    for (const row of secondaryEvaluatorMappings) {
+      const wbsId = row.mapping_wbs_item_id;
+      if (!wbsId || !row.mapping_evaluator_id) continue;
+
+      secondaryEvaluatorMap.set(wbsId, {
+        evaluatorId: row.mapping_evaluator_id,
+        evaluatorName: row.evaluator_name || '',
+      });
+    }
+  }
+
+  // 8. 배치 조회: 하향평가 데이터 (WHERE periodId = :p AND employeeId = :e AND wbsId IN (:...wbsItemIds))
+  const downwardEvaluationMap = new Map<
+    string,
+    {
+      primary: WbsDownwardEvaluationInfo | null;
+      secondary: WbsDownwardEvaluationInfo | null;
+    }
+  >();
+  if (wbsItemIds.length > 0) {
+    const downwardEvaluationRows = await downwardEvaluationRepository
+      .createQueryBuilder('downward')
+      .select([
+        'downward.id AS downward_id',
+        'downward.wbsId AS downward_wbs_id',
+        'downward.evaluatorId AS downward_evaluator_id',
+        'downward.evaluationType AS downward_evaluation_type',
+        'downward.downwardEvaluationContent AS downward_evaluation_content',
+        'downward.downwardEvaluationScore AS downward_score',
+        'downward.isCompleted AS downward_is_completed',
+        'downward.completedAt AS downward_completed_at',
+      ])
+      .where('downward.periodId = :periodId', {
+        periodId: evaluationPeriodId,
+      })
+      .andWhere('downward.employeeId = :employeeId', { employeeId })
+      .andWhere('downward.wbsId IN (:...wbsItemIds)', { wbsItemIds })
+      .andWhere('downward.deletedAt IS NULL')
+      .getRawMany();
+
+    // 하향평가 데이터를 primary/secondary로 분류
+    for (const row of downwardEvaluationRows) {
+      const wbsId = row.downward_wbs_id;
+      if (!wbsId) continue;
+
+      if (!downwardEvaluationMap.has(wbsId)) {
+        downwardEvaluationMap.set(wbsId, {
+          primary: null,
+          secondary: null,
+        });
+      }
+
+      const evalData = downwardEvaluationMap.get(wbsId)!;
+      const primaryEvaluator = primaryEvaluatorMap.get(wbsId);
+      const secondaryEvaluator = secondaryEvaluatorMap.get(wbsId);
+
+      // evaluationContent는 문자열이어야 함 (JSON일 경우 문자열로 변환)
+      const evaluationContent =
+        typeof row.downward_evaluation_content === 'string'
+          ? row.downward_evaluation_content
+          : row.downward_evaluation_content
+            ? JSON.stringify(row.downward_evaluation_content)
+            : undefined;
+
+      // score는 숫자여야 함
+      const score =
+        typeof row.downward_score === 'number'
+          ? row.downward_score
+          : row.downward_score !== null && row.downward_score !== undefined
+            ? parseFloat(String(row.downward_score)) || undefined
+            : undefined;
+
+      // submittedAt은 Date이거나 문자열이어야 함
+      const submittedAt =
+        row.downward_completed_at instanceof Date
+          ? row.downward_completed_at
+          : row.downward_completed_at
+            ? new Date(row.downward_completed_at)
+            : undefined;
+
+      if (row.downward_evaluation_type === 'primary' && primaryEvaluator) {
+        evalData.primary = {
+          downwardEvaluationId: row.downward_id,
+          evaluatorId: primaryEvaluator.evaluatorId,
+          evaluatorName: primaryEvaluator.evaluatorName,
+          evaluationContent,
+          score,
+          isCompleted: row.downward_is_completed || false,
+          isEditable: mapping.isPrimaryEvaluationEditable,
+          submittedAt,
+        };
+      } else if (
+        row.downward_evaluation_type === 'secondary' &&
+        secondaryEvaluator
+      ) {
+        evalData.secondary = {
+          downwardEvaluationId: row.downward_id,
+          evaluatorId: secondaryEvaluator.evaluatorId,
+          evaluatorName: secondaryEvaluator.evaluatorName,
+          evaluationContent,
+          score,
+          isCompleted: row.downward_is_completed || false,
+          isEditable: mapping.isSecondaryEvaluationEditable,
+          submittedAt,
+        };
+      }
     }
 
-    // 1차 평가자의 실제 평가 데이터 조회 (해당 WBS에 대한 평가)
-    const primaryEvaluation = await downwardEvaluationRepository
-      .createQueryBuilder('downward')
+    // 평가 데이터가 없지만 평가자가 있는 경우 기본 정보 설정
+    for (const wbsId of wbsItemIds) {
+      if (!downwardEvaluationMap.has(wbsId)) {
+        downwardEvaluationMap.set(wbsId, {
+          primary: null,
+          secondary: null,
+        });
+      }
+
+      const evalData = downwardEvaluationMap.get(wbsId)!;
+      const primaryEvaluator = primaryEvaluatorMap.get(wbsId);
+      const secondaryEvaluator = secondaryEvaluatorMap.get(wbsId);
+
+      if (primaryEvaluator && !evalData.primary) {
+        evalData.primary = {
+          evaluatorId: primaryEvaluator.evaluatorId,
+          evaluatorName: primaryEvaluator.evaluatorName,
+          isCompleted: false,
+          isEditable: mapping.isPrimaryEvaluationEditable,
+        };
+      }
+
+      if (secondaryEvaluator && !evalData.secondary) {
+        evalData.secondary = {
+          evaluatorId: secondaryEvaluator.evaluatorId,
+          evaluatorName: secondaryEvaluator.evaluatorName,
+          isCompleted: false,
+          isEditable: mapping.isSecondaryEvaluationEditable,
+        };
+      }
+    }
+  }
+
+  // 9. 배치 조회: 산출물 (WHERE wbsItemId IN (:...wbsItemIds))
+  const deliverablesMap = new Map<string, DeliverableInfo[]>();
+  if (wbsItemIds.length > 0) {
+    const deliverableRows = await deliverableRepository
+      .createQueryBuilder('deliverable')
       .select([
-        '"downward"."id" AS downward_id',
-        '"downward"."downwardEvaluationContent" AS downward_evaluationContent',
-        '"downward"."downwardEvaluationScore" AS downward_score',
-        '"downward"."isCompleted" AS downward_isCompleted',
-        '"downward"."completedAt" AS downward_completedAt',
+        'deliverable.id AS deliverable_id',
+        'deliverable.wbsItemId AS deliverable_wbs_item_id',
+        'deliverable.name AS deliverable_name',
+        'deliverable.description AS deliverable_description',
+        'deliverable.type AS deliverable_type',
+        'deliverable.filePath AS deliverable_file_path',
+        'deliverable.employeeId AS deliverable_employee_id',
+        'deliverable.mappedDate AS deliverable_mapped_date',
+        'deliverable.mappedBy AS deliverable_mapped_by',
+        'deliverable.isActive AS deliverable_is_active',
+        'deliverable.createdAt AS deliverable_created_at',
       ])
-      .where('"downward"."periodId" = :evaluationPeriodId', {
-        evaluationPeriodId,
-      })
-      .andWhere('"downward"."employeeId" = :employeeId', {
-        employeeId: employeeId,
-      })
-      .andWhere('"downward"."wbsId" = :wbsId', { wbsId })
-      .andWhere('"downward"."evaluatorId" = :evaluatorId', {
-        evaluatorId: evaluatorIdValue,
-      })
-      .andWhere('"downward"."evaluationType" = :evaluationType', {
-        evaluationType: 'primary',
-      })
-      .andWhere('"downward"."deletedAt" IS NULL')
-      .getRawOne();
+      .where('deliverable.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
+      .andWhere('deliverable.deletedAt IS NULL')
+      .andWhere('deliverable.isActive = :isActive', { isActive: true })
+      .orderBy('deliverable.createdAt', 'DESC')
+      .getRawMany();
 
-    // TypeORM raw query 결과는 컬럼명이 소문자로 변환될 수 있음
-    // 따라서 여러 가능성을 모두 확인
-    const evaluationContentValue =
-      primaryEvaluation?.downward_evaluationContent ??
-      primaryEvaluation?.downward_evaluationcontent;
-    
-    // isCompleted는 평가 데이터가 있을 때 해당 값 사용, 없으면 false
-    const isCompletedValue = primaryEvaluation
-      ? primaryEvaluation.downward_isCompleted ??
-        primaryEvaluation.downward_iscompleted ??
-        false
-      : false;
-    
-    primary = {
-      downwardEvaluationId: primaryEvaluation?.downward_id,
-      evaluatorId: evaluatorIdValue, // 항상 포함 (mapping에서 조회한 값)
-      evaluatorName: primaryEvaluatorMapping.evaluator_name || '', // null일 경우 빈 문자열
-      evaluationContent: evaluationContentValue,
-      score: primaryEvaluation?.downward_score,
-      isCompleted: isCompletedValue, // 평가 데이터가 있을 때 해당 값, 없으면 false
-      isEditable: mapping.isPrimaryEvaluationEditable,
-      submittedAt: primaryEvaluation?.downward_completedat,
-    };
+    for (const row of deliverableRows) {
+      const wbsId = row.deliverable_wbs_item_id;
+      if (!wbsId) continue;
 
-    // 디버깅: 생성된 primary 객체 확인
-    logger.debug(
-      `primary 객체 생성: evaluatorId=${evaluatorIdValue}, isCompleted=${isCompletedValue}, primaryEvaluation=${JSON.stringify(primaryEvaluation)}`,
+      if (!deliverablesMap.has(wbsId)) {
+        deliverablesMap.set(wbsId, []);
+      }
+
+      deliverablesMap.get(wbsId)!.push({
+        id: row.deliverable_id,
+        name: row.deliverable_name,
+        description: row.deliverable_description,
+        type: row.deliverable_type,
+        filePath: row.deliverable_file_path,
+        employeeId: row.deliverable_employee_id,
+        mappedDate: row.deliverable_mapped_date,
+        mappedBy: row.deliverable_mapped_by,
+        isActive: row.deliverable_is_active,
+        createdAt: row.deliverable_created_at,
+      });
+    }
+  }
+
+  // 10. 메모리에서 그룹핑: 프로젝트별 WBS 목록 구성
+  const projectsWithWbs: AssignedProjectWithWbs[] = [];
+
+  for (const row of projectAssignments) {
+    const projectId = row.assignment_project_id || row.project_id;
+
+    if (!projectId) {
+      logger.warn('프로젝트 ID가 없는 할당 발견', { row });
+      continue;
+    }
+
+    // 해당 프로젝트의 WBS 목록 필터링
+    const projectWbsAssignments = wbsAssignments.filter(
+      (wbsRow) =>
+        (wbsRow.assignment_project_id || wbsRow.wbs_item_project_id) ===
+        projectId,
     );
+
+    const wbsList: AssignedWbsInfo[] = [];
+
+    for (const wbsRow of projectWbsAssignments) {
+      const wbsItemId =
+        wbsRow.assignment_wbs_item_id || wbsRow.wbs_item_id;
+
+      if (!wbsItemId) {
+        logger.warn('WBS ID가 없는 할당 발견', { wbsRow });
+        continue;
+      }
+
+      const criteria = criteriaMap.get(wbsItemId) || [];
+      const selfEvalData = selfEvaluationMap.get(wbsItemId);
+      const downwardEvalData =
+        downwardEvaluationMap.get(wbsItemId) || {
+          primary: null,
+          secondary: null,
+        };
+      const deliverables = deliverablesMap.get(wbsItemId) || [];
+
+      wbsList.push({
+        wbsId: wbsItemId,
+        wbsName: wbsRow.wbs_item_title || '',
+        wbsCode: wbsRow.wbs_item_wbs_code || '',
+        weight: parseFloat(wbsRow.assignment_weight) || 0,
+        assignedAt: wbsRow.assignment_assigned_date,
+        criteria,
+        performance: selfEvalData?.performance || null,
+        selfEvaluation: selfEvalData?.selfEvaluation || null,
+        primaryDownwardEvaluation: downwardEvalData.primary || null,
+        secondaryDownwardEvaluation: downwardEvalData.secondary || null,
+        deliverables,
+      });
+    }
+
+    projectsWithWbs.push({
+      projectId,
+      projectName: row.project_name || '',
+      projectCode: row.project_project_code || '',
+      assignedAt: row.assignment_assigned_date,
+      projectManager:
+        row.manager_id && row.manager_name
+          ? {
+              id: row.manager_id,
+              name: row.manager_name,
+            }
+          : null,
+      wbsList,
+    });
   }
 
-  // 4. 2차 평가자 정보 구성 (WBS별 1명씩)
-  let secondary: WbsDownwardEvaluationInfo | null = null;
-  if (secondaryEvaluatorMappings.length > 0) {
-    // WBS별로 2차 평가자는 1명씩만 할당됨
-    const secondaryMapping = secondaryEvaluatorMappings[0];
-    
-    // 해당 2차 평가자의 실제 평가 데이터 조회
-    const secondaryEvaluation = await downwardEvaluationRepository
-      .createQueryBuilder('downward')
-      .select([
-        '"downward"."id" AS downward_id',
-        '"downward"."downwardEvaluationContent" AS downward_evaluationContent',
-        '"downward"."downwardEvaluationScore" AS downward_score',
-        '"downward"."isCompleted" AS downward_isCompleted',
-        '"downward"."completedAt" AS downward_completedAt',
-      ])
-      .where('"downward"."periodId" = :evaluationPeriodId', {
-        evaluationPeriodId,
-      })
-      .andWhere('"downward"."employeeId" = :employeeId', {
-        employeeId: employeeId,
-      })
-      .andWhere('"downward"."wbsId" = :wbsId', { wbsId })
-      .andWhere('"downward"."evaluatorId" = :evaluatorId', {
-        evaluatorId: secondaryMapping.mapping_evaluatorId,
-      })
-      .andWhere('"downward"."evaluationType" = :evaluationType', {
-        evaluationType: 'secondary',
-      })
-      .andWhere('"downward"."deletedAt" IS NULL')
-      .getRawOne();
-
-    // isCompleted는 평가 데이터가 있을 때 해당 값 사용, 없으면 false
-    const secondaryIsCompletedValue = secondaryEvaluation
-      ? secondaryEvaluation.downward_isCompleted ??
-        secondaryEvaluation.downward_iscompleted ??
-        false
-      : false;
-    
-    secondary = {
-      downwardEvaluationId: secondaryEvaluation?.downward_id,
-      evaluatorId: secondaryMapping.mapping_evaluatorId,
-      evaluatorName: secondaryMapping.evaluator_name || '', // null일 경우 빈 문자열
-      evaluationContent: secondaryEvaluation?.downward_evaluationContent,
-      score: secondaryEvaluation?.downward_score,
-      isCompleted: secondaryIsCompletedValue, // 평가 데이터가 있을 때 해당 값, 없으면 false
-      isEditable: mapping.isSecondaryEvaluationEditable,
-      submittedAt: secondaryEvaluation?.downward_completedat,
-    };
-  }
-
-  return {
-    primary,
-    secondary,
-  };
-}
-
-/**
- * 특정 WBS에 연결된 산출물 목록 조회
- *
- * Deliverable 엔티티에서 특정 WBS에 매핑된 산출물을 조회합니다.
- */
-export async function getDeliverablesByWbsId(
-  wbsItemId: string,
-  deliverableRepository: Repository<Deliverable>,
-): Promise<DeliverableInfo[]> {
-  const deliverables = await deliverableRepository
-    .createQueryBuilder('deliverable')
-    .select([
-      'deliverable.id AS deliverable_id',
-      'deliverable.name AS deliverable_name',
-      'deliverable.description AS deliverable_description',
-      'deliverable.type AS deliverable_type',
-      'deliverable.filePath AS deliverable_filePath',
-      'deliverable.employeeId AS deliverable_employeeId',
-      'deliverable.mappedDate AS deliverable_mappedDate',
-      'deliverable.mappedBy AS deliverable_mappedBy',
-      'deliverable.isActive AS deliverable_isActive',
-      'deliverable.createdAt AS deliverable_createdAt',
-    ])
-    .where('deliverable.wbsItemId = :wbsItemId', { wbsItemId })
-    .andWhere('deliverable.deletedAt IS NULL')
-    .andWhere('deliverable.isActive = :isActive', { isActive: true })
-    .orderBy('deliverable.createdAt', 'DESC')
-    .getRawMany();
-
-  return deliverables.map((row) => ({
-    id: row.deliverable_id,
-    name: row.deliverable_name,
-    description: row.deliverable_description,
-    type: row.deliverable_type,
-    filePath: row.deliverable_filepath,
-    employeeId: row.deliverable_employeeid,
-    mappedDate: row.deliverable_mappeddate,
-    mappedBy: row.deliverable_mappedby,
-    isActive: row.deliverable_isactive,
-    createdAt: row.deliverable_createdat,
-  }));
+  return projectsWithWbs;
 }
