@@ -115,38 +115,55 @@ export class DashboardApiClient {
   }
 
   /**
-   * 부서 하이라키 조회 API 호출
+   * 나의 할당 정보 조회 (현재 로그인 사용자)
    *
-   * @returns 부서 계층 구조 데이터
+   * @param periodId - 평가기간 ID
+   * @returns 현재 로그인 사용자의 할당 정보 (하향평가 정보 제외)
    */
-  async getDepartmentHierarchy(): Promise<any> {
+  async getMyAssignedData(periodId: string): Promise<any> {
     const response = await this.testSuite
       .request()
-      .get('/admin/dashboard/department-hierarchy')
+      .get(`/admin/dashboard/${periodId}/my-assigned-data`)
       .expect(200);
 
     return response.body;
   }
 
   /**
-   * 부서 하이라키 with 직원 목록 조회 API 호출
+   * 평가기간별 최종평가 목록 조회
    *
-   * @param config.periodId - 평가기간 ID
-   * @param config.includeEmployees - 직원 목록 포함 여부
-   * @returns 부서 계층 구조와 직원 목록
+   * @param periodId - 평가기간 ID
+   * @returns 평가기간의 모든 직원 최종평가 목록
    */
-  async getDepartmentHierarchyWithEmployees(config: {
-    periodId: string;
-    includeEmployees?: boolean;
+  async getFinalEvaluationsByPeriod(periodId: string): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get(`/admin/dashboard/${periodId}/final-evaluations`)
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * 직원별 최종평가 목록 조회
+   *
+   * @param config.employeeId - 직원 ID
+   * @param config.startDate - 조회 시작일 (선택)
+   * @param config.endDate - 조회 종료일 (선택)
+   * @returns 직원의 모든 평가기간 최종평가 목록
+   */
+  async getFinalEvaluationsByEmployee(config: {
+    employeeId: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<any> {
     const queryParams: any = {};
-    if (config.includeEmployees !== undefined) {
-      queryParams.includeEmployees = config.includeEmployees.toString();
-    }
+    if (config.startDate) queryParams.startDate = config.startDate;
+    if (config.endDate) queryParams.endDate = config.endDate;
 
     const response = await this.testSuite
       .request()
-      .get(`/admin/dashboard/${config.periodId}/department-hierarchy`)
+      .get(`/admin/dashboard/employees/${config.employeeId}/final-evaluations`)
       .query(queryParams)
       .expect(200);
 
@@ -154,6 +171,84 @@ export class DashboardApiClient {
   }
 
   /**
+   * 전체 직원별 최종평가 목록 조회
+   *
+   * @param config.startDate - 조회 시작일 (선택)
+   * @param config.endDate - 조회 종료일 (선택)
+   * @returns 모든 직원의 최종평가 목록 (평가기간별로 매트릭스 형태)
+   */
+  async getAllEmployeesFinalEvaluations(config?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<any> {
+    const queryParams: any = {};
+    if (config?.startDate) queryParams.startDate = config.startDate;
+    if (config?.endDate) queryParams.endDate = config.endDate;
+
+    const response = await this.testSuite
+      .request()
+      .get('/admin/dashboard/final-evaluations')
+      .query(queryParams)
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * 직원의 평가 현황 및 할당 데이터 통합 조회
+   *
+   * @param config.periodId - 평가기간 ID
+   * @param config.employeeId - 직원 ID
+   * @returns 직원의 평가 진행 현황과 할당 데이터
+   */
+  async getEmployeeCompleteStatus(config: {
+    periodId: string;
+    employeeId: string;
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get(
+        `/admin/dashboard/${config.periodId}/employees/${config.employeeId}/complete-status`,
+      )
+      .expect(200);
+
+    return response.body;
+  }
+
+  // ==================== 아래 메서드들은 컨트롤러에 없음 - 제거 예정 또는 이동 필요 ====================
+
+  /**
+   * @deprecated 이 메서드는 Employee Management Controller에 있습니다.
+   * 부서 하이라키 조회 API 호출
+   *
+   * @returns 부서 계층 구조 데이터
+   */
+  async getDepartmentHierarchy(): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get('/admin/employees/department-hierarchy')
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * @deprecated 이 메서드는 Employee Management Controller에 있습니다.
+   * 부서 하이라키 with 직원 목록 조회 API 호출
+   *
+   * @returns 부서 계층 구조와 직원 목록
+   */
+  async getDepartmentHierarchyWithEmployees(): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get('/admin/employees/department-hierarchy-with-employees')
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * @deprecated 컨트롤러에 없는 엔드포인트입니다.
    * 평가 진행 현황 조회 API 호출
    *
    * @param periodId - 평가기간 ID
@@ -169,6 +264,7 @@ export class DashboardApiClient {
   }
 
   /**
+   * @deprecated 컨트롤러에 없는 엔드포인트입니다.
    * 평가 통계 조회 API 호출
    *
    * @param periodId - 평가기간 ID
@@ -184,6 +280,7 @@ export class DashboardApiClient {
   }
 
   /**
+   * @deprecated 컨트롤러에 없는 엔드포인트입니다.
    * 직원별 평가 상세 정보 조회 API 호출
    *
    * @param config.periodId - 평가기간 ID

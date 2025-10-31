@@ -147,7 +147,7 @@ describe('WBS 할당 정책 검증 시나리오', () => {
     it.skip('프로젝트 할당 없이 WBS 할당 시도 시 실패해야 한다', async () => {
       // TODO: 프로젝트 할당 없이도 WBS 할당이 성공하고 있음
       // 정책이 아직 구현되지 않은 것 같음
-      
+
       // 프로젝트 할당을 생성하지 않고 WBS 할당 시도
       await testSuite
         .request()
@@ -160,9 +160,10 @@ describe('WBS 할당 정책 검증 시나리오', () => {
         })
         .expect((res) => {
           // 404 Not Found 또는 422 UnprocessableEntity 응답이 와야 함
-          expect([HttpStatus.NOT_FOUND, HttpStatus.UNPROCESSABLE_ENTITY]).toContain(
-            res.status,
-          );
+          expect([
+            HttpStatus.NOT_FOUND,
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          ]).toContain(res.status);
           if (res.body.message) {
             expect(res.body.message).toMatch(
               /프로젝트 할당|존재하지 않습니다/i,
@@ -217,7 +218,7 @@ describe('WBS 할당 정책 검증 시나리오', () => {
     it.skip('완료된 평가기간에 WBS 할당 생성이 불가능해야 한다', async () => {
       // TODO: 완료된 평가기간 정책이 아직 구현되지 않은 것 같음
       // 현재는 완료된 평가기간에서도 WBS 할당이 가능함
-      
+
       // 완료된 평가기간에 WBS 할당 시도
       await testSuite
         .request()
@@ -239,7 +240,7 @@ describe('WBS 할당 정책 검증 시나리오', () => {
 
     it.skip('완료된 평가기간에 WBS 대량 할당이 불가능해야 한다', async () => {
       // TODO: 완료된 평가기간 정책이 아직 구현되지 않은 것 같음
-      
+
       // 완료된 평가기간에 WBS 대량 할당 시도
       await testSuite
         .request()
@@ -273,7 +274,9 @@ describe('WBS 할당 정책 검증 시나리오', () => {
       // 완료된 평가기간에 WBS 할당 취소 시도
       await testSuite
         .request()
-        .delete(`/admin/evaluation-criteria/wbs-assignments/wbs-item/${wbsItemIds[0]}`)
+        .delete(
+          `/admin/evaluation-criteria/wbs-assignments/wbs-item/${wbsItemIds[0]}`,
+        )
         .send({
           employeeId: employeeIds[0],
           projectId: projectIds[0],
@@ -303,9 +306,10 @@ describe('WBS 할당 정책 검증 시나리오', () => {
         })
         .expect((res) => {
           // 400 Bad Request 또는 422 Unprocessable Entity
-          expect([HttpStatus.BAD_REQUEST, HttpStatus.UNPROCESSABLE_ENTITY]).toContain(
-            res.status,
-          );
+          expect([
+            HttpStatus.BAD_REQUEST,
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          ]).toContain(res.status);
           // message가 문자열이거나 배열일 수 있음
           if (res.body.message) {
             const message = Array.isArray(res.body.message)
@@ -321,7 +325,7 @@ describe('WBS 할당 정책 검증 시나리오', () => {
 
     it.skip('완료된 평가기간에 WBS 생성 및 할당이 불가능해야 한다', async () => {
       // TODO: 완료된 평가기간 정책이 아직 구현되지 않은 것 같음
-      
+
       // 완료된 평가기간에 WBS 생성 및 할당 시도
       await testSuite
         .request()
@@ -371,7 +375,7 @@ describe('WBS 할당 정책 검증 시나리오', () => {
     it.skip('동일한 WBS를 중복 할당 시도 시 실패해야 한다', async () => {
       // TODO: 평가기간 재개 API가 구현되면 활성화
       // 현재는 완료된 평가기간에서 테스트할 수 없음
-      
+
       // 이미 할당된 WBS를 다시 할당 시도
       await testSuite
         .request()
@@ -395,7 +399,7 @@ describe('WBS 할당 정책 검증 시나리오', () => {
     it.skip('존재하지 않는 직원으로 WBS 할당 시도 시 실패해야 한다', async () => {
       // TODO: 존재하지 않는 직원으로도 WBS 할당이 성공하고 있음
       // 정책이 아직 구현되지 않은 것 같음
-      
+
       // 프로젝트 할당을 먼저 생성 (비정상 직원 ID로는 실패할 것)
       const fakeEmployeeId = '00000000-0000-0000-0000-000000000000';
 
@@ -409,9 +413,10 @@ describe('WBS 할당 정책 검증 시나리오', () => {
           periodId: evaluationPeriodId,
         })
         .expect((res) => {
-          expect([HttpStatus.NOT_FOUND, HttpStatus.UNPROCESSABLE_ENTITY]).toContain(
-            res.status,
-          );
+          expect([
+            HttpStatus.NOT_FOUND,
+            HttpStatus.UNPROCESSABLE_ENTITY,
+          ]).toContain(res.status);
         });
 
       console.log('✅ 존재하지 않는 직원으로 WBS 할당 시도 실패 검증 완료');
@@ -463,7 +468,9 @@ describe('WBS 할당 정책 검증 시나리오', () => {
           }
         });
 
-      console.log('✅ 존재하지 않는 프로젝트로 프로젝트 할당 시도 실패 검증 완료');
+      console.log(
+        '✅ 존재하지 않는 프로젝트로 프로젝트 할당 시도 실패 검증 완료',
+      );
     });
 
     it('존재하지 않는 평가기간으로 할당 시도 시 실패해야 한다', async () => {
@@ -495,7 +502,7 @@ describe('WBS 할당 정책 검증 시나리오', () => {
     it.skip('이미 삭제된 WBS 할당을 다시 취소해도 성공 처리되어야 한다', async () => {
       // TODO: 완료된 평가기간에서는 프로젝트 할당을 생성할 수 없어 이 테스트 실행 불가
       // 평가기간 재개 API가 구현되면 활성화
-      
+
       // 1. 새로운 WBS 할당 생성
       await projectAssignmentScenario.프로젝트를_할당한다({
         employeeId: employeeIds[3],
@@ -515,7 +522,9 @@ describe('WBS 할당 정책 검증 시나리오', () => {
       // 2. 첫 번째 취소 (정상 삭제)
       await testSuite
         .request()
-        .delete(`/admin/evaluation-criteria/wbs-assignments/wbs-item/${wbsItemIds[11]}`)
+        .delete(
+          `/admin/evaluation-criteria/wbs-assignments/wbs-item/${wbsItemIds[11]}`,
+        )
         .send({
           employeeId: employeeIds[3],
           projectId: projectIds[2],
@@ -528,7 +537,9 @@ describe('WBS 할당 정책 검증 시나리오', () => {
       // 3. 두 번째 취소 (멱등성 - 이미 삭제된 것을 다시 삭제)
       await testSuite
         .request()
-        .delete(`/admin/evaluation-criteria/wbs-assignments/wbs-item/${wbsItemIds[11]}`)
+        .delete(
+          `/admin/evaluation-criteria/wbs-assignments/wbs-item/${wbsItemIds[11]}`,
+        )
         .send({
           employeeId: employeeIds[3],
           projectId: projectIds[2],
@@ -536,8 +547,9 @@ describe('WBS 할당 정책 검증 시나리오', () => {
         })
         .expect(HttpStatus.OK); // 조용히 성공 처리
 
-      console.log('✅ 이미 삭제된 WBS 할당 재취소 시 멱등성 검증 완료 (200 OK)');
+      console.log(
+        '✅ 이미 삭제된 WBS 할당 재취소 시 멱등성 검증 완료 (200 OK)',
+      );
     });
   });
 });
-
