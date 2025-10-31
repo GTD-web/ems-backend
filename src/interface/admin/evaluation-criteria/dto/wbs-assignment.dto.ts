@@ -18,6 +18,38 @@ import { OrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluatio
 import { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 
 /**
+ * WBS ID 기반 할당 취소 Body DTO
+ */
+export class CancelWbsAssignmentByWbsDto {
+  @ApiProperty({
+    description: '직원 ID (UUID 형식)',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  employeeId: string;
+
+  @ApiProperty({
+    description: '프로젝트 ID (UUID 형식)',
+    example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  projectId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID (UUID 형식)',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  periodId: string;
+}
+
+/**
  * WBS 할당 생성 DTO
  *
  * Note: assignedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
@@ -444,6 +476,56 @@ export class ResetWbsAssignmentsDto {
  * WBS 할당 순서 변경 Query DTO
  */
 export class ChangeWbsAssignmentOrderQueryDto {
+  @ApiProperty({
+    description: '이동 방향 (up: 위로, down: 아래로)',
+    example: OrderDirection.UP,
+    enum: OrderDirection,
+    enumName: 'OrderDirection',
+  })
+  @IsEnum(OrderDirection, { message: '이동 방향은 up 또는 down이어야 합니다.' })
+  direction: OrderDirection;
+}
+
+/**
+ * WBS ID 기반 할당 순서 변경 Body DTO
+ */
+export class ChangeWbsAssignmentOrderByWbsDto {
+  @ApiProperty({
+    description: '직원 ID (UUID 형식)',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  employeeId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID (UUID 형식)',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '프로젝트 ID (UUID 형식)',
+    example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  projectId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID (UUID 형식)',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  periodId: string;
+
   @ApiProperty({
     description: '이동 방향 (up: 위로, down: 아래로)',
     example: OrderDirection.UP,

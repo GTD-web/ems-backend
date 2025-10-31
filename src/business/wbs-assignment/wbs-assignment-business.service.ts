@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { EmployeeService } from '@domain/common/employee/employee.service';
 import { ProjectService } from '@domain/common/project/project.service';
@@ -223,6 +223,54 @@ export class WbsAssignmentBusinessService {
   }
 
   /**
+   * WBS ID를 사용하여 WBS 할당을 취소하고 관련 평가기준을 정리한다
+   */
+  async WBS_할당을_WBS_ID로_취소한다(params: {
+    employeeId: string;
+    wbsItemId: string;
+    projectId: string;
+    periodId: string;
+    cancelledBy: string;
+  }): Promise<void> {
+    this.logger.log('WBS ID 기반 할당 취소 비즈니스 로직 시작', {
+      employeeId: params.employeeId,
+      wbsItemId: params.wbsItemId,
+      projectId: params.projectId,
+      periodId: params.periodId,
+    });
+
+    // 1. WBS 할당 상세 조회하여 할당 ID 찾기
+    const assignmentDetail =
+      await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(
+        params.employeeId,
+        params.wbsItemId,
+        params.projectId,
+        params.periodId,
+      );
+
+    // 할당이 없으면 평가기준 정리할 것이 없으므로 조기 반환
+    // (컨텍스트에서 취소는 이미 멱등성을 보장함)
+    if (!assignmentDetail) {
+      this.logger.log(
+        'WBS 할당을 찾을 수 없습니다. 평가기준 정리를 생략합니다.',
+        {
+          employeeId: params.employeeId,
+          wbsItemId: params.wbsItemId,
+          projectId: params.projectId,
+          periodId: params.periodId,
+        },
+      );
+      return;
+    }
+
+    // 2. 기존 취소 메서드 호출
+    await this.WBS_할당을_취소한다({
+      assignmentId: assignmentDetail.id,
+      cancelledBy: params.cancelledBy,
+    });
+  }
+
+  /**
    * WBS를 대량으로 할당하고 관련 알림을 발송한다
    */
   async WBS를_대량으로_할당한다(params: {
@@ -346,6 +394,55 @@ export class WbsAssignmentBusinessService {
 
     this.logger.log('WBS 할당 순서 변경 완료', {
       assignmentId: params.assignmentId,
+    });
+
+    return assignment;
+  }
+
+  /**
+   * WBS ID를 사용하여 WBS 할당 순서를 변경한다
+   */
+  async WBS_할당_순서를_WBS_ID로_변경한다(params: {
+    employeeId: string;
+    wbsItemId: string;
+    projectId: string;
+    periodId: string;
+    direction: OrderDirection;
+    updatedBy: string;
+  }): Promise<any> {
+    this.logger.log('WBS ID 기반 할당 순서 변경 비즈니스 로직 시작', {
+      employeeId: params.employeeId,
+      wbsItemId: params.wbsItemId,
+      projectId: params.projectId,
+      periodId: params.periodId,
+      direction: params.direction,
+    });
+
+    // 1. WBS 할당 상세 조회하여 할당 ID 찾기
+    const assignmentDetail =
+      await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(
+        params.employeeId,
+        params.wbsItemId,
+        params.projectId,
+        params.periodId,
+      );
+
+    if (!assignmentDetail) {
+      throw new NotFoundException(
+        `WBS 할당을 찾을 수 없습니다. (employeeId: ${params.employeeId}, wbsItemId: ${params.wbsItemId}, projectId: ${params.projectId}, periodId: ${params.periodId})`,
+      );
+    }
+
+    // 2. 할당 ID를 사용하여 순서 변경
+    const assignment =
+      await this.evaluationCriteriaManagementService.WBS_할당_순서를_변경한다(
+        assignmentDetail.id,
+        params.direction,
+        params.updatedBy,
+      );
+
+    this.logger.log('WBS ID 기반 할당 순서 변경 완료', {
+      assignmentId: assignmentDetail.id,
     });
 
     return assignment;

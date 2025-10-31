@@ -6,13 +6,17 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
+import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
+import type { AuthenticatedUser } from '../../decorators';
+import { CurrentUser } from '../../decorators';
 import {
   BulkCreateWbsAssignments,
   CancelWbsAssignment,
+  CancelWbsAssignmentByWbs,
   ChangeWbsAssignmentOrder,
+  ChangeWbsAssignmentOrderByWbs,
   CreateAndAssignWbs,
   CreateWbsAssignment,
   GetEmployeeWbsAssignments,
@@ -28,23 +32,20 @@ import {
 } from './decorators/wbs-assignment-api.decorators';
 import {
   BulkCreateWbsAssignmentDto,
-  ChangeWbsAssignmentOrderBodyDto,
+  CancelWbsAssignmentByWbsDto,
+  ChangeWbsAssignmentOrderByWbsDto,
   ChangeWbsAssignmentOrderQueryDto,
   CreateAndAssignWbsDto,
   CreateWbsAssignmentDto,
   EmployeeWbsAssignmentsResponseDto,
   GetUnassignedWbsItemsDto,
   ProjectWbsAssignmentsResponseDto,
-  ResetWbsAssignmentsDto,
   UnassignedWbsItemsResponseDto,
   UpdateWbsItemTitleDto,
   WbsAssignmentDetailResponseDto,
   WbsAssignmentFilterDto,
-  WbsItemAssignmentsResponseDto,
+  WbsItemAssignmentsResponseDto
 } from './dto/wbs-assignment.dto';
-import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
-import { CurrentUser } from '../../decorators';
-import type { AuthenticatedUser } from '../../decorators';
 
 /**
  * WBS 할당 관리 컨트롤러
@@ -78,7 +79,8 @@ export class WbsAssignmentManagementController {
   }
 
   /**
-   * WBS 할당 취소
+   * WBS 할당 취소 (Deprecated)
+   * @deprecated WBS ID 기반 엔드포인트를 사용하세요. cancelWbsAssignmentByWbs
    */
   @CancelWbsAssignment()
   async cancelWbsAssignment(
@@ -88,6 +90,25 @@ export class WbsAssignmentManagementController {
     const cancelledBy = user.id;
     return await this.wbsAssignmentBusinessService.WBS_할당을_취소한다({
       assignmentId: id,
+      cancelledBy,
+    });
+  }
+
+  /**
+   * WBS 할당 취소 (WBS ID 기반)
+   */
+  @CancelWbsAssignmentByWbs()
+  async cancelWbsAssignmentByWbs(
+    @Param('wbsItemId', ParseUUIDPipe) wbsItemId: string,
+    @Body() bodyDto: CancelWbsAssignmentByWbsDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    const cancelledBy = user.id;
+    return await this.wbsAssignmentBusinessService.WBS_할당을_WBS_ID로_취소한다({
+      employeeId: bodyDto.employeeId,
+      wbsItemId: wbsItemId,
+      projectId: bodyDto.projectId,
+      periodId: bodyDto.periodId,
       cancelledBy,
     });
   }
@@ -278,7 +299,8 @@ export class WbsAssignmentManagementController {
   }
 
   /**
-   * WBS 할당 순서 변경
+   * WBS 할당 순서 변경 (Deprecated)
+   * @deprecated WBS ID 기반 엔드포인트를 사용하세요. changeWbsAssignmentOrderByWbs
    */
   @ChangeWbsAssignmentOrder()
   async changeWbsAssignmentOrder(
@@ -290,6 +312,26 @@ export class WbsAssignmentManagementController {
     return await this.wbsAssignmentBusinessService.WBS_할당_순서를_변경한다({
       assignmentId: id,
       direction: queryDto.direction,
+      updatedBy,
+    });
+  }
+
+  /**
+   * WBS 할당 순서 변경 (WBS ID 기반)
+   */
+  @ChangeWbsAssignmentOrderByWbs()
+  async changeWbsAssignmentOrderByWbs(
+    @Param('wbsItemId', ParseUUIDPipe) wbsItemId: string,
+    @Body() bodyDto: ChangeWbsAssignmentOrderByWbsDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<any> {
+    const updatedBy = user.id;
+    return await this.wbsAssignmentBusinessService.WBS_할당_순서를_WBS_ID로_변경한다({
+      employeeId: bodyDto.employeeId,
+      wbsItemId: wbsItemId,
+      projectId: bodyDto.projectId,
+      periodId: bodyDto.periodId,
+      direction: bodyDto.direction,
       updatedBy,
     });
   }
