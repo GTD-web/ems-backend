@@ -12,9 +12,15 @@
 - **WBS 할당 기본 관리** 
     - POST /admin/evaluation-periods (평가기간 생성) 
     - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성 - 선행 조건) 
+                - **프로젝트 할당 생성** 
+                    - employeeId, projectId, periodId로 프로젝트 할당 생성
+                    - WBS 할당 생성 전 필수 선행 조건이므로 먼저 생성
+                    - 할당 ID 반환 확인
     - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성) 
                 - **할당 생성 검증** 
                     - employeeId, wbsItemId, projectId, periodId로 할당 생성
+                    - 프로젝트 할당이 위에서 생성되었으므로 정상 생성됨
                     - assignedBy 자동 설정 (현재 사용자)
                     - 할당 ID 반환 확인
                     - **평가기준 자동 생성 검증** 
@@ -62,9 +68,14 @@
         - employeeId, wbsItemId, projectId, periodId로 상세 정보 조회
         - employee, project, wbsItem, evaluationPeriod 중첩 객체 구조 검증
     - **WBS 대량 할당 관리** 
+        - POST /admin/evaluation-criteria/project-assignments/bulk (프로젝트 대량 할당 - 선행 조건) 
+            - 여러 직원을 여러 프로젝트에 한 번에 할당
+            - assignments 배열로 다중 할당 처리
+            - WBS 대량 할당 전 필수 선행 조건이므로 먼저 생성
         - POST /admin/evaluation-criteria/wbs-assignments/bulk (WBS 대량 할당) 
             - 여러 직원을 여러 WBS 항목에 한 번에 할당
             - assignments 배열로 다중 할당 처리
+            - 프로젝트 할당이 위에서 생성되었으므로 정상 생성됨
             - **평가기준 자동 생성 검증** 
                 - 각 WBS 항목에 평가기준이 없는 경우 빈 평가기준 자동 생성 확인
             - **평가라인 자동 구성 검증** 
@@ -123,8 +134,12 @@
             - HTTP 200 응답으로 성공 확인
             - 다른 직원의 할당은 영향받지 않음 확인
     - **WBS 생성 및 할당** 
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성 - 선행 조건) 
+            - employeeId, projectId, periodId로 프로젝트 할당 생성
+            - WBS 생성 및 할당 전 필수 선행 조건이므로 먼저 생성
         - POST /admin/evaluation-criteria/wbs-assignments/create-and-assign (WBS 생성하면서 할당) 
             - WBS 항목을 새로 생성하면서 동시에 직원에게 할당
+            - 프로젝트 할당이 위에서 생성되었으므로 정상 생성됨
             - **WBS 코드 자동 생성 검증** 
                 - 프로젝트 내 기존 WBS 개수를 조회하여 "WBS-001", "WBS-002" 형식으로 순차 생성 확인
             - **WBS 기본값 설정 검증** 
@@ -150,6 +165,16 @@
     - POST /admin/evaluation-periods (평가기간 생성) 
     - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
     - POST /admin/evaluation-periods/{id}/complete (평가기간 완료) 
+    - POST /admin/evaluation-criteria/wbs-assignments (프로젝트 할당 없이 WBS 할당 시도) 
+        - **프로젝트 할당 없이 할당 시도 검증** 
+            - 프로젝트 할당을 생성하지 않고 WBS 할당 생성 시도
+            - HTTP 404 Not Found 또는 422 UnprocessableEntity 응답 확인
+            - "프로젝트 할당이 존재하지 않습니다." 또는 유사한 에러 메시지 검증
+        - **프로젝트 할당 후 할당 시도 검증** 
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+            - 프로젝트 할당 생성 후 WBS 할당 생성 시도
+            - HTTP 201 Created 응답 확인
+            - 정상적으로 WBS 할당이 생성됨을 검증
     - POST /admin/evaluation-criteria/wbs-assignments (완료된 평가기간에 할당 시도) 
         - **완료된 평가기간 할당 불가 검증** 
             - 평가기간을 완료 상태로 변경
@@ -179,14 +204,18 @@
             - "이미 할당된 WBS입니다." 에러 메시지 검증
     - POST /admin/evaluation-criteria/wbs-assignments (존재하지 않는 리소스로 할당 시도) 
         - **존재하지 않는 직원 할당 시도** 
-            - 존재하지 않는 employeeId로 할당 시도
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당은 먼저 생성)
+            - 존재하지 않는 employeeId로 WBS 할당 시도
             - HTTP 404 Not Found 응답 확인
         - **존재하지 않는 WBS 항목 할당 시도** 
-            - 존재하지 않는 wbsItemId로 할당 시도
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당은 먼저 생성)
+            - 존재하지 않는 wbsItemId로 WBS 할당 시도
             - HTTP 404 Not Found 응답 확인
         - **존재하지 않는 프로젝트 할당 시도** 
-            - 존재하지 않는 projectId로 할당 시도
+            - 존재하지 않는 projectId로 프로젝트 할당 생성 시도
             - HTTP 404 Not Found 응답 확인
+            - 프로젝트 할당이 실패하면 WBS 할당도 불가능
         - **존재하지 않는 평가기간 할당 시도** 
-            - 존재하지 않는 periodId로 할당 시도
+            - 존재하지 않는 periodId로 프로젝트 할당 생성 시도
             - HTTP 404 Not Found 응답 확인
+            - 프로젝트 할당이 실패하면 WBS 할당도 불가능
