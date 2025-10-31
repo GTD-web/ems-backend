@@ -87,6 +87,61 @@ export class ChangeProjectAssignmentOrderBodyDto {
 }
 
 /**
+ * 프로젝트 ID 기반 할당 취소 Body DTO
+ */
+export class CancelProjectAssignmentByProjectDto {
+  @ApiProperty({
+    description: '직원 ID (UUID 형식)',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  employeeId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID (UUID 형식)',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  periodId: string;
+}
+
+/**
+ * 프로젝트 ID 기반 할당 순서 변경 Body DTO
+ */
+export class ChangeProjectAssignmentOrderByProjectDto {
+  @ApiProperty({
+    description: '직원 ID (UUID 형식)',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  employeeId: string;
+
+  @ApiProperty({
+    description: '평가기간 ID (UUID 형식)',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
+  periodId: string;
+
+  @ApiProperty({
+    description: '이동 방향 (up: 위로, down: 아래로)',
+    example: OrderDirection.UP,
+    enum: OrderDirection,
+    enumName: 'OrderDirection',
+  })
+  @IsEnum(OrderDirection, { message: '이동 방향은 up 또는 down이어야 합니다.' })
+  direction: OrderDirection;
+}
+
+/**
  * 프로젝트 할당 필터 DTO
  */
 export class ProjectAssignmentFilterDto {

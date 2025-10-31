@@ -6,7 +6,9 @@ import { EvaluationCriteriaManagementService } from '../../../context/evaluation
 import {
   BulkCreateProjectAssignments,
   CancelProjectAssignment,
+  CancelProjectAssignmentByProject,
   ChangeProjectAssignmentOrder,
+  ChangeProjectAssignmentOrderByProject,
   CreateProjectAssignment,
   GetAvailableProjects,
   GetEmployeeProjectAssignments,
@@ -19,6 +21,8 @@ import {
   BulkCreateProjectAssignmentDto,
   ChangeProjectAssignmentOrderQueryDto,
   ChangeProjectAssignmentOrderBodyDto,
+  CancelProjectAssignmentByProjectDto,
+  ChangeProjectAssignmentOrderByProjectDto,
   CreateProjectAssignmentDto,
   EmployeeProjectsResponseDto,
   GetAvailableProjectsQueryDto,
@@ -66,7 +70,8 @@ export class ProjectAssignmentManagementController {
   }
 
   /**
-   * 프로젝트 할당 취소
+   * 프로젝트 할당 취소 (Deprecated)
+   * @deprecated 프로젝트 ID 기반 엔드포인트를 사용하세요. cancelProjectAssignmentByProject
    */
   @CancelProjectAssignment()
   async cancelProjectAssignment(
@@ -220,7 +225,8 @@ export class ProjectAssignmentManagementController {
   }
 
   /**
-   * 프로젝트 할당 순서 변경
+   * 프로젝트 할당 순서 변경 (Deprecated)
+   * @deprecated 프로젝트 ID 기반 엔드포인트를 사용하세요. changeProjectAssignmentOrderByProject
    */
   @ChangeProjectAssignmentOrder()
   async changeProjectAssignmentOrder(
@@ -232,6 +238,43 @@ export class ProjectAssignmentManagementController {
     return await this.evaluationCriteriaManagementService.프로젝트_할당_순서를_변경한다(
       id,
       queryDto.direction,
+      updatedBy,
+    );
+  }
+
+  /**
+   * 프로젝트 할당 취소 (프로젝트 ID 기반)
+   */
+  @CancelProjectAssignmentByProject()
+  async cancelProjectAssignmentByProject(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Body() bodyDto: CancelProjectAssignmentByProjectDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    const cancelledBy = user.id;
+    return await this.evaluationCriteriaManagementService.프로젝트_할당을_프로젝트_ID로_취소한다(
+      bodyDto.employeeId,
+      projectId,
+      bodyDto.periodId,
+      cancelledBy,
+    );
+  }
+
+  /**
+   * 프로젝트 할당 순서 변경 (프로젝트 ID 기반)
+   */
+  @ChangeProjectAssignmentOrderByProject()
+  async changeProjectAssignmentOrderByProject(
+    @Param('projectId', ParseUUIDPipe) projectId: string,
+    @Body() bodyDto: ChangeProjectAssignmentOrderByProjectDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<ProjectAssignmentResponseDto> {
+    const updatedBy = user.id;
+    return await this.evaluationCriteriaManagementService.프로젝트_할당_순서를_프로젝트_ID로_변경한다(
+      bodyDto.employeeId,
+      projectId,
+      bodyDto.periodId,
+      bodyDto.direction,
       updatedBy,
     );
   }

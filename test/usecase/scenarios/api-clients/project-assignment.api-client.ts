@@ -57,12 +57,33 @@ export class ProjectAssignmentApiClient {
   }
 
   /**
-   * 프로젝트 할당 취소
+   * 프로젝트 할당 취소 (Deprecated)
+   * @deprecated 프로젝트 ID 기반 메서드를 사용하세요. cancelByProject
    */
   async cancel(assignmentId: string): Promise<void> {
     await this.testSuite
       .request()
       .delete(`/admin/evaluation-criteria/project-assignments/${assignmentId}`)
+      .expect(200);
+  }
+
+  /**
+   * 프로젝트 할당 취소 (프로젝트 ID 기반)
+   */
+  async cancelByProject(config: {
+    employeeId: string;
+    projectId: string;
+    periodId: string;
+  }): Promise<void> {
+    await this.testSuite
+      .request()
+      .delete(
+        `/admin/evaluation-criteria/project-assignments/project/${config.projectId}`,
+      )
+      .send({
+        employeeId: config.employeeId,
+        periodId: config.periodId,
+      })
       .expect(200);
   }
 
@@ -228,7 +249,8 @@ export class ProjectAssignmentApiClient {
   }
 
   /**
-   * 프로젝트 할당 순서 변경
+   * 프로젝트 할당 순서 변경 (Deprecated)
+   * @deprecated 프로젝트 ID 기반 메서드를 사용하세요. changeOrderByProject
    */
   async changeOrder(config: {
     assignmentId: string;
@@ -240,6 +262,30 @@ export class ProjectAssignmentApiClient {
         `/admin/evaluation-criteria/project-assignments/${config.assignmentId}/order`,
       )
       .query({
+        direction: config.direction,
+      })
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * 프로젝트 할당 순서 변경 (프로젝트 ID 기반)
+   */
+  async changeOrderByProject(config: {
+    employeeId: string;
+    projectId: string;
+    periodId: string;
+    direction: 'up' | 'down';
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .patch(
+        `/admin/evaluation-criteria/project-assignments/project/${config.projectId}/order`,
+      )
+      .send({
+        employeeId: config.employeeId,
+        periodId: config.periodId,
         direction: config.direction,
       })
       .expect(200);

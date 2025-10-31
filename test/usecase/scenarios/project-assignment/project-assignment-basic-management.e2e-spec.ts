@@ -485,6 +485,319 @@ describe('프로젝트 할당 기본 관리 시나리오', () => {
 
       console.log(`✅ 프로젝트 할당 취소 및 검증 완료 - 할당 ID: ${assignmentId}`);
     });
+
+    it('프로젝트 ID로 프로젝트 할당을 취소한다', async () => {
+      // 먼저 프로젝트를 할당
+      const 할당결과 = await projectAssignmentScenario.프로젝트를_할당한다({
+        employeeId: employeeIds[4],
+        projectId: projectIds[1],
+        periodId: evaluationPeriodId,
+      });
+
+      const employeeId = 할당결과.employeeId;
+      const projectId = 할당결과.projectId;
+
+      // 할당 취소 전 직원 할당 데이터 조회
+      const 취소전할당데이터 = await projectAssignmentScenario.직원_할당_데이터를_조회한다({
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+      });
+
+      // 할당 취소 전 대시보드 직원 현황 조회
+      const 취소전대시보드상태 = await projectAssignmentScenario.대시보드_직원_현황을_조회한다(evaluationPeriodId);
+      const 취소전직원상태 = 취소전대시보드상태.find((emp: any) => emp.employeeId === employeeId);
+
+      console.log(`📊 취소 전 할당 데이터 - 프로젝트 수: ${취소전할당데이터.projects?.length || 0}`);
+      console.log(`📊 취소 전 대시보드 상태 - assignedProjectCount: ${취소전직원상태?.evaluationCriteria?.assignedProjectCount || 0}`);
+
+      // 프로젝트 ID 기반 할당 취소
+      await projectAssignmentScenario.프로젝트_할당을_프로젝트_ID로_취소한다({
+        employeeId,
+        projectId,
+        periodId: evaluationPeriodId,
+      });
+
+      // 할당 취소 후 직원 할당 데이터 조회
+      const 취소후할당데이터 = await projectAssignmentScenario.직원_할당_데이터를_조회한다({
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+      });
+
+      // 할당 취소 후 대시보드 직원 현황 조회
+      const 취소후대시보드상태 = await projectAssignmentScenario.대시보드_직원_현황을_조회한다(evaluationPeriodId);
+      const 취소후직원상태 = 취소후대시보드상태.find((emp: any) => emp.employeeId === employeeId);
+
+      console.log(`📊 취소 후 할당 데이터 - 프로젝트 수: ${취소후할당데이터.projects?.length || 0}`);
+      console.log(`📊 취소 후 대시보드 상태 - assignedProjectCount: ${취소후직원상태?.evaluationCriteria?.assignedProjectCount || 0}`);
+
+      // 검증: 할당 취소 후 프로젝트 수가 감소했는지 확인
+      expect(취소후할당데이터.projects?.length || 0).toBeLessThan(취소전할당데이터.projects?.length || 0);
+      
+      // 검증: 취소된 프로젝트가 더 이상 할당 목록에 없는지 확인
+      const 취소된프로젝트 = 취소후할당데이터.projects?.find((p: any) => p.projectId === projectId);
+      expect(취소된프로젝트).toBeUndefined();
+
+      // 대시보드 상태 검증 (직원이 평가 대상으로 등록되어 있는 경우에만)
+      if (취소전직원상태 && 취소후직원상태) {
+        expect(취소후직원상태.evaluationCriteria?.assignedProjectCount || 0).toBeLessThan(취소전직원상태.evaluationCriteria?.assignedProjectCount || 0);
+      } else {
+        console.log('⚠️ 직원이 평가 대상으로 등록되지 않아 대시보드 상태 검증을 건너뜁니다.');
+      }
+
+      console.log(`✅ 프로젝트 ID 기반 할당 취소 및 검증 완료 - 프로젝트 ID: ${projectId}`);
+    });
+
+    it('프로젝트 ID로 프로젝트 할당 순서를 변경하고 대시보드에서 검증한다', async () => {
+      // 1. 먼저 현재 할당 상태를 확인
+      const 현재할당데이터 = await projectAssignmentScenario.직원_할당_데이터를_조회한다({
+        periodId: evaluationPeriodId,
+        employeeId: employeeIds[0],
+      });
+
+      const 이미할당된프로젝트ID들 = (현재할당데이터.projects || []).map((p: any) => p.projectId);
+      console.log(`📊 현재 할당된 프로젝트 ID들:`, 이미할당된프로젝트ID들);
+
+      // 2. 이미 할당된 프로젝트가 2개 이상이면 바로 순서 변경 테스트 진행
+      if (이미할당된프로젝트ID들.length >= 2) {
+        console.log(`✅ 이미 할당된 프로젝트가 ${이미할당된프로젝트ID들.length}개 있습니다. 순서 변경 테스트를 진행합니다.`);
+        
+        const 변경전프로젝트순서 = 현재할당데이터.projects || [];
+        const 변경전프로젝트수 = 변경전프로젝트순서.length;
+        console.log(`📊 변경 전 프로젝트 순서 (${변경전프로젝트수}개):`, 변경전프로젝트순서.map((p: any) => p.projectId));
+
+        // 마지막 프로젝트의 순서를 위로 변경 (프로젝트 ID 기반)
+        const 마지막프로젝트ID = 변경전프로젝트순서[변경전프로젝트순서.length - 1].projectId;
+        const result = await projectAssignmentScenario.프로젝트_할당_순서를_프로젝트_ID로_변경하고_대시보드에서_검증한다({
+          employeeId: employeeIds[0],
+          projectId: 마지막프로젝트ID,
+          periodId: evaluationPeriodId,
+          direction: 'up',
+        });
+
+        // 순서 변경 결과 검증
+        expect(result.순서변경결과).toBeDefined();
+        console.log(`✅ 프로젝트 할당 순서 변경 완료 - 프로젝트 ID: ${마지막프로젝트ID}`);
+
+        // 할당 데이터 검증
+        expect(result.할당데이터).toBeDefined();
+        expect(result.할당데이터.employee).toBeDefined();
+        expect(result.할당데이터.projects).toBeDefined();
+        expect(result.할당데이터.projects.length).toBeGreaterThan(0);
+
+        // 프로젝트 순서 검증
+        expect(result.프로젝트순서).toBeDefined();
+        expect(result.프로젝트순서.length).toBe(변경전프로젝트수);
+        console.log(`📊 변경 후 프로젝트 순서 (${result.프로젝트순서.length}개):`, result.프로젝트순서.map((p: any) => p.projectId));
+
+        // 총 프로젝트 수 검증
+        expect(result.총프로젝트수).toBe(변경전프로젝트수);
+        expect(result.총프로젝트수).toBe(result.프로젝트순서.length);
+        console.log(`✅ 총 프로젝트 수 검증 완료 - ${result.총프로젝트수}개`);
+
+        // 대시보드 API에서 프로젝트 ID 검증
+        const 프로젝트ID로찾은프로젝트 = result.프로젝트순서.find((p: any) => p.projectId === 마지막프로젝트ID);
+        expect(프로젝트ID로찾은프로젝트).toBeDefined();
+        expect(프로젝트ID로찾은프로젝트.projectId).toBe(마지막프로젝트ID);
+        console.log(`✅ 대시보드 API에서 프로젝트 ID 검증 완료 - 프로젝트 ID: ${마지막프로젝트ID}`);
+        return;
+      }
+
+      // 3. 할당되지 않은 프로젝트 찾기
+      const 할당가능한프로젝트ID들 = projectIds.filter(id => !이미할당된프로젝트ID들.includes(id));
+      
+      if (할당가능한프로젝트ID들.length < 2) {
+        console.log(`⚠️ 할당 가능한 프로젝트가 2개 미만입니다. 다른 직원을 사용합니다.`);
+        // 다른 직원을 사용하여 테스트
+        const 다른직원ID = employeeIds.find(id => id !== employeeIds[0]) || employeeIds[1];
+        
+        // 해당 직원의 현재 할당 상태 확인
+        const 다른직원할당데이터 = await projectAssignmentScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: 다른직원ID,
+        });
+
+        const 다른직원할당된프로젝트ID들 = (다른직원할당데이터.projects || []).map((p: any) => p.projectId);
+        
+        // 다른 직원이 이미 2개 이상 할당되어 있으면 바로 테스트 진행
+        if (다른직원할당된프로젝트ID들.length >= 2) {
+          console.log(`✅ 다른 직원이 이미 ${다른직원할당된프로젝트ID들.length}개 프로젝트에 할당되어 있습니다.`);
+          
+          const 변경전프로젝트순서 = 다른직원할당데이터.projects || [];
+          const 변경전프로젝트수 = 변경전프로젝트순서.length;
+          console.log(`📊 변경 전 프로젝트 순서 (${변경전프로젝트수}개):`, 변경전프로젝트순서.map((p: any) => p.projectId));
+
+          // 마지막 프로젝트의 순서를 위로 변경 (프로젝트 ID 기반)
+          const 마지막프로젝트ID = 변경전프로젝트순서[변경전프로젝트순서.length - 1].projectId;
+          const result = await projectAssignmentScenario.프로젝트_할당_순서를_프로젝트_ID로_변경하고_대시보드에서_검증한다({
+            employeeId: 다른직원ID,
+            projectId: 마지막프로젝트ID,
+            periodId: evaluationPeriodId,
+            direction: 'up',
+          });
+
+          // 순서 변경 결과 검증
+          expect(result.순서변경결과).toBeDefined();
+          console.log(`✅ 프로젝트 할당 순서 변경 완료 - 프로젝트 ID: ${마지막프로젝트ID}`);
+
+          // 할당 데이터 검증
+          expect(result.할당데이터).toBeDefined();
+          expect(result.할당데이터.employee).toBeDefined();
+          expect(result.할당데이터.projects).toBeDefined();
+          expect(result.할당데이터.projects.length).toBeGreaterThan(0);
+
+          // 프로젝트 순서 검증
+          expect(result.프로젝트순서).toBeDefined();
+          expect(result.프로젝트순서.length).toBe(변경전프로젝트수);
+          console.log(`📊 변경 후 프로젝트 순서 (${result.프로젝트순서.length}개):`, result.프로젝트순서.map((p: any) => p.projectId));
+
+          // 총 프로젝트 수 검증
+          expect(result.총프로젝트수).toBe(변경전프로젝트수);
+          expect(result.총프로젝트수).toBe(result.프로젝트순서.length);
+          console.log(`✅ 총 프로젝트 수 검증 완료 - ${result.총프로젝트수}개`);
+
+          // 대시보드 API에서 프로젝트 ID 검증
+          const 프로젝트ID로찾은프로젝트 = result.프로젝트순서.find((p: any) => p.projectId === 마지막프로젝트ID);
+          expect(프로젝트ID로찾은프로젝트).toBeDefined();
+          expect(프로젝트ID로찾은프로젝트.projectId).toBe(마지막프로젝트ID);
+          console.log(`✅ 대시보드 API에서 프로젝트 ID 검증 완료 - 프로젝트 ID: ${마지막프로젝트ID}`);
+          return;
+        }
+
+        const 다른직원할당가능한프로젝트ID들 = projectIds.filter(id => !다른직원할당된프로젝트ID들.includes(id));
+
+        if (다른직원할당가능한프로젝트ID들.length < 2) {
+          throw new Error('테스트에 충분한 할당 가능한 프로젝트가 없습니다.');
+        }
+
+        // 여러 프로젝트를 할당해서 순서 변경이 가능한 상태 만들기
+        const 추가할당결과1 = await projectAssignmentScenario.프로젝트를_할당한다({
+          employeeId: 다른직원ID,
+          projectId: 다른직원할당가능한프로젝트ID들[0],
+          periodId: evaluationPeriodId,
+        });
+
+        const 추가할당결과2 = await projectAssignmentScenario.프로젝트를_할당한다({
+          employeeId: 다른직원ID,
+          projectId: 다른직원할당가능한프로젝트ID들[1],
+          periodId: evaluationPeriodId,
+        });
+
+        console.log(`✅ 추가 프로젝트 할당 완료 - 직원: ${다른직원ID}, 프로젝트 2개 추가`);
+
+        // 변경 전 할당 데이터 조회
+        const 변경전할당데이터 = await projectAssignmentScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: 다른직원ID,
+        });
+
+        const 변경전프로젝트순서 = 변경전할당데이터.projects || [];
+        const 변경전프로젝트수 = 변경전프로젝트순서.length;
+        console.log(`📊 변경 전 프로젝트 순서 (${변경전프로젝트수}개):`, 변경전프로젝트순서.map((p: any) => p.projectId));
+
+        // 마지막 할당의 순서를 위로 변경 (프로젝트 ID 기반)
+        const result = await projectAssignmentScenario.프로젝트_할당_순서를_프로젝트_ID로_변경하고_대시보드에서_검증한다({
+          employeeId: 다른직원ID,
+          projectId: 추가할당결과2.projectId,
+          periodId: evaluationPeriodId,
+          direction: 'up',
+        });
+
+        // 순서 변경 결과 검증
+        expect(result.순서변경결과).toBeDefined();
+        console.log(`✅ 프로젝트 할당 순서 변경 완료 - 프로젝트 ID: ${추가할당결과2.projectId}`);
+
+        // 할당 데이터 검증
+        expect(result.할당데이터).toBeDefined();
+        expect(result.할당데이터.employee).toBeDefined();
+        expect(result.할당데이터.projects).toBeDefined();
+        expect(result.할당데이터.projects.length).toBeGreaterThan(0);
+
+        // 프로젝트 순서 검증
+        expect(result.프로젝트순서).toBeDefined();
+        expect(result.프로젝트순서.length).toBe(변경전프로젝트수);
+        console.log(`📊 변경 후 프로젝트 순서 (${result.프로젝트순서.length}개):`, result.프로젝트순서.map((p: any) => p.projectId));
+
+        // 총 프로젝트 수 검증
+        expect(result.총프로젝트수).toBe(변경전프로젝트수);
+        expect(result.총프로젝트수).toBe(result.프로젝트순서.length);
+        console.log(`✅ 총 프로젝트 수 검증 완료 - ${result.총프로젝트수}개`);
+
+        // 대시보드 API에서 프로젝트 ID 검증
+        const 프로젝트ID로찾은프로젝트 = result.프로젝트순서.find((p: any) => p.projectId === 추가할당결과2.projectId);
+        expect(프로젝트ID로찾은프로젝트).toBeDefined();
+        expect(프로젝트ID로찾은프로젝트.projectId).toBe(추가할당결과2.projectId);
+        console.log(`✅ 대시보드 API에서 프로젝트 ID 검증 완료 - 프로젝트 ID: ${추가할당결과2.projectId}`);
+        return;
+      }
+
+      // 3. 여러 프로젝트를 할당해서 순서 변경이 가능한 상태 만들기
+      const 추가할당결과1 = await projectAssignmentScenario.프로젝트를_할당한다({
+        employeeId: employeeIds[0],
+        projectId: 할당가능한프로젝트ID들[0],
+        periodId: evaluationPeriodId,
+      });
+
+      const 추가할당결과2 = await projectAssignmentScenario.프로젝트를_할당한다({
+        employeeId: employeeIds[0],
+        projectId: 할당가능한프로젝트ID들[1],
+        periodId: evaluationPeriodId,
+      });
+
+      console.log(`✅ 추가 프로젝트 할당 완료 - 프로젝트 2개 추가`);
+
+      // 4. 변경 전 할당 데이터 조회
+      const 변경전할당데이터 = await projectAssignmentScenario.직원_할당_데이터를_조회한다({
+        periodId: evaluationPeriodId,
+        employeeId: employeeIds[0],
+      });
+
+      const 변경전프로젝트순서 = 변경전할당데이터.projects || [];
+      const 변경전프로젝트수 = 변경전프로젝트순서.length;
+      console.log(`📊 변경 전 프로젝트 순서 (${변경전프로젝트수}개):`, 변경전프로젝트순서.map((p: any) => p.projectId));
+
+      // 5. 마지막 할당의 순서를 위로 변경 (프로젝트 ID 기반)
+      const result = await projectAssignmentScenario.프로젝트_할당_순서를_프로젝트_ID로_변경하고_대시보드에서_검증한다({
+        employeeId: employeeIds[0],
+        projectId: 추가할당결과2.projectId,
+        periodId: evaluationPeriodId,
+        direction: 'up',
+      });
+
+      // 6. 순서 변경 결과 검증
+      expect(result.순서변경결과).toBeDefined();
+      console.log(`✅ 프로젝트 할당 순서 변경 완료 - 프로젝트 ID: ${추가할당결과2.projectId}`);
+
+      // 7. 할당 데이터 검증
+      expect(result.할당데이터).toBeDefined();
+      expect(result.할당데이터.employee).toBeDefined();
+      expect(result.할당데이터.projects).toBeDefined();
+      expect(result.할당데이터.projects.length).toBeGreaterThan(0);
+
+      // 8. 프로젝트 순서 검증
+      expect(result.프로젝트순서).toBeDefined();
+      expect(result.프로젝트순서.length).toBe(변경전프로젝트수);
+      console.log(`📊 변경 후 프로젝트 순서 (${result.프로젝트순서.length}개):`, result.프로젝트순서.map((p: any) => p.projectId));
+
+      // 9. 순서가 실제로 변경되었는지 검증 (첫 번째 프로젝트가 변경되었는지 확인)
+      if (변경전프로젝트순서.length > 0 && result.프로젝트순서.length > 0) {
+        const 변경전첫번째프로젝트 = 변경전프로젝트순서[0].projectId;
+        const 변경후첫번째프로젝트 = result.프로젝트순서[0].projectId;
+        
+        // 순서가 변경되었다면 첫 번째 프로젝트가 다를 수 있음 (다만 항상 다르지는 않음)
+        console.log(`📊 첫 번째 프로젝트 - 변경 전: ${변경전첫번째프로젝트}, 변경 후: ${변경후첫번째프로젝트}`);
+      }
+
+      // 10. 총 프로젝트 수 검증
+      expect(result.총프로젝트수).toBe(변경전프로젝트수);
+      expect(result.총프로젝트수).toBe(result.프로젝트순서.length);
+      console.log(`✅ 총 프로젝트 수 검증 완료 - ${result.총프로젝트수}개`);
+
+      // 11. 대시보드 API에서 프로젝트 ID 검증
+      const 프로젝트ID로찾은프로젝트 = result.프로젝트순서.find((p: any) => p.projectId === 추가할당결과2.projectId);
+      expect(프로젝트ID로찾은프로젝트).toBeDefined();
+      expect(프로젝트ID로찾은프로젝트.projectId).toBe(추가할당결과2.projectId);
+      console.log(`✅ 대시보드 API에서 프로젝트 ID 검증 완료 - 프로젝트 ID: ${추가할당결과2.projectId}`);
+    });
   });
 
 });

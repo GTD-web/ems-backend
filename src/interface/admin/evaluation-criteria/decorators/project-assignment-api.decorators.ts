@@ -23,6 +23,8 @@ import {
   ProjectEmployeesResponseDto,
   UnassignedEmployeesResponseDto,
   AvailableProjectsResponseDto,
+  CancelProjectAssignmentByProjectDto,
+  ChangeProjectAssignmentOrderByProjectDto,
 } from '../dto/project-assignment.dto';
 
 // ==================== GET 엔드포인트 데코레이터 ====================
@@ -579,14 +581,18 @@ export function UpdateProjectAssignment() {
 // ==================== DELETE 엔드포인트 데코레이터 ====================
 
 /**
- * 프로젝트 할당 취소 엔드포인트 데코레이터
+ * 프로젝트 할당 취소 엔드포인트 데코레이터 (Deprecated)
+ * @deprecated 프로젝트 ID 기반 엔드포인트를 사용하세요. DELETE /project/:projectId
  */
 export function CancelProjectAssignment() {
   return applyDecorators(
     Delete(':id'),
     ApiOperation({
-      summary: '프로젝트 할당 취소',
-      description: `**중요**: 기존 프로젝트 할당을 소프트 삭제 방식으로 취소합니다. 취소된 할당은 목록에서 제외되지만 데이터베이스에는 감사 목적으로 보관됩니다.
+      summary: '프로젝트 할당 취소 (Deprecated)',
+      deprecated: true,
+      description: `⚠️ **Deprecated**: 이 엔드포인트는 더 이상 권장되지 않습니다. 대신 \`DELETE /project/:projectId\` 엔드포인트를 사용하세요.
+
+**중요**: 기존 프로젝트 할당을 소프트 삭제 방식으로 취소합니다. 취소된 할당은 목록에서 제외되지만 데이터베이스에는 감사 목적으로 보관됩니다.
 
 **테스트 케이스:**
 - 기본 취소: 유효한 할당 ID로 할당 취소
@@ -648,14 +654,18 @@ export function CancelProjectAssignment() {
 }
 
 /**
- * 프로젝트 할당 순서 변경 엔드포인트 데코레이터
+ * 프로젝트 할당 순서 변경 엔드포인트 데코레이터 (Deprecated)
+ * @deprecated 프로젝트 ID 기반 엔드포인트를 사용하세요. PATCH /project/:projectId/order
  */
 export function ChangeProjectAssignmentOrder() {
   return applyDecorators(
     Patch(':id/order'),
     ApiOperation({
-      summary: '프로젝트 할당 순서 변경',
-      description: `프로젝트 할당의 표시 순서를 위 또는 아래로 이동합니다. 같은 직원-평가기간 내에서 인접한 항목과 순서를 자동으로 교환합니다.
+      summary: '프로젝트 할당 순서 변경 (Deprecated)',
+      deprecated: true,
+      description: `⚠️ **Deprecated**: 이 엔드포인트는 더 이상 권장되지 않습니다. 대신 \`PATCH /project/:projectId/order\` 엔드포인트를 사용하세요.
+
+프로젝트 할당의 표시 순서를 위 또는 아래로 이동합니다. 같은 직원-평가기간 내에서 인접한 항목과 순서를 자동으로 교환합니다.
 
 **기능:**
 - 위로 이동(up): 현재 항목과 바로 위 항목의 순서를 교환
@@ -699,6 +709,123 @@ export function ChangeProjectAssignmentOrder() {
       status: 400,
       description:
         '잘못된 요청 데이터 (UUID 형식 오류, 잘못된 direction 값 등)',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '프로젝트 할당을 찾을 수 없습니다.',
+    }),
+    ApiResponse({
+      status: 422,
+      description: '비즈니스 로직 오류 (완료된 평가기간의 순서 변경 제한 등)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
+
+/**
+ * 프로젝트 ID 기반 할당 취소 엔드포인트 데코레이터
+ */
+export function CancelProjectAssignmentByProject() {
+  return applyDecorators(
+    Delete('project/:projectId'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '프로젝트 할당 취소 (프로젝트 ID 기반)',
+      description: `프로젝트 ID를 사용하여 기존 프로젝트 할당을 취소(소프트 삭제)합니다. 할당 취소 시 멱등성 보장을 수행합니다.
+
+**동작:**
+- employeeId, projectId, periodId로 할당을 찾아 취소
+- 소프트 삭제: 실제 레코드 삭제가 아닌 deletedAt 필드를 업데이트
+- 멱등성 보장: 이미 취소되었거나 존재하지 않는 할당 조합으로 요청해도 200 OK 반환
+
+**테스트 케이스:**
+- 기본 할당 취소: 유효한 조합으로 취소 시 성공
+- 소프트 삭제 확인: deletedAt 필드가 설정되고 물리적 삭제는 되지 않음
+- 여러 할당 순차 취소: 동일 직원의 여러 할당을 순차적으로 취소 가능
+- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
+- 필수 필드 누락: employeeId, periodId 누락 시 400 에러
+- 존재하지 않는 할당: 유효하지 않은 조합으로 취소 시도 시 200 성공 반환 (멱등성)
+- 멱등성 - 이미 취소된 할당: 이미 취소된 할당을 다시 취소 시도 시 200 성공 반환
+- 할당 목록 제외: 취소된 할당은 목록 조회에서 제외됨
+- 상세 조회 불가: 취소된 할당은 상세 조회 시 404 반환
+- 트랜잭션 보장: 할당 취소가 원자적으로 수행됨`,
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID (UUID 형식)',
+      type: 'string',
+      format: 'uuid',
+      example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+    }),
+    ApiBody({
+      type: CancelProjectAssignmentByProjectDto,
+      description: '프로젝트 할당 취소 데이터',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '프로젝트 할당이 성공적으로 취소되었습니다.',
+    }),
+    ApiResponse({
+      status: 400,
+      description:
+        '잘못된 요청 데이터 (UUID 형식 오류, 필수 필드 누락 등)',
+    }),
+  );
+}
+
+/**
+ * 프로젝트 ID 기반 할당 순서 변경 엔드포인트 데코레이터
+ */
+export function ChangeProjectAssignmentOrderByProject() {
+  return applyDecorators(
+    Patch('project/:projectId/order'),
+    ApiOperation({
+      summary: '프로젝트 할당 순서 변경 (프로젝트 ID 기반)',
+      description: `프로젝트 ID를 사용하여 프로젝트 할당의 표시 순서를 위 또는 아래로 이동합니다. 같은 직원-평가기간 내에서 인접한 항목과 순서를 자동으로 교환합니다.
+
+**동작:**
+- employeeId, projectId, periodId로 할당을 찾아 순서 변경
+- 위로 이동(up): 현재 항목과 바로 위 항목의 순서를 교환
+- 아래로 이동(down): 현재 항목과 바로 아래 항목의 순서를 교환
+- 자동 재정렬: 순서 교환 시 두 항목만 업데이트되어 효율적
+- 경계 처리: 첫 번째 항목을 위로, 마지막 항목을 아래로 이동 시도시 현재 상태 유지
+
+**테스트 케이스:**
+- 위로 이동: 중간 항목을 위로 이동 시 순서 교환 확인
+- 아래로 이동: 중간 항목을 아래로 이동 시 순서 교환 확인
+- 첫 번째 항목 위로: 이미 첫 번째 항목을 위로 이동 시 순서 변화 없음
+- 마지막 항목 아래로: 이미 마지막 항목을 아래로 이동 시 순서 변화 없음
+- 단일 항목: 할당이 하나만 있을 때 순서 변경 시도
+- 존재하지 않는 할당: 유효하지 않은 조합으로 요청 시 404 에러
+- 잘못된 방향: 'up' 또는 'down' 이외의 값 전달 시 400 에러
+- 완료된 평가기간: 완료된 평가기간의 할당 순서 변경 시 422 에러
+- 다른 직원 항목: 같은 직원-평가기간의 항목들만 영향받음
+- 순서 일관성: 이동 후 displayOrder 값의 일관성 유지
+- 동시 순서 변경: 동일 할당에 대한 동시 순서 변경 요청 처리
+- 트랜잭션 보장: 순서 변경 중 오류 시 롤백 처리`,
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID (UUID 형식)',
+      example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiBody({
+      type: ChangeProjectAssignmentOrderByProjectDto,
+      description: '프로젝트 할당 순서 변경 데이터',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '프로젝트 할당 순서가 성공적으로 변경되었습니다.',
+      type: ProjectAssignmentResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description:
+        '잘못된 요청 데이터 (UUID 형식 오류, 잘못된 direction 값, 필수 필드 누락 등)',
     }),
     ApiResponse({
       status: 404,

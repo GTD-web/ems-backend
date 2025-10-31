@@ -164,7 +164,8 @@ export class ProjectAssignmentScenario {
   // ==================== 프로젝트 할당 수정 ====================
 
   /**
-   * 프로젝트 할당 순서를 변경한다
+   * 프로젝트 할당 순서를 변경한다 (Deprecated)
+   * @deprecated 프로젝트 ID 기반 메서드를 사용하세요. 프로젝트_할당_순서를_프로젝트_ID로_변경한다
    */
   async 프로젝트_할당_순서를_변경한다(
     assignmentId: string,
@@ -174,7 +175,20 @@ export class ProjectAssignmentScenario {
   }
 
   /**
-   * 프로젝트 할당 순서를 변경하고 대시보드에서 검증한다
+   * 프로젝트 할당 순서를 프로젝트 ID로 변경한다
+   */
+  async 프로젝트_할당_순서를_프로젝트_ID로_변경한다(config: {
+    employeeId: string;
+    projectId: string;
+    periodId: string;
+    direction: 'up' | 'down';
+  }): Promise<any> {
+    return await this.apiClient.changeOrderByProject(config);
+  }
+
+  /**
+   * 프로젝트 할당 순서를 변경하고 대시보드에서 검증한다 (Deprecated)
+   * @deprecated 프로젝트 ID 기반 메서드를 사용하세요. 프로젝트_할당_순서를_프로젝트_ID로_변경하고_대시보드에서_검증한다
    */
   async 프로젝트_할당_순서를_변경하고_대시보드에서_검증한다(config: {
     assignmentId: string;
@@ -213,13 +227,67 @@ export class ProjectAssignmentScenario {
     };
   }
 
+  /**
+   * 프로젝트 할당 순서를 프로젝트 ID로 변경하고 대시보드에서 검증한다
+   */
+  async 프로젝트_할당_순서를_프로젝트_ID로_변경하고_대시보드에서_검증한다(config: {
+    employeeId: string;
+    projectId: string;
+    periodId: string;
+    direction: 'up' | 'down';
+  }): Promise<{
+    순서변경결과: any;
+    할당데이터: any;
+    프로젝트순서: any[];
+    총프로젝트수: number;
+  }> {
+    // 1. 순서 변경 전 할당 데이터 조회
+    const 변경전할당데이터 = await this.dashboardApiClient.getEmployeeAssignedData({
+      periodId: config.periodId,
+      employeeId: config.employeeId,
+    });
+
+    // 2. 프로젝트 할당 순서 변경 (프로젝트 ID 기반)
+    const 순서변경결과 = await this.프로젝트_할당_순서를_프로젝트_ID로_변경한다({
+      employeeId: config.employeeId,
+      projectId: config.projectId,
+      periodId: config.periodId,
+      direction: config.direction,
+    });
+
+    // 3. 순서 변경 후 할당 데이터 조회
+    const 변경후할당데이터 = await this.dashboardApiClient.getEmployeeAssignedData({
+      periodId: config.periodId,
+      employeeId: config.employeeId,
+    });
+
+    return {
+      순서변경결과,
+      할당데이터: 변경후할당데이터,
+      프로젝트순서: 변경후할당데이터.projects || [],
+      총프로젝트수: 변경후할당데이터.summary?.totalProjects || 0,
+    };
+  }
+
   // ==================== 프로젝트 할당 삭제 ====================
 
   /**
-   * 프로젝트 할당을 취소한다
+   * 프로젝트 할당을 취소한다 (Deprecated)
+   * @deprecated 프로젝트 ID 기반 메서드를 사용하세요. 프로젝트_할당을_프로젝트_ID로_취소한다
    */
   async 프로젝트_할당을_취소한다(assignmentId: string): Promise<void> {
     return await this.apiClient.cancel(assignmentId);
+  }
+
+  /**
+   * 프로젝트 할당을 프로젝트 ID로 취소한다
+   */
+  async 프로젝트_할당을_프로젝트_ID로_취소한다(config: {
+    employeeId: string;
+    projectId: string;
+    periodId: string;
+  }): Promise<void> {
+    return await this.apiClient.cancelByProject(config);
   }
 
   // ==================== 대시보드 검증 ====================

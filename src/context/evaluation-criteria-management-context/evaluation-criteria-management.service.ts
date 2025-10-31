@@ -1,4 +1,9 @@
-import { Injectable, Logger, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
@@ -209,6 +214,62 @@ export class EvaluationCriteriaManagementService
       updatedBy,
     );
     return await this.commandBus.execute(command);
+  }
+
+  async 프로젝트_할당을_프로젝트_ID로_취소한다(
+    employeeId: string,
+    projectId: string,
+    periodId: string,
+    cancelledBy: string,
+  ): Promise<void> {
+    // 1. 프로젝트 할당 목록 조회하여 할당 ID 찾기
+    const assignmentList = await this.프로젝트_할당_목록을_조회한다({
+      employeeId,
+      projectId,
+      periodId,
+      page: 1,
+      limit: 1,
+    });
+
+    if (!assignmentList.assignments || assignmentList.assignments.length === 0) {
+      // 멱등성 보장: 할당이 없으면 성공 처리
+      return;
+    }
+
+    // 2. 할당 ID를 사용하여 취소
+    const assignmentId = assignmentList.assignments[0].id;
+    await this.프로젝트_할당을_취소한다(assignmentId, cancelledBy);
+  }
+
+  async 프로젝트_할당_순서를_프로젝트_ID로_변경한다(
+    employeeId: string,
+    projectId: string,
+    periodId: string,
+    direction: OrderDirection,
+    updatedBy: string,
+  ): Promise<EvaluationProjectAssignmentDto> {
+    // 1. 프로젝트 할당 목록 조회하여 할당 ID 찾기
+    const assignmentList = await this.프로젝트_할당_목록을_조회한다({
+      employeeId,
+      projectId,
+      periodId,
+      page: 1,
+      limit: 1,
+    });
+
+    if (!assignmentList.assignments || assignmentList.assignments.length === 0) {
+      throw new NotFoundException(
+        `프로젝트 할당을 찾을 수 없습니다. (employeeId: ${employeeId}, projectId: ${projectId}, periodId: ${periodId})`,
+      );
+    }
+
+    // 2. 할당 ID를 사용하여 순서 변경
+    const assignmentId = assignmentList.assignments[0].id;
+    return await this.프로젝트_할당_순서를_변경한다(
+      assignmentId,
+      direction,
+      updatedBy,
+    );
   }
 
   // ============================================================================
