@@ -50,6 +50,27 @@ export class DashboardApiClient {
   }
 
   /**
+   * 개별 직원의 평가기간 현황 조회 API 호출
+   *
+   * @param config.periodId - 평가기간 ID
+   * @param config.employeeId - 직원 ID
+   * @returns 특정 직원의 평가기간 현황 데이터
+   */
+  async getEmployeeEvaluationPeriodStatus(config: {
+    periodId: string;
+    employeeId: string;
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get(
+        `/admin/dashboard/${config.periodId}/employees/${config.employeeId}/status`,
+      )
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
    * 평가자별 담당 대상자 현황 조회 API 호출
    *
    * @param config.periodId - 평가기간 ID

@@ -13,35 +13,38 @@
     - POST /admin/evaluation-periods (평가기간 생성) 
     - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
     - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성 - 선행 조건) 
-                - **프로젝트 할당 생성** 
-                    - employeeId, projectId, periodId로 프로젝트 할당 생성
-                    - WBS 할당 생성 전 필수 선행 조건이므로 먼저 생성
-                    - 할당 ID 반환 확인
     - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성) 
-                - **할당 생성 검증** 
-                    - employeeId, wbsItemId, projectId, periodId로 할당 생성
-                    - 프로젝트 할당이 위에서 생성되었으므로 정상 생성됨
-                    - assignedBy 자동 설정 (현재 사용자)
-                    - 할당 ID 반환 확인
-                    - **평가기준 자동 생성 검증** 
-                        - WBS 항목에 평가기준이 없는 경우 빈 평가기준 자동 생성 확인
-                    - **평가라인 자동 구성 검증** 
-                        - 1차 평가자(관리자), 2차 평가자(PM) 자동 설정 확인
-                        - PM이 관리자와 같은 경우 2차 평가자 미설정 확인
-                - **대시보드 할당 검증** 
-                    - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
-                        - evaluationCriteria.status 확인 (WBS 할당 상태)
-                        - evaluationCriteria.assignedWbsCount 확인 (할당된 WBS 수)
-                    - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
-                        - employee 정보 확인
-                        - projects 배열 확인 (할당된 프로젝트 목록)
-                        - projects[].wbsList 배열 확인 (각 프로젝트의 할당된 WBS 목록)
-                        - **할당된 WBS ID 검증** 
-                            - wbsId로 의도한 WBS가 할당되었는지 확인
-                            - wbsName, wbsCode 정보 검증
-                            - assignedAt 할당 시점 정보 확인
-                            - weight (가중치) 정보 확인
-                            - criteria (평가기준) 배열 확인
+        <!-- - **평가기준 자동 생성 검증** 
+            - WBS 항목에 평가기준이 없는 경우 빈 평가기준 자동 생성 확인
+        - **평가라인 자동 구성 검증** 
+            - 1차 평가자(관리자), 2차 평가자(PM) 자동 설정 확인
+            - PM이 관리자와 같은 경우 2차 평가자 미설정 확인 -->
+        - **대시보드 할당 검증** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 전체 직원 현황 조회)
+                - evaluationCriteria.status 확인 (WBS 할당 상태)
+                - evaluationCriteria.assignedProjectCount 확인 (할당된 프로젝트 수)
+                - evaluationCriteria.assignedWbsCount 확인 (할당된 WBS 수)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
+                - employeeId 확인
+                - isEvaluationTarget 확인 (평가 대상 여부)
+                - evaluationCriteria.status 확인 (WBS 할당 상태)
+                - evaluationCriteria.assignedProjectCount 확인 (할당된 프로젝트 수)
+                - evaluationCriteria.assignedWbsCount 확인 (할당된 WBS 수)
+                - **전체 조회와 개별 조회 일관성 검증**
+                    - status API의 evaluationCriteria와 개별 조회의 evaluationCriteria 일치 확인
+                    - assignedProjectCount 일치 확인
+                    - assignedWbsCount 일치 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                - employee 정보 확인
+                - projects 배열 확인 (할당된 프로젝트 목록)
+                - projects[].wbsList 배열 확인 (각 프로젝트의 할당된 WBS 목록)
+                - **summary 검증**
+                    - summary.totalProjects 확인 (할당된 총 프로젝트 수)
+                    - summary.totalWbs 확인 (할당된 총 WBS 수)
+                - **할당된 WBS ID 검증** 
+                    - wbsId로 의도한 WBS가 할당되었는지 확인
+                    - wbsName, wbsCode 정보 검증
+                    - assignedAt 할당 시점 정보 확인
     - GET /admin/evaluation-criteria/wbs-assignments (WBS 할당 목록 조회) 
         - periodId, employeeId, projectId, wbsItemId로 필터링 가능
         - 페이징 및 정렬 지원
@@ -52,6 +55,9 @@
             - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
                 - 할당된 WBS의 wbsId 검증
                 - WBS 정보 일치 확인
+                - **summary 검증**
+                    - summary.totalProjects 확인 (할당된 총 프로젝트 수)
+                    - summary.totalWbs 확인 (할당된 총 WBS 수)
     - GET /admin/evaluation-criteria/wbs-assignments/project/{projectId}/period/{periodId} (프로젝트별 할당 WBS 조회) 
         - 특정 프로젝트의 특정 평가기간 할당 WBS 목록
         - WBS 할당 후 조회하여 데이터 검증
@@ -85,6 +91,9 @@
                 - 할당된 WBS의 wbsId, wbsName, wbsCode 검증
                 - 할당 시점(assignedAt) 및 가중치(weight) 정보 확인
                 - 평가기준(criteria) 배열 확인
+                - **summary 검증**
+                    - summary.totalProjects 확인 (할당된 총 프로젝트 수)
+                    - summary.totalWbs 확인 (할당된 총 WBS 수)
         - PATCH /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId}/order (WBS 할당 순서 변경) 
             - direction: "up" | "down"으로 순서 변경
             - employeeId, projectId, periodId를 body로 전달
@@ -93,27 +102,43 @@
                 - 변경 전후 WBS 순서 비교 검증
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
                     - projects[].wbsList 배열의 실제 순서 변경 확인
-                    - summary.totalWbsCount 확인
+                    - summary.totalProjects 확인 (할당된 총 프로젝트 수)
+                    - summary.totalWbs 확인 (할당된 총 WBS 수)
                     - 첫 번째 WBS가 변경되었는지 검증
                     - **대시보드 API 순서 변경 검증** 
                         - 할당된 WBS의 wbsId로 정확한 WBS가 순서 변경되었는지 확인
                         - WBS 정보(wbsName, wbsCode) 일치 확인
+                        - summary.totalWbs가 올바르게 반환되는지 확인
         - DELETE /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId} (WBS 할당 취소) 
             - employeeId, projectId, periodId를 body로 전달
             - 할당 취소
             - HTTP 200 응답으로 성공 확인
+            - **트랜잭션 관리 검증** 
+                - 할당 삭제와 가중치 재계산이 하나의 트랜잭션으로 처리됨
+                - 트랜잭션 매니저가 올바르게 전달되어 Query Runner 오류가 발생하지 않음
+            - **가중치 재계산 검증** 
+                - 할당 취소 후 남은 할당들의 가중치가 자동으로 재계산됨
+                - 재계산된 가중치 합계가 100이 되도록 조정됨
             - **평가기준 정리 검증** 
                 - 해당 WBS의 마지막 할당인 경우 평가기준도 자동 삭제 확인
                 - 다른 할당이 남아있으면 평가기준 유지 확인
+            - **할당 취소 전 상태 조회** 
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - 취소 전 WBS 수 기록
+                    - 취소 대상 WBS가 목록에 존재하는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
+                    - 취소 전 evaluationCriteria.assignedWbsCount 기록
             - **할당 취소 후 검증** 
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
-                    - 취소 전후 WBS 수 비교 검증
+                    - 취소 전후 WBS 수 비교 검증 (감소 확인)
                     - **대시보드 API 할당 취소 검증** 
-                        - 취소된 WBS가 더 이상 할당 목록에 없는지 확인
+                        - 취소된 WBS가 더 이상 할당 목록에 없는지 확인 (undefined)
                         - 남은 WBS들의 wbsId 검증
-                        - WBS 정보 일치 확인
+                        - WBS 정보(wbsName, wbsCode) 일치 확인
+                        - projects[].wbsList 배열에서 제거되었는지 확인
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
                     - evaluationCriteria.assignedWbsCount 감소 확인
+                    - 취소 전 카운트보다 작거나 같은지 검증
     - **WBS 초기화 관리** 
         - DELETE /admin/evaluation-criteria/wbs-assignments/period/{periodId} (평가기간의 WBS 할당 초기화) 
             - 해당 평가기간의 모든 WBS 할당 삭제
@@ -150,16 +175,103 @@
                 - 1차 평가자(관리자), 2차 평가자(PM) 자동 설정 확인
             - **대시보드 API 생성 및 할당 검증** 
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
-                    - 새로 생성된 WBS의 wbsId, wbsName, wbsCode 검증
-                    - WBS 정보 일치 확인
+                    - projects 배열이 반드시 존재하고 길이가 0보다 큼을 확인
+                    - 할당한 projectId에 해당하는 프로젝트가 반드시 존재함을 확인
+                    - 해당 프로젝트의 wbsList 배열이 반드시 존재함을 확인
+                    - 새로 생성된 WBS가 wbsList에 반드시 포함되어 있음을 확인
+                    - 생성된 WBS의 wbsId, wbsName, wbsCode가 정확히 일치함을 확인
     - **WBS 항목 이름 수정** 
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성 - 선행 조건) 
+            - employeeId, projectId, periodId로 프로젝트 할당 생성
+            - WBS 생성 및 할당 전 필수 선행 조건이므로 먼저 생성
+        - POST /admin/evaluation-criteria/wbs-assignments/create-and-assign (WBS 생성하면서 할당) 
+            - 수정 대상 WBS 항목을 새로 생성하면서 동시에 직원에게 할당
         - PATCH /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId}/title (WBS 항목 이름 수정) 
             - 기존 WBS 항목의 제목(title) 수정
             - 할당 관계는 유지됨 확인
             - HTTP 200 응답으로 성공 확인
             - **대시보드 API 이름 수정 검증** 
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
-                    - 수정된 wbsName이 반영되었는지 확인
+                    - projects 배열이 반드시 존재하고 길이가 0보다 큼을 확인
+                    - 할당한 projectId에 해당하는 프로젝트가 반드시 존재함을 확인
+                    - 해당 프로젝트의 wbsList 배열이 반드시 존재함을 확인
+                    - 수정된 WBS가 wbsList에 반드시 포함되어 있음을 확인
+                    - 수정된 wbsName이 정확히 반영되었는지 확인
+
+- **평가항목 상태(evaluationCriteria.status) 변경 검증** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - **단일 직원 상태 전환 시나리오** 
+        - **전체 상태 전환 흐름: none → in_progress → complete → in_progress → none**
+        - **1단계: 초기 상태 (none)** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
+                - evaluationCriteria.status = 'none' 확인
+                - evaluationCriteria.assignedProjectCount = 0 확인
+                - evaluationCriteria.assignedWbsCount = 0 확인
+        - **2단계: 프로젝트만 할당 (in_progress)** 
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
+                - evaluationCriteria.status = 'in_progress' 확인
+                - evaluationCriteria.assignedProjectCount = 1 확인
+                - evaluationCriteria.assignedWbsCount = 0 확인
+        - **3단계: WBS 할당으로 완료 상태 전환 (complete)** 
+            - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
+                - evaluationCriteria.status = 'complete' 확인
+                - evaluationCriteria.assignedProjectCount = 1 확인
+                - evaluationCriteria.assignedWbsCount >= 1 확인
+        - **4단계: WBS 취소로 진행중 상태 전환 (complete → in_progress)** 
+            - DELETE /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId} (모든 WBS 할당 취소)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
+                - evaluationCriteria.status = 'in_progress' 확인
+                - evaluationCriteria.assignedProjectCount = 1 확인 (프로젝트 유지)
+                - evaluationCriteria.assignedWbsCount = 0 확인
+        - **5단계: 프로젝트 취소로 초기 상태 전환 (in_progress → none)** 
+            - GET /admin/evaluation-criteria/project-assignments (프로젝트 할당 목록 조회)
+                - periodId, employeeId로 필터링하여 삭제 대상 할당 ID 조회
+            - DELETE /admin/evaluation-criteria/project-assignments/{id} (프로젝트 할당 취소)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 직원 현황 조회)
+                - evaluationCriteria.status = 'none' 확인
+                - evaluationCriteria.assignedProjectCount = 0 확인
+                - evaluationCriteria.assignedWbsCount = 0 확인
+    - **다중 할당 상태 전환 시나리오** 
+        - **다중 프로젝트와 WBS 할당 시 complete 상태** 
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 3개 할당)
+            - POST /admin/evaluation-criteria/wbs-assignments (각 프로젝트에 WBS 1개씩 할당)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status
+                - evaluationCriteria.status = 'complete' 확인
+                - evaluationCriteria.assignedProjectCount = 3 확인
+                - evaluationCriteria.assignedWbsCount = 3 확인
+        - **일부 WBS 취소 후에도 complete 유지** 
+            - DELETE /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId} (WBS 1개 취소)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status
+                - evaluationCriteria.status = 'complete' 확인 (다른 WBS가 남아있음)
+                - evaluationCriteria.assignedProjectCount = 3 확인
+                - evaluationCriteria.assignedWbsCount = 2 확인 (1개 감소)
+        - **모든 WBS 취소 시 complete → in_progress 전환** 
+            - **선행 조건**: 프로젝트 1개, WBS 2개 할당 → complete 상태
+            - DELETE /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId} (첫 번째 WBS 취소)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status
+                - evaluationCriteria.status = 'complete' 확인 (여전히 WBS 1개 남음)
+                - evaluationCriteria.assignedWbsCount = 1 확인
+            - DELETE /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId} (마지막 WBS 취소)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status
+                - evaluationCriteria.status = 'in_progress' 확인 (프로젝트만 남음)
+                - evaluationCriteria.assignedProjectCount = 1 확인
+                - evaluationCriteria.assignedWbsCount = 0 확인
+    - **엣지 케이스 검증** 
+        - **프로젝트 없이는 in_progress 상태가 될 수 없다** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
+                - evaluationCriteria.status = 'none' 확인
+                - evaluationCriteria.assignedProjectCount = 0 확인
+                - evaluationCriteria.assignedWbsCount = 0 확인
+        - **WBS 할당 시 complete 상태로 즉시 전환** 
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당)
+            - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/status
+                - evaluationCriteria.status = 'complete' 확인
+                - evaluationCriteria.assignedProjectCount = 1 확인
+                - evaluationCriteria.assignedWbsCount = 1 확인
 
 - **WBS 할당 정책 검증** 
     - POST /admin/evaluation-periods (평가기간 생성) 
@@ -189,6 +301,12 @@
             - DELETE /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId} (완료된 평가기간에 할당 취소 시도)
             - HTTP 422 UnprocessableEntity 응답 확인
             - "완료된 평가기간에는 WBS 할당을 취소할 수 없습니다." 에러 메시지 검증
+            - **멱등성 보장** 
+                - 할당이 존재하지 않을 경우 조용히 성공 처리 (HTTP 200)
+                - 이미 삭제된 할당을 다시 삭제해도 에러 없이 성공 처리
+            - **트랜잭션 관리** 
+                - 평가기간 상태 검증 후 완료 상태이면 할당 삭제 전에 예외 발생
+                - 트랜잭션 롤백으로 데이터 일관성 보장
         - **순서 변경도 동일한 정책 적용** 
             - PATCH /admin/evaluation-criteria/wbs-assignments/wbs-item/{wbsItemId}/order (완료된 평가기간에 순서 변경 시도)
             - HTTP 422 UnprocessableEntity 응답 확인

@@ -4,6 +4,7 @@ import { EmployeeService } from '@domain/common/employee/employee.service';
 import { ProjectService } from '@domain/common/project/project.service';
 import { EvaluationLineService } from '@domain/core/evaluation-line/evaluation-line.service';
 import { EvaluationLineMappingService } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.service';
+import { EvaluationWbsAssignmentService } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
 import type {
@@ -30,6 +31,7 @@ export class WbsAssignmentBusinessService {
     private readonly projectService: ProjectService,
     private readonly evaluationLineService: EvaluationLineService,
     private readonly evaluationLineMappingService: EvaluationLineMappingService,
+    private readonly evaluationWbsAssignmentService: EvaluationWbsAssignmentService,
     // private readonly notificationService: NotificationService, // TODO: 알림 서비스 추가 시 주입
     // private readonly organizationManagementService: OrganizationManagementService, // TODO: 조직 관리 서비스 추가 시 주입
   ) {}
@@ -153,16 +155,9 @@ export class WbsAssignmentBusinessService {
     });
 
     // 1. 할당 정보 조회 (평가기준 정리를 위해 wbsItemId와 periodId 필요)
-    // 목록 조회를 통해 assignmentId로 할당을 찾습니다
-    const allAssignments =
-      await this.evaluationCriteriaManagementService.WBS_할당_목록을_조회한다(
-        {},
-        1,
-        10000,
-      );
-
-    const assignment = allAssignments.assignments.find(
-      (a) => a.id === params.assignmentId,
+    // Domain 서비스를 통해 직접 ID로 조회합니다
+    const assignment = await this.evaluationWbsAssignmentService.ID로_조회한다(
+      params.assignmentId,
     );
 
     // 할당이 없으면 평가기준 정리할 것이 없으므로 조기 반환
@@ -961,20 +956,21 @@ export class WbsAssignmentBusinessService {
     });
 
     // 1. WBS 항목 생성 (코드 자동 생성 포함)
-    const wbsItem = await this.evaluationCriteriaManagementService.WBS_항목을_생성하고_코드를_자동_생성한다(
-      {
-        title: params.title,
-        status: WbsItemStatus.PENDING,
-        level: 1, // 최상위 항목
-        assignedToId: params.employeeId,
-        projectId: params.projectId,
-        parentWbsId: undefined,
-        startDate: undefined,
-        endDate: undefined,
-        progressPercentage: 0,
-      },
-      params.createdBy,
-    );
+    const wbsItem =
+      await this.evaluationCriteriaManagementService.WBS_항목을_생성하고_코드를_자동_생성한다(
+        {
+          title: params.title,
+          status: WbsItemStatus.PENDING,
+          level: 1, // 최상위 항목
+          assignedToId: params.employeeId,
+          projectId: params.projectId,
+          parentWbsId: undefined,
+          startDate: undefined,
+          endDate: undefined,
+          progressPercentage: 0,
+        },
+        params.createdBy,
+      );
 
     this.logger.log('WBS 항목 생성 완료', {
       wbsItemId: wbsItem.id,
@@ -1014,11 +1010,12 @@ export class WbsAssignmentBusinessService {
       title: params.title,
     });
 
-    const updatedWbsItem = await this.evaluationCriteriaManagementService.WBS_항목을_수정한다(
-      params.wbsItemId,
-      { title: params.title },
-      params.updatedBy,
-    );
+    const updatedWbsItem =
+      await this.evaluationCriteriaManagementService.WBS_항목을_수정한다(
+        params.wbsItemId,
+        { title: params.title },
+        params.updatedBy,
+      );
 
     this.logger.log('WBS 항목 이름 수정 완료', {
       wbsItemId: params.wbsItemId,
@@ -1027,5 +1024,4 @@ export class WbsAssignmentBusinessService {
 
     return updatedWbsItem;
   }
-
 }

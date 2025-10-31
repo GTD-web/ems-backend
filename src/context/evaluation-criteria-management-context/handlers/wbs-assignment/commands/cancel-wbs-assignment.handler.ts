@@ -86,10 +86,11 @@ export class CancelWbsAssignmentHandler
 
       this.logger.log(`WBS 할당 취소 완료 - ID: ${id}`);
 
-      // 5. 가중치 재계산
+      // 5. 가중치 재계산 (트랜잭션 매니저 전달)
       await this.weightCalculationService.직원_평가기간_가중치를_재계산한다(
         employeeId,
         periodId,
+        manager,
       );
     });
   }

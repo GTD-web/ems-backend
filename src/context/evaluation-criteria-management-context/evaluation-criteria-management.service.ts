@@ -231,7 +231,10 @@ export class EvaluationCriteriaManagementService
       limit: 1,
     });
 
-    if (!assignmentList.assignments || assignmentList.assignments.length === 0) {
+    if (
+      !assignmentList.assignments ||
+      assignmentList.assignments.length === 0
+    ) {
       // 멱등성 보장: 할당이 없으면 성공 처리
       return;
     }
@@ -257,7 +260,10 @@ export class EvaluationCriteriaManagementService
       limit: 1,
     });
 
-    if (!assignmentList.assignments || assignmentList.assignments.length === 0) {
+    if (
+      !assignmentList.assignments ||
+      assignmentList.assignments.length === 0
+    ) {
       throw new NotFoundException(
         `프로젝트 할당을 찾을 수 없습니다. (employeeId: ${employeeId}, projectId: ${projectId}, periodId: ${periodId})`,
       );
@@ -666,7 +672,8 @@ export class EvaluationCriteriaManagementService
    */
   private async WBS_코드를_자동_생성한다(projectId: string): Promise<string> {
     // 프로젝트 내 기존 WBS 개수 조회
-    const existingWbsItems = await this.프로젝트별_WBS_목록을_조회한다(projectId);
+    const existingWbsItems =
+      await this.프로젝트별_WBS_목록을_조회한다(projectId);
 
     // 다음 순번 계산 (1부터 시작)
     const nextNumber = existingWbsItems.length + 1;

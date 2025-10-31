@@ -1,0 +1,12 @@
+# 마크다운 파일 포맷팅 제외
+*.md
+
+# 기타 제외할 파일들
+node_modules/
+dist/
+build/
+coverage/
+*.lock
+package-lock.json
+yarn.lock
+

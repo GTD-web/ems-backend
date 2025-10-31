@@ -4,12 +4,14 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
  * WBS 할당 API 클라이언트
  *
  * WBS 할당 관련 HTTP 요청을 캡슐화합니다.
- * - WBS 할당 생성/취소
+ * - WBS 할당 생성/취소 (ID 기반, WBS ID 기반)
  * - WBS 대량 할당
  * - WBS 할당 조회 (목록/상세)
- * - 할당 순서 변경
+ * - 할당 순서 변경 (ID 기반, WBS ID 기반)
  * - 할당되지 않은 WBS 항목 조회
  * - WBS 할당 초기화 (평가기간/프로젝트/직원별)
+ * - WBS 생성하면서 할당
+ * - WBS 항목 이름 수정
  */
 export class WbsAssignmentApiClient {
   constructor(private readonly testSuite: BaseE2ETest) {}
@@ -60,13 +62,36 @@ export class WbsAssignmentApiClient {
   }
 
   /**
-   * WBS 할당 취소
+   * WBS 할당 취소 (Deprecated)
+   * @deprecated WBS ID 기반 메서드를 사용하세요. cancelByWbs
    */
   async cancel(assignmentId: string): Promise<void> {
     await this.testSuite
       .request()
       .delete(`/admin/evaluation-criteria/wbs-assignments/${assignmentId}`)
-      .expect(204);
+      .expect(200);
+  }
+
+  /**
+   * WBS 할당 취소 (WBS ID 기반)
+   */
+  async cancelByWbs(config: {
+    wbsItemId: string;
+    employeeId: string;
+    projectId: string;
+    periodId: string;
+  }): Promise<void> {
+    await this.testSuite
+      .request()
+      .delete(
+        `/admin/evaluation-criteria/wbs-assignments/wbs-item/${config.wbsItemId}`,
+      )
+      .send({
+        employeeId: config.employeeId,
+        projectId: config.projectId,
+        periodId: config.periodId,
+      })
+      .expect(200);
   }
 
   /**
@@ -175,16 +200,21 @@ export class WbsAssignmentApiClient {
   async getUnassignedWbsItems(config: {
     projectId: string;
     periodId: string;
-    employeeId: string;
+    employeeId?: string;
   }): Promise<any> {
+    const queryParams: any = {
+      projectId: config.projectId,
+      periodId: config.periodId,
+    };
+
+    if (config.employeeId) {
+      queryParams.employeeId = config.employeeId;
+    }
+
     const response = await this.testSuite
       .request()
-      .get('/admin/evaluation-criteria/wbs-assignments/unassigned-wbs-items')
-      .query({
-        projectId: config.projectId,
-        periodId: config.periodId,
-        employeeId: config.employeeId,
-      })
+      .get('/admin/evaluation-criteria/wbs-assignments/unassigned')
+      .query(queryParams)
       .expect(200);
 
     return response.body;
@@ -214,7 +244,8 @@ export class WbsAssignmentApiClient {
   }
 
   /**
-   * WBS 할당 순서 변경
+   * WBS 할당 순서 변경 (Deprecated)
+   * @deprecated WBS ID 기반 메서드를 사용하세요. changeOrderByWbs
    */
   async changeOrder(config: {
     assignmentId: string;
@@ -234,15 +265,41 @@ export class WbsAssignmentApiClient {
   }
 
   /**
+   * WBS 할당 순서 변경 (WBS ID 기반)
+   */
+  async changeOrderByWbs(config: {
+    wbsItemId: string;
+    employeeId: string;
+    projectId: string;
+    periodId: string;
+    direction: 'up' | 'down';
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .patch(
+        `/admin/evaluation-criteria/wbs-assignments/wbs-item/${config.wbsItemId}/order`,
+      )
+      .send({
+        // wbsItemId는 path parameter로 전달되므로 body에서 제외
+        employeeId: config.employeeId,
+        wbsItemId: config.wbsItemId, // DTO에 wbsItemId 필드가 있으므로 포함
+        projectId: config.projectId,
+        periodId: config.periodId,
+        direction: config.direction,
+      })
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
    * 평가기간의 WBS 할당 초기화
    */
   async resetPeriodWbsAssignments(periodId: string): Promise<void> {
     await this.testSuite
       .request()
-      .delete(
-        `/admin/evaluation-criteria/wbs-assignments/period/${periodId}/reset`,
-      )
-      .expect(204);
+      .delete(`/admin/evaluation-criteria/wbs-assignments/period/${periodId}`)
+      .expect(200);
   }
 
   /**
@@ -255,9 +312,9 @@ export class WbsAssignmentApiClient {
     await this.testSuite
       .request()
       .delete(
-        `/admin/evaluation-criteria/wbs-assignments/project/${config.projectId}/period/${config.periodId}/reset`,
+        `/admin/evaluation-criteria/wbs-assignments/project/${config.projectId}/period/${config.periodId}`,
       )
-      .expect(204);
+      .expect(200);
   }
 
   /**
@@ -270,9 +327,52 @@ export class WbsAssignmentApiClient {
     await this.testSuite
       .request()
       .delete(
-        `/admin/evaluation-criteria/wbs-assignments/employee/${config.employeeId}/period/${config.periodId}/reset`,
+        `/admin/evaluation-criteria/wbs-assignments/employee/${config.employeeId}/period/${config.periodId}`,
       )
-      .expect(204);
+      .expect(200);
+  }
+
+  /**
+   * WBS 생성하면서 할당
+   */
+  async createAndAssign(config: {
+    title: string;
+    projectId: string;
+    employeeId: string;
+    periodId: string;
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .post('/admin/evaluation-criteria/wbs-assignments/create-and-assign')
+      .send({
+        title: config.title,
+        projectId: config.projectId,
+        employeeId: config.employeeId,
+        periodId: config.periodId,
+      })
+      .expect(201);
+
+    return response.body;
+  }
+
+  /**
+   * WBS 항목 이름 수정
+   */
+  async updateWbsItemTitle(config: {
+    wbsItemId: string;
+    title: string;
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .patch(
+        `/admin/evaluation-criteria/wbs-assignments/wbs-item/${config.wbsItemId}/title`,
+      )
+      .send({
+        title: config.title,
+      })
+      .expect(200);
+
+    return response.body;
   }
 
   /**
@@ -335,7 +435,8 @@ export class WbsAssignmentApiClient {
   }
 
   /**
-   * WBS 할당 취소 (에러 예상)
+   * WBS 할당 취소 (에러 예상) - Deprecated
+   * @deprecated WBS ID 기반 메서드를 사용하세요. cancelByWbsExpectError
    */
   async cancelExpectError(
     assignmentId: string,
@@ -344,6 +445,33 @@ export class WbsAssignmentApiClient {
     const response = await this.testSuite
       .request()
       .delete(`/admin/evaluation-criteria/wbs-assignments/${assignmentId}`)
+      .expect(expectedStatus);
+
+    return response.body;
+  }
+
+  /**
+   * WBS 할당 취소 (WBS ID 기반, 에러 예상)
+   */
+  async cancelByWbsExpectError(
+    config: {
+      wbsItemId: string;
+      employeeId: string;
+      projectId: string;
+      periodId: string;
+    },
+    expectedStatus: number,
+  ): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .delete(
+        `/admin/evaluation-criteria/wbs-assignments/wbs-item/${config.wbsItemId}`,
+      )
+      .send({
+        employeeId: config.employeeId,
+        projectId: config.projectId,
+        periodId: config.periodId,
+      })
       .expect(expectedStatus);
 
     return response.body;
@@ -396,7 +524,8 @@ export class WbsAssignmentApiClient {
   }
 
   /**
-   * WBS 할당 순서 변경 (에러 예상)
+   * WBS 할당 순서 변경 (에러 예상) - Deprecated
+   * @deprecated WBS ID 기반 메서드를 사용하세요. changeOrderByWbsExpectError
    */
   async changeOrderExpectError(
     config: {
@@ -419,6 +548,35 @@ export class WbsAssignmentApiClient {
   }
 
   /**
+   * WBS 할당 순서 변경 (WBS ID 기반, 에러 예상)
+   */
+  async changeOrderByWbsExpectError(
+    config: {
+      wbsItemId: string;
+      employeeId: string;
+      projectId: string;
+      periodId: string;
+      direction: 'up' | 'down' | string;
+    },
+    expectedStatus: number,
+  ): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .patch(
+        `/admin/evaluation-criteria/wbs-assignments/wbs-item/${config.wbsItemId}/order`,
+      )
+      .send({
+        employeeId: config.employeeId,
+        projectId: config.projectId,
+        periodId: config.periodId,
+        direction: config.direction,
+      })
+      .expect(expectedStatus);
+
+    return response.body;
+  }
+
+  /**
    * 평가기간의 WBS 할당 초기화 (에러 예상)
    */
   async resetPeriodWbsAssignmentsExpectError(
@@ -427,9 +585,110 @@ export class WbsAssignmentApiClient {
   ): Promise<any> {
     const response = await this.testSuite
       .request()
+      .delete(`/admin/evaluation-criteria/wbs-assignments/period/${periodId}`)
+      .expect(expectedStatus);
+
+    return response.body;
+  }
+
+  /**
+   * 프로젝트의 WBS 할당 초기화 (에러 예상)
+   */
+  async resetProjectWbsAssignmentsExpectError(
+    config: {
+      projectId: string;
+      periodId: string;
+    },
+    expectedStatus: number,
+  ): Promise<any> {
+    const response = await this.testSuite
+      .request()
       .delete(
-        `/admin/evaluation-criteria/wbs-assignments/period/${periodId}/reset`,
+        `/admin/evaluation-criteria/wbs-assignments/project/${config.projectId}/period/${config.periodId}`,
       )
+      .expect(expectedStatus);
+
+    return response.body;
+  }
+
+  /**
+   * 직원의 WBS 할당 초기화 (에러 예상)
+   */
+  async resetEmployeeWbsAssignmentsExpectError(
+    config: {
+      employeeId: string;
+      periodId: string;
+    },
+    expectedStatus: number,
+  ): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .delete(
+        `/admin/evaluation-criteria/wbs-assignments/employee/${config.employeeId}/period/${config.periodId}`,
+      )
+      .expect(expectedStatus);
+
+    return response.body;
+  }
+
+  /**
+   * WBS 생성하면서 할당 (에러 예상)
+   */
+  async createAndAssignExpectError(
+    config: {
+      title?: string;
+      projectId?: string;
+      employeeId?: string;
+      periodId?: string;
+    },
+    expectedStatus: number,
+  ): Promise<any> {
+    const requestBody: any = {};
+
+    if (config.title !== undefined) {
+      requestBody.title = config.title;
+    }
+    if (config.projectId !== undefined) {
+      requestBody.projectId = config.projectId;
+    }
+    if (config.employeeId !== undefined) {
+      requestBody.employeeId = config.employeeId;
+    }
+    if (config.periodId !== undefined) {
+      requestBody.periodId = config.periodId;
+    }
+
+    const response = await this.testSuite
+      .request()
+      .post('/admin/evaluation-criteria/wbs-assignments/create-and-assign')
+      .send(requestBody)
+      .expect(expectedStatus);
+
+    return response.body;
+  }
+
+  /**
+   * WBS 항목 이름 수정 (에러 예상)
+   */
+  async updateWbsItemTitleExpectError(
+    config: {
+      wbsItemId: string;
+      title?: string;
+    },
+    expectedStatus: number,
+  ): Promise<any> {
+    const requestBody: any = {};
+
+    if (config.title !== undefined) {
+      requestBody.title = config.title;
+    }
+
+    const response = await this.testSuite
+      .request()
+      .patch(
+        `/admin/evaluation-criteria/wbs-assignments/wbs-item/${config.wbsItemId}/title`,
+      )
+      .send(requestBody)
       .expect(expectedStatus);
 
     return response.body;
