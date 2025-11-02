@@ -59,12 +59,12 @@
                     - wbsList 배열 길이가 0보다 큼
                     - 할당한 wbsItemId에 해당하는 WBS 존재 확인
                     - wbsId, wbsName, wbsCode 정보 일치 확인
-                - **평가기준 정보 검증 (TODO: criteria[].id 필드 누락 이슈)**
+                - **평가기준 정보 검증**
                     - WBS의 criteria 배열 존재 확인
                     - criteria가 배열 타입인지 확인
                     - criteria 배열에 요소가 있는지 확인 (자동 생성된 평가기준)
-                    - 평가기준의 criteria, importance 필드 존재 확인
-                    - > **현재 이슈**: criteria 배열의 id 필드가 누락되어 있어 검증 불가
+                    - 평가기준의 criterionId, criteria, importance 필드 존재 확인
+                    - > **참고**: criteria 배열의 id 필드는 `criterionId`로 명명됨
 
 - **평가기준 중요도(importance) 기반 가중치(weight) 자동 계산**
     - POST /admin/evaluation-periods (평가기간 생성)

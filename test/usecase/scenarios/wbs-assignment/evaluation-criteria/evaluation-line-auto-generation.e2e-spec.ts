@@ -497,9 +497,11 @@ describe('평가라인 자동 생성 및 대시보드 검증 시나리오', () =
       expect(wbs.criteria.length).toBeGreaterThan(0); // criteria 배열에 요소가 있는지 확인 (자동 생성된 평가기준)
 
       const 평가기준 = wbs.criteria[0];
-      // Note: criteria[].id 필드는 현재 API 응답에 포함되지 않을 수 있음
       expect(평가기준.criteria).toBeDefined(); // criteria 필드 존재 확인
       expect(평가기준.importance).toBeDefined(); // importance 필드 존재 확인
+      expect(평가기준.criterionId).toBeDefined(); // criterionId 필드 존재 확인 (id 대신 criterionId 사용)
+      expect(typeof 평가기준.criterionId).toBe('string');
+      expect(평가기준.criterionId.length).toBeGreaterThan(0);
 
       console.log('✅ 직원 할당 데이터 조회 검증 완료');
       console.log(`  - 프로젝트 ID: ${프로젝트.projectId}`);
