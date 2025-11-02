@@ -13,12 +13,6 @@
 - evaluation-period
 - dashboard
 
-> **사용 가능한 API**:
-> - ✅ `/admin/employees` - 전체 직원 목록 조회 (특정 직원 정보는 목록에서 필터링)
-> - ✅ `/admin/evaluation-criteria/project-assignments/available-projects` - 할당 가능한 프로젝트 목록 조회 (특정 프로젝트 정보는 목록에서 필터링)
-> - ✅ `/admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators` - 평가기간별 평가자 목록 조회
-> - ✅ `/admin/evaluation-criteria/evaluation-lines/evaluator/{evaluatorId}/employees` - 평가자별 피평가자 조회
-> - ✅ `/admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings` - 직원 평가설정 통합 조회 (평가라인 매핑 정보 포함)
 
 - **평가기준 자동 생성 관리**
     - POST /admin/evaluation-periods (평가기간 생성)
@@ -168,3 +162,32 @@
                     - 각 WBS 항목마다 독립적으로 2차 평가자가 구성되었는지 확인
                 - 또는 GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=secondary (2차 평가자 목록 조회)
                     - 각 WBS별로 독립적인 secondary 평가자 구성 확인
+    - **평가자별 피평가자 현황 조회를 통한 평가라인 검증**
+        - POST /admin/evaluation-periods (평가기간 생성)
+        - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+        - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+            - **평가라인 자동 지정 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자별 피평가자 현황 조회)
+                    - 응답 배열에서 해당 피평가자 정보 조회
+                    - **evaluationLine 객체 검증**
+                        - evaluationLine 객체 존재 확인
+                        - evaluationLine.status가 'complete'인지 확인 (1차/2차 평가자 모두 지정된 경우)
+                        - evaluationLine.hasPrimaryEvaluator가 true인지 확인 (1차 평가자가 지정된 경우)
+                        - evaluationLine.hasSecondaryEvaluator가 true인지 확인 (2차 평가자가 지정된 경우)
+                    - **downwardEvaluation 객체 검증**
+                        - downwardEvaluation 객체 존재 확인
+                        - downwardEvaluation.isPrimary가 true인지 확인 (1차 평가자인 경우)
+                        - downwardEvaluation.isSecondary가 true인지 확인 (2차 평가자인 경우)
+                        - downwardEvaluation.primaryStatus 객체 검증 (1차 평가자인 경우)
+                            - assignedWbsCount가 할당된 WBS 수와 일치하는지 확인
+                            - completedEvaluationCount가 0 이상인지 확인 (기본값 0)
+                            - isEditable이 boolean 타입인지 확인
+                        - downwardEvaluation.secondaryStatus 객체 검증 (2차 평가자인 경우)
+                            - assignedWbsCount가 해당 WBS 수와 일치하는지 확인
+                            - completedEvaluationCount가 0 이상인지 확인 (기본값 0)
+                            - isEditable이 boolean 타입인지 확인
+                    - **myEvaluatorTypes 배열 검증**
+                        - myEvaluatorTypes 배열 존재 확인
+                        - 'PRIMARY' 또는 'SECONDARY' 포함 여부 확인
+                        - 해당 평가자가 담당하는 평가자 유형만 포함되어 있는지 확인
