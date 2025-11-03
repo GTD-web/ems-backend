@@ -548,6 +548,233 @@ export class EvaluationCriteriaManagementService
     return await this.commandBus.execute(command);
   }
 
+  /**
+   * 여러 피평가자의 1차 평가자를 일괄 구성한다
+   * 여러 직원의 1차 평가자(고정 담당자)를 일괄로 설정한다
+   */
+  async 여러_피평가자의_일차_평가자를_일괄_구성한다(
+    periodId: string,
+    assignments: Array<{ employeeId: string; evaluatorId: string }>,
+    createdBy: string,
+  ): Promise<{
+    periodId: string;
+    totalCount: number;
+    successCount: number;
+    failureCount: number;
+    createdLines: number;
+    createdMappings: number;
+    results: Array<{
+      employeeId: string;
+      evaluatorId: string;
+      status: 'success' | 'error';
+      message?: string;
+      mapping?: {
+        id: string;
+        employeeId: string;
+        evaluatorId: string;
+        wbsItemId: string | null;
+        evaluationLineId: string;
+      };
+      error?: string;
+    }>;
+  }> {
+    const logger = new Logger('EvaluationCriteriaManagementService');
+    logger.log(
+      `여러 피평가자의 1차 평가자 일괄 구성 시작 - 평가기간: ${periodId}, 건수: ${assignments.length}`,
+    );
+
+    const results: Array<{
+      employeeId: string;
+      evaluatorId: string;
+      status: 'success' | 'error';
+      message?: string;
+      mapping?: {
+        id: string;
+        employeeId: string;
+        evaluatorId: string;
+        wbsItemId: string | null;
+        evaluationLineId: string;
+      };
+      error?: string;
+    }> = [];
+
+    let totalCreatedLines = 0;
+    let totalCreatedMappings = 0;
+    let successCount = 0;
+    let failureCount = 0;
+
+    // 각 할당에 대해 순차 처리 (일부 실패해도 계속 진행)
+    for (const assignment of assignments) {
+      try {
+        const result = await this.일차_평가자를_구성한다(
+          assignment.employeeId,
+          periodId,
+          assignment.evaluatorId,
+          createdBy,
+        );
+
+        totalCreatedLines += result.createdLines;
+        totalCreatedMappings += result.createdMappings;
+        successCount++;
+
+        results.push({
+          employeeId: assignment.employeeId,
+          evaluatorId: assignment.evaluatorId,
+          status: 'success',
+          message: result.message,
+          mapping: result.mapping,
+        });
+      } catch (error) {
+        failureCount++;
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        logger.error(
+          `1차 평가자 구성 실패 - 직원: ${assignment.employeeId}, 평가자: ${assignment.evaluatorId}, 오류: ${errorMessage}`,
+        );
+
+        results.push({
+          employeeId: assignment.employeeId,
+          evaluatorId: assignment.evaluatorId,
+          status: 'error',
+          error: errorMessage,
+        });
+      }
+    }
+
+    logger.log(
+      `여러 피평가자의 1차 평가자 일괄 구성 완료 - 평가기간: ${periodId}, 전체: ${assignments.length}, 성공: ${successCount}, 실패: ${failureCount}`,
+    );
+
+    return {
+      periodId,
+      totalCount: assignments.length,
+      successCount,
+      failureCount,
+      createdLines: totalCreatedLines,
+      createdMappings: totalCreatedMappings,
+      results,
+    };
+  }
+
+  /**
+   * 여러 피평가자의 2차 평가자를 일괄 구성한다
+   * 여러 직원의 여러 WBS 항목에 대한 2차 평가자를 일괄로 설정한다
+   */
+  async 여러_피평가자의_이차_평가자를_일괄_구성한다(
+    periodId: string,
+    assignments: Array<{
+      employeeId: string;
+      wbsItemId: string;
+      evaluatorId: string;
+    }>,
+    createdBy: string,
+  ): Promise<{
+    periodId: string;
+    totalCount: number;
+    successCount: number;
+    failureCount: number;
+    createdLines: number;
+    createdMappings: number;
+    results: Array<{
+      employeeId: string;
+      wbsItemId: string;
+      evaluatorId: string;
+      status: 'success' | 'error';
+      message?: string;
+      mapping?: {
+        id: string;
+        employeeId: string;
+        evaluatorId: string;
+        wbsItemId: string;
+        evaluationLineId: string;
+      };
+      error?: string;
+    }>;
+  }> {
+    const logger = new Logger('EvaluationCriteriaManagementService');
+    logger.log(
+      `여러 피평가자의 2차 평가자 일괄 구성 시작 - 평가기간: ${periodId}, 건수: ${assignments.length}`,
+    );
+
+    const results: Array<{
+      employeeId: string;
+      wbsItemId: string;
+      evaluatorId: string;
+      status: 'success' | 'error';
+      message?: string;
+      mapping?: {
+        id: string;
+        employeeId: string;
+        evaluatorId: string;
+        wbsItemId: string;
+        evaluationLineId: string;
+      };
+      error?: string;
+    }> = [];
+
+    let totalCreatedLines = 0;
+    let totalCreatedMappings = 0;
+    let successCount = 0;
+    let failureCount = 0;
+
+    // 각 할당에 대해 순차 처리 (일부 실패해도 계속 진행)
+    for (const assignment of assignments) {
+      try {
+        const result = await this.이차_평가자를_구성한다(
+          assignment.employeeId,
+          assignment.wbsItemId,
+          periodId,
+          assignment.evaluatorId,
+          createdBy,
+        );
+
+        totalCreatedLines += result.createdLines;
+        totalCreatedMappings += result.createdMappings;
+        successCount++;
+
+        results.push({
+          employeeId: assignment.employeeId,
+          wbsItemId: assignment.wbsItemId,
+          evaluatorId: assignment.evaluatorId,
+          status: 'success',
+          message: result.message,
+          mapping: result.mapping,
+        });
+      } catch (error) {
+        failureCount++;
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+
+        logger.error(
+          `2차 평가자 구성 실패 - 직원: ${assignment.employeeId}, WBS: ${assignment.wbsItemId}, 평가자: ${assignment.evaluatorId}, 오류: ${errorMessage}`,
+        );
+
+        results.push({
+          employeeId: assignment.employeeId,
+          wbsItemId: assignment.wbsItemId,
+          evaluatorId: assignment.evaluatorId,
+          status: 'error',
+          error: errorMessage,
+        });
+      }
+    }
+
+    logger.log(
+      `여러 피평가자의 2차 평가자 일괄 구성 완료 - 평가기간: ${periodId}, 전체: ${assignments.length}, 성공: ${successCount}, 실패: ${failureCount}`,
+    );
+
+    return {
+      periodId,
+      totalCount: assignments.length,
+      successCount,
+      failureCount,
+      createdLines: totalCreatedLines,
+      createdMappings: totalCreatedMappings,
+      results,
+    };
+  }
+
   // ============================================================================
   // WBS 평가기준 관리
   // ============================================================================

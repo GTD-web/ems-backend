@@ -10,6 +10,8 @@ import {
   IsEnum,
   IsBoolean,
   IsNumber,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -413,3 +415,273 @@ export class PrimaryEvaluatorInfoDto extends EvaluatorInfoDto {}
  * @deprecated PrimaryEvaluatorsByPeriodResponseDto 대신 EvaluatorsByPeriodResponseDto 사용
  */
 export class PrimaryEvaluatorsByPeriodResponseDto extends EvaluatorsByPeriodResponseDto {}
+
+/**
+ * 배치 1차 평가자 할당 항목 DTO
+ */
+export class BatchPrimaryEvaluatorAssignmentItemDto {
+  @ApiProperty({
+    description: '피평가자 직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  @IsString()
+  @IsUUID()
+  employeeId: string;
+
+  @ApiProperty({
+    description: '1차 평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
+  @IsString()
+  @IsUUID()
+  evaluatorId: string;
+}
+
+/**
+ * 배치 1차 평가자 구성 요청 DTO
+ *
+ * Note: periodId는 경로 파라미터로 전달되므로 DTO에 포함되지 않습니다.
+ */
+export class BatchConfigurePrimaryEvaluatorDto {
+  @ApiProperty({
+    description: '1차 평가자 할당 목록',
+    type: [BatchPrimaryEvaluatorAssignmentItemDto],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BatchPrimaryEvaluatorAssignmentItemDto)
+  assignments: BatchPrimaryEvaluatorAssignmentItemDto[];
+}
+
+/**
+ * 배치 1차 평가자 구성 결과 항목 DTO
+ */
+export class BatchPrimaryEvaluatorResultItemDto {
+  @ApiProperty({
+    description: '피평가자 직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: '1차 평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '처리 결과 (success: 성공, error: 실패)',
+    enum: ['success', 'error'],
+  })
+  status: 'success' | 'error';
+
+  @ApiPropertyOptional({
+    description: '결과 메시지',
+  })
+  message?: string;
+
+  @ApiPropertyOptional({
+    description: '생성된 매핑 정보',
+  })
+  mapping?: {
+    id: string;
+    employeeId: string;
+    evaluatorId: string;
+    wbsItemId: string | null;
+    evaluationLineId: string;
+  };
+
+  @ApiPropertyOptional({
+    description: '에러 메시지 (실패 시)',
+  })
+  error?: string;
+}
+
+/**
+ * 배치 1차 평가자 구성 응답 DTO
+ */
+export class BatchConfigurePrimaryEvaluatorResponseDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '전체 처리 건수',
+    example: 5,
+  })
+  totalCount: number;
+
+  @ApiProperty({
+    description: '성공 건수',
+    example: 4,
+  })
+  successCount: number;
+
+  @ApiProperty({
+    description: '실패 건수',
+    example: 1,
+  })
+  failureCount: number;
+
+  @ApiProperty({
+    description: '생성된 평가라인 수',
+    example: 1,
+  })
+  createdLines: number;
+
+  @ApiProperty({
+    description: '생성된 매핑 수',
+    example: 3,
+  })
+  createdMappings: number;
+
+  @ApiProperty({
+    description: '처리 결과 목록',
+    type: [BatchPrimaryEvaluatorResultItemDto],
+  })
+  results: BatchPrimaryEvaluatorResultItemDto[];
+}
+
+/**
+ * 배치 2차 평가자 할당 항목 DTO
+ */
+export class BatchSecondaryEvaluatorAssignmentItemDto {
+  @ApiProperty({
+    description: '피평가자 직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  @IsString()
+  @IsUUID()
+  employeeId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
+  @IsString()
+  @IsUUID()
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '2차 평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
+  @IsString()
+  @IsUUID()
+  evaluatorId: string;
+}
+
+/**
+ * 배치 2차 평가자 구성 요청 DTO
+ *
+ * Note: periodId는 경로 파라미터로 전달되므로 DTO에 포함되지 않습니다.
+ */
+export class BatchConfigureSecondaryEvaluatorDto {
+  @ApiProperty({
+    description: '2차 평가자 할당 목록',
+    type: [BatchSecondaryEvaluatorAssignmentItemDto],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BatchSecondaryEvaluatorAssignmentItemDto)
+  assignments: BatchSecondaryEvaluatorAssignmentItemDto[];
+}
+
+/**
+ * 배치 2차 평가자 구성 결과 항목 DTO
+ */
+export class BatchSecondaryEvaluatorResultItemDto {
+  @ApiProperty({
+    description: '피평가자 직원 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: 'WBS 항목 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
+  wbsItemId: string;
+
+  @ApiProperty({
+    description: '2차 평가자 ID',
+    example: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+  })
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '처리 결과 (success: 성공, error: 실패)',
+    enum: ['success', 'error'],
+  })
+  status: 'success' | 'error';
+
+  @ApiPropertyOptional({
+    description: '결과 메시지',
+  })
+  message?: string;
+
+  @ApiPropertyOptional({
+    description: '생성된 매핑 정보',
+  })
+  mapping?: {
+    id: string;
+    employeeId: string;
+    evaluatorId: string;
+    wbsItemId: string;
+    evaluationLineId: string;
+  };
+
+  @ApiPropertyOptional({
+    description: '에러 메시지 (실패 시)',
+  })
+  error?: string;
+}
+
+/**
+ * 배치 2차 평가자 구성 응답 DTO
+ */
+export class BatchConfigureSecondaryEvaluatorResponseDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+  })
+  periodId: string;
+
+  @ApiProperty({
+    description: '전체 처리 건수',
+    example: 5,
+  })
+  totalCount: number;
+
+  @ApiProperty({
+    description: '성공 건수',
+    example: 4,
+  })
+  successCount: number;
+
+  @ApiProperty({
+    description: '실패 건수',
+    example: 1,
+  })
+  failureCount: number;
+
+  @ApiProperty({
+    description: '생성된 평가라인 수',
+    example: 1,
+  })
+  createdLines: number;
+
+  @ApiProperty({
+    description: '생성된 매핑 수',
+    example: 3,
+  })
+  createdMappings: number;
+
+  @ApiProperty({
+    description: '처리 결과 목록',
+    type: [BatchSecondaryEvaluatorResultItemDto],
+  })
+  results: BatchSecondaryEvaluatorResultItemDto[];
+}

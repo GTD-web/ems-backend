@@ -64,21 +64,21 @@ export class EvaluationPeriodEmployeeMapping
 
   @Column({
     type: 'boolean',
-    default: true,
+    default: false,
     comment: '자기평가 수정 가능 여부',
   })
   isSelfEvaluationEditable: boolean;
 
   @Column({
     type: 'boolean',
-    default: true,
+    default: false,
     comment: '1차평가(하향평가) 수정 가능 여부',
   })
   isPrimaryEvaluationEditable: boolean;
 
   @Column({
     type: 'boolean',
-    default: true,
+    default: false,
     comment: '2차평가(하향평가) 수정 가능 여부',
   })
   isSecondaryEvaluationEditable: boolean;
@@ -92,9 +92,9 @@ export class EvaluationPeriodEmployeeMapping
       this.excludeReason = null;
       this.excludedBy = null;
       this.excludedAt = null;
-      this.isSelfEvaluationEditable = true;
-      this.isPrimaryEvaluationEditable = true;
-      this.isSecondaryEvaluationEditable = true;
+      this.isSelfEvaluationEditable = false;
+      this.isPrimaryEvaluationEditable = false;
+      this.isSecondaryEvaluationEditable = false;
 
       // 감사 정보 설정
       this.메타데이터를_업데이트한다(data.createdBy);

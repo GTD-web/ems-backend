@@ -228,4 +228,110 @@ export class EvaluationLineApiClient {
 
     return response.body;
   }
+
+  /**
+   * 여러 피평가자의 1차 평가자 일괄 구성
+   */
+  async batchConfigurePrimaryEvaluator(config: {
+    periodId: string;
+    assignments: Array<{
+      employeeId: string;
+      evaluatorId: string;
+    }>;
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .post(
+        `/admin/evaluation-criteria/evaluation-lines/period/${config.periodId}/batch-primary-evaluator`,
+      )
+      .send({
+        assignments: config.assignments,
+      })
+      .expect(201);
+
+    return response.body;
+  }
+
+  /**
+   * 여러 피평가자의 2차 평가자 일괄 구성
+   */
+  async batchConfigureSecondaryEvaluator(config: {
+    periodId: string;
+    assignments: Array<{
+      employeeId: string;
+      wbsItemId: string;
+      evaluatorId: string;
+    }>;
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .post(
+        `/admin/evaluation-criteria/evaluation-lines/period/${config.periodId}/batch-secondary-evaluator`,
+      )
+      .send({
+        assignments: config.assignments,
+      })
+      .expect(201);
+
+    return response.body;
+  }
+
+  /**
+   * 여러 피평가자의 1차 평가자 일괄 구성 (에러 예상)
+   */
+  async batchConfigurePrimaryEvaluatorExpectError(
+    config: {
+      periodId: string;
+      assignments?: Array<{
+        employeeId?: string;
+        evaluatorId?: string;
+      }>;
+    },
+    expectedStatus: number,
+  ): Promise<any> {
+    const requestBody: any = {};
+    if (config.assignments !== undefined) {
+      requestBody.assignments = config.assignments;
+    }
+
+    const response = await this.testSuite
+      .request()
+      .post(
+        `/admin/evaluation-criteria/evaluation-lines/period/${config.periodId}/batch-primary-evaluator`,
+      )
+      .send(requestBody)
+      .expect(expectedStatus);
+
+    return response.body;
+  }
+
+  /**
+   * 여러 피평가자의 2차 평가자 일괄 구성 (에러 예상)
+   */
+  async batchConfigureSecondaryEvaluatorExpectError(
+    config: {
+      periodId: string;
+      assignments?: Array<{
+        employeeId?: string;
+        wbsItemId?: string;
+        evaluatorId?: string;
+      }>;
+    },
+    expectedStatus: number,
+  ): Promise<any> {
+    const requestBody: any = {};
+    if (config.assignments !== undefined) {
+      requestBody.assignments = config.assignments;
+    }
+
+    const response = await this.testSuite
+      .request()
+      .post(
+        `/admin/evaluation-criteria/evaluation-lines/period/${config.periodId}/batch-secondary-evaluator`,
+      )
+      .send(requestBody)
+      .expect(expectedStatus);
+
+    return response.body;
+  }
 }

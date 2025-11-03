@@ -1,0 +1,295 @@
+# 평가라인 변경 관리 시나리오
+
+## 식별된 검증해야하는 시나리오
+
+각 하이라키별 시나리오 엔드포인트 순서대로 검증이 되어야 함.
+
+사용되는 컨트롤러
+- evaluation-line-management
+- wbs-assignment-management
+- project-assignment-management
+- employee-management
+- evaluation-period
+- dashboard
+
+- **1차 평가자 구성 관리**
+    - POST /admin/evaluation-periods (평가기간 생성)
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성 - 선행 조건)
+    - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성 - 선행 조건)
+        - **단일 직원의 1차 평가자 구성**
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 구성)
+                - evaluatorId를 body로 전달
+                - 직원별 고정 담당자(1차 평가자) 설정 (WBS와 무관)
+                - Upsert 방식으로 동작하여 중복 생성 방지
+            - **구성 결과 검증**
+                - GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings (직원 평가설정 통합 조회)
+                    - evaluationLineMappings 배열에서 wbsItemId가 null인 매핑 조회 (1차 평가자)
+                    - evaluatorId가 설정한 평가자 ID와 일치하는지 확인
+                    - mapping 객체의 employeeId, evaluatorId, evaluationLineId 필드 존재 확인
+                    - wbsItemId가 null인지 확인 (1차 평가자는 WBS와 무관)
+                - 또는 GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=primary (1차 평가자 목록 조회)
+                    - evaluatorType이 'primary'인 평가자 목록 확인
+                    - 설정한 evaluatorId가 목록에 포함되어 있는지 확인
+                    - evaluateeCount가 증가했는지 확인
+            - **대시보드 API를 통한 평가라인 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (직원 평가기간 현황 조회)
+                    - evaluationLine 객체 존재 확인
+                    - evaluationLine.hasPrimaryEvaluator가 true인지 확인
+                    - evaluationLine.status가 'in_progress' 또는 'complete'인지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자별 피평가자 현황 조회)
+                    - 응답 배열에서 해당 피평가자 정보 조회
+                    - downwardEvaluation.isPrimary가 true인지 확인
+                    - downwardEvaluation.primaryStatus 객체 존재 확인
+        - **기존 1차 평가자 업데이트**
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 구성)
+                - 다른 evaluatorId로 업데이트
+                - Upsert 방식으로 기존 평가자 업데이트
+            - **업데이트 결과 검증**
+                - GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings (직원 평가설정 통합 조회)
+                    - wbsItemId가 null인 매핑이 1개만 존재하는지 확인 (중복 방지)
+                    - evaluatorId가 새로 설정한 평가자 ID와 일치하는지 확인
+                    - 기존 평가자 ID와 다르다는 것 확인
+        - **여러 직원의 1차 평가자 배치 구성**
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-primary-evaluator (배치 1차 평가자 구성)
+                - assignments 배열로 여러 직원-평가자 쌍 전달
+                - 각 직원별로 고정된 1차 평가자 설정 (WBS와 무관)
+                - 일부 실패 시에도 성공한 항목은 처리됨
+            - **배치 구성 결과 검증**
+                - 응답에서 totalCount, successCount, failureCount 확인
+                - results 배열에서 각 항목의 status 확인 (success 또는 error)
+                - 성공한 항목의 mapping 정보 확인
+                - 실패한 항목의 error 메시지 확인
+            - **배치 구성 후 대시보드 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status (모든 직원 평가기간 현황 조회)
+                    - 각 직원의 evaluationLine.hasPrimaryEvaluator 확인
+                    - 설정한 직원들의 1차 평가자가 올바르게 구성되었는지 확인
+
+- **2차 평가자 구성 관리**
+    - POST /admin/evaluation-periods (평가기간 생성)
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성 - 선행 조건)
+    - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성 - 선행 조건)
+        - **단일 직원의 단일 WBS 항목에 대한 2차 평가자 구성**
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId}/secondary-evaluator (2차 평가자 구성)
+                - evaluatorId를 body로 전달
+                - 특정 WBS 항목에 대한 2차 평가자 설정
+                - WBS별로 한 명의 2차 평가자만 허용 (기존 매핑 자동 삭제 후 새 매핑 생성)
+                - Upsert 방식으로 동작하여 중복 생성 방지
+            - **구성 결과 검증**
+                - GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings (직원 평가설정 통합 조회)
+                    - evaluationLineMappings 배열에서 wbsItemId가 있는 매핑 조회 (2차 평가자)
+                    - 해당 wbsItemId와 일치하는 매핑 존재 확인
+                    - evaluatorId가 설정한 평가자 ID와 일치하는지 확인
+                    - mapping 객체의 employeeId, wbsItemId, evaluatorId, evaluationLineId 필드 존재 확인
+                - 또는 GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=secondary (2차 평가자 목록 조회)
+                    - evaluatorType이 'secondary'인 평가자 목록 확인
+                    - 설정한 evaluatorId가 목록에 포함되어 있는지 확인
+                    - evaluateeCount가 증가했는지 확인
+            - **대시보드 API를 통한 평가라인 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (직원 평가기간 현황 조회)
+                    - evaluationLine 객체 존재 확인
+                    - evaluationLine.hasSecondaryEvaluator가 true인지 확인
+                    - evaluationLine.status가 'complete'인지 확인 (1차/2차 모두 지정된 경우)
+                - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자별 피평가자 현황 조회)
+                    - 응답 배열에서 해당 피평가자 정보 조회
+                    - downwardEvaluation.isSecondary가 true인지 확인
+                    - downwardEvaluation.secondaryStatus 객체 존재 확인
+        - **기존 2차 평가자 업데이트**
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId}/secondary-evaluator (2차 평가자 구성)
+                - 다른 evaluatorId로 업데이트
+                - Upsert 방식으로 기존 평가자 업데이트
+                - 기존 매핑 삭제 후 새 매핑 생성 (WBS별 유일성 보장)
+            - **업데이트 결과 검증**
+                - GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings (직원 평가설정 통합 조회)
+                    - 해당 wbsItemId와 일치하는 매핑이 1개만 존재하는지 확인 (WBS별 유일성)
+                    - evaluatorId가 새로 설정한 평가자 ID와 일치하는지 확인
+                    - 기존 평가자 ID와 다르다는 것 확인
+        - **여러 직원의 여러 WBS 항목에 대한 2차 평가자 배치 구성**
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-secondary-evaluator (배치 2차 평가자 구성)
+                - assignments 배열로 여러 직원-WBS-평가자 쌍 전달
+                - 각 WBS 항목별로 2차 평가자 설정
+                - WBS별로 한 명의 2차 평가자만 허용 (기존 매핑 자동 삭제 후 새 매핑 생성)
+                - 일부 실패 시에도 성공한 항목은 처리됨
+            - **배치 구성 결과 검증**
+                - 응답에서 totalCount, successCount, failureCount 확인
+                - results 배열에서 각 항목의 status 확인 (success 또는 error)
+                - 성공한 항목의 mapping 정보 확인 (employeeId, wbsItemId, evaluatorId)
+                - 실패한 항목의 error 메시지 확인
+            - **배치 구성 후 대시보드 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status (모든 직원 평가기간 현황 조회)
+                    - 각 직원의 evaluationLine.hasSecondaryEvaluator 확인
+                    - 설정한 직원들의 2차 평가자가 올바르게 구성되었는지 확인
+
+- **1차/2차 평가자 통합 구성 관리**
+    - POST /admin/evaluation-periods (평가기간 생성)
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+    - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+        - **1차 평가자 구성 후 2차 평가자 구성**
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 구성)
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId}/secondary-evaluator (2차 평가자 구성)
+            - **통합 구성 결과 검증**
+                - GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings (직원 평가설정 통합 조회)
+                    - evaluationLineMappings 배열에서 wbsItemId가 null인 매핑 1개 확인 (1차 평가자)
+                    - evaluationLineMappings 배열에서 wbsItemId가 있는 매핑 확인 (2차 평가자)
+                    - 각 매핑의 evaluatorId 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (직원 평가기간 현황 조회)
+                    - evaluationLine.hasPrimaryEvaluator가 true인지 확인
+                    - evaluationLine.hasSecondaryEvaluator가 true인지 확인
+                    - evaluationLine.status가 'complete'인지 확인
+        - **배치 1차 평가자 구성 후 배치 2차 평가자 구성**
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-primary-evaluator (배치 1차 평가자 구성)
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-secondary-evaluator (배치 2차 평가자 구성)
+            - **통합 배치 구성 결과 검증**
+                - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=all (전체 평가자 목록 조회)
+                    - evaluators 배열에서 primary 평가자 목록 확인
+                    - evaluators 배열에서 secondary 평가자 목록 확인
+                    - 각 평가자의 evaluateeCount 확인
+
+- **평가자별 피평가자 현황 조회 검증**
+    - POST /admin/evaluation-periods (평가기간 생성)
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+    - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+    - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 구성)
+    - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId}/secondary-evaluator (2차 평가자 구성)
+        - **평가자별 피평가자 목록 조회**
+            - GET /admin/evaluation-criteria/evaluation-lines/evaluator/{evaluatorId}/employees (평가자별 피평가자 조회)
+                - employees 배열 존재 확인
+                - employees 배열에 설정한 피평가자 포함 확인
+                - 각 employee 객체의 employeeId, wbsItemId, evaluationLineId 필드 확인
+                - createdAt, updatedAt 타임스탬프 형식 확인
+        - **평가기간별 평가자 목록 조회**
+            - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=primary (1차 평가자 목록 조회)
+                - evaluators 배열에서 evaluatorType이 'primary'인 평가자만 확인
+                - evaluatorId, evaluatorName, departmentName, evaluatorType, evaluateeCount 필드 확인
+            - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=secondary (2차 평가자 목록 조회)
+                - evaluators 배열에서 evaluatorType이 'secondary'인 평가자만 확인
+                - evaluatorId, evaluatorName, departmentName, evaluatorType, evaluateeCount 필드 확인
+            - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=all (전체 평가자 목록 조회)
+                - evaluators 배열에 primary와 secondary 평가자 모두 포함 확인
+                - 동일 직원이 1차/2차 평가자 역할을 모두 하는 경우 각각 별도 항목으로 반환 확인
+
+- **평가라인 변경 실패 케이스 검증**
+    - POST /admin/evaluation-periods (평가기간 생성)
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+    - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+        - **잘못된 UUID 형식 검증**
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/invalid-uuid/period/{periodId}/primary-evaluator
+                - 잘못된 UUID 형식의 employeeId로 요청 시 400 에러
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/invalid-uuid/primary-evaluator
+                - 잘못된 UUID 형식의 periodId로 요청 시 400 에러
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator
+                - 잘못된 UUID 형식의 evaluatorId를 body로 전달 시 400 에러
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/invalid-uuid/period/{periodId}/secondary-evaluator
+                - 잘못된 UUID 형식의 wbsItemId로 요청 시 400 에러
+        - **필수 필드 누락 검증**
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator
+                - evaluatorId가 누락된 경우 400 에러
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-primary-evaluator
+                - assignments 필드가 누락된 경우 400 에러
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-secondary-evaluator
+                - assignments 필드가 누락된 경우 400 에러
+        - **배치 요청 유효성 검증**
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-primary-evaluator
+                - assignments 배열에 잘못된 UUID 형식의 employeeId가 포함된 경우 400 에러
+                - assignments 배열에 잘못된 UUID 형식의 evaluatorId가 포함된 경우 400 에러
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-secondary-evaluator
+                - assignments 배열에 잘못된 UUID 형식의 employeeId가 포함된 경우 400 에러
+                - assignments 배열에 잘못된 UUID 형식의 wbsItemId가 포함된 경우 400 에러
+                - assignments 배열에 잘못된 UUID 형식의 evaluatorId가 포함된 경우 400 에러
+        - **존재하지 않는 리소스 검증**
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator
+                - 존재하지 않는 employeeId로 요청 시 404 또는 400 에러
+                - 존재하지 않는 periodId로 요청 시 404 또는 400 에러
+                - 존재하지 않는 evaluatorId를 body로 전달 시 핸들러 단계에서 실패
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId}/secondary-evaluator
+                - 존재하지 않는 wbsItemId로 요청 시 404 또는 400 에러
+        - **배치 요청 일부 실패 처리 검증**
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-primary-evaluator
+                - 유효한 항목과 유효하지 않은 항목을 섞어서 전송
+                - 성공한 항목은 처리되고 실패한 항목은 error로 표시되는지 확인
+                - 응답의 successCount와 failureCount 확인
+                - results 배열에서 각 항목의 status 확인
+            - POST /admin/evaluation-criteria/evaluation-lines/period/{periodId}/batch-secondary-evaluator
+                - 유효한 항목과 유효하지 않은 항목을 섞어서 전송
+                - 성공한 항목은 처리되고 실패한 항목은 error로 표시되는지 확인
+
+- **평가라인 조회 검증**
+    - POST /admin/evaluation-periods (평가기간 생성)
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+    - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+    - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 구성)
+    - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId}/secondary-evaluator (2차 평가자 구성)
+        - **직원 평가설정 통합 조회**
+            - GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings (직원 평가설정 통합 조회)
+                - employeeId, periodId 필드 확인
+                - projectAssignments 배열 확인 (프로젝트 할당 정보)
+                - wbsAssignments 배열 확인 (WBS 할당 정보)
+                - evaluationLineMappings 배열 확인 (평가라인 매핑 정보)
+                - evaluationLineMappings 배열에서 1차 평가자 매핑 확인 (wbsItemId가 null)
+                - evaluationLineMappings 배열에서 2차 평가자 매핑 확인 (wbsItemId가 있음)
+        - **평가기간별 평가자 목록 조회 (쿼리 파라미터 검증)**
+            - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators (기본 조회)
+                - type 파라미터 생략 시 기본값(all)로 동작하여 모든 평가자 조회
+            - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=primary
+                - 1차 평가자만 반환되는지 확인
+                - secondary 평가자가 포함되지 않는지 확인
+            - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=secondary
+                - 2차 평가자만 반환되는지 확인
+                - primary 평가자가 포함되지 않는지 확인
+            - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=all
+                - 모든 평가자(primary, secondary)가 반환되는지 확인
+            - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=invalid
+                - 잘못된 type 값으로 요청 시 400 에러
+        - **평가자별 피평가자 조회**
+            - GET /admin/evaluation-criteria/evaluation-lines/evaluator/{evaluatorId}/employees (평가자별 피평가자 조회)
+                - evaluatorId 필드 확인
+                - employees 배열 확인
+                - employees 배열이 비어있는 경우도 허용 (평가자가 없는 경우)
+                - 각 employee 객체의 필드 확인 (employeeId, wbsItemId, evaluationLineId 등)
+
+- **대시보드 API를 통한 평가라인 상태 검증**
+    - POST /admin/evaluation-periods (평가기간 생성)
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+    - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+    - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+    - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 구성)
+    - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId}/secondary-evaluator (2차 평가자 구성)
+        - **직원 평가기간 현황 조회를 통한 평가라인 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (직원 평가기간 현황 조회)
+                - employee 정보 존재 확인
+                - employeeId 일치 확인
+                - **evaluationLine 객체 검증**
+                    - evaluationLine 객체 존재 확인
+                    - evaluationLine.status가 'complete'인지 확인 (1차/2차 평가자 모두 지정된 경우)
+                    - evaluationLine.hasPrimaryEvaluator가 true인지 확인 (1차 평가자가 지정된 경우)
+                    - evaluationLine.hasSecondaryEvaluator가 true인지 확인 (2차 평가자가 지정된 경우)
+        - **평가자별 피평가자 현황 조회를 통한 평가라인 검증**
+            - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자별 피평가자 현황 조회)
+                - 응답 배열에서 해당 피평가자 정보 조회
+                - **evaluationLine 객체 검증**
+                    - evaluationLine 객체 존재 확인
+                    - evaluationLine.status가 'complete'인지 확인 (1차/2차 평가자 모두 지정된 경우)
+                    - evaluationLine.hasPrimaryEvaluator가 true인지 확인 (1차 평가자가 지정된 경우)
+                    - evaluationLine.hasSecondaryEvaluator가 true인지 확인 (2차 평가자가 지정된 경우)
+                - **downwardEvaluation 객체 검증**
+                    - downwardEvaluation 객체 존재 확인
+                    - downwardEvaluation.isPrimary가 true인지 확인 (1차 평가자인 경우)
+                    - downwardEvaluation.isSecondary가 true인지 확인 (2차 평가자인 경우)
+                    - downwardEvaluation.primaryStatus 객체 검증 (1차 평가자인 경우)
+                        - assignedWbsCount가 할당된 WBS 수와 일치하는지 확인
+                        - completedEvaluationCount가 0 이상인지 확인 (기본값 0)
+                        - isEditable이 boolean 타입인지 확인
+                    - downwardEvaluation.secondaryStatus 객체 검증 (2차 평가자인 경우)
+                        - assignedWbsCount가 해당 WBS 수와 일치하는지 확인
+                        - completedEvaluationCount가 0 이상인지 확인 (기본값 0)
+                        - isEditable이 boolean 타입인지 확인
+                - **myEvaluatorTypes 배열 검증**
+                    - myEvaluatorTypes 배열 존재 확인
+                    - 'PRIMARY' 또는 'SECONDARY' 포함 여부 확인
+                    - 해당 평가자가 담당하는 평가자 유형만 포함되어 있는지 확인
+

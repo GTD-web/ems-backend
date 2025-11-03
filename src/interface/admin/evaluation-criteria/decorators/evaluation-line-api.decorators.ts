@@ -10,6 +10,10 @@ import {
 import {
   ConfigurePrimaryEvaluatorDto,
   ConfigureSecondaryEvaluatorDto,
+  BatchConfigurePrimaryEvaluatorDto,
+  BatchConfigurePrimaryEvaluatorResponseDto,
+  BatchConfigureSecondaryEvaluatorDto,
+  BatchConfigureSecondaryEvaluatorResponseDto,
 } from '../dto/evaluation-line.dto';
 
 /**
@@ -575,3 +579,118 @@ export const GetEvaluatorsByPeriod = () =>
  * @deprecated GetEvaluatorsByPeriod 사용 권장
  */
 export const GetPrimaryEvaluatorsByPeriod = GetEvaluatorsByPeriod;
+
+/**
+ * 배치 1차 평가자 구성 API 데코레이터
+ */
+export const BatchConfigurePrimaryEvaluator = () =>
+  applyDecorators(
+    Post('period/:periodId/batch-primary-evaluator'),
+    ApiOperation({
+      summary: '여러 피평가자의 1차 평가자 일괄 구성',
+      description: `여러 피평가자의 1차 평가자(고정 담당자)를 일괄로 구성합니다.
+
+**동작:**
+- 여러 직원의 1차 평가자를 한 번에 설정
+- 각 직원별로 고정된 1차 평가자 설정 (WBS와 무관)
+- 기존 1차 평가자가 있는 경우: 평가자 업데이트
+- 1차 평가자가 없는 경우: 새로운 평가라인 및 매핑 생성
+- Upsert 방식으로 동작하여 중복 생성 방지
+- 일부 실패 시에도 성공한 항목은 처리됨
+
+**테스트 케이스:**
+- 여러 직원의 1차 평가자 일괄 설정: 여러 직원의 1차 평가자를 한 번에 설정 (201)
+- 기존 1차 평가자 일괄 업데이트: 이미 설정된 여러 직원의 1차 평가자를 한 번에 변경 (201)
+- 혼합 처리: 새로 설정하는 직원과 업데이트하는 직원을 함께 처리 (201)
+- 일부 실패 처리: 일부 직원 ID가 유효하지 않아도 성공한 항목은 처리됨
+- 빈 배열 처리: assignments가 빈 배열인 경우 0건 처리 완료 (201)
+- 잘못된 UUID 형식 periodId: 잘못된 UUID 형식의 periodId로 요청 시 400 에러
+- 잘못된 UUID 형식 employeeId: assignments 배열에 잘못된 UUID 형식의 employeeId가 포함된 경우 400 에러
+- 잘못된 UUID 형식 evaluatorId: assignments 배열에 잘못된 UUID 형식의 evaluatorId가 포함된 경우 400 에러
+- assignments 누락: assignments 필드가 누락된 경우 400 에러
+- 존재하지 않는 직원 ID: 유효한 UUID이지만 존재하지 않는 직원 ID가 포함된 경우 해당 항목 실패`,
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+    }),
+    ApiBody({
+      type: BatchConfigurePrimaryEvaluatorDto,
+      description: '배치 1차 평가자 구성 데이터',
+    }),
+    ApiResponse({
+      status: 201,
+      description: '배치 1차 평가자 구성이 성공적으로 완료되었습니다.',
+      type: BatchConfigurePrimaryEvaluatorResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '평가기간을 찾을 수 없습니다.',
+    }),
+  );
+
+/**
+ * 배치 2차 평가자 구성 API 데코레이터
+ */
+export const BatchConfigureSecondaryEvaluator = () =>
+  applyDecorators(
+    Post('period/:periodId/batch-secondary-evaluator'),
+    ApiOperation({
+      summary: '여러 피평가자의 2차 평가자 일괄 구성',
+      description: `여러 피평가자의 WBS 항목별 2차 평가자를 일괄로 구성합니다.
+
+**동작:**
+- 여러 직원의 여러 WBS 항목에 대한 2차 평가자를 한 번에 설정
+- WBS 할당 시 자동으로 생성된 평가라인이 있는 경우: 평가자 업데이트
+- 평가라인이 없는 경우: 새로운 평가라인 및 매핑 생성
+- WBS별로 한 명의 2차 평가자만 허용 (기존 매핑 자동 삭제 후 새 매핑 생성)
+- Upsert 방식으로 동작하여 중복 생성 방지
+- 일부 실패 시에도 성공한 항목은 처리됨
+
+**테스트 케이스:**
+- 여러 직원의 여러 WBS 항목에 대한 2차 평가자 일괄 설정: 여러 직원의 여러 WBS에 대한 2차 평가자를 한 번에 설정 (201)
+- 기존 2차 평가자 일괄 업데이트: 이미 설정된 여러 직원의 여러 WBS에 대한 2차 평가자를 한 번에 변경 (201)
+- 혼합 처리: 새로 설정하는 항목과 업데이트하는 항목을 함께 처리 (201)
+- WBS별 유일성 보장: 동일 직원의 동일 WBS에 기존 2차 평가자가 있으면 기존 매핑 삭제 후 새 매핑 생성 (201)
+- 일부 실패 처리: 일부 항목이 유효하지 않아도 성공한 항목은 처리됨
+- 빈 배열 처리: assignments가 빈 배열인 경우 0건 처리 완료 (201)
+- 잘못된 UUID 형식 periodId: 잘못된 UUID 형식의 periodId로 요청 시 400 에러
+- 잘못된 UUID 형식 employeeId: assignments 배열에 잘못된 UUID 형식의 employeeId가 포함된 경우 400 에러
+- 잘못된 UUID 형식 wbsItemId: assignments 배열에 잘못된 UUID 형식의 wbsItemId가 포함된 경우 400 에러
+- 잘못된 UUID 형식 evaluatorId: assignments 배열에 잘못된 UUID 형식의 evaluatorId가 포함된 경우 400 에러
+- assignments 누락: assignments 필드가 누락된 경우 400 에러
+- 존재하지 않는 직원 ID: 유효한 UUID이지만 존재하지 않는 직원 ID가 포함된 경우 해당 항목 실패
+- 존재하지 않는 WBS 항목 ID: 유효한 UUID이지만 존재하지 않는 WBS 항목 ID가 포함된 경우 해당 항목 실패`,
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
+    }),
+    ApiBody({
+      type: BatchConfigureSecondaryEvaluatorDto,
+      description: '배치 2차 평가자 구성 데이터',
+    }),
+    ApiResponse({
+      status: 201,
+      description: '배치 2차 평가자 구성이 성공적으로 완료되었습니다.',
+      type: BatchConfigureSecondaryEvaluatorResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '평가기간을 찾을 수 없습니다.',
+    }),
+  );

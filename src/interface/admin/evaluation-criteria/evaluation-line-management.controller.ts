@@ -9,6 +9,8 @@ import {
   GetEmployeeEvaluationSettings,
   GetEvaluatorEmployees,
   GetEvaluatorsByPeriod,
+  BatchConfigurePrimaryEvaluator,
+  BatchConfigureSecondaryEvaluator,
 } from './decorators/evaluation-line-api.decorators';
 import {
   ConfigureEvaluatorResponseDto,
@@ -18,6 +20,10 @@ import {
   EvaluatorEmployeesResponseDto,
   EvaluatorsByPeriodResponseDto,
   EvaluatorTypeQueryDto,
+  BatchConfigurePrimaryEvaluatorDto,
+  BatchConfigurePrimaryEvaluatorResponseDto,
+  BatchConfigureSecondaryEvaluatorDto,
+  BatchConfigureSecondaryEvaluatorResponseDto,
 } from './dto/evaluation-line.dto';
 
 /**
@@ -116,6 +122,38 @@ export class EvaluationLineManagementController {
     return await this.evaluationCriteriaManagementService.평가기간의_평가자_목록을_조회한다(
       periodId,
       type,
+    );
+  }
+
+  /**
+   * 여러 피평가자의 1차 평가자 일괄 구성
+   */
+  @BatchConfigurePrimaryEvaluator()
+  async batchConfigurePrimaryEvaluator(
+    @Param('periodId', ParseUUIDPipe) periodId: string,
+    @Body() dto: BatchConfigurePrimaryEvaluatorDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<BatchConfigurePrimaryEvaluatorResponseDto> {
+    return await this.evaluationCriteriaManagementService.여러_피평가자의_일차_평가자를_일괄_구성한다(
+      periodId,
+      dto.assignments,
+      user.id,
+    );
+  }
+
+  /**
+   * 여러 피평가자의 2차 평가자 일괄 구성
+   */
+  @BatchConfigureSecondaryEvaluator()
+  async batchConfigureSecondaryEvaluator(
+    @Param('periodId', ParseUUIDPipe) periodId: string,
+    @Body() dto: BatchConfigureSecondaryEvaluatorDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<BatchConfigureSecondaryEvaluatorResponseDto> {
+    return await this.evaluationCriteriaManagementService.여러_피평가자의_이차_평가자를_일괄_구성한다(
+      periodId,
+      dto.assignments,
+      user.id,
     );
   }
 }
