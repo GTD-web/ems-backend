@@ -90,11 +90,12 @@ export class ConfigureEmployeeWbsEvaluationLineHandler
       }
 
       // 상급자 평가 라인 조회 또는 생성 (2차 평가자)
-      const existingSupervisorLines = await this.evaluationLineService.필터_조회한다({
-        evaluatorType: EvaluatorType.SECONDARY,
-        orderFrom: 2,
-        orderTo: 2,
-      });
+      const existingSupervisorLines =
+        await this.evaluationLineService.필터_조회한다({
+          evaluatorType: EvaluatorType.SECONDARY,
+          orderFrom: 2,
+          orderTo: 2,
+        });
 
       let supervisorEvaluationLine;
       if (existingSupervisorLines.length > 0) {
@@ -116,6 +117,7 @@ export class ConfigureEmployeeWbsEvaluationLineHandler
           // 중복 매핑 방지 체크
           const existingMapping =
             await this.evaluationLineMappingService.평가관계_존재_확인한다(
+              periodId,
               employeeId,
               assignmentDto.employeeId,
               wbsItemId,
