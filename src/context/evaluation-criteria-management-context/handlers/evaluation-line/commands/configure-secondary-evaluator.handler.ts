@@ -91,6 +91,7 @@ export class ConfigureSecondaryEvaluatorHandler
       // WBS별 유일한 2차 평가자 보장을 위해 기존 매핑들 조회
       const existingMappings =
         await this.evaluationLineMappingService.필터_조회한다({
+          evaluationPeriodId: periodId,
           employeeId,
           wbsItemId,
           evaluationLineId,
@@ -112,6 +113,7 @@ export class ConfigureSecondaryEvaluatorHandler
 
       // 새로운 2차 평가자 매핑 생성
       const mappingEntity = await this.evaluationLineMappingService.생성한다({
+        evaluationPeriodId: command.periodId,
         employeeId,
         evaluatorId,
         wbsItemId,

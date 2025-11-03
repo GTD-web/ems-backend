@@ -92,6 +92,12 @@ export class EvaluationLineMappingValidationService {
   private 필수데이터검증한다(
     createData: CreateEvaluationLineMappingData,
   ): void {
+    if (!createData.evaluationPeriodId) {
+      throw new EvaluationLineMappingRequiredDataMissingException(
+        '평가기간 ID는 필수입니다.',
+      );
+    }
+
     if (!createData.employeeId) {
       throw new EvaluationLineMappingRequiredDataMissingException(
         '피평가자 ID는 필수입니다.',
@@ -120,6 +126,12 @@ export class EvaluationLineMappingValidationService {
     // UUID 형식 검증
     const uuidRegex =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    if (!uuidRegex.test(createData.evaluationPeriodId)) {
+      throw new InvalidEvaluationLineMappingDataFormatException(
+        '평가기간 ID는 유효한 UUID 형식이어야 합니다.',
+      );
+    }
 
     if (!uuidRegex.test(createData.employeeId)) {
       throw new InvalidEvaluationLineMappingDataFormatException(

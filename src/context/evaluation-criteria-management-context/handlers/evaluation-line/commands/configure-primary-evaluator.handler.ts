@@ -87,9 +87,10 @@ export class ConfigurePrimaryEvaluatorHandler
 
       const evaluationLineId = primaryEvaluationLine.DTO로_변환한다().id;
 
-      // 기존 매핑 조회 (employeeId, evaluationLineId 기준, wbsItemId는 null)
+      // 기존 매핑 조회 (evaluationPeriodId, employeeId, evaluationLineId 기준, wbsItemId는 null)
       const existingMappings =
         await this.evaluationLineMappingService.필터_조회한다({
+          evaluationPeriodId: periodId,
           employeeId,
           evaluationLineId,
         });
@@ -120,6 +121,7 @@ export class ConfigurePrimaryEvaluatorHandler
       } else {
         // 새로 생성 (wbsItemId는 undefined로 설정)
         mappingEntity = await this.evaluationLineMappingService.생성한다({
+          evaluationPeriodId: command.periodId,
           employeeId,
           evaluatorId,
           wbsItemId: undefined, // 직원별 고정 담당자이므로 WBS와 무관

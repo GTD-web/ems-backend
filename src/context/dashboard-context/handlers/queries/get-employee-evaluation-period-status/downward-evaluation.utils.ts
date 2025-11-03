@@ -75,7 +75,8 @@ export async function 하향평가_상태를_조회한다(
   if (primaryLine) {
     const primaryMapping = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .where('mapping.employeeId = :employeeId', { employeeId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.evaluationLineId = :lineId', {
         lineId: primaryLine.id,
       })
@@ -147,7 +148,8 @@ export async function 하향평가_상태를_조회한다(
   if (secondaryLine) {
     const secondaryMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .where('mapping.employeeId = :employeeId', { employeeId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.evaluationLineId = :lineId', {
         lineId: secondaryLine.id,
       })

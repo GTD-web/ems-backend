@@ -94,7 +94,8 @@ export async function calculatePrimaryDownwardEvaluationScore(
       'line',
       'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
     )
-    .where('mapping.employeeId = :employeeId', { employeeId })
+    .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+    .andWhere('mapping.employeeId = :employeeId', { employeeId })
     .andWhere('line.evaluatorType = :evaluatorType', {
       evaluatorType: EvaluatorType.PRIMARY,
     })
@@ -113,7 +114,8 @@ export async function calculatePrimaryDownwardEvaluationScore(
         'line',
         'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
       )
-      .where('mapping.employeeId = :employeeId', { employeeId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.evaluatorId = :evaluatorId', {
         evaluatorId: primaryEvaluatorId,
       })
@@ -207,7 +209,8 @@ export async function calculateSecondaryDownwardEvaluationScore(
       'line',
       'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
     )
-    .where('mapping.employeeId = :employeeId', { employeeId })
+    .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+    .andWhere('mapping.employeeId = :employeeId', { employeeId })
     .andWhere('line.evaluatorType = :evaluatorType', {
       evaluatorType: EvaluatorType.SECONDARY,
     })
@@ -232,7 +235,8 @@ export async function calculateSecondaryDownwardEvaluationScore(
             'line',
             'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
           )
-          .where('mapping.employeeId = :employeeId', { employeeId })
+          .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+          .andWhere('mapping.employeeId = :employeeId', { employeeId })
           .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
           .andWhere('line.evaluatorType = :evaluatorType', {
             evaluatorType: EvaluatorType.SECONDARY,

@@ -86,6 +86,7 @@ export interface IEvaluationLineMappingService {
    * 특정 평가 관계가 존재하는지 확인한다
    */
   평가관계_존재_확인한다(
+    evaluationPeriodId: string,
     employeeId: string,
     evaluatorId: string,
     wbsItemId?: string,

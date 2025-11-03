@@ -7,7 +7,10 @@ import { EvaluationLineMapping } from '../../../../../domain/core/evaluation-lin
  * 평가자별 피평가자 목록 조회 쿼리
  */
 export class GetEvaluatorEmployeesQuery {
-  constructor(public readonly evaluatorId: string) {}
+  constructor(
+    public readonly evaluationPeriodId: string,
+    public readonly evaluatorId: string,
+  ) {}
 }
 
 /**
@@ -48,7 +51,10 @@ export class GetEvaluatorEmployeesHandler
     query: GetEvaluatorEmployeesQuery,
   ): Promise<EvaluatorEmployeesResult> {
     const mappings = await this.evaluationLineMappingRepository.find({
-      where: { evaluatorId: query.evaluatorId },
+      where: { 
+        evaluationPeriodId: query.evaluationPeriodId,
+        evaluatorId: query.evaluatorId 
+      },
       order: { createdAt: 'DESC' },
     });
 

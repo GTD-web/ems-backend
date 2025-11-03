@@ -234,6 +234,15 @@ export class EvaluationLineMappingService
       let queryBuilder = repository.createQueryBuilder('mapping');
 
       // 필터 적용
+      if (filter.evaluationPeriodId) {
+        queryBuilder.andWhere(
+          'mapping.evaluationPeriodId = :evaluationPeriodId',
+          {
+            evaluationPeriodId: filter.evaluationPeriodId,
+          },
+        );
+      }
+
       if (filter.employeeId) {
         queryBuilder.andWhere('mapping.employeeId = :employeeId', {
           employeeId: filter.employeeId,
@@ -307,6 +316,7 @@ export class EvaluationLineMappingService
       );
 
       const mapping = repository.create({
+        evaluationPeriodId: createData.evaluationPeriodId,
         employeeId: createData.employeeId,
         evaluatorId: createData.evaluatorId,
         wbsItemId: createData.wbsItemId,
@@ -317,7 +327,7 @@ export class EvaluationLineMappingService
       const savedMapping = await repository.save(mapping);
 
       this.logger.log(
-        `평가 라인 맵핑 생성 완료 - ID: ${savedMapping.id}, 피평가자: ${savedMapping.employeeId}, 평가자: ${savedMapping.evaluatorId}`,
+        `평가 라인 맵핑 생성 완료 - ID: ${savedMapping.id}, 평가기간: ${savedMapping.evaluationPeriodId}, 피평가자: ${savedMapping.employeeId}, 평가자: ${savedMapping.evaluatorId}`,
       );
 
       return savedMapping;
@@ -414,6 +424,7 @@ export class EvaluationLineMappingService
    * 특정 평가 관계가 존재하는지 확인한다
    */
   async 평가관계_존재_확인한다(
+    evaluationPeriodId: string,
     employeeId: string,
     evaluatorId: string,
     wbsItemId?: string,
@@ -428,7 +439,10 @@ export class EvaluationLineMappingService
 
       let queryBuilder = repository
         .createQueryBuilder('mapping')
-        .where('mapping.employeeId = :employeeId', { employeeId })
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
         .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId });
 
       if (wbsItemId) {

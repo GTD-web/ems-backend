@@ -1,0 +1,211 @@
+import { applyDecorators, Get, Patch } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiBadRequestResponse,
+  ApiForbiddenResponse,
+  ApiParam,
+  ApiQuery,
+  ApiBody,
+} from '@nestjs/swagger';
+import {
+  RevisionRequestResponseDto,
+  UnreadCountResponseDto,
+} from '../dto/revision-request-response.dto';
+import { CompleteRevisionRequestDto } from '../dto/complete-revision-request.dto';
+
+/**
+ * 내 재작성 요청 목록 조회 API 데코레이터
+ */
+export function GetMyRevisionRequests() {
+  return applyDecorators(
+    Get('me'),
+    ApiOperation({
+      summary: '내 재작성 요청 목록 조회',
+      description: `**담당자용**: 내가 수신한 재작성 요청 목록을 조회합니다.
+
+**수신자별 재작성 요청:**
+- **피평가자**: 평가기준, 자기평가 재작성 요청
+- **1차평가자**: 평가기준, 자기평가, 1차평가 재작성 요청
+- **2차평가자**: 2차평가 재작성 요청
+
+**필터링 옵션:**
+- \`evaluationPeriodId\`: 특정 평가기간의 요청만 조회
+- \`isRead\`: 읽음/읽지 않음 상태로 필터링
+- \`isCompleted\`: 완료/미완료 상태로 필터링
+- \`step\`: 특정 단계의 요청만 조회
+
+**사용 시나리오:**
+- 담당자가 자신의 재작성 요청 목록 확인
+- 읽지 않은 요청만 필터링하여 조회
+- 완료되지 않은 요청만 조회
+
+**테스트 케이스:**
+- 정상 조회: 내가 수신한 재작성 요청 목록 반환
+- 필터 적용: isRead=false로 읽지 않은 요청만 조회
+- 빈 목록: 수신한 요청이 없는 경우 빈 배열 반환`,
+    }),
+    ApiQuery({
+      name: 'evaluationPeriodId',
+      required: false,
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiQuery({
+      name: 'isRead',
+      required: false,
+      description: '읽음 여부',
+      type: 'boolean',
+    }),
+    ApiQuery({
+      name: 'isCompleted',
+      required: false,
+      description: '재작성 완료 여부',
+      type: 'boolean',
+    }),
+    ApiQuery({
+      name: 'step',
+      required: false,
+      description: '단계',
+      enum: ['criteria', 'self', 'primary', 'secondary'],
+    }),
+    ApiOkResponse({
+      description: '내 재작성 요청 목록 조회 성공',
+      type: [RevisionRequestResponseDto],
+    }),
+  );
+}
+
+/**
+ * 읽지 않은 재작성 요청 수 조회 API 데코레이터
+ */
+export function GetMyUnreadCount() {
+  return applyDecorators(
+    Get('me/unread-count'),
+    ApiOperation({
+      summary: '읽지 않은 재작성 요청 수 조회',
+      description: `**담당자용**: 내가 수신한 읽지 않은 재작성 요청 수를 조회합니다.
+
+**사용 시나리오:**
+- 대시보드에 알림 뱃지 표시
+- 읽지 않은 요청이 있는지 빠르게 확인
+
+**테스트 케이스:**
+- 정상 조회: 읽지 않은 재작성 요청 수 반환
+- 읽지 않은 요청이 없는 경우: 0 반환`,
+    }),
+    ApiOkResponse({
+      description: '읽지 않은 재작성 요청 수 조회 성공',
+      type: UnreadCountResponseDto,
+    }),
+  );
+}
+
+/**
+ * 재작성 요청 읽음 처리 API 데코레이터
+ */
+export function MarkRevisionRequestAsRead() {
+  return applyDecorators(
+    Patch(':id/read'),
+    ApiOperation({
+      summary: '재작성 요청 읽음 처리',
+      description: `**담당자용**: 재작성 요청을 읽음 처리합니다.
+
+**처리 내용:**
+- \`isRead\` 상태를 \`true\`로 변경
+- \`readAt\` 시간을 현재 시간으로 설정
+- 읽지 않은 요청 수가 감소
+
+**권한 확인:**
+- 본인이 수신한 요청만 읽음 처리 가능
+- 다른 사람의 요청 접근 시 403 에러
+
+**사용 시나리오:**
+- 담당자가 재작성 요청 내용 확인
+- 읽음 상태로 자동 업데이트
+
+**테스트 케이스:**
+- 정상 읽음 처리: isRead=true, readAt 설정
+- 이미 읽은 요청 재처리: 중복 처리 방지
+- 다른 사람의 요청 읽음 시도: 403 에러
+- 존재하지 않는 요청: 404 에러`,
+    }),
+    ApiParam({
+      name: 'id',
+      description: '재작성 요청 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiOkResponse({
+      description: '재작성 요청 읽음 처리 성공',
+    }),
+    ApiNotFoundResponse({
+      description: '재작성 요청을 찾을 수 없음',
+    }),
+    ApiForbiddenResponse({
+      description: '해당 재작성 요청에 접근할 권한이 없음',
+    }),
+  );
+}
+
+/**
+ * 재작성 완료 응답 제출 API 데코레이터
+ */
+export function CompleteRevisionRequest() {
+  return applyDecorators(
+    Patch(':id/complete'),
+    ApiOperation({
+      summary: '재작성 완료 응답 제출',
+      description: `**담당자용**: 재작성 완료 응답을 제출합니다.
+
+**처리 내용:**
+- \`isCompleted\` 상태를 \`true\`로 변경
+- \`completedAt\` 시간을 현재 시간으로 설정
+- \`responseComment\`에 응답 코멘트 저장
+
+**권한 확인:**
+- 본인이 수신한 요청만 응답 가능
+- 다른 사람의 요청 접근 시 403 에러
+
+**제약 사항:**
+- \`responseComment\`는 필수
+- 이미 완료된 요청에는 재응답 불가 (400 에러)
+
+**사용 시나리오:**
+- 담당자가 재작성 작업 완료 후 응답 제출
+- 관리자가 완료 상태 확인 가능
+
+**테스트 케이스:**
+- 정상 응답 제출: isCompleted=true, completedAt, responseComment 설정
+- 응답 코멘트 누락: 400 에러
+- 이미 완료된 요청에 재응답: 400 에러
+- 다른 사람의 요청에 응답: 403 에러
+- 존재하지 않는 요청: 404 에러`,
+    }),
+    ApiParam({
+      name: 'id',
+      description: '재작성 요청 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiBody({
+      type: CompleteRevisionRequestDto,
+      description: '재작성 완료 응답 정보',
+    }),
+    ApiOkResponse({
+      description: '재작성 완료 응답 제출 성공',
+    }),
+    ApiNotFoundResponse({
+      description: '재작성 요청을 찾을 수 없음',
+    }),
+    ApiBadRequestResponse({
+      description: '잘못된 요청 (예: 이미 완료된 요청, 응답 코멘트 누락)',
+    }),
+    ApiForbiddenResponse({
+      description: '해당 재작성 요청에 접근할 권한이 없음',
+    }),
+  );
+}
+

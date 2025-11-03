@@ -19,6 +19,7 @@ import { PeerEvaluation } from '../../domain/core/peer-evaluation/peer-evaluatio
 import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evaluation.entity';
 import { Deliverable } from '../../domain/core/deliverable/deliverable.entity';
 import { QUERY_HANDLERS } from './handlers/queries';
+import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evaluation-step-approval';
 
 /**
  * 대시보드 컨텍스트 모듈
@@ -29,6 +30,7 @@ import { QUERY_HANDLERS } from './handlers/queries';
 @Module({
   imports: [
     CqrsModule,
+    EmployeeEvaluationStepApprovalModule,
     TypeOrmModule.forFeature([
       EvaluationPeriod,
       EvaluationPeriodEmployeeMapping,

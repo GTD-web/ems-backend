@@ -89,7 +89,11 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": ".",
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/test"
+    ],
     "testRegex": ".*\\.(spec|e2e-spec)\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
@@ -97,15 +101,17 @@
     "collectCoverageFrom": [
       "**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "./coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@libs/(.*)$": "<rootDir>/../libs/$1",
-      "^@domain/(.*)$": "<rootDir>/domain/$1",
-      "^@context/(.*)$": "<rootDir>/context/$1"
+      "^@libs/(.*)$": "<rootDir>/libs/$1",
+      "^@domain/(.*)$": "<rootDir>/src/domain/$1",
+      "^@context/(.*)$": "<rootDir>/src/context/$1",
+      "^@business/(.*)$": "<rootDir>/src/business/$1",
+      "^@interface/(.*)$": "<rootDir>/src/interface/$1"
     },
     "setupFilesAfterEnv": [
-      "<rootDir>/../test/setup.ts"
+      "<rootDir>/test/setup.ts"
     ],
     "testTimeout": 60000
   }

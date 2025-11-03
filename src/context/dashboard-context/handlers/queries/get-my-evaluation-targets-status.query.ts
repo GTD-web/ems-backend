@@ -217,7 +217,7 @@ export class GetMyEvaluationTargetsStatusHandler
 
           // 평가라인 지정 상태 확인
           const { hasPrimaryEvaluator, hasSecondaryEvaluator } =
-            await this.평가라인_지정_여부를_확인한다(employeeId);
+            await this.평가라인_지정_여부를_확인한다(evaluationPeriodId, employeeId);
 
           // 평가라인 상태 계산
           const evaluationLineStatus: EvaluationLineStatus =
@@ -577,6 +577,7 @@ export class GetMyEvaluationTargetsStatusHandler
    * PRIMARY와 SECONDARY 평가라인에 평가자가 지정되었는지 확인
    */
   private async 평가라인_지정_여부를_확인한다(
+    evaluationPeriodId: string,
     employeeId: string,
   ): Promise<{ hasPrimaryEvaluator: boolean; hasSecondaryEvaluator: boolean }> {
     // PRIMARY 평가라인 조회
@@ -602,6 +603,7 @@ export class GetMyEvaluationTargetsStatusHandler
     if (primaryLine) {
       const primaryMapping = await this.lineMappingRepository.findOne({
         where: {
+          evaluationPeriodId: evaluationPeriodId,
           employeeId: employeeId,
           evaluationLineId: primaryLine.id,
           deletedAt: IsNull(),
@@ -614,6 +616,7 @@ export class GetMyEvaluationTargetsStatusHandler
     if (secondaryLine) {
       const secondaryMapping = await this.lineMappingRepository.findOne({
         where: {
+          evaluationPeriodId: evaluationPeriodId,
           employeeId: employeeId,
           evaluationLineId: secondaryLine.id,
           deletedAt: IsNull(),

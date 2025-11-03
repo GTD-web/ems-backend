@@ -172,6 +172,7 @@ export class WbsAssignmentBusinessService {
       return;
     }
 
+    const employeeId = assignment.employeeId;
     const wbsItemId = assignment.wbsItemId;
     const periodId = assignment.periodId;
 
@@ -181,14 +182,22 @@ export class WbsAssignmentBusinessService {
       params.cancelledBy,
     );
 
-    // 3. 해당 WBS 항목에 다른 할당이 있는지 확인
+    // 3. 해당 WBS에 대한 평가라인 매핑 삭제 (2차 평가자)
+    await this.평가라인_매핑을_삭제한다(
+      employeeId,
+      wbsItemId,
+      periodId,
+      params.cancelledBy,
+    );
+
+    // 4. 해당 WBS 항목에 다른 할당이 있는지 확인
     const remainingAssignments =
       await this.evaluationCriteriaManagementService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(
         wbsItemId,
         periodId,
       );
 
-    // 4. 마지막 할당이었다면 평가기준 삭제
+    // 5. 마지막 할당이었다면 평가기준 삭제
     if (!remainingAssignments || remainingAssignments.length === 0) {
       this.logger.log('마지막 WBS 할당이 취소되어 평가기준을 삭제합니다', {
         wbsItemId,
@@ -200,7 +209,7 @@ export class WbsAssignmentBusinessService {
       );
     }
 
-    // 5. 알림 발송 (추후 구현)
+    // 6. 알림 발송 (추후 구현)
     // TODO: WBS 할당 취소 알림 발송
     // await this.notificationService.send({
     //   type: 'WBS_ASSIGNMENT_CANCELLED',
@@ -210,7 +219,7 @@ export class WbsAssignmentBusinessService {
     //   },
     // });
 
-    this.logger.log('WBS 할당 취소 및 평가기준 정리 완료', {
+    this.logger.log('WBS 할당 취소, 평가라인 매핑 삭제 및 평가기준 정리 완료', {
       assignmentId: params.assignmentId,
       criteriaDeleted:
         !remainingAssignments || remainingAssignments.length === 0,
@@ -897,6 +906,44 @@ export class WbsAssignmentBusinessService {
   }
 
   /**
+   * 평가라인 매핑을 삭제한다
+   * WBS 할당 취소 시 해당 WBS에 대한 평가라인 매핑(주로 2차 평가자)을 삭제
+   */
+  private async 평가라인_매핑을_삭제한다(
+    employeeId: string,
+    wbsItemId: string,
+    periodId: string,
+    deletedBy: string,
+  ): Promise<void> {
+    this.logger.log('평가라인 매핑 삭제 시작', {
+      employeeId,
+      wbsItemId,
+      periodId,
+    });
+
+    // 해당 WBS에 대한 평가라인 매핑 조회
+    const mappings = await this.evaluationLineMappingService.필터_조회한다({
+      evaluationPeriodId: periodId,
+      employeeId,
+      wbsItemId,
+    });
+
+    // 매핑 삭제
+    for (const mapping of mappings) {
+      const mappingId = mapping.DTO로_변환한다().id;
+      await this.evaluationLineMappingService.삭제한다(mappingId, deletedBy);
+      this.logger.log('평가라인 매핑 삭제 완료', {
+        mappingId,
+        evaluatorId: mapping.DTO로_변환한다().evaluatorId,
+      });
+    }
+
+    this.logger.log('평가라인 매핑 삭제 완료', {
+      deletedCount: mappings.length,
+    });
+  }
+
+  /**
    * 기존에 할당된 1차 평가자를 조회한다
    * 직원별 고정 담당자(wbsItemId가 null인 매핑)를 조회
    */
@@ -917,9 +964,10 @@ export class WbsAssignmentBusinessService {
 
     const primaryEvaluationLineId = evaluationLines[0].DTO로_변환한다().id;
 
-    // 기존 매핑 조회 (직원별 고정 담당자)
+    // 기존 매핑 조회 (직원별 고정 담당자) - evaluationPeriodId 포함
     const existingMappings =
       await this.evaluationLineMappingService.필터_조회한다({
+        evaluationPeriodId: periodId,
         employeeId,
         evaluationLineId: primaryEvaluationLineId,
       });
