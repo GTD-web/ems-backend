@@ -116,6 +116,7 @@ export class ConfigureEmployeeWbsEvaluationLineHandler
           // 중복 매핑 방지 체크
           const existingMapping =
             await this.evaluationLineMappingService.평가관계_존재_확인한다(
+              periodId,
               employeeId,
               assignmentDto.employeeId,
               wbsItemId,
