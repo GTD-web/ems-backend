@@ -8,6 +8,8 @@ import { TestContextModule } from './test-context/test-context.module';
 import { DashboardContextModule } from './dashboard-context/dashboard-context.module';
 import { EvaluationQuestionManagementContextModule } from './evaluation-question-management-context/evaluation-question-management-context.module';
 import { SeedDataContextModule } from './seed-data-context/seed-data-context.module';
+import { StepApprovalContextModule } from './step-approval-context/step-approval-context.module';
+import { RevisionRequestContextModule } from './revision-request-context/revision-request-context.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { SeedDataContextModule } from './seed-data-context/seed-data-context.mod
     DashboardContextModule,
     EvaluationQuestionManagementContextModule,
     SeedDataContextModule,
+    StepApprovalContextModule,
+    RevisionRequestContextModule,
   ],
   providers: [],
   exports: [
@@ -32,6 +36,8 @@ import { SeedDataContextModule } from './seed-data-context/seed-data-context.mod
     DashboardContextModule,
     EvaluationQuestionManagementContextModule,
     SeedDataContextModule,
+    StepApprovalContextModule,
+    RevisionRequestContextModule,
   ],
 })
 export class DomainContextModule {}

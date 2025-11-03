@@ -21,10 +21,10 @@ import {
  */
 export const GetEvaluatorEmployees = () =>
   applyDecorators(
-    Get('evaluator/:evaluatorId/employees'),
+    Get('periods/:periodId/evaluators/:evaluatorId/employees'),
     ApiOperation({
       summary: '평가자별 피평가자 조회',
-      description: `특정 평가자가 평가해야 하는 피평가자 목록을 조회합니다.
+      description: `특정 평가기간에 특정 평가자가 평가해야 하는 피평가자 목록을 조회합니다.
 
 **테스트 케이스:**
 - 1차 평가자로 구성된 피평가자 목록 조회: WBS 할당 후 1차 평가자로 구성된 직원들의 목록을 성공적으로 조회 (200)
@@ -33,10 +33,17 @@ export const GetEvaluatorEmployees = () =>
 - 평가자로 구성되지 않은 경우: 평가자로 등록되지 않은 직원 ID로 조회 시 빈 배열 반환 (200)
 - WBS 항목 정보 포함: 각 피평가자의 WBS 항목 정보가 응답에 포함됨
 - 존재하지 않는 평가자 ID: 유효한 UUID이지만 존재하지 않는 평가자 ID로 조회 시 빈 배열 반환 (200)
-- 잘못된 UUID 형식: 잘못된 UUID 형식의 평가자 ID로 조회 시 에러 발생 (400 또는 500)
-- 빈 문자열 평가자 ID: 빈 문자열로 조회 시 에러 발생 (404 또는 500)
+- 잘못된 UUID 형식 평가기간 ID: 잘못된 UUID 형식의 평가기간 ID로 조회 시 에러 발생 (400)
+- 잘못된 UUID 형식 평가자 ID: 잘못된 UUID 형식의 평가자 ID로 조회 시 에러 발생 (400)
 - 타임스탬프 형식 검증: 조회된 피평가자 정보의 createdAt, updatedAt이 올바른 Date 형식
 - 중복 피평가자 처리: 같은 직원이 여러 WBS 항목에 대해 평가받는 경우 각각 반환됨`,
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
     }),
     ApiParam({
       name: 'evaluatorId',

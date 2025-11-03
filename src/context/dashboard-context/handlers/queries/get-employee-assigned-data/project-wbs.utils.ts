@@ -241,7 +241,8 @@ export async function getProjectsWithWbs(
       'line',
       'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
     )
-    .where('mapping.employeeId = :employeeId', { employeeId })
+    .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+    .andWhere('mapping.employeeId = :employeeId', { employeeId })
     .andWhere('mapping.wbsItemId IS NULL')
     .andWhere('mapping.deletedAt IS NULL')
     .andWhere('line.evaluatorType = :evaluatorType', {
@@ -274,7 +275,8 @@ export async function getProjectsWithWbs(
         'evaluator',
         'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL',
       )
-      .where('mapping.employeeId = :employeeId', { employeeId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
       .andWhere('mapping.deletedAt IS NULL')
       .getRawMany();

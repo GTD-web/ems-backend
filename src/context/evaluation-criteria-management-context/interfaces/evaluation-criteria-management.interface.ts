@@ -224,6 +224,7 @@ export interface IEvaluationCriteriaManagementService {
    * 특정 평가자가 평가해야 하는 피평가자 목록을 조회한다
    */
   특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
+    evaluationPeriodId: string,
     evaluatorId: string,
   ): Promise<{
     evaluatorId: string;

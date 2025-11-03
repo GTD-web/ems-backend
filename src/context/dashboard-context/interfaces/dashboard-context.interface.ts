@@ -275,6 +275,34 @@ export interface EmployeeEvaluationPeriodStatusDto {
     /** 확정일시 */
     confirmedAt: Date | null;
   };
+
+  /** 단계별 확인 상태 정보 */
+  stepApproval: {
+    /** 평가기준 설정 확인 상태 */
+    criteriaSettingStatus: 'pending' | 'approved' | 'revision_requested';
+    /** 평가기준 설정 승인자 ID */
+    criteriaSettingApprovedBy: string | null;
+    /** 평가기준 설정 승인 일시 */
+    criteriaSettingApprovedAt: Date | null;
+    /** 자기평가 확인 상태 */
+    selfEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+    /** 자기평가 승인자 ID */
+    selfEvaluationApprovedBy: string | null;
+    /** 자기평가 승인 일시 */
+    selfEvaluationApprovedAt: Date | null;
+    /** 1차 하향평가 확인 상태 */
+    primaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+    /** 1차 하향평가 승인자 ID */
+    primaryEvaluationApprovedBy: string | null;
+    /** 1차 하향평가 승인 일시 */
+    primaryEvaluationApprovedAt: Date | null;
+    /** 2차 하향평가 확인 상태 */
+    secondaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+    /** 2차 하향평가 승인자 ID */
+    secondaryEvaluationApprovedBy: string | null;
+    /** 2차 하향평가 승인 일시 */
+    secondaryEvaluationApprovedAt: Date | null;
+  };
 }
 
 /**

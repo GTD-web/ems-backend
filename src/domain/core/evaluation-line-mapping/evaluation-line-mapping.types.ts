@@ -8,6 +8,8 @@
 export interface EvaluationLineMappingDto {
   /** 고유 식별자 (UUID) */
   id: string;
+  /** 평가기간 ID - 평가가 수행되는 평가기간 식별자 */
+  evaluationPeriodId: string;
   /** 피평가자 ID - 평가를 받는 직원 식별자 */
   employeeId: string;
   /** 평가자 ID - 평가를 수행하는 직원 식별자 */
@@ -30,6 +32,7 @@ export interface EvaluationLineMappingDto {
  * 평가 라인 맵핑 생성 데이터
  */
 export interface CreateEvaluationLineMappingData {
+  evaluationPeriodId: string;
   employeeId: string;
   evaluatorId: string;
   wbsItemId?: string;
@@ -51,6 +54,7 @@ export interface UpdateEvaluationLineMappingData {
  * 평가 라인 맵핑 필터
  */
 export interface EvaluationLineMappingFilter {
+  evaluationPeriodId?: string;
   employeeId?: string;
   evaluatorId?: string;
   wbsItemId?: string;

@@ -7,6 +7,8 @@ import { EvaluationLineMappingDto } from '../evaluation-line-mapping.types';
  * 실제 평가 관계(피평가자-평가자)를 평가 라인과 연결하는 인터페이스입니다.
  */
 export interface IEvaluationLineMapping extends IBaseEntity {
+  /** 평가기간 ID - 평가가 수행되는 평가기간 식별자 */
+  evaluationPeriodId: string;
   /** 피평가자 ID - 평가를 받는 직원 식별자 */
   employeeId: string;
   /** 평가자 ID - 평가를 수행하는 직원 식별자 */
@@ -50,6 +52,7 @@ export interface IEvaluationLineMapping extends IBaseEntity {
    * 동일한 평가 관계인지 확인한다
    */
   동일한_평가관계인가(
+    evaluationPeriodId: string,
     employeeId: string,
     evaluatorId: string,
     wbsItemId?: string,

@@ -134,7 +134,8 @@ export class GetEvaluatorAssignedEmployeesDataHandler
     // 5. 평가자-피평가자 관계 확인 (EvaluationLineMapping에서 조회)
     const hasEvaluationRelation = await this.lineMappingRepository
       .createQueryBuilder('mapping')
-      .where('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.deletedAt IS NULL')
       .getCount();

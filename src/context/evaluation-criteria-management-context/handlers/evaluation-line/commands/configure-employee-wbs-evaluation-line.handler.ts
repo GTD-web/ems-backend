@@ -123,6 +123,7 @@ export class ConfigureEmployeeWbsEvaluationLineHandler
 
           if (!existingMapping) {
             await this.evaluationLineMappingService.생성한다({
+              evaluationPeriodId: command.periodId,
               employeeId,
               evaluatorId: assignmentDto.employeeId,
               wbsItemId,

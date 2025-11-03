@@ -44,9 +44,11 @@ export class EvaluationLineManagementController {
    */
   @GetEvaluatorEmployees()
   async getEvaluatorEmployees(
+    @Param('periodId', ParseUUIDPipe) periodId: string,
     @Param('evaluatorId', ParseUUIDPipe) evaluatorId: string,
   ): Promise<EvaluatorEmployeesResponseDto> {
     return await this.evaluationCriteriaManagementService.특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
+      periodId,
       evaluatorId,
     );
   }

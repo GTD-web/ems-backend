@@ -9,6 +9,7 @@ import { EvaluationLineStatus } from '../../../interfaces/dashboard-context.inte
  * PRIMARY와 SECONDARY 평가라인에 평가자가 지정되었는지 확인
  */
 export async function 평가라인_지정_여부를_확인한다(
+  evaluationPeriodId: string,
   employeeId: string,
   evaluationLineRepository: Repository<EvaluationLine>,
   evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
@@ -36,6 +37,7 @@ export async function 평가라인_지정_여부를_확인한다(
   if (primaryLine) {
     const primaryMapping = await evaluationLineMappingRepository.findOne({
       where: {
+        evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId,
         evaluationLineId: primaryLine.id,
         deletedAt: IsNull(),
@@ -48,6 +50,7 @@ export async function 평가라인_지정_여부를_확인한다(
   if (secondaryLine) {
     const secondaryMapping = await evaluationLineMappingRepository.findOne({
       where: {
+        evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId,
         evaluationLineId: secondaryLine.id,
         deletedAt: IsNull(),

@@ -580,6 +580,95 @@ export class ExclusionInfoDto {
 }
 
 /**
+ * 단계별 확인 상태 정보 DTO
+ */
+export class StepApprovalInfoDto {
+  @ApiProperty({
+    description: '평가기준 설정 확인 상태',
+    enum: ['pending', 'approved', 'revision_requested'],
+    example: 'pending',
+  })
+  criteriaSettingStatus: 'pending' | 'approved' | 'revision_requested';
+
+  @ApiPropertyOptional({
+    description: '평가기준 설정 승인자 ID',
+    nullable: true,
+  })
+  criteriaSettingApprovedBy: string | null;
+
+  @ApiPropertyOptional({
+    description: '평가기준 설정 승인 일시',
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
+  criteriaSettingApprovedAt: Date | null;
+
+  @ApiProperty({
+    description: '자기평가 확인 상태',
+    enum: ['pending', 'approved', 'revision_requested'],
+    example: 'pending',
+  })
+  selfEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+
+  @ApiPropertyOptional({
+    description: '자기평가 승인자 ID',
+    nullable: true,
+  })
+  selfEvaluationApprovedBy: string | null;
+
+  @ApiPropertyOptional({
+    description: '자기평가 승인 일시',
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
+  selfEvaluationApprovedAt: Date | null;
+
+  @ApiProperty({
+    description: '1차 하향평가 확인 상태',
+    enum: ['pending', 'approved', 'revision_requested'],
+    example: 'pending',
+  })
+  primaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+
+  @ApiPropertyOptional({
+    description: '1차 하향평가 승인자 ID',
+    nullable: true,
+  })
+  primaryEvaluationApprovedBy: string | null;
+
+  @ApiPropertyOptional({
+    description: '1차 하향평가 승인 일시',
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
+  primaryEvaluationApprovedAt: Date | null;
+
+  @ApiProperty({
+    description: '2차 하향평가 확인 상태',
+    enum: ['pending', 'approved', 'revision_requested'],
+    example: 'pending',
+  })
+  secondaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+
+  @ApiPropertyOptional({
+    description: '2차 하향평가 승인자 ID',
+    nullable: true,
+  })
+  secondaryEvaluationApprovedBy: string | null;
+
+  @ApiPropertyOptional({
+    description: '2차 하향평가 승인 일시',
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
+  secondaryEvaluationApprovedAt: Date | null;
+}
+
+/**
  * 직원의 평가기간 현황 응답 DTO
  */
 export class EmployeeEvaluationPeriodStatusResponseDto {
@@ -669,4 +758,10 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
     type: () => FinalEvaluationInfoDto,
   })
   finalEvaluation: FinalEvaluationInfoDto;
+
+  @ApiProperty({
+    description: '단계별 확인 상태 정보',
+    type: () => StepApprovalInfoDto,
+  })
+  stepApproval: StepApprovalInfoDto;
 }

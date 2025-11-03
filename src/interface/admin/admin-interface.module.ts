@@ -28,6 +28,10 @@ import { EvaluationQuestionManagementController } from './performance-evaluation
 import { DeliverableManagementController } from './performance-evaluation/deliverable-management.controller';
 import { EmployeeManagementController } from './employee-management/employee-management.controller';
 import { SeedDataController } from './seed-data/seed-data.controller';
+import { StepApprovalController } from './step-approval/step-approval.controller';
+import { RevisionRequestController } from './revision-request/revision-request.controller';
+import { StepApprovalContextModule } from '../../context/step-approval-context/step-approval-context.module';
+import { RevisionRequestContextModule } from '../../context/revision-request-context/revision-request-context.module';
 
 /**
  * 관리자 인터페이스 모듈
@@ -46,6 +50,8 @@ import { SeedDataController } from './seed-data/seed-data.controller';
     DashboardContextModule, // 대시보드 컨텍스트 모듈 주입
     EvaluationQuestionManagementContextModule, // 평가 질문 관리 컨텍스트 모듈 주입
     SeedDataContextModule, // 시드 데이터 컨텍스트 모듈 주입
+    StepApprovalContextModule, // 단계 승인 컨텍스트 모듈 주입
+    RevisionRequestContextModule, // 재작성 요청 컨텍스트 모듈 주입
     BusinessModule, // 비즈니스 레이어 모듈 주입
     EvaluationPeriodModule, // 평가 기간 모듈 주입
     EmployeeModule, // 직원 모듈 주입
@@ -68,6 +74,8 @@ import { SeedDataController } from './seed-data/seed-data.controller';
     EvaluationQuestionManagementController, // 평가 질문 관리 컨트롤러
     DeliverableManagementController, // 산출물 관리 컨트롤러
     SeedDataController, // 시드 데이터 컨트롤러
+    StepApprovalController, // 단계 승인 컨트롤러
+    RevisionRequestController, // 재작성 요청 컨트롤러
   ],
   providers: [],
   exports: [],

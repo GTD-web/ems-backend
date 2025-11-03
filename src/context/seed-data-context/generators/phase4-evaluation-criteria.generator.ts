@@ -77,6 +77,7 @@ export class Phase4EvaluationCriteriaGenerator {
 
     // 3. 평가 라인 매핑 생성
     const lineMappings = await this.생성_평가라인매핑들(
+      periodIds[0], // 평가기간 ID 전달
       employeeIds,
       evaluationLines,
       dist,
@@ -168,6 +169,7 @@ export class Phase4EvaluationCriteriaGenerator {
   }
 
   private async 생성_평가라인매핑들(
+    evaluationPeriodId: string,
     employeeIds: string[],
     evaluationLines: EvaluationLine[],
     dist: typeof DEFAULT_STATE_DISTRIBUTION,
@@ -209,6 +211,7 @@ export class Phase4EvaluationCriteriaGenerator {
       if (!primaryEvaluator) continue;
 
       const primaryMapping = new EvaluationLineMapping();
+      primaryMapping.evaluationPeriodId = evaluationPeriodId;
       primaryMapping.employeeId = employeeId;
       primaryMapping.evaluatorId = primaryEvaluator;
       primaryMapping.wbsItemId = wbsItemId; // wbsItemId 추가
@@ -237,6 +240,7 @@ export class Phase4EvaluationCriteriaGenerator {
             secondaryEvaluator = otherEmployees[Math.floor(Math.random() * otherEmployees.length)];
           }
           const secondaryMapping = new EvaluationLineMapping();
+          secondaryMapping.evaluationPeriodId = evaluationPeriodId;
           secondaryMapping.employeeId = employeeId;
           secondaryMapping.evaluatorId = secondaryEvaluator;
           secondaryMapping.wbsItemId = wbsItemId; // wbsItemId 추가

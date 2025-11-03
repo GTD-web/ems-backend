@@ -234,6 +234,12 @@ export class EvaluationLineMappingService
       let queryBuilder = repository.createQueryBuilder('mapping');
 
       // 필터 적용
+      if (filter.evaluationPeriodId) {
+        queryBuilder.andWhere('mapping.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId: filter.evaluationPeriodId,
+        });
+      }
+
       if (filter.employeeId) {
         queryBuilder.andWhere('mapping.employeeId = :employeeId', {
           employeeId: filter.employeeId,
@@ -307,6 +313,7 @@ export class EvaluationLineMappingService
       );
 
       const mapping = repository.create({
+        evaluationPeriodId: createData.evaluationPeriodId,
         employeeId: createData.employeeId,
         evaluatorId: createData.evaluatorId,
         wbsItemId: createData.wbsItemId,
@@ -317,7 +324,7 @@ export class EvaluationLineMappingService
       const savedMapping = await repository.save(mapping);
 
       this.logger.log(
-        `평가 라인 맵핑 생성 완료 - ID: ${savedMapping.id}, 피평가자: ${savedMapping.employeeId}, 평가자: ${savedMapping.evaluatorId}`,
+        `평가 라인 맵핑 생성 완료 - ID: ${savedMapping.id}, 평가기간: ${savedMapping.evaluationPeriodId}, 피평가자: ${savedMapping.employeeId}, 평가자: ${savedMapping.evaluatorId}`,
       );
 
       return savedMapping;

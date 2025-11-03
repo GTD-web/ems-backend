@@ -424,6 +424,7 @@ export class EvaluationCriteriaManagementService
   // ============================================================================
 
   async 특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(
+    evaluationPeriodId: string,
     evaluatorId: string,
   ): Promise<{
     evaluatorId: string;
@@ -437,7 +438,7 @@ export class EvaluationCriteriaManagementService
       updatedAt: Date;
     }[];
   }> {
-    const query = new GetEvaluatorEmployeesQuery(evaluatorId);
+    const query = new GetEvaluatorEmployeesQuery(evaluationPeriodId, evaluatorId);
     return await this.queryBus.execute(query);
   }
 

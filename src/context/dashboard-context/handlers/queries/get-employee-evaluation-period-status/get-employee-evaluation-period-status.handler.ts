@@ -15,6 +15,7 @@ import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-ev
 import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.entity';
 import { FinalEvaluation } from '@domain/core/final-evaluation/final-evaluation.entity';
 import { EmployeeEvaluationPeriodStatusDto } from '../../../interfaces/dashboard-context.interface';
+import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
 
 // 유틸 함수 import
 import {
@@ -96,6 +97,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     private readonly peerEvaluationRepository: Repository<PeerEvaluation>,
     @InjectRepository(FinalEvaluation)
     private readonly finalEvaluationRepository: Repository<FinalEvaluation>,
+    private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
   ) {}
 
   async execute(
@@ -153,8 +155,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           evaluationPeriodId,
         })
         .andWhere('mapping.employeeId = :employeeId', { employeeId });
-        // 등록 해제된 직원도 조회하도록 조건 제거
-        // .andWhere('mapping.deletedAt IS NULL')
+      // 등록 해제된 직원도 조회하도록 조건 제거
+      // .andWhere('mapping.deletedAt IS NULL')
 
       // includeUnregistered가 true면 소프트 삭제된 엔티티도 포함
       if (includeUnregistered) {
@@ -226,6 +228,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       // 8. 평가라인 지정 상태 확인
       const { hasPrimaryEvaluator, hasSecondaryEvaluator } =
         await 평가라인_지정_여부를_확인한다(
+          evaluationPeriodId,
           employeeId,
           this.evaluationLineRepository,
           this.evaluationLineMappingRepository,
@@ -303,7 +306,12 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       // 18. 최종평가 상태 계산
       const finalEvaluationStatus = 최종평가_상태를_계산한다(finalEvaluation);
 
-      // 19. DTO로 변환
+      // 19. 단계별 확인 상태 조회
+      const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+        result.mapping_id,
+      );
+
+      // 20. DTO로 변환
       // 평가 대상 여부 계산
       const isEvaluationTarget =
         !result.mapping_isexcluded && !result.mapping_deletedat;
@@ -340,9 +348,12 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               },
               // 수동 설정 상태 정보를 evaluationPeriod 안에 포함
               manualSettings: {
-                criteriaSettingEnabled: result.period_criteriasettingenabled || false,
-                selfEvaluationSettingEnabled: result.period_selfevaluationsettingenabled || false,
-                finalEvaluationSettingEnabled: result.period_finalevaluationsettingenabled || false,
+                criteriaSettingEnabled:
+                  result.period_criteriasettingenabled || false,
+                selfEvaluationSettingEnabled:
+                  result.period_selfevaluationsettingenabled || false,
+                finalEvaluationSettingEnabled:
+                  result.period_finalevaluationsettingenabled || false,
               },
             }
           : null,
@@ -365,7 +376,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           excludeReason: result.mapping_excludereason,
           excludedAt: result.mapping_excludedat,
         },
-
 
         // 평가항목 설정 정보
         evaluationCriteria: {
@@ -438,6 +448,33 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           jobDetailedGrade: finalEvaluation?.jobDetailedGrade ?? null,
           isConfirmed: finalEvaluation?.isConfirmed ?? false,
           confirmedAt: finalEvaluation?.confirmedAt ?? null,
+        },
+
+        // 단계별 확인 상태 정보
+        stepApproval: {
+          criteriaSettingStatus:
+            stepApproval?.criteriaSettingStatus ?? 'pending',
+          criteriaSettingApprovedBy:
+            stepApproval?.criteriaSettingApprovedBy ?? null,
+          criteriaSettingApprovedAt:
+            stepApproval?.criteriaSettingApprovedAt ?? null,
+          selfEvaluationStatus: stepApproval?.selfEvaluationStatus ?? 'pending',
+          selfEvaluationApprovedBy:
+            stepApproval?.selfEvaluationApprovedBy ?? null,
+          selfEvaluationApprovedAt:
+            stepApproval?.selfEvaluationApprovedAt ?? null,
+          primaryEvaluationStatus:
+            stepApproval?.primaryEvaluationStatus ?? 'pending',
+          primaryEvaluationApprovedBy:
+            stepApproval?.primaryEvaluationApprovedBy ?? null,
+          primaryEvaluationApprovedAt:
+            stepApproval?.primaryEvaluationApprovedAt ?? null,
+          secondaryEvaluationStatus:
+            stepApproval?.secondaryEvaluationStatus ?? 'pending',
+          secondaryEvaluationApprovedBy:
+            stepApproval?.secondaryEvaluationApprovedBy ?? null,
+          secondaryEvaluationApprovedAt:
+            stepApproval?.secondaryEvaluationApprovedAt ?? null,
         },
       };
 

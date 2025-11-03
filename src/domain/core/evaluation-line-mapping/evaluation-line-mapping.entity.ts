@@ -13,6 +13,16 @@ export class EvaluationLineMapping
   implements IEvaluationLineMapping
 {
   /**
+   * 평가기간 ID
+   * 평가가 수행되는 평가기간의 식별자입니다.
+   */
+  @Column({
+    type: 'uuid',
+    comment: '평가기간 ID - 평가가 수행되는 평가기간 식별자',
+  })
+  evaluationPeriodId: string;
+
+  /**
    * 피평가자 ID
    * 평가를 받는 직원의 식별자입니다.
    */
@@ -59,6 +69,7 @@ export class EvaluationLineMapping
   DTO로_변환한다(): EvaluationLineMappingDto {
     return {
       id: this.id,
+      evaluationPeriodId: this.evaluationPeriodId,
       employeeId: this.employeeId,
       evaluatorId: this.evaluatorId,
       wbsItemId: this.wbsItemId,
@@ -99,6 +110,7 @@ export class EvaluationLineMapping
    */
   유효성을_검증한다(): boolean {
     return (
+      this.evaluationPeriodId !== undefined &&
       this.employeeId !== undefined &&
       this.evaluatorId !== undefined &&
       this.evaluationLineId !== undefined &&
@@ -117,11 +129,13 @@ export class EvaluationLineMapping
    * 동일한 평가 관계인지 확인한다
    */
   동일한_평가관계인가(
+    evaluationPeriodId: string,
     employeeId: string,
     evaluatorId: string,
     wbsItemId?: string,
   ): boolean {
     return (
+      this.evaluationPeriodId === evaluationPeriodId &&
       this.employeeId === employeeId &&
       this.evaluatorId === evaluatorId &&
       this.wbsItemId === wbsItemId
