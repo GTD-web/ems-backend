@@ -344,7 +344,103 @@ export function SubmitPeerEvaluation() {
 }
 
 /**
+ * 동료평가 목록 조회 API 데코레이터 (통합)
+ * evaluatorId와 evaluateeId를 모두 query parameter로 받아 필터링합니다.
+ */
+export function GetPeerEvaluations() {
+  return applyDecorators(
+    Get(),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '동료평가 목록 조회',
+      description: `동료평가 목록을 상세 정보와 함께 페이지네이션 형태로 조회합니다.
+
+**동작:**
+- 평가자, 피평가자, 평가기간, 상태 등 다양한 필터 조건 지원
+- evaluatorId와 evaluateeId를 모두 제공하면 해당 조건에 맞는 평가만 조회
+- 하나만 제공하면 해당 기준으로 필터링
+- 모두 제공하지 않으면 전체 동료평가 목록 조회
+- 페이지네이션 지원 (기본값: page=1, limit=10)
+- 상세 정보 포함 (평가기간, 평가자, 피평가자, 부서, 매핑자, 질문 목록)
+
+**응답 구조:**
+- evaluations: 평가 상세 목록 배열 (상세 조회와 동일한 구조)
+- page: 현재 페이지 번호
+- limit: 페이지당 항목 수
+- total: 전체 항목 수
+
+**테스트 케이스:**
+- 전체 목록 조회: evaluatorId와 evaluateeId 없이 모든 동료평가 목록 조회
+- 평가자 기준 필터링: evaluatorId로 특정 평가자의 동료평가 목록 조회
+- 피평가자 기준 필터링: evaluateeId로 특정 피평가자의 동료평가 목록 조회
+- 복합 필터링: evaluatorId와 evaluateeId를 함께 사용하여 필터링
+- periodId 필터링: 평가기간으로 필터링
+- status 필터링: 평가 상태로 필터링
+- 페이지네이션 작동: page와 limit 파라미터로 페이지네이션 지원
+- 응답 구조 검증: 모든 필수 필드가 포함되어야 함
+- 상세 정보 포함: 평가기간, 평가자, 피평가자, 부서, 매핑자, 질문 목록 포함
+- UUID 형식 검증: 모든 UUID 필드가 유효한 형식이어야 함`,
+    }),
+    ApiQuery({
+      name: 'evaluatorId',
+      description: '평가자 ID',
+      required: false,
+      example: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    ApiQuery({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      required: false,
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiQuery({
+      name: 'periodId',
+      description: '평가기간 ID',
+      required: false,
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiQuery({
+      name: 'status',
+      description: '평가 상태',
+      required: false,
+      enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
+      example: 'DRAFT',
+    }),
+    ApiQuery({
+      name: 'page',
+      description: '페이지 번호 (1부터 시작)',
+      required: false,
+      example: 1,
+    }),
+    ApiQuery({
+      name: 'limit',
+      description: '페이지 크기',
+      required: false,
+      example: 10,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '동료평가 목록이 성공적으로 조회되었습니다.',
+      type: PeerEvaluationListResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 파라미터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+  );
+}
+
+/**
  * 평가자의 동료평가 목록 조회 API 데코레이터 (특정 평가자)
+ * @deprecated GET /?evaluatorId={evaluatorId} 사용을 권장합니다.
  */
 export function GetEvaluatorPeerEvaluations() {
   return applyDecorators(
@@ -352,7 +448,10 @@ export function GetEvaluatorPeerEvaluations() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '평가자의 동료평가 목록 조회',
+      deprecated: true,
       description: `특정 평가자의 동료평가 목록을 상세 정보와 함께 페이지네이션 형태로 조회합니다.
+
+**⚠️ Deprecated**: 이 엔드포인트는 사용 중단 예정입니다. 대신 \`GET /?evaluatorId={evaluatorId}\`를 사용하세요.
 
 **동작:**
 - 평가자에게 할당된 모든 동료평가 목록 조회
@@ -439,7 +538,108 @@ export function GetEvaluatorPeerEvaluations() {
 }
 
 /**
+ * 피평가자의 동료평가 목록 조회 API 데코레이터 (특정 피평가자)
+ * @deprecated GET /?evaluateeId={evaluateeId} 사용을 권장합니다.
+ */
+export function GetEvaluateePeerEvaluations() {
+  return applyDecorators(
+    Get('evaluatee/:evaluateeId'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '피평가자의 동료평가 목록 조회',
+      deprecated: true,
+      description: `특정 피평가자의 동료평가 목록을 상세 정보와 함께 페이지네이션 형태로 조회합니다.
+
+**⚠️ Deprecated**: 이 엔드포인트는 사용 중단 예정입니다. 대신 \`GET /?evaluateeId={evaluateeId}\`를 사용하세요.
+
+**동작:**
+- 피평가자에게 할당된 모든 동료평가 목록 조회
+- 다양한 필터 조건 지원 (평가자, 평가기간, 상태)
+- 페이지네이션 지원 (기본값: page=1, limit=10)
+- 상세 정보 포함 (평가기간, 평가자, 피평가자, 부서, 매핑자, 질문 목록)
+
+**응답 구조:**
+- evaluations: 평가 상세 목록 배열 (상세 조회와 동일한 구조)
+- page: 현재 페이지 번호
+- limit: 페이지당 항목 수
+- total: 전체 항목 수
+
+**테스트 케이스:**
+- 기본 목록을 조회할 수 있어야 한다
+- 여러 개의 평가 목록을 조회할 수 있어야 한다
+- evaluatorId로 필터링할 수 있어야 한다
+- periodId로 필터링할 수 있어야 한다
+- status로 필터링할 수 있어야 한다
+- 페이지네이션이 작동해야 한다
+- 평가가 없는 피평가자의 경우 빈 배열을 반환해야 한다
+- 잘못된 형식의 evaluateeId로 조회 시 400 에러가 발생해야 한다
+- 응답에 필수 필드가 모두 포함되어야 한다
+- 평가 항목에 필수 필드가 포함되어야 한다
+- UUID 필드가 유효한 UUID 형식이어야 한다`,
+    }),
+    ApiParam({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiQuery({
+      name: 'evaluatorId',
+      description: '평가자 ID',
+      required: false,
+      example: '550e8400-e29b-41d4-a716-446655440000',
+    }),
+    ApiQuery({
+      name: 'periodId',
+      description: '평가기간 ID',
+      required: false,
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiQuery({
+      name: 'status',
+      description: '평가 상태',
+      required: false,
+      enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
+      example: 'DRAFT',
+    }),
+    ApiQuery({
+      name: 'page',
+      description: '페이지 번호 (1부터 시작)',
+      required: false,
+      example: 1,
+    }),
+    ApiQuery({
+      name: 'limit',
+      description: '페이지 크기',
+      required: false,
+      example: 10,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '피평가자의 동료평가 목록이 성공적으로 조회되었습니다.',
+      type: PeerEvaluationListResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 파라미터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '피평가자를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
  * 모든 평가자의 동료평가 목록 조회 API 데코레이터
+ * @deprecated GET / 사용을 권장합니다.
  */
 export function GetAllPeerEvaluations() {
   return applyDecorators(
@@ -447,7 +647,10 @@ export function GetAllPeerEvaluations() {
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '모든 평가자의 동료평가 상세 목록 조회',
+      deprecated: true,
       description: `모든 평가자의 동료평가 목록을 상세 정보와 함께 페이지네이션 형태로 조회합니다.
+
+**⚠️ Deprecated**: 이 엔드포인트는 사용 중단 예정입니다. 대신 \`GET /\`를 사용하세요.
 
 **동작:**
 - 모든 평가자의 동료평가 목록 조회

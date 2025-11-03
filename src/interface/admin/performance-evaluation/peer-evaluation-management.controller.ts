@@ -10,7 +10,9 @@ import {
   RequestPeerEvaluationToMultipleEvaluators,
   RequestMultiplePeerEvaluations,
   SubmitPeerEvaluation,
+  GetPeerEvaluations,
   GetEvaluatorPeerEvaluations,
+  GetEvaluateePeerEvaluations,
   GetAllPeerEvaluations,
   GetPeerEvaluationDetail,
   GetEvaluatorAssignedEvaluatees,
@@ -156,7 +158,26 @@ export class PeerEvaluationManagementController {
   }
 
   /**
+   * 동료평가 목록 조회 (통합 엔드포인트)
+   * evaluatorId와 evaluateeId를 모두 query parameter로 받아 필터링합니다.
+   */
+  @GetPeerEvaluations()
+  async getPeerEvaluations(
+    @Query() filter: PeerEvaluationFilterDto,
+  ): Promise<PeerEvaluationListResponseDto> {
+    return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
+      evaluatorId: filter.evaluatorId,
+      evaluateeId: filter.evaluateeId,
+      periodId: filter.periodId,
+      status: filter.status,
+      page: filter.page || 1,
+      limit: filter.limit || 10,
+    });
+  }
+
+  /**
    * 평가자의 동료평가 목록 조회
+   * @deprecated GET /?evaluatorId={evaluatorId} 사용을 권장합니다.
    */
   @GetEvaluatorPeerEvaluations()
   async getEvaluatorPeerEvaluations(
@@ -174,7 +195,27 @@ export class PeerEvaluationManagementController {
   }
 
   /**
+   * 피평가자의 동료평가 목록 조회
+   * @deprecated GET /?evaluateeId={evaluateeId} 사용을 권장합니다.
+   */
+  @GetEvaluateePeerEvaluations()
+  async getEvaluateePeerEvaluations(
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @Query() filter: PeerEvaluationFilterDto,
+  ): Promise<PeerEvaluationListResponseDto> {
+    return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
+      evaluatorId: filter.evaluatorId,
+      evaluateeId,
+      periodId: filter.periodId,
+      status: filter.status,
+      page: filter.page || 1,
+      limit: filter.limit || 10,
+    });
+  }
+
+  /**
    * 모든 평가자의 동료평가 목록 조회
+   * @deprecated GET / 사용을 권장합니다.
    */
   @GetAllPeerEvaluations()
   async getAllPeerEvaluations(
