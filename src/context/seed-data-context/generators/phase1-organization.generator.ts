@@ -130,6 +130,35 @@ export class Phase1OrganizationGenerator {
       this.logger.log('⏭️ 부서장 설정 건너뜀 (실제 데이터 사용 중)');
     }
 
+    // 3.6. 현재 사용자를 평가자로 등록하는 경우, 모든 직원의 managerId를 currentUserId로 설정
+    this.logger.log(
+      `🔍 currentUserId 확인: ${config.currentUserId || 'undefined'}`,
+    );
+    console.log(
+      `🔍 [Phase1] currentUserId 확인: ${config.currentUserId || 'undefined'}`,
+    );
+    if (config.currentUserId) {
+      this.logger.log(
+        `✅ 현재 사용자를 모든 직원의 관리자로 설정 시작 (currentUserId: ${config.currentUserId})`,
+      );
+      console.log(
+        `✅ [Phase1] 현재 사용자를 모든 직원의 관리자로 설정 시작 (currentUserId: ${config.currentUserId})`,
+      );
+      await this.현재_사용자를_모든_직원의_관리자로_설정한다(
+        employeeIds,
+        config.currentUserId,
+      );
+      this.logger.log(`✅ 현재 사용자를 모든 직원의 관리자로 설정 완료`);
+      console.log(
+        `✅ [Phase1] 현재 사용자를 모든 직원의 관리자로 설정 완료`,
+      );
+    } else {
+      this.logger.log('⚠️ currentUserId가 없어 관리자 설정을 건너뜁니다.');
+      console.log(
+        '⚠️ [Phase1] currentUserId가 없어 관리자 설정을 건너뜁니다.',
+      );
+    }
+
     // 4. Project 생성
     const projectIds = await this.생성_Project들(
       config.dataScale.projectCount,
@@ -870,5 +899,49 @@ export class Phase1OrganizationGenerator {
     }
 
     this.logger.log(`부서장 설정 완료: ${departmentEmployeeMap.size}개 부서`);
+  }
+
+  /**
+   * 현재 사용자를 모든 직원의 관리자로 설정한다
+   * includeCurrentUserAsEvaluator 옵션이 true일 때 사용
+   */
+  private async 현재_사용자를_모든_직원의_관리자로_설정한다(
+    employeeIds: string[],
+    currentUserId: string,
+  ): Promise<void> {
+    this.logger.log(
+      `현재 사용자를 모든 직원의 관리자로 설정: ${employeeIds.length}명`,
+    );
+    console.log(
+      `[Phase1] 현재 사용자를 모든 직원의 관리자로 설정: ${employeeIds.length}명, currentUserId: ${currentUserId}`,
+    );
+
+    // 모든 직원의 managerId를 currentUserId로 설정 (본인 제외)
+    const targetEmployeeIds = employeeIds.filter((id) => id !== currentUserId);
+
+    console.log(
+      `[Phase1] 대상 직원 수: ${targetEmployeeIds.length}명 (전체: ${employeeIds.length}명, 현재 사용자 제외)`,
+    );
+
+    if (targetEmployeeIds.length > 0) {
+      const updateResult = await this.employeeRepository
+        .createQueryBuilder()
+        .update(Employee)
+        .set({ managerId: currentUserId, updatedAt: new Date() })
+        .where('id IN (:...ids)', { ids: targetEmployeeIds })
+        .execute();
+
+      this.logger.log(
+        `✅ ${targetEmployeeIds.length}명의 직원에게 현재 사용자를 관리자로 설정 완료`,
+      );
+      console.log(
+        `✅ [Phase1] ${updateResult.affected}명의 직원에게 현재 사용자를 관리자로 설정 완료 (영향받은 행: ${updateResult.affected})`,
+      );
+    } else {
+      this.logger.log('⚠️ 설정할 직원이 없습니다 (모든 직원이 현재 사용자)');
+      console.log(
+        '⚠️ [Phase1] 설정할 직원이 없습니다 (모든 직원이 현재 사용자)',
+      );
+    }
   }
 }

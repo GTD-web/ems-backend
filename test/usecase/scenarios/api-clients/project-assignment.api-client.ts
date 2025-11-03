@@ -29,9 +29,20 @@ export class ProjectAssignmentApiClient {
         employeeId: config.employeeId,
         projectId: config.projectId,
         periodId: config.periodId,
-      })
-      .expect(201);
+      });
 
+    // 응답 상태가 201이 아닌 경우 에러 정보 출력
+    if (response.status !== 201) {
+      console.error(
+        `프로젝트 할당 생성 실패 - Status: ${response.status}, Body:`,
+        JSON.stringify(response.body, null, 2),
+      );
+      console.error(
+        `요청 데이터 - employeeId: ${config.employeeId}, projectId: ${config.projectId}, periodId: ${config.periodId}`,
+      );
+    }
+
+    expect(response.status).toBe(201);
     return response.body;
   }
 

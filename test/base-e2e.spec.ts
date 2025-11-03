@@ -433,6 +433,17 @@ export class BaseE2ETest {
       isSynced: false,
     });
 
+    // 토큰검증및사용자조회 모킹 업데이트 (JWT 가드에서 사용)
+    this.mockAuthService.토큰검증및사용자조회 = jest.fn().mockResolvedValue({
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        employeeNumber: user.employeeNumber,
+        roles: defaultUser.roles,
+      },
+    });
+
     // 역할포함사용자조회 모킹 업데이트
     this.mockAuthService.역할포함사용자조회 = jest.fn().mockResolvedValue({
       user: {

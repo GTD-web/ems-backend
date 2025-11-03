@@ -191,3 +191,76 @@
                         - myEvaluatorTypes 배열 존재 확인
                         - 'PRIMARY' 또는 'SECONDARY' 포함 여부 확인
                         - 해당 평가자가 담당하는 평가자 유형만 포함되어 있는지 확인
+    - **직원 할당 데이터 조회를 통한 평가라인 검증**
+        - POST /admin/evaluation-periods (평가기간 생성)
+        - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+        - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+            - **평가라인 자동 지정 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - projects 배열 존재 확인
+                    - projects[].wbsList 배열 존재 확인
+                    - 해당 WBS 항목 조회
+                    - **primaryDownwardEvaluation 객체 검증 (1차 평가자가 지정된 경우)**
+                        - primaryDownwardEvaluation 객체 존재 확인
+                        - primaryDownwardEvaluation.evaluatorId가 직원의 managerId와 일치하는지 확인
+                        - primaryDownwardEvaluation.evaluatorName이 평가자 이름과 일치하는지 확인
+                        - primaryDownwardEvaluation.isCompleted가 false인지 확인 (초기값, 평가 미완료)
+                        - primaryDownwardEvaluation.isEditable이 boolean 타입인지 확인
+                        - primaryDownwardEvaluation.evaluationContent가 null 또는 undefined인지 확인 (초기값, 평가 내용 없음)
+                        - primaryDownwardEvaluation.score가 null 또는 undefined인지 확인 (초기값, 점수 없음)
+                        - primaryDownwardEvaluation.submittedAt이 null 또는 undefined인지 확인 (초기값, 제출일 없음)
+                    - **secondaryDownwardEvaluation 객체 검증 (2차 평가자가 지정된 경우)**
+                        - secondaryDownwardEvaluation 객체 존재 확인
+                        - secondaryDownwardEvaluation.evaluatorId가 프로젝트의 managerId(PM ID)와 일치하는지 확인
+                        - secondaryDownwardEvaluation.evaluatorName이 PM 이름과 일치하는지 확인
+                        - secondaryDownwardEvaluation.isCompleted가 false인지 확인 (초기값, 평가 미완료)
+                        - secondaryDownwardEvaluation.isEditable이 boolean 타입인지 확인
+                        - secondaryDownwardEvaluation.evaluationContent가 null 또는 undefined인지 확인 (초기값, 평가 내용 없음)
+                        - secondaryDownwardEvaluation.score가 null 또는 undefined인지 확인 (초기값, 점수 없음)
+                        - secondaryDownwardEvaluation.submittedAt이 null 또는 undefined인지 확인 (초기값, 제출일 없음)
+                    - **평가자 미지정 경우 검증**
+                        - 관리자가 없는 경우 primaryDownwardEvaluation이 null인지 확인
+                        - PM이 없는 경우 secondaryDownwardEvaluation이 null인지 확인
+    - **includeCurrentUserAsEvaluator 옵션을 사용한 평가라인 검증**
+        - POST /admin/seed/generate-with-real-data (시드 데이터 생성)
+            - includeCurrentUserAsEvaluator: true 설정
+            - useRealDepartments: true (실제 부서 사용)
+            - useRealEmployees: true (실제 직원 사용)
+            - projectCount, wbsPerProject 설정
+        - POST /admin/evaluation-periods (평가기간 생성)
+        - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+        - GET /admin/employees (전체 직원 목록 조회)
+            - **managerId 설정 검증**
+                - 모든 직원의 managerId가 현재 사용자 ID와 일치하는지 확인 (본인 제외)
+                - 현재 사용자 본인의 managerId는 null 또는 다른 값일 수 있음
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+        - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+            - **평가라인 자동 구성 검증 (현재 사용자가 1차 평가자로 설정됨)**
+                - GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings (직원 평가설정 통합 조회)
+                    - evaluationLineMappings 배열에서 wbsItemId가 null인 매핑 조회 (1차 평가자)
+                    - evaluatorId가 현재 사용자 ID와 일치하는지 확인
+                    - 모든 피평가자에 대해 현재 사용자가 1차 평가자로 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{currentUserId}/status (현재 사용자로 평가자별 피평가자 현황 조회)
+                    - 응답 배열에서 모든 피평가자 정보 조회
+                    - 각 피평가자의 evaluationLine.hasPrimaryEvaluator가 true인지 확인
+                    - 각 피평가자의 downwardEvaluation.isPrimary가 true인지 확인
+                    - 각 피평가자의 myEvaluatorTypes에 'primary'가 포함되어 있는지 확인
+                    - **평가 대상자 수 일치 검증**
+                        - 응답 배열의 길이를 저장 (대시보드에서 조회된 피평가자 수)
+                        - 각 피평가자에 대해 GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/settings (직원 평가설정 통합 조회) 호출
+                        - evaluationLineMappings 배열에서 evaluatorId가 currentUserId와 일치하는 매핑이 있는지 확인
+                        - evaluatorId 기준으로 필터링된 매핑이 있는 직원 수를 집계
+                        - 대시보드에서 조회된 피평가자 수와 직원 평가설정 통합 조회에서 evaluatorId 기준으로 필터링된 매핑이 있는 직원 수가 일치하는지 확인
+                        - (참고: 여러 WBS에 할당된 직원의 경우 여러 매핑이 있을 수 있지만, 직원 수 기준으로 집계)
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - projects[].wbsList 배열의 각 WBS 확인
+                    - **primaryDownwardEvaluation 객체 검증**
+                        - primaryDownwardEvaluation 객체 존재 확인
+                        - primaryDownwardEvaluation.evaluatorId가 현재 사용자 ID와 일치하는지 확인
+                        - primaryDownwardEvaluation.evaluatorName이 현재 사용자 이름과 일치하는지 확인
+                        - primaryDownwardEvaluation.isCompleted가 false인지 확인 (초기값)
+                        - primaryDownwardEvaluation.isEditable이 boolean 타입인지 확인
+                    - **여러 직원에 대한 일관성 검증**
+                        - 여러 직원에 대해 동일한 검증 수행
+                        - 모든 직원의 primaryDownwardEvaluation.evaluatorId가 현재 사용자 ID와 일치하는지 확인

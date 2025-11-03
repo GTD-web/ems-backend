@@ -327,7 +327,8 @@ export class EvaluationProjectAssignmentValidationService {
       .createQueryBuilder('assignment')
       .where('assignment.periodId = :periodId', { periodId })
       .andWhere('assignment.employeeId = :employeeId', { employeeId })
-      .andWhere('assignment.projectId = :projectId', { projectId });
+      .andWhere('assignment.projectId = :projectId', { projectId })
+      .andWhere('assignment.deletedAt IS NULL'); // soft delete 된 할당 제외
 
     if (excludeId) {
       queryBuilder.andWhere('assignment.id != :excludeId', { excludeId });
