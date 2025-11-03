@@ -26,6 +26,24 @@ export class GetRevisionRequestsQueryDto {
   evaluationPeriodId?: string;
 
   @ApiPropertyOptional({
+    description: '피평가자 ID (관리자용)',
+    type: 'string',
+    format: 'uuid',
+  })
+  @IsOptional()
+  @IsUUID()
+  employeeId?: string;
+
+  @ApiPropertyOptional({
+    description: '요청자 ID (관리자용)',
+    type: 'string',
+    format: 'uuid',
+  })
+  @IsOptional()
+  @IsUUID()
+  requestedBy?: string;
+
+  @ApiPropertyOptional({
     description: '읽음 여부',
     type: 'boolean',
   })

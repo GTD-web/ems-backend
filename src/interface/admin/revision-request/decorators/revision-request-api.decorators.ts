@@ -16,6 +16,92 @@ import {
 import { CompleteRevisionRequestDto } from '../dto/complete-revision-request.dto';
 
 /**
+ * 전체 재작성 요청 목록 조회 API 데코레이터 (관리자용)
+ */
+export function GetRevisionRequests() {
+  return applyDecorators(
+    Get(),
+    ApiOperation({
+      summary: '전체 재작성 요청 목록 조회',
+      description: `**관리자용**: 시스템 내 모든 재작성 요청 목록을 조회합니다.
+
+**동작:**
+- 시스템 내 모든 재작성 요청을 수신자별로 조회
+- 각 요청의 피평가자, 평가기간, 수신자 정보 포함
+- 필터링 옵션을 통해 조건별 조회 가능
+
+**필터링 옵션:**
+- \`evaluationPeriodId\`: 특정 평가기간의 요청만 조회
+- \`employeeId\`: 특정 피평가자의 요청만 조회
+- \`requestedBy\`: 특정 요청자가 생성한 요청만 조회
+- \`isRead\`: 읽음/읽지 않음 상태로 필터링
+- \`isCompleted\`: 완료/미완료 상태로 필터링
+- \`step\`: 특정 단계의 요청만 조회
+
+**사용 시나리오:**
+- 관리자가 전체 재작성 요청 현황 확인
+- 특정 평가기간 또는 피평가자의 요청 조회
+- 읽지 않거나 완료되지 않은 요청 모니터링
+
+**테스트 케이스:**
+- 정상 조회: 전체 재작성 요청 목록 반환
+- 필터 적용: evaluationPeriodId로 특정 평가기간의 요청만 조회
+- employeeId 필터: 특정 피평가자의 요청만 조회
+- requestedBy 필터: 특정 요청자가 생성한 요청만 조회
+- 여러 필터 조합: 여러 필터를 동시에 적용하여 조회
+- 빈 목록: 조건에 맞는 요청이 없는 경우 빈 배열 반환
+- 잘못된 UUID 형식: employeeId가 UUID 형식이 아닌 경우 400 에러
+- 잘못된 step 값: 유효하지 않은 step 값 입력 시 400 에러`,
+    }),
+    ApiQuery({
+      name: 'evaluationPeriodId',
+      required: false,
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiQuery({
+      name: 'employeeId',
+      required: false,
+      description: '피평가자 ID (관리자용)',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiQuery({
+      name: 'requestedBy',
+      required: false,
+      description: '요청자 ID (관리자용)',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiQuery({
+      name: 'isRead',
+      required: false,
+      description: '읽음 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+      type: String,
+      example: 'false',
+    }),
+    ApiQuery({
+      name: 'isCompleted',
+      required: false,
+      description: '재작성 완료 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+      type: String,
+      example: 'false',
+    }),
+    ApiQuery({
+      name: 'step',
+      required: false,
+      description: '단계',
+      enum: ['criteria', 'self', 'primary', 'secondary'],
+    }),
+    ApiOkResponse({
+      description: '전체 재작성 요청 목록 조회 성공',
+      type: [RevisionRequestResponseDto],
+    }),
+  );
+}
+
+/**
  * 내 재작성 요청 목록 조회 API 데코레이터
  */
 export function GetMyRevisionRequests() {

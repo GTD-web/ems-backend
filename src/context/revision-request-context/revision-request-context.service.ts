@@ -32,6 +32,95 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
   ) {}
 
   /**
+   * 전체 재작성 요청 목록을 조회한다 (관리자용)
+   */
+  async 전체_재작성요청목록을_조회한다(
+    filter?: GetRevisionRequestsFilter,
+  ): Promise<RevisionRequestWithDetailsDto[]> {
+    this.logger.log('전체 재작성 요청 목록 조회');
+
+    // 재작성 요청 목록 조회 (수신자 정보 포함)
+    const requests = await this.revisionRequestService.필터로_조회한다({
+      evaluationPeriodId: filter?.evaluationPeriodId,
+      employeeId: filter?.employeeId,
+      step: filter?.step,
+      requestedBy: filter?.requestedBy,
+    });
+
+    // 각 요청의 모든 수신자에 대해 상세 정보 조회
+    const result: RevisionRequestWithDetailsDto[] = [];
+
+    for (const request of requests) {
+      // 피평가자 정보 조회
+      const employee = await this.employeeRepository.findOne({
+        where: { id: request.employeeId, deletedAt: null as any },
+      });
+
+      if (!employee) {
+        this.logger.warn(
+          `피평가자를 찾을 수 없습니다. - 직원 ID: ${request.employeeId}`,
+        );
+        continue;
+      }
+
+      // 평가기간 정보 조회
+      const evaluationPeriod = await this.evaluationPeriodRepository.findOne({
+        where: { id: request.evaluationPeriodId, deletedAt: null as any },
+      });
+
+      if (!evaluationPeriod) {
+        this.logger.warn(
+          `평가기간을 찾을 수 없습니다. - 평가기간 ID: ${request.evaluationPeriodId}`,
+        );
+        continue;
+      }
+
+      // 각 수신자별로 필터링 및 항목 생성
+      for (const recipient of request.recipients || []) {
+        // 삭제된 수신자는 제외
+        if (recipient.deletedAt) {
+          continue;
+        }
+
+        // 필터 적용
+        if (filter?.isRead !== undefined && recipient.isRead !== filter.isRead) {
+          continue;
+        }
+
+        if (
+          filter?.isCompleted !== undefined &&
+          recipient.isCompleted !== filter.isCompleted
+        ) {
+          continue;
+        }
+
+        result.push({
+          request: request.DTO로_변환한다(),
+          recipientInfo: recipient.DTO로_변환한다(),
+          employee: {
+            id: employee.id,
+            name: employee.name,
+            employeeNumber: employee.employeeNumber,
+            email: employee.email,
+            departmentName: employee.departmentName,
+            rankName: employee.rankName,
+          },
+          evaluationPeriod: {
+            id: evaluationPeriod.id,
+            name: evaluationPeriod.name,
+          },
+        });
+      }
+    }
+
+    this.logger.log(
+      `전체 재작성 요청 목록 조회 완료 - 요청 수: ${result.length}`,
+    );
+
+    return result;
+  }
+
+  /**
    * 내 재작성 요청 목록을 조회한다
    */
   async 내_재작성요청목록을_조회한다(

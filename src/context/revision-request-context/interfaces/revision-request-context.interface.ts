@@ -34,6 +34,10 @@ export interface RevisionRequestWithDetailsDto {
 export interface GetRevisionRequestsFilter {
   /** 평가기간 ID */
   evaluationPeriodId?: string;
+  /** 피평가자 ID (관리자용) */
+  employeeId?: string;
+  /** 요청자 ID (관리자용) */
+  requestedBy?: string;
   /** 읽음 여부 */
   isRead?: boolean;
   /** 완료 여부 */
@@ -46,6 +50,13 @@ export interface GetRevisionRequestsFilter {
  * 재작성 요청 컨텍스트 인터페이스
  */
 export interface IRevisionRequestContext {
+  /**
+   * 전체 재작성 요청 목록을 조회한다 (관리자용)
+   */
+  전체_재작성요청목록을_조회한다(
+    filter?: GetRevisionRequestsFilter,
+  ): Promise<RevisionRequestWithDetailsDto[]>;
+
   /**
    * 내 재작성 요청 목록을 조회한다
    */

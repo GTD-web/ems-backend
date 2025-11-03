@@ -2,6 +2,7 @@ import { Controller, Query, Param, Body, ParseUUIDPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RevisionRequestContextService } from '@context/revision-request-context';
 import {
+  GetRevisionRequests,
   GetMyRevisionRequests,
   GetMyUnreadCount,
   MarkRevisionRequestAsRead,
@@ -26,6 +27,45 @@ export class RevisionRequestController {
   constructor(
     private readonly revisionRequestContextService: RevisionRequestContextService,
   ) {}
+
+  /**
+   * 전체 재작성 요청 목록을 조회한다 (관리자용)
+   */
+  @GetRevisionRequests()
+  async getRevisionRequests(
+    @Query() query: GetRevisionRequestsQueryDto,
+  ): Promise<RevisionRequestResponseDto[]> {
+    const requests =
+      await this.revisionRequestContextService.전체_재작성요청목록을_조회한다({
+        evaluationPeriodId: query.evaluationPeriodId,
+        employeeId: query.employeeId,
+        requestedBy: query.requestedBy,
+        isRead: query.isRead,
+        isCompleted: query.isCompleted,
+        step: query.step as any,
+      });
+
+    return requests.map((req) => ({
+      requestId: req.request.id,
+      evaluationPeriodId: req.request.evaluationPeriodId,
+      evaluationPeriod: req.evaluationPeriod,
+      employeeId: req.request.employeeId,
+      employee: req.employee,
+      step: req.request.step,
+      comment: req.request.comment,
+      requestedBy: req.request.requestedBy,
+      requestedAt: req.request.requestedAt,
+      recipientId: req.recipientInfo.recipientId,
+      recipientType: req.recipientInfo.recipientType,
+      isRead: req.recipientInfo.isRead,
+      readAt: req.recipientInfo.readAt,
+      isCompleted: req.recipientInfo.isCompleted,
+      completedAt: req.recipientInfo.completedAt,
+      responseComment: req.recipientInfo.responseComment,
+      createdAt: req.recipientInfo.createdAt,
+      updatedAt: req.recipientInfo.updatedAt,
+    }));
+  }
 
   /**
    * 내 재작성 요청 목록을 조회한다
