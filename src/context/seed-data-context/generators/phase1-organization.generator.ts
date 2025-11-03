@@ -110,11 +110,17 @@ export class Phase1OrganizationGenerator {
       this.logger.log(`Employee createdBy/excludedBy 업데이트 완료`);
     }
 
-    // 3.5. 부서장 설정 (실제 데이터가 아닌 경우에만)
+    // 3.5. 부서장 설정 (실제 데이터가 아닌 경우에만, currentUserId가 설정되지 않은 경우에만)
+    // 주의: currentUserId가 설정되면 모든 직원의 managerId가 currentUserId로 덮어써지므로,
+    // 부서장 설정을 먼저 해도 의미가 없습니다. 따라서 currentUserId가 있을 때는 부서장 설정을 건너뜁니다.
     this.logger.log(
-      `🔍 부서장 설정 조건 확인 - useRealDepartments: ${config.useRealDepartments}, useRealEmployees: ${config.useRealEmployees}`,
+      `🔍 부서장 설정 조건 확인 - useRealDepartments: ${config.useRealDepartments}, useRealEmployees: ${config.useRealEmployees}, currentUserId: ${config.currentUserId || 'undefined'}`,
     );
-    if (!config.useRealDepartments && !config.useRealEmployees) {
+    if (
+      !config.useRealDepartments &&
+      !config.useRealEmployees &&
+      !config.currentUserId
+    ) {
       this.logger.log('✅ 부서장 설정 시작');
       // 최신 부서 목록을 다시 조회 (새로 생성된 부서 포함)
       const latestDepartments = await this.departmentRepository
@@ -127,10 +133,17 @@ export class Phase1OrganizationGenerator {
       await this.부서장을_설정한다(employeeIds, latestDepartments);
       this.logger.log(`✅ 부서장 설정 완료`);
     } else {
-      this.logger.log('⏭️ 부서장 설정 건너뜀 (실제 데이터 사용 중)');
+      if (config.currentUserId) {
+        this.logger.log(
+          '⏭️ 부서장 설정 건너뜀 (currentUserId 설정으로 인해 모든 직원의 managerId가 덮어써지므로)',
+        );
+      } else {
+        this.logger.log('⏭️ 부서장 설정 건너뜀 (실제 데이터 사용 중)');
+      }
     }
 
     // 3.6. 현재 사용자를 평가자로 등록하는 경우, 모든 직원의 managerId를 currentUserId로 설정
+    // 주의: 이 설정은 부서장 설정을 덮어씁니다. 따라서 currentUserId가 있을 때는 부서장 설정을 먼저 하지 않습니다.
     this.logger.log(
       `🔍 currentUserId 확인: ${config.currentUserId || 'undefined'}`,
     );
