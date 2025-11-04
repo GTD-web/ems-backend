@@ -24,6 +24,10 @@ import {
   가중치_기반_2차_하향평가_점수를_계산한다,
   하향평가_등급을_조회한다,
 } from '../queries/get-employee-evaluation-period-status/downward-evaluation-score.utils';
+import {
+  자기평가_진행_상태를_조회한다,
+  자기평가_상태를_계산한다,
+} from '../queries/get-employee-evaluation-period-status/self-evaluation.utils';
 
 /**
  * 내가 담당하는 평가 대상자 현황 조회 쿼리
@@ -237,6 +241,24 @@ export class GetMyEvaluationTargetsStatusHandler
               inputCompletedCount,
             );
 
+          // 자기평가 제출 상태 조회
+          const selfEvaluationStatus = await 자기평가_진행_상태를_조회한다(
+            evaluationPeriodId,
+            employeeId,
+            this.wbsSelfEvaluationRepository,
+            this.wbsAssignmentRepository,
+            this.evaluationPeriodRepository,
+          );
+
+          // 자기평가 상태 계산
+          const selfEvaluationStatusType = 자기평가_상태를_계산한다(
+            selfEvaluationStatus.totalMappingCount,
+            selfEvaluationStatus.completedMappingCount,
+          );
+
+          // 자기평가 수정 가능 여부 조회
+          const isSelfEvaluationEditable = mapping.isSelfEvaluationEditable;
+
           // 내가 담당하는 하향평가 현황 조회
           const downwardEvaluationStatus =
             await this.내가_담당하는_하향평가_현황을_조회한다(
@@ -270,6 +292,23 @@ export class GetMyEvaluationTargetsStatusHandler
               inputCompletedCount,
             },
             myEvaluatorTypes: evaluatorTypes,
+            selfEvaluation: {
+              status: selfEvaluationStatusType,
+              totalMappingCount: selfEvaluationStatus.totalMappingCount,
+              completedMappingCount: selfEvaluationStatus.completedMappingCount,
+              isEditable: isSelfEvaluationEditable,
+              totalSelfEvaluations: selfEvaluationStatus.totalMappingCount,
+              submittedToEvaluatorCount:
+                selfEvaluationStatus.submittedToEvaluatorCount,
+              isSubmittedToEvaluator:
+                selfEvaluationStatus.isSubmittedToEvaluator,
+              submittedToManagerCount:
+                selfEvaluationStatus.submittedToManagerCount,
+              isSubmittedToManager:
+                selfEvaluationStatus.isSubmittedToManager,
+              totalScore: selfEvaluationStatus.totalScore,
+              grade: selfEvaluationStatus.grade,
+            },
             downwardEvaluation: downwardEvaluationStatus,
           });
         } catch (error) {

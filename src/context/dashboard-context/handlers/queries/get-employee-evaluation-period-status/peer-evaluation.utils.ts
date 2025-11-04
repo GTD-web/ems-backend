@@ -1,33 +1,41 @@
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, Not } from 'typeorm';
 import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.entity';
 import { PeerEvaluationStatus } from '../../../interfaces/dashboard-context.interface';
+import { PeerEvaluationStatus as DomainPeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 
 /**
  * 동료평가 상태를 조회한다
  * 평가기간과 직원(피평가자)에 해당하는 동료평가의 전체 수와 완료된 수를 조회
+ * 취소된 동료평가(status = 'cancelled')는 제외됩니다.
  */
 export async function 동료평가_상태를_조회한다(
   evaluationPeriodId: string,
   employeeId: string,
   peerEvaluationRepository: Repository<PeerEvaluation>,
 ): Promise<{ totalRequestCount: number; completedRequestCount: number }> {
-  // 활성화된 동료평가 요청 전체 수 조회 (isActive = true, deletedAt IS NULL)
+  // 활성화된 동료평가 요청 전체 수 조회
+  // 취소된 동료평가(status = 'cancelled')는 제외
+  // isActive = true, deletedAt IS NULL, status != 'cancelled'
   const totalRequestCount = await peerEvaluationRepository.count({
     where: {
       periodId: evaluationPeriodId,
       evaluateeId: employeeId,
       isActive: true,
+      status: Not(DomainPeerEvaluationStatus.CANCELLED),
       deletedAt: IsNull(),
     },
   });
 
-  // 완료된 동료평가 수 조회 (isCompleted = true)
+  // 완료된 동료평가 수 조회
+  // 취소된 동료평가는 제외
+  // isActive = true, isCompleted = true, status != 'cancelled', deletedAt IS NULL
   const completedRequestCount = await peerEvaluationRepository.count({
     where: {
       periodId: evaluationPeriodId,
       evaluateeId: employeeId,
       isActive: true,
       isCompleted: true,
+      status: Not(DomainPeerEvaluationStatus.CANCELLED),
       deletedAt: IsNull(),
     },
   });

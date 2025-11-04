@@ -16,7 +16,8 @@ import type {
 
 // summary 타입은 Context의 EmployeeAssignedDataResult['summary'] 타입과 호환
 type AssignmentSummary = EmployeeAssignedDataResult['summary'];
-type EvaluationScore = AssignmentSummary['selfEvaluation'];
+type EvaluationScore = AssignmentSummary['primaryDownwardEvaluation'];
+type SelfEvaluationSummary = AssignmentSummary['selfEvaluation'];
 
 // ==================== 사용자 할당 정보 응답 DTO ====================
 
@@ -574,6 +575,56 @@ export class EvaluationScoreDto implements EvaluationScore {
 }
 
 /**
+ * 자기평가 요약 정보 DTO
+ * Context의 summary.selfEvaluation 타입과 일치해야 함
+ */
+export class SelfEvaluationSummaryDto implements SelfEvaluationSummary {
+  @ApiProperty({
+    description: '총점 (0-100 범위, 미완료 시 null)',
+    example: 75.5,
+    nullable: true,
+  })
+  totalScore: number | null;
+
+  @ApiProperty({
+    description: '등급 (S, A, B, C, D 등, 미완료 시 null)',
+    example: 'C',
+    nullable: true,
+  })
+  grade: string | null;
+
+  @ApiProperty({
+    description: '전체 WBS 자기평가 수',
+    example: 5,
+  })
+  totalSelfEvaluations: number;
+
+  @ApiProperty({
+    description: '1차 평가자에게 제출된 자기평가 수',
+    example: 3,
+  })
+  submittedToEvaluatorCount: number;
+
+  @ApiProperty({
+    description: '관리자에게 제출된 자기평가 수',
+    example: 3,
+  })
+  submittedToManagerCount: number;
+
+  @ApiProperty({
+    description: '모든 자기평가가 1차 평가자에게 제출되었는지 여부',
+    example: false,
+  })
+  isSubmittedToEvaluator: boolean;
+
+  @ApiProperty({
+    description: '모든 자기평가가 관리자에게 제출되었는지 여부',
+    example: true,
+  })
+  isSubmittedToManager: boolean;
+}
+
+/**
  * 할당 데이터 요약 DTO
  * Context의 AssignmentSummary 타입과 일치해야 함
  */
@@ -603,11 +654,11 @@ export class AssignmentSummaryDto implements AssignmentSummary {
   completedSelfEvaluations: number;
 
   @ApiProperty({
-    description: '자기평가 총점 및 등급',
-    type: EvaluationScoreDto,
+    description: '자기평가 총점, 등급 및 제출 상태',
+    type: SelfEvaluationSummaryDto,
   })
-  @Type(() => EvaluationScoreDto)
-  selfEvaluation: EvaluationScoreDto;
+  @Type(() => SelfEvaluationSummaryDto)
+  selfEvaluation: SelfEvaluationSummaryDto;
 
   @ApiProperty({
     description: '1차 하향평가 총점 및 등급',

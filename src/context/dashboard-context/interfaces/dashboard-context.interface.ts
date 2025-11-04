@@ -476,6 +476,35 @@ export interface MyEvaluationTargetStatusDto {
   myEvaluatorTypes: string[];
 
   /**
+   * 자기평가 제출 상태
+   * 피평가자가 1차 평가자에게 자기평가를 제출했는지 여부
+   */
+  selfEvaluation: {
+    /** 자기평가 진행 상태 */
+    status: SelfEvaluationStatus;
+    /** 전체 WBS 자기평가 매핑 수 */
+    totalMappingCount: number;
+    /** 완료된 WBS 자기평가 수 */
+    completedMappingCount: number;
+    /** 자기평가 수정 가능 여부 */
+    isEditable: boolean;
+    /** 전체 WBS 자기평가 매핑 수 (totalMappingCount와 동일) */
+    totalSelfEvaluations: number;
+    /** 1차 평가자에게 제출된 자기평가 수 */
+    submittedToEvaluatorCount: number;
+    /** 모든 자기평가가 1차 평가자에게 제출되었는지 여부 */
+    isSubmittedToEvaluator: boolean;
+    /** 관리자에게 제출된 자기평가 수 */
+    submittedToManagerCount: number;
+    /** 모든 자기평가가 관리자에게 제출되었는지 여부 */
+    isSubmittedToManager: boolean;
+    /** 가중치 기반 자기평가 총점 (0-100) */
+    totalScore: number | null;
+    /** 평가기간 등급 기준에 따른 자기평가 등급 (예: S+, A-, B 등) */
+    grade: string | null;
+  };
+
+  /**
    * 내가 담당하는 하향평가 현황
    */
   downwardEvaluation: MyDownwardEvaluationStatus;

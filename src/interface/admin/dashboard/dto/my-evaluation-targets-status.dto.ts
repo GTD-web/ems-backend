@@ -188,6 +188,80 @@ export class PerformanceInputDto {
 }
 
 /**
+ * 내가 담당하는 평가 대상자의 자기평가 제출 상태 DTO
+ */
+export class MyTargetSelfEvaluationDto {
+  @ApiProperty({
+    description: '자기평가 진행 상태',
+    enum: ['complete', 'in_progress', 'none'],
+    example: 'in_progress',
+  })
+  status: 'complete' | 'in_progress' | 'none';
+
+  @ApiProperty({
+    description: '전체 WBS 자기평가 매핑 수',
+    example: 5,
+  })
+  totalMappingCount: number;
+
+  @ApiProperty({
+    description: '완료된 WBS 자기평가 수',
+    example: 3,
+  })
+  completedMappingCount: number;
+
+  @ApiProperty({
+    description: '자기평가 수정 가능 여부',
+    example: true,
+  })
+  isEditable: boolean;
+
+  @ApiProperty({
+    description: '전체 WBS 자기평가 매핑 수 (totalMappingCount와 동일)',
+    example: 5,
+  })
+  totalSelfEvaluations: number;
+
+  @ApiProperty({
+    description: '1차 평가자에게 제출된 자기평가 수',
+    example: 3,
+  })
+  submittedToEvaluatorCount: number;
+
+  @ApiProperty({
+    description: '모든 자기평가가 1차 평가자에게 제출되었는지 여부',
+    example: false,
+  })
+  isSubmittedToEvaluator: boolean;
+
+  @ApiProperty({
+    description: '관리자에게 제출된 자기평가 수',
+    example: 2,
+  })
+  submittedToManagerCount: number;
+
+  @ApiProperty({
+    description: '모든 자기평가가 관리자에게 제출되었는지 여부',
+    example: false,
+  })
+  isSubmittedToManager: boolean;
+
+  @ApiPropertyOptional({
+    description: '가중치 기반 자기평가 총점 (0-100)',
+    example: 85.5,
+    nullable: true,
+  })
+  totalScore: number | null;
+
+  @ApiPropertyOptional({
+    description: '평가기간 등급 기준에 따른 자기평가 등급 (예: S+, A-, B 등)',
+    example: 'A-',
+    nullable: true,
+  })
+  grade: string | null;
+}
+
+/**
  * 내가 담당하는 평가 대상자 현황 응답 DTO
  */
 export class MyEvaluationTargetStatusResponseDto {
@@ -244,6 +318,13 @@ export class MyEvaluationTargetStatusResponseDto {
     isArray: true,
   })
   myEvaluatorTypes: string[];
+
+  @ApiProperty({
+    description: '자기평가 제출 상태',
+    type: () => MyTargetSelfEvaluationDto,
+  })
+  @Type(() => MyTargetSelfEvaluationDto)
+  selfEvaluation: MyTargetSelfEvaluationDto;
 
   @ApiProperty({
     description: '내가 담당하는 하향평가 현황',

@@ -22,6 +22,8 @@ export async function 자기평가_진행_상태를_조회한다(
   completedMappingCount: number;
   submittedToEvaluatorCount: number;
   isSubmittedToEvaluator: boolean;
+  submittedToManagerCount: number;
+  isSubmittedToManager: boolean;
   totalScore: number | null;
   grade: string | null;
 }> {
@@ -59,6 +61,14 @@ export async function 자기평가_진행_상태를_조회한다(
     totalMappingCount > 0 &&
     submittedToEvaluatorCount === totalMappingCount;
 
+  // 관리자에게 제출된 WBS 자기평가 수는 completedMappingCount와 동일
+  const submittedToManagerCount = completedMappingCount;
+
+  // 모든 자기평가가 관리자에게 제출되었는지 확인
+  const isSubmittedToManager =
+    totalMappingCount > 0 &&
+    submittedToManagerCount === totalMappingCount;
+
   // 가중치 기반 자기평가 총점 및 등급 계산
   let totalScore: number | null = null;
   let grade: string | null = null;
@@ -88,6 +98,8 @@ export async function 자기평가_진행_상태를_조회한다(
     completedMappingCount,
     submittedToEvaluatorCount,
     isSubmittedToEvaluator,
+    submittedToManagerCount,
+    isSubmittedToManager,
     totalScore,
     grade,
   };

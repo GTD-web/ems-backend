@@ -141,8 +141,19 @@ describe('GET /admin/dashboard/:evaluationPeriodId/my-evaluation-targets/:evalua
       expect(firstTarget).toHaveProperty('employeeId');
       expect(firstTarget).toHaveProperty('isEvaluationTarget');
       expect(firstTarget).toHaveProperty('downwardEvaluation');
+      expect(firstTarget).toHaveProperty('selfEvaluation');
+
+      // 자기평가 제출 상태 검증
+      expect(firstTarget.selfEvaluation).toMatchObject({
+        totalSelfEvaluations: expect.any(Number),
+        submittedToEvaluatorCount: expect.any(Number),
+        isSubmittedToEvaluator: expect.any(Boolean),
+      });
 
       console.log('\n✅ 피평가자 목록 조회 성공');
+      console.log(
+        `  자기평가 제출 상태: ${firstTarget.selfEvaluation.submittedToEvaluatorCount}/${firstTarget.selfEvaluation.totalSelfEvaluations}`,
+      );
     });
 
     it('1차 평가자로 지정되어 있어야 한다', async () => {

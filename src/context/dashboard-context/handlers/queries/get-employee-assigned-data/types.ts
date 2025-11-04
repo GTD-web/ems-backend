@@ -149,6 +149,16 @@ export interface EmployeeAssignedDataResult {
     selfEvaluation: {
       totalScore: number | null;
       grade: string | null;
+      /** 전체 WBS 자기평가 수 */
+      totalSelfEvaluations: number;
+      /** 1차 평가자에게 제출된 자기평가 수 */
+      submittedToEvaluatorCount: number;
+      /** 관리자에게 제출된 자기평가 수 */
+      submittedToManagerCount: number;
+      /** 모든 자기평가가 1차 평가자에게 제출되었는지 여부 */
+      isSubmittedToEvaluator: boolean;
+      /** 모든 자기평가가 관리자에게 제출되었는지 여부 */
+      isSubmittedToManager: boolean;
     };
     primaryDownwardEvaluation: {
       totalScore: number | null;

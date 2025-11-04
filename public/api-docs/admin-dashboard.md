@@ -256,6 +256,12 @@ interface MyEvaluationTargetStatusResponseDto {
 
   myEvaluatorTypes: string[]; // ['PRIMARY'] or ['SECONDARY'] or ['PRIMARY', 'SECONDARY']
 
+  selfEvaluation: {
+    totalSelfEvaluations: number; // 전체 WBS 자기평가 매핑 수
+    submittedToEvaluatorCount: number; // 1차 평가자에게 제출된 자기평가 수
+    isSubmittedToEvaluator: boolean; // 모든 자기평가가 1차 평가자에게 제출되었는지 여부
+  };
+
   downwardEvaluation: {
     isPrimary: boolean; // 1차 평가자 여부
     isSecondary: boolean; // 2차 평가자 여부

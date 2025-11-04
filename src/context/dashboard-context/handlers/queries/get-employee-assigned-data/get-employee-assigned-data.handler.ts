@@ -154,17 +154,33 @@ export class GetEmployeeAssignedDataHandler
     // 6. 요약 정보 계산
     let completedPerformances = 0;
     let completedSelfEvaluations = 0;
+    let submittedToEvaluatorCount = 0;
+    let submittedToManagerCount = 0;
     const totalWbs = projects.reduce((sum, project) => {
       project.wbsList.forEach((wbs) => {
         if (wbs.performance?.isCompleted) completedPerformances++;
-        if (wbs.selfEvaluation?.submittedToManager)
+        if (wbs.selfEvaluation?.submittedToEvaluator) {
+          submittedToEvaluatorCount++;
+        }
+        if (wbs.selfEvaluation?.submittedToManager) {
           completedSelfEvaluations++;
+          submittedToManagerCount++;
+        }
       });
       return sum + project.wbsList.length;
     }, 0);
 
+    // 전체 자기평가 수 조회
+    const totalSelfEvaluations = await this.selfEvaluationRepository.count({
+      where: {
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+        deletedAt: null as any,
+      },
+    });
+
     // 7. 자기평가 점수/등급 계산
-    const selfEvaluation = await calculateSelfEvaluationScore(
+    const selfEvaluationScore = await calculateSelfEvaluationScore(
       evaluationPeriodId,
       employeeId,
       completedSelfEvaluations,
@@ -172,6 +188,23 @@ export class GetEmployeeAssignedDataHandler
       this.wbsAssignmentRepository,
       this.evaluationPeriodRepository,
     );
+
+    // 전체 제출 상태 계산
+    const isSubmittedToEvaluator =
+      totalSelfEvaluations > 0 &&
+      submittedToEvaluatorCount === totalSelfEvaluations;
+    const isSubmittedToManager =
+      totalSelfEvaluations > 0 &&
+      submittedToManagerCount === totalSelfEvaluations;
+
+    const selfEvaluation = {
+      ...selfEvaluationScore,
+      totalSelfEvaluations,
+      submittedToEvaluatorCount,
+      submittedToManagerCount,
+      isSubmittedToEvaluator,
+      isSubmittedToManager,
+    };
 
     // 8. 1차 하향평가 점수/등급 계산
     const primaryDownwardEvaluation =

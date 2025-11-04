@@ -251,7 +251,16 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
               isCompleted: expect.any(Boolean),
               isEditable: expect.any(Boolean),
               submittedAt: expect.any(String),
+              submittedToEvaluator: expect.any(Boolean),
+              submittedToManager: expect.any(Boolean),
             });
+            // 제출 상태에 따라 submittedToEvaluatorAt, submittedToManagerAt 검증
+            if (wbs.selfEvaluation.submittedToEvaluator) {
+              expect(wbs.selfEvaluation.submittedToEvaluatorAt).toBeDefined();
+            }
+            if (wbs.selfEvaluation.submittedToManager) {
+              expect(wbs.selfEvaluation.submittedToManagerAt).toBeDefined();
+            }
           }
 
           // 1차 하향평가 정보가 있으면 검증 (모든 필드)
@@ -296,14 +305,25 @@ describe('GET /admin/dashboard/:evaluationPeriodId/evaluators/:evaluatorId/emplo
         completedSelfEvaluations: expect.any(Number),
       });
 
-      // 자기평가 점수/등급 (완료된 경우만 있음)
+      // 자기평가 점수/등급 및 제출 상태 (완료된 경우만 있음)
       if (response.body.evaluatee.summary.selfEvaluation) {
         expect(response.body.evaluatee.summary.selfEvaluation).toMatchObject({
           totalScore: expect.any(Number),
           grade: expect.any(String),
+          totalSelfEvaluations: expect.any(Number),
+          submittedToEvaluatorCount: expect.any(Number),
+          submittedToManagerCount: expect.any(Number),
+          isSubmittedToEvaluator: expect.any(Boolean),
+          isSubmittedToManager: expect.any(Boolean),
         });
         console.log(
           `\n  📊 자기평가: ${response.body.evaluatee.summary.selfEvaluation.totalScore}점 (${response.body.evaluatee.summary.selfEvaluation.grade}등급)`,
+        );
+        console.log(
+          `  제출 상태: 1차 평가자에게 ${response.body.evaluatee.summary.selfEvaluation.submittedToEvaluatorCount}/${response.body.evaluatee.summary.selfEvaluation.totalSelfEvaluations} 제출`,
+        );
+        console.log(
+          `  관리자에게 ${response.body.evaluatee.summary.selfEvaluation.submittedToManagerCount}/${response.body.evaluatee.summary.selfEvaluation.totalSelfEvaluations} 제출`,
         );
       }
 
