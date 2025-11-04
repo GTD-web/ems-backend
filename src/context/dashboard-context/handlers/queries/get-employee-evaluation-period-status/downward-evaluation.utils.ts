@@ -69,8 +69,7 @@ export async function 하향평가_상태를_조회한다(
   });
 
   // 2. PRIMARY 평가자 조회
-  // 한 직원이 여러 WBS를 가질 경우, 여러 평가라인 매핑이 존재할 수 있음
-  // 가장 먼저 생성된 매핑의 평가자를 대표 평가자로 선택
+  // 1차 평가자는 직원별 고정 담당자이므로 wbsItemId가 null인 매핑만 조회
   let primaryEvaluatorId: string | null = null;
   if (primaryLine) {
     const primaryMapping = await evaluationLineMappingRepository
@@ -80,6 +79,7 @@ export async function 하향평가_상태를_조회한다(
       .andWhere('mapping.evaluationLineId = :lineId', {
         lineId: primaryLine.id,
       })
+      .andWhere('mapping.wbsItemId IS NULL') // 1차 평가자는 WBS와 무관하므로 null
       .andWhere('mapping.deletedAt IS NULL')
       .orderBy('mapping.createdAt', 'ASC') // 가장 먼저 생성된 매핑 선택
       .limit(1)

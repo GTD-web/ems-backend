@@ -84,6 +84,7 @@ export class GetMyEvaluationTargetsStatusHandler
 
     try {
       // 1. 내가 평가자로 지정된 매핑 조회 (평가라인 정보 포함)
+      // 평가기간별로 필터링하여 해당 평가기간의 평가라인만 조회
       const myTargetMappings = await this.lineMappingRepository
         .createQueryBuilder('mapping')
         .leftJoin(
@@ -92,6 +93,9 @@ export class GetMyEvaluationTargetsStatusHandler
           'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
         )
         .where('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+        .andWhere('mapping.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
         .andWhere('mapping.deletedAt IS NULL')
         .getMany();
 

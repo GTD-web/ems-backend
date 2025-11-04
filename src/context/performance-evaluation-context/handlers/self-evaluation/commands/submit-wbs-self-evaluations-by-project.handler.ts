@@ -163,8 +163,7 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
               selfEvaluationContent: evaluation.selfEvaluationContent,
               selfEvaluationScore: evaluation.selfEvaluationScore,
               performanceResult: evaluation.performanceResult,
-              submittedToManagerAt:
-                evaluation.submittedToManagerAt || new Date(),
+              submittedToManagerAt: evaluation.submittedToManagerAt,
             });
             continue;
           }
@@ -222,8 +221,7 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
             selfEvaluationContent: updatedEvaluation.selfEvaluationContent,
             selfEvaluationScore: updatedEvaluation.selfEvaluationScore,
             performanceResult: updatedEvaluation.performanceResult,
-            submittedToManagerAt:
-              updatedEvaluation.submittedToManagerAt || new Date(),
+            submittedToManagerAt: updatedEvaluation.submittedToManagerAt,
           });
 
           this.logger.debug(`평가 완료 처리 성공 - ID: ${evaluation.id}`);

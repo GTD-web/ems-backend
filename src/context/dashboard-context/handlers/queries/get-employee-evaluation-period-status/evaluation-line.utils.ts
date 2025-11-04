@@ -34,12 +34,14 @@ export async function 평가라인_지정_여부를_확인한다(
   let hasSecondaryEvaluator = false;
 
   // PRIMARY 평가라인에 평가자가 지정되었는지 확인
+  // 1차 평가자는 직원별 고정 담당자이므로 wbsItemId가 null인 매핑만 조회
   if (primaryLine) {
     const primaryMapping = await evaluationLineMappingRepository.findOne({
       where: {
         evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId,
         evaluationLineId: primaryLine.id,
+        wbsItemId: IsNull(), // 1차 평가자는 WBS와 무관하므로 null
         deletedAt: IsNull(),
       },
     });
