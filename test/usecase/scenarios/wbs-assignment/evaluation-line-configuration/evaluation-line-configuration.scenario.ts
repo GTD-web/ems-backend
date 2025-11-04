@@ -107,12 +107,11 @@ export class EvaluationLineConfigurationScenario {
   /**
    * 평가자별 피평가자 조회
    */
-  async 평가자별_피평가자를_조회한다(
-    evaluatorId: string,
-  ): Promise<any> {
-    return await this.evaluationLineApiClient.getEvaluatorEmployees(
-      evaluatorId,
-    );
+  async 평가자별_피평가자를_조회한다(config: {
+    periodId: string;
+    evaluatorId: string;
+  }): Promise<any> {
+    return await this.evaluationLineApiClient.getEvaluatorEmployees(config);
   }
 
   /**

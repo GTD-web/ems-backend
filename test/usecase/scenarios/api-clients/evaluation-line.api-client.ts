@@ -15,11 +15,14 @@ export class EvaluationLineApiClient {
   /**
    * 평가자별 피평가자 조회
    */
-  async getEvaluatorEmployees(evaluatorId: string): Promise<any> {
+  async getEvaluatorEmployees(config: {
+    periodId: string;
+    evaluatorId: string;
+  }): Promise<any> {
     const response = await this.testSuite
       .request()
       .get(
-        `/admin/evaluation-criteria/evaluation-lines/evaluator/${evaluatorId}/employees`,
+        `/admin/evaluation-criteria/evaluation-lines/periods/${config.periodId}/evaluators/${config.evaluatorId}/employees`,
       )
       .expect(200);
 
@@ -114,13 +117,16 @@ export class EvaluationLineApiClient {
    * 평가자별 피평가자 조회 (에러 예상)
    */
   async getEvaluatorEmployeesExpectError(
-    evaluatorId: string,
+    config: {
+      periodId: string;
+      evaluatorId: string;
+    },
     expectedStatus: number,
   ): Promise<any> {
     const response = await this.testSuite
       .request()
       .get(
-        `/admin/evaluation-criteria/evaluation-lines/evaluator/${evaluatorId}/employees`,
+        `/admin/evaluation-criteria/evaluation-lines/periods/${config.periodId}/evaluators/${config.evaluatorId}/employees`,
       )
       .expect(expectedStatus);
 

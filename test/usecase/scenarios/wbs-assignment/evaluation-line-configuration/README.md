@@ -155,7 +155,7 @@
     - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 구성)
     - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId}/secondary-evaluator (2차 평가자 구성)
         - **평가자별 피평가자 목록 조회**
-            - GET /admin/evaluation-criteria/evaluation-lines/evaluator/{evaluatorId}/employees (평가자별 피평가자 조회)
+            - GET /admin/evaluation-criteria/evaluation-lines/periods/{periodId}/evaluators/{evaluatorId}/employees (평가자별 피평가자 조회)
                 - employees 배열 존재 확인
                 - employees 배열에 설정한 피평가자 포함 확인
                 - 각 employee 객체의 employeeId, wbsItemId, evaluationLineId 필드 확인
@@ -246,7 +246,7 @@
             - GET /admin/evaluation-criteria/evaluation-lines/period/{periodId}/evaluators?type=invalid
                 - 잘못된 type 값으로 요청 시 400 에러
         - **평가자별 피평가자 조회**
-            - GET /admin/evaluation-criteria/evaluation-lines/evaluator/{evaluatorId}/employees (평가자별 피평가자 조회)
+            - GET /admin/evaluation-criteria/evaluation-lines/periods/{periodId}/evaluators/{evaluatorId}/employees (평가자별 피평가자 조회)
                 - evaluatorId 필드 확인
                 - employees 배열 확인
                 - employees 배열이 비어있는 경우도 허용 (평가자가 없는 경우)
