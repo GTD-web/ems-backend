@@ -9,11 +9,17 @@ import {
   GetEmployeeSelfEvaluationsQuery,
   GetWbsSelfEvaluationDetailQuery,
   SubmitWbsSelfEvaluationCommand,
+  SubmitWbsSelfEvaluationToEvaluatorCommand,
   SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand,
+  SubmitAllWbsSelfEvaluationsToEvaluatorCommand,
   ResetWbsSelfEvaluationCommand,
   ResetAllWbsSelfEvaluationsByEmployeePeriodCommand,
   SubmitWbsSelfEvaluationsByProjectCommand,
+  SubmitWbsSelfEvaluationsToEvaluatorByProjectCommand,
   ResetWbsSelfEvaluationsByProjectCommand,
+  ResetWbsSelfEvaluationToEvaluatorCommand,
+  ResetAllWbsSelfEvaluationsToEvaluatorCommand,
+  ResetWbsSelfEvaluationsToEvaluatorByProjectCommand,
   ClearWbsSelfEvaluationCommand,
   ClearAllWbsSelfEvaluationsByEmployeePeriodCommand,
   ClearWbsSelfEvaluationsByProjectCommand,
@@ -22,9 +28,13 @@ import {
 } from './handlers/self-evaluation';
 import type {
   SubmitAllWbsSelfEvaluationsResponse,
+  SubmitAllWbsSelfEvaluationsToEvaluatorResponse,
   ResetAllWbsSelfEvaluationsResponse,
   SubmitWbsSelfEvaluationsByProjectResponse,
+  SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse,
   ResetWbsSelfEvaluationsByProjectResponse,
+  ResetAllWbsSelfEvaluationsToEvaluatorResponse,
+  ResetWbsSelfEvaluationsToEvaluatorByProjectResponse,
   ClearAllWbsSelfEvaluationsResponse,
   ClearWbsSelfEvaluationsByProjectResponse,
 } from './handlers/self-evaluation';
@@ -196,7 +206,7 @@ export class PerformanceEvaluationService
   }
 
   /**
-   * WBS 자기평가를 제출한다
+   * WBS 자기평가를 제출한다 (1차 평가자 → 관리자)
    */
   async WBS자기평가를_제출한다(
     evaluationId: string,
@@ -212,8 +222,24 @@ export class PerformanceEvaluationService
   }
 
   /**
-   * 직원의 전체 WBS 자기평가를 제출한다
-   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 완료 처리합니다.
+   * 피평가자가 1차 평가자에게 자기평가를 제출한다
+   */
+  async 피평가자가_1차평가자에게_자기평가를_제출한다(
+    evaluationId: string,
+    submittedBy?: string,
+  ): Promise<WbsSelfEvaluationResponseDto> {
+    const command = new SubmitWbsSelfEvaluationToEvaluatorCommand(
+      evaluationId,
+      submittedBy || '시스템',
+    );
+
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가를 제출한다 (1차 평가자 → 관리자)
+   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 관리자에게 제출 처리합니다.
    */
   async 직원의_전체_WBS자기평가를_제출한다(
     employeeId: string,
@@ -221,6 +247,25 @@ export class PerformanceEvaluationService
     submittedBy?: string,
   ): Promise<SubmitAllWbsSelfEvaluationsResponse> {
     const command = new SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand(
+      employeeId,
+      periodId,
+      submittedBy || '시스템',
+    );
+
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가를 1차 평가자에게 제출한다
+   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 1차 평가자에게 제출 처리합니다.
+   */
+  async 직원의_전체_자기평가를_1차평가자에게_제출한다(
+    employeeId: string,
+    periodId: string,
+    submittedBy?: string,
+  ): Promise<SubmitAllWbsSelfEvaluationsToEvaluatorResponse> {
+    const command = new SubmitAllWbsSelfEvaluationsToEvaluatorCommand(
       employeeId,
       periodId,
       submittedBy || '시스템',
@@ -266,8 +311,8 @@ export class PerformanceEvaluationService
   }
 
   /**
-   * 프로젝트별 WBS 자기평가를 제출한다
-   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 완료 처리합니다.
+   * 프로젝트별 WBS 자기평가를 제출한다 (1차 평가자 → 관리자)
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 관리자에게 제출 처리합니다.
    */
   async 프로젝트별_WBS자기평가를_제출한다(
     employeeId: string,
@@ -280,6 +325,84 @@ export class PerformanceEvaluationService
       periodId,
       projectId,
       submittedBy || '시스템',
+    );
+
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가를 1차 평가자에게 제출한다
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 1차 평가자에게 제출 처리합니다.
+   */
+  async 프로젝트별_자기평가를_1차평가자에게_제출한다(
+    employeeId: string,
+    periodId: string,
+    projectId: string,
+    submittedBy?: string,
+  ): Promise<SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse> {
+    const command = new SubmitWbsSelfEvaluationsToEvaluatorByProjectCommand(
+      employeeId,
+      periodId,
+      projectId,
+      submittedBy || '시스템',
+    );
+
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  /**
+   * 피평가자가 1차 평가자에게 제출한 자기평가를 취소한다 (단일)
+   * 특정 WBS 자기평가의 1차 평가자 제출 상태를 취소합니다.
+   */
+  async 피평가자가_1차평가자에게_제출한_자기평가를_취소한다(
+    evaluationId: string,
+    resetBy?: string,
+  ): Promise<WbsSelfEvaluationResponseDto> {
+    const command = new ResetWbsSelfEvaluationToEvaluatorCommand(
+      evaluationId,
+      resetBy || '시스템',
+    );
+
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  /**
+   * 직원의 전체 자기평가를 1차 평가자 제출 취소한다
+   * 특정 직원의 특정 평가기간에 대한 모든 1차 평가자 제출 완료된 WBS 자기평가를 취소합니다.
+   */
+  async 직원의_전체_자기평가를_1차평가자_제출_취소한다(
+    employeeId: string,
+    periodId: string,
+    resetBy?: string,
+  ): Promise<ResetAllWbsSelfEvaluationsToEvaluatorResponse> {
+    const command = new ResetAllWbsSelfEvaluationsToEvaluatorCommand(
+      employeeId,
+      periodId,
+      resetBy || '시스템',
+    );
+
+    const result = await this.commandBus.execute(command);
+    return result;
+  }
+
+  /**
+   * 프로젝트별 자기평가를 1차 평가자 제출 취소한다
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 1차 평가자 제출 완료된 WBS 자기평가를 취소합니다.
+   */
+  async 프로젝트별_자기평가를_1차평가자_제출_취소한다(
+    employeeId: string,
+    periodId: string,
+    projectId: string,
+    resetBy?: string,
+  ): Promise<ResetWbsSelfEvaluationsToEvaluatorByProjectResponse> {
+    const command = new ResetWbsSelfEvaluationsToEvaluatorByProjectCommand(
+      employeeId,
+      periodId,
+      projectId,
+      resetBy || '시스템',
     );
 
     const result = await this.commandBus.execute(command);

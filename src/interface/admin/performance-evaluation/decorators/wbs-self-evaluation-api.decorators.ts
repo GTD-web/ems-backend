@@ -186,22 +186,24 @@ export function SubmitWbsSelfEvaluation() {
     Patch(':id/submit'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
-      summary: 'WBS 자기평가 제출',
-      description: `**중요**: 작성된 WBS 자기평가를 제출 상태로 변경합니다. 제출된 자기평가는 완료일(completedAt)이 기록되며, 완료 상태(isCompleted)가 true로 설정됩니다.
+      summary: 'WBS 자기평가 제출 (1차 평가자 → 관리자)',
+      description: `**중요**: 1차 평가자가 자기평가를 관리자에게 제출합니다. 피평가자가 1차 평가자에게 먼저 제출했는지 확인한 후, 관리자 제출 상태(submittedToManager)가 true로 설정됩니다.
 
 **제출 가능 조건:**
+- 피평가자가 1차 평가자에게 먼저 제출했어야 함 (submittedToEvaluator = true)
 - 자기평가가 작성되어 있어야 함 (내용 또는 점수가 입력됨)
-- 이미 제출된 경우 멱등성을 보장하며 재제출 시에도 성공 반환
+- 이미 관리자에게 제출된 경우 멱등성을 보장하며 재제출 시에도 성공 반환
 
 **테스트 케이스:**
-- 작성된 자기평가 제출: 정상적으로 작성된 자기평가를 제출 상태로 변경
-- completedAt 설정: 제출 시 완료일시 자동 기록
-- isCompleted 변경: 완료 상태가 true로 설정됨
+- 1차 평가자 → 관리자 제출: 피평가자가 1차 평가자에게 제출한 후 관리자에게 제출
+- submittedToManagerAt 설정: 제출 시 관리자 제출일시 자동 기록
+- submittedToManager 변경: 관리자 제출 상태가 true로 설정됨
+- 피평가자 제출 확인: 피평가자가 1차 평가자에게 먼저 제출하지 않았으면 400 에러
 - updatedAt 갱신: 제출 시 수정일시 자동 업데이트
-- 멱등성 보장: 이미 제출된 자기평가를 다시 제출해도 성공 (상태 유지)
+- 멱등성 보장: 이미 관리자에게 제출된 자기평가를 다시 제출해도 성공 (상태 유지)
 - 잘못된 UUID: UUID 형식이 아닌 ID로 요청 시 400 에러
 - 존재하지 않는 ID: 유효한 UUID이지만 존재하지 않는 자기평가 ID로 요청 시 400 에러
-- 응답 필드 검증: id, isCompleted, completedAt, selfEvaluationContent, selfEvaluationScore 등 포함
+- 응답 필드 검증: id, submittedToManager, submittedToManagerAt, selfEvaluationContent, selfEvaluationScore 등 포함
 - 트랜잭션 보장: 제출 중 오류 시 롤백 처리`,
     }),
     ApiParam({
@@ -213,12 +215,71 @@ export function SubmitWbsSelfEvaluation() {
     ApiResponse({
       status: HttpStatus.OK,
       description:
-        'WBS 자기평가가 성공적으로 제출되었습니다. 제출된 자기평가 정보를 반환합니다.',
+        'WBS 자기평가가 성공적으로 관리자에게 제출되었습니다. 제출된 자기평가 정보를 반환합니다.',
       type: WbsSelfEvaluationResponseDto,
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description: '잘못된 요청 (UUID 형식 오류, 존재하지 않는 자기평가 ID 등)',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
+
+/**
+ * WBS 자기평가 제출 API 데코레이터 (피평가자 → 1차 평가자)
+ */
+export function SubmitWbsSelfEvaluationToEvaluator() {
+  return applyDecorators(
+    Patch(':id/submit-to-evaluator'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: 'WBS 자기평가 제출 (피평가자 → 1차 평가자)',
+      description: `**중요**: 피평가자가 자기평가를 1차 평가자에게 제출합니다. 제출된 자기평가는 1차 평가자 제출일시(submittedToEvaluatorAt)가 기록되며, 1차 평가자 제출 상태(submittedToEvaluator)가 true로 설정됩니다.
+
+**제출 가능 조건:**
+- 자기평가가 작성되어 있어야 함 (내용 또는 점수가 입력됨)
+- 이미 1차 평가자에게 제출된 경우 멱등성을 보장하며 재제출 시에도 성공 반환
+
+**테스트 케이스:**
+- 피평가자 → 1차 평가자 제출: 정상적으로 작성된 자기평가를 1차 평가자에게 제출
+- submittedToEvaluatorAt 설정: 제출 시 1차 평가자 제출일시 자동 기록
+- submittedToEvaluator 변경: 1차 평가자 제출 상태가 true로 설정됨
+- updatedAt 갱신: 제출 시 수정일시 자동 업데이트
+- 멱등성 보장: 이미 1차 평가자에게 제출된 자기평가를 다시 제출해도 성공 (상태 유지)
+- 잘못된 UUID: UUID 형식이 아닌 ID로 요청 시 400 에러
+- 존재하지 않는 ID: 유효한 UUID이지만 존재하지 않는 자기평가 ID로 요청 시 400 에러
+- 평가 내용/점수 필수: 평가 내용과 점수가 입력되지 않았으면 400 에러
+- 응답 필드 검증: id, submittedToEvaluator, submittedToEvaluatorAt, selfEvaluationContent, selfEvaluationScore 등 포함
+- 트랜잭션 보장: 제출 중 오류 시 롤백 처리`,
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'WBS 자기평가 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440000',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        'WBS 자기평가가 성공적으로 1차 평가자에게 제출되었습니다. 제출된 자기평가 정보를 반환합니다.',
+      type: WbsSelfEvaluationResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 (UUID 형식 오류, 존재하지 않는 자기평가 ID, 평가 내용/점수 미입력 등)',
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
@@ -402,8 +463,8 @@ export function SubmitAllWbsSelfEvaluationsByEmployeePeriod() {
     Patch('employee/:employeeId/period/:periodId/submit-all'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
-      summary: '직원의 전체 WBS 자기평가 한 번에 제출',
-      description: `**중요**: 특정 평가기간 내 특정 직원의 모든 WBS 자기평가를 한 번에 제출합니다. 작성된 자기평가만 제출되며, 미작성된 자기평가는 실패 목록에 포함됩니다.
+      summary: '직원의 전체 WBS 자기평가 한 번에 제출 (1차 평가자 → 관리자)',
+      description: `**중요**: 특정 평가기간 내 특정 직원의 모든 WBS 자기평가를 관리자에게 한 번에 제출합니다. 피평가자가 1차 평가자에게 먼저 제출했는지 확인한 후, 관리자 제출 상태(submittedToManager)가 true로 설정됩니다.
 
 **사용 시나리오:**
 - 평가 완료: 직원이 모든 WBS 항목에 대한 자기평가를 작성한 후 일괄 제출
@@ -411,8 +472,9 @@ export function SubmitAllWbsSelfEvaluationsByEmployeePeriod() {
 - 평가 진행 상황 추적: 성공/실패 개수를 통해 평가 완료율 확인
 
 **제출 가능 조건:**
+- 피평가자가 1차 평가자에게 먼저 제출했어야 함 (submittedToEvaluator = true)
 - 자기평가 내용 또는 점수가 입력되어 있어야 함
-- 이미 제출된 자기평가도 포함되어 제출 처리 (멱등성)
+- 이미 관리자에게 제출된 자기평가도 포함되어 제출 처리 (멱등성)
 
 **테스트 케이스:**
 - 모든 자기평가 제출: 직원의 모든 WBS 자기평가를 한 번에 제출
@@ -441,12 +503,82 @@ export function SubmitAllWbsSelfEvaluationsByEmployeePeriod() {
     ApiResponse({
       status: HttpStatus.OK,
       description:
-        '직원의 WBS 자기평가가 성공적으로 제출되었습니다. 제출 결과 상세 정보를 반환합니다.',
+        '직원의 WBS 자기평가가 성공적으로 관리자에게 제출되었습니다. 제출 결과 상세 정보를 반환합니다.',
       type: SubmitAllWbsSelfEvaluationsResponseDto,
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description: '잘못된 요청 (UUID 형식 오류, 제출할 자기평가가 없음 등)',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
+
+/**
+ * 직원의 전체 WBS 자기평가 한 번에 제출 API 데코레이터 (피평가자 → 1차 평가자)
+ */
+export function SubmitAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod() {
+  return applyDecorators(
+    Patch('employee/:employeeId/period/:periodId/submit-to-evaluator'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '직원의 전체 WBS 자기평가 한 번에 제출 (피평가자 → 1차 평가자)',
+      description: `**중요**: 특정 평가기간 내 특정 직원의 모든 WBS 자기평가를 1차 평가자에게 한 번에 제출합니다. 작성된 자기평가만 제출되며, 미작성된 자기평가는 실패 목록에 포함됩니다.
+
+**사용 시나리오:**
+- 평가 완료: 직원이 모든 WBS 항목에 대한 자기평가를 작성한 후 일괄 제출
+- 부분 제출: 일부만 작성된 경우에도 작성된 항목만 제출 처리
+- 평가 진행 상황 추적: 성공/실패 개수를 통해 평가 완료율 확인
+
+**제출 가능 조건:**
+- 자기평가 내용 또는 점수가 입력되어 있어야 함
+- 이미 1차 평가자에게 제출된 자기평가도 포함되어 제출 처리 (멱등성)
+
+**테스트 케이스:**
+- 모든 자기평가 제출: 직원의 모든 WBS 자기평가를 1차 평가자에게 한 번에 제출
+- 제출 개수 반환: submittedCount에 실제 제출된 평가 개수 포함
+- 총 개수 반환: totalCount에 전체 자기평가 개수 포함
+- 완료 목록 반환: completedEvaluations에 제출된 평가 상세 정보 포함
+- 부분 작성: 일부만 작성된 경우 작성된 것만 제출, 나머지는 failedEvaluations에 포함
+- 실패 목록: 제출 불가능한 자기평가는 실패 이유와 함께 반환
+- 자기평가 없음: 작성된 자기평가가 하나도 없는 경우 400 에러
+- 잘못된 UUID: employeeId 또는 periodId가 UUID 형식이 아닐 때 400 에러
+- 응답 구조 검증: submittedCount, failedCount, totalCount, completedEvaluations, failedEvaluations 포함
+- 트랜잭션 보장: 일부 실패 시에도 성공한 자기평가는 제출 완료 처리`,
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        '직원의 WBS 자기평가가 성공적으로 1차 평가자에게 제출되었습니다. 제출 결과 상세 정보를 반환합니다.',
+      type: SubmitAllWbsSelfEvaluationsResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 (UUID 형식 오류, 제출할 자기평가가 없음 등)',
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,
@@ -599,8 +731,8 @@ export function SubmitWbsSelfEvaluationsByProject() {
     Patch('employee/:employeeId/period/:periodId/project/:projectId/submit'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
-      summary: '프로젝트별 WBS 자기평가 제출',
-      description: `**중요**: 특정 평가기간 내 특정 직원의 특정 프로젝트에 할당된 모든 WBS 자기평가를 제출합니다. 프로젝트 단위로 평가를 관리할 때 유용하며, 해당 프로젝트의 WBS 항목에 대한 자기평가만 제출 처리됩니다.
+      summary: '프로젝트별 WBS 자기평가 제출 (1차 평가자 → 관리자)',
+      description: `**중요**: 특정 평가기간 내 특정 직원의 특정 프로젝트에 할당된 모든 WBS 자기평가를 관리자에게 제출합니다. 피평가자가 1차 평가자에게 먼저 제출했는지 확인한 후, 관리자 제출 상태(submittedToManager)가 true로 설정됩니다. 프로젝트 단위로 평가를 관리할 때 유용하며, 해당 프로젝트의 WBS 항목에 대한 자기평가만 제출 처리됩니다.
 
 **사용 시나리오:**
 - 프로젝트 완료: 특정 프로젝트가 완료되어 해당 프로젝트의 자기평가를 일괄 제출
@@ -608,9 +740,10 @@ export function SubmitWbsSelfEvaluationsByProject() {
 - 단계별 제출: 프로젝트 진행 단계에 따라 순차적으로 평가 제출
 
 **제출 가능 조건:**
+- 피평가자가 1차 평가자에게 먼저 제출했어야 함 (submittedToEvaluator = true)
 - 해당 프로젝트에 평가기간 내 WBS가 할당되어 있어야 함 (EvaluationWbsAssignment 존재)
 - 자기평가 내용 또는 점수가 입력되어 있어야 함
-- 이미 제출된 자기평가도 포함되어 제출 처리 (멱등성)
+- 이미 관리자에게 제출된 자기평가도 포함되어 제출 처리 (멱등성)
 
 **테스트 케이스:**
 - 프로젝트별 제출: 특정 프로젝트의 모든 WBS 자기평가를 제출
@@ -644,7 +777,7 @@ export function SubmitWbsSelfEvaluationsByProject() {
     ApiResponse({
       status: HttpStatus.OK,
       description:
-        '프로젝트의 WBS 자기평가가 성공적으로 제출되었습니다. 제출 결과 상세 정보를 반환합니다.',
+        '프로젝트의 WBS 자기평가가 성공적으로 관리자에게 제출되었습니다. 제출 결과 상세 정보를 반환합니다.',
       type: SubmitWbsSelfEvaluationsByProjectResponseDto,
     }),
     ApiResponse({
@@ -723,6 +856,213 @@ export function ResetWbsSelfEvaluationsByProject() {
       status: HttpStatus.OK,
       description:
         '프로젝트의 WBS 자기평가가 성공적으로 미제출 상태로 변경되었습니다. 초기화 결과 상세 정보를 반환합니다.',
+      type: ResetWbsSelfEvaluationsByProjectResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 (UUID 형식 오류, 프로젝트에 할당된 WBS가 없음 등)',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
+
+/**
+ * WBS 자기평가 취소 API 데코레이터 (피평가자 → 1차 평가자 제출 취소)
+ */
+export function ResetWbsSelfEvaluationToEvaluator() {
+  return applyDecorators(
+    Patch(':id/reset-to-evaluator'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: 'WBS 자기평가 취소 (피평가자 → 1차 평가자 제출 취소)',
+      description: `**중요**: 피평가자가 1차 평가자에게 제출한 WBS 자기평가를 취소합니다. 1차 평가자 제출일시(submittedToEvaluatorAt)가 null로 설정되며, 1차 평가자 제출 상태(submittedToEvaluator)가 false로 변경됩니다.
+
+**취소 가능 조건:**
+- 자기평가가 1차 평가자에게 제출 상태(submittedToEvaluator: true)여야 함
+- 이미 미제출 상태인 경우 400 에러 반환 (중복 취소 방지)
+
+**테스트 케이스:**
+- 제출된 자기평가 취소: 1차 평가자에게 제출된 자기평가를 취소
+- submittedToEvaluatorAt 초기화: 1차 평가자 제출일시가 null로 설정됨
+- submittedToEvaluator 변경: 1차 평가자 제출 상태가 false로 설정됨
+- updatedAt 갱신: 취소 처리 시 수정일시 자동 업데이트
+- 이미 미제출 상태: 미제출 상태인 자기평가를 다시 취소로 변경 시도 시 400 에러
+- 자기평가 내용 유지: 제출 상태만 변경되며 자기평가 내용과 점수는 유지됨
+- 잘못된 UUID: UUID 형식이 아닌 ID로 요청 시 400 에러
+- 존재하지 않는 ID: 유효한 UUID이지만 존재하지 않는 자기평가 ID로 요청 시 400 에러
+- 응답 필드 검증: id, submittedToEvaluator, submittedToEvaluatorAt (null), selfEvaluationContent, selfEvaluationScore 등 포함
+- 트랜잭션 보장: 취소 처리 중 오류 시 롤백 처리`,
+    }),
+    ApiParam({
+      name: 'id',
+      description: 'WBS 자기평가 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440000',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        'WBS 자기평가가 성공적으로 취소되었습니다. 취소된 자기평가 정보를 반환합니다.',
+      type: WbsSelfEvaluationResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 (UUID 형식 오류, 존재하지 않는 자기평가 ID, 이미 미제출 상태 등)',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
+
+/**
+ * 직원의 전체 WBS 자기평가 취소 API 데코레이터 (피평가자 → 1차 평가자 제출 취소)
+ */
+export function ResetAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod() {
+  return applyDecorators(
+    Patch('employee/:employeeId/period/:periodId/reset-to-evaluator'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '직원의 전체 WBS 자기평가 한 번에 취소 (피평가자 → 1차 평가자 제출 취소)',
+      description: `**중요**: 특정 평가기간 내 특정 직원의 1차 평가자에게 제출된 모든 WBS 자기평가를 한 번에 취소합니다. 제출된 자기평가만 취소 처리되며, 이미 미제출 상태인 자기평가는 제외됩니다.
+
+**사용 시나리오:**
+- 재평가 요청: 평가를 재작성해야 하는 경우 일괄 취소 처리
+- 평가 취소: 피평가자가 특정 직원의 평가를 일괄 취소하는 경우
+- 평가 기간 연장: 평가 기간 연장으로 인해 제출 상태를 초기화해야 하는 경우
+
+**취소 가능 조건:**
+- 자기평가가 1차 평가자에게 제출 상태(submittedToEvaluator: true)여야 함
+- 이미 미제출 상태인 자기평가는 처리 대상에서 제외
+
+**테스트 케이스:**
+- 모든 제출된 자기평가 취소: 직원의 모든 1차 평가자 제출된 WBS 자기평가를 한 번에 취소
+- 취소 개수 반환: resetCount에 실제 취소 처리된 평가 개수 포함
+- 총 개수 반환: totalCount에 전체 자기평가 개수 포함
+- 취소 목록 반환: resetEvaluations에 취소 처리된 평가 상세 정보 포함
+- wasSubmittedToEvaluator 플래그: 각 평가가 1차 평가자에게 제출 상태였는지 여부 정보 포함
+- 제출된 자기평가 없음: 1차 평가자에게 제출된 자기평가가 하나도 없는 경우 빈 결과 반환 (resetCount: 0)
+- 자기평가 내용 유지: 제출 상태만 변경되며 자기평가 내용과 점수는 유지됨
+- 잘못된 UUID: employeeId 또는 periodId가 UUID 형식이 아닐 때 400 에러
+- 응답 구조 검증: resetCount, failedCount, totalCount, resetEvaluations, failedResets 포함
+- 트랜잭션 보장: 일부 실패 시 전체 롤백 처리`,
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        '직원의 WBS 자기평가가 성공적으로 취소되었습니다. 취소 결과 상세 정보를 반환합니다.',
+      type: ResetAllWbsSelfEvaluationsResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 (UUID 형식 오류, 취소할 자기평가가 없음 등)',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
+
+/**
+ * 프로젝트별 WBS 자기평가 취소 API 데코레이터 (피평가자 → 1차 평가자 제출 취소)
+ */
+export function ResetWbsSelfEvaluationsToEvaluatorByProject() {
+  return applyDecorators(
+    Patch('employee/:employeeId/period/:periodId/project/:projectId/reset-to-evaluator'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '프로젝트별 WBS 자기평가 취소 (피평가자 → 1차 평가자 제출 취소)',
+      description: `**중요**: 특정 평가기간 내 특정 직원의 특정 프로젝트에 할당된 1차 평가자에게 제출된 모든 WBS 자기평가를 취소합니다. 프로젝트 단위로 평가를 관리할 때 유용하며, 해당 프로젝트의 WBS 항목에 대한 자기평가만 취소 처리됩니다.
+
+**사용 시나리오:**
+- 프로젝트 재평가: 특정 프로젝트의 평가를 다시 작성해야 하는 경우
+- 프로젝트별 평가 취소: 피평가자가 특정 프로젝트의 평가를 일괄 취소하는 경우
+- 프로젝트 평가 기간 연장: 프로젝트별로 평가 기간을 연장하는 경우
+
+**취소 가능 조건:**
+- 해당 프로젝트에 평가기간 내 WBS가 할당되어 있어야 함 (EvaluationWbsAssignment 존재)
+- 자기평가가 1차 평가자에게 제출 상태(submittedToEvaluator: true)여야 함
+- 이미 미제출 상태인 자기평가는 처리 대상에서 제외
+
+**테스트 케이스:**
+- 프로젝트별 취소: 특정 프로젝트의 모든 1차 평가자 제출된 WBS 자기평가를 취소
+- 취소 개수 반환: resetCount에 실제 취소 처리된 평가 개수 포함
+- 총 개수 반환: totalCount에 해당 프로젝트의 전체 자기평가 개수 포함
+- 취소 목록 반환: resetEvaluations에 취소 처리된 평가 상세 정보 포함
+- wasSubmittedToEvaluator 플래그: 각 평가가 1차 평가자에게 제출 상태였는지 여부 정보 포함
+- WBS 할당 확인: 프로젝트에 할당된 WBS가 없는 경우 400 에러
+- 제출된 자기평가 없음: 1차 평가자에게 제출된 자기평가가 하나도 없는 경우 빈 결과 반환 (resetCount: 0)
+- 자기평가 내용 유지: 제출 상태만 변경되며 자기평가 내용과 점수는 유지됨
+- 잘못된 UUID: employeeId, periodId, projectId 중 하나라도 UUID 형식이 아닐 때 400 에러
+- 응답 구조 검증: resetCount, failedCount, totalCount, resetEvaluations, failedResets 포함
+- 트랜잭션 보장: 일부 실패 시 전체 롤백 처리`,
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440003',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        '프로젝트의 WBS 자기평가가 성공적으로 취소되었습니다. 취소 결과 상세 정보를 반환합니다.',
       type: ResetWbsSelfEvaluationsByProjectResponseDto,
     }),
     ApiResponse({
@@ -863,6 +1203,82 @@ export function ClearAllWbsSelfEvaluationsByEmployeePeriod() {
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
       description: '잘못된 요청 (UUID 형식 오류 등)',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
+
+/**
+ * 프로젝트별 WBS 자기평가 제출 API 데코레이터 (피평가자 → 1차 평가자)
+ */
+export function SubmitWbsSelfEvaluationsToEvaluatorByProject() {
+  return applyDecorators(
+    Patch('employee/:employeeId/period/:periodId/project/:projectId/submit-to-evaluator'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '프로젝트별 WBS 자기평가 제출 (피평가자 → 1차 평가자)',
+      description: `**중요**: 특정 평가기간 내 특정 직원의 특정 프로젝트에 할당된 모든 WBS 자기평가를 1차 평가자에게 제출합니다. 프로젝트 단위로 평가를 관리할 때 유용하며, 해당 프로젝트의 WBS 항목에 대한 자기평가만 제출 처리됩니다.
+
+**사용 시나리오:**
+- 프로젝트 완료: 특정 프로젝트가 완료되어 해당 프로젝트의 자기평가를 일괄 제출
+- 프로젝트별 평가 관리: 여러 프로젝트를 수행하는 직원의 경우 프로젝트별로 평가 제출
+- 단계별 제출: 프로젝트 진행 단계에 따라 순차적으로 평가 제출
+
+**제출 가능 조건:**
+- 해당 프로젝트에 평가기간 내 WBS가 할당되어 있어야 함 (EvaluationWbsAssignment 존재)
+- 자기평가 내용 또는 점수가 입력되어 있어야 함
+- 이미 1차 평가자에게 제출된 자기평가도 포함되어 제출 처리 (멱등성)
+
+**테스트 케이스:**
+- 프로젝트별 제출: 특정 프로젝트의 모든 WBS 자기평가를 1차 평가자에게 제출
+- 제출 개수 반환: submittedCount에 실제 제출된 평가 개수 포함
+- 총 개수 반환: totalCount에 해당 프로젝트의 전체 자기평가 개수 포함
+- 완료 목록 반환: completedEvaluations에 제출된 평가 상세 정보 포함
+- WBS 할당 확인: 프로젝트에 할당된 WBS가 없는 경우 400 에러
+- 부분 작성: 일부만 작성된 경우 작성된 것만 제출, 나머지는 failedEvaluations에 포함
+- 잘못된 UUID: employeeId, periodId, projectId 중 하나라도 UUID 형식이 아닐 때 400 에러
+- 응답 구조 검증: submittedCount, failedCount, totalCount, completedEvaluations, failedEvaluations 포함
+- 트랜잭션 보장: 일부 실패 시에도 성공한 자기평가는 제출 완료 처리`,
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '직원 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiParam({
+      name: 'projectId',
+      description: '프로젝트 ID (UUID 형식)',
+      example: '550e8400-e29b-41d4-a716-446655440003',
+      schema: { type: 'string', format: 'uuid' },
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description:
+        '프로젝트의 WBS 자기평가가 성공적으로 1차 평가자에게 제출되었습니다. 제출 결과 상세 정보를 반환합니다.',
+      type: SubmitWbsSelfEvaluationsByProjectResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description:
+        '잘못된 요청 (UUID 형식 오류, 프로젝트에 할당된 WBS가 없음 등)',
     }),
     ApiResponse({
       status: HttpStatus.UNAUTHORIZED,

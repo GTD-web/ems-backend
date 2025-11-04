@@ -179,16 +179,28 @@ export class WbsSelfEvaluationBasicDto {
   assignedDate: Date;
 
   @ApiProperty({
-    description: '완료 여부',
+    description: '피평가자가 1차 평가자에게 제출한 여부',
     example: false,
   })
-  isCompleted: boolean;
+  submittedToEvaluator: boolean;
 
   @ApiPropertyOptional({
-    description: '완료일',
+    description: '1차 평가자에게 제출한 일시',
+    example: '2024-01-15T10:00:00Z',
+  })
+  submittedToEvaluatorAt?: Date;
+
+  @ApiProperty({
+    description: '1차 평가자가 관리자에게 제출한 여부',
+    example: false,
+  })
+  submittedToManager: boolean;
+
+  @ApiPropertyOptional({
+    description: '관리자에게 제출한 일시',
     example: '2024-01-15T15:00:00Z',
   })
-  completedAt?: Date;
+  submittedToManagerAt?: Date;
 
   @ApiProperty({
     description: '평가일',
@@ -279,16 +291,28 @@ export class WbsSelfEvaluationDetailResponseDto {
   assignedDate: Date;
 
   @ApiProperty({
-    description: '완료 여부',
+    description: '피평가자가 1차 평가자에게 제출한 여부',
     example: false,
   })
-  isCompleted: boolean;
+  submittedToEvaluator: boolean;
 
   @ApiPropertyOptional({
-    description: '완료일',
+    description: '1차 평가자에게 제출한 일시',
+    example: '2024-01-15T10:00:00Z',
+  })
+  submittedToEvaluatorAt?: Date;
+
+  @ApiProperty({
+    description: '1차 평가자가 관리자에게 제출한 여부',
+    example: false,
+  })
+  submittedToManager: boolean;
+
+  @ApiPropertyOptional({
+    description: '관리자에게 제출한 일시',
     example: '2024-01-15T15:00:00Z',
   })
-  completedAt?: Date;
+  submittedToManagerAt?: Date;
 
   @ApiProperty({
     description: '평가일',
@@ -504,11 +528,17 @@ export class SubmittedWbsSelfEvaluationDetailDto {
   })
   performanceResult?: string;
 
-  @ApiProperty({
-    description: '완료 일시',
+  @ApiPropertyOptional({
+    description: '관리자에게 제출한 일시 (1차 평가자 → 관리자 제출 시 사용)',
     example: '2024-01-15T15:00:00Z',
   })
-  completedAt: Date;
+  submittedToManagerAt?: Date;
+
+  @ApiPropertyOptional({
+    description: '1차 평가자에게 제출한 일시 (피평가자 → 1차 평가자 제출 시 사용)',
+    example: '2024-01-15T10:00:00Z',
+  })
+  submittedToEvaluatorAt?: Date;
 }
 
 /**
@@ -579,7 +609,7 @@ export class SubmitAllWbsSelfEvaluationsResponseDto {
         selfEvaluationScore: 4,
         performanceResult:
           'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
-        completedAt: '2024-01-15T15:00:00Z',
+        submittedToManagerAt: '2024-01-15T15:00:00Z',
       },
     ],
   })
@@ -636,10 +666,10 @@ export class ResetWbsSelfEvaluationDetailDto {
   performanceResult?: string;
 
   @ApiProperty({
-    description: '초기화 전 완료 상태였는지 여부',
+    description: '초기화 전 관리자에게 제출 상태였는지 여부',
     example: true,
   })
-  wasCompleted: boolean;
+  wasSubmittedToManager: boolean;
 }
 
 /**
@@ -753,10 +783,11 @@ export class SubmittedWbsSelfEvaluationByProjectDetailDto {
   performanceResult?: string;
 
   @ApiProperty({
-    description: '완료일',
+    description: '관리자에게 제출한 일시',
     example: '2024-01-15T09:30:00Z',
   })
-  completedAt: Date;
+  submittedToManagerAt?: Date;
+  submittedToEvaluatorAt?: Date;
 }
 
 /**
@@ -827,7 +858,7 @@ export class SubmitWbsSelfEvaluationsByProjectResponseDto {
         selfEvaluationScore: 4,
         performanceResult:
           'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
-        completedAt: '2024-01-15T09:30:00Z',
+        submittedToManagerAt: '2024-01-15T09:30:00Z',
       },
     ],
   })
@@ -884,10 +915,10 @@ export class ResetWbsSelfEvaluationByProjectDetailDto {
   performanceResult?: string;
 
   @ApiProperty({
-    description: '초기화 전 완료 상태였는지 여부',
+    description: '초기화 전 관리자에게 제출 상태였는지 여부',
     example: true,
   })
-  wasCompleted: boolean;
+  wasSubmittedToManager: boolean;
 }
 
 /**

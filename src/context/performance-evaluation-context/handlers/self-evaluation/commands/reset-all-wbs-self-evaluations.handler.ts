@@ -4,7 +4,7 @@ import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-s
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
- * 직원의 전체 WBS 자기평가 초기화 커맨드
+ * 직원의 전체 WBS 자기평가 초기화 커맨드 (1차 평가자 → 관리자 제출 취소)
  */
 export class ResetAllWbsSelfEvaluationsByEmployeePeriodCommand {
   constructor(
@@ -23,7 +23,7 @@ export interface ResetWbsSelfEvaluationDetail {
   selfEvaluationContent?: string;
   selfEvaluationScore?: number;
   performanceResult?: string;
-  wasCompleted: boolean;
+  wasSubmittedToManager: boolean;
 }
 
 /**
@@ -52,8 +52,8 @@ export interface ResetAllWbsSelfEvaluationsResponse {
 }
 
 /**
- * 직원의 전체 WBS 자기평가 초기화 핸들러
- * 특정 직원의 특정 평가기간에 대한 모든 완료된 WBS 자기평가를 초기화합니다.
+ * 직원의 전체 WBS 자기평가 초기화 핸들러 (1차 평가자 → 관리자 제출 취소)
+ * 특정 직원의 특정 평가기간에 대한 모든 관리자 제출 완료된 WBS 자기평가를 초기화합니다.
  */
 @Injectable()
 @CommandHandler(ResetAllWbsSelfEvaluationsByEmployeePeriodCommand)
@@ -96,18 +96,20 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler
       // 각 평가를 초기화 처리
       for (const evaluation of evaluations) {
         try {
-          const wasCompleted = evaluation.완료되었는가();
+          const wasSubmittedToManager = evaluation.일차평가자가_관리자에게_제출했는가();
 
-          // 이미 미완료 상태면 스킵
-          if (!wasCompleted) {
-            this.logger.debug(`이미 미완료 상태 스킵 - ID: ${evaluation.id}`);
+          // 이미 관리자에게 미제출 상태면 스킵
+          if (!wasSubmittedToManager) {
+            this.logger.debug(
+              `이미 관리자에게 미제출 상태 스킵 - ID: ${evaluation.id}`,
+            );
             continue;
           }
 
-          // 자기평가 완료 상태 초기화
+          // 1차 평가자 → 관리자 제출 상태 초기화
           await this.wbsSelfEvaluationService.수정한다(
             evaluation.id,
-            { isCompleted: false },
+            { submittedToManager: false },
             resetBy,
           );
 
@@ -117,7 +119,7 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler
             selfEvaluationContent: evaluation.selfEvaluationContent,
             selfEvaluationScore: evaluation.selfEvaluationScore,
             performanceResult: evaluation.performanceResult,
-            wasCompleted,
+            wasSubmittedToManager,
           });
 
           this.logger.debug(`평가 초기화 성공 - ID: ${evaluation.id}`);

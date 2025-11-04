@@ -20,9 +20,23 @@ export {
 } from './commands/submit-wbs-self-evaluation.handler';
 
 export {
+  SubmitWbsSelfEvaluationToEvaluatorCommand,
+  SubmitWbsSelfEvaluationToEvaluatorHandler,
+} from './commands/submit-wbs-self-evaluation-to-evaluator.handler';
+
+export {
   SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand,
   SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler,
 } from './commands/submit-all-wbs-self-evaluations.handler';
+export {
+  SubmitAllWbsSelfEvaluationsToEvaluatorCommand,
+  SubmitAllWbsSelfEvaluationsToEvaluatorHandler,
+} from './commands/submit-all-wbs-self-evaluations-to-evaluator.handler';
+export type {
+  SubmitAllWbsSelfEvaluationsToEvaluatorResponse,
+  SubmittedWbsSelfEvaluationToEvaluatorDetail,
+  FailedWbsSelfEvaluationToEvaluator,
+} from './commands/submit-all-wbs-self-evaluations-to-evaluator.handler';
 export type {
   SubmitAllWbsSelfEvaluationsResponse,
   SubmittedWbsSelfEvaluationDetail,
@@ -48,6 +62,15 @@ export {
   SubmitWbsSelfEvaluationsByProjectCommand,
   SubmitWbsSelfEvaluationsByProjectHandler,
 } from './commands/submit-wbs-self-evaluations-by-project.handler';
+export {
+  SubmitWbsSelfEvaluationsToEvaluatorByProjectCommand,
+  SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler,
+} from './commands/submit-wbs-self-evaluations-to-evaluator-by-project.handler';
+export type {
+  SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse,
+  SubmittedWbsSelfEvaluationToEvaluatorByProjectDetail,
+  FailedWbsSelfEvaluationToEvaluatorByProject,
+} from './commands/submit-wbs-self-evaluations-to-evaluator-by-project.handler';
 export type {
   SubmitWbsSelfEvaluationsByProjectResponse,
   SubmittedWbsSelfEvaluationByProjectDetail,
@@ -63,6 +86,29 @@ export type {
   ResetWbsSelfEvaluationByProjectDetail,
   FailedResetWbsSelfEvaluationByProject,
 } from './commands/reset-wbs-self-evaluations-by-project.handler';
+
+export {
+  ResetWbsSelfEvaluationToEvaluatorCommand,
+  ResetWbsSelfEvaluationToEvaluatorHandler,
+} from './commands/reset-wbs-self-evaluation-to-evaluator.handler';
+export {
+  ResetAllWbsSelfEvaluationsToEvaluatorCommand,
+  ResetAllWbsSelfEvaluationsToEvaluatorHandler,
+} from './commands/reset-all-wbs-self-evaluations-to-evaluator.handler';
+export type {
+  ResetAllWbsSelfEvaluationsToEvaluatorResponse,
+  ResetWbsSelfEvaluationToEvaluatorDetail,
+  FailedResetWbsSelfEvaluationToEvaluator,
+} from './commands/reset-all-wbs-self-evaluations-to-evaluator.handler';
+export {
+  ResetWbsSelfEvaluationsToEvaluatorByProjectCommand,
+  ResetWbsSelfEvaluationsToEvaluatorByProjectHandler,
+} from './commands/reset-wbs-self-evaluations-to-evaluator-by-project.handler';
+export type {
+  ResetWbsSelfEvaluationsToEvaluatorByProjectResponse,
+  ResetWbsSelfEvaluationToEvaluatorByProjectDetail,
+  FailedResetWbsSelfEvaluationToEvaluatorByProject,
+} from './commands/reset-wbs-self-evaluations-to-evaluator-by-project.handler';
 
 export {
   ClearWbsSelfEvaluationCommand,

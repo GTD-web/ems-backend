@@ -109,11 +109,19 @@ export class WbsSelfEvaluationService {
         wbsSelfEvaluation.assignedBy = updateData.assignedBy;
       }
 
-      if (updateData.isCompleted !== undefined) {
-        if (updateData.isCompleted) {
-          wbsSelfEvaluation.자가평가를_완료한다();
+      if (updateData.submittedToEvaluator !== undefined) {
+        if (updateData.submittedToEvaluator) {
+          wbsSelfEvaluation.피평가자가_1차평가자에게_제출한다();
         } else {
-          wbsSelfEvaluation.자가평가_완료를_취소한다();
+          wbsSelfEvaluation.피평가자_제출을_취소한다();
+        }
+      }
+
+      if (updateData.submittedToManager !== undefined) {
+        if (updateData.submittedToManager) {
+          wbsSelfEvaluation.일차평가자가_관리자에게_제출한다();
+        } else {
+          wbsSelfEvaluation.일차평가자_제출을_취소한다();
         }
       }
 
@@ -136,6 +144,97 @@ export class WbsSelfEvaluationService {
       this.logger.log(`WBS 자가평가 수정 완료 - ID: ${id}`);
       return saved;
     }, '수정한다');
+  }
+
+  /**
+   * 피평가자가 1차 평가자에게 제출한다
+   */
+  async 피평가자가_1차평가자에게_제출한다(
+    id: string,
+    submittedBy: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluation> {
+    return this.executeSafeDomainOperation(async () => {
+      this.logger.log(
+        `피평가자가 1차 평가자에게 자기평가 제출 시작 - ID: ${id}`,
+      );
+
+      const repository = this.transactionManager.getRepository(
+        WbsSelfEvaluation,
+        this.wbsSelfEvaluationRepository,
+        manager,
+      );
+
+      const wbsSelfEvaluation = await repository.findOne({ where: { id } });
+      if (!wbsSelfEvaluation) {
+        throw new WbsSelfEvaluationNotFoundException(id);
+      }
+
+      // 자기평가 내용과 점수가 있는지 확인
+      if (
+        !wbsSelfEvaluation.selfEvaluationContent ||
+        !wbsSelfEvaluation.selfEvaluationScore
+      ) {
+        throw new WbsSelfEvaluationValidationException(
+          '평가 내용과 점수는 필수 입력 항목입니다.',
+        );
+      }
+
+      // 피평가자가 1차 평가자에게 제출
+      wbsSelfEvaluation.피평가자가_1차평가자에게_제출한다();
+      wbsSelfEvaluation.메타데이터를_업데이트한다(submittedBy);
+
+      const saved = await repository.save(wbsSelfEvaluation);
+
+      this.logger.log(
+        `피평가자가 1차 평가자에게 자기평가 제출 완료 - ID: ${id}`,
+      );
+      return saved;
+    }, '피평가자가_1차평가자에게_제출한다');
+  }
+
+  /**
+   * 피평가자가 1차 평가자에게 제출한 것을 취소한다
+   */
+  async 피평가자가_1차평가자에게_제출한_것을_취소한다(
+    id: string,
+    resetBy: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluation> {
+    return this.executeSafeDomainOperation(async () => {
+      this.logger.log(
+        `피평가자가 1차 평가자에게 제출한 것을 취소 시작 - ID: ${id}`,
+      );
+
+      const repository = this.transactionManager.getRepository(
+        WbsSelfEvaluation,
+        this.wbsSelfEvaluationRepository,
+        manager,
+      );
+
+      const wbsSelfEvaluation = await repository.findOne({ where: { id } });
+      if (!wbsSelfEvaluation) {
+        throw new WbsSelfEvaluationNotFoundException(id);
+      }
+
+      // 이미 미제출 상태면 에러
+      if (!wbsSelfEvaluation.피평가자가_1차평가자에게_제출했는가()) {
+        throw new WbsSelfEvaluationValidationException(
+          '이미 1차 평가자에게 미제출 상태인 자기평가입니다.',
+        );
+      }
+
+      // 피평가자 제출 취소
+      wbsSelfEvaluation.피평가자_제출을_취소한다();
+      wbsSelfEvaluation.메타데이터를_업데이트한다(resetBy);
+
+      const saved = await repository.save(wbsSelfEvaluation);
+
+      this.logger.log(
+        `피평가자가 1차 평가자에게 제출한 것을 취소 완료 - ID: ${id}`,
+      );
+      return saved;
+    }, '피평가자가_1차평가자에게_제출한_것을_취소한다');
   }
 
   /**
@@ -234,15 +333,27 @@ export class WbsSelfEvaluationService {
         });
       }
 
-      if (filter.completedOnly) {
-        queryBuilder.andWhere('evaluation.isCompleted = :isCompleted', {
-          isCompleted: true,
+      if (filter.submittedToEvaluatorOnly) {
+        queryBuilder.andWhere('evaluation.submittedToEvaluator = :submittedToEvaluator', {
+          submittedToEvaluator: true,
         });
       }
 
-      if (filter.uncompletedOnly) {
-        queryBuilder.andWhere('evaluation.isCompleted = :isCompleted', {
-          isCompleted: false,
+      if (filter.notSubmittedToEvaluatorOnly) {
+        queryBuilder.andWhere('evaluation.submittedToEvaluator = :submittedToEvaluator', {
+          submittedToEvaluator: false,
+        });
+      }
+
+      if (filter.submittedToManagerOnly) {
+        queryBuilder.andWhere('evaluation.submittedToManager = :submittedToManager', {
+          submittedToManager: true,
+        });
+      }
+
+      if (filter.notSubmittedToManagerOnly) {
+        queryBuilder.andWhere('evaluation.submittedToManager = :submittedToManager', {
+          submittedToManager: false,
         });
       }
 
@@ -258,15 +369,27 @@ export class WbsSelfEvaluationService {
         });
       }
 
-      if (filter.completedDateFrom) {
-        queryBuilder.andWhere('evaluation.completedAt >= :completedDateFrom', {
-          completedDateFrom: filter.completedDateFrom,
+      if (filter.submittedToEvaluatorDateFrom) {
+        queryBuilder.andWhere('evaluation.submittedToEvaluatorAt >= :submittedToEvaluatorDateFrom', {
+          submittedToEvaluatorDateFrom: filter.submittedToEvaluatorDateFrom,
         });
       }
 
-      if (filter.completedDateTo) {
-        queryBuilder.andWhere('evaluation.completedAt <= :completedDateTo', {
-          completedDateTo: filter.completedDateTo,
+      if (filter.submittedToEvaluatorDateTo) {
+        queryBuilder.andWhere('evaluation.submittedToEvaluatorAt <= :submittedToEvaluatorDateTo', {
+          submittedToEvaluatorDateTo: filter.submittedToEvaluatorDateTo,
+        });
+      }
+
+      if (filter.submittedToManagerDateFrom) {
+        queryBuilder.andWhere('evaluation.submittedToManagerAt >= :submittedToManagerDateFrom', {
+          submittedToManagerDateFrom: filter.submittedToManagerDateFrom,
+        });
+      }
+
+      if (filter.submittedToManagerDateTo) {
+        queryBuilder.andWhere('evaluation.submittedToManagerAt <= :submittedToManagerDateTo', {
+          submittedToManagerDateTo: filter.submittedToManagerDateTo,
         });
       }
 

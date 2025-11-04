@@ -189,6 +189,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
     completedMappingCount: number;
     /** 자기평가 수정 가능 여부 */
     isEditable: boolean;
+    /** 피평가자가 1차 평가자에게 자기평가 제출 완료 여부 */
+    isSubmittedToEvaluator: boolean;
     /** 가중치 기반 자기평가 총점 (0-100) */
     totalScore: number | null;
     /** 평가기간 등급 기준에 따른 자기평가 등급 (예: S+, A-, B 등) */

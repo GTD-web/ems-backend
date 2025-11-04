@@ -169,6 +169,234 @@ describe('POST /admin/performance-evaluation/downward-evaluations - 초기화 (�
 
       console.log('\n✅ 2차 하향평가 초기화 성공');
     });
+
+    it('미완료 2차 하향평가는 초기화할 수 없어야 한다', async () => {
+      const evaluations = await dataSource.query(
+        `SELECT de.id, de."employeeId", de."evaluatorId", de."periodId", de."wbsId"
+         FROM downward_evaluation de
+         WHERE de."evaluationType" = 'secondary'
+         AND de."isCompleted" = false
+         AND de."deletedAt" IS NULL
+         LIMIT 1`,
+      );
+
+      if (!evaluations || evaluations.length === 0) {
+        console.log('미완료 2차 평가가 없어서 테스트 스킵');
+        return;
+      }
+
+      const evaluation = evaluations[0];
+
+      // When - 미완료 평가를 초기화 시도
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluation.employeeId}/period/${evaluation.periodId}/wbs/${evaluation.wbsId}/secondary/reset`,
+        )
+        .send({ evaluatorId: evaluation.evaluatorId })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      console.log('\n✅ 미완료 2차 평가 초기화 방지 성공');
+    });
+  });
+
+  describe('초기화 후 재제출 테스트', () => {
+    it('1차 하향평가를 초기화한 후 다시 제출할 수 있어야 한다', async () => {
+      const evaluation = await getCompletedPrimaryEvaluation();
+
+      if (!evaluation) {
+        console.log('완료된 1차 평가가 없어서 테스트 스킵');
+        return;
+      }
+
+      // 초기화 전 상태 확인
+      const beforeReset = await dataSource.query(
+        `SELECT "isCompleted", "downwardEvaluationContent", "downwardEvaluationScore", "updatedAt"
+         FROM downward_evaluation
+         WHERE id = $1`,
+        [evaluation.id],
+      );
+
+      const beforeContent = beforeReset[0].downwardEvaluationContent;
+      const beforeScore = beforeReset[0].downwardEvaluationScore;
+
+      // When - 초기화 요청
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluation.employeeId}/period/${evaluation.periodId}/wbs/${evaluation.wbsId}/primary/reset`,
+        )
+        .send({ evaluatorId: evaluation.evaluatorId })
+        .expect(HttpStatus.OK);
+
+      // 초기화 후 상태 확인
+      const afterReset = await dataSource.query(
+        `SELECT "isCompleted", "downwardEvaluationContent", "downwardEvaluationScore", "updatedAt"
+         FROM downward_evaluation
+         WHERE id = $1`,
+        [evaluation.id],
+      );
+
+      expect(afterReset[0].isCompleted).toBe(false);
+      // 평가 내용과 점수는 유지되어야 함
+      expect(afterReset[0].downwardEvaluationContent).toBe(beforeContent);
+      expect(afterReset[0].downwardEvaluationScore).toBe(beforeScore);
+      // updatedAt이 갱신되었는지 확인
+      expect(new Date(afterReset[0].updatedAt).getTime()).toBeGreaterThan(
+        new Date(beforeReset[0].updatedAt).getTime(),
+      );
+
+      // 다시 제출 가능한지 확인
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluation.employeeId}/period/${evaluation.periodId}/wbs/${evaluation.wbsId}/primary/submit`,
+        )
+        .send({ evaluatorId: evaluation.evaluatorId })
+        .expect(HttpStatus.OK);
+
+      // 재제출 후 상태 확인
+      const afterResubmit = await dataSource.query(
+        `SELECT "isCompleted", "completedAt"
+         FROM downward_evaluation
+         WHERE id = $1`,
+        [evaluation.id],
+      );
+
+      expect(afterResubmit[0].isCompleted).toBe(true);
+      expect(afterResubmit[0].completedAt).toBeDefined();
+
+      console.log('\n✅ 초기화 후 재제출 성공');
+    });
+
+    it('2차 하향평가를 초기화한 후 다시 제출할 수 있어야 한다', async () => {
+      const evaluation = await getCompletedSecondaryEvaluation();
+
+      if (!evaluation) {
+        console.log('완료된 2차 평가가 없어서 테스트 스킵');
+        return;
+      }
+
+      // When - 초기화 요청
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluation.employeeId}/period/${evaluation.periodId}/wbs/${evaluation.wbsId}/secondary/reset`,
+        )
+        .send({ evaluatorId: evaluation.evaluatorId })
+        .expect(HttpStatus.OK);
+
+      // 초기화 후 상태 확인
+      const afterReset = await dataSource.query(
+        `SELECT "isCompleted"
+         FROM downward_evaluation
+         WHERE id = $1`,
+        [evaluation.id],
+      );
+
+      expect(afterReset[0].isCompleted).toBe(false);
+
+      // 다시 제출 가능한지 확인
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluation.employeeId}/period/${evaluation.periodId}/wbs/${evaluation.wbsId}/secondary/submit`,
+        )
+        .send({ evaluatorId: evaluation.evaluatorId })
+        .expect(HttpStatus.OK);
+
+      // 재제출 후 상태 확인
+      const afterResubmit = await dataSource.query(
+        `SELECT "isCompleted", "completedAt"
+         FROM downward_evaluation
+         WHERE id = $1`,
+        [evaluation.id],
+      );
+
+      expect(afterResubmit[0].isCompleted).toBe(true);
+      expect(afterResubmit[0].completedAt).toBeDefined();
+
+      console.log('\n✅ 2차 하향평가 초기화 후 재제출 성공');
+    });
+  });
+
+  describe('평가 내용 유지 테스트', () => {
+    it('초기화 시 평가 내용과 점수가 유지되어야 한다', async () => {
+      const evaluation = await getCompletedPrimaryEvaluation();
+
+      if (!evaluation) {
+        console.log('완료된 1차 평가가 없어서 테스트 스킵');
+        return;
+      }
+
+      // 초기화 전 평가 내용 확인
+      const beforeReset = await dataSource.query(
+        `SELECT "downwardEvaluationContent", "downwardEvaluationScore", "selfEvaluationId"
+         FROM downward_evaluation
+         WHERE id = $1`,
+        [evaluation.id],
+      );
+
+      const beforeContent = beforeReset[0].downwardEvaluationContent;
+      const beforeScore = beforeReset[0].downwardEvaluationScore;
+      const beforeSelfEvalId = beforeReset[0].selfEvaluationId;
+
+      // When - 초기화 요청
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluation.employeeId}/period/${evaluation.periodId}/wbs/${evaluation.wbsId}/primary/reset`,
+        )
+        .send({ evaluatorId: evaluation.evaluatorId })
+        .expect(HttpStatus.OK);
+
+      // 초기화 후 평가 내용 확인
+      const afterReset = await dataSource.query(
+        `SELECT "isCompleted", "downwardEvaluationContent", "downwardEvaluationScore", "selfEvaluationId"
+         FROM downward_evaluation
+         WHERE id = $1`,
+        [evaluation.id],
+      );
+
+      // isCompleted만 false로 변경되고, 나머지는 유지되어야 함
+      expect(afterReset[0].isCompleted).toBe(false);
+      expect(afterReset[0].downwardEvaluationContent).toBe(beforeContent);
+      expect(afterReset[0].downwardEvaluationScore).toBe(beforeScore);
+      expect(afterReset[0].selfEvaluationId).toBe(beforeSelfEvalId);
+
+      console.log('\n✅ 평가 내용 유지 확인 성공');
+    });
+  });
+
+  describe('여러 번 초기화 테스트', () => {
+    it('같은 평가를 여러 번 초기화할 수 없어야 한다 (이미 미제출 상태인 경우)', async () => {
+      const evaluation = await getCompletedPrimaryEvaluation();
+
+      if (!evaluation) {
+        console.log('완료된 1차 평가가 없어서 테스트 스킵');
+        return;
+      }
+
+      // 첫 번째 초기화
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluation.employeeId}/period/${evaluation.periodId}/wbs/${evaluation.wbsId}/primary/reset`,
+        )
+        .send({ evaluatorId: evaluation.evaluatorId })
+        .expect(HttpStatus.OK);
+
+      // 두 번째 초기화 시도 (이미 미제출 상태이므로 에러 발생해야 함)
+      await testSuite
+        .request()
+        .post(
+          `/admin/performance-evaluation/downward-evaluations/evaluatee/${evaluation.employeeId}/period/${evaluation.periodId}/wbs/${evaluation.wbsId}/primary/reset`,
+        )
+        .send({ evaluatorId: evaluation.evaluatorId })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      console.log('\n✅ 여러 번 초기화 방지 성공');
+    });
   });
 
   describe('실패 시나리오', () => {

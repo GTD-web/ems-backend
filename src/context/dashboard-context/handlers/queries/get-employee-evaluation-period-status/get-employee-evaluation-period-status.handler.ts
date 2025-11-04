@@ -255,14 +255,20 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       );
 
       // 12. 자기평가 진행 상태 조회
-      const { totalMappingCount, completedMappingCount, totalScore, grade } =
-        await 자기평가_진행_상태를_조회한다(
-          evaluationPeriodId,
-          employeeId,
-          this.wbsSelfEvaluationRepository,
-          this.wbsAssignmentRepository,
-          this.periodRepository,
-        );
+      const {
+        totalMappingCount,
+        completedMappingCount,
+        submittedToEvaluatorCount,
+        isSubmittedToEvaluator,
+        totalScore,
+        grade,
+      } = await 자기평가_진행_상태를_조회한다(
+        evaluationPeriodId,
+        employeeId,
+        this.wbsSelfEvaluationRepository,
+        this.wbsAssignmentRepository,
+        this.periodRepository,
+      );
 
       // 13. 자기평가 상태 계산
       const selfEvaluationStatus = 자기평가_상태를_계산한다(
@@ -410,6 +416,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           totalMappingCount,
           completedMappingCount,
           isEditable: isSelfEvaluationEditable,
+          isSubmittedToEvaluator,
           totalScore,
           grade,
         },

@@ -6,9 +6,9 @@ import { TransactionManagerService } from '@libs/database/transaction-manager.se
 import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
 
 /**
- * 프로젝트별 WBS 자기평가 제출 커맨드 (1차 평가자 → 관리자)
+ * 프로젝트별 WBS 자기평가 제출 커맨드 (피평가자 → 1차 평가자)
  */
-export class SubmitWbsSelfEvaluationsByProjectCommand {
+export class SubmitWbsSelfEvaluationsToEvaluatorByProjectCommand {
   constructor(
     public readonly employeeId: string,
     public readonly periodId: string,
@@ -20,19 +20,19 @@ export class SubmitWbsSelfEvaluationsByProjectCommand {
 /**
  * 제출된 WBS 자기평가 상세 정보
  */
-export interface SubmittedWbsSelfEvaluationByProjectDetail {
+export interface SubmittedWbsSelfEvaluationToEvaluatorByProjectDetail {
   evaluationId: string;
   wbsItemId: string;
   selfEvaluationContent?: string;
   selfEvaluationScore?: number;
   performanceResult?: string;
-  submittedToManagerAt: Date;
+  submittedToEvaluatorAt: Date;
 }
 
 /**
  * 제출 실패한 WBS 자기평가 정보
  */
-export interface FailedWbsSelfEvaluationByProject {
+export interface FailedWbsSelfEvaluationToEvaluatorByProject {
   evaluationId: string;
   wbsItemId: string;
   reason: string;
@@ -41,9 +41,9 @@ export interface FailedWbsSelfEvaluationByProject {
 }
 
 /**
- * 프로젝트별 WBS 자기평가 제출 응답
+ * 프로젝트별 WBS 자기평가 제출 응답 (피평가자 → 1차 평가자)
  */
-export interface SubmitWbsSelfEvaluationsByProjectResponse {
+export interface SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse {
   /** 제출된 평가 개수 */
   submittedCount: number;
   /** 제출 실패한 평가 개수 */
@@ -51,22 +51,22 @@ export interface SubmitWbsSelfEvaluationsByProjectResponse {
   /** 총 평가 개수 */
   totalCount: number;
   /** 제출된 평가 상세 정보 */
-  completedEvaluations: SubmittedWbsSelfEvaluationByProjectDetail[];
+  completedEvaluations: SubmittedWbsSelfEvaluationToEvaluatorByProjectDetail[];
   /** 제출 실패한 평가 정보 */
-  failedEvaluations: FailedWbsSelfEvaluationByProject[];
+  failedEvaluations: FailedWbsSelfEvaluationToEvaluatorByProject[];
 }
 
 /**
- * 프로젝트별 WBS 자기평가 제출 핸들러 (1차 평가자 → 관리자)
- * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 관리자에게 제출합니다.
+ * 프로젝트별 WBS 자기평가 제출 핸들러 (피평가자 → 1차 평가자)
+ * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 1차 평가자에게 제출합니다.
  */
 @Injectable()
-@CommandHandler(SubmitWbsSelfEvaluationsByProjectCommand)
-export class SubmitWbsSelfEvaluationsByProjectHandler
-  implements ICommandHandler<SubmitWbsSelfEvaluationsByProjectCommand>
+@CommandHandler(SubmitWbsSelfEvaluationsToEvaluatorByProjectCommand)
+export class SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler
+  implements ICommandHandler<SubmitWbsSelfEvaluationsToEvaluatorByProjectCommand>
 {
   private readonly logger = new Logger(
-    SubmitWbsSelfEvaluationsByProjectHandler.name,
+    SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler.name,
   );
 
   constructor(
@@ -77,12 +77,12 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
   ) {}
 
   async execute(
-    command: SubmitWbsSelfEvaluationsByProjectCommand,
-  ): Promise<SubmitWbsSelfEvaluationsByProjectResponse> {
+    command: SubmitWbsSelfEvaluationsToEvaluatorByProjectCommand,
+  ): Promise<SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse> {
     const { employeeId, periodId, projectId, submittedBy } = command;
 
     this.logger.log(
-      '프로젝트별 WBS 자기평가 제출 시작 (1차 평가자 → 관리자)',
+      '프로젝트별 WBS 자기평가 제출 시작 (피평가자 → 1차 평가자)',
       {
         employeeId,
         periodId,
@@ -145,17 +145,18 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
         projectEvaluations: projectEvaluations.length,
       });
 
-      const completedEvaluations: SubmittedWbsSelfEvaluationByProjectDetail[] =
+      const completedEvaluations: SubmittedWbsSelfEvaluationToEvaluatorByProjectDetail[] =
         [];
-      const failedEvaluations: FailedWbsSelfEvaluationByProject[] = [];
+      const failedEvaluations: FailedWbsSelfEvaluationToEvaluatorByProject[] =
+        [];
 
-      // 5. 각 평가를 완료 처리
+      // 5. 각 평가를 제출 처리
       for (const evaluation of projectEvaluations) {
         try {
-          // 이미 관리자에게 제출된 평가는 스킵 (정보는 포함)
-          if (evaluation.일차평가자가_관리자에게_제출했는가()) {
+          // 이미 1차 평가자에게 제출된 평가는 스킵 (정보는 포함)
+          if (evaluation.피평가자가_1차평가자에게_제출했는가()) {
             this.logger.debug(
-              `이미 관리자에게 제출된 평가 스킵 - ID: ${evaluation.id}`,
+              `이미 1차 평가자에게 제출된 평가 스킵 - ID: ${evaluation.id}`,
             );
             completedEvaluations.push({
               evaluationId: evaluation.id,
@@ -163,20 +164,8 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
               selfEvaluationContent: evaluation.selfEvaluationContent,
               selfEvaluationScore: evaluation.selfEvaluationScore,
               performanceResult: evaluation.performanceResult,
-              submittedToManagerAt:
-                evaluation.submittedToManagerAt || new Date(),
-            });
-            continue;
-          }
-
-          // 피평가자가 1차 평가자에게 제출했는지 확인
-          if (!evaluation.피평가자가_1차평가자에게_제출했는가()) {
-            failedEvaluations.push({
-              evaluationId: evaluation.id,
-              wbsItemId: evaluation.wbsItemId,
-              reason: '피평가자가 1차 평가자에게 먼저 제출해야 합니다.',
-              selfEvaluationContent: evaluation.selfEvaluationContent,
-              selfEvaluationScore: evaluation.selfEvaluationScore,
+              submittedToEvaluatorAt:
+                evaluation.submittedToEvaluatorAt || new Date(),
             });
             continue;
           }
@@ -208,11 +197,10 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
             continue;
           }
 
-          // 1차 평가자가 관리자에게 제출 처리
+          // 피평가자가 1차 평가자에게 제출 처리
           const updatedEvaluation =
-            await this.wbsSelfEvaluationService.수정한다(
+            await this.wbsSelfEvaluationService.피평가자가_1차평가자에게_제출한다(
               evaluation.id,
-              { submittedToManager: true },
               submittedBy,
             );
 
@@ -222,14 +210,14 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
             selfEvaluationContent: updatedEvaluation.selfEvaluationContent,
             selfEvaluationScore: updatedEvaluation.selfEvaluationScore,
             performanceResult: updatedEvaluation.performanceResult,
-            submittedToManagerAt:
-              updatedEvaluation.submittedToManagerAt || new Date(),
+            submittedToEvaluatorAt:
+              updatedEvaluation.submittedToEvaluatorAt || new Date(),
           });
 
-          this.logger.debug(`평가 완료 처리 성공 - ID: ${evaluation.id}`);
+          this.logger.debug(`평가 제출 처리 성공 - ID: ${evaluation.id}`);
         } catch (error) {
           this.logger.error(
-            `평가 완료 처리 실패 - ID: ${evaluation.id}`,
+            `평가 제출 처리 실패 - ID: ${evaluation.id}`,
             error,
           );
           failedEvaluations.push({
@@ -242,7 +230,7 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
         }
       }
 
-      const result: SubmitWbsSelfEvaluationsByProjectResponse = {
+      const result: SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse = {
         submittedCount: completedEvaluations.length,
         failedCount: failedEvaluations.length,
         totalCount: projectEvaluations.length,
@@ -251,15 +239,17 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
       };
 
       this.logger.log(
-        '프로젝트별 WBS 자기평가 제출 완료 (1차 평가자 → 관리자)',
+        '프로젝트별 WBS 자기평가 제출 완료 (피평가자 → 1차 평가자)',
         {
           employeeId,
-        periodId,
-        projectId,
-        submittedCount: result.submittedCount,
-        failedCount: result.failedCount,
-      });
+          periodId,
+          projectId,
+          submittedCount: result.submittedCount,
+          failedCount: result.failedCount,
+        },
+      );
 
+      // 실패한 평가가 있으면 경고 로그
       if (failedEvaluations.length > 0) {
         this.logger.warn('일부 평가 제출 실패', {
           failedCount: failedEvaluations.length,
@@ -271,3 +261,5 @@ export class SubmitWbsSelfEvaluationsByProjectHandler
     });
   }
 }
+
+

@@ -149,7 +149,9 @@ export async function calculatePrimaryDownwardEvaluationScore(
         .andWhere('eval.evaluationType = :evaluationType', {
           evaluationType: DownwardEvaluationType.PRIMARY,
         })
-        .andWhere('eval.isCompleted = :isCompleted', { isCompleted: true })
+        .andWhere('eval.submittedToManager = :submittedToManager', {
+          submittedToManager: true,
+        })
         .andWhere('eval.deletedAt IS NULL')
         .getCount();
     }
@@ -264,7 +266,9 @@ export async function calculateSecondaryDownwardEvaluationScore(
             .andWhere('eval.evaluationType = :evaluationType', {
               evaluationType: DownwardEvaluationType.SECONDARY,
             })
-            .andWhere('eval.isCompleted = :isCompleted', { isCompleted: true })
+            .andWhere('eval.submittedToManager = :submittedToManager', {
+          submittedToManager: true,
+        })
             .andWhere('eval.deletedAt IS NULL')
             .getCount();
         }

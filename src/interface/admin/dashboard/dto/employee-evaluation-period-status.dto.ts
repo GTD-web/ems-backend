@@ -334,6 +334,12 @@ export class SelfEvaluationInfoDto {
   })
   isEditable: boolean;
 
+  @ApiProperty({
+    description: '피평가자가 1차 평가자에게 자기평가 제출 완료 여부',
+    example: true,
+  })
+  isSubmittedToEvaluator: boolean;
+
   @ApiPropertyOptional({
     description: '가중치 기반 자기평가 총점 (0-100)',
     example: 85.5,
@@ -592,6 +598,7 @@ export class StepApprovalInfoDto {
 
   @ApiPropertyOptional({
     description: '평가기준 설정 승인자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
     nullable: true,
   })
   criteriaSettingApprovedBy: string | null;
@@ -613,6 +620,7 @@ export class StepApprovalInfoDto {
 
   @ApiPropertyOptional({
     description: '자기평가 승인자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
     nullable: true,
   })
   selfEvaluationApprovedBy: string | null;
@@ -634,6 +642,7 @@ export class StepApprovalInfoDto {
 
   @ApiPropertyOptional({
     description: '1차 하향평가 승인자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
     nullable: true,
   })
   primaryEvaluationApprovedBy: string | null;
@@ -655,6 +664,7 @@ export class StepApprovalInfoDto {
 
   @ApiPropertyOptional({
     description: '2차 하향평가 승인자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
     nullable: true,
   })
   secondaryEvaluationApprovedBy: string | null;
@@ -748,6 +758,12 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
   downwardEvaluation: DownwardEvaluationInfoDto;
 
   @ApiProperty({
+    description: '단계별 확인 상태 정보',
+    type: () => StepApprovalInfoDto,
+  })
+  stepApproval: StepApprovalInfoDto;
+
+  @ApiProperty({
     description: '동료평가 진행 정보',
     type: () => PeerEvaluationInfoDto,
   })
@@ -758,10 +774,4 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
     type: () => FinalEvaluationInfoDto,
   })
   finalEvaluation: FinalEvaluationInfoDto;
-
-  @ApiProperty({
-    description: '단계별 확인 상태 정보',
-    type: () => StepApprovalInfoDto,
-  })
-  stepApproval: StepApprovalInfoDto;
 }

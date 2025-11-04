@@ -18,10 +18,14 @@ export interface WbsSelfEvaluationDto {
   assignedBy: string;
   /** 할당일 */
   assignedDate: Date;
-  /** 자가평가 완료 여부 */
-  isCompleted: boolean;
-  /** 완료일 */
-  completedAt?: Date;
+  /** 피평가자가 1차 평가자에게 제출한 여부 */
+  submittedToEvaluator: boolean;
+  /** 1차 평가자에게 제출한 일시 */
+  submittedToEvaluatorAt?: Date;
+  /** 1차 평가자가 관리자에게 제출한 여부 */
+  submittedToManager: boolean;
+  /** 관리자에게 제출한 일시 */
+  submittedToManagerAt?: Date;
   /** 평가일 */
   evaluationDate: Date;
   /** 성과 입력 (실제 달성한 성과 및 결과) */
@@ -60,10 +64,14 @@ export interface WbsSelfEvaluationDetailDto {
   assignedBy: string;
   /** 할당일 */
   assignedDate: Date;
-  /** 자가평가 완료 여부 */
-  isCompleted: boolean;
-  /** 완료일 */
-  completedAt?: Date;
+  /** 피평가자가 1차 평가자에게 제출한 여부 */
+  submittedToEvaluator: boolean;
+  /** 1차 평가자에게 제출한 일시 */
+  submittedToEvaluatorAt?: Date;
+  /** 1차 평가자가 관리자에게 제출한 여부 */
+  submittedToManager: boolean;
+  /** 관리자에게 제출한 일시 */
+  submittedToManagerAt?: Date;
   /** 평가일 */
   evaluationDate: Date;
   /** 성과 입력 (실제 달성한 성과 및 결과) */
@@ -114,8 +122,10 @@ export interface CreateWbsSelfEvaluationData {
 export interface UpdateWbsSelfEvaluationData {
   /** 할당자 ID */
   assignedBy?: string;
-  /** 자가평가 완료 여부 */
-  isCompleted?: boolean;
+  /** 피평가자가 1차 평가자에게 제출한 여부 */
+  submittedToEvaluator?: boolean;
+  /** 1차 평가자가 관리자에게 제출한 여부 */
+  submittedToManager?: boolean;
   /** 성과 입력 (실제 달성한 성과 및 결과) */
   performanceResult?: string;
   /** 자가평가 내용 */
@@ -136,18 +146,26 @@ export interface WbsSelfEvaluationFilter {
   wbsItemId?: string;
   /** 할당자 ID */
   assignedBy?: string;
-  /** 완료된 자가평가만 조회 */
-  completedOnly?: boolean;
-  /** 미완료 자가평가만 조회 */
-  uncompletedOnly?: boolean;
+  /** 피평가자가 1차 평가자에게 제출한 자기평가만 조회 */
+  submittedToEvaluatorOnly?: boolean;
+  /** 피평가자가 1차 평가자에게 미제출한 자기평가만 조회 */
+  notSubmittedToEvaluatorOnly?: boolean;
+  /** 1차 평가자가 관리자에게 제출한 자기평가만 조회 */
+  submittedToManagerOnly?: boolean;
+  /** 1차 평가자가 관리자에게 미제출한 자기평가만 조회 */
+  notSubmittedToManagerOnly?: boolean;
   /** 할당일 시작 */
   assignedDateFrom?: Date;
   /** 할당일 종료 */
   assignedDateTo?: Date;
-  /** 완료일 시작 */
-  completedDateFrom?: Date;
-  /** 완료일 종료 */
-  completedDateTo?: Date;
+  /** 1차 평가자 제출일 시작 */
+  submittedToEvaluatorDateFrom?: Date;
+  /** 1차 평가자 제출일 종료 */
+  submittedToEvaluatorDateTo?: Date;
+  /** 관리자 제출일 시작 */
+  submittedToManagerDateFrom?: Date;
+  /** 관리자 제출일 종료 */
+  submittedToManagerDateTo?: Date;
   /** 평가일 시작 */
   evaluationDateFrom?: Date;
   /** 평가일 종료 */

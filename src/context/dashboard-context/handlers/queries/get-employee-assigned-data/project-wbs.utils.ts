@@ -180,8 +180,10 @@ export async function getProjectsWithWbs(
         'evaluation.performanceResult AS evaluation_performance_result',
         'evaluation.selfEvaluationContent AS evaluation_self_evaluation_content',
         'evaluation.selfEvaluationScore AS evaluation_self_evaluation_score',
-        'evaluation.isCompleted AS evaluation_is_completed',
-        'evaluation.completedAt AS evaluation_completed_at',
+        'evaluation.submittedToEvaluator AS evaluation_submitted_to_evaluator',
+        'evaluation.submittedToEvaluatorAt AS evaluation_submitted_to_evaluator_at',
+        'evaluation.submittedToManager AS evaluation_submitted_to_manager',
+        'evaluation.submittedToManagerAt AS evaluation_submitted_to_manager_at',
       ])
       .where('evaluation.periodId = :periodId', {
         periodId: evaluationPeriodId,
@@ -197,17 +199,22 @@ export async function getProjectsWithWbs(
 
       const performance: WbsPerformance = {
         performanceResult: row.evaluation_performance_result,
-        isCompleted: row.evaluation_is_completed,
-        completedAt: row.evaluation_completed_at,
+        isCompleted: row.evaluation_performance_result ? true : false,
+        completedAt: row.evaluation_performance_result
+          ? row.evaluation_submitted_to_manager_at
+          : undefined,
       };
 
       const selfEvaluation: WbsSelfEvaluationInfo = {
         selfEvaluationId: row.evaluation_id,
         evaluationContent: row.evaluation_self_evaluation_content,
         score: row.evaluation_self_evaluation_score,
-        isCompleted: row.evaluation_is_completed,
+        submittedToEvaluator: row.evaluation_submitted_to_evaluator || false,
+        submittedToEvaluatorAt: row.evaluation_submitted_to_evaluator_at,
+        submittedToManager: row.evaluation_submitted_to_manager || false,
+        submittedToManagerAt: row.evaluation_submitted_to_manager_at,
         isEditable: mapping.isSelfEvaluationEditable,
-        submittedAt: row.evaluation_completed_at,
+        submittedAt: row.evaluation_submitted_to_manager_at,
       };
 
       selfEvaluationMap.set(wbsId, {

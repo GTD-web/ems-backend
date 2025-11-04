@@ -5,9 +5,9 @@ import { EvaluationWbsAssignmentService } from '@domain/core/evaluation-wbs-assi
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 
 /**
- * 프로젝트별 WBS 자기평가 초기화 커맨드 (1차 평가자 → 관리자 제출 취소)
+ * 프로젝트별 WBS 자기평가 취소 커맨드 (피평가자 → 1차 평가자 제출 취소)
  */
-export class ResetWbsSelfEvaluationsByProjectCommand {
+export class ResetWbsSelfEvaluationsToEvaluatorByProjectCommand {
   constructor(
     public readonly employeeId: string,
     public readonly periodId: string,
@@ -17,53 +17,53 @@ export class ResetWbsSelfEvaluationsByProjectCommand {
 }
 
 /**
- * 초기화된 WBS 자기평가 상세 정보
+ * 취소된 WBS 자기평가 상세 정보
  */
-export interface ResetWbsSelfEvaluationByProjectDetail {
+export interface ResetWbsSelfEvaluationToEvaluatorByProjectDetail {
   evaluationId: string;
   wbsItemId: string;
   selfEvaluationContent?: string;
   selfEvaluationScore?: number;
   performanceResult?: string;
-  wasSubmittedToManager: boolean;
+  wasSubmittedToEvaluator: boolean;
 }
 
 /**
- * 초기화 실패한 WBS 자기평가 정보
+ * 취소 실패한 WBS 자기평가 정보
  */
-export interface FailedResetWbsSelfEvaluationByProject {
+export interface FailedResetWbsSelfEvaluationToEvaluatorByProject {
   evaluationId: string;
   wbsItemId: string;
   reason: string;
 }
 
 /**
- * 프로젝트별 WBS 자기평가 초기화 응답
+ * 프로젝트별 WBS 자기평가 취소 응답 (피평가자 → 1차 평가자 제출 취소)
  */
-export interface ResetWbsSelfEvaluationsByProjectResponse {
-  /** 초기화된 평가 개수 */
+export interface ResetWbsSelfEvaluationsToEvaluatorByProjectResponse {
+  /** 취소된 평가 개수 */
   resetCount: number;
-  /** 초기화 실패한 평가 개수 */
+  /** 취소 실패한 평가 개수 */
   failedCount: number;
   /** 총 평가 개수 */
   totalCount: number;
-  /** 초기화된 평가 상세 정보 */
-  resetEvaluations: ResetWbsSelfEvaluationByProjectDetail[];
-  /** 초기화 실패한 평가 정보 */
-  failedResets: FailedResetWbsSelfEvaluationByProject[];
+  /** 취소된 평가 상세 정보 */
+  resetEvaluations: ResetWbsSelfEvaluationToEvaluatorByProjectDetail[];
+  /** 취소 실패한 평가 정보 */
+  failedResets: FailedResetWbsSelfEvaluationToEvaluatorByProject[];
 }
 
 /**
- * 프로젝트별 WBS 자기평가 초기화 핸들러 (1차 평가자 → 관리자 제출 취소)
- * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 관리자 제출 완료된 WBS 자기평가를 초기화합니다.
+ * 프로젝트별 WBS 자기평가 취소 핸들러 (피평가자 → 1차 평가자 제출 취소)
+ * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 1차 평가자 제출 완료된 WBS 자기평가를 취소합니다.
  */
 @Injectable()
-@CommandHandler(ResetWbsSelfEvaluationsByProjectCommand)
-export class ResetWbsSelfEvaluationsByProjectHandler
-  implements ICommandHandler<ResetWbsSelfEvaluationsByProjectCommand>
+@CommandHandler(ResetWbsSelfEvaluationsToEvaluatorByProjectCommand)
+export class ResetWbsSelfEvaluationsToEvaluatorByProjectHandler
+  implements ICommandHandler<ResetWbsSelfEvaluationsToEvaluatorByProjectCommand>
 {
   private readonly logger = new Logger(
-    ResetWbsSelfEvaluationsByProjectHandler.name,
+    ResetWbsSelfEvaluationsToEvaluatorByProjectHandler.name,
   );
 
   constructor(
@@ -73,15 +73,18 @@ export class ResetWbsSelfEvaluationsByProjectHandler
   ) {}
 
   async execute(
-    command: ResetWbsSelfEvaluationsByProjectCommand,
-  ): Promise<ResetWbsSelfEvaluationsByProjectResponse> {
+    command: ResetWbsSelfEvaluationsToEvaluatorByProjectCommand,
+  ): Promise<ResetWbsSelfEvaluationsToEvaluatorByProjectResponse> {
     const { employeeId, periodId, projectId, resetBy } = command;
 
-    this.logger.log('프로젝트별 WBS 자기평가 초기화 시작', {
-      employeeId,
-      periodId,
-      projectId,
-    });
+    this.logger.log(
+      '프로젝트별 WBS 자기평가 취소 시작 (피평가자 → 1차 평가자 제출 취소)',
+      {
+        employeeId,
+        periodId,
+        projectId,
+      },
+    );
 
     return await this.transactionManager.executeTransaction(async () => {
       // 1. 해당 프로젝트에 할당된 WBS 항목 조회
@@ -118,7 +121,7 @@ export class ResetWbsSelfEvaluationsByProjectHandler
       );
 
       if (projectEvaluations.length === 0) {
-        throw new BadRequestException('초기화할 자기평가가 존재하지 않습니다.');
+        throw new BadRequestException('취소할 자기평가가 존재하지 않습니다.');
       }
 
       this.logger.debug('프로젝트 자기평가 개수', {
@@ -126,26 +129,28 @@ export class ResetWbsSelfEvaluationsByProjectHandler
         projectEvaluations: projectEvaluations.length,
       });
 
-      const resetEvaluations: ResetWbsSelfEvaluationByProjectDetail[] = [];
-      const failedResets: FailedResetWbsSelfEvaluationByProject[] = [];
+      const resetEvaluations: ResetWbsSelfEvaluationToEvaluatorByProjectDetail[] =
+        [];
+      const failedResets: FailedResetWbsSelfEvaluationToEvaluatorByProject[] =
+        [];
 
-      // 5. 각 평가를 초기화 처리
+      // 5. 각 평가를 취소 처리
       for (const evaluation of projectEvaluations) {
         try {
-          const wasSubmittedToManager = evaluation.일차평가자가_관리자에게_제출했는가();
+          const wasSubmittedToEvaluator =
+            evaluation.피평가자가_1차평가자에게_제출했는가();
 
-          // 이미 관리자에게 미제출 상태면 스킵
-          if (!wasSubmittedToManager) {
+          // 이미 1차 평가자에게 미제출 상태면 스킵
+          if (!wasSubmittedToEvaluator) {
             this.logger.debug(
-              `이미 관리자에게 미제출 상태 스킵 - ID: ${evaluation.id}`,
+              `이미 1차 평가자에게 미제출 상태 스킵 - ID: ${evaluation.id}`,
             );
             continue;
           }
 
-          // 1차 평가자 → 관리자 제출 상태 초기화
-          await this.wbsSelfEvaluationService.수정한다(
+          // 피평가자가 1차 평가자에게 제출한 것을 취소
+          await this.wbsSelfEvaluationService.피평가자가_1차평가자에게_제출한_것을_취소한다(
             evaluation.id,
-            { submittedToManager: false },
             resetBy,
           );
 
@@ -155,12 +160,12 @@ export class ResetWbsSelfEvaluationsByProjectHandler
             selfEvaluationContent: evaluation.selfEvaluationContent,
             selfEvaluationScore: evaluation.selfEvaluationScore,
             performanceResult: evaluation.performanceResult,
-            wasSubmittedToManager,
+            wasSubmittedToEvaluator,
           });
 
-          this.logger.debug(`평가 초기화 성공 - ID: ${evaluation.id}`);
+          this.logger.debug(`평가 취소 성공 - ID: ${evaluation.id}`);
         } catch (error) {
-          this.logger.error(`평가 초기화 실패 - ID: ${evaluation.id}`, error);
+          this.logger.error(`평가 취소 실패 - ID: ${evaluation.id}`, error);
           failedResets.push({
             evaluationId: evaluation.id,
             wbsItemId: evaluation.wbsItemId,
@@ -169,7 +174,7 @@ export class ResetWbsSelfEvaluationsByProjectHandler
         }
       }
 
-      const result: ResetWbsSelfEvaluationsByProjectResponse = {
+      const result: ResetWbsSelfEvaluationsToEvaluatorByProjectResponse = {
         resetCount: resetEvaluations.length,
         failedCount: failedResets.length,
         totalCount: projectEvaluations.length,
@@ -177,24 +182,27 @@ export class ResetWbsSelfEvaluationsByProjectHandler
         failedResets,
       };
 
-      this.logger.log('프로젝트별 WBS 자기평가 초기화 완료', {
-        employeeId,
-        periodId,
-        projectId,
-        resetCount: result.resetCount,
-        failedCount: result.failedCount,
-      });
+      this.logger.log(
+        '프로젝트별 WBS 자기평가 취소 완료 (피평가자 → 1차 평가자 제출 취소)',
+        {
+          employeeId,
+          periodId,
+          projectId,
+          resetCount: result.resetCount,
+          failedCount: result.failedCount,
+        },
+      );
 
-      // 초기화된 평가가 없으면 정보 로그
+      // 취소된 평가가 없으면 정보 로그
       if (resetEvaluations.length === 0) {
-        this.logger.warn('초기화된 평가 없음 (모두 미완료 상태)', {
+        this.logger.warn('취소된 평가 없음 (모두 미제출 상태)', {
           totalCount: projectEvaluations.length,
         });
       }
 
-      // 실패한 초기화가 있으면 경고 로그
+      // 실패한 취소가 있으면 경고 로그
       if (failedResets.length > 0) {
-        this.logger.warn('일부 평가 초기화 실패', {
+        this.logger.warn('일부 평가 취소 실패', {
           failedCount: failedResets.length,
           failures: failedResets,
         });
@@ -204,3 +212,4 @@ export class ResetWbsSelfEvaluationsByProjectHandler
     });
   }
 }
+

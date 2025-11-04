@@ -55,7 +55,10 @@ export interface WbsSelfEvaluationInfo {
   selfEvaluationId?: string;
   evaluationContent?: string;
   score?: number;
-  isCompleted: boolean;
+  submittedToEvaluator: boolean;
+  submittedToEvaluatorAt?: Date;
+  submittedToManager: boolean;
+  submittedToManagerAt?: Date;
   isEditable: boolean;
   submittedAt?: Date;
 }

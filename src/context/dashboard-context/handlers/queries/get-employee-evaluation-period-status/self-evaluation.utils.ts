@@ -20,6 +20,8 @@ export async function 자기평가_진행_상태를_조회한다(
 ): Promise<{
   totalMappingCount: number;
   completedMappingCount: number;
+  submittedToEvaluatorCount: number;
+  isSubmittedToEvaluator: boolean;
   totalScore: number | null;
   grade: string | null;
 }> {
@@ -32,15 +34,30 @@ export async function 자기평가_진행_상태를_조회한다(
     },
   });
 
-  // 완료된 WBS 자기평가 수 조회
+  // 관리자에게 제출된 WBS 자기평가 수 조회
   const completedMappingCount = await wbsSelfEvaluationRepository.count({
     where: {
       periodId: evaluationPeriodId,
       employeeId: employeeId,
-      isCompleted: true,
+      submittedToManager: true,
       deletedAt: IsNull(),
     },
   });
+
+  // 1차 평가자에게 제출된 WBS 자기평가 수 조회
+  const submittedToEvaluatorCount = await wbsSelfEvaluationRepository.count({
+    where: {
+      periodId: evaluationPeriodId,
+      employeeId: employeeId,
+      submittedToEvaluator: true,
+      deletedAt: IsNull(),
+    },
+  });
+
+  // 모든 자기평가가 1차 평가자에게 제출되었는지 확인
+  const isSubmittedToEvaluator =
+    totalMappingCount > 0 &&
+    submittedToEvaluatorCount === totalMappingCount;
 
   // 가중치 기반 자기평가 총점 및 등급 계산
   let totalScore: number | null = null;
@@ -66,7 +83,14 @@ export async function 자기평가_진행_상태를_조회한다(
     }
   }
 
-  return { totalMappingCount, completedMappingCount, totalScore, grade };
+  return {
+    totalMappingCount,
+    completedMappingCount,
+    submittedToEvaluatorCount,
+    isSubmittedToEvaluator,
+    totalScore,
+    grade,
+  };
 }
 
 /**
@@ -117,12 +141,12 @@ export async function 가중치_기반_자기평가_점수를_계산한다(
 
     const maxSelfEvaluationRate = period.maxSelfEvaluationRate;
 
-    // 완료된 WBS 자기평가 목록 조회
+    // 관리자에게 제출된 WBS 자기평가 목록 조회
     const selfEvaluations = await wbsSelfEvaluationRepository.find({
       where: {
         periodId: evaluationPeriodId,
         employeeId: employeeId,
-        isCompleted: true,
+        submittedToManager: true,
         deletedAt: IsNull(),
       },
     });

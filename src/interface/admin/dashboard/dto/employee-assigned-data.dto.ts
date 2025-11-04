@@ -269,10 +269,34 @@ export class WbsSelfEvaluationDto implements WbsSelfEvaluationInfo {
   score?: number;
 
   @ApiProperty({
-    description: '평가 완료 여부',
+    description: '피평가자가 1차 평가자에게 제출한 여부',
     example: true,
   })
-  isCompleted: boolean;
+  submittedToEvaluator: boolean;
+
+  @ApiPropertyOptional({
+    description: '1차 평가자에게 제출한 일시',
+    type: 'string',
+    format: 'date-time',
+    example: '2024-04-01T10:00:00.000Z',
+    nullable: true,
+  })
+  submittedToEvaluatorAt?: Date;
+
+  @ApiProperty({
+    description: '1차 평가자가 관리자에게 제출한 여부',
+    example: true,
+  })
+  submittedToManager: boolean;
+
+  @ApiPropertyOptional({
+    description: '관리자에게 제출한 일시',
+    type: 'string',
+    format: 'date-time',
+    example: '2024-04-01T10:00:00.000Z',
+    nullable: true,
+  })
+  submittedToManagerAt?: Date;
 
   @ApiProperty({
     description: '수정 가능 여부',

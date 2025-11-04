@@ -157,7 +157,8 @@ export class GetEmployeeAssignedDataHandler
     const totalWbs = projects.reduce((sum, project) => {
       project.wbsList.forEach((wbs) => {
         if (wbs.performance?.isCompleted) completedPerformances++;
-        if (wbs.selfEvaluation?.isCompleted) completedSelfEvaluations++;
+        if (wbs.selfEvaluation?.submittedToManager)
+          completedSelfEvaluations++;
       });
       return sum + project.wbsList.length;
     }, 0);

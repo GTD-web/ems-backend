@@ -16,9 +16,15 @@ import {
   ResetAllWbsSelfEvaluationsByEmployeePeriod,
   ResetWbsSelfEvaluation,
   ResetWbsSelfEvaluationsByProject,
+  ResetWbsSelfEvaluationToEvaluator,
+  ResetAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod,
+  ResetWbsSelfEvaluationsToEvaluatorByProject,
   SubmitAllWbsSelfEvaluationsByEmployeePeriod,
+  SubmitAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod,
   SubmitWbsSelfEvaluation,
+  SubmitWbsSelfEvaluationToEvaluator,
   SubmitWbsSelfEvaluationsByProject,
+  SubmitWbsSelfEvaluationsToEvaluatorByProject,
   UpsertWbsSelfEvaluation,
 } from './decorators/wbs-self-evaluation-api.decorators';
 import {
@@ -73,7 +79,7 @@ export class WbsSelfEvaluationManagementController {
   }
 
   /**
-   * WBS 자기평가 제출
+   * WBS 자기평가 제출 (1차 평가자 → 관리자)
    */
   @SubmitWbsSelfEvaluation()
   async submitWbsSelfEvaluation(
@@ -88,8 +94,23 @@ export class WbsSelfEvaluationManagementController {
   }
 
   /**
-   * 직원의 전체 WBS 자기평가 제출
-   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 한 번에 제출합니다.
+   * WBS 자기평가 제출 (피평가자 → 1차 평가자)
+   */
+  @SubmitWbsSelfEvaluationToEvaluator()
+  async submitWbsSelfEvaluationToEvaluator(
+    @ParseUUID('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<WbsSelfEvaluationResponseDto> {
+    const submittedBy = user.id;
+    return await this.performanceEvaluationService.피평가자가_1차평가자에게_자기평가를_제출한다(
+      id,
+      submittedBy,
+    );
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가 제출 (1차 평가자 → 관리자)
+   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 관리자에게 한 번에 제출합니다.
    */
   @SubmitAllWbsSelfEvaluationsByEmployeePeriod()
   async submitAllWbsSelfEvaluationsByEmployeePeriod(
@@ -103,6 +124,35 @@ export class WbsSelfEvaluationManagementController {
       periodId,
       submittedBy,
     );
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가 제출 (피평가자 → 1차 평가자)
+   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 1차 평가자에게 한 번에 제출합니다.
+   */
+  @SubmitAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod()
+  async submitAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod(
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<SubmitAllWbsSelfEvaluationsResponseDto> {
+    const submittedBy = user.id;
+    const result = await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자에게_제출한다(
+      employeeId,
+      periodId,
+      submittedBy,
+    );
+    // 피평가자 → 1차 평가자 제출 응답을 DTO 형식으로 변환
+    return {
+      ...result,
+      completedEvaluations: result.completedEvaluations.map((e) => {
+        const { submittedToEvaluatorAt, ...rest } = e;
+        return {
+          ...rest,
+          submittedToEvaluatorAt,
+        };
+      }),
+    } as SubmitAllWbsSelfEvaluationsResponseDto;
   }
 
   /**
@@ -140,8 +190,8 @@ export class WbsSelfEvaluationManagementController {
   }
 
   /**
-   * 프로젝트별 WBS 자기평가 제출
-   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 한 번에 제출합니다.
+   * 프로젝트별 WBS 자기평가 제출 (1차 평가자 → 관리자)
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 관리자에게 한 번에 제출합니다.
    */
   @SubmitWbsSelfEvaluationsByProject()
   async submitWbsSelfEvaluationsByProject(
@@ -157,6 +207,37 @@ export class WbsSelfEvaluationManagementController {
       projectId,
       submittedBy,
     );
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가 제출 (피평가자 → 1차 평가자)
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 WBS 자기평가를 1차 평가자에게 한 번에 제출합니다.
+   */
+  @SubmitWbsSelfEvaluationsToEvaluatorByProject()
+  async submitWbsSelfEvaluationsToEvaluatorByProject(
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<SubmitWbsSelfEvaluationsByProjectResponseDto> {
+    const submittedBy = user.id;
+    const result = await this.performanceEvaluationService.프로젝트별_자기평가를_1차평가자에게_제출한다(
+      employeeId,
+      periodId,
+      projectId,
+      submittedBy,
+    );
+    // 피평가자 → 1차 평가자 제출 응답을 DTO 형식으로 변환
+    return {
+      ...result,
+      completedEvaluations: result.completedEvaluations.map((e) => {
+        const { submittedToEvaluatorAt, ...rest } = e;
+        return {
+          ...rest,
+          submittedToEvaluatorAt,
+        };
+      }),
+    } as SubmitWbsSelfEvaluationsByProjectResponseDto;
   }
 
   /**
@@ -177,6 +258,76 @@ export class WbsSelfEvaluationManagementController {
       projectId,
       resetBy,
     );
+  }
+
+  /**
+   * WBS 자기평가 취소 (피평가자 → 1차 평가자 제출 취소)
+   * 특정 WBS 자기평가의 1차 평가자 제출 상태를 취소합니다.
+   */
+  @ResetWbsSelfEvaluationToEvaluator()
+  async resetWbsSelfEvaluationToEvaluator(
+    @ParseUUID('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<WbsSelfEvaluationResponseDto> {
+    const resetBy = user.id;
+    return await this.performanceEvaluationService.피평가자가_1차평가자에게_제출한_자기평가를_취소한다(
+      id,
+      resetBy,
+    );
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가 취소 (피평가자 → 1차 평가자 제출 취소)
+   * 특정 직원의 특정 평가기간에 대한 모든 1차 평가자 제출 완료된 WBS 자기평가를 취소합니다.
+   */
+  @ResetAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod()
+  async resetAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod(
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<ResetAllWbsSelfEvaluationsResponseDto> {
+    const resetBy = user.id;
+    const result = await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자_제출_취소한다(
+      employeeId,
+      periodId,
+      resetBy,
+    );
+    // 피평가자 → 1차 평가자 제출 취소 응답을 DTO 형식으로 변환
+    return {
+      ...result,
+      resetEvaluations: result.resetEvaluations.map((e) => ({
+        ...e,
+        wasSubmittedToManager: false, // 1차 평가자 제출 취소는 관리자 제출과 무관
+      })),
+    } as ResetAllWbsSelfEvaluationsResponseDto;
+  }
+
+  /**
+   * 프로젝트별 WBS 자기평가 취소 (피평가자 → 1차 평가자 제출 취소)
+   * 특정 직원의 특정 평가기간 + 프로젝트에 대한 모든 1차 평가자 제출 완료된 WBS 자기평가를 취소합니다.
+   */
+  @ResetWbsSelfEvaluationsToEvaluatorByProject()
+  async resetWbsSelfEvaluationsToEvaluatorByProject(
+    @ParseUUID('employeeId') employeeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @ParseUUID('projectId') projectId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<ResetWbsSelfEvaluationsByProjectResponseDto> {
+    const resetBy = user.id;
+    const result = await this.performanceEvaluationService.프로젝트별_자기평가를_1차평가자_제출_취소한다(
+      employeeId,
+      periodId,
+      projectId,
+      resetBy,
+    );
+    // 피평가자 → 1차 평가자 제출 취소 응답을 DTO 형식으로 변환
+    return {
+      ...result,
+      resetEvaluations: result.resetEvaluations.map((e) => ({
+        ...e,
+        wasSubmittedToManager: false, // 1차 평가자 제출 취소는 관리자 제출과 무관
+      })),
+    } as ResetWbsSelfEvaluationsByProjectResponseDto;
   }
 
   /**

@@ -182,10 +182,12 @@ export class Phase7EvaluationGenerator {
       evaluation.assignedBy = assignment.assignedBy || systemAdminId;
       evaluation.assignedDate = assignment.assignedDate || new Date();
       evaluation.evaluationDate = new Date();
-      evaluation.isCompleted = isCompleted;
+      evaluation.submittedToEvaluator = isCompleted;
+      evaluation.submittedToManager = isCompleted;
 
       if (isCompleted) {
-        evaluation.completedAt = new Date();
+        evaluation.submittedToEvaluatorAt = new Date();
+        evaluation.submittedToManagerAt = new Date();
 
         // 완료된 경우에만 점수 생성
         // 평가기간의 maxSelfEvaluationRate를 최대값으로 사용
@@ -207,7 +209,7 @@ export class Phase7EvaluationGenerator {
     }
 
     this.logger.log(
-      `자기평가 생성 - 총 ${evaluations.length}개 (완료: ${evaluations.filter((e) => e.isCompleted).length}개)`,
+      `자기평가 생성 - 총 ${evaluations.length}개 (완료: ${evaluations.filter((e) => e.submittedToManager).length}개)`,
     );
     this.logger.log(
       `자기평가 점수 범위: 1-${maxRate} (평균: ${Math.round(maxRate * 0.7)})`,
@@ -542,7 +544,7 @@ export class Phase7EvaluationGenerator {
     // 완료된 평가의 직원 ID 목록 추출
     const completedEmployeeIds = [
       ...new Set(
-        evaluations.filter((e) => e.isCompleted).map((e) => e.employeeId),
+        evaluations.filter((e) => e.submittedToManager).map((e) => e.employeeId),
       ),
     ];
 

@@ -53,16 +53,30 @@ export class WbsSelfEvaluation
   @Column({
     type: 'boolean',
     default: false,
-    comment: '자가평가 완료 여부',
+    comment: '피평가자가 1차 평가자에게 제출한 여부',
   })
-  isCompleted: boolean;
+  submittedToEvaluator: boolean;
 
   @Column({
     type: 'timestamp with time zone',
     nullable: true,
-    comment: '완료일',
+    comment: '1차 평가자에게 제출한 일시',
   })
-  completedAt?: Date;
+  submittedToEvaluatorAt?: Date;
+
+  @Column({
+    type: 'boolean',
+    default: false,
+    comment: '1차 평가자가 관리자에게 제출한 여부',
+  })
+  submittedToManager: boolean;
+
+  @Column({
+    type: 'timestamp with time zone',
+    nullable: true,
+    comment: '관리자에게 제출한 일시',
+  })
+  submittedToManagerAt?: Date;
 
   @Column({
     type: 'timestamp with time zone',
@@ -99,7 +113,8 @@ export class WbsSelfEvaluation
       this.wbsItemId = data.wbsItemId;
       this.assignedBy = data.assignedBy;
       this.assignedDate = new Date();
-      this.isCompleted = false;
+      this.submittedToEvaluator = false;
+      this.submittedToManager = false;
       this.performanceResult = data.performanceResult;
       this.selfEvaluationContent = data.selfEvaluationContent;
       this.selfEvaluationScore = data.selfEvaluationScore;
@@ -132,26 +147,49 @@ export class WbsSelfEvaluation
   }
 
   /**
-   * 자가평가를 완료로 표시한다
+   * 피평가자가 1차 평가자에게 제출한다
    */
-  자가평가를_완료한다(): void {
-    this.isCompleted = true;
-    this.completedAt = new Date();
+  피평가자가_1차평가자에게_제출한다(): void {
+    this.submittedToEvaluator = true;
+    this.submittedToEvaluatorAt = new Date();
   }
 
   /**
-   * 자가평가 완료를 취소한다
+   * 1차 평가자가 관리자에게 제출한다
    */
-  자가평가_완료를_취소한다(): void {
-    this.isCompleted = false;
-    this.completedAt = undefined;
+  일차평가자가_관리자에게_제출한다(): void {
+    this.submittedToManager = true;
+    this.submittedToManagerAt = new Date();
   }
 
   /**
-   * 완료되었는지 확인한다
+   * 피평가자 제출을 취소한다
    */
-  완료되었는가(): boolean {
-    return this.isCompleted;
+  피평가자_제출을_취소한다(): void {
+    this.submittedToEvaluator = false;
+    this.submittedToEvaluatorAt = undefined;
+  }
+
+  /**
+   * 1차 평가자 제출을 취소한다
+   */
+  일차평가자_제출을_취소한다(): void {
+    this.submittedToManager = false;
+    this.submittedToManagerAt = undefined;
+  }
+
+  /**
+   * 피평가자가 1차 평가자에게 제출했는지 확인한다
+   */
+  피평가자가_1차평가자에게_제출했는가(): boolean {
+    return this.submittedToEvaluator;
+  }
+
+  /**
+   * 1차 평가자가 관리자에게 제출했는지 확인한다
+   */
+  일차평가자가_관리자에게_제출했는가(): boolean {
+    return this.submittedToManager;
   }
 
   /**
@@ -202,8 +240,10 @@ export class WbsSelfEvaluation
     this.selfEvaluationContent = undefined;
     this.selfEvaluationScore = undefined;
     this.performanceResult = undefined;
-    this.isCompleted = false;
-    this.completedAt = undefined;
+    this.submittedToEvaluator = false;
+    this.submittedToEvaluatorAt = undefined;
+    this.submittedToManager = false;
+    this.submittedToManagerAt = undefined;
     this.evaluationDate = new Date();
 
     if (updatedBy) {
@@ -229,8 +269,10 @@ export class WbsSelfEvaluation
       wbsItemId: this.wbsItemId,
       assignedBy: this.assignedBy,
       assignedDate: this.assignedDate,
-      isCompleted: this.isCompleted,
-      completedAt: this.completedAt,
+      submittedToEvaluator: this.submittedToEvaluator,
+      submittedToEvaluatorAt: this.submittedToEvaluatorAt,
+      submittedToManager: this.submittedToManager,
+      submittedToManagerAt: this.submittedToManagerAt,
       evaluationDate: this.evaluationDate,
       performanceResult: this.performanceResult,
       selfEvaluationContent: this.selfEvaluationContent,
