@@ -50,3 +50,4 @@ export interface IEmployeeEvaluationStepApproval {
   DTO로_변환한다(): EmployeeEvaluationStepApprovalDto;
 }
 
+

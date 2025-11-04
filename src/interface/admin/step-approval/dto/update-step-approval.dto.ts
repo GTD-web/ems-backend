@@ -24,6 +24,7 @@ export enum StepApprovalStatusEnum {
   PENDING = 'pending',
   APPROVED = 'approved',
   REVISION_REQUESTED = 'revision_requested',
+  REVISION_COMPLETED = 'revision_completed',
 }
 
 /**
@@ -59,4 +60,5 @@ export class UpdateStepApprovalDto {
   @IsOptional()
   revisionComment?: string;
 }
+
 

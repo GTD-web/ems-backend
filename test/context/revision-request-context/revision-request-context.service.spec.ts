@@ -5,9 +5,12 @@ import { DatabaseModule } from '@libs/database/database.module';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
 import { EvaluationRevisionRequestModule } from '@domain/sub/evaluation-revision-request';
+import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evaluation-step-approval';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { EmployeeEvaluationStepApproval } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.entity';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
 import {
@@ -15,6 +18,7 @@ import {
   EvaluationPeriodPhase,
 } from '@domain/core/evaluation-period/evaluation-period.types';
 import { RevisionRequestStepType } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.types';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
 
 /**
  * RevisionRequestContextService 유닛 테스트
@@ -30,6 +34,8 @@ describe('RevisionRequestContextService', () => {
   let evaluationPeriodRepository: Repository<EvaluationPeriod>;
   let employeeRepository: Repository<Employee>;
   let departmentRepository: Repository<Department>;
+  let mappingRepository: Repository<EvaluationPeriodEmployeeMapping>;
+  let stepApprovalRepository: Repository<EmployeeEvaluationStepApproval>;
   let revisionRequestRepository: Repository<EvaluationRevisionRequest>;
   let recipientRepository: Repository<EvaluationRevisionRequestRecipient>;
 
@@ -40,6 +46,7 @@ describe('RevisionRequestContextService', () => {
   let departmentId: string;
   let adminId: string;
   let revisionRequestId: string;
+  let mappingId: string;
 
   const systemAdminId = '00000000-0000-0000-0000-000000000001';
 
@@ -51,10 +58,13 @@ describe('RevisionRequestContextService', () => {
           EvaluationPeriod,
           Employee,
           Department,
+          EvaluationPeriodEmployeeMapping,
+          EmployeeEvaluationStepApproval,
           EvaluationRevisionRequest,
           EvaluationRevisionRequestRecipient,
         ]),
         EvaluationRevisionRequestModule,
+        EmployeeEvaluationStepApprovalModule,
       ],
       providers: [RevisionRequestContextService],
     }).compile();
@@ -68,6 +78,8 @@ describe('RevisionRequestContextService', () => {
     evaluationPeriodRepository = dataSource.getRepository(EvaluationPeriod);
     employeeRepository = dataSource.getRepository(Employee);
     departmentRepository = dataSource.getRepository(Department);
+    mappingRepository = dataSource.getRepository(EvaluationPeriodEmployeeMapping);
+    stepApprovalRepository = dataSource.getRepository(EmployeeEvaluationStepApproval);
     revisionRequestRepository = dataSource.getRepository(
       EvaluationRevisionRequest,
     );
@@ -99,6 +111,12 @@ describe('RevisionRequestContextService', () => {
       await dataSource.query(
         'DELETE FROM evaluation_revision_request WHERE "deletedAt" IS NULL OR "deletedAt" IS NOT NULL',
       );
+
+      // 2-1. 단계 승인 삭제
+      await stepApprovalRepository.delete({});
+
+      // 2-2. 평가기간-직원 맵핑 삭제
+      await mappingRepository.delete({});
 
       // 3. 평가기간 삭제
       await evaluationPeriodRepository.delete({});
@@ -172,6 +190,26 @@ describe('RevisionRequestContextService', () => {
     });
     const savedEvaluator = await employeeRepository.save(evaluator);
     evaluatorId = savedEvaluator.id;
+
+    // 4-1. 평가기간-직원 맵핑 생성
+    const mapping = mappingRepository.create({
+      evaluationPeriodId: evaluationPeriodId,
+      employeeId: employeeId,
+      createdBy: systemAdminId,
+    });
+    const savedMapping = await mappingRepository.save(mapping);
+    mappingId = savedMapping.id;
+
+    // 4-2. 단계 승인 생성 (revision_requested 상태)
+    const stepApproval = stepApprovalRepository.create({
+      evaluationPeriodEmployeeMappingId: mappingId,
+      criteriaSettingStatus: StepApprovalStatus.REVISION_REQUESTED,
+      selfEvaluationStatus: StepApprovalStatus.PENDING,
+      primaryEvaluationStatus: StepApprovalStatus.PENDING,
+      secondaryEvaluationStatus: StepApprovalStatus.PENDING,
+      createdBy: systemAdminId,
+    });
+    await stepApprovalRepository.save(stepApproval);
 
     // 5. 재작성 요청 생성
     const revisionRequest = revisionRequestRepository.create({
@@ -809,6 +847,92 @@ describe('RevisionRequestContextService', () => {
           '다시 수정했습니다.',
         ),
       ).rejects.toThrow();
+    });
+
+    it('재작성 완료 응답 제출 시 단계 승인 상태가 revision_completed로 변경되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+      const responseComment = '수정 완료했습니다.';
+
+      // 초기 상태 확인 (revision_requested)
+      const beforeStepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      expect(beforeStepApproval).toBeDefined();
+      expect(beforeStepApproval!.criteriaSettingStatus).toBe(
+        StepApprovalStatus.REVISION_REQUESTED,
+      );
+
+      // When - 재작성 완료 응답 제출
+      await service.재작성완료_응답을_제출한다(
+        revisionRequestId,
+        evaluatorId,
+        responseComment,
+      );
+
+      // Then - 단계 승인 상태가 revision_completed로 변경되었는지 확인
+      const afterStepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+
+      expect(afterStepApproval).toBeDefined();
+      expect(afterStepApproval!.criteriaSettingStatus).toBe(
+        StepApprovalStatus.REVISION_COMPLETED,
+      );
+    });
+
+    it('모든 수신자가 완료해야만 단계 승인 상태가 revision_completed로 변경되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 피평가자도 수신자로 추가
+      const employeeRecipient = recipientRepository.create({
+        revisionRequestId: revisionRequestId,
+        recipientId: employeeId,
+        recipientType: 'evaluatee',
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(employeeRecipient);
+
+      // 초기 상태 확인
+      const beforeStepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      expect(beforeStepApproval!.criteriaSettingStatus).toBe(
+        StepApprovalStatus.REVISION_REQUESTED,
+      );
+
+      // When - 평가자만 완료 응답 제출
+      await service.재작성완료_응답을_제출한다(
+        revisionRequestId,
+        evaluatorId,
+        '평가자 완료했습니다.',
+      );
+
+      // Then - 아직 피평가자가 완료하지 않았으므로 상태는 변경되지 않아야 함
+      const afterFirstStepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      expect(afterFirstStepApproval!.criteriaSettingStatus).toBe(
+        StepApprovalStatus.REVISION_REQUESTED,
+      );
+
+      // When - 피평가자도 완료 응답 제출
+      await service.재작성완료_응답을_제출한다(
+        revisionRequestId,
+        employeeId,
+        '피평가자 완료했습니다.',
+      );
+
+      // Then - 모든 수신자가 완료했으므로 상태가 revision_completed로 변경되어야 함
+      const afterSecondStepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      expect(afterSecondStepApproval!.criteriaSettingStatus).toBe(
+        StepApprovalStatus.REVISION_COMPLETED,
+      );
     });
   });
 

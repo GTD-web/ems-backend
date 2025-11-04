@@ -7,6 +7,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EvaluationRevisionRequestService } from '@domain/sub/evaluation-revision-request';
+import {
+  EmployeeEvaluationStepApprovalService,
+  StepApprovalStatus,
+} from '@domain/sub/employee-evaluation-step-approval';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import type {
@@ -25,10 +30,13 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
 
   constructor(
     private readonly revisionRequestService: EvaluationRevisionRequestService,
+    private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
     @InjectRepository(Employee)
     private readonly employeeRepository: Repository<Employee>,
     @InjectRepository(EvaluationPeriod)
     private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
   ) {}
 
   /**
@@ -267,6 +275,15 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
       `재작성 완료 응답 제출 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`,
     );
 
+    // 재작성 요청 조회
+    const request = await this.revisionRequestService.ID로_조회한다(requestId);
+
+    if (!request) {
+      throw new NotFoundException(
+        `재작성 요청을 찾을 수 없습니다. (요청 ID: ${requestId})`,
+      );
+    }
+
     // 수신자 조회
     const recipient = await this.revisionRequestService.수신자를_조회한다(
       requestId,
@@ -292,8 +309,105 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     // 저장
     await this.revisionRequestService.수신자를_저장한다(recipient);
 
+    // 모든 수신자가 완료했는지 확인
+    const allCompleted = await this.모든_수신자가_완료했는가(requestId);
+
+    if (allCompleted) {
+      // 단계 승인 상태를 REVISION_COMPLETED로 변경
+      await this.단계_승인_상태를_재작성완료로_변경한다(
+        request.evaluationPeriodId,
+        request.employeeId,
+        request.step,
+        recipientId,
+      );
+    }
+
     this.logger.log(
       `재작성 완료 응답 제출 완료 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`,
+    );
+  }
+
+  /**
+   * 모든 수신자가 완료했는지 확인한다
+   */
+  private async 모든_수신자가_완료했는가(
+    requestId: string,
+  ): Promise<boolean> {
+    const request = await this.revisionRequestService.ID로_조회한다(requestId);
+
+    if (!request || !request.recipients) {
+      return false;
+    }
+
+    // 삭제되지 않은 수신자들만 확인
+    const activeRecipients = request.recipients.filter(
+      (r) => !r.deletedAt,
+    );
+
+    if (activeRecipients.length === 0) {
+      return false;
+    }
+
+    // 모든 수신자가 완료했는지 확인
+    return activeRecipients.every((r) => r.isCompleted);
+  }
+
+  /**
+   * 단계 승인 상태를 재작성 완료로 변경한다
+   */
+  private async 단계_승인_상태를_재작성완료로_변경한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    step: string,
+    updatedBy: string,
+  ): Promise<void> {
+    this.logger.log(
+      `단계 승인 상태를 재작성 완료로 변경 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 단계: ${step}`,
+    );
+
+    // 맵핑 조회
+    const mapping = await this.mappingRepository.findOne({
+      where: {
+        evaluationPeriodId,
+        employeeId,
+        deletedAt: null as any,
+      },
+    });
+
+    if (!mapping) {
+      this.logger.warn(
+        `평가기간-직원 맵핑을 찾을 수 없습니다. - 평가기간 ID: ${evaluationPeriodId}, 직원 ID: ${employeeId}`,
+      );
+      return;
+    }
+
+    // 단계 승인 정보 조회
+    const stepApproval =
+      await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+
+    if (!stepApproval) {
+      this.logger.warn(
+        `단계 승인 정보를 찾을 수 없습니다. - 맵핑 ID: ${mapping.id}`,
+      );
+      return;
+    }
+
+    // 단계 타입 변환 (RevisionRequestStepType -> StepType)
+    const stepType = step as 'criteria' | 'self' | 'primary' | 'secondary';
+
+    // 단계 상태 변경
+    this.stepApprovalService.단계_상태를_변경한다(
+      stepApproval,
+      stepType,
+      StepApprovalStatus.REVISION_COMPLETED,
+      updatedBy,
+    );
+
+    // 저장
+    await this.stepApprovalService.저장한다(stepApproval);
+
+    this.logger.log(
+      `단계 승인 상태를 재작성 완료로 변경 완료 - 직원: ${employeeId}, 단계: ${step}`,
     );
   }
 }

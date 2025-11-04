@@ -16,6 +16,7 @@ import { TransactionManagerService } from './transaction-manager.service';
       useFactory: (configService: ConfigService) => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
         const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+        const isTest = nodeEnv === 'test';
 
         if (!databaseUrl) {
           throw new Error('DATABASE_URL environment variable is required');
@@ -25,13 +26,15 @@ import { TransactionManagerService } from './transaction-manager.service';
           type: 'postgres',
           url: databaseUrl,
           autoLoadEntities: true,
+          // 테스트 환경에서는 기존 스키마를 드롭하고 새로 생성
+          dropSchema: isTest,
           synchronize: configService.get<boolean>(
             'DB_SYNCHRONIZE',
-            nodeEnv === 'development',
+            nodeEnv === 'development' || isTest,
           ),
           logging: configService.get<boolean>(
             'DB_LOGGING',
-            nodeEnv === 'development',
+            nodeEnv === 'development' && !isTest,
           ),
           ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
           // 연결 풀 설정 (개발 환경에서 안정성 향상)

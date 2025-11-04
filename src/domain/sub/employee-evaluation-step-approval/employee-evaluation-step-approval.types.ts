@@ -5,6 +5,7 @@ export enum StepApprovalStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REVISION_REQUESTED = 'revision_requested',
+  REVISION_COMPLETED = 'revision_completed',
 }
 
 /**
@@ -70,4 +71,5 @@ export interface EmployeeEvaluationStepApprovalDto {
   /** 삭제 일시 */
   deletedAt?: Date | null;
 }
+
 

@@ -591,10 +591,14 @@ export class ExclusionInfoDto {
 export class StepApprovalInfoDto {
   @ApiProperty({
     description: '평가기준 설정 확인 상태',
-    enum: ['pending', 'approved', 'revision_requested'],
+    enum: ['pending', 'approved', 'revision_requested', 'revision_completed'],
     example: 'pending',
   })
-  criteriaSettingStatus: 'pending' | 'approved' | 'revision_requested';
+  criteriaSettingStatus:
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiPropertyOptional({
     description: '평가기준 설정 승인자 ID',
@@ -613,10 +617,14 @@ export class StepApprovalInfoDto {
 
   @ApiProperty({
     description: '자기평가 확인 상태',
-    enum: ['pending', 'approved', 'revision_requested'],
+    enum: ['pending', 'approved', 'revision_requested', 'revision_completed'],
     example: 'pending',
   })
-  selfEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+  selfEvaluationStatus:
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiPropertyOptional({
     description: '자기평가 승인자 ID',
@@ -635,10 +643,14 @@ export class StepApprovalInfoDto {
 
   @ApiProperty({
     description: '1차 하향평가 확인 상태',
-    enum: ['pending', 'approved', 'revision_requested'],
+    enum: ['pending', 'approved', 'revision_requested', 'revision_completed'],
     example: 'pending',
   })
-  primaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+  primaryEvaluationStatus:
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiPropertyOptional({
     description: '1차 하향평가 승인자 ID',
@@ -657,10 +669,14 @@ export class StepApprovalInfoDto {
 
   @ApiProperty({
     description: '2차 하향평가 확인 상태',
-    enum: ['pending', 'approved', 'revision_requested'],
+    enum: ['pending', 'approved', 'revision_requested', 'revision_completed'],
     example: 'pending',
   })
-  secondaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested';
+  secondaryEvaluationStatus:
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiPropertyOptional({
     description: '2차 하향평가 승인자 ID',

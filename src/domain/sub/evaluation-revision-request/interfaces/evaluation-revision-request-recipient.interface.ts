@@ -28,3 +28,4 @@ export interface IEvaluationRevisionRequestRecipient {
   DTO로_변환한다(): EvaluationRevisionRequestRecipientDto;
 }
 
+

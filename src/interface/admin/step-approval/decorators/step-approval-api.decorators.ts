@@ -19,6 +19,14 @@ export function UpdateStepApproval() {
       summary: '단계 승인 상태 변경',
       description: `**관리자용**: 특정 직원의 평가 단계별 승인 상태를 변경합니다.
 
+**동작:**
+- 평가 단계별 승인 상태를 변경합니다
+- 상태가 \`revision_requested\`인 경우 재작성 요청이 자동으로 생성됩니다
+- 재작성 요청은 해당 단계의 담당자에게 전송됩니다
+- 평가기준/자기평가 단계: 피평가자 + 1차평가자에게 전송
+- 1차평가 단계: 1차평가자에게 전송
+- 2차평가 단계: 2차평가자들에게 전송
+
 **변경 가능한 단계:**
 - \`criteria\`: 평가기준 설정
 - \`self\`: 자기평가 입력
@@ -29,25 +37,30 @@ export function UpdateStepApproval() {
 - \`pending\`: 대기 (미확인)
 - \`approved\`: 확인 완료
 - \`revision_requested\`: 재작성 요청 (코멘트 필수)
+- \`revision_completed\`: 재작성 완료 (재작성 완료 응답 제출 시 자동 변경, 이 API로 직접 설정 불가)
 
-**재작성 요청 시:**
-- 상태가 \`revision_requested\`인 경우 \`revisionComment\`는 필수입니다.
-- 재작성 요청이 생성되며, 해당 단계의 담당자에게 전송됩니다.
-- 평가기준/자기평가: 피평가자 + 1차평가자
-- 1차평가: 1차평가자
-- 2차평가: 2차평가자들
-
-**사용 시나리오:**
-- 관리자가 각 단계별 진행 상황을 확인
-- 문제가 있는 경우 재작성 요청
-- 확인 완료 처리
+**주의사항:**
+- \`revision_requested\` 상태로 변경 시 \`revisionComment\`는 필수입니다
+- \`revision_completed\` 상태는 재작성 완료 응답 제출 시 자동으로 변경되므로 이 API로 직접 설정할 수 없습니다
 
 **테스트 케이스:**
-- 정상 확인: pending → approved
-- 재작성 요청: approved → revision_requested (코멘트 포함)
-- 대기 상태로 변경: approved → pending
-- 코멘트 누락 시 400 에러
-- 존재하지 않는 직원/평가기간: 404 에러`,
+- 평가기준 설정을 approved로 변경: 평가기준 설정 상태가 approved로 변경됨
+- 평가기준 설정을 revision_requested로 변경하고 재작성 요청 생성: 상태 변경 및 재작성 요청 생성 확인
+- 평가기준 설정을 pending으로 변경: 평가기준 설정 상태가 pending으로 변경됨
+- 자기평가를 approved로 변경: 자기평가 상태가 approved로 변경됨
+- 자기평가를 revision_requested로 변경: 자기평가 상태가 revision_requested로 변경됨
+- 1차 하향평가를 approved로 변경: 1차 하향평가 상태가 approved로 변경됨
+- 1차 하향평가를 revision_requested로 변경: 1차 하향평가 상태가 revision_requested로 변경됨
+- 2차 하향평가를 approved로 변경: 2차 하향평가 상태가 approved로 변경됨
+- 2차 하향평가를 revision_requested로 변경: 2차 하향평가 상태가 revision_requested로 변경됨
+- 잘못된 evaluationPeriodId UUID 형식: UUID 형식이 아닌 평가기간 ID 입력 시 400 에러
+- 잘못된 employeeId UUID 형식: UUID 형식이 아닌 직원 ID 입력 시 400 에러
+- 필수 필드 step 누락: step 필드 누락 시 400 에러
+- 필수 필드 status 누락: status 필드 누락 시 400 에러
+- 잘못된 step 값: 유효하지 않은 step 값 입력 시 400 에러
+- 잘못된 status 값: 유효하지 않은 status 값 입력 시 400 에러
+- revisionComment 누락: revision_requested 상태인데 revisionComment 누락 시 400 에러
+- 존재하지 않는 리소스: 존재하지 않는 평가기간-직원 조합으로 요청 시 404 에러`,
     }),
     ApiParam({
       name: 'evaluationPeriodId',
@@ -76,4 +89,5 @@ export function UpdateStepApproval() {
     }),
   );
 }
+
 

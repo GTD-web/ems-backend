@@ -166,6 +166,9 @@ export class EmployeeEvaluationStepApprovalService
       case StepApprovalStatusEnum.REVISION_REQUESTED:
         stepApproval.평가기준설정_재작성요청상태로_변경한다(updatedBy);
         break;
+      case StepApprovalStatusEnum.REVISION_COMPLETED:
+        stepApproval.평가기준설정_재작성완료상태로_변경한다(updatedBy);
+        break;
     }
   }
 
@@ -186,6 +189,9 @@ export class EmployeeEvaluationStepApprovalService
         break;
       case StepApprovalStatusEnum.REVISION_REQUESTED:
         stepApproval.자기평가_재작성요청상태로_변경한다(updatedBy);
+        break;
+      case StepApprovalStatusEnum.REVISION_COMPLETED:
+        stepApproval.자기평가_재작성완료상태로_변경한다(updatedBy);
         break;
     }
   }
@@ -208,6 +214,9 @@ export class EmployeeEvaluationStepApprovalService
       case StepApprovalStatusEnum.REVISION_REQUESTED:
         stepApproval.일차평가_재작성요청상태로_변경한다(updatedBy);
         break;
+      case StepApprovalStatusEnum.REVISION_COMPLETED:
+        stepApproval.일차평가_재작성완료상태로_변경한다(updatedBy);
+        break;
     }
   }
 
@@ -229,7 +238,11 @@ export class EmployeeEvaluationStepApprovalService
       case StepApprovalStatusEnum.REVISION_REQUESTED:
         stepApproval.이차평가_재작성요청상태로_변경한다(updatedBy);
         break;
+      case StepApprovalStatusEnum.REVISION_COMPLETED:
+        stepApproval.이차평가_재작성완료상태로_변경한다(updatedBy);
+        break;
     }
   }
 }
+
 

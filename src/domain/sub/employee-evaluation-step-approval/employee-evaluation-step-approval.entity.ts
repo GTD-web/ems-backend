@@ -181,6 +181,16 @@ export class EmployeeEvaluationStepApproval
     this.메타데이터를_업데이트한다(updatedBy);
   }
 
+  /**
+   * 평가기준 설정을 재작성 완료 상태로 변경한다
+   */
+  평가기준설정_재작성완료상태로_변경한다(updatedBy: string): void {
+    this.criteriaSettingStatus = StepApprovalStatusEnum.REVISION_COMPLETED;
+    this.criteriaSettingApprovedBy = null;
+    this.criteriaSettingApprovedAt = null;
+    this.메타데이터를_업데이트한다(updatedBy);
+  }
+
   // ==================== 자기평가 메서드 ====================
 
   /**
@@ -208,6 +218,16 @@ export class EmployeeEvaluationStepApproval
    */
   자기평가_재작성요청상태로_변경한다(updatedBy: string): void {
     this.selfEvaluationStatus = StepApprovalStatusEnum.REVISION_REQUESTED;
+    this.selfEvaluationApprovedBy = null;
+    this.selfEvaluationApprovedAt = null;
+    this.메타데이터를_업데이트한다(updatedBy);
+  }
+
+  /**
+   * 자기평가를 재작성 완료 상태로 변경한다
+   */
+  자기평가_재작성완료상태로_변경한다(updatedBy: string): void {
+    this.selfEvaluationStatus = StepApprovalStatusEnum.REVISION_COMPLETED;
     this.selfEvaluationApprovedBy = null;
     this.selfEvaluationApprovedAt = null;
     this.메타데이터를_업데이트한다(updatedBy);
@@ -245,6 +265,16 @@ export class EmployeeEvaluationStepApproval
     this.메타데이터를_업데이트한다(updatedBy);
   }
 
+  /**
+   * 1차 하향평가를 재작성 완료 상태로 변경한다
+   */
+  일차평가_재작성완료상태로_변경한다(updatedBy: string): void {
+    this.primaryEvaluationStatus = StepApprovalStatusEnum.REVISION_COMPLETED;
+    this.primaryEvaluationApprovedBy = null;
+    this.primaryEvaluationApprovedAt = null;
+    this.메타데이터를_업데이트한다(updatedBy);
+  }
+
   // ==================== 2차 하향평가 메서드 ====================
 
   /**
@@ -272,6 +302,16 @@ export class EmployeeEvaluationStepApproval
    */
   이차평가_재작성요청상태로_변경한다(updatedBy: string): void {
     this.secondaryEvaluationStatus = StepApprovalStatusEnum.REVISION_REQUESTED;
+    this.secondaryEvaluationApprovedBy = null;
+    this.secondaryEvaluationApprovedAt = null;
+    this.메타데이터를_업데이트한다(updatedBy);
+  }
+
+  /**
+   * 2차 하향평가를 재작성 완료 상태로 변경한다
+   */
+  이차평가_재작성완료상태로_변경한다(updatedBy: string): void {
+    this.secondaryEvaluationStatus = StepApprovalStatusEnum.REVISION_COMPLETED;
     this.secondaryEvaluationApprovedBy = null;
     this.secondaryEvaluationApprovedAt = null;
     this.메타데이터를_업데이트한다(updatedBy);

@@ -2,7 +2,10 @@ import { Controller, Body, Param, ParseUUIDPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StepApprovalContextService } from '@context/step-approval-context';
 import { UpdateStepApprovalDto } from './dto/update-step-approval.dto';
+import { StepApprovalEnumsResponseDto } from './dto/step-approval-enums.dto';
 import { UpdateStepApproval } from './decorators/step-approval-api.decorators';
+import { GetStepApprovalEnums } from './decorators/step-approval-enums-api.decorators';
+import { StepTypeEnum, StepApprovalStatusEnum } from './dto/update-step-approval.dto';
 import { CurrentUser } from '@interface/decorators/current-user.decorator';
 
 /**
@@ -16,6 +19,17 @@ export class StepApprovalController {
   constructor(
     private readonly stepApprovalContextService: StepApprovalContextService,
   ) {}
+
+  /**
+   * 단계 승인 Enum 목록을 조회한다
+   */
+  @GetStepApprovalEnums()
+  async getStepApprovalEnums(): Promise<StepApprovalEnumsResponseDto> {
+    return {
+      steps: Object.values(StepTypeEnum),
+      statuses: Object.values(StepApprovalStatusEnum),
+    };
+  }
 
   /**
    * 단계 승인 상태를 변경한다
@@ -37,3 +51,4 @@ export class StepApprovalController {
     });
   }
 }
+

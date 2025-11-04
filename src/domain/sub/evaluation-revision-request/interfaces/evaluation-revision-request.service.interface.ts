@@ -64,3 +64,4 @@ export interface IEvaluationRevisionRequestService {
   읽지않은_요청수를_조회한다(recipientId: string): Promise<number>;
 }
 
+

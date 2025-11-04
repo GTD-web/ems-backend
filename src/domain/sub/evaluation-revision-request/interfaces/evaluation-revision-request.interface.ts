@@ -27,3 +27,4 @@ export interface IEvaluationRevisionRequest {
   DTO로_변환한다(): EvaluationRevisionRequestDto;
 }
 
+
