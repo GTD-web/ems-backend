@@ -187,19 +187,25 @@ export class Phase4EvaluationCriteriaGenerator {
     // 부서별 직원 그룹화 (각 부서의 첫 번째 직원이 부서장 역할)
     const departmentMap = await this.부서별_직원_그룹화(employeeIds);
 
-    // WBS 할당 조회 (wbsItemId를 매핑에 포함하기 위함)
+    // WBS 할당 조회 (평가기간별 필터링, wbsItemId를 매핑에 포함하기 위함)
     const wbsAssignments = await this.wbsAssignmentRepository.find({
-      where: { deletedAt: null as any },
+      where: {
+        periodId: evaluationPeriodId,
+        deletedAt: null as any,
+      },
     });
 
     this.logger.log(
       `WBS 할당 ${wbsAssignments.length}개에 대해 평가라인 매핑 생성`,
     );
 
-    // WBS 할당별로 평가라인 매핑 생성
+    // 1. 직원별 1차 평가자 매핑 생성 (직원별 고정 담당자, wbsItemId는 null)
+    const processedEmployees = new Set<string>();
     for (const assignment of wbsAssignments) {
       const employeeId = assignment.employeeId;
-      const wbsItemId = assignment.wbsItemId;
+
+      // 이미 처리된 직원은 스킵 (1차 평가자는 직원별 고정이므로 한 번만 생성)
+      if (processedEmployees.has(employeeId)) continue;
 
       // Primary 평가자 결정
       const primaryEvaluator = await this.일차평가자_선택(
@@ -214,10 +220,27 @@ export class Phase4EvaluationCriteriaGenerator {
       primaryMapping.evaluationPeriodId = evaluationPeriodId;
       primaryMapping.employeeId = employeeId;
       primaryMapping.evaluatorId = primaryEvaluator;
-      primaryMapping.wbsItemId = wbsItemId; // wbsItemId 추가
+      primaryMapping.wbsItemId = undefined; // 1차 평가자는 직원별 고정 담당자이므로 WBS와 무관
       primaryMapping.evaluationLineId = primaryLine.id;
       primaryMapping.createdBy = systemAdminId;
       mappings.push(primaryMapping);
+
+      processedEmployees.add(employeeId);
+    }
+
+    // 2. WBS 할당별 2차 평가자 매핑 생성 (WBS별 평가자, wbsItemId 존재)
+    for (const assignment of wbsAssignments) {
+      const employeeId = assignment.employeeId;
+      const wbsItemId = assignment.wbsItemId;
+
+      // Primary 평가자 결정 (2차 평가자 선택 시 제외하기 위해)
+      const primaryEvaluator = await this.일차평가자_선택(
+        employeeId,
+        employeeIds,
+        departmentMap,
+        currentUserId,
+      );
+      if (!primaryEvaluator) continue;
 
       // Secondary 평가자 매핑 (확률적)
       const mappingType = ProbabilityUtil.selectByProbability(
@@ -243,7 +266,7 @@ export class Phase4EvaluationCriteriaGenerator {
           secondaryMapping.evaluationPeriodId = evaluationPeriodId;
           secondaryMapping.employeeId = employeeId;
           secondaryMapping.evaluatorId = secondaryEvaluator;
-          secondaryMapping.wbsItemId = wbsItemId; // wbsItemId 추가
+          secondaryMapping.wbsItemId = wbsItemId; // 2차 평가자는 WBS별 평가자이므로 wbsItemId 필요
           secondaryMapping.evaluationLineId = secondaryLine.id;
           secondaryMapping.createdBy = systemAdminId;
           mappings.push(secondaryMapping);
