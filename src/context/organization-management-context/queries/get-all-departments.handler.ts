@@ -1,6 +1,6 @@
 import { IQuery, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
-import { DepartmentRepository } from '../../../domain/common/department/department.repository';
+import { DepartmentService } from '../../../domain/common/department/department.service';
 import type { DepartmentDto } from '../../../domain/common/department/department.types';
 
 /**
@@ -16,10 +16,9 @@ export class GetAllDepartmentsQuery implements IQuery {}
 export class GetAllDepartmentsQueryHandler
   implements IQueryHandler<GetAllDepartmentsQuery>
 {
-  constructor(private readonly departmentRepository: DepartmentRepository) {}
+  constructor(private readonly departmentService: DepartmentService) {}
 
   async execute(query: GetAllDepartmentsQuery): Promise<DepartmentDto[]> {
-    const departments = await this.departmentRepository.findAll();
-    return departments.map((dept) => dept.DTO로_변환한다());
+    return this.departmentService.전체_조회한다();
   }
 }

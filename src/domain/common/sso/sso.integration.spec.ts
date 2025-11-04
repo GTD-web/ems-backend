@@ -87,7 +87,7 @@ describe('SSO 통합 테스트 (실제 서버)', () => {
         expect(Array.isArray(employees)).toBe(true);
 
         if (employees.length > 0) {
-          const firstEmployee = employees[0];
+          const firstEmployee = employees[1];
           console.log('   첫 번째 직원 정보:');
           console.log(`   - 이름: ${firstEmployee.name}`);
           console.log(`   - 사번: ${firstEmployee.employeeNumber}`);

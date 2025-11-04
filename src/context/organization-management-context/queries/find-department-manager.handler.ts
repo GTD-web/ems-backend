@@ -1,7 +1,7 @@
 import { IQuery, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
-import { EmployeeRepository } from '../../../domain/common/employee/employee.repository';
-import { DepartmentRepository } from '../../../domain/common/department/department.repository';
+import { EmployeeService } from '../../../domain/common/employee/employee.service';
+import { DepartmentService } from '../../../domain/common/department/department.service';
 
 /**
  * 부서장 조회 쿼리
@@ -26,8 +26,8 @@ export class FindDepartmentManagerHandler implements IQueryHandler<FindDepartmen
   private readonly logger = new Logger(FindDepartmentManagerHandler.name);
 
   constructor(
-    private readonly employeeRepository: EmployeeRepository,
-    private readonly departmentRepository: DepartmentRepository,
+    private readonly employeeService: EmployeeService,
+    private readonly departmentService: DepartmentService,
   ) {}
 
   async execute(query: FindDepartmentManagerQuery): Promise<string | null> {
@@ -37,7 +37,7 @@ export class FindDepartmentManagerHandler implements IQueryHandler<FindDepartmen
 
     try {
       // 1. 직원 정보 조회
-      const employee = await this.employeeRepository.findById(employeeId);
+      const employee = await this.employeeService.findById(employeeId);
       if (!employee) {
         this.logger.warn(`직원을 찾을 수 없습니다: ${employeeId}`);
         return null;
@@ -51,7 +51,7 @@ export class FindDepartmentManagerHandler implements IQueryHandler<FindDepartmen
         return null;
       }
 
-      const department = await this.departmentRepository.findById(employee.departmentId);
+      const department = await this.departmentService.findById(employee.departmentId);
       if (!department) {
         this.logger.warn(`부서를 찾을 수 없습니다: ${employee.departmentId}`);
         return null;
@@ -99,7 +99,7 @@ export class FindDepartmentManagerHandler implements IQueryHandler<FindDepartmen
       
       // 상위 부서가 있으면 상위 부서 확인
       if (department.parentDepartmentId) {
-        const parentDepartment = await this.departmentRepository.findById(department.parentDepartmentId);
+        const parentDepartment = await this.departmentService.findByExternalId(department.parentDepartmentId);
         if (parentDepartment) {
           return await this.부서장을_찾는다(employeeId, parentDepartment, level + 1);
         }
@@ -114,7 +114,7 @@ export class FindDepartmentManagerHandler implements IQueryHandler<FindDepartmen
       
       // 상위 부서가 있으면 상위 부서의 부서장 확인
       if (department.parentDepartmentId) {
-        const parentDepartment = await this.departmentRepository.findById(department.parentDepartmentId);
+        const parentDepartment = await this.departmentService.findByExternalId(department.parentDepartmentId);
         if (parentDepartment) {
           return await this.부서장을_찾는다(employeeId, parentDepartment, level + 1);
         }
@@ -124,13 +124,13 @@ export class FindDepartmentManagerHandler implements IQueryHandler<FindDepartmen
     }
 
     // managerId가 실제 직원으로 존재하는지 확인
-    const manager = await this.employeeRepository.findById(department.managerId);
+    const manager = await this.employeeService.findById(department.managerId);
     if (!manager) {
       this.logger.warn(`부서장이 Employee 테이블에 존재하지 않습니다 - managerId: ${department.managerId}, 부서: ${department.id}`);
       
       // 상위 부서가 있으면 상위 부서 확인
       if (department.parentDepartmentId) {
-        const parentDepartment = await this.departmentRepository.findById(department.parentDepartmentId);
+        const parentDepartment = await this.departmentService.findByExternalId(department.parentDepartmentId);
         if (parentDepartment) {
           return await this.부서장을_찾는다(employeeId, parentDepartment, level + 1);
         }

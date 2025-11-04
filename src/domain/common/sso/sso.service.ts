@@ -17,6 +17,8 @@ import {
   GetDepartmentHierarchyParams,
   EmployeeInfo,
   DepartmentHierarchy,
+  DepartmentInfo,
+  DepartmentNode,
   SubscribeFCMParams,
   SubscribeFCMResult,
   UnsubscribeFCMParams,
@@ -159,7 +161,7 @@ export class SSOService {
    */
   async 여러직원정보를조회한다(
     params: GetEmployeesParams,
-  ): Promise<EmployeeInfo[]> {
+  ): Promise<any[]> {
     return this.ssoClient.organization.여러직원정보를조회한다(params);
   }
 
@@ -224,7 +226,7 @@ export class SSOService {
    * 이메일로 직원 정보를 조회한다
    * 전체 직원 목록을 가져온 후 이메일로 필터링
    */
-  async 이메일로직원을조회한다(email: string): Promise<EmployeeInfo | null> {
+  async 이메일로직원을조회한다(email: string): Promise<any | null> {
     const employees = await this.여러직원정보를조회한다({
       withDetail: true,
     });
@@ -236,11 +238,115 @@ export class SSOService {
    */
   async 여러사번으로직원을조회한다(
     employeeNumbers: string[],
-  ): Promise<EmployeeInfo[]> {
+  ): Promise<any[]> {
     return this.여러직원정보를조회한다({
       identifiers: employeeNumbers,
       withDetail: true,
       includeTerminated: false,
     });
+  }
+
+  /**
+   * SSO에서 모든 부서 정보를 평면 목록으로 조회한다
+   * 부서 계층구조를 재귀적으로 순회하여 평면 목록으로 변환
+   */
+  async 모든부서정보를조회한다(
+    params?: GetDepartmentHierarchyParams,
+  ): Promise<DepartmentInfo[]> {
+    const hierarchy = await this.부서계층구조를조회한다({
+      ...params,
+      includeEmptyDepartments: true,
+      withEmployeeDetail: false,
+    });
+
+    const departments: DepartmentInfo[] = [];
+
+    // 재귀적으로 부서 노드를 평면 목록으로 변환
+    const flattenDepartments = (nodes: DepartmentNode[]): void => {
+      for (const node of nodes) {
+        departments.push({
+          id: node.id,
+          departmentCode: node.departmentCode,
+          departmentName: node.departmentName,
+          parentDepartmentId: node.parentDepartmentId,
+        });
+
+        if (node.children && node.children.length > 0) {
+          flattenDepartments(node.children);
+        }
+      }
+    };
+
+    flattenDepartments(hierarchy.departments);
+
+    this.logger.log(
+      `SSO에서 ${departments.length}개의 부서 데이터를 조회했습니다.`,
+    );
+
+    return departments;
+  }
+
+  /**
+   * SSO에서 모든 직원 정보를 평면 목록으로 조회한다
+   * 부서 계층구조를 재귀적으로 순회하여 모든 부서의 직원 정보를 평면 목록으로 변환
+   */
+  async 모든직원정보를조회한다(
+    params?: GetDepartmentHierarchyParams,
+  ): Promise<any[]> {
+    const hierarchy = await this.부서계층구조를조회한다({
+      ...params,
+      includeEmptyDepartments: true,
+      withEmployeeDetail: true, // 직원 상세 정보 포함
+    });
+
+    this.logger.log(
+      `부서 계층구조 조회 완료: 총 부서 ${hierarchy.totalDepartments}개, 총 직원 ${hierarchy.totalEmployees}개`,
+    );
+
+    const employees: any[] = [];
+
+    // 재귀적으로 부서 노드를 순회하여 직원 정보를 평면 목록으로 변환
+    const flattenEmployees = (
+      nodes: DepartmentNode[],
+      depth: number = 0,
+    ): void => {
+      for (const node of nodes) {
+        const indent = '  '.repeat(depth);
+        this.logger.debug(
+          `${indent}부서: ${node.departmentName} (${node.departmentCode}) - 직원 수: ${node.employees?.length || 0}`,
+        );
+
+        // 현재 부서의 직원들을 추가
+        if (node.employees && node.employees.length > 0) {
+          this.logger.debug(
+            `${indent}  → ${node.employees.length}명의 직원 추가: ${node.employees.map((e) => e.name).join(', ')}`,
+          );
+          employees.push(...node.employees);
+        }
+
+        // 하위 부서 재귀 호출
+        if (node.children && node.children.length > 0) {
+          this.logger.debug(
+            `${indent}  하위 부서 ${node.children.length}개 재귀 호출`,
+          );
+          flattenEmployees(node.children, depth + 1);
+        }
+      }
+    };
+
+    flattenEmployees(hierarchy.departments);
+
+    this.logger.log(
+      `SSO에서 ${employees.length}개의 직원 데이터를 조회했습니다. (부서 계층구조 총 직원 수: ${hierarchy.totalEmployees})`,
+    );
+
+    // 총 직원 수와 실제 수집된 직원 수가 다른 경우 경고
+    if (hierarchy.totalEmployees > 0 && employees.length !== hierarchy.totalEmployees) {
+      this.logger.warn(
+        `경고: 부서 계층구조의 총 직원 수(${hierarchy.totalEmployees})와 실제 수집된 직원 수(${employees.length})가 다릅니다.`,
+      );
+    }
+
+    return employees;
   }
 }

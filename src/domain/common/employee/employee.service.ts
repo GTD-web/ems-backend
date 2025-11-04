@@ -6,6 +6,9 @@ import {
   EmployeeDto,
   EmployeeFilter,
   EmployeeListOptions,
+  EmployeeStatistics,
+  EmployeeStatus,
+  EmployeeGender,
 } from './employee.types';
 
 /**
@@ -469,5 +472,295 @@ export class EmployeeService {
 
     employee.roles = roles;
     return this.employeeRepository.save(employee);
+  }
+
+  // ========== 엔티티 직접 반환 메서드 (컨텍스트에서 사용) ==========
+
+  /**
+   * 외부 ID로 직원 엔티티를 조회한다
+   * @param externalId 외부 시스템 ID
+   * @returns 직원 엔티티 (없으면 null)
+   */
+  async findByExternalId(externalId: string): Promise<Employee | null> {
+    return this.employeeRepository.findOne({
+      where: { externalId },
+    });
+  }
+
+  /**
+   * 모든 직원 엔티티를 조회한다
+   * @param includeExcluded 제외된 직원도 포함할지 여부 (기본값: false)
+   * @returns 직원 엔티티 목록
+   */
+  async findAll(includeExcluded: boolean = false): Promise<Employee[]> {
+    const where: any = {};
+    if (!includeExcluded) {
+      where.isExcludedFromList = false;
+    }
+    return this.employeeRepository.find({
+      where,
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * 필터 조건으로 직원 엔티티를 조회한다
+   * @param filter 필터 조건
+   * @returns 직원 엔티티 목록
+   */
+  async findByFilter(filter: EmployeeFilter): Promise<Employee[]> {
+    const queryBuilder =
+      this.employeeRepository.createQueryBuilder('employee');
+
+    if (filter.departmentId) {
+      queryBuilder.andWhere('employee.departmentId = :departmentId', {
+        departmentId: filter.departmentId,
+      });
+    }
+
+    if (filter.positionId) {
+      queryBuilder.andWhere('employee.positionId = :positionId', {
+        positionId: filter.positionId,
+      });
+    }
+
+    if (filter.rankId) {
+      queryBuilder.andWhere('employee.rankId = :rankId', {
+        rankId: filter.rankId,
+      });
+    }
+
+    if (filter.status) {
+      queryBuilder.andWhere('employee.status = :status', {
+        status: filter.status,
+      });
+    }
+
+    if (filter.gender) {
+      queryBuilder.andWhere('employee.gender = :gender', {
+        gender: filter.gender,
+      });
+    }
+
+    if (filter.managerId) {
+      queryBuilder.andWhere('employee.managerId = :managerId', {
+        managerId: filter.managerId,
+      });
+    }
+
+    if (filter.includeExcluded !== true) {
+      queryBuilder.andWhere('employee.isExcludedFromList = :isExcluded', {
+        isExcluded: false,
+      });
+    }
+
+    return queryBuilder.orderBy('employee.name', 'ASC').getMany();
+  }
+
+  /**
+   * 직원 엔티티를 저장한다
+   * @param employee 직원 엔티티
+   * @returns 저장된 직원 엔티티
+   */
+  async save(employee: Employee): Promise<Employee> {
+    return this.employeeRepository.save(employee);
+  }
+
+  /**
+   * 여러 직원 엔티티를 일괄 저장한다
+   * @param employees 직원 엔티티 배열
+   * @returns 저장된 직원 엔티티 배열
+   */
+  async saveMany(employees: Employee[]): Promise<Employee[]> {
+    return this.employeeRepository.save(employees);
+  }
+
+  /**
+   * 이메일로 직원 엔티티를 조회한다
+   * @param email 이메일
+   * @returns 직원 엔티티 (없으면 null)
+   */
+  async findByEmail(email: string): Promise<Employee | null> {
+    return this.employeeRepository.findOne({
+      where: { email },
+    });
+  }
+
+  /**
+   * 부서별 직원 엔티티를 조회한다
+   * @param departmentId 부서 ID
+   * @returns 직원 엔티티 목록
+   */
+  async findByDepartmentId(departmentId: string): Promise<Employee[]> {
+    return this.employeeRepository.find({
+      where: { departmentId },
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * 상태별 직원 엔티티를 조회한다
+   * @param status 직원 상태
+   * @returns 직원 엔티티 목록
+   */
+  async findByStatus(status: EmployeeStatus): Promise<Employee[]> {
+    return this.employeeRepository.find({
+      where: { status },
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * 성별로 직원 엔티티를 조회한다
+   * @param gender 성별
+   * @returns 직원 엔티티 목록
+   */
+  async findByGender(gender: EmployeeGender): Promise<Employee[]> {
+    return this.employeeRepository.find({
+      where: { gender },
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * 직급별 직원 엔티티를 조회한다
+   * @param positionId 직급 ID
+   * @returns 직원 엔티티 목록
+   */
+  async findByPositionId(positionId: string): Promise<Employee[]> {
+    return this.employeeRepository.find({
+      where: { positionId },
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * 직책별 직원 엔티티를 조회한다
+   * @param rankId 직책 ID
+   * @returns 직원 엔티티 목록
+   */
+  async findByRankId(rankId: string): Promise<Employee[]> {
+    return this.employeeRepository.find({
+      where: { rankId },
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * 활성 직원 엔티티 목록을 조회한다
+   * @returns 직원 엔티티 목록
+   */
+  async findActiveEmployees(): Promise<Employee[]> {
+    return this.employeeRepository.find({
+      where: { status: '재직중' },
+      order: { name: 'ASC' },
+    });
+  }
+
+  /**
+   * 직원명으로 검색한다 (부분 일치)
+   * @param searchTerm 검색어
+   * @returns 직원 엔티티 목록
+   */
+  async searchByName(searchTerm: string): Promise<Employee[]> {
+    return this.employeeRepository
+      .createQueryBuilder('employee')
+      .where('employee.name ILIKE :searchTerm', {
+        searchTerm: `%${searchTerm}%`,
+      })
+      .orderBy('employee.name', 'ASC')
+      .getMany();
+  }
+
+  /**
+   * 직원 통계를 조회한다
+   * @returns 직원 통계
+   */
+  async getEmployeeStats(): Promise<EmployeeStatistics> {
+    const [
+      totalEmployees,
+      activeEmployees,
+      onLeaveEmployees,
+      resignedEmployees,
+    ] = await Promise.all([
+      this.employeeRepository.count(),
+      this.employeeRepository.count({ where: { status: '재직중' } }),
+      this.employeeRepository.count({ where: { status: '휴직중' } }),
+      this.employeeRepository.count({ where: { status: '퇴사' } }),
+    ]);
+
+    const departmentStats = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .select('employee.departmentId', 'departmentId')
+      .addSelect('COUNT(*)', 'count')
+      .where('employee.departmentId IS NOT NULL')
+      .groupBy('employee.departmentId')
+      .getRawMany();
+
+    const positionStats = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .select('employee.positionId', 'positionId')
+      .addSelect('COUNT(*)', 'count')
+      .where('employee.positionId IS NOT NULL')
+      .groupBy('employee.positionId')
+      .getRawMany();
+
+    const rankStats = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .select('employee.rankId', 'rankId')
+      .addSelect('COUNT(*)', 'count')
+      .where('employee.rankId IS NOT NULL')
+      .groupBy('employee.rankId')
+      .getRawMany();
+
+    const genderStats = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .select('employee.gender', 'gender')
+      .addSelect('COUNT(*)', 'count')
+      .where('employee.gender IS NOT NULL')
+      .groupBy('employee.gender')
+      .getRawMany();
+
+    const statusStats = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .select('employee.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('employee.status')
+      .getRawMany();
+
+    const lastSyncResult = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .select('MAX(employee.lastSyncAt)', 'lastSyncAt')
+      .getRawOne();
+
+    return {
+      totalEmployees,
+      activeEmployees,
+      onLeaveEmployees,
+      resignedEmployees,
+      employeesByDepartment: departmentStats.reduce((acc, stat) => {
+        acc[stat.departmentId] = parseInt(stat.count);
+        return acc;
+      }, {}),
+      employeesByPosition: positionStats.reduce((acc, stat) => {
+        acc[stat.positionId] = parseInt(stat.count);
+        return acc;
+      }, {}),
+      employeesByRank: rankStats.reduce((acc, stat) => {
+        acc[stat.rankId] = parseInt(stat.count);
+        return acc;
+      }, {}),
+      employeesByGender: genderStats.reduce((acc, stat) => {
+        acc[stat.gender] = parseInt(stat.count);
+        return acc;
+      }, {}),
+      employeesByStatus: statusStats.reduce((acc, stat) => {
+        acc[stat.status] = parseInt(stat.count);
+        return acc;
+      }, {}),
+      lastSyncAt: lastSyncResult.lastSyncAt
+        ? new Date(lastSyncResult.lastSyncAt)
+        : undefined,
+    };
   }
 }

@@ -1,7 +1,6 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { ForbiddenException, UnauthorizedException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
 import { SSOService } from './sso.service';
-import { ISSOClient } from './interfaces';
 
 describe('SSOService', () => {
   let service: SSOService;

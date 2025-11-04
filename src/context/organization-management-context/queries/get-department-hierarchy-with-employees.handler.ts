@@ -1,7 +1,7 @@
 import { IQuery, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
-import { DepartmentRepository } from '../../../domain/common/department/department.repository';
-import { EmployeeRepository } from '../../../domain/common/employee/employee.repository';
+import { DepartmentService } from '../../../domain/common/department/department.service';
+import { EmployeeService } from '../../../domain/common/employee/employee.service';
 import type {
   DepartmentHierarchyWithEmployeesDto,
   EmployeeSummaryDto,
@@ -21,15 +21,15 @@ export class GetDepartmentHierarchyWithEmployeesQueryHandler
   implements IQueryHandler<GetDepartmentHierarchyWithEmployeesQuery>
 {
   constructor(
-    private readonly departmentRepository: DepartmentRepository,
-    private readonly employeeRepository: EmployeeRepository,
+    private readonly departmentService: DepartmentService,
+    private readonly employeeService: EmployeeService,
   ) {}
 
   async execute(
     query: GetDepartmentHierarchyWithEmployeesQuery,
   ): Promise<DepartmentHierarchyWithEmployeesDto[]> {
-    const allDepartments = await this.departmentRepository.findAll();
-    const allEmployees = await this.employeeRepository.findAll();
+    const allDepartments = await this.departmentService.findAll();
+    const allEmployees = await this.employeeService.findAll();
 
     const kimEmployee = allEmployees.find((emp) => emp.name === '김종식');
     console.log('🚀 김종식 직원:', kimEmployee);

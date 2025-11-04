@@ -1,6 +1,6 @@
 import { IQuery, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
-import { DepartmentRepository } from '../../../domain/common/department/department.repository';
+import { DepartmentService } from '../../../domain/common/department/department.service';
 import type { DepartmentDto } from '../../../domain/common/department/department.types';
 
 /**
@@ -18,12 +18,15 @@ export class GetSubDepartmentsQuery implements IQuery {
 export class GetSubDepartmentsQueryHandler
   implements IQueryHandler<GetSubDepartmentsQuery>
 {
-  constructor(private readonly departmentRepository: DepartmentRepository) {}
+  constructor(private readonly departmentService: DepartmentService) {}
 
   async execute(query: GetSubDepartmentsQuery): Promise<DepartmentDto[]> {
     const { departmentId } = query;
-    const subDepartments =
-      await this.departmentRepository.findByParentDepartmentId(departmentId);
-    return subDepartments.map((dept) => dept.DTO로_변환한다());
+    const department = await this.departmentService.findById(departmentId);
+    if (!department) {
+      return [];
+    }
+    // parentDepartmentId는 외부 시스템 ID이므로 externalId로 매칭
+    return this.departmentService.하위_부서_조회한다(department.externalId);
   }
 }

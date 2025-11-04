@@ -1,6 +1,6 @@
 import { IQuery, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
-import { DepartmentRepository } from '../../../domain/common/department/department.repository';
+import { DepartmentService } from '../../../domain/common/department/department.service';
 import type { DepartmentHierarchyDto } from '../interfaces/organization-management-context.interface';
 
 /**
@@ -16,12 +16,12 @@ export class GetDepartmentHierarchyQuery implements IQuery {}
 export class GetDepartmentHierarchyQueryHandler
   implements IQueryHandler<GetDepartmentHierarchyQuery>
 {
-  constructor(private readonly departmentRepository: DepartmentRepository) {}
+  constructor(private readonly departmentService: DepartmentService) {}
 
   async execute(
     query: GetDepartmentHierarchyQuery,
   ): Promise<DepartmentHierarchyDto[]> {
-    const allDepartments = await this.departmentRepository.findAll();
+    const allDepartments = await this.departmentService.findAll();
 
     // 부서 계층 구조 구성
     // externalId를 키로 사용하여 매핑 (parentDepartmentId가 외부 시스템 ID이기 때문)

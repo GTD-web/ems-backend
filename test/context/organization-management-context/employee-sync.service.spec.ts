@@ -1,0 +1,753 @@
+import { Test, TestingModule } from '@nestjs/testing';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource, Repository, Not, IsNull } from 'typeorm';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
+import { DatabaseModule } from '@libs/database/database.module';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
+import { OrganizationManagementContextModule } from '@context/organization-management-context/organization-management-context.module';
+import { EmployeeModule } from '@domain/common/employee/employee.module';
+import { SSOModule } from '@domain/common/sso/sso.module';
+import { Employee } from '@domain/common/employee/employee.entity';
+import { EmployeeService } from '@domain/common/employee/employee.service';
+import { SSOService } from '@domain/common/sso/sso.service';
+import type { EmployeeInfo } from '@domain/common/sso/interfaces';
+import type { EmployeeSyncResult } from '@domain/common/employee/employee.types';
+
+/**
+ * EmployeeSyncService 통합 테스트
+ *
+ * SSO 서비스를 통한 직원 데이터 동기화 기능을 검증합니다.
+ */
+describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
+  let service: EmployeeSyncService;
+  let employeeService: EmployeeService;
+  let ssoService: SSOService;
+  let dataSource: DataSource;
+  let module: TestingModule;
+
+  // Repository 참조
+  let employeeRepository: Repository<Employee>;
+
+  beforeAll(async () => {
+    module = await Test.createTestingModule({
+      imports: [
+        DatabaseModule,
+        ConfigModule.forRoot({
+          isGlobal: true,
+        }),
+        ScheduleModule.forRoot(),
+        TypeOrmModule.forFeature([Employee]),
+        EmployeeModule,
+        SSOModule,
+        OrganizationManagementContextModule,
+      ],
+    }).compile();
+
+    service = module.get<EmployeeSyncService>(EmployeeSyncService);
+    employeeService = module.get<EmployeeService>(EmployeeService);
+    ssoService = module.get<SSOService>(SSOService);
+    dataSource = module.get<DataSource>(DataSource);
+
+    // Repository 초기화
+    employeeRepository = dataSource.getRepository(Employee);
+
+    // 데이터베이스 스키마 동기화
+    await dataSource.synchronize(true);
+
+    // SSO 클라이언트 초기화
+    try {
+      await ssoService.부서계층구조를조회한다({});
+      console.log('✅ SSO 서비스 연결 확인 완료');
+    } catch (error) {
+      console.warn('⚠️ SSO 서비스 연결 실패 (테스트는 계속 진행):', error.message);
+    }
+  });
+
+  afterAll(async () => {
+    await dataSource.destroy();
+    await module.close();
+  });
+
+  beforeEach(async () => {
+    // 각 테스트 전에 직원 데이터 정리
+    try {
+      const employees = await employeeRepository.find();
+      await employeeRepository.remove(employees);
+    } catch (error) {
+      // 초기 테스트에서는 무시
+    }
+  });
+
+  describe('SSO 직원 정보 조회', () => {
+    it('SSO에서 부서 계층 구조를 통해 직원 정보를 조회할 수 있어야 한다', async () => {
+      // Given & When
+      const employees = await service.fetchExternalEmployees();
+
+      // Then
+      expect(employees).toBeDefined();
+      expect(Array.isArray(employees)).toBe(true);
+      expect(employees.length).toBeGreaterThan(0);
+
+      // 직원 정보 구조 검증
+      if (employees.length > 0) {
+        const firstEmployee = employees[0];
+        expect(firstEmployee).toHaveProperty('id');
+        expect(firstEmployee).toHaveProperty('employeeNumber');
+        expect(firstEmployee).toHaveProperty('name');
+        expect(firstEmployee).toHaveProperty('email');
+        expect(firstEmployee.id).toBeTruthy();
+        expect(firstEmployee.employeeNumber).toBeTruthy();
+        expect(firstEmployee.name).toBeTruthy();
+        expect(firstEmployee.email).toBeTruthy();
+      }
+    }, 60000); // SSO API 호출 시간 고려
+
+    it('SSO 서비스에서 모든 직원 정보를 평면 목록으로 조회할 수 있어야 한다', async () => {
+      // Given & When
+      const employees = await ssoService.모든직원정보를조회한다({
+        includeEmptyDepartments: true,
+      });
+
+      // Then
+      expect(employees).toBeDefined();
+      expect(Array.isArray(employees)).toBe(true);
+      expect(employees.length).toBeGreaterThan(0);
+
+      // 평면 목록인지 확인 (모든 직원이 같은 레벨에 있는지)
+      employees.forEach((emp) => {
+        expect(emp).toHaveProperty('id');
+        expect(emp).toHaveProperty('employeeNumber');
+        expect(emp).toHaveProperty('name');
+        expect(emp).toHaveProperty('email');
+      });
+    }, 60000);
+  });
+
+  describe('직원 데이터 동기화', () => {
+    it('SSO에서 직원 데이터를 동기화할 수 있어야 한다', async () => {
+      // Given
+      const statsBefore = await employeeService.getEmployeeStats();
+      expect(statsBefore.totalEmployees).toBe(0);
+
+      // When
+      const result: EmployeeSyncResult = await service.syncEmployees(true);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.totalProcessed).toBeGreaterThan(0);
+      expect(result.created + result.updated).toBeGreaterThan(0);
+
+      // 동기화 후 데이터 확인
+      const statsAfter = await employeeService.getEmployeeStats();
+      expect(statsAfter.totalEmployees).toBeGreaterThan(0);
+      expect(statsAfter.totalEmployees).toBe(result.created + result.updated);
+    }, 120000); // SSO API 호출 및 동기화 시간 고려
+
+    it('이미 존재하는 직원은 업데이트되어야 한다', async () => {
+      // Given
+      // 1. 첫 번째 동기화
+      const firstResult = await service.syncEmployees(true);
+      expect(firstResult.success).toBe(true);
+      expect(firstResult.created).toBeGreaterThan(0);
+
+      const employeesBefore = await employeeService.findAll();
+      expect(employeesBefore.length).toBeGreaterThan(0);
+
+      // 첫 번째 직원 정보 저장
+      const firstEmployee = employeesBefore[0];
+      const originalName = firstEmployee.name;
+
+      // 2. 두 번째 동기화 (forceSync)
+      const secondResult = await service.syncEmployees(true);
+
+      // Then
+      expect(secondResult.success).toBe(true);
+      expect(secondResult.updated).toBeGreaterThanOrEqual(0);
+
+      // 직원 데이터가 유지되는지 확인
+      const employeesAfter = await employeeService.findAll();
+      expect(employeesAfter.length).toBe(employeesBefore.length);
+    }, 120000);
+
+    it('동기화가 비활성화되어 있으면 동기화를 수행하지 않아야 한다', async () => {
+      // Given
+      const mockConfigService = {
+        get: jest.fn((key: string, defaultValue?: boolean) => {
+          if (key === 'EMPLOYEE_SYNC_ENABLED') {
+            return false; // 동기화 비활성화
+          }
+          // 다른 환경 변수는 실제 값 반환
+          if (key === 'DATABASE_URL') {
+            return process.env.DATABASE_URL;
+          }
+          if (key === 'SSO_BASE_URL') {
+            return process.env.SSO_BASE_URL;
+          }
+          if (key === 'SSO_CLIENT_ID') {
+            return process.env.SSO_CLIENT_ID;
+          }
+          if (key === 'SSO_CLIENT_SECRET') {
+            return process.env.SSO_CLIENT_SECRET;
+          }
+          return defaultValue;
+        }),
+      };
+
+      // EmployeeSyncService를 직접 생성하여 테스트
+      const employeeServiceInstance = module.get<EmployeeService>(EmployeeService);
+      const ssoServiceInstance = module.get<SSOService>(SSOService);
+
+      const disabledService = new EmployeeSyncService(
+        employeeServiceInstance,
+        mockConfigService as any,
+        ssoServiceInstance,
+      );
+
+      // When
+      const result = await disabledService.syncEmployees(false);
+
+      // Then
+      expect(result.success).toBe(false);
+      expect(result.errors).toContain('동기화가 비활성화되어 있습니다.');
+      expect(result.totalProcessed).toBe(0);
+      expect(result.created).toBe(0);
+      expect(result.updated).toBe(0);
+    });
+
+    it('동기화 실패 시 에러를 반환해야 한다', async () => {
+      // Given
+      // SSO 서비스를 모킹하여 에러 발생 시뮬레이션
+      const mockSSOService = {
+        모든직원정보를조회한다: jest.fn().mockRejectedValue(new Error('SSO API 오류')),
+      };
+
+      const errorModule = await Test.createTestingModule({
+        imports: [
+          DatabaseModule,
+          ConfigModule.forRoot({
+            isGlobal: true,
+          }),
+          ScheduleModule.forRoot(),
+          TypeOrmModule.forFeature([Employee]),
+          EmployeeModule,
+          SSOModule,
+        ],
+        providers: [
+          EmployeeSyncService,
+          {
+            provide: SSOService,
+            useValue: mockSSOService,
+          },
+        ],
+      }).compile();
+
+      const errorService = errorModule.get<EmployeeSyncService>(
+        EmployeeSyncService,
+      );
+
+      // When
+      const result = await errorService.syncEmployees(true);
+
+      // Then
+      expect(result.success).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+
+      await errorModule.close();
+    });
+  });
+
+  describe('직원 조회 (히트미스 전략)', () => {
+    it('로컬 데이터가 없으면 SSO에서 동기화 후 조회해야 한다', async () => {
+      // Given
+      const statsBefore = await employeeService.getEmployeeStats();
+      expect(statsBefore.totalEmployees).toBe(0);
+
+      // When
+      const employees = await service.getEmployees(false);
+
+      // Then
+      expect(employees).toBeDefined();
+      expect(Array.isArray(employees)).toBe(true);
+      expect(employees.length).toBeGreaterThan(0);
+
+      // 동기화가 수행되었는지 확인
+      const statsAfter = await employeeService.getEmployeeStats();
+      expect(statsAfter.totalEmployees).toBeGreaterThan(0);
+    }, 120000);
+
+    it('로컬 데이터가 있으면 SSO 동기화 없이 조회해야 한다', async () => {
+      // Given
+      // 먼저 동기화 수행
+      await service.syncEmployees(true);
+      const employeesBefore = await employeeService.findAll();
+      expect(employeesBefore.length).toBeGreaterThan(0);
+
+      // When
+      const employees = await service.getEmployees(false);
+
+      // Then
+      expect(employees.length).toBe(employeesBefore.length);
+    }, 120000);
+
+    it('강제 새로고침 시 SSO에서 재동기화해야 한다', async () => {
+      // Given
+      // 첫 번째 동기화
+      await service.syncEmployees(true);
+      const employeesBefore = await employeeService.findAll();
+
+      // When
+      const employees = await service.getEmployees(true);
+
+      // Then
+      expect(employees).toBeDefined();
+      expect(Array.isArray(employees)).toBe(true);
+      expect(employees.length).toBeGreaterThanOrEqual(employeesBefore.length);
+    }, 120000);
+
+    it('ID로 직원을 조회할 수 있어야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+      const allEmployees = await employeeService.findAll();
+      expect(allEmployees.length).toBeGreaterThan(0);
+
+      const targetEmployee = allEmployees[0];
+
+      // When
+      const employee = await service.getEmployeeById(targetEmployee.id, false);
+
+      // Then
+      expect(employee).toBeDefined();
+      expect(employee?.id).toBe(targetEmployee.id);
+      expect(employee?.name).toBe(targetEmployee.name);
+    }, 120000);
+
+    it('외부 ID로 직원을 조회할 수 있어야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+      const allEmployees = await employeeService.findAll();
+      expect(allEmployees.length).toBeGreaterThan(0);
+
+      const targetEmployee = allEmployees[0];
+      expect(targetEmployee.externalId).toBeTruthy();
+
+      // When
+      const employee = await service.getEmployeeByExternalId(
+        targetEmployee.externalId,
+        false,
+      );
+
+      // Then
+      expect(employee).toBeDefined();
+      expect(employee?.externalId).toBe(targetEmployee.externalId);
+      expect(employee?.id).toBe(targetEmployee.id);
+    }, 120000);
+
+    it('직원 번호로 직원을 조회할 수 있어야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+      const allEmployees = await employeeService.findAll();
+      expect(allEmployees.length).toBeGreaterThan(0);
+
+      const targetEmployee = allEmployees[0];
+      expect(targetEmployee.employeeNumber).toBeTruthy();
+
+      // When
+      const employee = await service.getEmployeeByEmployeeNumber(
+        targetEmployee.employeeNumber,
+        false,
+      );
+
+      // Then
+      expect(employee).toBeDefined();
+      expect(employee?.employeeNumber).toBe(targetEmployee.employeeNumber);
+      expect(employee?.id).toBe(targetEmployee.id);
+    }, 120000);
+
+    it('이메일로 직원을 조회할 수 있어야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+      const allEmployees = await employeeService.findAll();
+      expect(allEmployees.length).toBeGreaterThan(0);
+
+      const targetEmployee = allEmployees[0];
+      expect(targetEmployee.email).toBeTruthy();
+
+      // When
+      const employee = await service.getEmployeeByEmail(
+        targetEmployee.email,
+        false,
+      );
+
+      // Then
+      expect(employee).toBeDefined();
+      expect(employee?.email).toBe(targetEmployee.email);
+      expect(employee?.id).toBe(targetEmployee.id);
+    }, 120000);
+  });
+
+  describe('직원 통계', () => {
+    it('직원 통계를 조회할 수 있어야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+
+      // When
+      const stats = await employeeService.getEmployeeStats();
+
+      // Then
+      expect(stats).toBeDefined();
+      expect(stats.totalEmployees).toBeGreaterThan(0);
+      expect(stats.activeEmployees).toBeGreaterThanOrEqual(0);
+      expect(stats.onLeaveEmployees).toBeGreaterThanOrEqual(0);
+      expect(stats.resignedEmployees).toBeGreaterThanOrEqual(0);
+    }, 120000);
+  });
+
+  describe('수동 동기화 트리거', () => {
+    it('수동 동기화를 트리거할 수 있어야 한다', async () => {
+      // Given
+      const statsBefore = await employeeService.getEmployeeStats();
+      expect(statsBefore.totalEmployees).toBe(0);
+
+      // When
+      const result = await service.triggerManualSync();
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.totalProcessed).toBeGreaterThan(0);
+
+      // 동기화 후 데이터 확인
+      const statsAfter = await employeeService.getEmployeeStats();
+      expect(statsAfter.totalEmployees).toBeGreaterThan(0);
+    }, 120000);
+  });
+
+  describe('실제 데이터베이스 검증', () => {
+    it('동기화 후 실제 DB에 직원 데이터가 저장되어야 한다', async () => {
+      // Given
+      const statsBefore = await employeeService.getEmployeeStats();
+      expect(statsBefore.totalEmployees).toBe(0);
+
+      // When
+      const result = await service.syncEmployees(true);
+
+      // Then
+      expect(result.success).toBe(true);
+      expect(result.created + result.updated).toBeGreaterThan(0);
+
+      // 실제 DB에서 직접 조회하여 검증
+      const dbEmployees = await employeeRepository.find({
+        order: { name: 'ASC' },
+      });
+
+      expect(dbEmployees.length).toBeGreaterThan(0);
+      expect(dbEmployees.length).toBe(result.created + result.updated);
+
+      // 첫 번째 직원의 필수 필드 검증
+      if (dbEmployees.length > 0) {
+        const firstEmployee = dbEmployees[0];
+        expect(firstEmployee.id).toBeTruthy();
+        expect(firstEmployee.employeeNumber).toBeTruthy();
+        expect(firstEmployee.name).toBeTruthy();
+        expect(firstEmployee.email).toBeTruthy();
+        expect(firstEmployee.externalId).toBeTruthy();
+        expect(firstEmployee.lastSyncAt).toBeTruthy();
+        expect(firstEmployee.createdAt).toBeTruthy();
+        expect(firstEmployee.updatedAt).toBeTruthy();
+      }
+
+      // 통계와 실제 DB 데이터 일치 확인
+      const statsAfter = await employeeService.getEmployeeStats();
+      expect(statsAfter.totalEmployees).toBe(dbEmployees.length);
+    }, 120000);
+
+    it('동기화된 직원 데이터의 상세 정보가 올바르게 저장되어야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+
+      // When
+      const dbEmployees = await employeeRepository.find({
+        take: 5, // 처음 5개만 확인
+        order: { name: 'ASC' },
+      });
+
+      // Then
+      expect(dbEmployees.length).toBeGreaterThan(0);
+
+      // 각 직원의 필수 필드 및 선택 필드 검증
+      dbEmployees.forEach((employee) => {
+        // 필수 필드
+        expect(employee.id).toBeTruthy();
+        expect(employee.employeeNumber).toBeTruthy();
+        expect(employee.name).toBeTruthy();
+        expect(employee.email).toBeTruthy();
+        expect(employee.externalId).toBeTruthy();
+        expect(employee.status).toBeTruthy();
+
+        // 동기화 메타데이터
+        expect(employee.lastSyncAt).toBeTruthy();
+        expect(employee.createdBy).toBeTruthy();
+        expect(employee.updatedBy).toBeTruthy();
+
+        // 타임스탬프
+        expect(employee.createdAt).toBeInstanceOf(Date);
+        expect(employee.updatedAt).toBeInstanceOf(Date);
+        expect(employee.lastSyncAt).toBeInstanceOf(Date);
+
+        // 선택 필드 (있을 수 있음)
+        // departmentId, positionId, rankId 등은 있을 수도 없을 수도 있음
+        // phoneNumber, dateOfBirth, gender 등도 선택 사항
+      });
+    }, 120000);
+
+    it('중복 직원이 올바르게 처리되어야 한다', async () => {
+      // Given
+      // 첫 번째 동기화
+      const firstResult = await service.syncEmployees(true);
+      expect(firstResult.success).toBe(true);
+      const firstCount = firstResult.created + firstResult.updated;
+
+      // When
+      // 두 번째 동기화 (중복 데이터)
+      const secondResult = await service.syncEmployees(true);
+
+      // Then
+      expect(secondResult.success).toBe(true);
+
+      // DB에서 실제 데이터 확인
+      const dbEmployees = await employeeRepository.find();
+      expect(dbEmployees.length).toBe(firstCount); // 개수는 동일해야 함
+
+      // 중복이 없어야 함 (employeeNumber 기준)
+      const employeeNumbers = dbEmployees.map((emp) => emp.employeeNumber);
+      const uniqueEmployeeNumbers = new Set(employeeNumbers);
+      expect(uniqueEmployeeNumbers.size).toBe(employeeNumbers.length);
+
+      // 외부 ID도 중복이 없어야 함
+      const externalIds = dbEmployees.map((emp) => emp.externalId);
+      const uniqueExternalIds = new Set(externalIds);
+      expect(uniqueExternalIds.size).toBe(externalIds.length);
+    }, 120000);
+
+    it('직원 데이터의 부서 정보가 올바르게 매핑되어야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+
+      // When
+      const dbEmployees = await employeeRepository.find({
+        where: [{ departmentId: Not(IsNull()) }],
+        take: 10,
+      });
+
+      // Then
+      // 부서 정보가 있는 직원이 있다면 검증
+      if (dbEmployees.length > 0) {
+        dbEmployees.forEach((employee) => {
+          expect(employee.departmentId).toBeTruthy();
+          // departmentId는 외부 시스템 ID이므로 문자열이어야 함
+          expect(typeof employee.departmentId).toBe('string');
+        });
+      }
+    }, 120000);
+
+    it('각 필드 값들이 SSO 데이터와 올바르게 매핑되어 저장되어야 한다', async () => {
+      // Given
+      // SSO에서 원본 데이터 조회
+      const ssoEmployees = await ssoService.모든직원정보를조회한다({
+        includeEmptyDepartments: true,
+      });
+      expect(ssoEmployees.length).toBeGreaterThan(0);
+
+      // 동기화 수행
+      const result = await service.syncEmployees(true);
+      expect(result.success).toBe(true);
+
+      // When
+      // 실제 DB에서 동기화된 데이터 조회
+      const dbEmployees = await employeeRepository.find({
+        order: { name: 'ASC' },
+      });
+
+      // Then
+      expect(dbEmployees.length).toBeGreaterThan(0);
+
+      // SSO 데이터와 DB 데이터를 매핑하여 비교
+      const ssoEmployeeMap = new Map(
+        ssoEmployees.map((emp) => [emp.id, emp]),
+      );
+
+      // 각 DB 직원에 대해 SSO 데이터와 비교
+      dbEmployees.forEach((dbEmployee) => {
+        const ssoEmployee = ssoEmployeeMap.get(dbEmployee.externalId);
+
+        if (ssoEmployee) {
+          // 기본 정보 검증
+          expect(dbEmployee.employeeNumber).toBe(ssoEmployee.employeeNumber);
+          expect(dbEmployee.name).toBe(ssoEmployee.name);
+          expect(dbEmployee.email).toBe(ssoEmployee.email);
+          expect(dbEmployee.externalId).toBe(ssoEmployee.id);
+
+          // 상태 정보 검증
+          const expectedStatus = ssoEmployee.isTerminated ? '퇴사' : '재직중';
+          expect(dbEmployee.status).toBe(expectedStatus);
+
+          // 전화번호 검증 (SSO에 있을 경우)
+          if (ssoEmployee.phoneNumber) {
+            expect(dbEmployee.phoneNumber).toBe(ssoEmployee.phoneNumber);
+          }
+
+          // 부서 정보 검증
+          if (ssoEmployee.department) {
+            expect(dbEmployee.departmentId).toBe(ssoEmployee.department.id);
+            expect(dbEmployee.departmentName).toBe(
+              ssoEmployee.department.departmentName,
+            );
+            expect(dbEmployee.departmentCode).toBe(
+              ssoEmployee.department.departmentCode,
+            );
+          }
+
+          // 직급 정보 검증 (SSO의 jobTitle이 rank에 해당)
+          if (ssoEmployee.jobTitle) {
+            expect(dbEmployee.rankId).toBe(ssoEmployee.jobTitle.id);
+            expect(dbEmployee.rankName).toBe(ssoEmployee.jobTitle.jobTitleName);
+            expect(dbEmployee.rankLevel).toBe(ssoEmployee.jobTitle.jobTitleLevel);
+          }
+
+          // 직책 정보 검증 (SSO의 position)
+          if (ssoEmployee.position) {
+            expect(dbEmployee.positionId).toBe(ssoEmployee.position.id);
+          }
+
+          // 동기화 메타데이터 검증
+          expect(dbEmployee.lastSyncAt).toBeInstanceOf(Date);
+          expect(dbEmployee.createdBy).toBe('SYSTEM_SYNC');
+          expect(dbEmployee.updatedBy).toBe('SYSTEM_SYNC');
+
+          // 타임스탬프 검증
+          expect(dbEmployee.createdAt).toBeInstanceOf(Date);
+          expect(dbEmployee.updatedAt).toBeInstanceOf(Date);
+          expect(dbEmployee.createdAt.getTime()).toBeLessThanOrEqual(
+            Date.now(),
+          );
+          expect(dbEmployee.updatedAt.getTime()).toBeLessThanOrEqual(
+            Date.now(),
+          );
+
+          console.log(`✅ 직원 ${dbEmployee.name} (${dbEmployee.employeeNumber}) 필드 검증 완료`);
+        }
+      });
+
+      console.log(`✅ 총 ${dbEmployees.length}명의 직원 필드 검증 완료`);
+    }, 120000);
+
+    it('특정 직원의 모든 필드 값을 상세히 검증해야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+
+      // When
+      const dbEmployees = await employeeRepository.find({
+        take: 3, // 처음 3명만 상세 검증
+        order: { name: 'ASC' },
+      });
+
+      // Then
+      expect(dbEmployees.length).toBeGreaterThan(0);
+
+      dbEmployees.forEach((employee, index) => {
+        console.log(`\n📋 직원 #${index + 1} 필드 검증:`);
+        console.log(`  - ID: ${employee.id}`);
+        console.log(`  - 직원번호: ${employee.employeeNumber}`);
+        console.log(`  - 이름: ${employee.name}`);
+        console.log(`  - 이메일: ${employee.email}`);
+        console.log(`  - 전화번호: ${employee.phoneNumber || '없음'}`);
+        console.log(`  - 상태: ${employee.status}`);
+        console.log(`  - 외부 ID: ${employee.externalId}`);
+        console.log(`  - 부서 ID: ${employee.departmentId || '없음'}`);
+        console.log(`  - 부서명: ${employee.departmentName || '없음'}`);
+        console.log(`  - 부서 코드: ${employee.departmentCode || '없음'}`);
+        console.log(`  - 직급 ID: ${employee.rankId || '없음'}`);
+        console.log(`  - 직급명: ${employee.rankName || '없음'}`);
+        console.log(`  - 직급 레벨: ${employee.rankLevel || '없음'}`);
+        console.log(`  - 직책 ID: ${employee.positionId || '없음'}`);
+        console.log(`  - 마지막 동기화: ${employee.lastSyncAt}`);
+        console.log(`  - 생성일: ${employee.createdAt}`);
+        console.log(`  - 수정일: ${employee.updatedAt}`);
+
+        // 필수 필드 검증
+        expect(employee.id).toBeTruthy();
+        expect(employee.employeeNumber).toBeTruthy();
+        expect(employee.name).toBeTruthy();
+        expect(employee.email).toBeTruthy();
+        expect(employee.externalId).toBeTruthy();
+        expect(employee.status).toBeTruthy();
+        expect(['재직중', '휴직중', '퇴사']).toContain(employee.status);
+
+        // UUID 형식 검증
+        expect(employee.id).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+        );
+
+        // 이메일 형식 검증
+        expect(employee.email).toMatch(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
+
+        // 타임스탬프 순서 검증
+        expect(employee.createdAt.getTime()).toBeLessThanOrEqual(
+          employee.updatedAt.getTime(),
+        );
+        expect(employee.lastSyncAt.getTime()).toBeLessThanOrEqual(Date.now());
+
+        // 동기화 메타데이터 검증
+        expect(employee.createdBy).toBe('SYSTEM_SYNC');
+        expect(employee.updatedBy).toBe('SYSTEM_SYNC');
+      });
+    }, 120000);
+
+    it('모든 직원의 필수 필드가 누락되지 않았는지 확인해야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+
+      // When
+      const dbEmployees = await employeeRepository.find();
+
+      // Then
+      expect(dbEmployees.length).toBeGreaterThan(0);
+
+      const missingFields: string[] = [];
+
+      dbEmployees.forEach((employee, index) => {
+        const missing: string[] = [];
+
+        // 필수 필드 검증
+        if (!employee.id) missing.push('id');
+        if (!employee.employeeNumber) missing.push('employeeNumber');
+        if (!employee.name) missing.push('name');
+        if (!employee.email) missing.push('email');
+        if (!employee.externalId) missing.push('externalId');
+        if (!employee.status) missing.push('status');
+        if (!employee.lastSyncAt) missing.push('lastSyncAt');
+        if (!employee.createdAt) missing.push('createdAt');
+        if (!employee.updatedAt) missing.push('updatedAt');
+        if (!employee.createdBy) missing.push('createdBy');
+        if (!employee.updatedBy) missing.push('updatedBy');
+
+        if (missing.length > 0) {
+          missingFields.push(
+            `직원 #${index + 1} (${employee.name || '이름 없음'}): ${missing.join(', ')}`,
+          );
+        }
+      });
+
+      if (missingFields.length > 0) {
+        console.error('❌ 누락된 필드가 있는 직원:');
+        missingFields.forEach((msg) => console.error(`  - ${msg}`));
+      }
+
+      expect(missingFields.length).toBe(0);
+      console.log(`✅ 모든 ${dbEmployees.length}명의 직원의 필수 필드가 올바르게 저장되었습니다.`);
+    }, 120000);
+  });
+});
+

@@ -65,8 +65,8 @@ import { WbsAssignmentWeightCalculationService } from '@context/evaluation-crite
 @Module({
   imports: [
     CqrsModule,
-    OrganizationManagementContextModule, // For EmployeeSyncService
-    DepartmentModule, // For DepartmentSyncService
+    OrganizationManagementContextModule, // For EmployeeSyncService and DepartmentSyncService
+    DepartmentModule, // For Department Repository
     EmployeeModule, // For Employee Repository
     TypeOrmModule.forFeature([
       // Common (Phase 1)

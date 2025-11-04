@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Employee } from './employee.entity';
 import { EmployeeTestService } from './employee-test.service';
+import { Department } from '@domain/common/department/department.entity';
 
 /**
  * 직원 테스트용 모듈
@@ -10,8 +11,9 @@ import { EmployeeTestService } from './employee-test.service';
  * 실제 운영 환경에서는 사용하지 않습니다.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Employee])],
+  imports: [TypeOrmModule.forFeature([Employee, Department])],
   providers: [EmployeeTestService],
   exports: [EmployeeTestService],
 })
 export class EmployeeTestModule {}
+

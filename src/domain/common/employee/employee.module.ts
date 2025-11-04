@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Employee } from './employee.entity';
-import { EmployeeRepository } from './employee.repository';
 import { EmployeeService } from './employee.service';
-import { EmployeeTestService } from './employee-test.service';
 
 /**
  * Employee 도메인 모듈
@@ -13,7 +11,7 @@ import { EmployeeTestService } from './employee-test.service';
  */
 @Module({
   imports: [TypeOrmModule.forFeature([Employee])],
-  providers: [EmployeeRepository, EmployeeService, EmployeeTestService],
-  exports: [EmployeeRepository, EmployeeService, EmployeeTestService],
+  providers: [EmployeeService,],
+  exports: [EmployeeService,],
 })
 export class EmployeeModule {}

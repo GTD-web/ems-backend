@@ -6,13 +6,14 @@ import {
   DepartmentDto,
   DepartmentFilter,
   DepartmentListOptions,
+  DepartmentStatistics,
 } from './department.types';
 
 /**
  * 부서 도메인 서비스
  *
- * 부서 엔티티의 비즈니스 로직을 담당하는 서비스입니다.
- * 외부 시스템에서 동기화되는 데이터이므로 Repository 패턴을 사용합니다.
+ * 부서 엔티티의 비즈니스 로직과 데이터베이스 접근을 담당하는 서비스입니다.
+ * TypeORM Repository를 직접 사용하여 데이터베이스 작업을 수행합니다.
  */
 @Injectable()
 export class DepartmentService {
@@ -284,5 +285,189 @@ export class DepartmentService {
       where: { externalId, deletedAt: IsNull() },
     });
     return count > 0;
+  }
+
+  // ========== 엔티티 직접 반환 메서드 (컨텍스트에서 사용) ==========
+
+  /**
+   * ID로 부서 엔티티를 조회한다
+   * @param id 부서 ID
+   * @returns 부서 엔티티 (없으면 null)
+   */
+  async findById(id: string): Promise<Department | null> {
+    return this.departmentRepository.findOne({
+      where: { id },
+    });
+  }
+
+  /**
+   * 외부 ID로 부서 엔티티를 조회한다
+   * @param externalId 외부 시스템 ID
+   * @returns 부서 엔티티 (없으면 null)
+   */
+  async findByExternalId(externalId: string): Promise<Department | null> {
+    return this.departmentRepository.findOne({
+      where: { externalId },
+    });
+  }
+
+  /**
+   * 모든 부서 엔티티를 조회한다
+   * @returns 부서 엔티티 목록
+   */
+  async findAll(): Promise<Department[]> {
+    return this.departmentRepository.find({
+      order: { order: 'ASC', name: 'ASC' },
+    });
+  }
+
+  /**
+   * 필터 조건으로 부서 엔티티를 조회한다
+   * @param filter 필터 조건
+   * @returns 부서 엔티티 목록
+   */
+  async findByFilter(filter: DepartmentFilter): Promise<Department[]> {
+    const queryBuilder =
+      this.departmentRepository.createQueryBuilder('department');
+
+    if (filter.name) {
+      queryBuilder.andWhere('department.name LIKE :name', {
+        name: `%${filter.name}%`,
+      });
+    }
+
+    if (filter.code) {
+      queryBuilder.andWhere('department.code = :code', { code: filter.code });
+    }
+
+    if (filter.managerId) {
+      queryBuilder.andWhere('department.managerId = :managerId', {
+        managerId: filter.managerId,
+      });
+    }
+
+    if (filter.parentDepartmentId) {
+      queryBuilder.andWhere(
+        'department.parentDepartmentId = :parentDepartmentId',
+        { parentDepartmentId: filter.parentDepartmentId },
+      );
+    }
+
+    if (filter.externalId) {
+      queryBuilder.andWhere('department.externalId = :externalId', {
+        externalId: filter.externalId,
+      });
+    }
+
+    return queryBuilder
+      .orderBy('department.order', 'ASC')
+      .addOrderBy('department.name', 'ASC')
+      .getMany();
+  }
+
+  /**
+   * 부서 엔티티를 저장한다
+   * @param department 부서 엔티티
+   * @returns 저장된 부서 엔티티
+   */
+  async save(department: Department): Promise<Department> {
+    return this.departmentRepository.save(department);
+  }
+
+  /**
+   * 여러 부서 엔티티를 일괄 저장한다
+   * @param departments 부서 엔티티 배열
+   * @returns 저장된 부서 엔티티 배열
+   */
+  async saveMany(departments: Department[]): Promise<Department[]> {
+    return this.departmentRepository.save(departments);
+  }
+
+  /**
+   * 부서 코드로 부서 엔티티를 조회한다
+   * @param code 부서 코드
+   * @returns 부서 엔티티 (없으면 null)
+   */
+  async findByCode(code: string): Promise<Department | null> {
+    return this.departmentRepository.findOne({
+      where: { code },
+    });
+  }
+
+  /**
+   * 상위 부서별 하위 부서 엔티티를 조회한다
+   * @param parentDepartmentId 상위 부서 ID
+   * @returns 하위 부서 엔티티 목록
+   */
+  async findByParentDepartmentId(
+    parentDepartmentId: string,
+  ): Promise<Department[]> {
+    return this.departmentRepository.find({
+      where: { parentDepartmentId },
+      order: { order: 'ASC', name: 'ASC' },
+    });
+  }
+
+  /**
+   * 루트 부서 목록을 조회한다 (상위 부서가 없는 부서)
+   * @returns 루트 부서 엔티티 목록
+   */
+  async findRootDepartments(): Promise<Department[]> {
+    return this.departmentRepository
+      .createQueryBuilder('department')
+      .where('department.parentDepartmentId IS NULL')
+      .orderBy('department.order', 'ASC')
+      .addOrderBy('department.name', 'ASC')
+      .getMany();
+  }
+
+  /**
+   * 부서 통계를 조회한다
+   * @returns 부서 통계
+   */
+  async getDepartmentStats(): Promise<DepartmentStatistics> {
+    const totalDepartments = await this.departmentRepository.count();
+
+    const rootDepartments = await this.departmentRepository
+      .createQueryBuilder('department')
+      .where('department.parentDepartmentId IS NULL')
+      .getCount();
+
+    const lastSyncRecord = await this.departmentRepository
+      .createQueryBuilder('department')
+      .select('department.lastSyncAt')
+      .where('department.lastSyncAt IS NOT NULL')
+      .orderBy('department.lastSyncAt', 'DESC')
+      .limit(1)
+      .getOne();
+
+    const subDepartments = totalDepartments - rootDepartments;
+
+    return {
+      totalDepartments,
+      rootDepartments,
+      subDepartments,
+      employeesByDepartment: {}, // 복잡한 조인이 필요하므로 추후 구현
+      averageEmployeesPerDepartment: 0, // 복잡한 조인이 필요하므로 추후 구현
+      lastSyncAt: lastSyncRecord?.lastSyncAt,
+    };
+  }
+
+  /**
+   * 부서 엔티티를 업데이트한다
+   * @param id 부서 ID
+   * @param partialDepartment 업데이트할 부분 데이터
+   * @returns 업데이트된 부서 엔티티
+   */
+  async update(
+    id: string,
+    partialDepartment: Partial<Department>,
+  ): Promise<Department> {
+    await this.departmentRepository.update(id, partialDepartment);
+    const department = await this.findById(id);
+    if (!department) {
+      throw new Error(`부서를 찾을 수 없습니다: ${id}`);
+    }
+    return department;
   }
 }

@@ -1,6 +1,8 @@
 import { Department } from '@domain/common/department/department.entity';
-import { DepartmentSyncService } from '@domain/common/department/department-sync.service';
+import { DepartmentService } from '@domain/common/department/department.service';
+import { DepartmentSyncService } from '@context/organization-management-context';
 import { Employee } from '@domain/common/employee/employee.entity';
+import { EmployeeService } from '@domain/common/employee/employee.service';
 import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { Project } from '@domain/common/project/project.entity';
 import { ProjectStatus } from '@domain/common/project/project.types';
@@ -32,6 +34,8 @@ export class Phase1OrganizationGenerator {
     private readonly projectRepository: Repository<Project>,
     @InjectRepository(WbsItem)
     private readonly wbsItemRepository: Repository<WbsItem>,
+    private readonly departmentService: DepartmentService,
+    private readonly employeeService: EmployeeService,
     private readonly departmentSyncService: DepartmentSyncService,
     private readonly employeeSyncService: EmployeeSyncService,
   ) {}
@@ -72,7 +76,7 @@ export class Phase1OrganizationGenerator {
     }
 
     // 2. Employee 생성
-    const allDepartments = await this.departmentRepository.find();
+    const allDepartments = await this.departmentService.findAll();
     let employeeIds: string[];
     if (config.useRealEmployees) {
       // 실제 직원 데이터 사용
@@ -122,11 +126,8 @@ export class Phase1OrganizationGenerator {
       !config.currentUserId
     ) {
       this.logger.log('✅ 부서장 설정 시작');
-      // 최신 부서 목록을 다시 조회 (새로 생성된 부서 포함)
-      const latestDepartments = await this.departmentRepository
-        .createQueryBuilder('department')
-        .where('department.deletedAt IS NULL')
-        .getMany();
+      // 최신 부서 목록을 다시 조회 (새로 생성된 부서 포함, Service를 통해 조회)
+      const latestDepartments = await this.departmentService.findAll();
       this.logger.log(
         `📊 조회된 부서: ${latestDepartments.length}개, 직원: ${employeeIds.length}명`,
       );
@@ -328,19 +329,16 @@ export class Phase1OrganizationGenerator {
     // 고유한 employeeNumber 생성을 위한 타임스탬프 접미사
     const timestamp = Date.now().toString().slice(-6);
 
-    // clearExisting=false 모드에서는 기존 시스템 관리자 확인
+    // clearExisting=false 모드에서는 기존 시스템 관리자 확인 (Service를 통해 조회)
     let existingAdminId: string | null = null;
     if (!clearExisting) {
-      const existingAdmin = await this.employeeRepository.findOne({
-        where: {
-          email: 'admin@system.com',
-          deletedAt: IsNull(),
-        },
-      });
+      const existingAdminDto = await this.employeeService.이메일로_조회한다(
+        'admin@system.com',
+      );
 
-      if (existingAdmin) {
+      if (existingAdminDto) {
         this.logger.log('기존 시스템 관리자 계정 사용: admin@system.com');
-        existingAdminId = existingAdmin.id;
+        existingAdminId = existingAdminDto.id;
       }
     }
 
@@ -719,11 +717,8 @@ export class Phase1OrganizationGenerator {
         `부서 동기화 완료: ${syncResult.created}개 생성, ${syncResult.updated}개 업데이트`,
       );
 
-      // 2. 동기화된 부서 데이터 조회
-      const departments = await this.departmentRepository.find({
-        where: { deletedAt: IsNull() },
-        order: { order: 'ASC', name: 'ASC' },
-      });
+      // 2. 동기화된 부서 데이터 조회 (Service를 통해 조회)
+      const departments = await this.departmentService.findAll();
 
       if (departments.length === 0) {
         this.logger.warn(
@@ -761,15 +756,9 @@ export class Phase1OrganizationGenerator {
         `직원 동기화 완료: ${syncResult.created}개 생성, ${syncResult.updated}개 업데이트`,
       );
 
-      // 2. 동기화된 직원 데이터 조회 (삭제되지 않고, 제외되지 않고, 재직중인 것만)
-      const employees = await this.employeeRepository.find({
-        where: {
-          deletedAt: IsNull(),
-          isExcludedFromList: false,
-          status: '재직중', // 재직중인 직원만 평가 대상으로 포함
-        },
-        order: { name: 'ASC' },
-      });
+      // 2. 동기화된 직원 데이터 조회 (Service를 통해 조회, 재직중인 직원만 필터링)
+      const allEmployees = await this.employeeService.findAll(false); // 제외된 직원 제외
+      const employees = allEmployees.filter((emp) => emp.status === '재직중'); // 재직중인 직원만 평가 대상으로 포함
 
       if (employees.length === 0) {
         this.logger.warn(
@@ -862,14 +851,16 @@ export class Phase1OrganizationGenerator {
     // 부서별로 직원을 그룹화
     const departmentEmployeeMap = new Map<string, string[]>();
 
-    // 모든 직원의 부서 정보 조회
-    const employees = await this.employeeRepository
-      .createQueryBuilder('employee')
-      .select(['employee.id', 'employee.departmentId'])
-      .where('employee.id IN (:...employeeIds)', { employeeIds })
-      .andWhere('employee.deletedAt IS NULL')
-      .orderBy('employee.createdAt', 'ASC') // 생성 순서대로 정렬
-      .getMany();
+    // 모든 직원의 부서 정보 조회 (Service를 통해 조회)
+    // ID 리스트로 직원을 조회하기 위해 Service의 findByFilter를 사용
+    // 하지만 특정 ID 목록으로 조회하는 메서드가 없으므로, 먼저 모든 직원을 조회한 후 필터링
+    const allEmployees = await this.employeeService.findAll(true); // 제외된 직원도 포함
+    const employees = allEmployees
+      .filter((emp) => employeeIds.includes(emp.id))
+      .sort((a, b) => {
+        // createdAt으로 정렬 (Service에서 가져온 순서 유지)
+        return a.createdAt.getTime() - b.createdAt.getTime();
+      });
 
     // 부서별로 직원 그룹화
     for (const employee of employees) {

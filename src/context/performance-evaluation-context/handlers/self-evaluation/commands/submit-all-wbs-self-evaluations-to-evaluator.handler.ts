@@ -50,7 +50,7 @@ export interface SubmitAllWbsSelfEvaluationsToEvaluatorResponse {
   totalCount: number;
   /** 제출된 평가 상세 정보 */
   completedEvaluations: SubmittedWbsSelfEvaluationToEvaluatorDetail[];
-  /** 제출 실패한 평가 상세 정보 */
+  /** 제출 실패한 평가 정보 */
   failedEvaluations: FailedWbsSelfEvaluationToEvaluator[];
 }
 
@@ -127,8 +127,7 @@ export class SubmitAllWbsSelfEvaluationsToEvaluatorHandler
               selfEvaluationContent: evaluation.selfEvaluationContent,
               selfEvaluationScore: evaluation.selfEvaluationScore,
               performanceResult: evaluation.performanceResult,
-              submittedToEvaluatorAt:
-                evaluation.submittedToEvaluatorAt!,
+              submittedToEvaluatorAt: evaluation.submittedToEvaluatorAt!,
             });
             continue;
           }
@@ -173,8 +172,7 @@ export class SubmitAllWbsSelfEvaluationsToEvaluatorHandler
             selfEvaluationContent: updatedEvaluation.selfEvaluationContent,
             selfEvaluationScore: updatedEvaluation.selfEvaluationScore,
             performanceResult: updatedEvaluation.performanceResult,
-            submittedToEvaluatorAt:
-              updatedEvaluation.submittedToEvaluatorAt!,
+            submittedToEvaluatorAt: updatedEvaluation.submittedToEvaluatorAt!,
           });
 
           this.logger.debug(`평가 제출 처리 성공 - ID: ${evaluation.id}`);
@@ -223,5 +221,3 @@ export class SubmitAllWbsSelfEvaluationsToEvaluatorHandler
     });
   }
 }
-
-

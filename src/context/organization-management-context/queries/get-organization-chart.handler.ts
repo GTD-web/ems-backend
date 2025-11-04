@@ -1,7 +1,7 @@
 import { IQuery, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
-import { DepartmentRepository } from '../../../domain/common/department/department.repository';
-import { EmployeeRepository } from '../../../domain/common/employee/employee.repository';
+import { DepartmentService } from '../../../domain/common/department/department.service';
+import { EmployeeService } from '../../../domain/common/employee/employee.service';
 import type { EmployeeDto } from '../../../domain/common/employee/employee.types';
 import type {
   OrganizationChartDto,
@@ -22,15 +22,15 @@ export class GetOrganizationChartQueryHandler
   implements IQueryHandler<GetOrganizationChartQuery>
 {
   constructor(
-    private readonly departmentRepository: DepartmentRepository,
-    private readonly employeeRepository: EmployeeRepository,
+    private readonly departmentService: DepartmentService,
+    private readonly employeeService: EmployeeService,
   ) {}
 
   async execute(
     query: GetOrganizationChartQuery,
   ): Promise<OrganizationChartDto> {
-    const allDepartments = await this.departmentRepository.findAll();
-    const allEmployees = await this.employeeRepository.findAll();
+    const allDepartments = await this.departmentService.findAll();
+    const allEmployees = await this.employeeService.findAll();
 
     // 부서별로 직원들을 그룹화
     const employeesByDept = allEmployees.reduce(

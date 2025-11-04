@@ -66,19 +66,6 @@ export interface DepartmentDto {
   readonly needsSync: boolean;
 }
 
-// 외부 API 부서 데이터 구조
-export interface ExternalDepartmentData {
-  order: number;
-  _id: string;
-  department_name: string;
-  department_code: string;
-  manager_id: string | null;
-  parent_department_id: string | null;
-  created_at: string;
-  updated_at: string;
-  id: string;
-}
-
 // 부서 생성 DTO
 export interface CreateDepartmentDto {
   name: string;

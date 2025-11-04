@@ -1,6 +1,6 @@
 import { IQuery, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
-import { EmployeeRepository } from '../../../domain/common/employee/employee.repository';
+import { EmployeeService } from '../../../domain/common/employee/employee.service';
 import type { EmployeeDto } from '../../../domain/common/employee/employee.types';
 
 /**
@@ -18,12 +18,12 @@ export class GetEmployeesByDepartmentQuery implements IQuery {
 export class GetEmployeesByDepartmentQueryHandler
   implements IQueryHandler<GetEmployeesByDepartmentQuery>
 {
-  constructor(private readonly employeeRepository: EmployeeRepository) {}
+  constructor(private readonly employeeService: EmployeeService) {}
 
   async execute(query: GetEmployeesByDepartmentQuery): Promise<EmployeeDto[]> {
     const { departmentId } = query;
     const employees =
-      await this.employeeRepository.findByDepartmentId(departmentId);
+      await this.employeeService.findByDepartmentId(departmentId);
     return employees.map((emp) => emp.DTO로_변환한다());
   }
 }

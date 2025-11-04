@@ -8,7 +8,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Employee } from '../../domain/common/employee/employee.entity';
-import { EmployeeRepository } from '../../domain/common/employee/employee.repository';
+import { EmployeeService } from '../../domain/common/employee/employee.service';
 import {
   EmployeeSyncResult,
   CreateEmployeeDto,
@@ -30,7 +30,7 @@ export class EmployeeSyncService implements OnModuleInit {
   private readonly systemUserId = 'SYSTEM_SYNC'; // 시스템 동기화 사용자 ID
 
   constructor(
-    private readonly employeeRepository: EmployeeRepository,
+    private readonly employeeService: EmployeeService,
     private readonly configService: ConfigService,
     private readonly ssoService: SSOService,
   ) {
@@ -56,7 +56,7 @@ export class EmployeeSyncService implements OnModuleInit {
       this.logger.log('모듈 초기화: 직원 데이터 확인 중...');
 
       // 직원 데이터 개수 확인
-      const stats = await this.employeeRepository.getEmployeeStats();
+      const stats = await this.employeeService.getEmployeeStats();
 
       if (stats.totalEmployees === 0) {
         this.logger.log('직원 데이터가 없습니다. 초기 동기화를 시작합니다...');
@@ -82,18 +82,34 @@ export class EmployeeSyncService implements OnModuleInit {
 
   /**
    * SSO 서비스에서 직원 데이터 조회
+   * getEmployees API를 사용하여 모든 직원 정보를 조회합니다.
+   * 
+   * @param useHierarchyAPI 부서 계층 구조 API 사용 여부 (기본값: false, getEmployees 사용)
    */
-  async fetchExternalEmployees(): Promise<EmployeeInfo[]> {
+  async fetchExternalEmployees(useHierarchyAPI: boolean = false): Promise<EmployeeInfo[]> {
     try {
-      // SSO에서 모든 직원 정보를 상세 정보 포함하여 조회
-      const employees = await this.ssoService.여러직원정보를조회한다({
-        withDetail: true,
-        includeTerminated: false, // 퇴사자 제외
-      });
+      let employees: EmployeeInfo[];
 
-      this.logger.log(
-        `SSO에서 ${employees.length}개의 직원 데이터를 조회했습니다.`,
-      );
+      if (useHierarchyAPI) {
+        // 부서 계층 구조를 통해 모든 직원 정보를 평면 목록으로 조회 (옵션)
+        this.logger.log('부서 계층 구조 API를 사용하여 모든 직원 정보를 조회합니다...');
+        employees = await this.ssoService.모든직원정보를조회한다({
+          includeEmptyDepartments: true,
+        });
+        this.logger.log(
+          `부서 계층 구조 API에서 ${employees.length}개의 직원 데이터를 조회했습니다.`,
+        );
+      } else {
+        // 직접 직원 목록 API 사용 (identifiers 생략 시 전체 조회) - 기본 방식
+        this.logger.log('직원 목록 API(getEmployees)를 사용하여 모든 직원 정보를 조회합니다...');
+        employees = await this.ssoService.여러직원정보를조회한다({
+          withDetail: true,
+          includeTerminated: false, // 퇴사자 제외
+        });
+        this.logger.log(
+          `직원 목록 API에서 ${employees.length}개의 직원 데이터를 조회했습니다.`,
+        );
+      }
 
       return employees;
     } catch (error) {
@@ -151,8 +167,15 @@ export class EmployeeSyncService implements OnModuleInit {
 
   /**
    * 직원 데이터 동기화
+   * getEmployees API를 사용하여 직원 데이터를 동기화합니다.
+   * 
+   * @param forceSync 강제 동기화 여부
+   * @param useHierarchyAPI 부서 계층 구조 API 사용 여부 (기본값: false, getEmployees 사용)
    */
-  async syncEmployees(forceSync: boolean = false): Promise<EmployeeSyncResult> {
+  async syncEmployees(
+    forceSync: boolean = false,
+    useHierarchyAPI: boolean = false,
+  ): Promise<EmployeeSyncResult> {
     if (!this.syncEnabled && !forceSync) {
       this.logger.warn('직원 동기화가 비활성화되어 있습니다.');
       return {
@@ -174,10 +197,21 @@ export class EmployeeSyncService implements OnModuleInit {
     try {
       this.logger.log('직원 데이터 동기화를 시작합니다...');
 
-      // 1. SSO에서 직원 데이터 조회
-      const ssoEmployees = await this.fetchExternalEmployees();
+      // 1. SSO에서 직원 데이터 조회 (기본: getEmployees API 사용)
+      const ssoEmployees = await this.fetchExternalEmployees(useHierarchyAPI);
 
       totalProcessed = ssoEmployees.length;
+      this.logger.log(
+        `SSO에서 ${totalProcessed}개의 직원 데이터를 조회했습니다. 동기화를 시작합니다...`,
+      );
+
+      // SSO에서 받은 직원 데이터 예시 로그 출력 (첫 번째 직원)
+      if (ssoEmployees.length > 0) {
+        const sampleEmployee = ssoEmployees[1];
+        this.logger.log(
+          `[SSO 직원 데이터 예시] 첫 번째 직원 정보: ${JSON.stringify(sampleEmployee, null, 2)}`,
+        );
+      }
 
       // 2. 각 직원 데이터 처리
       const employeesToSave: Employee[] = [];
@@ -186,13 +220,13 @@ export class EmployeeSyncService implements OnModuleInit {
         try {
           // 기존 직원 확인 (employeeNumber 우선)
           let existingEmployee =
-            await this.employeeRepository.findByEmployeeNumber(
+            await this.employeeService.findByEmployeeNumber(
               ssoEmp.employeeNumber,
             );
 
           // employeeNumber로 못 찾으면 externalId로 조회
           if (!existingEmployee) {
-            existingEmployee = await this.employeeRepository.findByExternalId(
+            existingEmployee = await this.employeeService.findByExternalId(
               ssoEmp.id,
             );
           }
@@ -317,11 +351,15 @@ export class EmployeeSyncService implements OnModuleInit {
       }
 
       // 3. 일괄 저장 (중복 키 에러 처리)
+      this.logger.log(
+        `처리 완료: 총 ${totalProcessed}개 중 ${created}개 생성, ${updated}개 업데이트, ${errors.length}개 오류`,
+      );
+
       if (employeesToSave.length > 0) {
         try {
-          await this.employeeRepository.saveMany(employeesToSave);
+          await this.employeeService.saveMany(employeesToSave);
           this.logger.log(
-            `${employeesToSave.length}개의 직원 데이터를 저장했습니다.`,
+            `${employeesToSave.length}개의 직원 데이터를 저장했습니다. (생성: ${created}, 업데이트: ${updated})`,
           );
         } catch (saveError) {
           // 중복 키 에러인 경우 개별 저장 시도
@@ -339,7 +377,7 @@ export class EmployeeSyncService implements OnModuleInit {
             // 개별 저장
             for (const employee of employeesToSave) {
               try {
-                await this.employeeRepository.save(employee);
+                await this.employeeService.save(employee);
                 savedCount++;
               } catch (individualError) {
                 if (
@@ -357,7 +395,7 @@ export class EmployeeSyncService implements OnModuleInit {
 
                     // 1. employeeNumber로 재조회 시도 (가장 신뢰할 수 있는 식별자)
                     existingEmployee =
-                      await this.employeeRepository.findByEmployeeNumber(
+                      await this.employeeService.findByEmployeeNumber(
                         employee.employeeNumber,
                       );
 
@@ -370,7 +408,7 @@ export class EmployeeSyncService implements OnModuleInit {
                     // 2. employeeNumber로 못 찾으면 email로 재조회
                     if (!existingEmployee) {
                       existingEmployee =
-                        await this.employeeRepository.findByEmail(
+                        await this.employeeService.findByEmail(
                           employee.email,
                         );
                       if (existingEmployee) {
@@ -383,7 +421,7 @@ export class EmployeeSyncService implements OnModuleInit {
                     // 3. email로도 못 찾으면 externalId로 재조회
                     if (!existingEmployee) {
                       existingEmployee =
-                        await this.employeeRepository.findByExternalId(
+                        await this.employeeService.findByExternalId(
                           employee.externalId,
                         );
                       if (existingEmployee) {
@@ -420,7 +458,7 @@ export class EmployeeSyncService implements OnModuleInit {
                         updatedBy: this.systemUserId,
                       });
 
-                      await this.employeeRepository.save(existingEmployee);
+                      await this.employeeService.save(existingEmployee);
                       savedCount++;
                       this.logger.debug(
                         `직원 ${employee.name} (${employee.employeeNumber}) 업데이트 완료`,
@@ -487,7 +525,7 @@ export class EmployeeSyncService implements OnModuleInit {
   /**
    * 스케줄된 자동 동기화 (매시간)
    */
-  @Cron(CronExpression.EVERY_10_MINUTES)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async scheduledSync(): Promise<void> {
     this.logger.log('스케줄된 직원 동기화를 시작합니다...');
     await this.syncEmployees();
@@ -508,16 +546,16 @@ export class EmployeeSyncService implements OnModuleInit {
   async getEmployees(forceRefresh: boolean = false): Promise<Employee[]> {
     try {
       // 1. 강제 새로고침이 요청되었거나 로컬 데이터가 없는 경우
-      const localEmployees = await this.employeeRepository.findAll();
+      const localEmployees = await this.employeeService.findAll();
 
       if (forceRefresh || localEmployees.length === 0) {
         this.logger.log('직원 데이터를 외부 API에서 동기화합니다...');
         await this.syncEmployees(forceRefresh);
-        return this.employeeRepository.findAll();
+        return this.employeeService.findAll();
       }
 
       // 2. 마지막 동기화 시간 확인 (24시간 이상 경과시 백그라운드 동기화)
-      const stats = await this.employeeRepository.getEmployeeStats();
+      const stats = await this.employeeService.getEmployeeStats();
       const lastSyncAt = stats.lastSyncAt;
       const now = new Date();
       const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -552,12 +590,12 @@ export class EmployeeSyncService implements OnModuleInit {
   ): Promise<Employee | null> {
     try {
       // 1. 로컬에서 조회
-      let employee = await this.employeeRepository.findById(id);
+      let employee = await this.employeeService.findById(id);
 
       // 2. 없거나 강제 새로고침인 경우 동기화 후 재조회
       if (!employee || forceRefresh) {
         await this.syncEmployees(forceRefresh);
-        employee = await this.employeeRepository.findById(id);
+        employee = await this.employeeService.findById(id);
       }
 
       return employee;
@@ -578,11 +616,11 @@ export class EmployeeSyncService implements OnModuleInit {
     forceRefresh: boolean = false,
   ): Promise<Employee | null> {
     try {
-      let employee = await this.employeeRepository.findByExternalId(externalId);
+      let employee = await this.employeeService.findByExternalId(externalId);
 
       if (!employee || forceRefresh) {
         await this.syncEmployees(forceRefresh);
-        employee = await this.employeeRepository.findByExternalId(externalId);
+        employee = await this.employeeService.findByExternalId(externalId);
       }
 
       return employee;
@@ -604,12 +642,12 @@ export class EmployeeSyncService implements OnModuleInit {
   ): Promise<Employee | null> {
     try {
       let employee =
-        await this.employeeRepository.findByEmployeeNumber(employeeNumber);
+        await this.employeeService.findByEmployeeNumber(employeeNumber);
 
       if (!employee || forceRefresh) {
         await this.syncEmployees(forceRefresh);
         employee =
-          await this.employeeRepository.findByEmployeeNumber(employeeNumber);
+          await this.employeeService.findByEmployeeNumber(employeeNumber);
       }
 
       return employee;
@@ -633,11 +671,11 @@ export class EmployeeSyncService implements OnModuleInit {
     forceRefresh: boolean = false,
   ): Promise<Employee | null> {
     try {
-      let employee = await this.employeeRepository.findByEmail(email);
+      let employee = await this.employeeService.findByEmail(email);
 
       if (!employee || forceRefresh) {
         await this.syncEmployees(forceRefresh);
-        employee = await this.employeeRepository.findByEmail(email);
+        employee = await this.employeeService.findByEmail(email);
       }
 
       return employee;

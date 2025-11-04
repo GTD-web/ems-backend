@@ -25,202 +25,32 @@ export class DepartmentTestService {
     // 기존 테스트 데이터 정리
     await this.테스트_데이터를_정리한다();
 
-    // 고유한 식별자를 위한 타임스탬프와 랜덤 값 생성
-    const timestamp = Date.now();
-    const randomId = Math.floor(Math.random() * 10000);
-    const uniqueSuffix = `${timestamp}-${randomId}`;
-
     const testDepartments = [
-      // 최상위 부서들
       {
-        name: '경영진',
-        code: `EXEC-${uniqueSuffix}`,
-        externalId: `exec-001-${uniqueSuffix}`,
+        name: '루미르 주식회사',
+        code: '루미르',
+        order: 0,
+        externalId: 'test-dept-001',
+        externalCreatedAt: new Date(),
+        externalUpdatedAt: new Date(),
+      },
+      {
+        name: '개발본부',
+        code: '개발본부',
         order: 1,
-        managerId: 'manager-001',
-        parentDepartmentId: null,
-        externalCreatedAt: new Date('2024-01-01'),
-        externalUpdatedAt: new Date('2024-01-01'),
+        parentDepartmentId: 'test-dept-001',
+        externalId: 'test-dept-002',
+        externalCreatedAt: new Date(),
+        externalUpdatedAt: new Date(),
       },
       {
-        name: '기술개발본부',
-        code: `TECH-${uniqueSuffix}`,
-        externalId: `tech-001-${uniqueSuffix}`,
+        name: '개발팀',
+        code: '개발팀',
         order: 2,
-        managerId: 'manager-002',
-        parentDepartmentId: null,
-        externalCreatedAt: new Date('2024-01-01'),
-        externalUpdatedAt: new Date('2024-01-01'),
-      },
-      {
-        name: '영업본부',
-        code: `SALES-${uniqueSuffix}`,
-        externalId: `sales-001-${uniqueSuffix}`,
-        order: 3,
-        managerId: 'manager-003',
-        parentDepartmentId: null,
-        externalCreatedAt: new Date('2024-01-01'),
-        externalUpdatedAt: new Date('2024-01-01'),
-      },
-      {
-        name: '인사관리부',
-        code: `HR-${uniqueSuffix}`,
-        externalId: `hr-001-${uniqueSuffix}`,
-        order: 4,
-        managerId: 'manager-004',
-        parentDepartmentId: null,
-        externalCreatedAt: new Date('2024-01-01'),
-        externalUpdatedAt: new Date('2024-01-01'),
-      },
-
-      // 기술개발본부 하위 부서들
-      {
-        name: '백엔드개발팀',
-        code: `BACKEND-${uniqueSuffix}`,
-        externalId: `backend-001-${uniqueSuffix}`,
-        order: 1,
-        managerId: 'manager-005',
-        parentDepartmentId: 'tech-001',
-        externalCreatedAt: new Date('2024-01-02'),
-        externalUpdatedAt: new Date('2024-01-02'),
-      },
-      {
-        name: '프론트엔드개발팀',
-        code: `FRONTEND-${uniqueSuffix}`,
-        externalId: `frontend-001-${uniqueSuffix}`,
-        order: 2,
-        managerId: 'manager-006',
-        parentDepartmentId: 'tech-001',
-        externalCreatedAt: new Date('2024-01-02'),
-        externalUpdatedAt: new Date('2024-01-02'),
-      },
-      {
-        name: '데이터팀',
-        code: `DATA-${uniqueSuffix}`,
-        externalId: `data-001-${uniqueSuffix}`,
-        order: 3,
-        managerId: 'manager-007',
-        parentDepartmentId: 'tech-001',
-        externalCreatedAt: new Date('2024-01-02'),
-        externalUpdatedAt: new Date('2024-01-02'),
-      },
-      {
-        name: 'DevOps팀',
-        code: `DEVOPS-${uniqueSuffix}`,
-        externalId: `devops-001-${uniqueSuffix}`,
-        order: 4,
-        managerId: 'manager-008',
-        parentDepartmentId: 'tech-001',
-        externalCreatedAt: new Date('2024-01-02'),
-        externalUpdatedAt: new Date('2024-01-02'),
-      },
-
-      // 영업본부 하위 부서들
-      {
-        name: '국내영업팀',
-        code: `DOMESTIC-${uniqueSuffix}`,
-        externalId: `domestic-001-${uniqueSuffix}`,
-        order: 1,
-        managerId: 'manager-009',
-        parentDepartmentId: 'sales-001',
-        externalCreatedAt: new Date('2024-01-03'),
-        externalUpdatedAt: new Date('2024-01-03'),
-      },
-      {
-        name: '해외영업팀',
-        code: `GLOBAL-${uniqueSuffix}`,
-        externalId: `global-001-${uniqueSuffix}`,
-        order: 2,
-        managerId: 'manager-010',
-        parentDepartmentId: 'sales-001',
-        externalCreatedAt: new Date('2024-01-03'),
-        externalUpdatedAt: new Date('2024-01-03'),
-      },
-      {
-        name: '마케팅팀',
-        code: `MARKETING-${uniqueSuffix}`,
-        externalId: `marketing-001-${uniqueSuffix}`,
-        order: 3,
-        managerId: 'manager-011',
-        parentDepartmentId: 'sales-001',
-        externalCreatedAt: new Date('2024-01-03'),
-        externalUpdatedAt: new Date('2024-01-03'),
-      },
-
-      // 인사관리부 하위 부서들
-      {
-        name: '채용팀',
-        code: `RECRUIT-${uniqueSuffix}`,
-        externalId: `recruit-001-${uniqueSuffix}`,
-        order: 1,
-        managerId: 'manager-012',
-        parentDepartmentId: 'hr-001',
-        externalCreatedAt: new Date('2024-01-04'),
-        externalUpdatedAt: new Date('2024-01-04'),
-      },
-      {
-        name: '교육팀',
-        code: `TRAINING-${uniqueSuffix}`,
-        externalId: `training-001-${uniqueSuffix}`,
-        order: 2,
-        managerId: 'manager-013',
-        parentDepartmentId: 'hr-001',
-        externalCreatedAt: new Date('2024-01-04'),
-        externalUpdatedAt: new Date('2024-01-04'),
-      },
-      {
-        name: '급여팀',
-        code: `PAYROLL-${uniqueSuffix}`,
-        externalId: `payroll-001-${uniqueSuffix}`,
-        order: 3,
-        managerId: 'manager-014',
-        parentDepartmentId: 'hr-001',
-        externalCreatedAt: new Date('2024-01-04'),
-        externalUpdatedAt: new Date('2024-01-04'),
-      },
-
-      // 3단계 하위 부서들 (백엔드개발팀 하위)
-      {
-        name: 'API개발팀',
-        code: `API-${uniqueSuffix}`,
-        externalId: `api-001-${uniqueSuffix}`,
-        order: 1,
-        managerId: 'manager-015',
-        parentDepartmentId: 'backend-001',
-        externalCreatedAt: new Date('2024-01-05'),
-        externalUpdatedAt: new Date('2024-01-05'),
-      },
-      {
-        name: '마이크로서비스팀',
-        code: `MICROSERVICE-${uniqueSuffix}`,
-        externalId: `microservice-001-${uniqueSuffix}`,
-        order: 2,
-        managerId: 'manager-016',
-        parentDepartmentId: 'backend-001',
-        externalCreatedAt: new Date('2024-01-05'),
-        externalUpdatedAt: new Date('2024-01-05'),
-      },
-
-      // 프론트엔드개발팀 하위
-      {
-        name: '웹개발팀',
-        code: `WEB-${uniqueSuffix}`,
-        externalId: `web-001-${uniqueSuffix}`,
-        order: 1,
-        managerId: 'manager-017',
-        parentDepartmentId: 'frontend-001',
-        externalCreatedAt: new Date('2024-01-05'),
-        externalUpdatedAt: new Date('2024-01-05'),
-      },
-      {
-        name: '모바일개발팀',
-        code: `MOBILE-${uniqueSuffix}`,
-        externalId: `mobile-001-${uniqueSuffix}`,
-        order: 2,
-        managerId: 'manager-018',
-        parentDepartmentId: 'frontend-001',
-        externalCreatedAt: new Date('2024-01-05'),
-        externalUpdatedAt: new Date('2024-01-05'),
+        parentDepartmentId: 'test-dept-002',
+        externalId: 'test-dept-003',
+        externalCreatedAt: new Date(),
+        externalUpdatedAt: new Date(),
       },
     ];
 
@@ -231,74 +61,20 @@ export class DepartmentTestService {
         dept.code,
         dept.externalId,
         dept.order,
-        dept.managerId,
-        dept.parentDepartmentId || undefined,
+        undefined, // managerId
+        dept.parentDepartmentId,
         dept.externalCreatedAt,
         dept.externalUpdatedAt,
       );
+      department.createdBy = 'TEST_SYSTEM';
+      department.updatedBy = 'TEST_SYSTEM';
       return department;
     });
 
     const savedDepartments = await this.departmentRepository.save(departments);
 
-    return savedDepartments.map((department) => department.DTO로_변환한다());
-  }
+    console.log(`부서 생성 완료: ${savedDepartments.length}개`);
 
-  /**
-   * 특정 부서의 테스트 데이터를 생성한다
-   * @param departmentData 부서 데이터
-   * @returns 생성된 부서 정보
-   */
-  async 특정_부서_테스트데이터를_생성한다(departmentData: {
-    name: string;
-    code: string;
-    externalId: string;
-    order?: number;
-    managerId?: string;
-    parentDepartmentId?: string;
-    externalCreatedAt?: Date;
-    externalUpdatedAt?: Date;
-  }): Promise<DepartmentDto> {
-    const department = new Department(
-      departmentData.name,
-      departmentData.code,
-      departmentData.externalId,
-      departmentData.order || 0,
-      departmentData.managerId,
-      departmentData.parentDepartmentId,
-      departmentData.externalCreatedAt || new Date(),
-      departmentData.externalUpdatedAt || new Date(),
-    );
-
-    const savedDepartment = await this.departmentRepository.save(department);
-    return savedDepartment.DTO로_변환한다();
-  }
-
-  /**
-   * 테스트용 랜덤 부서 데이터를 생성한다
-   * @param count 생성할 부서 수
-   * @returns 생성된 부서 목록
-   */
-  async 랜덤_테스트데이터를_생성한다(
-    count: number = 10,
-  ): Promise<DepartmentDto[]> {
-    const departments: Department[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const department = new Department(
-        `테스트부서${i + 1}`,
-        `TEST${String(i + 1).padStart(3, '0')}`,
-        `test-${i + 1}`,
-        i + 1,
-        `manager-${i + 1}`,
-        undefined, // 최상위 부서로 생성
-        new Date(),
-        new Date(),
-      );
-      departments.push(department);
-    }
-
-    const savedDepartments = await this.departmentRepository.save(departments);
     return savedDepartments.map((department) => department.DTO로_변환한다());
   }
 
@@ -307,21 +83,8 @@ export class DepartmentTestService {
    * @returns 삭제된 부서 수
    */
   async 테스트_데이터를_정리한다(): Promise<number> {
-    // 테스트용 부서들을 삭제 (externalId가 test-로 시작하거나 특정 패턴을 가진 것들)
-    const result = await this.departmentRepository
-      .createQueryBuilder()
-      .delete()
-      .where(
-        'externalId LIKE :pattern1 OR externalId LIKE :pattern2 OR externalId LIKE :pattern3',
-        {
-          pattern1: 'test-%',
-          pattern2: 'exec-%',
-          pattern3: 'tech-%',
-        },
-      )
-      .execute();
-
-    return result.affected || 0;
+    // E2E 테스트는 독립적으로 실행되므로 모든 부서 데이터를 삭제
+    return await this.모든_테스트데이터를_삭제한다();
   }
 
   /**
@@ -336,69 +99,5 @@ export class DepartmentTestService {
 
     return result.affected || 0;
   }
-
-  /**
-   * 테스트용 부서 계층 구조를 생성한다
-   * @param depth 최대 깊이
-   * @param maxChildrenPerLevel 각 레벨당 최대 자식 수
-   * @returns 생성된 부서 목록
-   */
-  async 계층구조_테스트데이터를_생성한다(
-    depth: number = 3,
-    maxChildrenPerLevel: number = 3,
-  ): Promise<DepartmentDto[]> {
-    await this.테스트_데이터를_정리한다();
-
-    const departments: Department[] = [];
-    let currentLevel = 0;
-    let parentIds: string[] = [];
-    let orderCounter = 1;
-
-    // 루트 부서 생성
-    const rootDepartment = new Department(
-      '테스트루트부서',
-      'ROOT',
-      'test-root',
-      orderCounter++,
-      'root-manager',
-      undefined,
-      new Date(),
-      new Date(),
-    );
-    const savedRoot = await this.departmentRepository.save(rootDepartment);
-    departments.push(savedRoot);
-    parentIds = [savedRoot.externalId];
-
-    // 각 레벨별로 부서 생성
-    for (let level = 1; level <= depth; level++) {
-      const newParentIds: string[] = [];
-
-      for (const parentId of parentIds) {
-        const childrenCount =
-          Math.floor(Math.random() * maxChildrenPerLevel) + 1;
-
-        for (let i = 0; i < childrenCount; i++) {
-          const department = new Department(
-            `레벨${level}부서${i + 1}`,
-            `L${level}D${i + 1}`,
-            `test-l${level}-d${i + 1}`,
-            orderCounter++,
-            `manager-l${level}-d${i + 1}`,
-            parentId,
-            new Date(),
-            new Date(),
-          );
-
-          const savedDepartment =
-            await this.departmentRepository.save(department);
-          departments.push(savedDepartment);
-          newParentIds.push(savedDepartment.externalId);
-        }
-      }
-
-      parentIds = newParentIds;
-    }
-
-    return departments.map((department) => department.DTO로_변환한다());
-  }
 }
+
