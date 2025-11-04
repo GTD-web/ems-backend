@@ -27,7 +27,7 @@ import { TransactionManagerService } from './transaction-manager.service';
           url: databaseUrl,
           autoLoadEntities: true,
           // 테스트 환경에서는 기존 스키마를 드롭하고 새로 생성
-          dropSchema: isTest,
+          dropSchema: true,
           synchronize: configService.get<boolean>(
             'DB_SYNCHRONIZE',
             nodeEnv === 'development' || isTest,
