@@ -206,15 +206,7 @@ export class EvaluationWbsAssignmentValidationService {
     createData: CreateEvaluationWbsAssignmentData,
     manager?: EntityManager,
   ): Promise<void> {
-    // 중복 할당 검증
-    await this.중복할당검증한다(
-      createData.periodId,
-      createData.employeeId,
-      createData.projectId,
-      createData.wbsItemId,
-      undefined,
-      manager,
-    );
+    // 주의: 중복 할당 검증은 컨텍스트 레벨에서 수행됩니다.
 
     // 평가기간 유효성 검증 (실제 구현에서는 평가기간 서비스를 주입받아 검증)
     await this.평가기간유효성검증한다(createData.periodId, manager);
@@ -228,12 +220,7 @@ export class EvaluationWbsAssignmentValidationService {
     // WBS 항목 유효성 검증 (실제 구현에서는 WBS 서비스를 주입받아 검증)
     await this.WBS항목유효성검증한다(createData.wbsItemId, manager);
 
-    // 프로젝트-WBS 항목 연관성 검증
-    await this.프로젝트WBS연관성검증한다(
-      createData.projectId,
-      createData.wbsItemId,
-      manager,
-    );
+    // 주의: 프로젝트-WBS 항목 연관성 검증은 컨텍스트 레벨에서 수행됩니다.
   }
 
   /**
@@ -252,34 +239,6 @@ export class EvaluationWbsAssignmentValidationService {
     if (updateData.assignedBy) {
       await this.할당자유효성검증한다(updateData.assignedBy, manager);
     }
-  }
-
-  /**
-   * 할당 생성 비즈니스 규칙을 검증한다
-   */
-  async 할당생성비즈니스규칙검증한다(
-    createData: CreateEvaluationWbsAssignmentData,
-    manager?: EntityManager,
-  ): Promise<void> {
-    // 중복 할당 검증
-    await this.중복할당검증한다(
-      createData.periodId,
-      createData.employeeId,
-      createData.projectId,
-      createData.wbsItemId,
-      undefined,
-      manager,
-    );
-
-    // 평가기간 상태 검증
-    await this.평가기간상태검증한다(createData.periodId, manager);
-
-    // 프로젝트-WBS 항목 연관성 검증
-    await this.프로젝트WBS연관성검증한다(
-      createData.projectId,
-      createData.wbsItemId,
-      manager,
-    );
   }
 
   /**
@@ -303,8 +262,7 @@ export class EvaluationWbsAssignmentValidationService {
       );
     }
 
-    // 평가기간 상태 검증
-    await this.평가기간상태검증한다(existingAssignment.periodId, manager);
+    // 주의: 평가기간 상태 검증은 컨텍스트 레벨에서 수행됩니다.
 
     // 기존 업데이트 비즈니스 규칙 검증
     await this.업데이트비즈니스규칙검증한다(
@@ -322,46 +280,6 @@ export class EvaluationWbsAssignmentValidationService {
     // 평가기간 상태 검증 - 완료된 평가기간의 할당은 삭제할 수 없음
     // 실제 구현에서는 평가기간 서비스를 주입받아 상태 확인
     // 현재는 특별한 제약 없이 삭제 허용 (초기화 기능은 관리자 권한으로 수행)
-  }
-
-  /**
-   * 중복 할당을 검증한다
-   */
-  private async 중복할당검증한다(
-    periodId: string,
-    employeeId: string,
-    projectId: string,
-    wbsItemId: string,
-    excludeId?: string,
-    manager?: EntityManager,
-  ): Promise<void> {
-    const repository = this.transactionManager.getRepository(
-      EvaluationWbsAssignment,
-      this.evaluationWbsAssignmentRepository,
-      manager,
-    );
-
-    const queryBuilder = repository
-      .createQueryBuilder('assignment')
-      .where('assignment.periodId = :periodId', { periodId })
-      .andWhere('assignment.employeeId = :employeeId', { employeeId })
-      .andWhere('assignment.projectId = :projectId', { projectId })
-      .andWhere('assignment.wbsItemId = :wbsItemId', { wbsItemId })
-      .andWhere('assignment.deletedAt IS NULL'); // soft delete 된 할당 제외
-
-    if (excludeId) {
-      queryBuilder.andWhere('assignment.id != :excludeId', { excludeId });
-    }
-
-    const count = await queryBuilder.getCount();
-    if (count > 0) {
-      throw new EvaluationWbsAssignmentDuplicateException(
-        periodId,
-        employeeId,
-        projectId,
-        wbsItemId,
-      );
-    }
   }
 
   /**
@@ -440,43 +358,6 @@ export class EvaluationWbsAssignmentValidationService {
     if (!assignedBy?.trim()) {
       throw new EvaluationWbsAssignmentBusinessRuleViolationException(
         '유효하지 않은 할당자 ID입니다.',
-      );
-    }
-  }
-
-  /**
-   * 평가기간 상태를 검증한다
-   */
-  private async 평가기간상태검증한다(
-    periodId: string,
-    manager?: EntityManager,
-  ): Promise<void> {
-    // 실제 구현에서는 평가기간 서비스를 주입받아 상태 확인
-    // 완료된 평가기간에는 할당을 생성/수정할 수 없음
-    // 현재는 기본적인 검증만 수행
-
-    if (!periodId?.trim()) {
-      throw new EvaluationWbsAssignmentBusinessRuleViolationException(
-        '평가기간 상태를 확인할 수 없습니다.',
-      );
-    }
-  }
-
-  /**
-   * 프로젝트-WBS 항목 연관성을 검증한다
-   */
-  private async 프로젝트WBS연관성검증한다(
-    projectId: string,
-    wbsItemId: string,
-    manager?: EntityManager,
-  ): Promise<void> {
-    // 실제 구현에서는 프로젝트 서비스와 WBS 서비스를 주입받아 연관성 확인
-    // WBS 항목이 해당 프로젝트에 속하는지 검증
-    // 현재는 기본적인 검증만 수행
-
-    if (!projectId?.trim() || !wbsItemId?.trim()) {
-      throw new EvaluationWbsAssignmentBusinessRuleViolationException(
-        '프로젝트와 WBS 항목의 연관성을 확인할 수 없습니다.',
       );
     }
   }

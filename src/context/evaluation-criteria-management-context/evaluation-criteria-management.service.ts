@@ -6,11 +6,12 @@ import {
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, EntityManager } from 'typeorm';
 import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-criteria-management.interface';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
+import { WbsAssignmentValidationService } from './services/wbs-assignment-validation.service';
 
 // Project Assignment Commands & Queries
 import {
@@ -132,6 +133,7 @@ export class EvaluationCriteriaManagementService
     private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
     @InjectRepository(EvaluationLine)
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
+    private readonly wbsAssignmentValidationService: WbsAssignmentValidationService,
   ) {}
 
   // ============================================================================
@@ -281,6 +283,20 @@ export class EvaluationCriteriaManagementService
   // ============================================================================
   // WBS 할당 관리
   // ============================================================================
+
+  /**
+   * WBS 할당 생성 비즈니스 규칙을 검증한다
+   * Context 레벨에서 비즈니스 로직 검증 및 예외 처리를 수행
+   */
+  async WBS_할당_생성_비즈니스_규칙을_검증한다(
+    data: CreateEvaluationWbsAssignmentData,
+    manager?: EntityManager,
+  ): Promise<void> {
+    await this.wbsAssignmentValidationService.할당생성비즈니스규칙검증한다(
+      data,
+      manager,
+    );
+  }
 
   async WBS를_할당한다(
     data: CreateEvaluationWbsAssignmentData,
@@ -438,7 +454,10 @@ export class EvaluationCriteriaManagementService
       updatedAt: Date;
     }[];
   }> {
-    const query = new GetEvaluatorEmployeesQuery(evaluationPeriodId, evaluatorId);
+    const query = new GetEvaluatorEmployeesQuery(
+      evaluationPeriodId,
+      evaluatorId,
+    );
     return await this.queryBus.execute(query);
   }
 

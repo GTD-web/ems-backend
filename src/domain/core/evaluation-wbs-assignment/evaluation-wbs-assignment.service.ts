@@ -286,11 +286,7 @@ export class EvaluationWbsAssignmentService
     return this.executeSafeDomainOperation(async () => {
       const entityManager = manager || this.dataSource.manager;
 
-      // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
-      await this.validationService.할당생성비즈니스규칙검증한다(
-        createData,
-        entityManager,
-      );
+      // 주의: 비즈니스 규칙 검증은 컨텍스트 레벨에서 수행됩니다.
 
       const repository = this.transactionManager.getRepository(
         EvaluationWbsAssignment,

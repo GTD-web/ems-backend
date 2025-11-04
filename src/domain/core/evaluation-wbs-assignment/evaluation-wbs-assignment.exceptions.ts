@@ -162,3 +162,33 @@ export class InvalidEvaluationWbsAssignmentDataFormatException extends Evaluatio
     this.name = 'InvalidEvaluationWbsAssignmentDataFormatException';
   }
 }
+
+/**
+ * 프로젝트 할당 선행 조건 미충족 예외
+ */
+export class ProjectAssignmentPrerequisiteException extends EvaluationWbsAssignmentDomainException {
+  constructor(
+    periodId: string,
+    employeeId: string,
+    projectId: string,
+  ) {
+    super(
+      `프로젝트 할당이 없으면 WBS 할당을 생성할 수 없습니다. 평가기간: ${periodId}, 직원: ${employeeId}, 프로젝트: ${projectId}`,
+      'PROJECT_ASSIGNMENT_PREREQUISITE_NOT_MET',
+    );
+    this.name = 'ProjectAssignmentPrerequisiteException';
+  }
+}
+
+/**
+ * 완료된 평가기간에서 할당 생성 불가 예외
+ */
+export class CompletedEvaluationPeriodAssignmentException extends EvaluationWbsAssignmentDomainException {
+  constructor(periodId: string, action: string) {
+    super(
+      `완료된 평가기간에는 ${action}할 수 없습니다. 평가기간: ${periodId}`,
+      'COMPLETED_EVALUATION_PERIOD_ASSIGNMENT',
+    );
+    this.name = 'CompletedEvaluationPeriodAssignmentException';
+  }
+}

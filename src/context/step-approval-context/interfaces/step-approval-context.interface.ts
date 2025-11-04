@@ -31,3 +31,4 @@ export interface IStepApprovalContext {
   단계별_확인상태를_변경한다(request: UpdateStepApprovalRequest): Promise<void>;
 }
 
+
