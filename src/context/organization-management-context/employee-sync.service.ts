@@ -78,6 +78,7 @@ export class EmployeeSyncService implements OnModuleInit {
       this.logger.error(`모듈 초기화 중 오류 발생: ${error.message}`);
       // 초기화 오류는 애플리케이션 시작을 막지 않습니다
     }
+    
   }
 
   /**
@@ -86,9 +87,9 @@ export class EmployeeSyncService implements OnModuleInit {
    * 
    * @param useHierarchyAPI 부서 계층 구조 API 사용 여부 (기본값: false, getEmployees 사용)
    */
-  async fetchExternalEmployees(useHierarchyAPI: boolean = false): Promise<EmployeeInfo[]> {
+  async fetchExternalEmployees(useHierarchyAPI: boolean = false): Promise<any[]> {
     try {
-      let employees: EmployeeInfo[];
+      let employees: any[];
 
       if (useHierarchyAPI) {
         // 부서 계층 구조를 통해 모든 직원 정보를 평면 목록으로 조회 (옵션)
@@ -102,10 +103,28 @@ export class EmployeeSyncService implements OnModuleInit {
       } else {
         // 직접 직원 목록 API 사용 (identifiers 생략 시 전체 조회) - 기본 방식
         this.logger.log('직원 목록 API(getEmployees)를 사용하여 모든 직원 정보를 조회합니다...');
-        employees = await this.ssoService.여러직원정보를조회한다({
+        
+        // 원시 데이터를 직접 받기 위해 SDK 클라이언트에서 직접 호출
+        const result = await (this.ssoService as any).sdkClient.organization.getEmployees({
           withDetail: true,
           includeTerminated: false, // 퇴사자 제외
         });
+
+        // SDK 응답이 배열인지 확인
+        const rawEmployees = Array.isArray(result)
+          ? result
+          : result?.employees || result?.data || [];
+
+        if (!Array.isArray(rawEmployees)) {
+          this.logger.warn(
+            '예상치 못한 응답 형식:',
+            JSON.stringify(result).substring(0, 200),
+          );
+          return [];
+        }
+
+        // 원시 데이터를 그대로 반환 (EmployeeInfo로 변환하지 않음)
+        employees = rawEmployees;
         this.logger.log(
           `직원 목록 API에서 ${employees.length}개의 직원 데이터를 조회했습니다.`,
         );
@@ -123,31 +142,86 @@ export class EmployeeSyncService implements OnModuleInit {
 
   /**
    * SSO 직원 정보를 내부 엔티티로 변환
+   * 실제 SSO 서버에서 넘어온 원시 데이터를 직원 테이블 구조에 맞게 매핑
    */
-  private mapSSOEmployeeToDto(ssoEmployee: EmployeeInfo): CreateEmployeeDto {
-    // SSO의 EmployeeInfo 구조에서 필요한 정보 추출
+  private mapSSOEmployeeToDto(ssoEmployee: any): CreateEmployeeDto {
+    // SSO 원시 데이터에서 직접 추출 (EmployeeInfo 인터페이스가 아닌 실제 데이터 구조 사용)
     const departmentId = ssoEmployee.department?.id;
     const departmentName = ssoEmployee.department?.departmentName;
     const departmentCode = ssoEmployee.department?.departmentCode;
 
     const positionId = ssoEmployee.position?.id;
 
-    // jobTitle이 rank(직책)에 해당
-    const rankId = ssoEmployee.jobTitle?.id;
-    const rankName = ssoEmployee.jobTitle?.jobTitleName;
-    const rankLevel = ssoEmployee.jobTitle?.jobTitleLevel;
+    // rank 필드가 실제 SSO 데이터 구조 (jobTitle이 아님)
+    const rankId = ssoEmployee.rank?.id;
+    const rankName = ssoEmployee.rank?.rankName;
+    const rankCode = ssoEmployee.rank?.rankCode;
+    const rankLevel = ssoEmployee.rank?.level;
 
-    // 퇴사자 여부에 따른 상태 설정
-    const status = ssoEmployee.isTerminated ? '퇴사' : '재직중';
+    // status 필드 처리: "재직중" 또는 다른 값
+    let status: '재직중' | '휴직중' | '퇴사' = '재직중';
+    if (ssoEmployee.status) {
+      if (ssoEmployee.status === '재직중' || ssoEmployee.status === 'ACTIVE' || ssoEmployee.status === 'active') {
+        status = '재직중';
+      } else if (ssoEmployee.status === '휴직중' || ssoEmployee.status === 'ON_LEAVE') {
+        status = '휴직중';
+      } else if (ssoEmployee.status === '퇴사' || ssoEmployee.status === 'TERMINATED' || ssoEmployee.status === 'terminated') {
+        status = '퇴사';
+      }
+    } else if (ssoEmployee.isTerminated) {
+      status = '퇴사';
+    }
+
+    // dateOfBirth 처리: "1989-12-04" 형식의 문자열을 Date로 변환
+    let dateOfBirth: Date | undefined;
+    if (ssoEmployee.dateOfBirth) {
+      try {
+        dateOfBirth = new Date(ssoEmployee.dateOfBirth);
+        if (isNaN(dateOfBirth.getTime())) {
+          dateOfBirth = undefined;
+        }
+      } catch {
+        dateOfBirth = undefined;
+      }
+    }
+
+    // hireDate 처리: "2025-01-01" 형식의 문자열을 Date로 변환
+    let hireDate: Date | undefined;
+    if (ssoEmployee.hireDate) {
+      try {
+        hireDate = new Date(ssoEmployee.hireDate);
+        if (isNaN(hireDate.getTime())) {
+          hireDate = undefined;
+        }
+      } catch {
+        hireDate = undefined;
+      }
+    }
+
+    // gender 처리: "MALE" 또는 "FEMALE"
+    let gender: 'MALE' | 'FEMALE' | undefined;
+    if (ssoEmployee.gender) {
+      const genderUpper = ssoEmployee.gender.toUpperCase();
+      if (genderUpper === 'MALE' || genderUpper === 'M') {
+        gender = 'MALE';
+      } else if (genderUpper === 'FEMALE' || genderUpper === 'F') {
+        gender = 'FEMALE';
+      }
+    }
+
+    // phoneNumber 처리: 빈 문자열이면 undefined
+    const phoneNumber = ssoEmployee.phoneNumber && ssoEmployee.phoneNumber.trim() !== '' 
+      ? ssoEmployee.phoneNumber 
+      : undefined;
 
     return {
       employeeNumber: ssoEmployee.employeeNumber,
       name: ssoEmployee.name,
       email: ssoEmployee.email,
-      phoneNumber: ssoEmployee.phoneNumber || undefined,
-      dateOfBirth: undefined, // SSO에서 제공하지 않음
-      gender: undefined, // SSO에서 제공하지 않음
-      hireDate: undefined, // SSO에서 제공하지 않음
+      phoneNumber: phoneNumber,
+      dateOfBirth: dateOfBirth,
+      gender: gender,
+      hireDate: hireDate,
       managerId: undefined, // SSO에서 제공하지 않음
       status: status,
       departmentId: departmentId,
@@ -156,7 +230,7 @@ export class EmployeeSyncService implements OnModuleInit {
       positionId: positionId,
       rankId: rankId,
       rankName: rankName,
-      rankCode: undefined, // SSO에서 제공하지 않음
+      rankCode: rankCode,
       rankLevel: rankLevel,
       externalId: ssoEmployee.id,
       externalCreatedAt: new Date(), // SSO에서 제공하지 않으므로 현재 시간 사용
@@ -205,148 +279,24 @@ export class EmployeeSyncService implements OnModuleInit {
         `SSO에서 ${totalProcessed}개의 직원 데이터를 조회했습니다. 동기화를 시작합니다...`,
       );
 
-      // SSO에서 받은 직원 데이터 예시 로그 출력 (첫 번째 직원)
-      if (ssoEmployees.length > 0) {
-        const sampleEmployee = ssoEmployees[1];
-        this.logger.log(
-          `[SSO 직원 데이터 예시] 첫 번째 직원 정보: ${JSON.stringify(sampleEmployee, null, 2)}`,
-        );
-      }
-
       // 2. 각 직원 데이터 처리
       const employeesToSave: Employee[] = [];
 
       for (const ssoEmp of ssoEmployees) {
-        try {
-          // 기존 직원 확인 (employeeNumber 우선)
-          let existingEmployee =
-            await this.employeeService.findByEmployeeNumber(
-              ssoEmp.employeeNumber,
-            );
-
-          // employeeNumber로 못 찾으면 externalId로 조회
-          if (!existingEmployee) {
-            existingEmployee = await this.employeeService.findByExternalId(
-              ssoEmp.id,
-            );
-          }
-
-          const mappedData = this.mapSSOEmployeeToDto(ssoEmp);
-
-          if (existingEmployee) {
-            // 업데이트가 필요한지 확인 (forceSync 또는 정보 변경 시)
-            let needsUpdate = forceSync;
-
-            // 직급 정보가 없는 경우 강제 업데이트
-            const hasRankData = mappedData.rankId || mappedData.rankName;
-            const missingRankData =
-              !existingEmployee.rankId && !existingEmployee.rankName;
-            if (hasRankData && missingRankData) {
-              needsUpdate = true;
-              this.logger.debug(
-                `직원 ${existingEmployee.name}의 직급 정보가 없어 강제 업데이트합니다.`,
-              );
-            }
-
-            // 직급 정보가 변경된 경우
-            if (
-              hasRankData &&
-              (existingEmployee.rankId !== mappedData.rankId ||
-                existingEmployee.rankName !== mappedData.rankName ||
-                existingEmployee.rankLevel !== mappedData.rankLevel)
-            ) {
-              needsUpdate = true;
-              this.logger.debug(
-                `직원 ${existingEmployee.name}의 직급 정보가 변경되어 업데이트합니다.`,
-              );
-            }
-
-            // 부서 정보가 없는 경우 강제 업데이트
-            const hasDepartmentData =
-              mappedData.departmentId ||
-              mappedData.departmentName ||
-              mappedData.departmentCode;
-            const missingDepartmentData =
-              !existingEmployee.departmentName &&
-              !existingEmployee.departmentCode;
-            if (hasDepartmentData && missingDepartmentData) {
-              needsUpdate = true;
-              this.logger.debug(
-                `직원 ${existingEmployee.name}의 부서 정보가 없어 강제 업데이트합니다.`,
-              );
-            }
-
-            // 부서 정보가 변경된 경우
-            if (
-              hasDepartmentData &&
-              (existingEmployee.departmentId !== mappedData.departmentId ||
-                existingEmployee.departmentName !== mappedData.departmentName ||
-                existingEmployee.departmentCode !== mappedData.departmentCode)
-            ) {
-              needsUpdate = true;
-              this.logger.debug(
-                `직원 ${existingEmployee.name}의 부서 정보가 변경되어 업데이트합니다.`,
-              );
-            }
-
-            if (needsUpdate) {
-              // 기존 직원 업데이트
-              Object.assign(existingEmployee, {
-                employeeNumber: mappedData.employeeNumber,
-                name: mappedData.name,
-                email: mappedData.email,
-                phoneNumber: mappedData.phoneNumber,
-                status: mappedData.status,
-                departmentId: mappedData.departmentId,
-                departmentName: mappedData.departmentName,
-                departmentCode: mappedData.departmentCode,
-                positionId: mappedData.positionId,
-                rankId: mappedData.rankId,
-                rankName: mappedData.rankName,
-                rankLevel: mappedData.rankLevel,
-                externalUpdatedAt: mappedData.externalUpdatedAt,
-                lastSyncAt: syncStartTime,
-                updatedBy: this.systemUserId,
-              } as UpdateEmployeeDto);
-
-              employeesToSave.push(existingEmployee);
-              updated++;
-            }
-          } else {
-            // 새 직원 생성
-            const newEmployee = new Employee(
-              mappedData.employeeNumber,
-              mappedData.name,
-              mappedData.email,
-              mappedData.externalId,
-              mappedData.phoneNumber,
-              mappedData.dateOfBirth,
-              mappedData.gender,
-              mappedData.hireDate,
-              mappedData.managerId,
-              mappedData.status,
-              mappedData.departmentId,
-              mappedData.departmentName,
-              mappedData.departmentCode,
-              mappedData.positionId,
-              mappedData.rankId,
-              mappedData.rankName,
-              mappedData.rankCode,
-              mappedData.rankLevel,
-              mappedData.externalCreatedAt,
-              mappedData.externalUpdatedAt,
-            );
-            newEmployee.lastSyncAt = syncStartTime;
-            newEmployee.createdBy = this.systemUserId;
-            newEmployee.updatedBy = this.systemUserId;
-
-            employeesToSave.push(newEmployee);
+        const result = await this.직원을_처리한다(
+          ssoEmp,
+          forceSync,
+          syncStartTime,
+        );
+        if (result.success && result.employee) {
+          employeesToSave.push(result.employee);
+          if (result.isNew) {
             created++;
+          } else {
+            updated++;
           }
-        } catch (error) {
-          const errorMsg = `직원 ${ssoEmp.name} 처리 실패: ${error.message}`;
-          this.logger.error(errorMsg);
-          errors.push(errorMsg);
+        } else if (result.error) {
+          errors.push(result.error);
         }
       }
 
@@ -356,141 +306,7 @@ export class EmployeeSyncService implements OnModuleInit {
       );
 
       if (employeesToSave.length > 0) {
-        try {
-          await this.employeeService.saveMany(employeesToSave);
-          this.logger.log(
-            `${employeesToSave.length}개의 직원 데이터를 저장했습니다. (생성: ${created}, 업데이트: ${updated})`,
-          );
-        } catch (saveError) {
-          // 중복 키 에러인 경우 개별 저장 시도
-          if (
-            saveError?.code === '23505' ||
-            saveError?.message?.includes('duplicate key')
-          ) {
-            this.logger.warn(
-              '일괄 저장 중 중복 키 에러 발생, 개별 저장으로 재시도합니다.',
-            );
-
-            let savedCount = 0;
-            let skippedCount = 0;
-
-            // 개별 저장
-            for (const employee of employeesToSave) {
-              try {
-                await this.employeeService.save(employee);
-                savedCount++;
-              } catch (individualError) {
-                if (
-                  individualError?.code === '23505' ||
-                  individualError?.message?.includes('duplicate key')
-                ) {
-                  // 중복 키 에러 발생 시 기존 데이터를 찾아서 업데이트
-                  this.logger.debug(
-                    `직원 ${employee.name} (${employee.employeeNumber}) 중복 발생, 재조회 후 업데이트 시도`,
-                  );
-
-                  try {
-                    // 중복 키가 어떤 필드인지 확인하고 해당 필드로 재조회
-                    let existingEmployee: Employee | null = null;
-
-                    // 1. employeeNumber로 재조회 시도 (가장 신뢰할 수 있는 식별자)
-                    existingEmployee =
-                      await this.employeeService.findByEmployeeNumber(
-                        employee.employeeNumber,
-                      );
-
-                    if (existingEmployee) {
-                      this.logger.debug(
-                        `직원 ${employee.name}을 employeeNumber로 찾음`,
-                      );
-                    }
-
-                    // 2. employeeNumber로 못 찾으면 email로 재조회
-                    if (!existingEmployee) {
-                      existingEmployee =
-                        await this.employeeService.findByEmail(
-                          employee.email,
-                        );
-                      if (existingEmployee) {
-                        this.logger.debug(
-                          `직원 ${employee.name}을 email로 찾음`,
-                        );
-                      }
-                    }
-
-                    // 3. email로도 못 찾으면 externalId로 재조회
-                    if (!existingEmployee) {
-                      existingEmployee =
-                        await this.employeeService.findByExternalId(
-                          employee.externalId,
-                        );
-                      if (existingEmployee) {
-                        this.logger.debug(
-                          `직원 ${employee.name}을 externalId로 찾음`,
-                        );
-                      }
-                    }
-
-                    if (existingEmployee) {
-                      // 기존 엔티티에 새 데이터 덮어쓰기 (모든 필드 업데이트)
-                      Object.assign(existingEmployee, {
-                        employeeNumber: employee.employeeNumber,
-                        name: employee.name,
-                        email: employee.email,
-                        phoneNumber: employee.phoneNumber,
-                        dateOfBirth: employee.dateOfBirth,
-                        gender: employee.gender,
-                        hireDate: employee.hireDate,
-                        managerId: employee.managerId,
-                        status: employee.status,
-                        departmentId: employee.departmentId,
-                        departmentName: employee.departmentName,
-                        departmentCode: employee.departmentCode,
-                        positionId: employee.positionId,
-                        rankId: employee.rankId,
-                        rankName: employee.rankName,
-                        rankCode: employee.rankCode,
-                        rankLevel: employee.rankLevel,
-                        externalId: employee.externalId, // externalId도 업데이트
-                        externalCreatedAt: employee.externalCreatedAt,
-                        externalUpdatedAt: employee.externalUpdatedAt,
-                        lastSyncAt: employee.lastSyncAt,
-                        updatedBy: this.systemUserId,
-                      });
-
-                      await this.employeeService.save(existingEmployee);
-                      savedCount++;
-                      this.logger.debug(
-                        `직원 ${employee.name} (${employee.employeeNumber}) 업데이트 완료`,
-                      );
-                    } else {
-                      this.logger.warn(
-                        `직원 ${employee.name} (${employee.employeeNumber}) 재조회 실패, 건너뜀. ` +
-                          `externalId=${employee.externalId}, employeeNumber=${employee.employeeNumber}, email=${employee.email}`,
-                      );
-                      skippedCount++;
-                    }
-                  } catch (retryError) {
-                    const errorMsg = `직원 ${employee.name} 재조회/업데이트 실패: ${retryError.message}`;
-                    this.logger.error(errorMsg);
-                    errors.push(errorMsg);
-                    skippedCount++;
-                  }
-                } else {
-                  const errorMsg = `직원 ${employee.name} 저장 실패: ${individualError.message}`;
-                  this.logger.error(errorMsg);
-                  errors.push(errorMsg);
-                }
-              }
-            }
-
-            this.logger.log(
-              `개별 저장 완료: ${savedCount}개 저장, ${skippedCount}개 건너뜀`,
-            );
-          } else {
-            throw saveError;
-          }
-        }
+        await this.직원들을_저장한다(employeesToSave, errors);
       }
 
       const result: EmployeeSyncResult = {
@@ -685,6 +501,302 @@ export class EmployeeSyncService implements OnModuleInit {
         '직원 조회에 실패했습니다.',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  // ========== 헬퍼 메서드 ==========
+
+  /**
+   * 직원을 처리한다 (생성 또는 업데이트)
+   */
+  private async 직원을_처리한다(
+    ssoEmp: any,
+    forceSync: boolean,
+    syncStartTime: Date,
+  ): Promise<{ success: boolean; employee?: Employee; isNew?: boolean; error?: string }> {
+    try {
+      // 기존 직원 확인 (employeeNumber 우선)
+      let existingEmployee =
+        await this.employeeService.findByEmployeeNumber(ssoEmp.employeeNumber);
+
+      // employeeNumber로 못 찾으면 externalId로 조회
+      if (!existingEmployee) {
+        existingEmployee = await this.employeeService.findByExternalId(ssoEmp.id);
+      }
+
+      const mappedData = this.mapSSOEmployeeToDto(ssoEmp);
+
+      if (existingEmployee) {
+        // 업데이트가 필요한지 확인
+        const needsUpdate = this.업데이트가_필요한가(existingEmployee, mappedData, forceSync);
+
+        if (needsUpdate) {
+          // 기존 직원 업데이트
+          Object.assign(existingEmployee, {
+            employeeNumber: mappedData.employeeNumber,
+            name: mappedData.name,
+            email: mappedData.email,
+            phoneNumber: mappedData.phoneNumber,
+            status: mappedData.status,
+            departmentId: mappedData.departmentId,
+            departmentName: mappedData.departmentName,
+            departmentCode: mappedData.departmentCode,
+            positionId: mappedData.positionId,
+            rankId: mappedData.rankId,
+            rankName: mappedData.rankName,
+            rankLevel: mappedData.rankLevel,
+            externalUpdatedAt: mappedData.externalUpdatedAt,
+            lastSyncAt: syncStartTime,
+            updatedBy: this.systemUserId,
+          } as UpdateEmployeeDto);
+
+          return { success: true, employee: existingEmployee, isNew: false };
+        }
+
+        return { success: false };
+      } else {
+        // 새 직원 생성
+        const newEmployee = new Employee(
+          mappedData.employeeNumber,
+          mappedData.name,
+          mappedData.email,
+          mappedData.externalId,
+          mappedData.phoneNumber,
+          mappedData.dateOfBirth,
+          mappedData.gender,
+          mappedData.hireDate,
+          mappedData.managerId,
+          mappedData.status,
+          mappedData.departmentId,
+          mappedData.departmentName,
+          mappedData.departmentCode,
+          mappedData.positionId,
+          mappedData.rankId,
+          mappedData.rankName,
+          mappedData.rankCode,
+          mappedData.rankLevel,
+          mappedData.externalCreatedAt,
+          mappedData.externalUpdatedAt,
+        );
+        newEmployee.lastSyncAt = syncStartTime;
+        newEmployee.createdBy = this.systemUserId;
+        newEmployee.updatedBy = this.systemUserId;
+
+        return { success: true, employee: newEmployee, isNew: true };
+      }
+    } catch (error) {
+      const errorMsg = `직원 ${ssoEmp.name} 처리 실패: ${error.message}`;
+      this.logger.error(errorMsg);
+      return { success: false, error: errorMsg };
+    }
+  }
+
+  /**
+   * 업데이트가 필요한지 확인한다
+   */
+  private 업데이트가_필요한가(
+    existingEmployee: Employee,
+    mappedData: CreateEmployeeDto,
+    forceSync: boolean,
+  ): boolean {
+    if (forceSync) {
+      return true;
+    }
+
+    // 직급 정보가 없는 경우 강제 업데이트
+    const hasRankData = mappedData.rankId || mappedData.rankName;
+    const missingRankData = !existingEmployee.rankId && !existingEmployee.rankName;
+    if (hasRankData && missingRankData) {
+      this.logger.debug(
+        `직원 ${existingEmployee.name}의 직급 정보가 없어 강제 업데이트합니다.`,
+      );
+      return true;
+    }
+
+    // 직급 정보가 변경된 경우
+    if (
+      hasRankData &&
+      (existingEmployee.rankId !== mappedData.rankId ||
+        existingEmployee.rankName !== mappedData.rankName ||
+        existingEmployee.rankLevel !== mappedData.rankLevel)
+    ) {
+      this.logger.debug(
+        `직원 ${existingEmployee.name}의 직급 정보가 변경되어 업데이트합니다.`,
+      );
+      return true;
+    }
+
+    // 부서 정보가 없는 경우 강제 업데이트
+    const hasDepartmentData =
+      mappedData.departmentId ||
+      mappedData.departmentName ||
+      mappedData.departmentCode;
+    const missingDepartmentData =
+      !existingEmployee.departmentName && !existingEmployee.departmentCode;
+    if (hasDepartmentData && missingDepartmentData) {
+      this.logger.debug(
+        `직원 ${existingEmployee.name}의 부서 정보가 없어 강제 업데이트합니다.`,
+      );
+      return true;
+    }
+
+    // 부서 정보가 변경된 경우
+    if (
+      hasDepartmentData &&
+      (existingEmployee.departmentId !== mappedData.departmentId ||
+        existingEmployee.departmentName !== mappedData.departmentName ||
+        existingEmployee.departmentCode !== mappedData.departmentCode)
+    ) {
+      this.logger.debug(
+        `직원 ${existingEmployee.name}의 부서 정보가 변경되어 업데이트합니다.`,
+      );
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * 직원들을 저장한다 (중복 키 에러 처리)
+   */
+  private async 직원들을_저장한다(
+    employeesToSave: Employee[],
+    errors: string[],
+  ): Promise<void> {
+    try {
+      await this.employeeService.saveMany(employeesToSave);
+      this.logger.log(
+        `${employeesToSave.length}개의 직원 데이터를 저장했습니다.`,
+      );
+    } catch (saveError) {
+      // 중복 키 에러인 경우 개별 저장 시도
+      if (
+        saveError?.code === '23505' ||
+        saveError?.message?.includes('duplicate key')
+      ) {
+        this.logger.warn(
+          '일괄 저장 중 중복 키 에러 발생, 개별 저장으로 재시도합니다.',
+        );
+        await this.개별_저장으로_재시도한다(employeesToSave, errors);
+      } else {
+        throw saveError;
+      }
+    }
+  }
+
+  /**
+   * 개별 저장으로 재시도한다
+   */
+  private async 개별_저장으로_재시도한다(
+    employeesToSave: Employee[],
+    errors: string[],
+  ): Promise<void> {
+    let savedCount = 0;
+    let skippedCount = 0;
+
+    for (const employee of employeesToSave) {
+      const result = await this.직원을_개별_저장한다(employee);
+      if (result.success) {
+        savedCount++;
+      } else {
+        errors.push(result.error!);
+        skippedCount++;
+      }
+    }
+
+    this.logger.log(
+      `개별 저장 완료: ${savedCount}개 저장, ${skippedCount}개 건너뜀`,
+    );
+  }
+
+  /**
+   * 직원을 개별 저장한다
+   */
+  private async 직원을_개별_저장한다(
+    employee: Employee,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.employeeService.save(employee);
+      return { success: true };
+    } catch (individualError) {
+      if (
+        individualError?.code === '23505' ||
+        individualError?.message?.includes('duplicate key')
+      ) {
+        // 중복 키 에러 발생 시 기존 데이터를 찾아서 업데이트
+        const result = await this.중복_키_에러_처리한다(employee);
+        if (result.success) {
+          return { success: true };
+        } else {
+          return { success: false, error: result.error };
+        }
+      } else {
+        const errorMsg = `직원 ${employee.name} 저장 실패: ${individualError.message}`;
+        this.logger.error(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+    }
+  }
+
+  /**
+   * 중복 키 에러를 처리한다 (기존 데이터 찾아서 업데이트)
+   */
+  private async 중복_키_에러_처리한다(
+    employee: Employee,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // 기존 직원 찾기
+      let existingEmployee =
+        await this.employeeService.findByEmployeeNumber(employee.employeeNumber);
+
+      if (!existingEmployee) {
+        existingEmployee = await this.employeeService.findByEmail(employee.email);
+      }
+
+      if (!existingEmployee) {
+        existingEmployee = await this.employeeService.findByExternalId(
+          employee.externalId,
+        );
+      }
+
+      if (existingEmployee) {
+        // 기존 엔티티에 새 데이터 덮어쓰기
+        Object.assign(existingEmployee, {
+          employeeNumber: employee.employeeNumber,
+          name: employee.name,
+          email: employee.email,
+          phoneNumber: employee.phoneNumber,
+          dateOfBirth: employee.dateOfBirth,
+          gender: employee.gender,
+          hireDate: employee.hireDate,
+          managerId: employee.managerId,
+          status: employee.status,
+          departmentId: employee.departmentId,
+          departmentName: employee.departmentName,
+          departmentCode: employee.departmentCode,
+          positionId: employee.positionId,
+          rankId: employee.rankId,
+          rankName: employee.rankName,
+          rankCode: employee.rankCode,
+          rankLevel: employee.rankLevel,
+          externalId: employee.externalId,
+          externalCreatedAt: employee.externalCreatedAt,
+          externalUpdatedAt: employee.externalUpdatedAt,
+          lastSyncAt: employee.lastSyncAt,
+          updatedBy: this.systemUserId,
+        });
+
+        await this.employeeService.save(existingEmployee);
+        return { success: true };
+      } else {
+        const errorMsg = `직원 ${employee.name} (${employee.employeeNumber}) 재조회 실패, 건너뜀. externalId=${employee.externalId}, employeeNumber=${employee.employeeNumber}, email=${employee.email}`;
+        this.logger.warn(errorMsg);
+        return { success: false, error: errorMsg };
+      }
+    } catch (error) {
+      const errorMsg = `직원 ${employee.name} 재조회/업데이트 실패: ${error.message}`;
+      this.logger.error(errorMsg);
+      return { success: false, error: errorMsg };
     }
   }
 }

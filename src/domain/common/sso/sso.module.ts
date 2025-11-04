@@ -1,8 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { SSOClientWrapper } from './sso-client.wrapper';
 import { SSOService } from './sso.service';
-import { ISSOClient, SSOClientConfig } from './interfaces';
+import { SSOClientConfig } from './interfaces';
 
 /**
  * SSO 모듈
@@ -45,17 +44,8 @@ import { ISSOClient, SSOClientConfig } from './interfaces';
       },
       inject: [ConfigService],
     },
-    {
-      provide: 'SSO_CLIENT',
-      useFactory: async (config: SSOClientConfig): Promise<ISSOClient> => {
-        const client = new SSOClientWrapper(config);
-        await client.초기화한다();
-        return client;
-      },
-      inject: ['SSO_CONFIG'],
-    },
     SSOService,
   ],
-  exports: ['SSO_CLIENT', 'SSO_CONFIG', 'SSO_SYSTEM_NAME', SSOService],
+  exports: ['SSO_CONFIG', 'SSO_SYSTEM_NAME', SSOService],
 })
 export class SSOModule {}

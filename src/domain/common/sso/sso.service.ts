@@ -1,47 +1,92 @@
 import {
-  Injectable,
-  Inject,
   ForbiddenException,
-  UnauthorizedException,
+  Inject,
+  Injectable,
   Logger,
+  OnModuleInit,
+  UnauthorizedException,
 } from '@nestjs/common';
-import type { ISSOClient } from './interfaces';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
-  LoginResult,
-  VerifyTokenResult,
-  RefreshTokenResult,
-  CheckPasswordResult,
   ChangePasswordResult,
-  GetEmployeeParams,
-  GetEmployeesParams,
-  GetDepartmentHierarchyParams,
-  EmployeeInfo,
+  CheckPasswordResult,
   DepartmentHierarchy,
   DepartmentInfo,
   DepartmentNode,
+  EmployeeInfo,
+  FCMTokenInfo,
+  GetDepartmentHierarchyParams,
+  GetEmployeeParams,
+  GetEmployeesParams,
+  GetFCMTokenParams,
+  GetMultipleFCMTokensParams,
+  LoginResult,
+  MultipleFCMTokensInfo,
+  RefreshTokenResult,
   SubscribeFCMParams,
   SubscribeFCMResult,
   UnsubscribeFCMParams,
   UnsubscribeFCMResult,
-  GetFCMTokenParams,
-  FCMTokenInfo,
-  GetMultipleFCMTokensParams,
-  MultipleFCMTokensInfo,
+  VerifyTokenResult,
 } from './interfaces';
 
 /**
  * SSO 서비스
- * SSO 클라이언트를 파사드 패턴으로 래핑하여 비즈니스 로직에서 사용하기 쉽게 한다
+ * SSO SDK를 직접 사용하여 비즈니스 로직에서 사용하기 쉽게 한다
  */
 @Injectable()
-export class SSOService {
+export class SSOService implements OnModuleInit {
   private readonly logger = new Logger(SSOService.name);
+  private readonly sdkClient: any; // SDK 클라이언트 타입
+  private readonly systemName: string;
+  private initialized = false;
 
   constructor(
-    @Inject('SSO_CLIENT') private readonly ssoClient: ISSOClient,
-    @Inject('SSO_SYSTEM_NAME') private readonly systemName: string,
+    @Inject('SSO_CONFIG') private readonly config: any,
+    @Inject('SSO_SYSTEM_NAME') private readonly injectedSystemName: string,
   ) {
-    this.logger.log(`SSO 시스템 이름: ${this.systemName}`);
+    this.systemName = injectedSystemName;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { SSOClient: SDKSSOClientClass } = require('@lumir-company/sso-sdk');
+    this.sdkClient = new SDKSSOClientClass({
+      baseUrl: this.config.baseUrl,
+      clientId: this.config.clientId,
+      clientSecret: this.config.clientSecret,
+      systemName: this.config.systemName || this.systemName,
+      timeoutMs: this.config.timeoutMs,
+      retries: this.config.retries,
+      retryDelay: this.config.retryDelay,
+      enableLogging: this.config.enableLogging,
+    });
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.초기화한다();
+  }
+
+  /**
+   * 시스템 인증을 수행한다
+   */
+  async 초기화한다(): Promise<void> {
+    if (this.initialized) {
+      return;
+    }
+
+    try {
+      await this.sdkClient.initialize();
+      this.initialized = true;
+    } catch (error) {
+      this.logger.error('SSO 클라이언트 초기화 실패:', error);
+      throw error;
+    }
+  }
+
+  private 초기화확인(): void {
+    if (!this.initialized) {
+      throw new Error(
+        'SSO 클라이언트가 초기화되지 않았습니다. 먼저 초기화한다()를 호출하세요.',
+      );
+    }
   }
 
   // ========== 인증 관련 메서드 ==========
@@ -53,7 +98,8 @@ export class SSOService {
    * @throws {ForbiddenException} 시스템 역할이 없거나 비어있는 경우
    */
   async 로그인한다(email: string, password: string): Promise<LoginResult> {
-    const result = await this.ssoClient.auth.로그인한다(email, password);
+    this.초기화확인();
+    const result = await this.sdkClient.auth.login(email, password);
 
     // 시스템 역할 검증
     this.시스템역할을검증한다(result);
@@ -95,10 +141,6 @@ export class SSOService {
           `시스템 관리자에게 문의하세요.`,
       );
     }
-
-    this.logger.log(
-      `사용자 ${loginResult.email}의 ${this.systemName} 역할: ${roles.join(', ')}`,
-    );
   }
 
   /**
@@ -108,7 +150,8 @@ export class SSOService {
    * @throws {UnauthorizedException} 토큰이 유효하지 않은 경우
    */
   async 토큰을검증한다(accessToken: string): Promise<VerifyTokenResult> {
-    const result = await this.ssoClient.auth.토큰을검증한다(accessToken);
+    this.초기화확인();
+    const result = await this.sdkClient.auth.verifyToken(accessToken);
 
     // valid가 false인 경우 예외 발생
     if (!result.valid) {
@@ -123,7 +166,8 @@ export class SSOService {
    * 리프레시 토큰으로 액세스 토큰을 갱신한다
    */
   async 토큰을갱신한다(refreshToken: string): Promise<RefreshTokenResult> {
-    return this.ssoClient.auth.토큰을갱신한다(refreshToken);
+    this.초기화확인();
+    return this.sdkClient.auth.refreshToken(refreshToken);
   }
 
   /**
@@ -134,7 +178,8 @@ export class SSOService {
     password: string,
     email: string,
   ): Promise<CheckPasswordResult> {
-    return this.ssoClient.auth.비밀번호를확인한다(accessToken, password, email);
+    this.초기화확인();
+    return this.sdkClient.auth.checkPassword(accessToken, password, email);
   }
 
   /**
@@ -144,7 +189,8 @@ export class SSOService {
     accessToken: string,
     newPassword: string,
   ): Promise<ChangePasswordResult> {
-    return this.ssoClient.auth.비밀번호를변경한다(accessToken, newPassword);
+    this.초기화확인();
+    return this.sdkClient.auth.changePassword(accessToken, newPassword);
   }
 
   // ========== 조직 정보 조회 메서드 ==========
@@ -153,7 +199,19 @@ export class SSOService {
    * 직원 정보를 조회한다
    */
   async 직원정보를조회한다(params: GetEmployeeParams): Promise<EmployeeInfo> {
-    return this.ssoClient.organization.직원정보를조회한다(params);
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.organization.getEmployee({
+        employeeNumber: params.employeeNumber,
+        employeeId: params.employeeId,
+        withDetail: params.withDetail,
+      });
+
+      return this.mapToEmployeeInfo(result);
+    } catch (error) {
+      this.logger.error('직원 정보 조회 실패', error);
+      throw error;
+    }
   }
 
   /**
@@ -161,8 +219,33 @@ export class SSOService {
    */
   async 여러직원정보를조회한다(
     params: GetEmployeesParams,
-  ): Promise<any[]> {
-    return this.ssoClient.organization.여러직원정보를조회한다(params);
+  ): Promise<EmployeeInfo[]> {
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.organization.getEmployees({
+        identifiers: params.identifiers,
+        withDetail: params.withDetail,
+        includeTerminated: params.includeTerminated,
+      });
+
+      // SDK 응답이 배열인지 확인
+      const employees = Array.isArray(result)
+        ? result
+        : result?.employees || result?.data || [];
+
+      if (!Array.isArray(employees)) {
+        this.logger.warn(
+          '예상치 못한 응답 형식:',
+          JSON.stringify(result).substring(0, 200),
+        );
+        return [];
+      }
+
+      return employees.map((emp) => this.mapToEmployeeInfo(emp));
+    } catch (error) {
+      this.logger.error('여러 직원 정보 조회 실패', error);
+      throw error;
+    }
   }
 
   /**
@@ -171,7 +254,26 @@ export class SSOService {
   async 부서계층구조를조회한다(
     params?: GetDepartmentHierarchyParams,
   ): Promise<DepartmentHierarchy> {
-    return this.ssoClient.organization.부서계층구조를조회한다(params);
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.organization.getDepartmentHierarchy({
+        rootDepartmentId: params?.rootDepartmentId,
+        maxDepth: params?.maxDepth,
+        withEmployeeDetail: params?.withEmployeeDetail,
+        includeEmptyDepartments: params?.includeEmptyDepartments,
+      });
+
+      return {
+        departments: result.departments.map((dept) =>
+          this.mapToDepartmentNode(dept),
+        ),
+        totalDepartments: result.totalDepartments,
+        totalEmployees: result.totalEmployees,
+      };
+    } catch (error) {
+      this.logger.error('부서 계층구조 조회 실패', error);
+      throw error;
+    }
   }
 
   // ========== FCM 토큰 관리 메서드 ==========
@@ -182,7 +284,24 @@ export class SSOService {
   async FCM토큰을구독한다(
     params: SubscribeFCMParams,
   ): Promise<SubscribeFCMResult> {
-    return this.ssoClient.fcm.FCM토큰을구독한다(params);
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.fcm.subscribe({
+        employeeNumber: params.employeeNumber,
+        fcmToken: params.fcmToken,
+        deviceType: params.deviceType,
+      });
+
+      return {
+        success: true,
+        fcmToken: result.fcmToken,
+        employeeNumber: result.employeeNumber,
+        deviceType: result.deviceType,
+      };
+    } catch (error) {
+      this.logger.error('FCM 토큰 구독 실패', error);
+      throw error;
+    }
   }
 
   /**
@@ -191,14 +310,45 @@ export class SSOService {
   async FCM토큰을구독해지한다(
     params: UnsubscribeFCMParams,
   ): Promise<UnsubscribeFCMResult> {
-    return this.ssoClient.fcm.FCM토큰을구독해지한다(params);
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.fcm.unsubscribe({
+        employeeNumber: params.employeeNumber,
+      });
+
+      return {
+        success: result.success || true,
+        deletedCount: result.deletedCount || 0,
+        message: result.message,
+      };
+    } catch (error) {
+      this.logger.error('FCM 토큰 구독 해지 실패', error);
+      throw error;
+    }
   }
 
   /**
    * FCM 토큰을 조회한다
    */
   async FCM토큰을조회한다(params: GetFCMTokenParams): Promise<FCMTokenInfo> {
-    return this.ssoClient.fcm.FCM토큰을조회한다(params);
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.fcm.getToken({
+        employeeNumber: params.employeeNumber,
+      });
+
+      return {
+        employeeNumber: result.employeeNumber,
+        tokens: result.tokens.map((token) => ({
+          fcmToken: token.fcmToken,
+          deviceType: token.deviceType,
+          createdAt: new Date(token.createdAt),
+        })),
+      };
+    } catch (error) {
+      this.logger.error('FCM 토큰 조회 실패', error);
+      throw error;
+    }
   }
 
   /**
@@ -207,7 +357,33 @@ export class SSOService {
   async 여러직원의FCM토큰을조회한다(
     params: GetMultipleFCMTokensParams,
   ): Promise<MultipleFCMTokensInfo> {
-    return this.ssoClient.fcm.여러직원의FCM토큰을조회한다(params);
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.fcm.getMultipleTokens({
+        employeeNumbers: params.employeeNumbers,
+      });
+
+      return {
+        totalEmployees: result.totalEmployees,
+        totalTokens: result.totalTokens,
+        byEmployee: result.byEmployee.map((emp) => ({
+          employeeNumber: emp.employeeNumber,
+          tokens: emp.tokens.map((token) => ({
+            fcmToken: token.fcmToken,
+            deviceType: token.deviceType,
+            createdAt: new Date(token.createdAt),
+          })),
+        })),
+        allTokens: result.allTokens.map((token) => ({
+          fcmToken: token.fcmToken,
+          deviceType: token.deviceType,
+          createdAt: new Date(token.createdAt),
+        })),
+      };
+    } catch (error) {
+      this.logger.error('여러 직원의 FCM 토큰 조회 실패', error);
+      throw error;
+    }
   }
 
   // ========== 편의 메서드 ==========
@@ -226,24 +402,11 @@ export class SSOService {
    * 이메일로 직원 정보를 조회한다
    * 전체 직원 목록을 가져온 후 이메일로 필터링
    */
-  async 이메일로직원을조회한다(email: string): Promise<any | null> {
+  async 이메일로직원을조회한다(email: string): Promise<EmployeeInfo | null> {
     const employees = await this.여러직원정보를조회한다({
       withDetail: true,
     });
     return employees.find((emp) => emp.email === email) || null;
-  }
-
-  /**
-   * 여러 사번으로 직원 정보를 조회한다
-   */
-  async 여러사번으로직원을조회한다(
-    employeeNumbers: string[],
-  ): Promise<any[]> {
-    return this.여러직원정보를조회한다({
-      identifiers: employeeNumbers,
-      withDetail: true,
-      includeTerminated: false,
-    });
   }
 
   /**
@@ -279,10 +442,6 @@ export class SSOService {
 
     flattenDepartments(hierarchy.departments);
 
-    this.logger.log(
-      `SSO에서 ${departments.length}개의 부서 데이터를 조회했습니다.`,
-    );
-
     return departments;
   }
 
@@ -292,61 +451,95 @@ export class SSOService {
    */
   async 모든직원정보를조회한다(
     params?: GetDepartmentHierarchyParams,
-  ): Promise<any[]> {
+  ): Promise<EmployeeInfo[]> {
     const hierarchy = await this.부서계층구조를조회한다({
       ...params,
       includeEmptyDepartments: true,
       withEmployeeDetail: true, // 직원 상세 정보 포함
     });
 
-    this.logger.log(
-      `부서 계층구조 조회 완료: 총 부서 ${hierarchy.totalDepartments}개, 총 직원 ${hierarchy.totalEmployees}개`,
-    );
-
-    const employees: any[] = [];
+    const employees: EmployeeInfo[] = [];
 
     // 재귀적으로 부서 노드를 순회하여 직원 정보를 평면 목록으로 변환
-    const flattenEmployees = (
-      nodes: DepartmentNode[],
-      depth: number = 0,
-    ): void => {
+    const flattenEmployees = (nodes: DepartmentNode[]): void => {
       for (const node of nodes) {
-        const indent = '  '.repeat(depth);
-        this.logger.debug(
-          `${indent}부서: ${node.departmentName} (${node.departmentCode}) - 직원 수: ${node.employees?.length || 0}`,
-        );
-
         // 현재 부서의 직원들을 추가
         if (node.employees && node.employees.length > 0) {
-          this.logger.debug(
-            `${indent}  → ${node.employees.length}명의 직원 추가: ${node.employees.map((e) => e.name).join(', ')}`,
-          );
           employees.push(...node.employees);
         }
 
         // 하위 부서 재귀 호출
         if (node.children && node.children.length > 0) {
-          this.logger.debug(
-            `${indent}  하위 부서 ${node.children.length}개 재귀 호출`,
-          );
-          flattenEmployees(node.children, depth + 1);
+          flattenEmployees(node.children);
         }
       }
     };
 
     flattenEmployees(hierarchy.departments);
 
-    this.logger.log(
-      `SSO에서 ${employees.length}개의 직원 데이터를 조회했습니다. (부서 계층구조 총 직원 수: ${hierarchy.totalEmployees})`,
-    );
-
-    // 총 직원 수와 실제 수집된 직원 수가 다른 경우 경고
-    if (hierarchy.totalEmployees > 0 && employees.length !== hierarchy.totalEmployees) {
-      this.logger.warn(
-        `경고: 부서 계층구조의 총 직원 수(${hierarchy.totalEmployees})와 실제 수집된 직원 수(${employees.length})가 다릅니다.`,
-      );
-    }
-
     return employees;
+  }
+
+  // ========== 헬퍼 메서드 ==========
+
+  private mapToEmployeeInfo(data: any): EmployeeInfo {
+    // 실제 SSO 데이터 구조에 맞게 매핑
+    // status가 "재직중"이면 isTerminated는 false, 그 외는 true
+    const isTerminated =
+      data.status !== '재직중' && data.status !== 'ACTIVE' && data.status !== 'active';
+
+    return {
+      id: data.id,
+      employeeNumber: data.employeeNumber,
+      name: data.name,
+      email: data.email,
+      phoneNumber: data.phoneNumber || undefined,
+      isTerminated: data.isTerminated !== undefined ? data.isTerminated : isTerminated,
+      department: data.department
+        ? {
+            id: data.department.id,
+            departmentCode: data.department.departmentCode,
+            departmentName: data.department.departmentName,
+            parentDepartmentId: data.department.parentDepartmentId,
+          }
+        : undefined,
+      position: data.position
+        ? {
+            id: data.position.id,
+            positionName: data.position.positionTitle || data.position.positionName,
+            positionLevel: data.position.level || data.position.positionLevel,
+          }
+        : undefined,
+      jobTitle: data.rank
+        ? {
+            id: data.rank.id,
+            jobTitleName: data.rank.rankName,
+            jobTitleLevel: data.rank.level,
+          }
+        : data.jobTitle
+          ? {
+              id: data.jobTitle.id,
+              jobTitleName: data.jobTitle.jobTitleName,
+              jobTitleLevel: data.jobTitle.jobTitleLevel,
+            }
+          : undefined,
+    };
+  }
+
+  private mapToDepartmentNode(data: any): DepartmentNode {
+    return {
+      id: data.id,
+      departmentCode: data.departmentCode,
+      departmentName: data.departmentName,
+      parentDepartmentId: data.parentDepartmentId,
+      depth: data.depth,
+      employeeCount: data.employeeCount,
+      employees: Array.isArray(data.employees)
+        ? data.employees.map((emp) => this.mapToEmployeeInfo(emp))
+        : [],
+      children: Array.isArray(data.children)
+        ? data.children.map((child) => this.mapToDepartmentNode(child))
+        : [],
+    };
   }
 }
