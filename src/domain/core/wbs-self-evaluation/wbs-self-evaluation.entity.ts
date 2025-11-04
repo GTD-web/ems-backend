@@ -163,19 +163,19 @@ export class WbsSelfEvaluation
   }
 
   /**
-   * 피평가자 제출을 취소한다
+   * 피평가자 제출을 취소한다 (제출 상태만 false로 변경, submittedToEvaluatorAt은 유지)
    */
   피평가자_제출을_취소한다(): void {
     this.submittedToEvaluator = false;
-    this.submittedToEvaluatorAt = undefined;
+    // Reset 시에는 submittedToEvaluatorAt을 초기화하지 않고 유지
   }
 
   /**
-   * 1차 평가자 제출을 취소한다
+   * 1차 평가자 제출을 취소한다 (제출 상태만 false로 변경, submittedToManagerAt은 유지)
    */
   일차평가자_제출을_취소한다(): void {
     this.submittedToManager = false;
-    this.submittedToManagerAt = undefined;
+    // Reset 시에는 submittedToManagerAt을 초기화하지 않고 유지
   }
 
   /**
@@ -234,16 +234,17 @@ export class WbsSelfEvaluation
   }
 
   /**
-   * 자가평가 내용을 초기화한다 (빈 값으로 설정)
+   * 자가평가 내용을 초기화한다 (빈 문자열과 0점으로 설정)
    */
   자가평가_내용을_초기화한다(updatedBy?: string): void {
-    this.selfEvaluationContent = undefined;
-    this.selfEvaluationScore = undefined;
-    this.performanceResult = undefined;
+    // Clear 시: 내용은 빈 문자열(""), 점수는 0점으로 설정
+    this.selfEvaluationContent = '';
+    this.selfEvaluationScore = 0;
+    this.performanceResult = null as any;
     this.submittedToEvaluator = false;
-    this.submittedToEvaluatorAt = undefined;
+    this.submittedToEvaluatorAt = null as any;
     this.submittedToManager = false;
-    this.submittedToManagerAt = undefined;
+    this.submittedToManagerAt = null as any;
     this.evaluationDate = new Date();
 
     if (updatedBy) {

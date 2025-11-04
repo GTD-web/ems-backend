@@ -78,22 +78,25 @@ export class EmployeeSyncService implements OnModuleInit {
       this.logger.error(`모듈 초기화 중 오류 발생: ${error.message}`);
       // 초기화 오류는 애플리케이션 시작을 막지 않습니다
     }
-    
   }
 
   /**
    * SSO 서비스에서 직원 데이터 조회
    * getEmployees API를 사용하여 모든 직원 정보를 조회합니다.
-   * 
+   *
    * @param useHierarchyAPI 부서 계층 구조 API 사용 여부 (기본값: false, getEmployees 사용)
    */
-  async fetchExternalEmployees(useHierarchyAPI: boolean = false): Promise<any[]> {
+  async fetchExternalEmployees(
+    useHierarchyAPI: boolean = false,
+  ): Promise<any[]> {
     try {
       let employees: any[];
 
       if (useHierarchyAPI) {
         // 부서 계층 구조를 통해 모든 직원 정보를 평면 목록으로 조회 (옵션)
-        this.logger.log('부서 계층 구조 API를 사용하여 모든 직원 정보를 조회합니다...');
+        this.logger.log(
+          '부서 계층 구조 API를 사용하여 모든 직원 정보를 조회합니다...',
+        );
         employees = await this.ssoService.모든직원정보를조회한다({
           includeEmptyDepartments: true,
         });
@@ -102,10 +105,14 @@ export class EmployeeSyncService implements OnModuleInit {
         );
       } else {
         // 직접 직원 목록 API 사용 (identifiers 생략 시 전체 조회) - 기본 방식
-        this.logger.log('직원 목록 API(getEmployees)를 사용하여 모든 직원 정보를 조회합니다...');
-        
+        this.logger.log(
+          '직원 목록 API(getEmployees)를 사용하여 모든 직원 정보를 조회합니다...',
+        );
+
         // 원시 데이터를 직접 받기 위해 SDK 클라이언트에서 직접 호출
-        const result = await (this.ssoService as any).sdkClient.organization.getEmployees({
+        const result = await (
+          this.ssoService as any
+        ).sdkClient.organization.getEmployees({
           withDetail: true,
           includeTerminated: false, // 퇴사자 제외
         });
@@ -161,11 +168,22 @@ export class EmployeeSyncService implements OnModuleInit {
     // status 필드 처리: "재직중" 또는 다른 값
     let status: '재직중' | '휴직중' | '퇴사' = '재직중';
     if (ssoEmployee.status) {
-      if (ssoEmployee.status === '재직중' || ssoEmployee.status === 'ACTIVE' || ssoEmployee.status === 'active') {
+      if (
+        ssoEmployee.status === '재직중' ||
+        ssoEmployee.status === 'ACTIVE' ||
+        ssoEmployee.status === 'active'
+      ) {
         status = '재직중';
-      } else if (ssoEmployee.status === '휴직중' || ssoEmployee.status === 'ON_LEAVE') {
+      } else if (
+        ssoEmployee.status === '휴직중' ||
+        ssoEmployee.status === 'ON_LEAVE'
+      ) {
         status = '휴직중';
-      } else if (ssoEmployee.status === '퇴사' || ssoEmployee.status === 'TERMINATED' || ssoEmployee.status === 'terminated') {
+      } else if (
+        ssoEmployee.status === '퇴사' ||
+        ssoEmployee.status === 'TERMINATED' ||
+        ssoEmployee.status === 'terminated'
+      ) {
         status = '퇴사';
       }
     } else if (ssoEmployee.isTerminated) {
@@ -210,9 +228,10 @@ export class EmployeeSyncService implements OnModuleInit {
     }
 
     // phoneNumber 처리: 빈 문자열이면 undefined
-    const phoneNumber = ssoEmployee.phoneNumber && ssoEmployee.phoneNumber.trim() !== '' 
-      ? ssoEmployee.phoneNumber 
-      : undefined;
+    const phoneNumber =
+      ssoEmployee.phoneNumber && ssoEmployee.phoneNumber.trim() !== ''
+        ? ssoEmployee.phoneNumber
+        : undefined;
 
     return {
       employeeNumber: ssoEmployee.employeeNumber,
@@ -242,7 +261,7 @@ export class EmployeeSyncService implements OnModuleInit {
   /**
    * 직원 데이터 동기화
    * getEmployees API를 사용하여 직원 데이터를 동기화합니다.
-   * 
+   *
    * @param forceSync 강제 동기화 여부
    * @param useHierarchyAPI 부서 계층 구조 API 사용 여부 (기본값: false, getEmployees 사용)
    */
@@ -341,7 +360,7 @@ export class EmployeeSyncService implements OnModuleInit {
   /**
    * 스케줄된 자동 동기화 (매시간)
    */
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async scheduledSync(): Promise<void> {
     this.logger.log('스케줄된 직원 동기화를 시작합니다...');
     await this.syncEmployees();
@@ -513,22 +532,34 @@ export class EmployeeSyncService implements OnModuleInit {
     ssoEmp: any,
     forceSync: boolean,
     syncStartTime: Date,
-  ): Promise<{ success: boolean; employee?: Employee; isNew?: boolean; error?: string }> {
+  ): Promise<{
+    success: boolean;
+    employee?: Employee;
+    isNew?: boolean;
+    error?: string;
+  }> {
     try {
       // 기존 직원 확인 (employeeNumber 우선)
-      let existingEmployee =
-        await this.employeeService.findByEmployeeNumber(ssoEmp.employeeNumber);
+      let existingEmployee = await this.employeeService.findByEmployeeNumber(
+        ssoEmp.employeeNumber,
+      );
 
       // employeeNumber로 못 찾으면 externalId로 조회
       if (!existingEmployee) {
-        existingEmployee = await this.employeeService.findByExternalId(ssoEmp.id);
+        existingEmployee = await this.employeeService.findByExternalId(
+          ssoEmp.id,
+        );
       }
 
       const mappedData = this.mapSSOEmployeeToDto(ssoEmp);
 
       if (existingEmployee) {
         // 업데이트가 필요한지 확인
-        const needsUpdate = this.업데이트가_필요한가(existingEmployee, mappedData, forceSync);
+        const needsUpdate = this.업데이트가_필요한가(
+          existingEmployee,
+          mappedData,
+          forceSync,
+        );
 
         if (needsUpdate) {
           // 기존 직원 업데이트
@@ -605,7 +636,8 @@ export class EmployeeSyncService implements OnModuleInit {
 
     // 직급 정보가 없는 경우 강제 업데이트
     const hasRankData = mappedData.rankId || mappedData.rankName;
-    const missingRankData = !existingEmployee.rankId && !existingEmployee.rankName;
+    const missingRankData =
+      !existingEmployee.rankId && !existingEmployee.rankName;
     if (hasRankData && missingRankData) {
       this.logger.debug(
         `직원 ${existingEmployee.name}의 직급 정보가 없어 강제 업데이트합니다.`,
@@ -746,11 +778,14 @@ export class EmployeeSyncService implements OnModuleInit {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // 기존 직원 찾기
-      let existingEmployee =
-        await this.employeeService.findByEmployeeNumber(employee.employeeNumber);
+      let existingEmployee = await this.employeeService.findByEmployeeNumber(
+        employee.employeeNumber,
+      );
 
       if (!existingEmployee) {
-        existingEmployee = await this.employeeService.findByEmail(employee.email);
+        existingEmployee = await this.employeeService.findByEmail(
+          employee.email,
+        );
       }
 
       if (!existingEmployee) {

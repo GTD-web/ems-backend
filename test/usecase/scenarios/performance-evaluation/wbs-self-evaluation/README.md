@@ -86,18 +86,62 @@
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
             - selfEvaluation.completedMappingCount가 변경되지 않는지 확인 (제출 전)
 
-### 자기평가 제출 (단일)
+### 자기평가 제출 (피평가자 → 1차 평가자, 단일)
 
-- PATCH /admin/performance-evaluation/wbs-self-evaluations/{id}/submit (WBS 자기평가 제출)
+- PATCH /admin/performance-evaluation/wbs-self-evaluations/{id}/submit-to-evaluator (WBS 자기평가 제출 - 피평가자 → 1차 평가자)
     - **제출 검증**
-        - 자기평가 ID로 제출
+        - 자기평가 ID로 1차 평가자에게 제출
         - HTTP 200 응답 확인
-        - 응답에서 isCompleted가 true로 변경되었는지 확인
-        - 응답에서 completedAt이 기록되었는지 확인
+        - 응답에서 submittedToEvaluator가 true로 변경되었는지 확인
+        - 응답에서 submittedToEvaluatorAt이 기록되었는지 확인
+        - 응답에서 submittedToManager가 false인지 확인 (아직 관리자 제출 전)
+    - **대시보드 API 제출 후 검증**
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 1 증가하는지 확인
+                - selfEvaluation.isSubmittedToEvaluator 확인
+                    - 모든 자기평가가 1차 평가자에게 제출 완료 시: true
+                    - 일부만 제출된 경우: false
+                - selfEvaluation.completedMappingCount는 변경 없음 확인 (관리자 제출 전이므로)
+                - selfEvaluation.submittedToManagerCount는 0인지 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자 담당 대상자 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 1 증가하는지 확인
+                - selfEvaluation.isSubmittedToEvaluator 확인
+                    - 모든 자기평가가 1차 평가자에게 제출 완료 시: true
+                    - 일부만 제출된 경우: false
+                - selfEvaluation.submittedToManagerCount는 0인지 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+            - **summary.selfEvaluation 검증**
+                - summary.selfEvaluation.submittedToEvaluatorCount가 1 증가하는지 확인
+                - summary.selfEvaluation.isSubmittedToEvaluator 확인
+                    - 모든 자기평가가 1차 평가자에게 제출 완료 시: true
+                    - 일부만 제출된 경우: false
+                - summary.selfEvaluation.completedMappingCount는 변경 없음 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 전체 직원 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 1 증가하는지 확인
+                - selfEvaluation.isSubmittedToEvaluator 확인
+
+### 자기평가 제출 (1차 평가자 → 관리자, 단일)
+
+- PATCH /admin/performance-evaluation/wbs-self-evaluations/{id}/submit (WBS 자기평가 제출 - 1차 평가자 → 관리자)
+    - **제출 검증**
+        - 자기평가 ID로 관리자에게 제출 (1차 평가자 제출 상태 확인 필요)
+        - HTTP 200 응답 확인
+        - 응답에서 submittedToManager가 true로 변경되었는지 확인
+        - 응답에서 submittedToManagerAt이 기록되었는지 확인
+        - 응답에서 submittedToEvaluator가 true인지 확인 (이미 제출된 상태 유지)
     - **대시보드 API 제출 후 검증**
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
             - **selfEvaluation 객체 검증**
                 - selfEvaluation.completedMappingCount가 1 증가하는지 확인
+                - selfEvaluation.submittedToManagerCount가 1 증가하는지 확인
+                - selfEvaluation.isSubmittedToManager 확인
+                    - 모든 자기평가가 관리자에게 제출 완료 시: true
+                    - 일부만 제출된 경우: false
                 - selfEvaluation.status 확인
                     - 모든 자기평가 제출 완료 시: 'complete'
                     - 일부만 제출된 경우: 'in_progress'
@@ -107,14 +151,27 @@
                 - selfEvaluation.grade 확인
                     - 모든 자기평가 제출 완료 시: 계산된 등급
                     - 일부만 제출된 경우: null
+        - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자 담당 대상자 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToManagerCount가 1 증가하는지 확인
+                - selfEvaluation.isSubmittedToManager 확인
+                    - 모든 자기평가가 관리자에게 제출 완료 시: true
+                    - 일부만 제출된 경우: false
+                - selfEvaluation.completedMappingCount가 1 증가하는지 확인
+                - selfEvaluation.status 확인 (complete 또는 in_progress)
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
             - **해당 WBS의 selfEvaluation 객체 검증**
-                - projects[].wbsList[].selfEvaluation.isCompleted가 true로 변경되는지 확인
+                - projects[].wbsList[].selfEvaluation.isCompleted가 true로 변경되는지 확인 (submittedToManager가 true인 경우)
                 - projects[].wbsList[].selfEvaluation.submittedAt이 기록되는지 확인
                 - projects[].wbsList[].selfEvaluation.evaluationContent 유지 확인
                 - projects[].wbsList[].selfEvaluation.score 유지 확인
-            - **summary 검증**
-                - summary.completedSelfEvaluations가 1 증가하는지 확인
+            - **summary.selfEvaluation 검증**
+                - summary.selfEvaluation.completedSelfEvaluations가 1 증가하는지 확인 (submittedToManagerCount와 동일)
+                - summary.selfEvaluation.submittedToManagerCount가 1 증가하는지 확인
+                - summary.selfEvaluation.isSubmittedToManager 확인
+                    - 모든 자기평가가 관리자에게 제출 완료 시: true
+                    - 일부만 제출된 경우: false
                 - summary.selfEvaluation.totalScore 확인
                     - 모든 자기평가 제출 완료 시: 계산된 점수
                     - 일부만 제출된 경우: null
@@ -125,6 +182,7 @@
             - 응답 배열에서 해당 직원 정보 조회
             - **selfEvaluation 객체 검증**
                 - selfEvaluation.completedMappingCount가 1 증가하는지 확인
+                - selfEvaluation.submittedToManagerCount가 1 증가하는지 확인
                 - selfEvaluation.status 확인 (complete 또는 in_progress)
 
 ### 자기평가 수정 (제출 후)
@@ -152,19 +210,25 @@
     - **초기화 검증**
         - 자기평가 ID로 내용 초기화
         - HTTP 200 응답 확인
-        - 응답에서 evaluationContent, score가 null로 변경되었는지 확인
-        - 제출 상태였던 경우 isCompleted가 false로 변경되고 completedAt이 null로 변경되는지 확인
+        - 응답에서 evaluationContent가 빈 문자열("")로 변경되었는지 확인
+        - 응답에서 score가 0으로 변경되었는지 확인
+        - 제출 상태였던 경우 submittedToEvaluator, submittedToEvaluatorAt이 false/null로 변경되는지 확인
+        - 제출 상태였던 경우 submittedToManager, submittedToManagerAt이 false/null로 변경되는지 확인
     - **대시보드 API 초기화 후 검증**
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
             - **해당 WBS의 selfEvaluation 객체 검증**
-                - projects[].wbsList[].selfEvaluation.evaluationContent가 null로 변경되는지 확인
-                - projects[].wbsList[].selfEvaluation.score가 null로 변경되는지 확인
+                - projects[].wbsList[].selfEvaluation.evaluationContent가 빈 문자열("")로 변경되는지 확인
+                - projects[].wbsList[].selfEvaluation.score가 0으로 변경되는지 확인
                 - 제출 상태였던 경우:
-                    - projects[].wbsList[].selfEvaluation.isCompleted가 false로 변경되는지 확인
-                    - projects[].wbsList[].selfEvaluation.submittedAt이 null로 변경되는지 확인
+                    - projects[].wbsList[].selfEvaluation.submittedToManager가 false로 변경되는지 확인
+                    - projects[].wbsList[].selfEvaluation.submittedToManagerAt이 null로 변경되는지 확인
+                    - projects[].wbsList[].selfEvaluation.submittedToEvaluator가 false로 변경되는지 확인
+                    - projects[].wbsList[].selfEvaluation.submittedToEvaluatorAt이 null로 변경되는지 확인
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
             - **selfEvaluation 객체 검증**
                 - 제출 상태였던 경우: selfEvaluation.completedMappingCount가 감소하는지 확인
+                - 제출 상태였던 경우: selfEvaluation.submittedToManagerCount가 감소하는지 확인
+                - 제출 상태였던 경우: selfEvaluation.submittedToEvaluatorCount가 감소하는지 확인
                 - selfEvaluation.status 확인
                     - 모든 자기평가가 초기화된 경우: 'none' 또는 'in_progress'
                     - 일부만 초기화된 경우: 'in_progress'
@@ -175,29 +239,82 @@
                 - 제출 상태였던 경우: summary.completedSelfEvaluations가 감소하는지 확인
                 - summary.selfEvaluation.totalScore와 grade가 재계산되거나 null로 변경되는지 확인
 
-### 자기평가 미제출 상태로 변경 (Reset)
+### 자기평가 취소 (피평가자 → 1차 평가자 제출 취소)
 
-- PATCH /admin/performance-evaluation/wbs-self-evaluations/{id}/reset (WBS 자기평가 미제출)
-    - **미제출 처리 검증**
-        - 자기평가 ID로 미제출 상태로 변경
+- PATCH /admin/performance-evaluation/wbs-self-evaluations/{id}/reset-to-evaluator (WBS 자기평가 취소 - 피평가자 → 1차 평가자 제출 취소)
+    - **취소 검증**
+        - 자기평가 ID로 1차 평가자 제출 취소
         - HTTP 200 응답 확인
-        - 응답에서 isCompleted가 false로 변경되었는지 확인
-        - 응답에서 completedAt이 null로 변경되었는지 확인
+        - 응답에서 submittedToEvaluator가 false로 변경되었는지 확인
+        - 응답에서 submittedToEvaluatorAt이 유지되는지 확인 (Reset 시 제출 일시는 유지)
         - 응답에서 evaluationContent와 score가 유지되는지 확인 (내용 유지)
+        - 응답에서 submittedToManager가 false인지 확인 (관리자 제출 상태 유지 또는 초기 상태)
+    - **대시보드 API 취소 후 검증**
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 감소하는지 확인
+                - selfEvaluation.isSubmittedToEvaluator가 false로 변경되는지 확인
+                - selfEvaluation.completedMappingCount는 변경 없음 확인 (관리자 제출 상태와 무관)
+                - selfEvaluation.submittedToManagerCount는 변경 없음 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자 담당 대상자 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 감소하는지 확인
+                - selfEvaluation.isSubmittedToEvaluator가 false로 변경되는지 확인
+                - selfEvaluation.submittedToManagerCount는 변경 없음 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+            - **summary.selfEvaluation 검증**
+                - summary.selfEvaluation.submittedToEvaluatorCount가 감소하는지 확인
+                - summary.selfEvaluation.isSubmittedToEvaluator가 false로 변경되는지 확인
+                - summary.selfEvaluation.completedMappingCount는 변경 없음 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 전체 직원 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 감소하는지 확인
+                - selfEvaluation.isSubmittedToEvaluator가 false로 변경되는지 확인
+
+### 자기평가 미제출 상태로 변경 (1차 평가자 → 관리자 제출 초기화)
+
+- PATCH /admin/performance-evaluation/wbs-self-evaluations/{id}/reset (WBS 자기평가 미제출 - 1차 평가자 → 관리자 제출 초기화)
+    - **미제출 처리 검증**
+        - 자기평가 ID로 관리자 제출 상태 초기화
+        - HTTP 200 응답 확인
+        - 응답에서 submittedToManager가 false로 변경되었는지 확인
+        - 응답에서 submittedToManagerAt이 유지되는지 확인 (Reset 시 제출 일시는 유지)
+        - 응답에서 evaluationContent와 score가 유지되는지 확인 (내용 유지)
+        - 응답에서 submittedToEvaluator는 유지되는지 확인 (1차 평가자 제출 상태 유지)
     - **대시보드 API 미제출 처리 후 검증**
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
             - **selfEvaluation 객체 검증**
                 - selfEvaluation.completedMappingCount가 감소하는지 확인
+                - selfEvaluation.submittedToManagerCount가 감소하는지 확인
+                - selfEvaluation.isSubmittedToManager가 false로 변경되는지 확인
                 - selfEvaluation.status가 'in_progress'로 변경되는지 확인 (일부만 미제출 처리된 경우)
+                - selfEvaluation.submittedToEvaluatorCount는 유지되는지 확인 (1차 평가자 제출 상태 유지)
                 - selfEvaluation.totalScore와 grade가 재계산되거나 null로 변경되는지 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자 담당 대상자 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToManagerCount가 감소하는지 확인
+                - selfEvaluation.isSubmittedToManager가 false로 변경되는지 확인
+                - selfEvaluation.completedMappingCount가 감소하는지 확인
+                - selfEvaluation.submittedToEvaluatorCount는 유지되는지 확인
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
             - **해당 WBS의 selfEvaluation 객체 검증**
-                - projects[].wbsList[].selfEvaluation.isCompleted가 false로 변경되는지 확인
-                - projects[].wbsList[].selfEvaluation.submittedAt이 null로 변경되는지 확인
+                - projects[].wbsList[].selfEvaluation.submittedToManager가 false로 변경되는지 확인
+                - projects[].wbsList[].selfEvaluation.submittedToManagerAt이 유지되는지 확인 (Reset 시 제출 일시는 유지)
                 - projects[].wbsList[].selfEvaluation.evaluationContent와 score가 유지되는지 확인 (내용 유지)
-            - **summary 검증**
-                - summary.completedSelfEvaluations가 감소하는지 확인
+            - **summary.selfEvaluation 검증**
+                - summary.selfEvaluation.completedSelfEvaluations가 감소하는지 확인
+                - summary.selfEvaluation.submittedToManagerCount가 감소하는지 확인
+                - summary.selfEvaluation.isSubmittedToManager가 false로 변경되는지 확인
                 - summary.selfEvaluation.totalScore와 grade가 재계산되거나 null로 변경되는지 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 전체 직원 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.completedMappingCount가 감소하는지 확인
+                - selfEvaluation.submittedToManagerCount가 감소하는지 확인
+                - selfEvaluation.status가 'in_progress'로 변경되는지 확인
 
 ---
 
@@ -248,11 +365,44 @@
 - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 여러 개 생성)
 - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId} (자기평가 여러 개 저장)
 
-### 직원의 전체 자기평가 제출
+### 직원의 전체 자기평가 제출 (피평가자 → 1차 평가자)
 
-- PATCH /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/submit-all (직원의 전체 WBS 자기평가 제출)
+- PATCH /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/submit-all-to-evaluator (직원의 전체 WBS 자기평가 제출 - 피평가자 → 1차 평가자)
     - **일괄 제출 검증**
-        - employeeId, periodId로 모든 자기평가 제출
+        - employeeId, periodId로 모든 자기평가를 1차 평가자에게 제출
+        - HTTP 200 응답 확인
+        - 응답에서 submittedCount, failedCount, totalCount 포함 확인
+        - completedEvaluations 배열에 제출된 자기평가 정보 포함 확인
+        - failedEvaluations 배열에 실패한 자기평가 정보 포함 확인 (있는 경우)
+    - **대시보드 API 일괄 제출 후 검증**
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.isSubmittedToEvaluator가 true로 변경되는지 확인
+                - selfEvaluation.completedMappingCount는 변경 없음 확인 (관리자 제출 전이므로)
+                - selfEvaluation.submittedToManagerCount는 0인지 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자 담당 대상자 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.isSubmittedToEvaluator가 true로 변경되는지 확인
+                - selfEvaluation.submittedToManagerCount는 0인지 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+            - **summary.selfEvaluation 검증**
+                - summary.selfEvaluation.submittedToEvaluatorCount가 전체 WBS 수와 동일해지는지 확인
+                - summary.selfEvaluation.isSubmittedToEvaluator가 true로 변경되는지 확인
+                - summary.selfEvaluation.completedMappingCount는 변경 없음 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 전체 직원 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToEvaluatorCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.isSubmittedToEvaluator가 true로 변경되는지 확인
+
+### 직원의 전체 자기평가 제출 (1차 평가자 → 관리자)
+
+- PATCH /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/submit-all (직원의 전체 WBS 자기평가 제출 - 1차 평가자 → 관리자)
+    - **일괄 제출 검증**
+        - employeeId, periodId로 모든 자기평가를 관리자에게 제출
         - HTTP 200 응답 확인
         - 응답에서 submittedCount, failedCount, totalCount 포함 확인
         - completedEvaluations 배열에 제출된 자기평가 정보 포함 확인
@@ -261,17 +411,34 @@
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
             - **selfEvaluation 객체 검증**
                 - selfEvaluation.completedMappingCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.submittedToManagerCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.isSubmittedToManager가 true로 변경되는지 확인
                 - selfEvaluation.status가 'complete'로 변경되는지 확인
                 - selfEvaluation.totalScore가 계산되는지 확인 (가중치 기반)
                 - selfEvaluation.grade가 계산되는지 확인 (등급 기준)
+        - GET /admin/dashboard/{evaluationPeriodId}/my-evaluation-targets/{evaluatorId}/status (평가자 담당 대상자 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.submittedToManagerCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.isSubmittedToManager가 true로 변경되는지 확인
+                - selfEvaluation.completedMappingCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.status가 'complete'로 변경되는지 확인
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
             - **모든 WBS의 selfEvaluation 객체 검증**
                 - 모든 projects[].wbsList[].selfEvaluation.isCompleted가 true로 변경되는지 확인
                 - 모든 projects[].wbsList[].selfEvaluation.submittedAt이 기록되는지 확인
-            - **summary 검증**
-                - summary.completedSelfEvaluations가 전체 WBS 수와 동일해지는지 확인
+            - **summary.selfEvaluation 검증**
+                - summary.selfEvaluation.completedSelfEvaluations가 전체 WBS 수와 동일해지는지 확인
+                - summary.selfEvaluation.submittedToManagerCount가 전체 WBS 수와 동일해지는지 확인
+                - summary.selfEvaluation.isSubmittedToManager가 true로 변경되는지 확인
                 - summary.selfEvaluation.totalScore가 계산되는지 확인
                 - summary.selfEvaluation.grade가 계산되는지 확인
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 전체 직원 현황 조회)
+            - 응답 배열에서 해당 직원 정보 조회
+            - **selfEvaluation 객체 검증**
+                - selfEvaluation.completedMappingCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.submittedToManagerCount가 전체 WBS 수와 동일해지는지 확인
+                - selfEvaluation.status가 'complete'로 변경되는지 확인
 
 ### 프로젝트별 자기평가 제출
 
@@ -300,13 +467,16 @@
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
             - **selfEvaluation 객체 검증**
                 - selfEvaluation.completedMappingCount가 0으로 변경되는지 확인 (제출 상태였던 경우)
+                - selfEvaluation.submittedToManagerCount가 0으로 변경되는지 확인 (제출 상태였던 경우)
+                - selfEvaluation.submittedToEvaluatorCount가 0으로 변경되는지 확인 (제출 상태였던 경우)
                 - selfEvaluation.status가 'none' 또는 'in_progress'로 변경되는지 확인
                 - selfEvaluation.totalScore와 grade가 null로 변경되는지 확인
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
             - **모든 WBS의 selfEvaluation 객체 검증**
-                - 모든 projects[].wbsList[].selfEvaluation.evaluationContent가 null로 변경되는지 확인
-                - 모든 projects[].wbsList[].selfEvaluation.score가 null로 변경되는지 확인
-                - 제출 상태였던 경우 isCompleted가 false로 변경되고 submittedAt이 null로 변경되는지 확인
+                - 모든 projects[].wbsList[].selfEvaluation.evaluationContent가 빈 문자열("")로 변경되는지 확인
+                - 모든 projects[].wbsList[].selfEvaluation.score가 0으로 변경되는지 확인
+                - 제출 상태였던 경우 submittedToManager가 false로 변경되고 submittedToManagerAt이 null로 변경되는지 확인
+                - 제출 상태였던 경우 submittedToEvaluator가 false로 변경되고 submittedToEvaluatorAt이 null로 변경되는지 확인
             - **summary 검증**
                 - summary.completedSelfEvaluations가 0으로 변경되는지 확인 (제출 상태였던 경우)
                 - summary.selfEvaluation.totalScore와 grade가 null로 변경되는지 확인
@@ -321,7 +491,8 @@
     - **대시보드 API 프로젝트별 초기화 후 검증**
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
             - **해당 프로젝트의 WBS만 초기화 확인**
-                - 해당 프로젝트의 projects[].wbsList[].selfEvaluation.evaluationContent가 null로 변경되는지 확인
+                - 해당 프로젝트의 projects[].wbsList[].selfEvaluation.evaluationContent가 빈 문자열("")로 변경되는지 확인
+                - 해당 프로젝트의 projects[].wbsList[].selfEvaluation.score가 0으로 변경되는지 확인
                 - 다른 프로젝트의 WBS는 영향받지 않는지 확인
 
 ### 직원의 전체 자기평가 미제출 처리
@@ -335,12 +506,13 @@
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
             - **selfEvaluation 객체 검증**
                 - selfEvaluation.completedMappingCount가 0으로 변경되는지 확인
+                - selfEvaluation.submittedToManagerCount가 0으로 변경되는지 확인
                 - selfEvaluation.status가 'in_progress'로 변경되는지 확인
                 - selfEvaluation.totalScore와 grade가 null로 변경되는지 확인
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
             - **모든 WBS의 selfEvaluation 객체 검증**
-                - 모든 projects[].wbsList[].selfEvaluation.isCompleted가 false로 변경되는지 확인
-                - 모든 projects[].wbsList[].selfEvaluation.submittedAt이 null로 변경되는지 확인
+                - 모든 projects[].wbsList[].selfEvaluation.submittedToManager가 false로 변경되는지 확인
+                - 모든 projects[].wbsList[].selfEvaluation.submittedToManagerAt이 유지되는지 확인 (Reset 시 제출 일시는 유지)
                 - projects[].wbsList[].selfEvaluation.evaluationContent와 score가 유지되는지 확인 (내용 유지)
             - **summary 검증**
                 - summary.completedSelfEvaluations가 0으로 변경되는지 확인
@@ -594,9 +766,16 @@
 - 일부만 제출된 경우 `'in_progress'`
 
 ### 4. 제출 상태 관리
-- `isCompleted`는 제출 여부를 나타냄
-- 내용 초기화(`Clear`) 시 제출 상태도 함께 초기화됨
-- 미제출 처리(`Reset`) 시에는 제출 상태만 변경되고 내용은 유지됨
+- `submittedToManager`는 관리자 제출 여부를 나타냄
+- `submittedToEvaluator`는 1차 평가자 제출 여부를 나타냄
+- 내용 초기화(`Clear`) 시:
+    - 내용은 빈 문자열("")로, 점수는 0점으로 초기화됨
+    - 제출 상태(`submittedToManager`, `submittedToEvaluator`)도 함께 초기화됨
+    - 제출 일시(`submittedToManagerAt`, `submittedToEvaluatorAt`)도 null로 초기화됨
+- 미제출 처리(`Reset`) 시:
+    - 제출 상태(`submittedToManager`, `submittedToEvaluator`)만 false로 변경됨
+    - 제출 일시(`submittedToManagerAt`, `submittedToEvaluatorAt`)는 유지됨
+    - 내용(`evaluationContent`, `score`)은 유지됨
 
 ### 5. 데이터 일관성
 - 여러 엔드포인트에서 동일한 필드의 값이 일치해야 함
