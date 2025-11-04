@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, EntityManager } from 'typeorm';
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { WbsItem } from './wbs-item.entity';
 import {
   CreateWbsItemDto,
@@ -22,6 +23,7 @@ export class WbsItemService {
   constructor(
     @InjectRepository(WbsItem)
     private readonly wbsItemRepository: Repository<WbsItem>,
+    private readonly transactionManager: TransactionManagerService,
   ) {}
 
   /**
@@ -196,10 +198,20 @@ export class WbsItemService {
   /**
    * ID로 WBS 항목을 조회한다
    * @param id WBS 항목 ID
+   * @param manager 트랜잭션 매니저 (선택적)
    * @returns WBS 항목 정보 (없으면 null)
    */
-  async ID로_조회한다(id: string): Promise<WbsItemDto | null> {
-    const wbsItem = await this.wbsItemRepository.findOne({
+  async ID로_조회한다(
+    id: string,
+    manager?: EntityManager,
+  ): Promise<WbsItemDto | null> {
+    const repository = this.transactionManager.getRepository(
+      WbsItem,
+      this.wbsItemRepository,
+      manager,
+    );
+
+    const wbsItem = await repository.findOne({
       where: { id, deletedAt: IsNull() },
     });
 

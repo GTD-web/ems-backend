@@ -499,14 +499,14 @@ export class ChangeWbsAssignmentOrderByWbsDto {
   @IsNotEmpty()
   employeeId: string;
 
-  @ApiProperty({
-    description: 'WBS 항목 ID (UUID 형식)',
+  @ApiPropertyOptional({
+    description: 'WBS 항목 ID (UUID 형식, URL 파라미터로 전달되므로 선택적)',
     example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
   })
+  @IsOptional()
   @IsString()
   @IsUUID()
-  @IsNotEmpty()
-  wbsItemId: string;
+  wbsItemId?: string;
 
   @ApiProperty({
     description: '프로젝트 ID (UUID 형식)',

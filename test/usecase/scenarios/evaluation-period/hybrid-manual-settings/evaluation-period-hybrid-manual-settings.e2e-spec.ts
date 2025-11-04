@@ -20,9 +20,10 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
     );
 
     await baseE2E.initializeApp();
-    
+
     // 기존 평가기간 정리
-    await baseE2E.request()
+    await baseE2E
+      .request()
       .delete('/admin/evaluation-periods/cleanup-test-data')
       .catch(() => {
         // 정리 API가 없으면 무시
@@ -44,7 +45,8 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
       console.log('🔍 evaluation-setup 단계 상태:', {
         criteriaSettingEnabled: periodDetail.criteriaSettingEnabled,
         selfEvaluationSettingEnabled: periodDetail.selfEvaluationSettingEnabled,
-        finalEvaluationSettingEnabled: periodDetail.finalEvaluationSettingEnabled,
+        finalEvaluationSettingEnabled:
+          periodDetail.finalEvaluationSettingEnabled,
         manuallySetFields: periodDetail.manuallySetFields,
       });
 
@@ -55,7 +57,8 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
       console.log('🔍 performance 단계 상태:', {
         criteriaSettingEnabled: periodDetail.criteriaSettingEnabled,
         selfEvaluationSettingEnabled: periodDetail.selfEvaluationSettingEnabled,
-        finalEvaluationSettingEnabled: periodDetail.finalEvaluationSettingEnabled,
+        finalEvaluationSettingEnabled:
+          periodDetail.finalEvaluationSettingEnabled,
         manuallySetFields: periodDetail.manuallySetFields,
       });
 
@@ -73,12 +76,13 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
 
       // When: evaluation-setup 단계에서 수동으로 criteriaSettingEnabled를 false로 설정
       await scenario.평가기간_설정을_변경한다(periodId, 'criteria', false);
-      
+
       let periodDetail = await scenario.평가기간_상세를_조회한다(periodId);
       console.log('🔍 수동 설정 후 evaluation-setup 단계 상태:', {
         criteriaSettingEnabled: periodDetail.criteriaSettingEnabled,
         selfEvaluationSettingEnabled: periodDetail.selfEvaluationSettingEnabled,
-        finalEvaluationSettingEnabled: periodDetail.finalEvaluationSettingEnabled,
+        finalEvaluationSettingEnabled:
+          periodDetail.finalEvaluationSettingEnabled,
         manuallySetFields: periodDetail.manuallySetFields,
       });
 
@@ -90,7 +94,8 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
       console.log('🔍 performance 단계 전이 후 상태:', {
         criteriaSettingEnabled: periodDetail.criteriaSettingEnabled,
         selfEvaluationSettingEnabled: periodDetail.selfEvaluationSettingEnabled,
-        finalEvaluationSettingEnabled: periodDetail.finalEvaluationSettingEnabled,
+        finalEvaluationSettingEnabled:
+          periodDetail.finalEvaluationSettingEnabled,
         manuallySetFields: periodDetail.manuallySetFields,
       });
 
@@ -98,7 +103,9 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
       expect(periodDetail.criteriaSettingEnabled).toBe(false); // 수동 설정 보존
       expect(periodDetail.selfEvaluationSettingEnabled).toBe(false); // 기본값 적용
       expect(periodDetail.finalEvaluationSettingEnabled).toBe(false); // 기본값 적용
-      expect(periodDetail.manuallySetFields).toContain('criteriaSettingEnabled');
+      expect(periodDetail.manuallySetFields).toContain(
+        'criteriaSettingEnabled',
+      );
     });
 
     it('여러 수동 설정이 있는 경우 모든 수동 설정이 보존된다', async () => {
@@ -108,17 +115,23 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
 
       // When: evaluation-setup 단계에서 여러 설정을 수동으로 변경
       await scenario.평가기간_설정을_변경한다(periodId, 'criteria', false);
-      await scenario.평가기간_설정을_변경한다(periodId, 'self-evaluation', true);
-      
+      await scenario.평가기간_설정을_변경한다(
+        periodId,
+        'self-evaluation',
+        true,
+      );
+
       let periodDetail = await scenario.평가기간_상세를_조회한다(periodId);
       console.log('🔍 여러 수동 설정 후 evaluation-setup 단계 상태:', {
         criteriaSettingEnabled: periodDetail.criteriaSettingEnabled,
         selfEvaluationSettingEnabled: periodDetail.selfEvaluationSettingEnabled,
-        finalEvaluationSettingEnabled: periodDetail.finalEvaluationSettingEnabled,
+        finalEvaluationSettingEnabled:
+          periodDetail.finalEvaluationSettingEnabled,
         manuallySetFields: periodDetail.manuallySetFields,
       });
 
-      // self-evaluation 단계로 전이
+      // performance 단계를 거쳐 self-evaluation 단계로 전이 (단계 전이 규칙: evaluation-setup → performance → self-evaluation)
+      await scenario.평가기간_단계를_변경한다(periodId, 'performance');
       await scenario.평가기간_단계를_변경한다(periodId, 'self-evaluation');
 
       // Then: self-evaluation 단계에서 수동 설정들이 보존됨
@@ -126,7 +139,8 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
       console.log('🔍 self-evaluation 단계 전이 후 상태:', {
         criteriaSettingEnabled: periodDetail.criteriaSettingEnabled,
         selfEvaluationSettingEnabled: periodDetail.selfEvaluationSettingEnabled,
-        finalEvaluationSettingEnabled: periodDetail.finalEvaluationSettingEnabled,
+        finalEvaluationSettingEnabled:
+          periodDetail.finalEvaluationSettingEnabled,
         manuallySetFields: periodDetail.manuallySetFields,
       });
 
@@ -134,8 +148,12 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
       expect(periodDetail.criteriaSettingEnabled).toBe(false); // 수동 설정 보존
       expect(periodDetail.selfEvaluationSettingEnabled).toBe(true); // 수동 설정 보존
       expect(periodDetail.finalEvaluationSettingEnabled).toBe(false); // 기본값 적용
-      expect(periodDetail.manuallySetFields).toContain('criteriaSettingEnabled');
-      expect(periodDetail.manuallySetFields).toContain('selfEvaluationSettingEnabled');
+      expect(periodDetail.manuallySetFields).toContain(
+        'criteriaSettingEnabled',
+      );
+      expect(periodDetail.manuallySetFields).toContain(
+        'selfEvaluationSettingEnabled',
+      );
     });
   });
 
@@ -185,7 +203,8 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
         phase: periodDetail.currentPhase,
         criteriaSettingEnabled: periodDetail.criteriaSettingEnabled,
         selfEvaluationSettingEnabled: periodDetail.selfEvaluationSettingEnabled,
-        finalEvaluationSettingEnabled: periodDetail.finalEvaluationSettingEnabled,
+        finalEvaluationSettingEnabled:
+          periodDetail.finalEvaluationSettingEnabled,
         manuallySetFields: periodDetail.manuallySetFields,
       });
 
@@ -200,7 +219,8 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
         phase: periodDetail.currentPhase,
         criteriaSettingEnabled: periodDetail.criteriaSettingEnabled,
         selfEvaluationSettingEnabled: periodDetail.selfEvaluationSettingEnabled,
-        finalEvaluationSettingEnabled: periodDetail.finalEvaluationSettingEnabled,
+        finalEvaluationSettingEnabled:
+          periodDetail.finalEvaluationSettingEnabled,
         manuallySetFields: periodDetail.manuallySetFields,
       });
 
@@ -211,15 +231,38 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
   });
 
   describe('하이브리드 수동 설정 에러 케이스', () => {
+    let periodIdForCleanup: string | null = null;
+
+    afterEach(async () => {
+      // 각 테스트 후 생성된 평가기간 정리
+      if (periodIdForCleanup) {
+        try {
+          await baseE2E
+            .request()
+            .delete(`/admin/evaluation-periods/${periodIdForCleanup}`)
+            .catch(() => {
+              // 정리 API가 없거나 이미 삭제된 경우 무시
+            });
+        } catch (error) {
+          // 정리 실패 시 무시
+        }
+        periodIdForCleanup = null;
+      }
+    });
+
     it('완료된 평가기간에서 수동 설정 변경 시 에러가 발생한다', async () => {
       // Given: 평가기간 생성, 시작, 완료
       const { id: periodId } = await scenario.평가기간을_생성한다();
+      periodIdForCleanup = periodId;
       await scenario.평가기간을_시작한다(periodId);
       await scenario.평가기간을_완료한다(periodId);
 
       // When & Then: 완료된 평가기간에서 설정 변경 시도
-      await baseE2E.request()
-        .patch(`/admin/evaluation-periods/${periodId}/settings/criteria-permission`)
+      await baseE2E
+        .request()
+        .patch(
+          `/admin/evaluation-periods/${periodId}/settings/criteria-permission`,
+        )
         .send({ enabled: true })
         .expect(400);
     });

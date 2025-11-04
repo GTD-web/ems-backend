@@ -75,14 +75,19 @@ describe('평가라인 변경 관리 시나리오', () => {
       );
     }
 
-    // 평가기간 생성
+    // 평가기간 생성 (고유한 날짜를 위해 timestamp 사용)
+    const timestamp = Date.now();
     const today = new Date();
-    const nextMonth = new Date(today);
-    nextMonth.setMonth(today.getMonth() + 1);
+    // 고유한 날짜를 위해 timestamp를 사용하여 일수 추가
+    const uniqueDays = Math.floor(timestamp / (1000 * 60 * 60 * 24));
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + uniqueDays);
+    const nextMonth = new Date(startDate);
+    nextMonth.setMonth(startDate.getMonth() + 1);
 
     const createData = {
-      name: '평가라인 변경 관리 테스트용 평가기간',
-      startDate: today.toISOString(),
+      name: `평가라인 변경 관리 테스트용 평가기간_${timestamp}`,
+      startDate: startDate.toISOString(),
       peerEvaluationDeadline: nextMonth.toISOString(),
       description: '평가라인 변경 관리 E2E 테스트용 평가기간',
       maxSelfEvaluationRate: 120,
@@ -122,11 +127,9 @@ describe('평가라인 변경 관리 시나리오', () => {
     // 각 테스트 후 정리
     try {
       if (evaluationPeriodId) {
-        await testSuite
-          .request()
-          .post(`/admin/evaluation-periods/${evaluationPeriodId}/end`)
-          .expect(HttpStatus.OK);
-
+        // 평가기간 완료 (실제 API는 /complete 사용)
+        await evaluationPeriodScenario.평가기간을_완료한다(evaluationPeriodId);
+        // 평가기간 삭제
         await evaluationPeriodScenario.평가기간을_삭제한다(evaluationPeriodId);
       }
       await seedDataScenario.시드_데이터를_삭제한다();
@@ -1115,4 +1118,3 @@ describe('평가라인 변경 관리 시나리오', () => {
     });
   });
 });
-

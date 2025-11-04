@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { WbsItem } from './wbs-item.entity';
 import { WbsItemService } from './wbs-item.service';
 import { WbsItemTestService } from './wbs-item-test.service';
@@ -12,7 +13,7 @@ import { WbsItemTestService } from './wbs-item-test.service';
  */
 @Module({
   imports: [TypeOrmModule.forFeature([WbsItem])],
-  providers: [WbsItemService, WbsItemTestService],
+  providers: [WbsItemService, WbsItemTestService, TransactionManagerService],
   exports: [WbsItemService, WbsItemTestService, TypeOrmModule],
 })
 export class WbsItemModule {}

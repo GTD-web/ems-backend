@@ -12,6 +12,19 @@
 - evaluation-period
 - dashboard
 
+## 테스트 환경 설정 및 정리
+
+### 선행 조건 설정
+- 각 테스트마다 시드 데이터 생성 (프로젝트, WBS, 직원 등)
+- 평가기간 생성 시 고유한 날짜 보장 (timestamp 기반)
+- 평가기간 시작
+- 평가 대상자 등록
+
+### 테스트 후 정리
+- 평가기간 완료: POST /admin/evaluation-periods/{id}/complete
+- 평가기간 삭제: DELETE /admin/evaluation-periods/{id}
+- 시드 데이터 삭제
+
 - **1차 평가자 구성 관리**
     - POST /admin/evaluation-periods (평가기간 생성)
     - POST /admin/evaluation-periods/{id}/start (평가기간 시작)

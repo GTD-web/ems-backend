@@ -11,6 +11,7 @@ import { Employee } from '@domain/common/employee/employee.entity';
 import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { WbsItemService } from '@domain/common/wbs-item/wbs-item.service';
 import type { CreateEvaluationWbsAssignmentData } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 
 /**
@@ -30,6 +31,7 @@ export class WbsAssignmentValidationService {
     private readonly wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
     private readonly transactionManager: TransactionManagerService,
     private readonly evaluationPeriodService: EvaluationPeriodService,
+    private readonly wbsItemService: WbsItemService,
   ) {}
 
   /**
@@ -55,7 +57,18 @@ export class WbsAssignmentValidationService {
       );
     }
 
-    // 2. 프로젝트 할당 선행 조건 검증
+    // 2. WBS 항목 존재 검증 (직원 검증 후, 프로젝트 할당 검증 전에 실행하여 404를 명확히 반환)
+    const wbsItem = await this.wbsItemService.ID로_조회한다(
+      data.wbsItemId,
+      manager,
+    );
+    if (!wbsItem) {
+      throw new NotFoundException(
+        `WBS 항목 ID ${data.wbsItemId}에 해당하는 WBS 항목을 찾을 수 없습니다.`,
+      );
+    }
+
+    // 3. 프로젝트 할당 선행 조건 검증
     const projectAssignmentRepository = this.transactionManager.getRepository(
       EvaluationProjectAssignment,
       this.projectAssignmentRepository,
@@ -75,7 +88,7 @@ export class WbsAssignmentValidationService {
       );
     }
 
-    // 3. 평가기간 상태 검증
+    // 4. 평가기간 상태 검증
     if (!data.periodId?.trim()) {
       throw new UnprocessableEntityException(
         '평가기간 상태를 확인할 수 없습니다.',
@@ -96,7 +109,7 @@ export class WbsAssignmentValidationService {
       );
     }
 
-    // 4. 중복 할당 검증
+    // 5. 중복 할당 검증
     const wbsAssignmentRepository = this.transactionManager.getRepository(
       EvaluationWbsAssignment,
       this.wbsAssignmentRepository,

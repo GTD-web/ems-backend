@@ -69,14 +69,19 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       );
     }
 
-    // 평가기간 생성
+    // 평가기간 생성 (고유한 날짜를 위해 timestamp 사용)
+    const timestamp = Date.now();
     const today = new Date();
-    const nextMonth = new Date(today);
-    nextMonth.setMonth(today.getMonth() + 1);
+    // 고유한 날짜를 위해 timestamp를 사용하여 일수 추가
+    const uniqueDays = Math.floor(timestamp / (1000 * 60 * 60 * 24));
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + uniqueDays);
+    const nextMonth = new Date(startDate);
+    nextMonth.setMonth(startDate.getMonth() + 1);
 
     const createData = {
-      name: '평가항목 상태 테스트용 평가기간',
-      startDate: today.toISOString(),
+      name: `평가항목 상태 테스트용 평가기간_${timestamp}`,
+      startDate: startDate.toISOString(),
       peerEvaluationDeadline: nextMonth.toISOString(),
       description: '평가항목 상태 변경 검증 E2E 테스트용 평가기간',
       maxSelfEvaluationRate: 120,
@@ -116,11 +121,9 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
     // 각 테스트 후 시드 데이터 초기화
     try {
       if (evaluationPeriodId) {
-        await testSuite
-          .request()
-          .post(`/admin/evaluation-periods/${evaluationPeriodId}/end`)
-          .expect(HttpStatus.OK);
-
+        // 평가기간 완료 (실제 API는 /complete 사용)
+        await evaluationPeriodScenario.평가기간을_완료한다(evaluationPeriodId);
+        // 평가기간 삭제
         await evaluationPeriodScenario.평가기간을_삭제한다(evaluationPeriodId);
       }
       await seedDataScenario.시드_데이터를_삭제한다();
@@ -462,7 +465,9 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
         periodId: evaluationPeriodId,
       });
 
-      // complete 상태 확인
+      // complete 상태 확인 (데이터 반영 지연 고려)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const 할당후상태 =
         await wbsAssignmentScenario.대시보드_직원_현황을_조회한다(
           evaluationPeriodId,
@@ -471,6 +476,17 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
         (emp: any) => emp.employeeId === testEmployeeId,
       );
 
+      // 디버깅: 직원 상태가 없으면 로그 출력
+      if (!할당후직원상태) {
+        console.log(
+          `⚠️ 직원 상태를 찾을 수 없음 - employeeId: ${testEmployeeId}, 조회된 직원 수: ${할당후상태?.length || 0}`,
+        );
+        console.log(
+          `조회된 직원 ID 목록: ${할당후상태?.map((e: any) => e.employeeId).join(', ') || '없음'}`,
+        );
+      }
+
+      expect(할당후직원상태).toBeDefined();
       expect(할당후직원상태.evaluationCriteria?.status).toBe('complete');
       expect(할당후직원상태.evaluationCriteria?.assignedWbsCount).toBe(2);
 

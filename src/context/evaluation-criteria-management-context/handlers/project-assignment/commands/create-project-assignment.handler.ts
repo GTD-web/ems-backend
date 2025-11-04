@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
@@ -47,7 +48,7 @@ export class CreateProjectAssignmentHandler
       // 프로젝트 존재 여부 검증 (Infrastructure 레벨)
       const project = await this.projectService.ID로_조회한다(data.projectId);
       if (!project) {
-        throw new BadRequestException(
+        throw new NotFoundException(
           `프로젝트 ID ${data.projectId}에 해당하는 프로젝트를 찾을 수 없습니다.`,
         );
       }
@@ -58,7 +59,7 @@ export class CreateProjectAssignmentHandler
         manager,
       );
       if (!evaluationPeriod) {
-        throw new BadRequestException(
+        throw new NotFoundException(
           `평가기간 ID ${data.periodId}에 해당하는 평가기간을 찾을 수 없습니다.`,
         );
       }

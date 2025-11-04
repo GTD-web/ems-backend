@@ -55,14 +55,19 @@ describe('WBS 할당 기본 관리 시나리오', () => {
       );
     }
 
-    // 평가기간 생성
+    // 평가기간 생성 (고유한 날짜를 위해 timestamp 사용)
+    const timestamp = Date.now();
     const today = new Date();
-    const nextMonth = new Date(today);
-    nextMonth.setMonth(today.getMonth() + 1);
+    // 고유한 날짜를 위해 timestamp를 사용하여 일수 추가
+    const uniqueDays = Math.floor(timestamp / (1000 * 60 * 60 * 24));
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + uniqueDays);
+    const nextMonth = new Date(startDate);
+    nextMonth.setMonth(startDate.getMonth() + 1);
 
     const createData = {
-      name: 'WBS 할당 테스트용 평가기간',
-      startDate: today.toISOString(),
+      name: `WBS 할당 테스트용 평가기간_${timestamp}`,
+      startDate: startDate.toISOString(),
       peerEvaluationDeadline: nextMonth.toISOString(),
       description: 'WBS 할당 E2E 테스트용 평가기간',
       maxSelfEvaluationRate: 120,
@@ -102,11 +107,9 @@ describe('WBS 할당 기본 관리 시나리오', () => {
     // 각 테스트 후 시드 데이터 초기화
     try {
       if (evaluationPeriodId) {
-        await testSuite
-          .request()
-          .post(`/admin/evaluation-periods/${evaluationPeriodId}/end`)
-          .expect(200);
-
+        // 평가기간 완료 (실제 API는 /complete 사용)
+        await evaluationPeriodScenario.평가기간을_완료한다(evaluationPeriodId);
+        // 평가기간 삭제
         await evaluationPeriodScenario.평가기간을_삭제한다(evaluationPeriodId);
       }
       await seedDataScenario.시드_데이터를_삭제한다();
@@ -688,7 +691,9 @@ describe('WBS 할당 기본 관리 시나리오', () => {
       );
       const 취소후WBS수 = 취소후프로젝트?.wbsList?.length || 0;
 
-      // 할당 취소 후 대시보드 직원 현황 조회
+      // 할당 취소 후 대시보드 직원 현황 조회 (데이터 반영 지연 고려)
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const 취소후대시보드상태 =
         await wbsAssignmentScenario.대시보드_직원_현황을_조회한다(
           evaluationPeriodId,
@@ -696,6 +701,16 @@ describe('WBS 할당 기본 관리 시나리오', () => {
       const 취소후직원상태 = 취소후대시보드상태.find(
         (emp: any) => emp.employeeId === employeeId,
       );
+
+      // 디버깅: 직원 상태가 없으면 로그 출력
+      if (!취소후직원상태) {
+        console.log(
+          `⚠️ 직원 상태를 찾을 수 없음 - employeeId: ${employeeId}, 조회된 직원 수: ${취소후대시보드상태?.length || 0}`,
+        );
+        console.log(
+          `조회된 직원 ID 목록: ${취소후대시보드상태?.map((e: any) => e.employeeId).join(', ') || '없음'}`,
+        );
+      }
 
       console.log(`📊 취소 후 할당 데이터 - WBS 수: ${취소후WBS수}`);
       console.log(
@@ -712,7 +727,7 @@ describe('WBS 할당 기본 관리 시나리오', () => {
       expect(취소된WBS).toBeUndefined();
 
       // 대시보드 상태 검증
-
+      expect(취소후직원상태).toBeDefined();
       expect(
         취소후직원상태.evaluationCriteria?.assignedWbsCount || 0,
       ).toBeLessThanOrEqual(

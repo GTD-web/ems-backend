@@ -44,7 +44,7 @@ import {
   UpdateWbsItemTitleDto,
   WbsAssignmentDetailResponseDto,
   WbsAssignmentFilterDto,
-  WbsItemAssignmentsResponseDto
+  WbsItemAssignmentsResponseDto,
 } from './dto/wbs-assignment.dto';
 
 /**
@@ -104,13 +104,15 @@ export class WbsAssignmentManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     const cancelledBy = user.id;
-    return await this.wbsAssignmentBusinessService.WBS_할당을_WBS_ID로_취소한다({
-      employeeId: bodyDto.employeeId,
-      wbsItemId: wbsItemId,
-      projectId: bodyDto.projectId,
-      periodId: bodyDto.periodId,
-      cancelledBy,
-    });
+    return await this.wbsAssignmentBusinessService.WBS_할당을_WBS_ID로_취소한다(
+      {
+        employeeId: bodyDto.employeeId,
+        wbsItemId: wbsItemId,
+        projectId: bodyDto.projectId,
+        periodId: bodyDto.periodId,
+        cancelledBy,
+      },
+    );
   }
 
   /**
@@ -326,14 +328,17 @@ export class WbsAssignmentManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<any> {
     const updatedBy = user.id;
-    return await this.wbsAssignmentBusinessService.WBS_할당_순서를_WBS_ID로_변경한다({
-      employeeId: bodyDto.employeeId,
-      wbsItemId: wbsItemId,
-      projectId: bodyDto.projectId,
-      periodId: bodyDto.periodId,
-      direction: bodyDto.direction,
-      updatedBy,
-    });
+    // URL 파라미터의 wbsItemId를 사용 (bodyDto의 wbsItemId는 무시)
+    return await this.wbsAssignmentBusinessService.WBS_할당_순서를_WBS_ID로_변경한다(
+      {
+        employeeId: bodyDto.employeeId,
+        wbsItemId: wbsItemId, // URL 파라미터 사용
+        projectId: bodyDto.projectId,
+        periodId: bodyDto.periodId,
+        direction: bodyDto.direction,
+        updatedBy,
+      },
+    );
   }
 
   /**

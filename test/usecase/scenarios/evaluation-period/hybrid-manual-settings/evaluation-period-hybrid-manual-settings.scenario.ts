@@ -6,28 +6,74 @@ import { BaseE2ETest } from '../../../../base-e2e.spec';
  */
 @Injectable()
 export class EvaluationPeriodHybridManualSettingsScenario {
+  private static callCount = 0; // 호출 횟수 추적 (고유한 날짜 생성을 위해)
+
   constructor(private readonly baseE2E: BaseE2ETest) {}
 
   /**
    * 평가기간을 생성한다
    */
   async 평가기간을_생성한다(): Promise<{ id: string }> {
-    const timestamp = Date.now();
-    const year = 2030;
-    const month = (timestamp % 12) + 1; // 1-12월 중 랜덤 선택
-    const startDate = `${year}-${month.toString().padStart(2, '0')}-01T00:00:00.000Z`;
-    const endDate = `${year}-${month.toString().padStart(2, '0')}-28T23:59:59.999Z`;
+    // 호출 횟수 증가 (각 테스트마다 고유한 날짜를 보장하기 위해)
+    EvaluationPeriodHybridManualSettingsScenario.callCount++;
     
+    const timestamp = Date.now();
+    // 고유한 날짜를 위해 timestamp와 호출 횟수를 조합하여 시작일 생성 (겹침 방지)
+    // 2020년 1월 1일을 기준으로 timestamp를 일수로 변환
+    const baseDate = new Date('2020-01-01T00:00:00.000Z');
+    // timestamp를 일수로 변환
+    const daysFromBase = Math.floor(timestamp / (1000 * 60 * 60 * 24));
+    // 호출 횟수에 100일을 곱하여 각 테스트마다 충분한 날짜 간격 보장
+    // 예: 1번째 호출 = 0일, 2번째 호출 = 100일, 3번째 호출 = 200일...
+    const callOffset = (EvaluationPeriodHybridManualSettingsScenario.callCount - 1) * 100;
+    // 랜덤 값을 추가하여 더 고유한 날짜 생성 (0~50일 범위)
+    const randomOffset = Math.floor(Math.random() * 50);
+    const totalDays = daysFromBase + callOffset + randomOffset;
+    const startDateObj = new Date(baseDate);
+    startDateObj.setDate(baseDate.getDate() + totalDays);
+    
+    // 시작일로부터 20일 후 종료일
+    const endDateObj = new Date(startDateObj);
+    endDateObj.setDate(startDateObj.getDate() + 20);
+    
+    // 날짜 포맷팅
+    const year = startDateObj.getFullYear();
+    const month = (startDateObj.getMonth() + 1).toString().padStart(2, '0');
+    const day = startDateObj.getDate().toString().padStart(2, '0');
+    const endYear = endDateObj.getFullYear();
+    const endMonth = (endDateObj.getMonth() + 1).toString().padStart(2, '0');
+    const endDay = endDateObj.getDate().toString().padStart(2, '0');
+    
+    const startDate = `${year}-${month}-${day}T00:00:00.000Z`;
+    const endDate = `${endYear}-${endMonth}-${endDay}T23:59:59.999Z`;
+    
+    // 마감일 계산 (시작일 기준)
+    const evaluationSetupDeadline = new Date(startDateObj);
+    evaluationSetupDeadline.setDate(startDateObj.getDate() + 5);
+    const performanceDeadline = new Date(startDateObj);
+    performanceDeadline.setDate(startDateObj.getDate() + 10);
+    const selfEvaluationDeadline = new Date(startDateObj);
+    selfEvaluationDeadline.setDate(startDateObj.getDate() + 15);
+    const peerEvaluationDeadline = new Date(startDateObj);
+    peerEvaluationDeadline.setDate(startDateObj.getDate() + 18);
+    
+    const formatDate = (date: Date): string => {
+      const y = date.getFullYear();
+      const m = (date.getMonth() + 1).toString().padStart(2, '0');
+      const d = date.getDate().toString().padStart(2, '0');
+      return `${y}-${m}-${d}T23:59:59.999Z`;
+    };
+
     const response = await this.baseE2E.request()
       .post('/admin/evaluation-periods')
       .send({
-        name: `${year}년 ${month}월 하이브리드 테스트 평가기간_${timestamp}`,
+        name: `하이브리드 테스트 평가기간_${timestamp}`,
         startDate: startDate,
         endDate: endDate,
-        evaluationSetupDeadline: `${year}-${month.toString().padStart(2, '0')}-05T23:59:59.999Z`,
-        performanceDeadline: `${year}-${month.toString().padStart(2, '0')}-15T23:59:59.999Z`,
-        selfEvaluationDeadline: `${year}-${month.toString().padStart(2, '0')}-20T23:59:59.999Z`,
-        peerEvaluationDeadline: `${year}-${month.toString().padStart(2, '0')}-25T23:59:59.999Z`,
+        evaluationSetupDeadline: formatDate(evaluationSetupDeadline),
+        performanceDeadline: formatDate(performanceDeadline),
+        selfEvaluationDeadline: formatDate(selfEvaluationDeadline),
+        peerEvaluationDeadline: formatDate(peerEvaluationDeadline),
       });
 
     if (response.status !== 201) {
