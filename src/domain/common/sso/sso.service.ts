@@ -6,7 +6,6 @@ import {
   OnModuleInit,
   UnauthorizedException,
 } from '@nestjs/common';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
   ChangePasswordResult,
   CheckPasswordResult,
