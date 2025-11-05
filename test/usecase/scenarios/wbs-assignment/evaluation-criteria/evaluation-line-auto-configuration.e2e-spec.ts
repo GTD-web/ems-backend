@@ -885,16 +885,12 @@ describe('평가라인 자동 구성 관리 시나리오', () => {
             expect(
               primaryStatus.completedEvaluationCount,
             ).toBeGreaterThanOrEqual(0);
-            expect(typeof primaryStatus.isEditable).toBe('boolean');
 
             console.log(
               `  - primaryStatus.assignedWbsCount: ${primaryStatus.assignedWbsCount} ✅`,
             );
             console.log(
               `  - primaryStatus.completedEvaluationCount: ${primaryStatus.completedEvaluationCount} ✅`,
-            );
-            console.log(
-              `  - primaryStatus.isEditable: ${primaryStatus.isEditable} ✅`,
             );
           }
 
@@ -967,16 +963,12 @@ describe('평가라인 자동 구성 관리 시나리오', () => {
             expect(
               secondaryStatus.completedEvaluationCount,
             ).toBeGreaterThanOrEqual(0);
-            expect(typeof secondaryStatus.isEditable).toBe('boolean');
 
             console.log(
               `  - secondaryStatus.assignedWbsCount: ${secondaryStatus.assignedWbsCount} ✅`,
             );
             console.log(
               `  - secondaryStatus.completedEvaluationCount: ${secondaryStatus.completedEvaluationCount} ✅`,
-            );
-            console.log(
-              `  - secondaryStatus.isEditable: ${secondaryStatus.isEditable} ✅`,
             );
           }
 
@@ -1503,9 +1495,6 @@ describe('평가라인 자동 구성 관리 시나리오', () => {
           `  - isCompleted: ${primaryEval.isCompleted} (예상: false) ✅`,
         );
 
-        expect(typeof primaryEval.isEditable).toBe('boolean');
-        console.log(`  - isEditable: ${primaryEval.isEditable} (boolean) ✅`);
-
         // 초기값 검증 (평가 내용 없음)
         expect(
           primaryEval.evaluationContent === null ||
@@ -1567,9 +1556,6 @@ describe('평가라인 자동 구성 관리 시나리오', () => {
         console.log(
           `  - isCompleted: ${secondaryEval.isCompleted} (예상: false) ✅`,
         );
-
-        expect(typeof secondaryEval.isEditable).toBe('boolean');
-        console.log(`  - isEditable: ${secondaryEval.isEditable} (boolean) ✅`);
 
         // 초기값 검증 (평가 내용 없음)
         expect(
@@ -2118,7 +2104,6 @@ describe('평가라인 자동 구성 관리 시나리오', () => {
       }
 
       expect(primaryEval.isCompleted).toBe(false);
-      expect(typeof primaryEval.isEditable).toBe('boolean');
 
       console.log('✅ primaryDownwardEvaluation 검증 완료');
 

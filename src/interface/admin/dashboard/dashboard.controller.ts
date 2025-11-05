@@ -501,7 +501,6 @@ export class DashboardController {
         status: statusData.selfEvaluation.status,
         totalCount: statusData.selfEvaluation.totalMappingCount,
         completedCount: statusData.selfEvaluation.completedMappingCount,
-        isEditable: assignedData.editableStatus.isSelfEvaluationEditable,
         totalScore: statusData.selfEvaluation.totalScore,
         grade: statusData.selfEvaluation.grade,
       },
@@ -510,7 +509,6 @@ export class DashboardController {
         totalWbsCount: statusData.downwardEvaluation.primary.assignedWbsCount,
         completedCount:
           statusData.downwardEvaluation.primary.completedEvaluationCount,
-        isEditable: assignedData.editableStatus.isPrimaryEvaluationEditable,
         totalScore: statusData.downwardEvaluation.primary.totalScore,
         grade: statusData.downwardEvaluation.primary.grade,
       },
@@ -524,7 +522,6 @@ export class DashboardController {
         completedCount:
           statusData.downwardEvaluation.secondary.evaluators[0]
             ?.completedEvaluationCount || 0,
-        isEditable: assignedData.editableStatus.isSecondaryEvaluationEditable,
         totalScore: statusData.downwardEvaluation.secondary.totalScore,
         grade: statusData.downwardEvaluation.secondary.grade,
       },

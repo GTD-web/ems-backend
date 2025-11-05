@@ -160,12 +160,6 @@ export class SelfEvaluationStatusDto {
   })
   completedCount: number;
 
-  @ApiProperty({
-    description: '자기평가 수정 가능 여부',
-    example: true,
-  })
-  isEditable: boolean;
-
   @ApiPropertyOptional({
     description: '가중치 기반 자기평가 총점 (0-100)',
     example: 85.5,
@@ -203,12 +197,6 @@ export class DownwardEvaluationStatusDto {
     example: 3,
   })
   completedCount: number;
-
-  @ApiProperty({
-    description: '평가 수정 가능 여부',
-    example: true,
-  })
-  isEditable: boolean;
 
   @ApiPropertyOptional({
     description: '가중치 기반 하향평가 총점 (0-100)',

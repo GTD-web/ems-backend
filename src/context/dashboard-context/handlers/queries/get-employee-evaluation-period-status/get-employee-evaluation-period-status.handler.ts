@@ -132,9 +132,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'mapping.excludeReason AS mapping_excludereason',
           'mapping.excludedAt AS mapping_excludedat',
           'mapping.deletedAt AS mapping_deletedat',
-          'mapping.isSelfEvaluationEditable AS mapping_isselfevaluationeditable',
-          'mapping.isPrimaryEvaluationEditable AS mapping_isprimaryevaluationeditable',
-          'mapping.isSecondaryEvaluationEditable AS mapping_issecondaryevaluationeditable',
           // 평가기간 정보
           'period.name AS period_name',
           'period.status AS period_status',
@@ -322,14 +319,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       const isEvaluationTarget =
         !result.mapping_isexcluded && !result.mapping_deletedat;
 
-      // 수정 가능 여부 계산
-      const isSelfEvaluationEditable =
-        result.mapping_isselfevaluationeditable && isEvaluationTarget;
-      const isPrimaryEvaluationEditable =
-        result.mapping_isprimaryevaluationeditable && isEvaluationTarget;
-      const isSecondaryEvaluationEditable =
-        result.mapping_issecondaryevaluationeditable && isEvaluationTarget;
-
       const dto: EmployeeEvaluationPeriodStatusDto = {
         // 맵핑 기본 정보
         mappingId: result.mapping_id,
@@ -346,12 +335,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               currentPhase: result.period_currentphase,
               startDate: result.period_startdate,
               endDate: result.period_enddate,
-              // 수정 가능 상태 정보를 evaluationPeriod 안에 포함
-              editableStatus: {
-                isSelfEvaluationEditable: isSelfEvaluationEditable,
-                isPrimaryEvaluationEditable: isPrimaryEvaluationEditable,
-                isSecondaryEvaluationEditable: isSecondaryEvaluationEditable,
-              },
               // 수동 설정 상태 정보를 evaluationPeriod 안에 포함
               manualSettings: {
                 criteriaSettingEnabled:
@@ -415,7 +398,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           status: selfEvaluationStatus,
           totalMappingCount,
           completedMappingCount,
-          isEditable: isSelfEvaluationEditable,
           isSubmittedToEvaluator,
           totalScore,
           grade,
@@ -428,13 +410,11 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             status: primary.status,
             assignedWbsCount: primary.assignedWbsCount,
             completedEvaluationCount: primary.completedEvaluationCount,
-            isEditable: isPrimaryEvaluationEditable,
             totalScore: primary.totalScore,
             grade: primary.grade,
           },
           secondary: {
             evaluators: secondary.evaluators,
-            isEditable: isSecondaryEvaluationEditable,
             totalScore: secondary.totalScore,
             grade: secondary.grade,
           },
@@ -505,9 +485,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           `평가기준있는WBS: ${wbsWithCriteriaCount}/${wbsCount}, 평가기준상태: ${wbsCriteriaStatus}, ` +
           `PRIMARY평가자: ${hasPrimaryEvaluator}, SECONDARY평가자: ${hasSecondaryEvaluator}, 평가라인상태: ${evaluationLineStatus}, ` +
           `성과입력: ${inputCompletedCount}/${perfTotalWbsCount} (${performanceInputStatus}), ` +
-          `자기평가: ${completedMappingCount}/${totalMappingCount} (${selfEvaluationStatus}, 총점: ${totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${grade ?? 'N/A'}, 수정가능: ${isSelfEvaluationEditable}), ` +
-          `1차하향평가(${primary.evaluator?.id ?? 'N/A'}): ${primary.completedEvaluationCount}/${primary.assignedWbsCount} (${primary.status}, 총점: ${primary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${primary.grade ?? 'N/A'}, 수정가능: ${isPrimaryEvaluationEditable}), ` +
-          `2차하향평가: [${secondaryLog}] (총점: ${secondary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${secondary.grade ?? 'N/A'}, 수정가능: ${isSecondaryEvaluationEditable}), ` +
+          `자기평가: ${completedMappingCount}/${totalMappingCount} (${selfEvaluationStatus}, 총점: ${totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${grade ?? 'N/A'}), ` +
+          `1차하향평가(${primary.evaluator?.id ?? 'N/A'}): ${primary.completedEvaluationCount}/${primary.assignedWbsCount} (${primary.status}, 총점: ${primary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${primary.grade ?? 'N/A'}), ` +
+          `2차하향평가: [${secondaryLog}] (총점: ${secondary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${secondary.grade ?? 'N/A'}), ` +
           `동료평가: ${completedRequestCount}/${totalRequestCount} (${peerEvaluationStatus}), ` +
           `최종평가: ${finalEvaluationLog} (${finalEvaluationStatus})`,
       );

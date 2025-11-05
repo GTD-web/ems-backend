@@ -94,15 +94,6 @@ export interface EmployeeEvaluationPeriodStatusDto {
     startDate: Date;
     /** 평가 종료일 */
     endDate?: Date;
-    /** 수정 가능 상태 정보 */
-    editableStatus: {
-      /** 자기평가 수정 가능 여부 */
-      isSelfEvaluationEditable: boolean;
-      /** 1차 평가 수정 가능 여부 */
-      isPrimaryEvaluationEditable: boolean;
-      /** 2차 평가 수정 가능 여부 */
-      isSecondaryEvaluationEditable: boolean;
-    };
     /** 수동 설정 상태 정보 */
     manualSettings: {
       /** 평가 기준 설정 수동 허용 여부 */
@@ -187,8 +178,6 @@ export interface EmployeeEvaluationPeriodStatusDto {
     totalMappingCount: number;
     /** 완료된 WBS 자기평가 수 */
     completedMappingCount: number;
-    /** 자기평가 수정 가능 여부 */
-    isEditable: boolean;
     /** 피평가자가 1차 평가자에게 자기평가 제출 완료 여부 */
     isSubmittedToEvaluator: boolean;
     /** 가중치 기반 자기평가 총점 (0-100) */
@@ -216,8 +205,6 @@ export interface EmployeeEvaluationPeriodStatusDto {
       assignedWbsCount: number;
       /** 완료된 하향평가 수 */
       completedEvaluationCount: number;
-      /** 1차평가 수정 가능 여부 */
-      isEditable: boolean;
       /** 가중치 기반 1차 하향평가 총점 (0-100) */
       totalScore: number | null;
       /** 평가기간 등급 기준에 따른 1차 하향평가 등급 (예: S+, A-, B 등) */
@@ -243,8 +230,6 @@ export interface EmployeeEvaluationPeriodStatusDto {
         /** 완료된 하향평가 수 */
         completedEvaluationCount: number;
       }>;
-      /** 2차평가 수정 가능 여부 */
-      isEditable: boolean;
       /** 가중치 기반 2차 하향평가 총점 (0-100) */
       totalScore: number | null;
       /** 평가기간 등급 기준에 따른 2차 하향평가 등급 (예: S+, A-, B 등) */
@@ -366,11 +351,6 @@ export interface MyDownwardEvaluationStatus {
     completedEvaluationCount: number;
 
     /**
-     * 수정 가능 여부
-     */
-    isEditable: boolean;
-
-    /**
      * 가중치 기반 1차 하향평가 총점 (0-100)
      */
     totalScore: number | null;
@@ -394,11 +374,6 @@ export interface MyDownwardEvaluationStatus {
      * 완료된 평가 수
      */
     completedEvaluationCount: number;
-
-    /**
-     * 수정 가능 여부
-     */
-    isEditable: boolean;
 
     /**
      * 가중치 기반 2차 하향평가 총점 (0-100)
@@ -486,8 +461,6 @@ export interface MyEvaluationTargetStatusDto {
     totalMappingCount: number;
     /** 완료된 WBS 자기평가 수 */
     completedMappingCount: number;
-    /** 자기평가 수정 가능 여부 */
-    isEditable: boolean;
     /** 전체 WBS 자기평가 매핑 수 (totalMappingCount와 동일) */
     totalSelfEvaluations: number;
     /** 1차 평가자에게 제출된 자기평가 수 */

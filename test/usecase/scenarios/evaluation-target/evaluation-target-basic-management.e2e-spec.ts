@@ -135,10 +135,6 @@ describe('평가대상 기본 관리 E2E 테스트', () => {
         expect(target.excludedAt).toBeNull();
         expect(target.createdBy).toBeDefined();
         expect(target.createdAt).toBeDefined();
-        // 추가 필드들 검증
-        expect(target.isSelfEvaluationEditable).toBeDefined();
-        expect(target.isPrimaryEvaluationEditable).toBeDefined();
-        expect(target.isSecondaryEvaluationEditable).toBeDefined();
       });
       
       console.log(`✅ 평가대상자 대량 등록 완료: ${result.length}명`);

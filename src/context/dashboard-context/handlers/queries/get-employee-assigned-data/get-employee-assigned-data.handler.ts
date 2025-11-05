@@ -263,11 +263,6 @@ export class GetEmployeeAssignedDataHandler
         departmentName,
         status: employee.status,
       },
-      editableStatus: {
-        isSelfEvaluationEditable: mapping.isSelfEvaluationEditable,
-        isPrimaryEvaluationEditable: mapping.isPrimaryEvaluationEditable,
-        isSecondaryEvaluationEditable: mapping.isSecondaryEvaluationEditable,
-      },
       projects,
       summary,
     };

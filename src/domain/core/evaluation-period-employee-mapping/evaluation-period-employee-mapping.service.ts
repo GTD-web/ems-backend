@@ -496,149 +496,10 @@ export class EvaluationPeriodEmployeeMappingService
   }
 
   /**
-   * 자기평가 수정 가능 상태를 변경한다
-   */
-  async 자기평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    isEditable: boolean,
-    updatedBy: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    this.logger.log(
-      `자기평가 수정 가능 상태 변경 시작 - ID: ${mappingId}, 수정가능: ${isEditable}`,
-    );
-
-    const mapping = await this.repository.findOne({
-      where: { id: mappingId },
-    });
-
-    if (!mapping) {
-      throw new EvaluationPeriodEmployeeMappingNotFoundException(mappingId);
-    }
-
-    try {
-      mapping.자기평가_수정_가능_상태를_변경한다(isEditable, updatedBy);
-      const saved = await this.repository.save(mapping);
-
-      this.logger.log(`자기평가 수정 가능 상태 변경 완료 - ID: ${mappingId}`);
-      return saved.DTO로_변환한다();
-    } catch (error) {
-      this.logger.error(
-        `자기평가 수정 가능 상태 변경 실패 - ID: ${mappingId}`,
-        error.stack,
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * 1차평가 수정 가능 상태를 변경한다
-   */
-  async 일차평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    isEditable: boolean,
-    updatedBy: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    this.logger.log(
-      `1차평가 수정 가능 상태 변경 시작 - ID: ${mappingId}, 수정가능: ${isEditable}`,
-    );
-
-    const mapping = await this.repository.findOne({
-      where: { id: mappingId },
-    });
-
-    if (!mapping) {
-      throw new EvaluationPeriodEmployeeMappingNotFoundException(mappingId);
-    }
-
-    try {
-      mapping.일차평가_수정_가능_상태를_변경한다(isEditable, updatedBy);
-      const saved = await this.repository.save(mapping);
-
-      this.logger.log(`1차평가 수정 가능 상태 변경 완료 - ID: ${mappingId}`);
-      return saved.DTO로_변환한다();
-    } catch (error) {
-      this.logger.error(
-        `1차평가 수정 가능 상태 변경 실패 - ID: ${mappingId}`,
-        error.stack,
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * 2차평가 수정 가능 상태를 변경한다
-   */
-  async 이차평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    isEditable: boolean,
-    updatedBy: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    this.logger.log(
-      `2차평가 수정 가능 상태 변경 시작 - ID: ${mappingId}, 수정가능: ${isEditable}`,
-    );
-
-    const mapping = await this.repository.findOne({
-      where: { id: mappingId },
-    });
-
-    if (!mapping) {
-      throw new EvaluationPeriodEmployeeMappingNotFoundException(mappingId);
-    }
-
-    try {
-      mapping.이차평가_수정_가능_상태를_변경한다(isEditable, updatedBy);
-      const saved = await this.repository.save(mapping);
-
-      this.logger.log(`2차평가 수정 가능 상태 변경 완료 - ID: ${mappingId}`);
-      return saved.DTO로_변환한다();
-    } catch (error) {
-      this.logger.error(
-        `2차평가 수정 가능 상태 변경 실패 - ID: ${mappingId}`,
-        error.stack,
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * 모든 평가의 수정 가능 상태를 일괄 변경한다
-   */
-  async 모든_평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    isEditable: boolean,
-    updatedBy: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    this.logger.log(
-      `모든 평가 수정 가능 상태 일괄 변경 시작 - ID: ${mappingId}, 수정가능: ${isEditable}`,
-    );
-
-    const mapping = await this.repository.findOne({
-      where: { id: mappingId },
-    });
-
-    if (!mapping) {
-      throw new EvaluationPeriodEmployeeMappingNotFoundException(mappingId);
-    }
-
-    try {
-      mapping.모든_평가_수정_가능_상태를_변경한다(isEditable, updatedBy);
-      const saved = await this.repository.save(mapping);
-
-      this.logger.log(
-        `모든 평가 수정 가능 상태 일괄 변경 완료 - ID: ${mappingId}`,
-      );
-      return saved.DTO로_변환한다();
-    } catch (error) {
-      this.logger.error(
-        `모든 평가 수정 가능 상태 일괄 변경 실패 - ID: ${mappingId}`,
-        error.stack,
-      );
-      throw error;
-    }
-  }
-
-  /**
    * 평가기간별 모든 평가 대상자의 수정 가능 상태를 일괄 변경한다
+   * 
+   * 주의: 엔티티 필드가 삭제되었으므로 이 메서드는 실제로 아무 작업도 수행하지 않습니다.
+   * 평가기간별 일괄 변경 기능과의 호환성을 위해 유지됩니다.
    */
   async 평가기간별_모든_평가_수정_가능_상태를_변경한다(
     evaluationPeriodId: string,
@@ -652,29 +513,13 @@ export class EvaluationPeriodEmployeeMappingService
     );
 
     try {
+      // 엔티티 필드가 삭제되었으므로 실제 작업은 수행하지 않음
       const mappings = await this.repository.find({
         where: { evaluationPeriodId },
       });
 
-      for (const mapping of mappings) {
-        mapping.자기평가_수정_가능_상태를_변경한다(
-          isSelfEvaluationEditable,
-          updatedBy,
-        );
-        mapping.일차평가_수정_가능_상태를_변경한다(
-          isPrimaryEvaluationEditable,
-          updatedBy,
-        );
-        mapping.이차평가_수정_가능_상태를_변경한다(
-          isSecondaryEvaluationEditable,
-          updatedBy,
-        );
-      }
-
-      await this.repository.save(mappings);
-
       this.logger.log(
-        `평가기간별 모든 평가 수정 가능 상태 일괄 변경 완료 - 평가기간: ${evaluationPeriodId}, 변경 수: ${mappings.length}`,
+        `평가기간별 모든 평가 수정 가능 상태 일괄 변경 완료 - 평가기간: ${evaluationPeriodId}, 변경 수: ${mappings.length} (실제 변경 없음)`,
       );
 
       return mappings.length;

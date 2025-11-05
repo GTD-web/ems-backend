@@ -19,12 +19,6 @@ export class MyEvaluationStatusDetailDto {
   })
   completedEvaluationCount: number;
 
-  @ApiProperty({
-    description: '수정 가능 여부',
-    example: true,
-  })
-  isEditable: boolean;
-
   @ApiPropertyOptional({
     description: '가중치 기반 하향평가 총점 (0-100점)',
     example: 85.5,
@@ -209,12 +203,6 @@ export class MyTargetSelfEvaluationDto {
     example: 3,
   })
   completedMappingCount: number;
-
-  @ApiProperty({
-    description: '자기평가 수정 가능 여부',
-    example: true,
-  })
-  isEditable: boolean;
 
   @ApiProperty({
     description: '전체 WBS 자기평가 매핑 수 (totalMappingCount와 동일)',

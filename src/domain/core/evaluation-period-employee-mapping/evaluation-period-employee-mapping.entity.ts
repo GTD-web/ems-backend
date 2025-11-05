@@ -62,26 +62,6 @@ export class EvaluationPeriodEmployeeMapping
   })
   excludedAt?: Date | null;
 
-  @Column({
-    type: 'boolean',
-    default: false,
-    comment: '자기평가 수정 가능 여부',
-  })
-  isSelfEvaluationEditable: boolean;
-
-  @Column({
-    type: 'boolean',
-    default: false,
-    comment: '1차평가(하향평가) 수정 가능 여부',
-  })
-  isPrimaryEvaluationEditable: boolean;
-
-  @Column({
-    type: 'boolean',
-    default: false,
-    comment: '2차평가(하향평가) 수정 가능 여부',
-  })
-  isSecondaryEvaluationEditable: boolean;
 
   constructor(data?: CreateEvaluationPeriodEmployeeMappingData) {
     super();
@@ -92,9 +72,6 @@ export class EvaluationPeriodEmployeeMapping
       this.excludeReason = null;
       this.excludedBy = null;
       this.excludedAt = null;
-      this.isSelfEvaluationEditable = false;
-      this.isPrimaryEvaluationEditable = false;
-      this.isSecondaryEvaluationEditable = false;
 
       // 감사 정보 설정
       this.메타데이터를_업데이트한다(data.createdBy);
@@ -165,72 +142,6 @@ export class EvaluationPeriodEmployeeMapping
     this.메타데이터를_업데이트한다(updatedBy);
   }
 
-  /**
-   * 자기평가 수정 가능 여부를 확인한다
-   */
-  자기평가_수정_가능한가(): boolean {
-    return this.isSelfEvaluationEditable && this.평가대상인가();
-  }
-
-  /**
-   * 1차평가 수정 가능 여부를 확인한다
-   */
-  일차평가_수정_가능한가(): boolean {
-    return this.isPrimaryEvaluationEditable && this.평가대상인가();
-  }
-
-  /**
-   * 2차평가 수정 가능 여부를 확인한다
-   */
-  이차평가_수정_가능한가(): boolean {
-    return this.isSecondaryEvaluationEditable && this.평가대상인가();
-  }
-
-  /**
-   * 자기평가 수정 가능 상태를 변경한다
-   */
-  자기평가_수정_가능_상태를_변경한다(
-    isEditable: boolean,
-    updatedBy: string,
-  ): void {
-    this.isSelfEvaluationEditable = isEditable;
-    this.메타데이터를_업데이트한다(updatedBy);
-  }
-
-  /**
-   * 1차평가 수정 가능 상태를 변경한다
-   */
-  일차평가_수정_가능_상태를_변경한다(
-    isEditable: boolean,
-    updatedBy: string,
-  ): void {
-    this.isPrimaryEvaluationEditable = isEditable;
-    this.메타데이터를_업데이트한다(updatedBy);
-  }
-
-  /**
-   * 2차평가 수정 가능 상태를 변경한다
-   */
-  이차평가_수정_가능_상태를_변경한다(
-    isEditable: boolean,
-    updatedBy: string,
-  ): void {
-    this.isSecondaryEvaluationEditable = isEditable;
-    this.메타데이터를_업데이트한다(updatedBy);
-  }
-
-  /**
-   * 모든 평가의 수정 가능 상태를 일괄 변경한다
-   */
-  모든_평가_수정_가능_상태를_변경한다(
-    isEditable: boolean,
-    updatedBy: string,
-  ): void {
-    this.isSelfEvaluationEditable = isEditable;
-    this.isPrimaryEvaluationEditable = isEditable;
-    this.isSecondaryEvaluationEditable = isEditable;
-    this.메타데이터를_업데이트한다(updatedBy);
-  }
 
   /**
    * 맵핑을 삭제한다 (소프트 삭제)
@@ -251,9 +162,6 @@ export class EvaluationPeriodEmployeeMapping
       excludeReason: this.excludeReason,
       excludedBy: this.excludedBy,
       excludedAt: this.excludedAt,
-      isSelfEvaluationEditable: this.isSelfEvaluationEditable,
-      isPrimaryEvaluationEditable: this.isPrimaryEvaluationEditable,
-      isSecondaryEvaluationEditable: this.isSecondaryEvaluationEditable,
       createdBy: this.createdBy!,
       updatedBy: this.updatedBy!,
       createdAt: this.createdAt,

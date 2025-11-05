@@ -240,11 +240,6 @@ export class Phase2EvaluationPeriodGenerator {
           mapping.excludedAt = new Date();
         }
 
-        // 수정 가능 여부 (기본은 true)
-        mapping.isSelfEvaluationEditable = true;
-        mapping.isPrimaryEvaluationEditable = true;
-        mapping.isSecondaryEvaluationEditable = true;
-
         mapping.createdBy = systemAdminId;
         mappings.push(mapping);
       }

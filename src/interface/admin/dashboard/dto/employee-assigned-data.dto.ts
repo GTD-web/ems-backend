@@ -11,7 +11,6 @@ import type {
   WbsDownwardEvaluationInfo,
   EmployeeAssignedDataResult,
   DeliverableInfo,
-  EditableStatus,
 } from '@context/dashboard-context/handlers/queries/get-employee-assigned-data/types';
 
 // summary 타입은 Context의 EmployeeAssignedDataResult['summary'] 타입과 호환
@@ -158,30 +157,6 @@ export class EmployeeInfoDto implements EmployeeInfo {
 }
 
 /**
- * 수정가능 상태 DTO
- * Context의 EditableStatus 타입과 일치해야 함
- */
-export class EditableStatusDto implements EditableStatus {
-  @ApiProperty({
-    description: '자기평가 수정가능 여부',
-    example: true,
-  })
-  isSelfEvaluationEditable: boolean;
-
-  @ApiProperty({
-    description: '1차평가 수정가능 여부',
-    example: false,
-  })
-  isPrimaryEvaluationEditable: boolean;
-
-  @ApiProperty({
-    description: '2차평가 수정가능 여부',
-    example: false,
-  })
-  isSecondaryEvaluationEditable: boolean;
-}
-
-/**
  * WBS 평가기준 DTO
  * Context의 WbsEvaluationCriterion 타입과 일치해야 함
  */
@@ -298,12 +273,6 @@ export class WbsSelfEvaluationDto implements WbsSelfEvaluationInfo {
     nullable: true,
   })
   submittedToManagerAt?: Date;
-
-  @ApiProperty({
-    description: '수정 가능 여부',
-    example: true,
-  })
-  isEditable: boolean;
 
   @ApiProperty({
     description: '제출일',
@@ -436,12 +405,6 @@ export class WbsDownwardEvaluationDto implements WbsDownwardEvaluationInfo {
     example: true,
   })
   isCompleted: boolean;
-
-  @ApiProperty({
-    description: '수정 가능 여부',
-    example: false,
-  })
-  isEditable: boolean;
 
   @ApiProperty({
     description: '제출일',
@@ -744,13 +707,6 @@ export class EmployeeAssignedDataResponseDto
   employee: EmployeeInfoDto;
 
   @ApiProperty({
-    description: '수정가능 상태 정보',
-    type: EditableStatusDto,
-  })
-  @Type(() => EditableStatusDto)
-  editableStatus: EditableStatusDto;
-
-  @ApiProperty({
     description:
       '프로젝트별 할당 정보 (WBS, 평가기준, 성과, 자기평가, 하향평가 포함)',
     type: [AssignedProjectWithWbsDto],
@@ -777,13 +733,6 @@ export class EvaluateeAssignedDataDto {
   })
   @Type(() => EmployeeInfoDto)
   employee: EmployeeInfoDto;
-
-  @ApiProperty({
-    description: '수정가능 상태 정보',
-    type: EditableStatusDto,
-  })
-  @Type(() => EditableStatusDto)
-  editableStatus: EditableStatusDto;
 
   @ApiProperty({
     description: '할당된 프로젝트 및 WBS 목록',

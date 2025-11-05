@@ -566,9 +566,8 @@ export class Phase7EvaluationGenerator {
       .andWhere('mapping.deletedAt IS NULL')
       .getMany();
 
-    // 수정 가능 상태를 false로 변경
+    // 수정 가능 상태 변경 제거됨 (엔티티 필드 삭제)
     for (const mapping of mappings) {
-      mapping.isSelfEvaluationEditable = false;
       mapping.updatedBy = updatedBy;
       mapping.updatedAt = new Date();
     }
@@ -633,7 +632,6 @@ export class Phase7EvaluationGenerator {
           .getMany();
 
       for (const mapping of primaryMappings) {
-        mapping.isPrimaryEvaluationEditable = false;
         mapping.updatedBy = updatedBy;
         mapping.updatedAt = new Date();
       }
@@ -665,7 +663,6 @@ export class Phase7EvaluationGenerator {
           .getMany();
 
       for (const mapping of secondaryMappings) {
-        mapping.isSecondaryEvaluationEditable = false;
         mapping.updatedBy = updatedBy;
         mapping.updatedAt = new Date();
       }

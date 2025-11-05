@@ -26,29 +26,6 @@ export class GetEmployeeEvaluationPeriodStatusDto {
 // ==================== 응답 DTO ====================
 
 /**
- * 평가기간 수정 가능 상태 DTO
- */
-export class EvaluationPeriodEditableStatusDto {
-  @ApiProperty({
-    description: '자기평가 수정 가능 여부',
-    example: true,
-  })
-  isSelfEvaluationEditable: boolean;
-
-  @ApiProperty({
-    description: '1차 평가 수정 가능 여부',
-    example: true,
-  })
-  isPrimaryEvaluationEditable: boolean;
-
-  @ApiProperty({
-    description: '2차 평가 수정 가능 여부',
-    example: true,
-  })
-  isSecondaryEvaluationEditable: boolean;
-}
-
-/**
  * 평가기간 수동 설정 상태 DTO
  */
 export class EvaluationPeriodManualSettingsDto {
@@ -115,12 +92,6 @@ export class EvaluationPeriodInfoDto {
     nullable: true,
   })
   endDate?: Date;
-
-  @ApiProperty({
-    description: '수정 가능 상태 정보',
-    type: () => EvaluationPeriodEditableStatusDto,
-  })
-  editableStatus: EvaluationPeriodEditableStatusDto;
 
   @ApiProperty({
     description: '수동 설정 상태 정보',
@@ -329,12 +300,6 @@ export class SelfEvaluationInfoDto {
   completedMappingCount: number;
 
   @ApiProperty({
-    description: '자기평가 수정 가능 여부',
-    example: true,
-  })
-  isEditable: boolean;
-
-  @ApiProperty({
     description: '피평가자가 1차 평가자에게 자기평가 제출 완료 여부',
     example: true,
   })
@@ -384,12 +349,6 @@ export class PrimaryDownwardEvaluationDto {
     example: 3,
   })
   completedEvaluationCount: number;
-
-  @ApiProperty({
-    description: '1차평가 수정 가능 여부',
-    example: true,
-  })
-  isEditable: boolean;
 
   @ApiPropertyOptional({
     description: '가중치 기반 1차 하향평가 총점 (0-100)',
@@ -446,12 +405,6 @@ export class SecondaryDownwardEvaluationDto {
     type: () => [SecondaryEvaluatorDto],
   })
   evaluators: SecondaryEvaluatorDto[];
-
-  @ApiProperty({
-    description: '2차평가 수정 가능 여부',
-    example: true,
-  })
-  isEditable: boolean;
 
   @ApiPropertyOptional({
     description: '가중치 기반 2차 하향평가 총점 (0-100)',

@@ -213,7 +213,6 @@ export async function getProjectsWithWbs(
         submittedToEvaluatorAt: row.evaluation_submitted_to_evaluator_at,
         submittedToManager: row.evaluation_submitted_to_manager || false,
         submittedToManagerAt: row.evaluation_submitted_to_manager_at,
-        isEditable: mapping.isSelfEvaluationEditable,
         submittedAt: row.evaluation_submitted_to_manager_at,
       };
 
@@ -384,7 +383,6 @@ export async function getProjectsWithWbs(
           evaluationContent,
           score,
           isCompleted: row.downward_is_completed || false,
-          isEditable: mapping.isPrimaryEvaluationEditable,
           submittedAt,
         };
       } else if (
@@ -398,7 +396,6 @@ export async function getProjectsWithWbs(
           evaluationContent,
           score,
           isCompleted: row.downward_is_completed || false,
-          isEditable: mapping.isSecondaryEvaluationEditable,
           submittedAt,
         };
       }
@@ -422,7 +419,6 @@ export async function getProjectsWithWbs(
           evaluatorId: primaryEvaluator.evaluatorId,
           evaluatorName: primaryEvaluator.evaluatorName,
           isCompleted: false,
-          isEditable: mapping.isPrimaryEvaluationEditable,
         };
       }
 
@@ -431,7 +427,6 @@ export async function getProjectsWithWbs(
           evaluatorId: secondaryEvaluator.evaluatorId,
           evaluatorName: secondaryEvaluator.evaluatorName,
           isCompleted: false,
-          isEditable: mapping.isSecondaryEvaluationEditable,
         };
       }
     }

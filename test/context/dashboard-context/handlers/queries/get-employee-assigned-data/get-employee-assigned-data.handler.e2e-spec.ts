@@ -200,9 +200,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
     });
     await mappingRepository.save(mapping);
@@ -266,6 +263,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
 
     // 11. 평가라인 매핑 생성 (1차 평가자)
     const evaluationLineMapping = evaluationLineMappingRepository.create({
+      evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
       evaluatorId: evaluatorId,
       evaluationLineId: primaryEvaluationLineId,
@@ -313,11 +311,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
       // Summary 검증
       expect(result.summary.totalProjects).toBe(1);
       expect(result.summary.totalWbs).toBe(1);
-
-      // EditableStatus 검증
-      expect(result.editableStatus.isSelfEvaluationEditable).toBe(true);
-      expect(result.editableStatus.isPrimaryEvaluationEditable).toBe(true);
-      expect(result.editableStatus.isSecondaryEvaluationEditable).toBe(true);
     });
 
     it('primaryDownwardEvaluation이 정상적으로 반환되어야 한다', async () => {
@@ -341,7 +334,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
       expect(wbs.primaryDownwardEvaluation).toHaveProperty('evaluatorId');
       expect(wbs.primaryDownwardEvaluation).toHaveProperty('evaluatorName');
       expect(wbs.primaryDownwardEvaluation).toHaveProperty('isCompleted');
-      expect(wbs.primaryDownwardEvaluation).toHaveProperty('isEditable');
 
       // evaluatorId 검증
       expect(wbs.primaryDownwardEvaluation!.evaluatorId).toBe(evaluatorId);
@@ -358,10 +350,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
         'boolean',
       );
       expect(wbs.primaryDownwardEvaluation!.isCompleted).toBe(false);
-
-      // isEditable 검증
-      expect(typeof wbs.primaryDownwardEvaluation!.isEditable).toBe('boolean');
-      expect(wbs.primaryDownwardEvaluation!.isEditable).toBe(true);
 
       // JSON 출력
       const jsonOutput = JSON.stringify(

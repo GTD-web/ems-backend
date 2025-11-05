@@ -260,9 +260,6 @@ export class GetMyEvaluationTargetsStatusHandler
             selfEvaluationStatus.completedMappingCount,
           );
 
-          // 자기평가 수정 가능 여부 조회
-          const isSelfEvaluationEditable = mapping.isSelfEvaluationEditable;
-
           // 내가 담당하는 하향평가 현황 조회
           const downwardEvaluationStatus =
             await this.내가_담당하는_하향평가_현황을_조회한다(
@@ -300,7 +297,6 @@ export class GetMyEvaluationTargetsStatusHandler
               status: selfEvaluationStatusType,
               totalMappingCount: selfEvaluationStatus.totalMappingCount,
               completedMappingCount: selfEvaluationStatus.completedMappingCount,
-              isEditable: isSelfEvaluationEditable,
               totalSelfEvaluations: selfEvaluationStatus.totalMappingCount,
               submittedToEvaluatorCount:
                 selfEvaluationStatus.submittedToEvaluatorCount,
@@ -352,14 +348,12 @@ export class GetMyEvaluationTargetsStatusHandler
     primaryStatus: {
       assignedWbsCount: number;
       completedEvaluationCount: number;
-      isEditable: boolean;
       totalScore: number | null;
       grade: string | null;
     } | null;
     secondaryStatus: {
       assignedWbsCount: number;
       completedEvaluationCount: number;
-      isEditable: boolean;
       totalScore: number | null;
       grade: string | null;
     } | null;
@@ -376,20 +370,15 @@ export class GetMyEvaluationTargetsStatusHandler
       },
     });
 
-    const isPrimaryEditable = mapping?.isPrimaryEvaluationEditable ?? false;
-    const isSecondaryEditable = mapping?.isSecondaryEvaluationEditable ?? false;
-
     let primaryStatus: {
       assignedWbsCount: number;
       completedEvaluationCount: number;
-      isEditable: boolean;
       totalScore: number | null;
       grade: string | null;
     } | null = null;
     let secondaryStatus: {
       assignedWbsCount: number;
       completedEvaluationCount: number;
-      isEditable: boolean;
       totalScore: number | null;
       grade: string | null;
     } | null = null;
@@ -445,7 +434,6 @@ export class GetMyEvaluationTargetsStatusHandler
       primaryStatus = {
         assignedWbsCount,
         completedEvaluationCount,
-        isEditable: isPrimaryEditable,
         totalScore,
         grade,
       };
@@ -502,7 +490,6 @@ export class GetMyEvaluationTargetsStatusHandler
       secondaryStatus = {
         assignedWbsCount,
         completedEvaluationCount,
-        isEditable: isSecondaryEditable,
         totalScore,
         grade,
       };
