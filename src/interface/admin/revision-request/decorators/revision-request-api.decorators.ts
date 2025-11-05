@@ -9,11 +9,14 @@ import {
   ApiQuery,
   ApiBody,
 } from '@nestjs/swagger';
+import { RevisionRequestStepEnum } from '../dto/get-revision-requests-query.dto';
+import { CompleteRevisionRequestByEvaluatorQueryDto } from '../dto/complete-revision-request-by-evaluator-query.dto';
 import {
   RevisionRequestResponseDto,
   UnreadCountResponseDto,
 } from '../dto/revision-request-response.dto';
 import { CompleteRevisionRequestDto } from '../dto/complete-revision-request.dto';
+import { CompleteRevisionRequestByEvaluatorDto } from '../dto/complete-revision-request-by-evaluator.dto';
 
 /**
  * 전체 재작성 요청 목록 조회 API 데코레이터 (관리자용)
@@ -295,3 +298,78 @@ export function CompleteRevisionRequest() {
   );
 }
 
+
+/**
+ * 평가기간, 직원, 평가자 기반 재작성 완료 응답 제출 API 데코레이터 (관리자용)
+ */
+export function CompleteRevisionRequestByEvaluator() {
+  return applyDecorators(
+    Patch(':evaluationPeriodId/:employeeId/:evaluatorId/complete'),
+    ApiOperation({
+      summary: '재작성 완료 응답 제출 (평가기간/직원/평가자 기반)',
+      description: `**관리자용**: 평가기간, 직원, 평가자 ID를 기반으로 재작성 완료 응답을 제출합니다.
+
+**처리 내용:**
+- 평가기간, 직원, 평가자 ID로 재작성 요청 조회
+- 해당 평가자에게 전송된 재작성 요청의 완료 응답 처리
+- \`isCompleted\` 상태를 \`true\`로 변경
+- \`completedAt\` 시간을 현재 시간으로 설정
+- \`responseComment\`에 응답 코멘트 저장
+
+**특징:**
+- 2차 평가의 경우, 모든 평가자에게 전송된 모든 재작성 요청이 완료되었을 때만 단계 승인 상태 변경
+- 관리자가 특정 평가자의 재작성 요청을 대신 완료 처리 가능
+
+**사용 시나리오:**
+- 관리자가 특정 평가기간의 특정 평가자에게 온 재작성 요청을 완료 처리
+- 2차 평가자별로 개별 재작성 요청을 관리할 때 유용
+
+**테스트 케이스:**
+- 정상 응답 제출: 평가기간, 직원, 평가자 ID로 재작성 요청 찾아 완료 처리
+- 2차 평가자별 처리: 여러 2차 평가자 중 특정 평가자만 완료 처리
+- 모든 평가자 완료 시: 모든 2차 평가자가 완료되면 단계 승인 상태 변경
+- 재작성 요청 없음: 해당 조건의 재작성 요청이 없을 때 404 에러
+- 평가자 매칭 실패: 해당 평가자에게 전송된 재작성 요청이 없을 때 404 에러
+- 응답 코멘트 누락: 400 에러
+- 이미 완료된 요청: 400 에러`,
+    }),
+    ApiParam({
+      name: 'evaluationPeriodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'employeeId',
+      description: '피평가자 ID (직원 ID)',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiParam({
+      name: 'evaluatorId',
+      description: '평가자 ID',
+      type: 'string',
+      format: 'uuid',
+    }),
+    ApiQuery({
+      name: 'step',
+      description: '재작성 요청 단계',
+      enum: RevisionRequestStepEnum,
+      required: true,
+      example: RevisionRequestStepEnum.SECONDARY,
+    }),
+    ApiBody({
+      type: CompleteRevisionRequestByEvaluatorDto,
+      description: '재작성 완료 응답 정보 (responseComment만 포함)',
+    }),
+    ApiOkResponse({
+      description: '재작성 완료 응답 제출 성공',
+    }),
+    ApiNotFoundResponse({
+      description: '재작성 요청을 찾을 수 없음',
+    }),
+    ApiBadRequestResponse({
+      description: '잘못된 요청 (예: 이미 완료된 요청, 응답 코멘트 누락, 잘못된 UUID 형식)',
+    }),
+  );
+}

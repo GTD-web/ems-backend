@@ -391,6 +391,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               revisionComment: statusInfo?.revisionComment ?? null,
               isRevisionCompleted: statusInfo?.isCompleted ?? false,
               revisionCompletedAt: statusInfo?.completedAt ?? null,
+              responseComment: statusInfo?.responseComment ?? null,
             };
           })
           .filter((item) => item !== null);

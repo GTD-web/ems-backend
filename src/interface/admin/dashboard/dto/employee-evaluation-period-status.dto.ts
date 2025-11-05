@@ -615,6 +615,13 @@ export class SecondaryEvaluationStatusDto {
     nullable: true,
   })
   revisionCompletedAt: Date | null;
+
+  @ApiPropertyOptional({
+    description: '재작성 완료 응답 코멘트',
+    example: '평가 완료했습니다.',
+    nullable: true,
+  })
+  responseComment: string | null;
 }
 
 /**

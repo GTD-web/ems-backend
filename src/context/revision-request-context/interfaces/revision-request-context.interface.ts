@@ -86,6 +86,17 @@ export interface IRevisionRequestContext {
     recipientId: string,
     responseComment: string,
   ): Promise<void>;
+
+  /**
+   * 평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출한다 (관리자용)
+   */
+  평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    evaluatorId: string,
+    step: RevisionRequestStepType,
+    responseComment: string,
+  ): Promise<void>;
 }
 
 

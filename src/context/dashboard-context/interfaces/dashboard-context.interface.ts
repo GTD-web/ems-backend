@@ -307,6 +307,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
       isRevisionCompleted: boolean;
       /** 재작성 완료 일시 */
       revisionCompletedAt: Date | null;
+      /** 재작성 완료 응답 코멘트 */
+      responseComment: string | null;
     }[];
     /** 2차 하향평가 확인 상태 (최종 상태, 모든 평가자 완료 여부 기반, 하위 호환성) */
     secondaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';

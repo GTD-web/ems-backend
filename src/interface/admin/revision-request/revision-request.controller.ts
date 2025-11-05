@@ -1,5 +1,7 @@
 import { Controller, Query, Param, Body, ParseUUIDPipe } from '@nestjs/common';
+import { ParseUUID } from '@interface/decorators';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CompleteRevisionRequestByEvaluatorQueryDto } from './dto/complete-revision-request-by-evaluator-query.dto';
 import { RevisionRequestContextService } from '@context/revision-request-context';
 import {
   GetRevisionRequests,
@@ -7,6 +9,7 @@ import {
   GetMyUnreadCount,
   MarkRevisionRequestAsRead,
   CompleteRevisionRequest,
+  CompleteRevisionRequestByEvaluator,
 } from './decorators/revision-request-api.decorators';
 import {
   RevisionRequestResponseDto,
@@ -14,6 +17,7 @@ import {
 } from './dto/revision-request-response.dto';
 import { GetRevisionRequestsQueryDto } from './dto/get-revision-requests-query.dto';
 import { CompleteRevisionRequestDto } from './dto/complete-revision-request.dto';
+import { CompleteRevisionRequestByEvaluatorDto } from './dto/complete-revision-request-by-evaluator.dto';
 import { CurrentUser } from '@interface/decorators/current-user.decorator';
 
 /**
@@ -149,6 +153,26 @@ export class RevisionRequestController {
     await this.revisionRequestContextService.재작성완료_응답을_제출한다(
       requestId,
       recipientId,
+      dto.responseComment,
+    );
+  }
+
+  /**
+   * 평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출한다 (관리자용)
+   */
+  @CompleteRevisionRequestByEvaluator()
+  async completeRevisionRequestByEvaluator(
+    @Param('evaluationPeriodId', ParseUUIDPipe) evaluationPeriodId: string,
+    @Param('employeeId', ParseUUIDPipe) employeeId: string,
+    @Param('evaluatorId', ParseUUIDPipe) evaluatorId: string,
+    @Query() queryDto: CompleteRevisionRequestByEvaluatorQueryDto,
+    @Body() dto: CompleteRevisionRequestByEvaluatorDto,
+  ): Promise<void> {
+    await this.revisionRequestContextService.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+      evaluationPeriodId,
+      employeeId,
+      evaluatorId,
+      queryDto.step as any,
       dto.responseComment,
     );
   }

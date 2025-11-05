@@ -19,6 +19,8 @@ export interface EvaluatorRevisionRequestStatus {
   isCompleted: boolean;
   /** 재작성 완료 일시 */
   completedAt: Date | null;
+  /** 재작성 완료 응답 코멘트 */
+  responseComment: string | null;
   /** 요청 일시 */
   requestedAt: Date | null;
 }
@@ -70,6 +72,7 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
       revisionComment: null,
       isCompleted: false,
       completedAt: null,
+      responseComment: null,
       requestedAt: null,
     };
   }
@@ -91,6 +94,7 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
     revisionComment: request.comment,
     isCompleted: recipient.isCompleted,
     completedAt: recipient.completedAt,
+    responseComment: recipient.responseComment,
     requestedAt: request.requestedAt,
   };
 }

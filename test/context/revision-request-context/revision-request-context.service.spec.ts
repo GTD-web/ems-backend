@@ -1035,5 +1035,310 @@ describe('RevisionRequestContextService', () => {
       expect(completedRequests[0].recipientInfo.isCompleted).toBe(true);
     });
   });
+
+  describe('평가기간_직원_평가자로_재작성완료_응답을_제출한다 (2차 평가자별 처리)', () => {
+    // 2차 평가자 테스트 데이터 ID
+    let secondaryEvaluatorId1: string;
+    let secondaryEvaluatorId2: string;
+
+    /**
+     * 2차 평가자 포함 테스트 데이터 생성
+     */
+    async function 이차평가자_포함_테스트데이터를_생성한다(): Promise<void> {
+      // 기본 데이터 생성
+      await 테스트데이터를_생성한다();
+
+      // 2차 평가자 1 생성
+      const secondaryEvaluator1 = employeeRepository.create({
+        name: '박이차평가자1',
+        employeeNumber: `EMP003-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        email: `secondary1-${Date.now()}@test.com`,
+        externalId: `EXT003-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        departmentId: departmentId,
+        status: '재직중',
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryEvaluator1 =
+        await employeeRepository.save(secondaryEvaluator1);
+      secondaryEvaluatorId1 = savedSecondaryEvaluator1.id;
+
+      // 2차 평가자 2 생성
+      const secondaryEvaluator2 = employeeRepository.create({
+        name: '박이차평가자2',
+        employeeNumber: `EMP004-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        email: `secondary2-${Date.now()}@test.com`,
+        externalId: `EXT004-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        departmentId: departmentId,
+        status: '재직중',
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryEvaluator2 =
+        await employeeRepository.save(secondaryEvaluator2);
+      secondaryEvaluatorId2 = savedSecondaryEvaluator2.id;
+
+      // 단계 승인 상태를 2차 평가 revision_requested로 변경
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.secondaryEvaluationStatus =
+          StepApprovalStatus.REVISION_REQUESTED;
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // 2차 평가자 1에게 재작성 요청 생성
+      const revisionRequest1 = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'secondary' as RevisionRequestStepType,
+        comment: '2차 평가자 1에게 재작성 요청',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedRequest1 = await revisionRequestRepository.save(revisionRequest1);
+
+      const recipient1 = recipientRepository.create({
+        revisionRequestId: savedRequest1.id,
+        recipientId: secondaryEvaluatorId1,
+        recipientType: 'secondary_evaluator',
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(recipient1);
+
+      // 2차 평가자 2에게 재작성 요청 생성
+      const revisionRequest2 = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'secondary' as RevisionRequestStepType,
+        comment: '2차 평가자 2에게 재작성 요청',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedRequest2 = await revisionRequestRepository.save(revisionRequest2);
+
+      const recipient2 = recipientRepository.create({
+        revisionRequestId: savedRequest2.id,
+        recipientId: secondaryEvaluatorId2,
+        recipientType: 'secondary_evaluator',
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(recipient2);
+    }
+
+    it('평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출할 수 있어야 한다', async () => {
+      // Given
+      await 이차평가자_포함_테스트데이터를_생성한다();
+      const responseComment = '평가기간/직원/평가자 기반으로 완료 처리했습니다.';
+
+      // When
+      await service.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+        evaluationPeriodId,
+        employeeId,
+        secondaryEvaluatorId1,
+        'secondary',
+        responseComment,
+      );
+
+      // Then
+      const requests = await revisionRequestRepository.find({
+        where: {
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          step: 'secondary',
+        },
+        relations: ['recipients'],
+      });
+
+      const request1 = requests.find(
+        (r) =>
+          r.recipients?.some(
+            (rec) =>
+              rec.recipientId === secondaryEvaluatorId1 &&
+              rec.recipientType === 'secondary_evaluator',
+          ),
+      );
+
+      expect(request1).toBeDefined();
+      const recipient1 = request1!.recipients?.find(
+        (r) => r.recipientId === secondaryEvaluatorId1,
+      );
+      expect(recipient1).toBeDefined();
+      expect(recipient1!.isCompleted).toBe(true);
+      expect(recipient1!.responseComment).toBe(responseComment);
+    });
+
+    it('2차 평가의 경우, 한 평가자만 완료했을 때는 단계 승인 상태가 변경되지 않아야 한다', async () => {
+      // Given
+      await 이차평가자_포함_테스트데이터를_생성한다();
+      const responseComment = '첫 번째 평가자 완료';
+
+      // When - 첫 번째 2차 평가자만 완료
+      await service.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+        evaluationPeriodId,
+        employeeId,
+        secondaryEvaluatorId1,
+        'secondary',
+        responseComment,
+      );
+
+      // Then - 단계 승인 상태는 여전히 revision_requested여야 함
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+
+      expect(stepApproval).toBeDefined();
+      expect(stepApproval!.secondaryEvaluationStatus).toBe(
+        StepApprovalStatus.REVISION_REQUESTED,
+      );
+    });
+
+    it('2차 평가의 경우, 모든 평가자가 완료했을 때만 단계 승인 상태가 변경되어야 한다', async () => {
+      // Given
+      await 이차평가자_포함_테스트데이터를_생성한다();
+      const responseComment1 = '첫 번째 평가자 완료';
+      const responseComment2 = '두 번째 평가자 완료';
+
+      // When - 첫 번째 2차 평가자 완료
+      await service.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+        evaluationPeriodId,
+        employeeId,
+        secondaryEvaluatorId1,
+        'secondary',
+        responseComment1,
+      );
+
+      // Then - 아직 revision_requested 상태
+      let stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      expect(stepApproval!.secondaryEvaluationStatus).toBe(
+        StepApprovalStatus.REVISION_REQUESTED,
+      );
+
+      // When - 두 번째 2차 평가자도 완료
+      await service.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+        evaluationPeriodId,
+        employeeId,
+        secondaryEvaluatorId2,
+        'secondary',
+        responseComment2,
+      );
+
+      // Then - 이제 revision_completed 상태로 변경되어야 함
+      stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      expect(stepApproval!.secondaryEvaluationStatus).toBe(
+        StepApprovalStatus.REVISION_COMPLETED,
+      );
+    });
+
+    it('2차 평가가 아닌 경우, 기존 로직대로 단일 요청 완료 시 상태가 변경되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다(); // 기본 데이터 (criteria 단계)
+      const responseComment = '기준 단계 완료';
+
+      // When
+      await service.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId,
+        'criteria',
+        responseComment,
+      );
+
+      // Then - 단계 승인 상태가 revision_completed로 변경되어야 함
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+
+      expect(stepApproval).toBeDefined();
+      expect(stepApproval!.criteriaSettingStatus).toBe(
+        StepApprovalStatus.REVISION_COMPLETED,
+      );
+    });
+
+    it('재작성 요청이 없을 때 예외가 발생해야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+      const responseComment = '완료 처리';
+
+      // When & Then
+      await expect(
+        service.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+          evaluationPeriodId,
+          employeeId,
+          evaluatorId,
+          'secondary', // secondary 단계 재작성 요청이 없음
+          responseComment,
+        ),
+      ).rejects.toThrow('재작성 요청을 찾을 수 없습니다');
+    });
+
+    it('해당 평가자에게 전송된 재작성 요청이 없을 때 예외가 발생해야 한다', async () => {
+      // Given
+      await 이차평가자_포함_테스트데이터를_생성한다();
+      const otherEvaluatorId = '123e4567-e89b-12d3-a456-426614174999'; // 존재하지 않는 평가자
+      const responseComment = '완료 처리';
+
+      // When & Then
+      await expect(
+        service.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+          evaluationPeriodId,
+          employeeId,
+          otherEvaluatorId,
+          'secondary',
+          responseComment,
+        ),
+      ).rejects.toThrow('재작성 요청 수신자를 찾을 수 없습니다');
+    });
+
+    it('재작성 완료 시 자동으로 읽음 처리되어야 한다', async () => {
+      // Given
+      await 이차평가자_포함_테스트데이터를_생성한다();
+      const responseComment = '완료 처리';
+
+      // When
+      await service.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+        evaluationPeriodId,
+        employeeId,
+        secondaryEvaluatorId1,
+        'secondary',
+        responseComment,
+      );
+
+      // Then
+      const requests = await revisionRequestRepository.find({
+        where: {
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          step: 'secondary',
+        },
+        relations: ['recipients'],
+      });
+
+      const request1 = requests.find(
+        (r) =>
+          r.recipients?.some(
+            (rec) =>
+              rec.recipientId === secondaryEvaluatorId1 &&
+              rec.recipientType === 'secondary_evaluator',
+          ),
+      );
+
+      const recipient1 = request1!.recipients?.find(
+        (r) => r.recipientId === secondaryEvaluatorId1,
+      );
+
+      expect(recipient1!.isRead).toBe(true);
+      expect(recipient1!.readAt).toBeDefined();
+    });
+  });
 });
 
