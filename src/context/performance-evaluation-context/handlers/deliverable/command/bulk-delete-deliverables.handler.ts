@@ -17,8 +17,11 @@ export class BulkDeleteDeliverablesCommand {
  */
 export interface BulkDeleteResult {
   successCount: number;
-  failureCount: number;
-  failedIds: string[];
+  failedCount: number;
+  failedIds: Array<{
+    id: string;
+    error: string;
+  }>;
 }
 
 /**
@@ -42,23 +45,31 @@ export class BulkDeleteDeliverablesHandler
 
     const result: BulkDeleteResult = {
       successCount: 0,
-      failureCount: 0,
+      failedCount: 0,
       failedIds: [],
     };
 
     for (const id of command.deliverableIds) {
       try {
+        // ID 형식 검증 (string이어야 함)
+        if (!id || typeof id !== 'string') {
+          throw new Error(`잘못된 ID 형식입니다: ${id}`);
+        }
+
         await this.deliverableService.삭제한다(id, command.deletedBy);
         result.successCount++;
       } catch (error) {
         this.logger.error(`산출물 삭제 실패 - ID: ${id}`, error.stack);
-        result.failureCount++;
-        result.failedIds.push(id);
+        result.failedCount++;
+        result.failedIds.push({
+          id: String(id),
+          error: error.message || 'Deletion failed',
+        });
       }
     }
 
     this.logger.log(
-      `산출물 벌크 삭제 완료 - 성공: ${result.successCount}, 실패: ${result.failureCount}`,
+      `산출물 벌크 삭제 완료 - 성공: ${result.successCount}, 실패: ${result.failedCount}`,
     );
     return result;
   }

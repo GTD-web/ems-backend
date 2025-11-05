@@ -65,46 +65,6 @@ export class DeliverableManagementController {
   }
 
   /**
-   * 산출물 수정
-   */
-  @UpdateDeliverable()
-  async updateDeliverable(
-    @ParseUUID('id') id: string,
-    @Body() dto: UpdateDeliverableDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<DeliverableResponseDto> {
-    const updatedBy = user?.id || dto.updatedBy || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
-
-    const deliverable =
-      await this.performanceEvaluationService.산출물을_수정한다({
-        id,
-        updatedBy,
-        name: dto.name,
-        type: dto.type,
-        description: dto.description,
-        filePath: dto.filePath,
-        employeeId: dto.employeeId,
-        wbsItemId: dto.wbsItemId,
-        isActive: dto.isActive,
-      });
-
-    return this.toResponseDto(deliverable);
-  }
-
-  /**
-   * 산출물 삭제
-   */
-  @DeleteDeliverable()
-  async deleteDeliverable(
-    @ParseUUID('id') id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
-    const deletedBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
-
-    await this.performanceEvaluationService.산출물을_삭제한다(id, deletedBy);
-  }
-
-  /**
    * 벌크 산출물 생성
    */
   @BulkCreateDeliverables()
@@ -156,6 +116,46 @@ export class DeliverableManagementController {
       failedCount: result.failedCount,
       failedIds: result.failedIds,
     };
+  }
+
+  /**
+   * 산출물 수정
+   */
+  @UpdateDeliverable()
+  async updateDeliverable(
+    @ParseUUID('id') id: string,
+    @Body() dto: UpdateDeliverableDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<DeliverableResponseDto> {
+    const updatedBy = user?.id || dto.updatedBy || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
+
+    const deliverable =
+      await this.performanceEvaluationService.산출물을_수정한다({
+        id,
+        updatedBy,
+        name: dto.name,
+        type: dto.type,
+        description: dto.description,
+        filePath: dto.filePath,
+        employeeId: dto.employeeId,
+        wbsItemId: dto.wbsItemId,
+        isActive: dto.isActive,
+      });
+
+    return this.toResponseDto(deliverable);
+  }
+
+  /**
+   * 산출물 삭제
+   */
+  @DeleteDeliverable()
+  async deleteDeliverable(
+    @ParseUUID('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    const deletedBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
+
+    await this.performanceEvaluationService.산출물을_삭제한다(id, deletedBy);
   }
 
   /**

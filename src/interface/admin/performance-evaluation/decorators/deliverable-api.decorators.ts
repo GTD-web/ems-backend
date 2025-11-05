@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Put,
+  Patch,
   Delete,
   HttpCode,
   HttpStatus,
@@ -76,7 +77,7 @@ export function CreateDeliverable() {
  */
 export function UpdateDeliverable() {
   return applyDecorators(
-    Put(':id'),
+    Patch(':id'),
     HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '산출물 수정',

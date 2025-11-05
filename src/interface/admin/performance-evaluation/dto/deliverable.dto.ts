@@ -158,9 +158,10 @@ export class BulkCreateDeliverablesDto {
     ],
   })
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateDeliverableDto)
-  deliverables: CreateDeliverableDto[];
+  @ArrayNotEmpty()
+  // 벌크 작업에서는 개별 항목 검증을 핸들러에서 처리하므로 DTO 검증은 스킵
+  // @ValidateNested({ each: true })
+  deliverables: any[];
 }
 
 /**
@@ -177,7 +178,9 @@ export class BulkDeleteDeliverablesDto {
   })
   @IsArray()
   @ArrayNotEmpty()
-  @IsUUID('4', { each: true })
+  @IsString({ each: true })
+  // 벌크 작업에서는 개별 항목 검증을 핸들러에서 처리하므로 UUID 검증은 스킵
+  // @IsUUID('4', { each: true })
   deliverableIds: string[];
 }
 

@@ -1333,7 +1333,7 @@ describe('산출물 관리 시나리오', () => {
         expect(벌크삭제결과.successCount).toBe(1);
         expect(벌크삭제결과.failedCount).toBe(1);
         expect(벌크삭제결과.failedIds.length).toBe(1);
-        expect(벌크삭제결과.failedIds[0]).toBe(존재하지않는ID);
+        expect(벌크삭제결과.failedIds[0].id).toBe(존재하지않는ID);
       });
     });
   });

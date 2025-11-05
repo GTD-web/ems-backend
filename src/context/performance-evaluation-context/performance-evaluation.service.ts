@@ -38,12 +38,9 @@ import type {
   ClearAllWbsSelfEvaluationsResponse,
   ClearWbsSelfEvaluationsByProjectResponse,
 } from './handlers/self-evaluation';
-
 // 평가 수정 가능 상태 관련 커맨드
 import {
-  UpdateEvaluationEditableStatusCommand,
   UpdatePeriodAllEvaluationEditableStatusCommand,
-  EvaluationType,
 } from './handlers/evaluation-editable-status';
 import type { UpdatePeriodAllEvaluationEditableStatusResponse } from './handlers/evaluation-editable-status';
 
@@ -962,94 +959,11 @@ export class PerformanceEvaluationService
     return await this.queryBus.execute(query);
   }
 
-  // ==================== 평가 수정 가능 상태 관리 ====================
-
-  /**
-   * 평가 수정 가능 상태를 변경한다
-   */
-  async 평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    evaluationType: EvaluationType,
-    isEditable: boolean,
-    updatedBy?: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    const command = new UpdateEvaluationEditableStatusCommand(
-      mappingId,
-      evaluationType,
-      isEditable,
-      updatedBy,
-    );
-
-    const result = await this.commandBus.execute(command);
-    return result;
-  }
-
-  /**
-   * 자기평가 수정 가능 상태를 변경한다
-   */
-  async 자기평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    isEditable: boolean,
-    updatedBy?: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    return await this.평가_수정_가능_상태를_변경한다(
-      mappingId,
-      EvaluationType.SELF,
-      isEditable,
-      updatedBy,
-    );
-  }
-
-  /**
-   * 1차평가 수정 가능 상태를 변경한다
-   */
-  async 일차평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    isEditable: boolean,
-    updatedBy?: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    return await this.평가_수정_가능_상태를_변경한다(
-      mappingId,
-      EvaluationType.PRIMARY,
-      isEditable,
-      updatedBy,
-    );
-  }
-
-  /**
-   * 2차평가 수정 가능 상태를 변경한다
-   */
-  async 이차평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    isEditable: boolean,
-    updatedBy?: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    return await this.평가_수정_가능_상태를_변경한다(
-      mappingId,
-      EvaluationType.SECONDARY,
-      isEditable,
-      updatedBy,
-    );
-  }
-
-  /**
-   * 모든 평가의 수정 가능 상태를 일괄 변경한다
-   */
-  async 모든_평가_수정_가능_상태를_변경한다(
-    mappingId: string,
-    isEditable: boolean,
-    updatedBy?: string,
-  ): Promise<EvaluationPeriodEmployeeMappingDto> {
-    return await this.평가_수정_가능_상태를_변경한다(
-      mappingId,
-      EvaluationType.ALL,
-      isEditable,
-      updatedBy,
-    );
-  }
-
   /**
    * 평가기간별 모든 평가 대상자의 수정 가능 상태를 일괄 변경한다
+   * 
+   * 주의: 엔티티 필드가 삭제되었으므로 이 메서드는 실제로 아무 작업도 수행하지 않습니다.
+   * 평가기간별 일괄 변경 기능과의 호환성을 위해 유지됩니다.
    */
   async 평가기간별_모든_평가_수정_가능_상태를_변경한다(
     evaluationPeriodId: string,
@@ -1057,7 +971,8 @@ export class PerformanceEvaluationService
     isPrimaryEvaluationEditable: boolean,
     isSecondaryEvaluationEditable: boolean,
     updatedBy?: string,
-  ): Promise<UpdatePeriodAllEvaluationEditableStatusResponse> {
+  ): Promise<any> {
+    // 평가기간별 일괄 변경 기능은 유지되지만, 실제로는 아무 작업도 수행하지 않음
     const command = new UpdatePeriodAllEvaluationEditableStatusCommand(
       evaluationPeriodId,
       isSelfEvaluationEditable,
@@ -1340,10 +1255,10 @@ export class PerformanceEvaluationService
 
     const result = await this.commandBus.execute(command);
     return {
-      successCount: result.length,
-      failedCount: data.deliverables.length - result.length,
-      createdIds: result,
-      failedItems: [],
+      successCount: result.successCount,
+      failedCount: result.failedCount,
+      createdIds: result.createdIds,
+      failedItems: result.failedItems,
     };
   }
 
@@ -1363,11 +1278,8 @@ export class PerformanceEvaluationService
     const result = await this.commandBus.execute(command);
     return {
       successCount: result.successCount,
-      failedCount: result.failureCount,
-      failedIds: result.failedIds.map((id) => ({
-        id,
-        error: 'Deletion failed',
-      })),
+      failedCount: result.failedCount,
+      failedIds: result.failedIds,
     };
   }
 

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { Deliverable } from './deliverable.entity';
 import {
   DeliverableNotFoundException,
@@ -63,6 +63,7 @@ export class DeliverableService {
   ): Promise<Deliverable> {
     this.logger.log(`산출물 수정 시작 - ID: ${id}`);
 
+    // 존재 여부 확인 (컨텍스트에서 이미 검증했지만, 도메인 서비스에서도 확인)
     const deliverable = await this.조회한다(id);
     if (!deliverable) {
       throw new DeliverableNotFoundException(id);
@@ -406,4 +407,5 @@ export class DeliverableService {
       throw error;
     }
   }
+
 }

@@ -54,7 +54,6 @@ import {
 
 // 평가 수정 가능 상태
 import {
-  UpdateEvaluationEditableStatusHandler,
   UpdatePeriodAllEvaluationEditableStatusHandler,
 } from './evaluation-editable-status';
 
@@ -117,7 +116,6 @@ export const CommandHandlers = [
   CancelConfirmationFinalEvaluationHandler,
 
   // 평가 수정 가능 상태 커맨드 핸들러
-  UpdateEvaluationEditableStatusHandler,
   UpdatePeriodAllEvaluationEditableStatusHandler,
 
   // 산출물 커맨드 핸들러

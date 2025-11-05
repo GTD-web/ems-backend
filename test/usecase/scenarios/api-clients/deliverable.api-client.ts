@@ -90,7 +90,7 @@ export class DeliverableApiClient {
 
     const response = await this.testSuite
       .request()
-      .put(`/admin/performance-evaluation/deliverables/${config.id}`)
+      .patch(`/admin/performance-evaluation/deliverables/${config.id}`)
       .send(requestBody)
       .expect(200);
 
