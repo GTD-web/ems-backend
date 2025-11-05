@@ -31,12 +31,13 @@ export class LoginHandler {
 
   async execute(command: LoginCommand): Promise<LoginResult> {
     const { email, password } = command;
-
+    this.logger.log(`로그인 시도: ${email}`);
     // 1. SSO 로그인 (시스템 역할 자동 검증됨)
     // 외부 API 호출 에러만 변환
     let loginResult;
     try {
       loginResult = await this.ssoService.로그인한다(email, password);
+      this.logger.log(`로그인 성공: ${email}`);
     } catch (error) {
       // ForbiddenException은 그대로 전파 (EMS-PROD 역할 검증 실패)
       if (error instanceof ForbiddenException) {

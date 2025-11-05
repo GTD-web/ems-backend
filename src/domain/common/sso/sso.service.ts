@@ -99,8 +99,15 @@ export class SSOService implements OnModuleInit {
    */
   async 로그인한다(email: string, password: string): Promise<LoginResult> {
     this.초기화확인();
-    const result = await this.sdkClient.auth.login(email, password);
-
+    let result: LoginResult;
+    try {
+      result = await this.sdkClient.sso.login(email, password);
+      this.logger.log(`로그인 성공: ${email}`);
+    } catch (error) {
+      this.logger.error('로그인 실패', error);
+      throw error;
+    }
+    this.logger.log(`로그인 결과: ${JSON.stringify(result)}`);
     // 시스템 역할 검증
     this.시스템역할을검증한다(result);
 
@@ -151,7 +158,7 @@ export class SSOService implements OnModuleInit {
    */
   async 토큰을검증한다(accessToken: string): Promise<VerifyTokenResult> {
     this.초기화확인();
-    const result = await this.sdkClient.auth.verifyToken(accessToken);
+    const result = await this.sdkClient.sso.verifyToken(accessToken);
 
     // valid가 false인 경우 예외 발생
     if (!result.valid) {
@@ -167,7 +174,7 @@ export class SSOService implements OnModuleInit {
    */
   async 토큰을갱신한다(refreshToken: string): Promise<RefreshTokenResult> {
     this.초기화확인();
-    return this.sdkClient.auth.refreshToken(refreshToken);
+    return this.sdkClient.sso.refreshToken(refreshToken);
   }
 
   /**
@@ -179,7 +186,7 @@ export class SSOService implements OnModuleInit {
     email: string,
   ): Promise<CheckPasswordResult> {
     this.초기화확인();
-    return this.sdkClient.auth.checkPassword(accessToken, password, email);
+    return this.sdkClient.sso.checkPassword(accessToken, password, email);
   }
 
   /**
@@ -190,7 +197,7 @@ export class SSOService implements OnModuleInit {
     newPassword: string,
   ): Promise<ChangePasswordResult> {
     this.초기화확인();
-    return this.sdkClient.auth.changePassword(accessToken, newPassword);
+    return this.sdkClient.sso.changePassword(accessToken, newPassword);
   }
 
   // ========== 조직 정보 조회 메서드 ==========
