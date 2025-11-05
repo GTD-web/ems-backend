@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
 import { DownwardEvaluationNotFoundException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
+import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 
 // 자기평가 관련 커맨드 및 쿼리
 import {
@@ -73,6 +74,7 @@ import {
   UpdateDownwardEvaluationCommand,
   UpsertDownwardEvaluationCommand,
   ResetDownwardEvaluationCommand,
+  BulkSubmitDownwardEvaluationsCommand,
 } from './handlers/downward-evaluation';
 
 // 최종평가 관련 커맨드 및 쿼리
@@ -736,6 +738,35 @@ export class PerformanceEvaluationService
     );
 
     await this.commandBus.execute(command);
+  }
+
+  /**
+   * 피평가자의 모든 하향평가를 일괄 제출한다
+   * 평가자가 담당하는 특정 피평가자의 모든 하향평가를 한 번에 제출합니다.
+   */
+  async 피평가자의_모든_하향평가를_일괄_제출한다(
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    evaluationType: DownwardEvaluationType,
+    submittedBy: string,
+  ): Promise<{
+    submittedCount: number;
+    skippedCount: number;
+    failedCount: number;
+    submittedIds: string[];
+    skippedIds: string[];
+    failedItems: Array<{ evaluationId: string; error: string }>;
+  }> {
+    const command = new BulkSubmitDownwardEvaluationsCommand(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      evaluationType,
+      submittedBy,
+    );
+
+    return await this.commandBus.execute(command);
   }
 
   /**

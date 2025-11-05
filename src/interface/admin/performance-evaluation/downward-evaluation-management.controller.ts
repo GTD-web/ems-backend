@@ -1,6 +1,6 @@
 import type { AuthenticatedUser } from '@interface/decorators';
 import { CurrentUser, ParseUUID } from '@interface/decorators';
-import { Body, Controller, Query } from '@nestjs/common';
+import { Body, Controller, Query, BadRequestException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   GetDownwardEvaluationDetailQuery,
@@ -18,6 +18,7 @@ import {
   SubmitSecondaryDownwardEvaluation,
   UpsertPrimaryDownwardEvaluation,
   UpsertSecondaryDownwardEvaluation,
+  BulkSubmitDownwardEvaluations,
 } from './decorators/downward-evaluation-api.decorators';
 import {
   CreatePrimaryDownwardEvaluationBodyDto,
@@ -28,6 +29,7 @@ import {
   DownwardEvaluationResponseDto,
   SubmitDownwardEvaluationDto,
 } from './dto/downward-evaluation.dto';
+import { BulkSubmitDownwardEvaluationQueryDto } from './dto/bulk-submit-downward-evaluation-query.dto';
 
 /**
  * 하향평가 관리 컨트롤러
@@ -210,6 +212,36 @@ export class DownwardEvaluationManagementController {
     const submittedBy = user.id;
     await this.performanceEvaluationService.하향평가를_제출한다(
       id,
+      submittedBy,
+    );
+  }
+
+  /**
+   * 피평가자의 모든 하향평가 일괄 제출
+   */
+  @BulkSubmitDownwardEvaluations()
+  async bulkSubmitDownwardEvaluations(
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @Query() queryDto: BulkSubmitDownwardEvaluationQueryDto,
+    @Body() submitDto: SubmitDownwardEvaluationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{
+    submittedCount: number;
+    skippedCount: number;
+    failedCount: number;
+    submittedIds: string[];
+    skippedIds: string[];
+    failedItems: Array<{ evaluationId: string; error: string }>;
+  }> {
+    const evaluatorId = submitDto.evaluatorId;
+    const submittedBy = user.id;
+
+    return await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      queryDto.evaluationType,
       submittedBy,
     );
   }

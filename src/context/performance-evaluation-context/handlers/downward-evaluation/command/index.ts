@@ -22,3 +22,8 @@ export {
   ResetDownwardEvaluationCommand,
   ResetDownwardEvaluationHandler,
 } from './reset-downward-evaluation.handler';
+
+export {
+  BulkSubmitDownwardEvaluationsCommand,
+  BulkSubmitDownwardEvaluationsHandler,
+} from './bulk-submit-downward-evaluations.handler';

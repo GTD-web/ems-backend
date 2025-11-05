@@ -16,6 +16,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ToBoolean } from '@interface/decorators';
+import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 
 /**
  * 1차 하향평가 생성 Body DTO (경로 파라미터 제외)
@@ -124,6 +125,7 @@ export class UpdateDownwardEvaluationDto {
  * 하향평가 제출 DTO
  *
  * Note: submittedBy는 @CurrentUser() 데코레이터를 통해 자동으로 처리됩니다.
+ * Note: evaluationType은 쿼리 스트링으로 제공됩니다.
  */
 export class SubmitDownwardEvaluationDto {
   @ApiProperty({

@@ -124,6 +124,38 @@ export class DownwardEvaluationApiClient {
   }
 
   /**
+   * 피평가자의 모든 하향평가 일괄 제출
+   */
+  async bulkSubmit(config: {
+    evaluateeId: string;
+    periodId: string;
+    evaluatorId: string;
+    evaluationType: 'primary' | 'secondary';
+  }): Promise<{
+    submittedCount: number;
+    skippedCount: number;
+    failedCount: number;
+    submittedIds: string[];
+    skippedIds: string[];
+    failedItems: Array<{ evaluationId: string; error: string }>;
+  }> {
+    const response = await this.testSuite
+      .request()
+      .post(
+        `/admin/performance-evaluation/downward-evaluations/evaluatee/${config.evaluateeId}/period/${config.periodId}/bulk-submit`,
+      )
+      .query({
+        evaluationType: config.evaluationType,
+      })
+      .send({
+        evaluatorId: config.evaluatorId,
+      })
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
    * 1차 하향평가 초기화 (미제출 상태로 변경)
    */
   async resetPrimary(config: {

@@ -40,6 +40,7 @@ import {
   UpsertDownwardEvaluationHandler,
   SubmitDownwardEvaluationHandler,
   ResetDownwardEvaluationHandler,
+  BulkSubmitDownwardEvaluationsHandler,
 } from './downward-evaluation';
 
 // 최종평가
@@ -106,6 +107,7 @@ export const CommandHandlers = [
   UpsertDownwardEvaluationHandler,
   SubmitDownwardEvaluationHandler,
   ResetDownwardEvaluationHandler,
+  BulkSubmitDownwardEvaluationsHandler,
 
   // 최종평가 커맨드 핸들러
   CreateFinalEvaluationHandler,
