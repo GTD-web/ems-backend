@@ -257,6 +257,7 @@ describe('StepApprovalContextService', () => {
 
     // 8. 평가라인 매핑 생성
     const primaryLineMapping = evaluationLineMappingRepository.create({
+      evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
       evaluatorId: primaryEvaluatorId,
       evaluationLineId: savedPrimaryLine.id,
@@ -266,6 +267,7 @@ describe('StepApprovalContextService', () => {
     await evaluationLineMappingRepository.save(primaryLineMapping);
 
     const secondaryLineMapping = evaluationLineMappingRepository.create({
+      evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
       evaluatorId: secondaryEvaluatorId,
       evaluationLineId: savedSecondaryLine.id,
@@ -501,6 +503,238 @@ describe('StepApprovalContextService', () => {
           updatedBy: adminId,
         }),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('이차하향평가_확인상태를_변경한다', () => {
+    it('2차 평가자별로 승인 상태를 변경할 수 있어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // When
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      // Then
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+
+      expect(stepApproval).toBeDefined();
+      expect(stepApproval!.secondaryEvaluationStatus).toBe(
+        StepApprovalStatus.APPROVED,
+      );
+      expect(stepApproval!.secondaryEvaluationApprovedBy).toBe(adminId);
+      expect(stepApproval!.secondaryEvaluationApprovedAt).toBeDefined();
+
+      // 재작성 요청이 생성되지 않아야 함
+      const revisionRequests = await revisionRequestRepository.find();
+      expect(revisionRequests.length).toBe(0);
+    });
+
+    it('특정 2차 평가자에게만 재작성 요청을 보낼 수 있어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+      const revisionComment = '2차 평가를 수정해주세요.';
+
+      // When
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment,
+        updatedBy: adminId,
+      });
+
+      // Then - 상태 변경 확인
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      expect(stepApproval!.secondaryEvaluationStatus).toBe(
+        StepApprovalStatus.REVISION_REQUESTED,
+      );
+
+      // Then - 재작성 요청 생성 확인
+      const revisionRequests = await revisionRequestRepository.find({
+        relations: ['recipients'],
+      });
+      expect(revisionRequests.length).toBe(1);
+      expect(revisionRequests[0].evaluationPeriodId).toBe(evaluationPeriodId);
+      expect(revisionRequests[0].employeeId).toBe(employeeId);
+      expect(revisionRequests[0].step).toBe('secondary');
+      expect(revisionRequests[0].comment).toBe(revisionComment);
+      expect(revisionRequests[0].requestedBy).toBe(adminId);
+
+      // Then - 수신자 확인 (특정 2차 평가자에게만 전송)
+      const recipients = revisionRequests[0].recipients;
+      expect(recipients.length).toBe(1);
+      expect(recipients[0].recipientId).toBe(secondaryEvaluatorId);
+      expect(recipients[0].recipientType).toBe('secondary_evaluator');
+    });
+
+    it('2차 평가자가 아닌 사람의 ID를 전달하면 예외가 발생해야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+      const nonSecondaryEvaluatorId = primaryEvaluatorId; // 1차 평가자 ID
+
+      // When & Then
+      await expect(
+        service.이차하향평가_확인상태를_변경한다({
+          evaluationPeriodId,
+          employeeId,
+          evaluatorId: nonSecondaryEvaluatorId,
+          status: StepApprovalStatus.APPROVED,
+          updatedBy: adminId,
+        }),
+      ).rejects.toThrow('해당 평가자는 2차 평가자가 아닙니다');
+    });
+
+    it('존재하지 않는 평가자 ID를 전달하면 예외가 발생해야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+      const nonExistentEvaluatorId =
+        '123e4567-e89b-12d3-a456-426614174999';
+
+      // When & Then
+      await expect(
+        service.이차하향평가_확인상태를_변경한다({
+          evaluationPeriodId,
+          employeeId,
+          evaluatorId: nonExistentEvaluatorId,
+          status: StepApprovalStatus.APPROVED,
+          updatedBy: adminId,
+        }),
+      ).rejects.toThrow('해당 평가자는 2차 평가자가 아닙니다');
+    });
+
+    it('재작성 요청 상태로 변경 시 코멘트가 없으면 예외가 발생해야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // When & Then
+      await expect(
+        service.이차하향평가_확인상태를_변경한다({
+          evaluationPeriodId,
+          employeeId,
+          evaluatorId: secondaryEvaluatorId,
+          status: StepApprovalStatus.REVISION_REQUESTED,
+          // revisionComment 없음
+          updatedBy: adminId,
+        }),
+      ).rejects.toThrow('재작성 요청 코멘트는 필수입니다');
+    });
+
+    it('여러 2차 평가자가 있을 때 한 명에게만 재작성 요청을 보낼 수 있어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 2번째 2차 평가자 추가
+      const secondaryEvaluator2 = employeeRepository.create({
+        name: '최이차평가자2',
+        employeeNumber: 'EMP004',
+        email: 'secondary2@test.com',
+        externalId: 'EXT004',
+        departmentId: departmentId,
+        status: '재직중',
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryEvaluator2 =
+        await employeeRepository.save(secondaryEvaluator2);
+      const secondaryEvaluatorId2 = savedSecondaryEvaluator2.id;
+
+      // 2번째 2차 평가자용 평가라인 매핑 생성
+      const secondaryLine2 = evaluationLineRepository.create({
+        evaluatorType: EvaluatorType.SECONDARY,
+        order: 3,
+        isRequired: false,
+        isAutoAssigned: false,
+        version: 1,
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryLine2 =
+        await evaluationLineRepository.save(secondaryLine2);
+
+      const secondaryLineMapping2 = evaluationLineMappingRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        evaluatorId: secondaryEvaluatorId2,
+        evaluationLineId: savedSecondaryLine2.id,
+        version: 1,
+        createdBy: systemAdminId,
+      });
+      await evaluationLineMappingRepository.save(secondaryLineMapping2);
+
+      const revisionComment = '첫 번째 2차 평가자를 수정해주세요.';
+
+      // When - 첫 번째 2차 평가자에게만 재작성 요청
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment,
+        updatedBy: adminId,
+      });
+
+      // Then - 재작성 요청이 하나만 생성되어야 함
+      const revisionRequests = await revisionRequestRepository.find({
+        relations: ['recipients'],
+      });
+      expect(revisionRequests.length).toBe(1);
+
+      // Then - 첫 번째 2차 평가자에게만 전송되어야 함
+      const recipients = revisionRequests[0].recipients;
+      expect(recipients.length).toBe(1);
+      expect(recipients[0].recipientId).toBe(secondaryEvaluatorId);
+      expect(recipients[0].recipientId).not.toBe(secondaryEvaluatorId2);
+      expect(recipients[0].recipientType).toBe('secondary_evaluator');
+
+      // When - 두 번째 2차 평가자에게도 재작성 요청
+      const revisionComment2 = '두 번째 2차 평가자를 수정해주세요.';
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId2,
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment: revisionComment2,
+        updatedBy: adminId,
+      });
+
+      // Then - 두 개의 재작성 요청이 생성되어야 함
+      const revisionRequests2 = await revisionRequestRepository.find({
+        relations: ['recipients'],
+      });
+      expect(revisionRequests2.length).toBe(2);
+
+      // 각 요청이 다른 평가자에게 전송되었는지 확인
+      const recipientIds = revisionRequests2.flatMap((req) =>
+        req.recipients.map((r) => r.recipientId),
+      );
+      expect(recipientIds).toContain(secondaryEvaluatorId);
+      expect(recipientIds).toContain(secondaryEvaluatorId2);
+    });
+
+    it('존재하지 않는 평가기간-직원 매핑에 대한 상태 변경 시 예외가 발생해야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+      const nonExistentEmployeeId = '123e4567-e89b-12d3-a456-426614174999';
+
+      // When & Then
+      await expect(
+        service.이차하향평가_확인상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: nonExistentEmployeeId,
+          evaluatorId: secondaryEvaluatorId,
+          status: StepApprovalStatus.APPROVED,
+          updatedBy: adminId,
+        }),
+      ).rejects.toThrow('평가기간-직원 맵핑을 찾을 수 없습니다');
     });
   });
 });

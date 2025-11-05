@@ -15,6 +15,8 @@ import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/eval
 import type {
   IStepApprovalContext,
   UpdateStepApprovalRequest,
+  UpdateStepApprovalByStepRequest,
+  UpdateSecondaryStepApprovalRequest,
 } from './interfaces/step-approval-context.interface';
 
 /**
@@ -297,6 +299,201 @@ export class StepApprovalContextService implements IStepApprovalContext {
       .getRawMany();
 
     return lineMappings.map((mapping) => mapping.evaluatorId);
+  }
+
+  /**
+   * 평가기준 설정 단계 승인 상태를 변경한다
+   */
+  async 평가기준설정_확인상태를_변경한다(
+    request: UpdateStepApprovalByStepRequest,
+  ): Promise<void> {
+    await this.단계별_확인상태를_변경한다({
+      evaluationPeriodId: request.evaluationPeriodId,
+      employeeId: request.employeeId,
+      step: 'criteria',
+      status: request.status,
+      revisionComment: request.revisionComment,
+      updatedBy: request.updatedBy,
+    });
+  }
+
+  /**
+   * 자기평가 단계 승인 상태를 변경한다
+   */
+  async 자기평가_확인상태를_변경한다(
+    request: UpdateStepApprovalByStepRequest,
+  ): Promise<void> {
+    await this.단계별_확인상태를_변경한다({
+      evaluationPeriodId: request.evaluationPeriodId,
+      employeeId: request.employeeId,
+      step: 'self',
+      status: request.status,
+      revisionComment: request.revisionComment,
+      updatedBy: request.updatedBy,
+    });
+  }
+
+  /**
+   * 1차 하향평가 단계 승인 상태를 변경한다
+   */
+  async 일차하향평가_확인상태를_변경한다(
+    request: UpdateStepApprovalByStepRequest,
+  ): Promise<void> {
+    await this.단계별_확인상태를_변경한다({
+      evaluationPeriodId: request.evaluationPeriodId,
+      employeeId: request.employeeId,
+      step: 'primary',
+      status: request.status,
+      revisionComment: request.revisionComment,
+      updatedBy: request.updatedBy,
+    });
+  }
+
+  /**
+   * 2차 하향평가 단계 승인 상태를 평가자별로 변경한다
+   */
+  async 이차하향평가_확인상태를_변경한다(
+    request: UpdateSecondaryStepApprovalRequest,
+  ): Promise<void> {
+    this.logger.log(
+      `2차 하향평가 확인 상태 변경 시작 - 평가기간: ${request.evaluationPeriodId}, 직원: ${request.employeeId}, 평가자: ${request.evaluatorId}, 상태: ${request.status}`,
+    );
+
+    // 1. 맵핑 조회
+    const mapping = await this.mappingRepository.findOne({
+      where: {
+        evaluationPeriodId: request.evaluationPeriodId,
+        employeeId: request.employeeId,
+        deletedAt: null as any,
+      },
+    });
+
+    if (!mapping) {
+      throw new NotFoundException(
+        `평가기간-직원 맵핑을 찾을 수 없습니다. (평가기간 ID: ${request.evaluationPeriodId}, 직원 ID: ${request.employeeId})`,
+      );
+    }
+
+    // 2. 평가자 검증 - 해당 평가자가 실제로 2차 평가자인지 확인
+    const isSecondaryEvaluator = await this.평가자가_2차평가자인지_확인한다(
+      request.evaluationPeriodId,
+      request.employeeId,
+      request.evaluatorId,
+    );
+
+    if (!isSecondaryEvaluator) {
+      throw new NotFoundException(
+        `해당 평가자는 2차 평가자가 아닙니다. (평가기간 ID: ${request.evaluationPeriodId}, 직원 ID: ${request.employeeId}, 평가자 ID: ${request.evaluatorId})`,
+      );
+    }
+
+    // 3. 단계 승인 정보 조회 또는 생성
+    let stepApproval =
+      await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+
+    if (!stepApproval) {
+      this.logger.log(
+        `단계 승인 정보가 없어 새로 생성합니다. - 맵핑 ID: ${mapping.id}`,
+      );
+      stepApproval = await this.stepApprovalService.생성한다({
+        evaluationPeriodEmployeeMappingId: mapping.id,
+        createdBy: request.updatedBy,
+      });
+    }
+
+    // 4. 단계 상태 변경 (2차 평가)
+    this.stepApprovalService.단계_상태를_변경한다(
+      stepApproval,
+      'secondary',
+      request.status,
+      request.updatedBy,
+    );
+
+    // 5. 저장
+    await this.stepApprovalService.저장한다(stepApproval);
+
+    // 6. revision_requested인 경우 특정 평가자에게만 재작성 요청 생성
+    if (request.status === StepApprovalStatus.REVISION_REQUESTED) {
+      if (!request.revisionComment || request.revisionComment.trim() === '') {
+        throw new NotFoundException('재작성 요청 코멘트는 필수입니다.');
+      }
+
+      await this.재작성요청을_평가자별로_생성한다(
+        request.evaluationPeriodId,
+        request.employeeId,
+        request.evaluatorId,
+        request.revisionComment,
+        request.updatedBy,
+      );
+    }
+
+    this.logger.log(
+      `2차 하향평가 확인 상태 변경 완료 - 직원: ${request.employeeId}, 평가자: ${request.evaluatorId}`,
+    );
+  }
+
+  /**
+   * 평가자가 2차 평가자인지 확인한다
+   */
+  private async 평가자가_2차평가자인지_확인한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    evaluatorId: string,
+  ): Promise<boolean> {
+    const lineMapping = await this.evaluationLineMappingRepository
+      .createQueryBuilder('mapping')
+      .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+      .andWhere('mapping.deletedAt IS NULL')
+      .andWhere('line.evaluatorType = :evaluatorType', {
+        evaluatorType: 'secondary',
+      })
+      .andWhere('line.deletedAt IS NULL')
+      .getOne();
+
+    return !!lineMapping;
+  }
+
+  /**
+   * 재작성 요청을 특정 평가자에게만 생성한다 (평가자별 부분 처리)
+   */
+  private async 재작성요청을_평가자별로_생성한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    evaluatorId: string,
+    comment: string,
+    requestedBy: string,
+  ): Promise<void> {
+    this.logger.log(
+      `재작성 요청 생성 시작 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
+    );
+
+    // 특정 평가자에게만 재작성 요청 전송
+    const recipients = [
+      {
+        recipientId: evaluatorId,
+        recipientType: 'secondary_evaluator' as RecipientType,
+      },
+    ];
+
+    // 재작성 요청 생성
+    await this.revisionRequestService.생성한다({
+      evaluationPeriodId,
+      employeeId,
+      step: 'secondary',
+      comment,
+      requestedBy,
+      recipients,
+      createdBy: requestedBy,
+    });
+
+    this.logger.log(
+      `재작성 요청 생성 완료 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
+    );
   }
 }
 

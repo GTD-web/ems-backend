@@ -16,6 +16,11 @@ import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.ent
 import { FinalEvaluation } from '@domain/core/final-evaluation/final-evaluation.entity';
 import { EmployeeEvaluationPeriodStatusDto } from '../../../interfaces/dashboard-context.interface';
 import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
+import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
+import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
+import {
+  평가자들별_2차평가_단계승인_상태를_조회한다,
+} from './step-approval.utils';
 
 // 유틸 함수 import
 import {
@@ -97,6 +102,10 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     private readonly peerEvaluationRepository: Repository<PeerEvaluation>,
     @InjectRepository(FinalEvaluation)
     private readonly finalEvaluationRepository: Repository<FinalEvaluation>,
+    @InjectRepository(EvaluationRevisionRequest)
+    private readonly revisionRequestRepository: Repository<EvaluationRevisionRequest>,
+    @InjectRepository(EvaluationRevisionRequestRecipient)
+    private readonly revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>,
     private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
   ) {}
 
@@ -314,6 +323,106 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         result.mapping_id,
       );
 
+      // 19-1. 2차 평가자별 단계 승인 상태 조회
+      // evaluator가 존재하는 항목만 필터링
+      const validSecondaryEvaluators = secondary.evaluators.filter(
+        (e) => e.evaluator && e.evaluator.id,
+      );
+      const secondaryEvaluatorIds = validSecondaryEvaluators.map(
+        (e) => e.evaluator.id,
+      );
+      const secondaryEvaluationStatuses = await 평가자들별_2차평가_단계승인_상태를_조회한다(
+        evaluationPeriodId,
+        employeeId,
+        secondaryEvaluatorIds,
+        this.revisionRequestRepository,
+        this.revisionRequestRecipientRepository,
+      );
+
+      // 19-2. 평가자별 단계 승인 정보 구성 (평가자 정보 포함)
+      const secondaryEvaluationStatusesWithEvaluatorInfo =
+        validSecondaryEvaluators
+          .map((evaluatorInfo) => {
+            if (!evaluatorInfo.evaluator || !evaluatorInfo.evaluator.id) {
+              return null;
+            }
+
+            const statusInfo = secondaryEvaluationStatuses.find(
+              (s) => s.evaluatorId === evaluatorInfo.evaluator.id,
+            );
+
+            // 재작성 요청이 없고, stepApproval에서 approved 상태인 경우
+            let finalStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+            let approvedBy: string | null = null;
+            let approvedAt: Date | null = null;
+
+            // statusInfo가 있고 revisionRequestId가 null이 아니면 재작성 요청이 있는 것
+            if (statusInfo && statusInfo.revisionRequestId !== null) {
+              // 재작성 요청이 있는 경우
+              if (statusInfo.isCompleted) {
+                finalStatus = 'revision_completed';
+              } else if (statusInfo.status === 'revision_requested') {
+                finalStatus = 'revision_requested';
+              } else {
+                // 재작성 요청이 있지만 완료되지 않은 경우
+                finalStatus = 'revision_requested';
+              }
+            } else {
+              // 재작성 요청이 없는 경우, stepApproval 상태 확인
+              if (stepApproval?.secondaryEvaluationStatus === 'approved') {
+                finalStatus = 'approved';
+                approvedBy = stepApproval.secondaryEvaluationApprovedBy;
+                approvedAt = stepApproval.secondaryEvaluationApprovedAt;
+              } else {
+                finalStatus = 'pending';
+              }
+            }
+
+            return {
+              evaluatorId: evaluatorInfo.evaluator.id,
+              evaluatorName: evaluatorInfo.evaluator.name || '알 수 없음',
+              evaluatorEmployeeNumber:
+                evaluatorInfo.evaluator.employeeNumber || 'N/A',
+              evaluatorEmail: evaluatorInfo.evaluator.email || 'N/A',
+              status: finalStatus,
+              approvedBy,
+              approvedAt,
+              revisionRequestId: statusInfo?.revisionRequestId ?? null,
+              revisionComment: statusInfo?.revisionComment ?? null,
+              isRevisionCompleted: statusInfo?.isCompleted ?? false,
+              revisionCompletedAt: statusInfo?.completedAt ?? null,
+            };
+          })
+          .filter((item) => item !== null);
+
+      // 19-3. 최종 상태 결정 (모든 평가자가 완료되었는지 확인)
+      const allSecondaryCompleted =
+        secondaryEvaluationStatusesWithEvaluatorInfo.length > 0 &&
+        secondaryEvaluationStatusesWithEvaluatorInfo.every(
+          (s) =>
+            s.status === 'approved' ||
+            s.status === 'revision_completed' ||
+            (s.status === 'revision_requested' && s.isRevisionCompleted),
+        );
+
+      // 모든 평가자가 승인 상태인지 확인
+      const allSecondaryApproved =
+        secondaryEvaluationStatusesWithEvaluatorInfo.length > 0 &&
+        secondaryEvaluationStatusesWithEvaluatorInfo.every(
+          (s) => s.status === 'approved',
+        );
+
+      const finalSecondaryStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed' =
+        allSecondaryApproved
+          ? 'approved'
+          : allSecondaryCompleted
+            ? 'revision_completed'
+            : secondaryEvaluationStatusesWithEvaluatorInfo.some(
+                (s) => s.status === 'revision_requested',
+              )
+              ? 'revision_requested'
+              : 'pending';
+
       // 20. DTO로 변환
       // 평가 대상 여부 계산
       const isEvaluationTarget =
@@ -456,12 +565,17 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             stepApproval?.primaryEvaluationApprovedBy ?? null,
           primaryEvaluationApprovedAt:
             stepApproval?.primaryEvaluationApprovedAt ?? null,
-          secondaryEvaluationStatus:
-            stepApproval?.secondaryEvaluationStatus ?? 'pending',
+          secondaryEvaluationStatuses: secondaryEvaluationStatusesWithEvaluatorInfo,
+          secondaryEvaluationStatus: finalSecondaryStatus,
+          // 최종 상태가 approved일 때만 approvedBy와 approvedAt 반환
           secondaryEvaluationApprovedBy:
-            stepApproval?.secondaryEvaluationApprovedBy ?? null,
+            finalSecondaryStatus === 'approved'
+              ? stepApproval?.secondaryEvaluationApprovedBy ?? null
+              : null,
           secondaryEvaluationApprovedAt:
-            stepApproval?.secondaryEvaluationApprovedAt ?? null,
+            finalSecondaryStatus === 'approved'
+              ? stepApproval?.secondaryEvaluationApprovedAt ?? null
+              : null,
         },
       };
 

@@ -6,32 +6,13 @@ import {
   ValidateIf,
   IsOptional,
 } from 'class-validator';
+import { StepApprovalStatusEnum } from './update-step-approval.dto';
 
 /**
- * 단계 타입 enum
+ * 2차 평가 단계 승인 상태 업데이트 DTO
+ * 평가자 ID는 URL 파라미터로 받으므로 DTO에는 포함하지 않음
  */
-export enum StepTypeEnum {
-  CRITERIA = 'criteria',
-  SELF = 'self',
-  PRIMARY = 'primary',
-  SECONDARY = 'secondary',
-}
-
-/**
- * 단계 승인 상태 enum
- */
-export enum StepApprovalStatusEnum {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REVISION_REQUESTED = 'revision_requested',
-  REVISION_COMPLETED = 'revision_completed',
-}
-
-/**
- * 단계 승인 상태 업데이트 DTO
- * step 필드는 URL 경로로 구분되므로 제거됨
- */
-export class UpdateStepApprovalDto {
+export class UpdateSecondaryStepApprovalDto {
   @ApiProperty({
     description: '승인 상태',
     enum: StepApprovalStatusEnum,
@@ -44,7 +25,7 @@ export class UpdateStepApprovalDto {
   @ApiPropertyOptional({
     description:
       '재작성 요청 코멘트 (status가 revision_requested인 경우 필수)',
-    example: '평가기준이 명확하지 않습니다. 다시 작성해 주세요.',
+    example: '평가 내용이 부족합니다. 보완해 주세요.',
   })
   @ValidateIf((o) => o.status === StepApprovalStatusEnum.REVISION_REQUESTED)
   @IsString()
@@ -52,5 +33,4 @@ export class UpdateStepApprovalDto {
   @IsOptional()
   revisionComment?: string;
 }
-
 

@@ -18,6 +18,8 @@ import { DownwardEvaluation } from '../../domain/core/downward-evaluation/downwa
 import { PeerEvaluation } from '../../domain/core/peer-evaluation/peer-evaluation.entity';
 import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evaluation.entity';
 import { Deliverable } from '../../domain/core/deliverable/deliverable.entity';
+import { EvaluationRevisionRequest } from '../../domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
+import { EvaluationRevisionRequestRecipient } from '../../domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
 import { QUERY_HANDLERS } from './handlers/queries';
 import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evaluation-step-approval';
 
@@ -48,6 +50,8 @@ import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evalu
       PeerEvaluation,
       FinalEvaluation,
       Deliverable,
+      EvaluationRevisionRequest,
+      EvaluationRevisionRequestRecipient,
     ]),
   ],
   providers: [DashboardService, ...QUERY_HANDLERS],

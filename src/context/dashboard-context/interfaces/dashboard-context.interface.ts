@@ -283,11 +283,36 @@ export interface EmployeeEvaluationPeriodStatusDto {
     primaryEvaluationApprovedBy: string | null;
     /** 1차 하향평가 승인 일시 */
     primaryEvaluationApprovedAt: Date | null;
-    /** 2차 하향평가 확인 상태 */
+    /** 2차 하향평가 확인 상태 (평가자별) */
+    secondaryEvaluationStatuses: {
+      /** 평가자 ID */
+      evaluatorId: string;
+      /** 평가자 이름 */
+      evaluatorName: string;
+      /** 평가자 사번 */
+      evaluatorEmployeeNumber: string;
+      /** 평가자 이메일 */
+      evaluatorEmail: string;
+      /** 확인 상태 */
+      status: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+      /** 승인자 ID */
+      approvedBy: string | null;
+      /** 승인 일시 */
+      approvedAt: Date | null;
+      /** 재작성 요청 ID */
+      revisionRequestId: string | null;
+      /** 재작성 요청 코멘트 */
+      revisionComment: string | null;
+      /** 재작성 완료 여부 */
+      isRevisionCompleted: boolean;
+      /** 재작성 완료 일시 */
+      revisionCompletedAt: Date | null;
+    }[];
+    /** 2차 하향평가 확인 상태 (최종 상태, 모든 평가자 완료 여부 기반, 하위 호환성) */
     secondaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
-    /** 2차 하향평가 승인자 ID */
+    /** 2차 하향평가 승인자 ID (하위 호환성) */
     secondaryEvaluationApprovedBy: string | null;
-    /** 2차 하향평가 승인 일시 */
+    /** 2차 하향평가 승인 일시 (하위 호환성) */
     secondaryEvaluationApprovedAt: Date | null;
   };
 }

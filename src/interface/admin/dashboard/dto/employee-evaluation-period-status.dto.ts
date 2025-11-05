@@ -539,6 +539,85 @@ export class ExclusionInfoDto {
 }
 
 /**
+ * 2차 평가자별 단계 승인 상태 정보 DTO
+ */
+export class SecondaryEvaluationStatusDto {
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+  })
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '평가자 이름',
+    example: '홍길동',
+  })
+  evaluatorName: string;
+
+  @ApiProperty({
+    description: '평가자 사번',
+    example: 'EMP001',
+  })
+  evaluatorEmployeeNumber: string;
+
+  @ApiProperty({
+    description: '평가자 이메일',
+    example: 'hong@example.com',
+  })
+  evaluatorEmail: string;
+
+  @ApiProperty({
+    description: '확인 상태',
+    enum: ['pending', 'approved', 'revision_requested', 'revision_completed'],
+    example: 'pending',
+  })
+  status: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+
+  @ApiPropertyOptional({
+    description: '승인자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+    nullable: true,
+  })
+  approvedBy: string | null;
+
+  @ApiPropertyOptional({
+    description: '승인 일시',
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
+  approvedAt: Date | null;
+
+  @ApiPropertyOptional({
+    description: '재작성 요청 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+    nullable: true,
+  })
+  revisionRequestId: string | null;
+
+  @ApiPropertyOptional({
+    description: '재작성 요청 코멘트',
+    example: '평가 내용을 보완해 주세요.',
+    nullable: true,
+  })
+  revisionComment: string | null;
+
+  @ApiProperty({
+    description: '재작성 완료 여부',
+    example: false,
+  })
+  isRevisionCompleted: boolean;
+
+  @ApiPropertyOptional({
+    description: '재작성 완료 일시',
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+  })
+  revisionCompletedAt: Date | null;
+}
+
+/**
  * 단계별 확인 상태 정보 DTO
  */
 export class StepApprovalInfoDto {
@@ -621,7 +700,31 @@ export class StepApprovalInfoDto {
   primaryEvaluationApprovedAt: Date | null;
 
   @ApiProperty({
-    description: '2차 하향평가 확인 상태',
+    description: '2차 하향평가 확인 상태 (평가자별)',
+    type: () => [SecondaryEvaluationStatusDto],
+    isArray: true,
+    example: [
+      {
+        evaluatorId: '123e4567-e89b-12d3-a456-426614174003',
+        evaluatorName: '홍길동',
+        evaluatorEmployeeNumber: 'EMP001',
+        evaluatorEmail: 'hong@example.com',
+        status: 'pending',
+        approvedBy: null,
+        approvedAt: null,
+        revisionRequestId: null,
+        revisionComment: null,
+        isRevisionCompleted: false,
+        revisionCompletedAt: null,
+      },
+    ],
+  })
+  @Type(() => SecondaryEvaluationStatusDto)
+  secondaryEvaluationStatuses: SecondaryEvaluationStatusDto[];
+
+  @ApiProperty({
+    description:
+      '2차 하향평가 확인 상태 (최종 상태, 모든 평가자 완료 여부 기반, 하위 호환성)',
     enum: ['pending', 'approved', 'revision_requested', 'revision_completed'],
     example: 'pending',
   })
@@ -632,14 +735,14 @@ export class StepApprovalInfoDto {
     | 'revision_completed';
 
   @ApiPropertyOptional({
-    description: '2차 하향평가 승인자 ID',
+    description: '2차 하향평가 승인자 ID (하위 호환성)',
     example: '123e4567-e89b-12d3-a456-426614174003',
     nullable: true,
   })
   secondaryEvaluationApprovedBy: string | null;
 
   @ApiPropertyOptional({
-    description: '2차 하향평가 승인 일시',
+    description: '2차 하향평가 승인 일시 (하위 호환성)',
     type: 'string',
     format: 'date-time',
     nullable: true,
