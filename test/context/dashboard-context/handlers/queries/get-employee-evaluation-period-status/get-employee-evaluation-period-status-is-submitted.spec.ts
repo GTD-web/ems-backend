@@ -301,8 +301,8 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
     // 프로젝트 생성
     const project = projectRepository.create({
       name: '테스트 프로젝트',
+      projectCode: 'PROJ001',
       status: ProjectStatus.ACTIVE,
-      periodId: evaluationPeriodId,
       createdBy: systemAdminId,
     });
     const savedProject = await projectRepository.save(project);
@@ -310,32 +310,40 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
 
     // 프로젝트 할당 생성
     await projectAssignmentRepository.save({
-      evaluationPeriodId: evaluationPeriodId,
+      periodId: evaluationPeriodId,
       employeeId: employeeId,
       projectId: projectId,
+      assignedBy: systemAdminId,
+      assignedDate: new Date(),
       createdBy: systemAdminId,
     });
 
     // WBS 항목 생성
     const wbs1 = wbsItemRepository.create({
-      name: 'WBS 1',
+      wbsCode: 'WBS001',
+      title: 'WBS 항목 1',
       projectId: projectId,
+      level: 1,
       createdBy: systemAdminId,
     });
     const savedWbs1 = await wbsItemRepository.save(wbs1);
     wbsItemId1 = savedWbs1.id;
 
     const wbs2 = wbsItemRepository.create({
-      name: 'WBS 2',
+      wbsCode: 'WBS002',
+      title: 'WBS 항목 2',
       projectId: projectId,
+      level: 1,
       createdBy: systemAdminId,
     });
     const savedWbs2 = await wbsItemRepository.save(wbs2);
     wbsItemId2 = savedWbs2.id;
 
     const wbs3 = wbsItemRepository.create({
-      name: 'WBS 3',
+      wbsCode: 'WBS003',
+      title: 'WBS 항목 3',
       projectId: projectId,
+      level: 1,
       createdBy: systemAdminId,
     });
     const savedWbs3 = await wbsItemRepository.save(wbs3);
@@ -343,35 +351,48 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
 
     // WBS 할당 생성
     await wbsAssignmentRepository.save({
-      evaluationPeriodId: evaluationPeriodId,
+      periodId: evaluationPeriodId,
       employeeId: employeeId,
+      projectId: projectId,
       wbsItemId: wbsItemId1,
+      assignedBy: systemAdminId,
+      assignedDate: new Date(),
       createdBy: systemAdminId,
     });
     await wbsAssignmentRepository.save({
-      evaluationPeriodId: evaluationPeriodId,
+      periodId: evaluationPeriodId,
       employeeId: employeeId,
+      projectId: projectId,
       wbsItemId: wbsItemId2,
+      assignedBy: systemAdminId,
+      assignedDate: new Date(),
       createdBy: systemAdminId,
     });
     await wbsAssignmentRepository.save({
-      evaluationPeriodId: evaluationPeriodId,
+      periodId: evaluationPeriodId,
       employeeId: employeeId,
+      projectId: projectId,
       wbsItemId: wbsItemId3,
+      assignedBy: systemAdminId,
+      assignedDate: new Date(),
       createdBy: systemAdminId,
     });
 
     // 평가라인 생성
     const primaryLine = evaluationLineRepository.create({
       evaluatorType: EvaluatorType.PRIMARY,
-      name: '1차 평가라인',
+      order: 1,
+      isRequired: true,
+      isAutoAssigned: false,
       createdBy: systemAdminId,
     });
     const savedPrimaryLine = await evaluationLineRepository.save(primaryLine);
 
     const secondaryLine = evaluationLineRepository.create({
       evaluatorType: EvaluatorType.SECONDARY,
-      name: '2차 평가라인',
+      order: 2,
+      isRequired: true,
+      isAutoAssigned: false,
       createdBy: systemAdminId,
     });
     const savedSecondaryLine = await evaluationLineRepository.save(

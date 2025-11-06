@@ -217,12 +217,9 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
     employeeId = savedEmployee.id;
 
     // 4. 평가기간-직원 매핑 생성
-    const mapping = mappingRepository.create({
+    const mapping = new EvaluationPeriodEmployeeMapping({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);
