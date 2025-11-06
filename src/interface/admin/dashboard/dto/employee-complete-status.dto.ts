@@ -180,11 +180,11 @@ export class SelfEvaluationStatusDto {
  */
 export class DownwardEvaluationStatusDto {
   @ApiProperty({
-    description: '하향평가 진행 상태',
-    enum: ['complete', 'in_progress', 'none'],
-    example: 'in_progress',
+    description: '하향평가 통합 상태 (진행 상태 + 승인 상태)',
+    enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none';
+  status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
 
   @ApiProperty({
     description: '평가 대상 WBS 수',

@@ -160,6 +160,37 @@ export interface EmployeeEvaluationPeriodStatusDto {
     hasSecondaryEvaluator: boolean;
   };
 
+  /** 평가기준 설정 정보 (평가항목, WBS 평가기준, 평가라인을 통합) */
+  criteriaSetup: {
+    /** 평가기준 설정 상태 (계산된 상태) */
+    status: 'none' | 'in_progress' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+    /** 평가항목 설정 정보 */
+    evaluationCriteria: {
+      /** 평가항목 설정 상태 */
+      status: EvaluationCriteriaStatus;
+      /** 할당된 프로젝트 수 */
+      assignedProjectCount: number;
+      /** 할당된 WBS 수 */
+      assignedWbsCount: number;
+    };
+    /** WBS 평가기준 설정 정보 */
+    wbsCriteria: {
+      /** WBS 평가기준 설정 상태 */
+      status: WbsCriteriaStatus;
+      /** 평가기준이 설정된 WBS 수 */
+      wbsWithCriteriaCount: number;
+    };
+    /** 평가라인 지정 정보 */
+    evaluationLine: {
+      /** 평가라인 지정 완료 상태 */
+      status: EvaluationLineStatus;
+      /** PRIMARY 라인 평가자 지정 여부 */
+      hasPrimaryEvaluator: boolean;
+      /** SECONDARY 라인 평가자 지정 여부 */
+      hasSecondaryEvaluator: boolean;
+    };
+  };
+
   /** 성과 입력 정보 */
   performanceInput: {
     /** 성과 입력 상태 */
@@ -199,8 +230,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
         departmentName?: string;
         rankName?: string;
       } | null;
-      /** 하향평가 상태 */
-      status: DownwardEvaluationStatus;
+      /** 하향평가 통합 상태 (진행 상태 + 승인 상태) */
+      status: DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
       /** 할당된 WBS 수 */
       assignedWbsCount: number;
       /** 완료된 하향평가 수 */
@@ -214,6 +245,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
     };
     /** 2차 평가 정보 (여러 명 가능) */
     secondary: {
+      /** 2차 평가 전체 통합 상태 (모든 평가자 통합) */
+      status: DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
       /** 2차 평가자 목록 */
       evaluators: Array<{
         /** 평가자 정보 */
@@ -225,8 +258,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
           departmentName?: string;
           rankName?: string;
         };
-        /** 하향평가 상태 */
-        status: DownwardEvaluationStatus;
+        /** 하향평가 통합 상태 (진행 상태 + 승인 상태) */
+        status: DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
         /** 할당된 WBS 수 */
         assignedWbsCount: number;
         /** 완료된 하향평가 수 */

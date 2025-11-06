@@ -253,6 +253,36 @@ export class EvaluationLineInfoDto {
 }
 
 /**
+ * 평가기준 설정 정보 DTO (평가항목, WBS 평가기준, 평가라인을 통합)
+ */
+export class CriteriaSetupDto {
+  @ApiProperty({
+    description: '평가기준 설정 상태 (계산된 상태)',
+    enum: ['none', 'in_progress', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    example: 'none',
+  })
+  status: 'none' | 'in_progress' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+
+  @ApiProperty({
+    description: '평가항목 설정 정보',
+    type: () => EvaluationCriteriaInfoDto,
+  })
+  evaluationCriteria: EvaluationCriteriaInfoDto;
+
+  @ApiProperty({
+    description: 'WBS 평가기준 설정 정보',
+    type: () => WbsCriteriaInfoDto,
+  })
+  wbsCriteria: WbsCriteriaInfoDto;
+
+  @ApiProperty({
+    description: '평가라인 지정 정보',
+    type: () => EvaluationLineInfoDto,
+  })
+  evaluationLine: EvaluationLineInfoDto;
+}
+
+/**
  * 성과 입력 정보 DTO
  */
 export class PerformanceInputDto {
@@ -332,11 +362,11 @@ export class PrimaryDownwardEvaluationDto {
   evaluator: EvaluatorInfoDto | null;
 
   @ApiProperty({
-    description: '1차 하향평가 진행 상태',
-    enum: ['complete', 'in_progress', 'none'],
-    example: 'in_progress',
+    description: '1차 하향평가 통합 상태 (진행 상태 + 승인 상태)',
+    enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none';
+  status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
 
   @ApiProperty({
     description: '평가 대상 WBS 수',
@@ -383,11 +413,11 @@ export class SecondaryEvaluatorDto {
   evaluator: EvaluatorInfoDto;
 
   @ApiProperty({
-    description: '2차 하향평가 진행 상태',
-    enum: ['complete', 'in_progress', 'none'],
+    description: '2차 하향평가 통합 상태 (진행 상태 + 승인 상태)',
+    enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
     example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none';
+  status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
 
   @ApiProperty({
     description: '평가 대상 WBS 수',
@@ -412,6 +442,13 @@ export class SecondaryEvaluatorDto {
  * 하향평가 2차 정보 DTO
  */
 export class SecondaryDownwardEvaluationDto {
+  @ApiProperty({
+    description: '2차 평가 전체 통합 상태 (모든 평가자 통합)',
+    enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    example: 'complete',
+  })
+  status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+
   @ApiProperty({
     description: '2차 평가자 목록',
     type: () => [SecondaryEvaluatorDto],
@@ -828,6 +865,12 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
     type: () => EvaluationLineInfoDto,
   })
   evaluationLine: EvaluationLineInfoDto;
+
+  @ApiProperty({
+    description: '평가기준 설정 정보 (평가항목, WBS 평가기준, 평가라인을 통합)',
+    type: () => CriteriaSetupDto,
+  })
+  criteriaSetup: CriteriaSetupDto;
 
   @ApiProperty({
     description: '성과 입력 정보',

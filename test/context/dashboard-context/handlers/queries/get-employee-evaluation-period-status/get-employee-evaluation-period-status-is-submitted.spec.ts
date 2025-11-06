@@ -290,9 +290,7 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
+      isExcluded: false,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);
@@ -472,11 +470,12 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
       const result = await handler.execute(query);
 
       // Then - isSubmitted가 true여야 함
-      expect(result.downwardEvaluation.primary.isSubmitted).toBe(true);
-      expect(result.downwardEvaluation.primary.completedEvaluationCount).toBe(
+      expect(result).toBeDefined();
+      expect(result!.downwardEvaluation.primary.isSubmitted).toBe(true);
+      expect(result!.downwardEvaluation.primary.completedEvaluationCount).toBe(
         3,
       );
-      expect(result.downwardEvaluation.primary.assignedWbsCount).toBe(3);
+      expect(result!.downwardEvaluation.primary.assignedWbsCount).toBe(3);
     });
 
     it('1차 평가자의 일부 하향평가만 제출되었을 때 isSubmitted가 false여야 한다', async () => {
@@ -525,11 +524,12 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
       const result = await handler.execute(query);
 
       // Then - isSubmitted가 false여야 함
-      expect(result.downwardEvaluation.primary.isSubmitted).toBe(false);
-      expect(result.downwardEvaluation.primary.completedEvaluationCount).toBe(
+      expect(result).toBeDefined();
+      expect(result!.downwardEvaluation.primary.isSubmitted).toBe(false);
+      expect(result!.downwardEvaluation.primary.completedEvaluationCount).toBe(
         2,
       );
-      expect(result.downwardEvaluation.primary.assignedWbsCount).toBe(3);
+      expect(result!.downwardEvaluation.primary.assignedWbsCount).toBe(3);
     });
 
     it('1차 평가자의 하향평가가 없을 때 isSubmitted가 false여야 한다', async () => {
@@ -543,11 +543,12 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
       const result = await handler.execute(query);
 
       // Then - isSubmitted가 false여야 함
-      expect(result.downwardEvaluation.primary.isSubmitted).toBe(false);
-      expect(result.downwardEvaluation.primary.completedEvaluationCount).toBe(
+      expect(result).toBeDefined();
+      expect(result!.downwardEvaluation.primary.isSubmitted).toBe(false);
+      expect(result!.downwardEvaluation.primary.completedEvaluationCount).toBe(
         0,
       );
-      expect(result.downwardEvaluation.primary.assignedWbsCount).toBe(3);
+      expect(result!.downwardEvaluation.primary.assignedWbsCount).toBe(3);
     });
 
     it('2차 평가자1의 모든 하향평가가 제출되었을 때 isSubmitted가 true여야 한다', async () => {
@@ -596,7 +597,8 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
       const result = await handler.execute(query);
 
       // Then - 평가자1의 isSubmitted가 true여야 함
-      const evaluator1 = result.downwardEvaluation.secondary.evaluators.find(
+      expect(result).toBeDefined();
+      const evaluator1 = result!.downwardEvaluation.secondary.evaluators.find(
         (e) => e.evaluator.id === secondaryEvaluatorId1,
       );
       expect(evaluator1).toBeDefined();
@@ -675,14 +677,15 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
       const result = await handler.execute(query);
 
       // Then - 평가자1은 isSubmitted가 true, 평가자2는 false여야 함
-      const evaluator1 = result.downwardEvaluation.secondary.evaluators.find(
+      expect(result).toBeDefined();
+      const evaluator1 = result!.downwardEvaluation.secondary.evaluators.find(
         (e) => e.evaluator.id === secondaryEvaluatorId1,
       );
       expect(evaluator1).toBeDefined();
       expect(evaluator1?.isSubmitted).toBe(true);
       expect(evaluator1?.completedEvaluationCount).toBe(3);
 
-      const evaluator2 = result.downwardEvaluation.secondary.evaluators.find(
+      const evaluator2 = result!.downwardEvaluation.secondary.evaluators.find(
         (e) => e.evaluator.id === secondaryEvaluatorId2,
       );
       expect(evaluator2).toBeDefined();
@@ -734,7 +737,8 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
         employeeId,
       );
       const resultBefore = await handler.execute(queryBefore);
-      expect(resultBefore.downwardEvaluation.primary.isSubmitted).toBe(true);
+      expect(resultBefore).toBeDefined();
+      expect(resultBefore!.downwardEvaluation.primary.isSubmitted).toBe(true);
 
       // When - 일괄 초기화 실행
       const resetCommand = new BulkResetDownwardEvaluationsCommand(
@@ -752,8 +756,9 @@ describe('Dashboard Context - Downward Evaluation isSubmitted Field', () => {
         employeeId,
       );
       const resultAfter = await handler.execute(queryAfter);
-      expect(resultAfter.downwardEvaluation.primary.isSubmitted).toBe(false);
-      expect(resultAfter.downwardEvaluation.primary.completedEvaluationCount).toBe(
+      expect(resultAfter).toBeDefined();
+      expect(resultAfter!.downwardEvaluation.primary.isSubmitted).toBe(false);
+      expect(resultAfter!.downwardEvaluation.primary.completedEvaluationCount).toBe(
         0,
       );
     });

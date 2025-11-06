@@ -287,9 +287,7 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
+      isExcluded: false,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);

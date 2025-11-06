@@ -14,6 +14,96 @@ import {
 } from './downward-evaluation-score.utils';
 
 /**
+ * 하향평가 통합 상태를 계산한다
+ * - 하향평가 진행 상태와 승인 상태를 통합하여 계산
+ * 
+ * 계산 로직:
+ * 1. 하향평가 진행 상태가 none이면 → none
+ * 2. 하향평가 진행 상태가 in_progress이면 → in_progress
+ * 3. 하향평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
+ * 4. 하향평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
+ * 5. 하향평가 진행 상태가 complete이고 승인 상태가 revision_requested이면 → revision_requested
+ * 6. 하향평가 진행 상태가 complete이고 승인 상태가 revision_completed이면 → revision_completed
+ */
+export function 하향평가_통합_상태를_계산한다(
+  downwardStatus: DownwardEvaluationStatus,
+  approvalStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed',
+): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed' {
+  // 1. 하향평가 진행 상태가 none이면 → none
+  if (downwardStatus === 'none') {
+    return 'none';
+  }
+
+  // 2. 하향평가 진행 상태가 in_progress이면 → in_progress
+  if (downwardStatus === 'in_progress') {
+    return 'in_progress';
+  }
+
+  // 3. 하향평가 진행 상태가 complete이면 승인 상태 반환
+  // downwardStatus === 'complete'
+  return approvalStatus;
+}
+
+/**
+ * 2차 평가 전체 상태를 계산한다
+ * - 여러 평가자의 상태를 통합하여 전체 상태를 계산
+ * 
+ * 계산 로직:
+ * 1. 평가자가 없거나 모두 none인 경우 → none
+ * 2. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우 → in_progress
+ * 3. 모두 complete 이상인 경우:
+ *    - revision_requested가 하나라도 있으면 → revision_requested (최우선)
+ *    - 모두 pending인 경우 → pending
+ *    - revision_completed가 하나라도 있으면 → revision_completed
+ *    - 모두 approved인 경우 → approved
+ *    - 혼합 상태 (pending + approved 등) → pending
+ */
+export function 이차평가_전체_상태를_계산한다(
+  evaluatorStatuses: Array<DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed'>,
+): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed' {
+  // 1. 평가자가 없거나 모두 none인 경우
+  if (evaluatorStatuses.length === 0 || evaluatorStatuses.every(s => s === 'none')) {
+    return 'none';
+  }
+
+  // 2. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
+  const hasInProgress = evaluatorStatuses.some(s => s === 'in_progress' || s === 'complete');
+  if (hasInProgress && evaluatorStatuses.some(s => s === 'none' || s === 'in_progress')) {
+    return 'in_progress';
+  }
+
+  // 3. 모두 complete 이상인 경우 (none, in_progress 없음)
+  const allCompleteOrAbove = evaluatorStatuses.every(s => 
+    s === 'complete' || s === 'pending' || s === 'approved' || 
+    s === 'revision_requested' || s === 'revision_completed'
+  );
+
+  if (allCompleteOrAbove) {
+    // revision_requested가 하나라도 있으면 최우선
+    if (evaluatorStatuses.some(s => s === 'revision_requested')) {
+      return 'revision_requested';
+    }
+    // 모두 pending인 경우
+    if (evaluatorStatuses.every(s => s === 'pending')) {
+      return 'pending';
+    }
+    // revision_completed가 하나라도 있으면
+    if (evaluatorStatuses.some(s => s === 'revision_completed')) {
+      return 'revision_completed';
+    }
+    // 모두 approved인 경우
+    if (evaluatorStatuses.every(s => s === 'approved')) {
+      return 'approved';
+    }
+    // 혼합 상태 (pending + approved 등) → pending 반환
+    return 'pending';
+  }
+
+  // 4. 기본값: in_progress
+  return 'in_progress';
+}
+
+/**
  * 하향평가 상태를 조회한다
  * 평가라인에 지정된 1차, 2차 평가자의 하향평가 상태를 조회
  */

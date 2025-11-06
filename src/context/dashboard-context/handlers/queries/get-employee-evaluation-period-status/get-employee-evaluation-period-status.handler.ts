@@ -26,6 +26,7 @@ import {
 import {
   평가항목_상태를_계산한다,
   WBS평가기준_상태를_계산한다,
+  평가기준설정_상태를_계산한다,
 } from './evaluation-criteria.utils';
 import {
   평가라인_지정_여부를_확인한다,
@@ -39,7 +40,7 @@ import {
   자기평가_진행_상태를_조회한다,
   자기평가_상태를_계산한다,
 } from './self-evaluation.utils';
-import { 하향평가_상태를_조회한다 } from './downward-evaluation.utils';
+import { 하향평가_상태를_조회한다, 하향평가_통합_상태를_계산한다, 이차평가_전체_상태를_계산한다 } from './downward-evaluation.utils';
 import {
   동료평가_상태를_조회한다,
   동료평가_상태를_계산한다,
@@ -496,6 +497,30 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           hasSecondaryEvaluator,
         },
 
+        // 평가기준 설정 정보 (평가항목, WBS 평가기준, 평가라인을 통합)
+        criteriaSetup: {
+          status: 평가기준설정_상태를_계산한다(
+            evaluationCriteriaStatus,
+            wbsCriteriaStatus,
+            evaluationLineStatus,
+            stepApproval?.criteriaSettingStatus ?? null,
+          ),
+          evaluationCriteria: {
+            status: evaluationCriteriaStatus,
+            assignedProjectCount: projectCount,
+            assignedWbsCount: wbsCount,
+          },
+          wbsCriteria: {
+            status: wbsCriteriaStatus,
+            wbsWithCriteriaCount,
+          },
+          evaluationLine: {
+            status: evaluationLineStatus,
+            hasPrimaryEvaluator,
+            hasSecondaryEvaluator,
+          },
+        },
+
         // 성과 입력 정보
         performanceInput: {
           status: performanceInputStatus,
@@ -517,7 +542,10 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         downwardEvaluation: {
           primary: {
             evaluator: primary.evaluator,
-            status: primary.status,
+            status: 하향평가_통합_상태를_계산한다(
+              primary.status,
+              stepApproval?.primaryEvaluationStatus ?? 'pending',
+            ),
             assignedWbsCount: primary.assignedWbsCount,
             completedEvaluationCount: primary.completedEvaluationCount,
             isSubmitted: primary.isSubmitted,
@@ -525,7 +553,34 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             grade: primary.grade,
           },
           secondary: {
-            evaluators: secondary.evaluators,
+            evaluators: secondary.evaluators.map((evaluatorInfo) => {
+              // 해당 평가자의 승인 정보 찾기
+              const approvalInfo = secondaryEvaluationStatusesWithEvaluatorInfo.find(
+                (s) => s.evaluatorId === evaluatorInfo.evaluator.id,
+              );
+
+              return {
+                evaluator: evaluatorInfo.evaluator,
+                status: 하향평가_통합_상태를_계산한다(
+                  evaluatorInfo.status,
+                  approvalInfo?.status ?? 'pending',
+                ),
+                assignedWbsCount: evaluatorInfo.assignedWbsCount,
+                completedEvaluationCount: evaluatorInfo.completedEvaluationCount,
+                isSubmitted: evaluatorInfo.isSubmitted,
+              };
+            }),
+            status: 이차평가_전체_상태를_계산한다(
+              secondary.evaluators.map((evaluatorInfo) => {
+                const approvalInfo = secondaryEvaluationStatusesWithEvaluatorInfo.find(
+                  (s) => s.evaluatorId === evaluatorInfo.evaluator.id,
+                );
+                return 하향평가_통합_상태를_계산한다(
+                  evaluatorInfo.status,
+                  approvalInfo?.status ?? 'pending',
+                );
+              }),
+            ),
             totalScore: secondary.totalScore,
             grade: secondary.grade,
           },
