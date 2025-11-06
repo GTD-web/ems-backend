@@ -31,6 +31,8 @@ import { StepApprovalController } from './step-approval/step-approval.controller
 import { RevisionRequestController } from './revision-request/revision-request.controller';
 import { StepApprovalContextModule } from '../../context/step-approval-context/step-approval-context.module';
 import { RevisionRequestContextModule } from '../../context/revision-request-context/revision-request-context.module';
+import { AuditLogContextModule } from '../../context/audit-log-context/audit-log-context.module';
+import { AuditLogController } from './audit-log/audit-log.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -51,6 +53,7 @@ import { RevisionRequestContextModule } from '../../context/revision-request-con
     SeedDataContextModule, // 시드 데이터 컨텍스트 모듈 주입
     StepApprovalContextModule, // 단계 승인 컨텍스트 모듈 주입
     RevisionRequestContextModule, // 재작성 요청 컨텍스트 모듈 주입
+    AuditLogContextModule, // Audit 로그 컨텍스트 모듈 주입
     BusinessModule, // 비즈니스 레이어 모듈 주입
     EvaluationPeriodModule, // 평가 기간 모듈 주입
     EmployeeModule, // 직원 모듈 주입
@@ -74,6 +77,7 @@ import { RevisionRequestContextModule } from '../../context/revision-request-con
     SeedDataController, // 시드 데이터 컨트롤러
     StepApprovalController, // 단계 승인 컨트롤러
     RevisionRequestController, // 재작성 요청 컨트롤러
+    AuditLogController, // Audit 로그 컨트롤러
   ],
   providers: [],
   exports: [],
