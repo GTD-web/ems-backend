@@ -684,6 +684,297 @@ describe('RevisionRequestContextService', () => {
       // Then
       expect(requests.length).toBe(0);
     });
+
+    it('approvalStatus 필드가 제대로 반환되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // When
+      const requests = await service.내_재작성요청목록을_조회한다(evaluatorId, {});
+
+      // Then
+      expect(requests.length).toBe(1);
+      expect(requests[0].approvalStatus).toBeDefined();
+      // criteria 단계의 재작성 요청이므로 criteriaSettingStatus가 반환되어야 함
+      expect(requests[0].approvalStatus).toBe(StepApprovalStatus.REVISION_REQUESTED);
+    });
+
+    it('criteria 단계의 approvalStatus가 올바르게 반환되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 단계 승인 상태를 approved로 변경
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.criteriaSettingStatus = StepApprovalStatus.APPROVED;
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // When
+      const requests = await service.내_재작성요청목록을_조회한다(evaluatorId, {
+        step: 'criteria' as RevisionRequestStepType,
+      });
+
+      // Then
+      expect(requests.length).toBe(1);
+      expect(requests[0].approvalStatus).toBe(StepApprovalStatus.APPROVED);
+    });
+
+    it('self 단계의 approvalStatus가 올바르게 반환되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 단계 승인 상태를 self 단계 revision_requested로 변경
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.selfEvaluationStatus = StepApprovalStatus.REVISION_REQUESTED;
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // self 단계 재작성 요청 생성
+      const selfRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'self' as RevisionRequestStepType,
+        comment: '자기평가를 수정해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedSelfRequest = await revisionRequestRepository.save(selfRequest);
+
+      // 피평가자에게 전송된 재작성 요청 생성
+      const selfRecipient = recipientRepository.create({
+        revisionRequestId: savedSelfRequest.id,
+        recipientId: employeeId,
+        recipientType: 'evaluatee',
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(selfRecipient);
+
+      // When
+      const requests = await service.내_재작성요청목록을_조회한다(employeeId, {
+        step: 'self' as RevisionRequestStepType,
+      });
+
+      // Then
+      expect(requests.length).toBe(1);
+      expect(requests[0].approvalStatus).toBe(StepApprovalStatus.REVISION_REQUESTED);
+    });
+
+    it('primary 단계의 approvalStatus가 올바르게 반환되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 단계 승인 상태를 primary 단계 pending으로 변경
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.primaryEvaluationStatus = StepApprovalStatus.PENDING;
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // primary 단계 재작성 요청 생성
+      const primaryRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'primary' as RevisionRequestStepType,
+        comment: '1차 평가를 수정해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedPrimaryRequest = await revisionRequestRepository.save(primaryRequest);
+
+      // 1차평가자에게 전송된 재작성 요청 생성
+      const primaryRecipient = recipientRepository.create({
+        revisionRequestId: savedPrimaryRequest.id,
+        recipientId: evaluatorId,
+        recipientType: 'primary_evaluator',
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(primaryRecipient);
+
+      // When
+      const requests = await service.내_재작성요청목록을_조회한다(evaluatorId, {
+        step: 'primary' as RevisionRequestStepType,
+      });
+
+      // Then
+      expect(requests.length).toBe(1);
+      expect(requests[0].approvalStatus).toBe(StepApprovalStatus.PENDING);
+    });
+
+    it('secondary 단계의 approvalStatus가 재작성 요청 완료 여부에 따라 올바르게 반환되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 단계 승인 상태를 secondary 단계 revision_requested로 변경
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.secondaryEvaluationStatus = StepApprovalStatus.REVISION_REQUESTED;
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // 2차 평가자 생성
+      const secondaryEvaluator = employeeRepository.create({
+        name: '박이차평가자',
+        employeeNumber: `EMP003-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        email: `secondary-${Date.now()}@test.com`,
+        externalId: `EXT003-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        departmentId: departmentId,
+        status: '재직중',
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryEvaluator = await employeeRepository.save(secondaryEvaluator);
+      const secondaryEvaluatorId = savedSecondaryEvaluator.id;
+
+      // secondary 단계 재작성 요청 생성
+      const secondaryRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'secondary' as RevisionRequestStepType,
+        comment: '2차 평가를 수정해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedSecondaryRequest = await revisionRequestRepository.save(secondaryRequest);
+
+      // 2차평가자에게 전송된 재작성 요청 생성
+      const secondaryRecipient = recipientRepository.create({
+        revisionRequestId: savedSecondaryRequest.id,
+        recipientId: secondaryEvaluatorId,
+        recipientType: 'secondary_evaluator',
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(secondaryRecipient);
+
+      // When - 재작성 요청이 있고 완료되지 않은 경우
+      const requestsBefore = await service.내_재작성요청목록을_조회한다(
+        secondaryEvaluatorId,
+        {
+          step: 'secondary' as RevisionRequestStepType,
+        },
+      );
+
+      // Then - revision_requested 상태여야 함
+      expect(requestsBefore.length).toBe(1);
+      expect(requestsBefore[0].approvalStatus).toBe(StepApprovalStatus.REVISION_REQUESTED);
+
+      // When - 재작성 완료 응답 제출
+      await service.재작성완료_응답을_제출한다(
+        savedSecondaryRequest.id,
+        secondaryEvaluatorId,
+        '2차 평가 수정 완료했습니다.',
+      );
+
+      // When - 재작성 요청이 완료된 경우
+      const requestsAfter = await service.내_재작성요청목록을_조회한다(
+        secondaryEvaluatorId,
+        {
+          step: 'secondary' as RevisionRequestStepType,
+        },
+      );
+
+      // Then - revision_completed 상태여야 함
+      expect(requestsAfter.length).toBe(1);
+      expect(requestsAfter[0].approvalStatus).toBe(StepApprovalStatus.REVISION_COMPLETED);
+    });
+
+    it('단계 승인 정보가 없을 때 approvalStatus는 pending이어야 한다', async () => {
+      // Given
+      // 단계 승인 정보 없이 재작성 요청만 생성
+      const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const department = departmentRepository.create({
+        name: '개발팀',
+        code: `DEV001-${uniqueSuffix}`,
+        externalId: `DEPT001-${uniqueSuffix}`,
+        externalCreatedAt: new Date(),
+        externalUpdatedAt: new Date(),
+        createdBy: systemAdminId,
+      });
+      const savedDepartment = await departmentRepository.save(department);
+
+      const evaluationPeriod = evaluationPeriodRepository.create({
+        name: `2024년 상반기 평가-${uniqueSuffix}`,
+        description: '테스트용 평가기간',
+        startDate: new Date('2024-01-01'),
+        endDate: new Date('2024-06-30'),
+        status: EvaluationPeriodStatus.IN_PROGRESS,
+        currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
+        criteriaSettingEnabled: true,
+        selfEvaluationSettingEnabled: true,
+        finalEvaluationSettingEnabled: true,
+        maxSelfEvaluationRate: 120,
+        createdBy: systemAdminId,
+      });
+      const savedPeriod = await evaluationPeriodRepository.save(evaluationPeriod);
+
+      const employee = employeeRepository.create({
+        name: '김피평가',
+        employeeNumber: `EMP001-${uniqueSuffix}`,
+        email: `employee-${uniqueSuffix}@test.com`,
+        externalId: `EXT001-${uniqueSuffix}`,
+        departmentId: savedDepartment.id,
+        status: '재직중',
+        createdBy: systemAdminId,
+      });
+      const savedEmployee = await employeeRepository.save(employee);
+
+      const evaluator = employeeRepository.create({
+        name: '이평가자',
+        employeeNumber: `EMP002-${uniqueSuffix}`,
+        email: `evaluator-${uniqueSuffix}@test.com`,
+        externalId: `EXT002-${uniqueSuffix}`,
+        departmentId: savedDepartment.id,
+        status: '재직중',
+        createdBy: systemAdminId,
+      });
+      const savedEvaluator = await employeeRepository.save(evaluator);
+
+      // 단계 승인 정보 없이 재작성 요청만 생성
+      const request = revisionRequestRepository.create({
+        evaluationPeriodId: savedPeriod.id,
+        employeeId: savedEmployee.id,
+        step: 'criteria' as RevisionRequestStepType,
+        comment: '평가기준을 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedRequest = await revisionRequestRepository.save(request);
+
+      const recipient = recipientRepository.create({
+        revisionRequestId: savedRequest.id,
+        recipientId: savedEvaluator.id,
+        recipientType: 'primary_evaluator',
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(recipient);
+
+      // When
+      const requests = await service.내_재작성요청목록을_조회한다(savedEvaluator.id, {});
+
+      // Then
+      expect(requests.length).toBe(1);
+      expect(requests[0].approvalStatus).toBe(StepApprovalStatus.PENDING);
+    });
   });
 
   describe('읽지않은_재작성요청수를_조회한다', () => {
