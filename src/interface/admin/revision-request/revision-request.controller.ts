@@ -19,6 +19,7 @@ import { GetRevisionRequestsQueryDto } from './dto/get-revision-requests-query.d
 import { CompleteRevisionRequestDto } from './dto/complete-revision-request.dto';
 import { CompleteRevisionRequestByEvaluatorDto } from './dto/complete-revision-request-by-evaluator.dto';
 import { CurrentUser } from '@interface/decorators/current-user.decorator';
+import { StepApprovalStatusEnum } from '@interface/admin/step-approval/dto/update-step-approval.dto';
 
 /**
  * 재작성 요청 컨트롤러
@@ -51,9 +52,7 @@ export class RevisionRequestController {
 
     return requests.map((req) => ({
       requestId: req.request.id,
-      evaluationPeriodId: req.request.evaluationPeriodId,
       evaluationPeriod: req.evaluationPeriod,
-      employeeId: req.request.employeeId,
       employee: req.employee,
       step: req.request.step,
       comment: req.request.comment,
@@ -66,8 +65,7 @@ export class RevisionRequestController {
       isCompleted: req.recipientInfo.isCompleted,
       completedAt: req.recipientInfo.completedAt,
       responseComment: req.recipientInfo.responseComment,
-      createdAt: req.recipientInfo.createdAt,
-      updatedAt: req.recipientInfo.updatedAt,
+      approvalStatus: req.approvalStatus as unknown as StepApprovalStatusEnum,
     }));
   }
 
@@ -92,9 +90,7 @@ export class RevisionRequestController {
 
     return requests.map((req) => ({
       requestId: req.request.id,
-      evaluationPeriodId: req.request.evaluationPeriodId,
       evaluationPeriod: req.evaluationPeriod,
-      employeeId: req.request.employeeId,
       employee: req.employee,
       step: req.request.step,
       comment: req.request.comment,
@@ -107,8 +103,7 @@ export class RevisionRequestController {
       isCompleted: req.recipientInfo.isCompleted,
       completedAt: req.recipientInfo.completedAt,
       responseComment: req.recipientInfo.responseComment,
-      createdAt: req.recipientInfo.createdAt,
-      updatedAt: req.recipientInfo.updatedAt,
+      approvalStatus: req.approvalStatus as unknown as StepApprovalStatusEnum,
     }));
   }
 

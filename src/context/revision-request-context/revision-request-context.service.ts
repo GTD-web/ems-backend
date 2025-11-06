@@ -110,6 +110,14 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           continue;
         }
 
+        // 단계 승인 상태 조회
+        const approvalStatus = await this.단계_승인_상태를_조회한다(
+          request.evaluationPeriodId,
+          request.employeeId,
+          request.step,
+          recipient.recipientId,
+        );
+
         result.push({
           request: request.DTO로_변환한다(),
           recipientInfo: recipient.DTO로_변환한다(),
@@ -125,6 +133,7 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
             id: evaluationPeriod.id,
             name: evaluationPeriod.name,
           },
+          approvalStatus,
         });
       }
     }
@@ -187,6 +196,14 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
         continue;
       }
 
+      // 단계 승인 상태 조회
+      const approvalStatus = await this.단계_승인_상태를_조회한다(
+        request.evaluationPeriodId,
+        request.employeeId,
+        request.step,
+        recipient.recipientId,
+      );
+
       result.push({
         request: request.DTO로_변환한다(),
         recipientInfo: recipient.DTO로_변환한다(),
@@ -202,6 +219,7 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           id: evaluationPeriod.id,
           name: evaluationPeriod.name,
         },
+        approvalStatus,
       });
     }
 
@@ -506,6 +524,92 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     }
 
     return true;
+  }
+
+  /**
+   * 단계 승인 상태를 조회한다
+   */
+  private async 단계_승인_상태를_조회한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    step: RevisionRequestStepType,
+    recipientId: string,
+  ): Promise<StepApprovalStatus> {
+    // 맵핑 조회
+    const mapping = await this.mappingRepository.findOne({
+      where: {
+        evaluationPeriodId,
+        employeeId,
+        deletedAt: null as any,
+      },
+    });
+
+    if (!mapping) {
+      // 맵핑이 없으면 기본 상태 반환
+      return StepApprovalStatus.PENDING;
+    }
+
+    // 단계 승인 정보 조회
+    const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+      mapping.id,
+    );
+
+    if (!stepApproval) {
+      // 단계 승인 정보가 없으면 기본 상태 반환
+      return StepApprovalStatus.PENDING;
+    }
+
+    // 2차 하향평가의 경우, 평가자별 상태 조회
+    if (step === 'secondary') {
+      // 재작성 요청이 있는지 확인
+      const revisionRequests = await this.revisionRequestService.필터로_조회한다(
+        {
+          evaluationPeriodId,
+          employeeId,
+          step: 'secondary',
+        },
+      );
+
+      // 해당 평가자에게 전송된 재작성 요청 찾기
+      for (const revisionRequest of revisionRequests) {
+        if (!revisionRequest.recipients || revisionRequest.recipients.length === 0) {
+          continue;
+        }
+
+        const recipient = revisionRequest.recipients.find(
+          (r) =>
+            !r.deletedAt &&
+            r.recipientId === recipientId &&
+            r.recipientType === 'secondary_evaluator',
+        );
+
+        if (recipient) {
+          // 재작성 요청이 있으면 완료 여부에 따라 상태 결정
+          if (recipient.isCompleted) {
+            return StepApprovalStatus.REVISION_COMPLETED;
+          } else {
+            return StepApprovalStatus.REVISION_REQUESTED;
+          }
+        }
+      }
+
+      // 재작성 요청이 없으면 단계 승인 엔티티의 상태 확인
+      // 2차 하향평가는 단계 승인 엔티티에 하나의 상태만 있으므로
+      // 재작성 요청이 없으면 단계 승인 엔티티의 상태를 반환
+      return stepApproval.secondaryEvaluationStatus;
+    }
+
+    // 평가기준, 자기평가, 1차 하향평가의 경우 단계 승인 엔티티에서 직접 조회
+    switch (step) {
+      case 'criteria':
+        return stepApproval.criteriaSettingStatus;
+      case 'self':
+        return stepApproval.selfEvaluationStatus;
+      case 'primary':
+        return stepApproval.primaryEvaluationStatus;
+      default:
+        return StepApprovalStatus.PENDING;
+    }
   }
 
   /**

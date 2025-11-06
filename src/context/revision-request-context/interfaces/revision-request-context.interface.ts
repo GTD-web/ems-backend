@@ -3,6 +3,7 @@ import type {
   EvaluationRevisionRequestRecipientDto,
   RevisionRequestStepType,
 } from '@domain/sub/evaluation-revision-request';
+import type { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 
 /**
  * 재작성 요청 응답 DTO (수신자 정보 포함)
@@ -26,6 +27,8 @@ export interface RevisionRequestWithDetailsDto {
     id: string;
     name: string;
   };
+  /** 단계 승인 상태 */
+  approvalStatus: StepApprovalStatus;
 }
 
 /**
