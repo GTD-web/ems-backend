@@ -4,6 +4,7 @@ import { PerformanceEvaluationContextModule } from '@context/performance-evaluat
 import { EvaluationCriteriaManagementContextModule } from '@context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { EvaluationPeriodManagementContextModule } from '@context/evaluation-period-management-context/evaluation-period-management-context.module';
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
+import { StepApprovalContextModule } from '@context/step-approval-context/step-approval-context.module';
 
 /**
  * 하향평가 비즈니스 모듈
@@ -16,6 +17,7 @@ import { RevisionRequestContextModule } from '@context/revision-request-context/
     EvaluationCriteriaManagementContextModule,
     EvaluationPeriodManagementContextModule,
     RevisionRequestContextModule,
+    StepApprovalContextModule,
   ],
   providers: [DownwardEvaluationBusinessService],
   exports: [DownwardEvaluationBusinessService],

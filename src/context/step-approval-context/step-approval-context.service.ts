@@ -226,7 +226,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
   /**
    * 1차평가자를 조회한다
    */
-  private async 일차평가자를_조회한다(
+  async 일차평가자를_조회한다(
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<string | null> {
