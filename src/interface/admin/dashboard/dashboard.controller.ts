@@ -509,6 +509,7 @@ export class DashboardController {
         totalWbsCount: statusData.downwardEvaluation.primary.assignedWbsCount,
         completedCount:
           statusData.downwardEvaluation.primary.completedEvaluationCount,
+        isSubmitted: statusData.downwardEvaluation.primary.isSubmitted,
         totalScore: statusData.downwardEvaluation.primary.totalScore,
         grade: statusData.downwardEvaluation.primary.grade,
       },
@@ -522,6 +523,9 @@ export class DashboardController {
         completedCount:
           statusData.downwardEvaluation.secondary.evaluators[0]
             ?.completedEvaluationCount || 0,
+        isSubmitted:
+          statusData.downwardEvaluation.secondary.evaluators[0]?.isSubmitted ||
+          false,
         totalScore: statusData.downwardEvaluation.secondary.totalScore,
         grade: statusData.downwardEvaluation.secondary.grade,
       },

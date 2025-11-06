@@ -350,6 +350,12 @@ export class PrimaryDownwardEvaluationDto {
   })
   completedEvaluationCount: number;
 
+  @ApiProperty({
+    description: '모든 하향평가가 제출되었는지 여부',
+    example: true,
+  })
+  isSubmitted: boolean;
+
   @ApiPropertyOptional({
     description: '가중치 기반 1차 하향평가 총점 (0-100)',
     example: 85.5,
@@ -394,6 +400,12 @@ export class SecondaryEvaluatorDto {
     example: 5,
   })
   completedEvaluationCount: number;
+
+  @ApiProperty({
+    description: '모든 하향평가가 제출되었는지 여부',
+    example: true,
+  })
+  isSubmitted: boolean;
 }
 
 /**

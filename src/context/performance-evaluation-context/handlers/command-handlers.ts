@@ -102,12 +102,12 @@ export const CommandHandlers = [
   UpdatePeerEvaluationQuestionOrderHandler,
   UpsertPeerEvaluationAnswersHandler,
 
-      // 하향평가 커맨드 핸들러
-      CreateDownwardEvaluationHandler,
-      UpdateDownwardEvaluationHandler,
-      UpsertDownwardEvaluationHandler,
-      SubmitDownwardEvaluationHandler,
-      ResetDownwardEvaluationHandler,
+  // 하향평가 커맨드 핸들러
+  CreateDownwardEvaluationHandler,
+  UpdateDownwardEvaluationHandler,
+  UpsertDownwardEvaluationHandler,
+  SubmitDownwardEvaluationHandler,
+  ResetDownwardEvaluationHandler,
       BulkSubmitDownwardEvaluationsHandler,
       BulkResetDownwardEvaluationsHandler,
 

@@ -198,6 +198,12 @@ export class DownwardEvaluationStatusDto {
   })
   completedCount: number;
 
+  @ApiProperty({
+    description: '모든 하향평가가 제출되었는지 여부',
+    example: true,
+  })
+  isSubmitted: boolean;
+
   @ApiPropertyOptional({
     description: '가중치 기반 하향평가 총점 (0-100)',
     example: 85.5,
