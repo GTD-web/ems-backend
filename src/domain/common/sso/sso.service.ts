@@ -269,6 +269,22 @@ export class SSOService implements OnModuleInit {
         includeEmptyDepartments: params?.includeEmptyDepartments,
       });
 
+      // 디버깅: 서버 원본 응답 구조 확인
+      if (result.departments && result.departments.length > 0) {
+        this.logger.debug(
+          `서버 응답: 총 부서 수=${result.totalDepartments}, 루트 부서 수=${result.departments.length}`,
+        );
+        const firstDept = result.departments[0];
+        this.logger.debug(
+          `첫 번째 부서: children 배열 존재=${!!firstDept.children}, children 길이=${firstDept.children?.length || 0}`,
+        );
+        if (firstDept.children && firstDept.children.length > 0) {
+          this.logger.debug(
+            `첫 번째 부서의 자식 부서 예시: ${JSON.stringify(firstDept.children[0])}`,
+          );
+        }
+      }
+
       return {
         departments: result.departments.map((dept) =>
           this.mapToDepartmentNode(dept),
@@ -533,6 +549,9 @@ export class SSOService implements OnModuleInit {
   }
 
   private mapToDepartmentNode(data: any): DepartmentNode {
+    // SSO SDK는 children 대신 childDepartments를 사용
+    const childDepartments = data.childDepartments || data.children || [];
+    
     return {
       id: data.id,
       departmentCode: data.departmentCode,
@@ -543,8 +562,8 @@ export class SSOService implements OnModuleInit {
       employees: Array.isArray(data.employees)
         ? data.employees.map((emp) => this.mapToEmployeeInfo(emp))
         : [],
-      children: Array.isArray(data.children)
-        ? data.children.map((child) => this.mapToDepartmentNode(child))
+      children: Array.isArray(childDepartments)
+        ? childDepartments.map((child) => this.mapToDepartmentNode(child))
         : [],
     };
   }
