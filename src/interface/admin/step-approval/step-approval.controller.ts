@@ -1,6 +1,7 @@
-import { Controller, Body, Param, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Body, Param, ParseUUIDPipe, BadRequestException } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StepApprovalContextService } from '@context/step-approval-context';
+import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
 import { UpdateStepApprovalDto } from './dto/update-step-approval.dto';
 import { UpdateSecondaryStepApprovalDto } from './dto/update-secondary-step-approval.dto';
 import { StepApprovalEnumsResponseDto } from './dto/step-approval-enums.dto';
@@ -25,6 +26,7 @@ import { CurrentUser } from '@interface/decorators/current-user.decorator';
 export class StepApprovalController {
   constructor(
     private readonly stepApprovalContextService: StepApprovalContextService,
+    private readonly wbsSelfEvaluationBusinessService: WbsSelfEvaluationBusinessService,
   ) {}
 
   /**
@@ -80,6 +82,7 @@ export class StepApprovalController {
 
   /**
    * 자기평가 단계 승인 상태를 변경한다
+   * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
    */
   @UpdateSelfStepApproval()
   async updateSelfStepApproval(
@@ -88,13 +91,29 @@ export class StepApprovalController {
     @Body() dto: UpdateStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
   ): Promise<void> {
-    await this.stepApprovalContextService.자기평가_확인상태를_변경한다({
-      evaluationPeriodId,
-      employeeId,
-      status: dto.status as any,
-      revisionComment: dto.revisionComment,
-      updatedBy,
-    });
+    // 재작성 요청 생성 시 제출 상태 초기화를 함께 처리
+    if (dto.status === StepApprovalStatusEnum.REVISION_REQUESTED) {
+      if (!dto.revisionComment || dto.revisionComment.trim() === '') {
+        throw new BadRequestException('재작성 요청 코멘트는 필수입니다.');
+      }
+
+      // 비즈니스 서비스를 통해 제출 상태 초기화 및 재작성 요청 생성
+      await this.wbsSelfEvaluationBusinessService.자기평가_재작성요청_생성_및_제출상태_초기화(
+        evaluationPeriodId,
+        employeeId,
+        dto.revisionComment,
+        updatedBy,
+      );
+    } else {
+      // 재작성 요청이 아닌 경우 기존 로직대로 처리
+      await this.stepApprovalContextService.자기평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        status: dto.status as any,
+        revisionComment: dto.revisionComment,
+        updatedBy,
+      });
+    }
   }
 
   /**

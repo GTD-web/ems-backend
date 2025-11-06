@@ -1,8 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
+import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
 import type { SubmitAllWbsSelfEvaluationsResponse } from '@context/performance-evaluation-context/handlers/self-evaluation';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 
 /**
  * WBS 자기평가 비즈니스 서비스
@@ -19,6 +21,7 @@ export class WbsSelfEvaluationBusinessService {
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
+    private readonly stepApprovalContextService: StepApprovalContextService,
   ) {}
 
   /**
@@ -60,5 +63,45 @@ export class WbsSelfEvaluationBusinessService {
     );
 
     return result;
+  }
+
+  /**
+   * 자기평가 재작성 요청 생성 및 제출 상태 초기화
+   * 자기평가 단계에서 재작성 요청이 생성될 때, 해당 평가기간의 자기평가 제출 상태를 초기화합니다.
+   *
+   * @param evaluationPeriodId 평가기간 ID
+   * @param employeeId 피평가자 ID
+   * @param revisionComment 재작성 요청 코멘트
+   * @param requestedBy 요청자 ID
+   */
+  async 자기평가_재작성요청_생성_및_제출상태_초기화(
+    evaluationPeriodId: string,
+    employeeId: string,
+    revisionComment: string,
+    requestedBy: string,
+  ): Promise<void> {
+    this.logger.log(
+      `자기평가 재작성 요청 생성 및 제출 상태 초기화 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+    );
+
+    // 1. 해당 평가기간의 자기평가 제출 상태 초기화 (submittedToManager, submittedToManagerAt)
+    await this.performanceEvaluationService.직원의_전체_WBS자기평가를_초기화한다(
+      employeeId,
+      evaluationPeriodId,
+      requestedBy,
+    );
+
+    // 2. 재작성 요청 생성
+    await this.stepApprovalContextService.자기평가_확인상태를_변경한다({
+      evaluationPeriodId,
+      employeeId,
+      status: StepApprovalStatus.REVISION_REQUESTED,
+      revisionComment,
+      updatedBy: requestedBy,
+    });
+
+    this.logger.log(
+      `자기평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+    );
   }
 }

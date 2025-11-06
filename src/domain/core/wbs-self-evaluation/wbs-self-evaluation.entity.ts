@@ -179,6 +179,15 @@ export class WbsSelfEvaluation
   }
 
   /**
+   * 1차 평가자 제출을 완전히 초기화한다 (제출 상태와 제출 일시 모두 초기화)
+   * 재작성 요청 생성 시 사용됩니다.
+   */
+  일차평가자_제출을_완전히_초기화한다(): void {
+    this.submittedToManager = false;
+    this.submittedToManagerAt = null as any;
+  }
+
+  /**
    * 피평가자가 1차 평가자에게 제출했는지 확인한다
    */
   피평가자가_1차평가자에게_제출했는가(): boolean {

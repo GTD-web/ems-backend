@@ -62,8 +62,9 @@ export class StepApprovalContextService implements IStepApprovalContext {
     }
 
     // 2. 단계 승인 정보 조회 또는 생성
-    let stepApproval =
-      await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+    let stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+      mapping.id,
+    );
 
     if (!stepApproval) {
       this.logger.log(
@@ -246,7 +247,11 @@ export class StepApprovalContextService implements IStepApprovalContext {
     // PRIMARY 타입의 평가라인을 통해 평가자 조회
     const lineMapping = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+      .leftJoin(
+        'evaluation_lines',
+        'line',
+        'line.id = mapping.evaluationLineId',
+      )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
       })
@@ -285,7 +290,11 @@ export class StepApprovalContextService implements IStepApprovalContext {
     // SECONDARY 타입의 평가라인을 통해 평가자들 조회
     const lineMappings = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+      .leftJoin(
+        'evaluation_lines',
+        'line',
+        'line.id = mapping.evaluationLineId',
+      )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
       })
@@ -319,10 +328,14 @@ export class StepApprovalContextService implements IStepApprovalContext {
 
   /**
    * 자기평가 단계 승인 상태를 변경한다
+   * 재작성 요청 생성 시 비즈니스 서비스를 통해 제출 상태 초기화를 함께 처리합니다.
    */
   async 자기평가_확인상태를_변경한다(
     request: UpdateStepApprovalByStepRequest,
   ): Promise<void> {
+    // 재작성 요청 생성 시 비즈니스 서비스를 통해 제출 상태 초기화를 함께 처리
+    // 비즈니스 서비스는 step-approval-context를 의존하므로 순환 의존성을 피하기 위해
+    // 여기서는 직접 처리하지 않고, 컨트롤러에서 비즈니스 서비스를 호출하도록 합니다.
     await this.단계별_확인상태를_변경한다({
       evaluationPeriodId: request.evaluationPeriodId,
       employeeId: request.employeeId,
@@ -388,8 +401,9 @@ export class StepApprovalContextService implements IStepApprovalContext {
     }
 
     // 3. 단계 승인 정보 조회 또는 생성
-    let stepApproval =
-      await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+    let stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+      mapping.id,
+    );
 
     if (!stepApproval) {
       this.logger.log(
@@ -442,7 +456,11 @@ export class StepApprovalContextService implements IStepApprovalContext {
   ): Promise<boolean> {
     const lineMapping = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+      .leftJoin(
+        'evaluation_lines',
+        'line',
+        'line.id = mapping.evaluationLineId',
+      )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
       })
@@ -496,4 +514,3 @@ export class StepApprovalContextService implements IStepApprovalContext {
     );
   }
 }
-

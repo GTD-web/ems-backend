@@ -106,10 +106,10 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler
             continue;
           }
 
-          // 1차 평가자 → 관리자 제출 상태 초기화
+          // 1차 평가자 → 관리자 제출 상태 초기화 (재작성 요청 생성 시 submittedToManagerAt도 초기화)
           await this.wbsSelfEvaluationService.수정한다(
             evaluation.id,
-            { submittedToManager: false },
+            { submittedToManager: false, resetSubmittedToManagerAt: true },
             resetBy,
           );
 

@@ -121,7 +121,12 @@ export class WbsSelfEvaluationService {
         if (updateData.submittedToManager) {
           wbsSelfEvaluation.일차평가자가_관리자에게_제출한다();
         } else {
-          wbsSelfEvaluation.일차평가자_제출을_취소한다();
+          // 재작성 요청 생성 시 submittedToManagerAt도 초기화
+          if (updateData.resetSubmittedToManagerAt) {
+            wbsSelfEvaluation.일차평가자_제출을_완전히_초기화한다();
+          } else {
+            wbsSelfEvaluation.일차평가자_제출을_취소한다();
+          }
         }
       }
 
