@@ -27,3 +27,8 @@ export {
   BulkSubmitDownwardEvaluationsCommand,
   BulkSubmitDownwardEvaluationsHandler,
 } from './bulk-submit-downward-evaluations.handler';
+
+export {
+  BulkResetDownwardEvaluationsCommand,
+  BulkResetDownwardEvaluationsHandler,
+} from './bulk-reset-downward-evaluations.handler';

@@ -763,6 +763,149 @@ export function ResetSecondaryDownwardEvaluation() {
 }
 
 /**
+ * 피평가자의 모든 하향평가 일괄 초기화 API 데코레이터
+ */
+export function BulkResetDownwardEvaluations() {
+  return applyDecorators(
+    Post('evaluatee/:evaluateeId/period/:periodId/bulk-reset'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '피평가자의 모든 하향평가 일괄 초기화',
+      description: `**중요**: 평가자가 담당하는 특정 피평가자의 모든 하향평가를 한 번에 미제출 상태로 되돌립니다. 평가 유형(1차/2차)별로 일괄 초기화할 수 있습니다.
+
+**특징:**
+- **평가자별 초기화**: 요청한 평가자(evaluatorId)가 담당하는 평가만 초기화됩니다.
+- **2차 평가 지원**: 2차 평가의 경우, 1명의 피평가자에게 여러 2차 평가자가 존재할 수 있으며, 각 평가자는 자신이 담당하는 평가만 일괄 초기화할 수 있습니다.
+- **1차 평가**: 1차 평가는 일반적으로 1명의 평가자만 존재하므로, 해당 평가자의 모든 평가를 일괄 초기화합니다.
+
+**동작:**
+- 요청한 평가자(evaluatorId)가 담당하는 피평가자의 모든 하향평가 조회
+- 평가 유형(primary/secondary)으로 필터링
+- 각 평가에 대해 초기화 처리 (이미 미제출 상태인 평가는 건너뜀)
+- 초기화 실패한 평가는 결과에 포함하여 반환
+- 모든 평가 초기화를 하나의 트랜잭션으로 처리
+
+**사용 예시:**
+- 1차 평가자 A가 피평가자 X의 모든 1차 하향평가를 일괄 초기화
+- 2차 평가자 B가 피평가자 X의 모든 2차 하향평가를 일괄 초기화 (평가자 B가 담당하는 평가만)
+- 2차 평가자 C가 피평가자 X의 모든 2차 하향평가를 일괄 초기화 (평가자 C가 담당하는 평가만, B와 독립적)
+
+**테스트 케이스:**
+- 평가자가 담당하는 피평가자의 모든 1차 하향평가 일괄 초기화
+- 평가자가 담당하는 피평가자의 모든 2차 하향평가 일괄 초기화 (2차 평가자별로 독립적으로 초기화 가능)
+- 여러 2차 평가자가 동일 피평가자의 평가를 각각 독립적으로 일괄 초기화 가능
+- 이미 미제출 상태인 평가는 건너뛰고 제출된 평가만 초기화
+- 초기화 결과에 초기화된 평가 수, 건너뛴 평가 수, 실패한 평가 수 포함
+- 초기화된 평가 ID 목록 반환
+- 실패한 평가의 오류 메시지 반환
+- 평가자가 담당하지 않는 피평가자 평가는 초기화 불가
+- 존재하지 않는 평가기간 조회 시 에러
+- 잘못된 형식의 evaluateeId로 요청 시 400 에러
+- 잘못된 형식의 periodId로 요청 시 400 에러
+- 잘못된 형식의 evaluatorId로 요청 시 400 에러
+- 잘못된 evaluationType으로 요청 시 400 에러`,
+    }),
+    ApiParam({
+      name: 'evaluateeId',
+      description: '피평가자 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440001',
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID',
+      type: 'string',
+      format: 'uuid',
+      example: '550e8400-e29b-41d4-a716-446655440002',
+    }),
+    ApiQuery({
+      name: 'evaluationType',
+      description: '평가 유형 (primary 또는 secondary)',
+      enum: DownwardEvaluationType,
+      required: true,
+      example: DownwardEvaluationType.PRIMARY,
+    }),
+    ApiBody({
+      type: SubmitDownwardEvaluationDto,
+      description: '하향평가 일괄 초기화 정보 (evaluatorId 포함)',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '하향평가 일괄 초기화 결과',
+      schema: {
+        type: 'object',
+        properties: {
+          resetCount: {
+            type: 'number',
+            description: '초기화된 평가 수',
+            example: 5,
+          },
+          skippedCount: {
+            type: 'number',
+            description: '건너뛴 평가 수 (이미 미제출 상태인 평가)',
+            example: 2,
+          },
+          failedCount: {
+            type: 'number',
+            description: '실패한 평가 수',
+            example: 1,
+          },
+          resetIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '초기화된 평가 ID 목록',
+            example: [
+              '550e8400-e29b-41d4-a716-446655440010',
+              '550e8400-e29b-41d4-a716-446655440011',
+            ],
+          },
+          skippedIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '건너뛴 평가 ID 목록',
+            example: ['550e8400-e29b-41d4-a716-446655440012'],
+          },
+          failedItems: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                evaluationId: { type: 'string' },
+                error: { type: 'string' },
+              },
+            },
+            description: '실패한 평가 목록',
+            example: [
+              {
+                evaluationId: '550e8400-e29b-41d4-a716-446655440013',
+                error: '초기화 중 오류가 발생했습니다.',
+              },
+            ],
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.UNAUTHORIZED,
+      description: '인증이 필요합니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.FORBIDDEN,
+      description: '권한이 없습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '하향평가를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
  * 평가자의 하향평가 목록 조회 API 데코레이터
  */
 export function GetEvaluatorDownwardEvaluations() {

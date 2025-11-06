@@ -520,6 +520,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             status: primary.status,
             assignedWbsCount: primary.assignedWbsCount,
             completedEvaluationCount: primary.completedEvaluationCount,
+            isSubmitted: primary.isSubmitted,
             totalScore: primary.totalScore,
             grade: primary.grade,
           },

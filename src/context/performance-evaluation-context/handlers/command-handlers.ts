@@ -41,6 +41,7 @@ import {
   SubmitDownwardEvaluationHandler,
   ResetDownwardEvaluationHandler,
   BulkSubmitDownwardEvaluationsHandler,
+  BulkResetDownwardEvaluationsHandler,
 } from './downward-evaluation';
 
 // 최종평가
@@ -101,13 +102,14 @@ export const CommandHandlers = [
   UpdatePeerEvaluationQuestionOrderHandler,
   UpsertPeerEvaluationAnswersHandler,
 
-  // 하향평가 커맨드 핸들러
-  CreateDownwardEvaluationHandler,
-  UpdateDownwardEvaluationHandler,
-  UpsertDownwardEvaluationHandler,
-  SubmitDownwardEvaluationHandler,
-  ResetDownwardEvaluationHandler,
-  BulkSubmitDownwardEvaluationsHandler,
+      // 하향평가 커맨드 핸들러
+      CreateDownwardEvaluationHandler,
+      UpdateDownwardEvaluationHandler,
+      UpsertDownwardEvaluationHandler,
+      SubmitDownwardEvaluationHandler,
+      ResetDownwardEvaluationHandler,
+      BulkSubmitDownwardEvaluationsHandler,
+      BulkResetDownwardEvaluationsHandler,
 
   // 최종평가 커맨드 핸들러
   CreateFinalEvaluationHandler,

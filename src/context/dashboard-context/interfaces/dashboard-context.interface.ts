@@ -205,6 +205,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
       assignedWbsCount: number;
       /** 완료된 하향평가 수 */
       completedEvaluationCount: number;
+      /** 모든 하향평가가 제출되었는지 여부 */
+      isSubmitted: boolean;
       /** 가중치 기반 1차 하향평가 총점 (0-100) */
       totalScore: number | null;
       /** 평가기간 등급 기준에 따른 1차 하향평가 등급 (예: S+, A-, B 등) */
@@ -229,6 +231,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
         assignedWbsCount: number;
         /** 완료된 하향평가 수 */
         completedEvaluationCount: number;
+        /** 모든 하향평가가 제출되었는지 여부 */
+        isSubmitted: boolean;
       }>;
       /** 가중치 기반 2차 하향평가 총점 (0-100) */
       totalScore: number | null;

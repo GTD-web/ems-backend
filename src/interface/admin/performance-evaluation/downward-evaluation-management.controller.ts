@@ -19,6 +19,7 @@ import {
   UpsertPrimaryDownwardEvaluation,
   UpsertSecondaryDownwardEvaluation,
   BulkSubmitDownwardEvaluations,
+  BulkResetDownwardEvaluations,
 } from './decorators/downward-evaluation-api.decorators';
 import {
   CreatePrimaryDownwardEvaluationBodyDto,
@@ -243,6 +244,36 @@ export class DownwardEvaluationManagementController {
       periodId,
       queryDto.evaluationType,
       submittedBy,
+    );
+  }
+
+  /**
+   * 피평가자의 모든 하향평가 일괄 초기화
+   */
+  @BulkResetDownwardEvaluations()
+  async bulkResetDownwardEvaluations(
+    @ParseUUID('evaluateeId') evaluateeId: string,
+    @ParseUUID('periodId') periodId: string,
+    @Query() queryDto: BulkSubmitDownwardEvaluationQueryDto,
+    @Body() submitDto: SubmitDownwardEvaluationDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<{
+    resetCount: number;
+    skippedCount: number;
+    failedCount: number;
+    resetIds: string[];
+    skippedIds: string[];
+    failedItems: Array<{ evaluationId: string; error: string }>;
+  }> {
+    const evaluatorId = submitDto.evaluatorId;
+    const resetBy = user.id;
+
+    return await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_초기화한다(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      queryDto.evaluationType,
+      resetBy,
     );
   }
 

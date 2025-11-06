@@ -39,6 +39,7 @@ export async function 하향평가_상태를_조회한다(
     status: DownwardEvaluationStatus;
     assignedWbsCount: number;
     completedEvaluationCount: number;
+    isSubmitted: boolean;
     totalScore: number | null;
     grade: string | null;
   };
@@ -55,6 +56,7 @@ export async function 하향평가_상태를_조회한다(
       status: DownwardEvaluationStatus;
       assignedWbsCount: number;
       completedEvaluationCount: number;
+      isSubmitted: boolean;
     }>;
     totalScore: number | null;
     grade: string | null;
@@ -223,6 +225,7 @@ export async function 하향평가_상태를_조회한다(
         status: status.status,
         assignedWbsCount: status.assignedWbsCount,
         completedEvaluationCount: status.completedEvaluationCount,
+        isSubmitted: status.isSubmitted,
       };
     }),
   );
@@ -292,6 +295,7 @@ export async function 하향평가_상태를_조회한다(
       status: primaryStatus.status,
       assignedWbsCount: primaryStatus.assignedWbsCount,
       completedEvaluationCount: primaryStatus.completedEvaluationCount,
+      isSubmitted: primaryStatus.isSubmitted,
       totalScore: primaryTotalScore,
       grade: primaryGrade,
     },
@@ -317,6 +321,7 @@ export async function 평가자별_하향평가_상태를_조회한다(
   status: DownwardEvaluationStatus;
   assignedWbsCount: number;
   completedEvaluationCount: number;
+  isSubmitted: boolean;
   averageScore: number | null;
 }> {
   // 1. 피평가자에게 할당된 WBS 수 조회 (평가해야 할 WBS 개수)
@@ -389,10 +394,18 @@ export async function 평가자별_하향평가_상태를_조회한다(
     status = 'none';
   }
 
+  // 6. 제출 여부 계산
+  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수와 같으면 제출 완료
+  const isSubmitted =
+    assignedWbsCount > 0 &&
+    completedEvaluationCount === assignedWbsCount &&
+    completedEvaluationCount > 0;
+
   return {
     status,
     assignedWbsCount,
     completedEvaluationCount,
+    isSubmitted,
     averageScore,
   };
 }
@@ -411,6 +424,7 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
   status: DownwardEvaluationStatus;
   assignedWbsCount: number;
   completedEvaluationCount: number;
+  isSubmitted: boolean;
   averageScore: number | null;
 }> {
   // 1. 피평가자에게 할당된 WBS 수 조회 (평가해야 할 WBS 개수)
@@ -477,10 +491,18 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
     status = 'none';
   }
 
+  // 6. 제출 여부 계산
+  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수와 같으면 제출 완료
+  const isSubmitted =
+    assignedWbsCount > 0 &&
+    completedEvaluationCount === assignedWbsCount &&
+    completedEvaluationCount > 0;
+
   return {
     status,
     assignedWbsCount,
     completedEvaluationCount,
+    isSubmitted,
     averageScore,
   };
 }

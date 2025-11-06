@@ -75,6 +75,7 @@ import {
   UpsertDownwardEvaluationCommand,
   ResetDownwardEvaluationCommand,
   BulkSubmitDownwardEvaluationsCommand,
+  BulkResetDownwardEvaluationsCommand,
 } from './handlers/downward-evaluation';
 
 // 최종평가 관련 커맨드 및 쿼리
@@ -764,6 +765,35 @@ export class PerformanceEvaluationService
       periodId,
       evaluationType,
       submittedBy,
+    );
+
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 피평가자의 모든 하향평가를 일괄 초기화한다 (미제출 상태로 변경)
+   * 평가자가 담당하는 특정 피평가자의 모든 하향평가를 한 번에 미제출 상태로 되돌립니다.
+   */
+  async 피평가자의_모든_하향평가를_일괄_초기화한다(
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    evaluationType: DownwardEvaluationType,
+    resetBy: string,
+  ): Promise<{
+    resetCount: number;
+    skippedCount: number;
+    failedCount: number;
+    resetIds: string[];
+    skippedIds: string[];
+    failedItems: Array<{ evaluationId: string; error: string }>;
+  }> {
+    const command = new BulkResetDownwardEvaluationsCommand(
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      evaluationType,
+      resetBy,
     );
 
     return await this.commandBus.execute(command);
