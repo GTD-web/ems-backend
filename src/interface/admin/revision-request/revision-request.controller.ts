@@ -82,6 +82,7 @@ export class RevisionRequestController {
         recipientId,
         {
           evaluationPeriodId: query.evaluationPeriodId,
+          employeeId: query.employeeId,
           isRead: query.isRead,
           isCompleted: query.isCompleted,
           step: query.step as any,

@@ -163,6 +163,7 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           isRead: filter?.isRead,
           isCompleted: filter?.isCompleted,
           evaluationPeriodId: filter?.evaluationPeriodId,
+          employeeId: filter?.employeeId,
           step: filter?.step,
         },
       );

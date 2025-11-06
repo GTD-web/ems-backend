@@ -135,6 +135,8 @@ export interface RevisionRequestRecipientFilter {
   isCompleted?: boolean;
   /** 평가기간 ID (join 필요) */
   evaluationPeriodId?: string;
+  /** 피평가자 ID (join 필요) */
+  employeeId?: string;
   /** 단계 (join 필요) */
   step?: RevisionRequestStepType;
 }
