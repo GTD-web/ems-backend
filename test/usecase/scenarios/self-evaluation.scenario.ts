@@ -42,24 +42,24 @@ export class SelfEvaluationScenario {
       expect(response.body.employeeId).toBe(config.employeeId);
       expect(response.body.wbsItemId).toBe(config.wbsItemId);
       expect(response.body.periodId).toBe(config.periodId);
-      // 시드 데이터를 완료되지 않은 상태로 생성하므로 저장 시 false 검증 가능
-      expect(response.body.isCompleted).toBe(false);
+      // 저장 시 제출 상태는 false이어야 함
+      expect(response.body.submittedToEvaluator).toBe(false);
 
     return response.body;
   }
 
   /**
-   * WBS 자기평가 제출 (단일)
+   * WBS 자기평가 제출 (피평가자 → 1차 평가자)
    */
   async WBS자기평가를_제출한다(evaluationId: string): Promise<any> {
     const response = await this.testSuite
       .request()
-      .patch(`/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/submit`)
+      .patch(`/admin/performance-evaluation/wbs-self-evaluations/${evaluationId}/submit-to-evaluator`)
       .expect(200);
 
     expect(response.body.id).toBe(evaluationId);
-    expect(response.body.isCompleted).toBe(true);
-    expect(response.body.completedAt).toBeDefined();
+    expect(response.body.submittedToEvaluator).toBe(true);
+    expect(response.body.submittedToEvaluatorAt).toBeDefined();
 
     return response.body;
   }

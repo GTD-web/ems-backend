@@ -4,7 +4,7 @@ import { SelfEvaluationScenario } from '../self-evaluation.scenario';
 
 /**
  * 기본 하향평가 시나리오
- * 
+ *
  * 하향평가의 기본적인 CRUD 기능을 제공합니다.
  * 1차/2차 구분 없이 공통으로 사용되는 기능들을 포함합니다.
  */
@@ -229,11 +229,11 @@ export class BaseDownwardEvaluationScenario {
         performanceResult: config.performanceResult,
       });
 
-    // 2. 자기평가 제출
+    // 2. 자기평가 제출 (피평가자 → 1차 평가자)
     const 자기평가제출 =
       await this.selfEvaluationScenario.WBS자기평가를_제출한다(자기평가저장.id);
 
-    expect(자기평가제출.isCompleted).toBe(true);
+    expect(자기평가제출.submittedToEvaluator).toBe(true);
 
     console.log(`✅ 자기평가 완료 (ID: ${자기평가저장.id})`);
 
