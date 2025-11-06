@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
+import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
+import { RecipientType } from '@domain/sub/evaluation-revision-request';
 
 /**
  * 하향평가 비즈니스 서비스
@@ -10,6 +12,7 @@ import { EvaluationPeriodManagementContextService } from '@context/evaluation-pe
  * - 평가라인 검증
  * - 평가자 권한 확인
  * - 여러 컨텍스트 간 조율
+ * - 재작성 요청 자동 완료 처리
  * - 알림 서비스 연동 (추후)
  */
 @Injectable()
@@ -20,6 +23,7 @@ export class DownwardEvaluationBusinessService {
     private readonly performanceEvaluationService: PerformanceEvaluationService,
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
     private readonly evaluationPeriodManagementContextService: EvaluationPeriodManagementContextService,
+    private readonly revisionRequestContextService: RevisionRequestContextService,
     // private readonly notificationService: NotificationService, // TODO: 알림 서비스 추가 시 주입
   ) {}
 
@@ -159,5 +163,87 @@ export class DownwardEvaluationBusinessService {
     this.logger.log('2차 하향평가 저장 완료', { evaluationId });
 
     return evaluationId;
+  }
+
+  /**
+   * 1차 하향평가를 제출하고 재작성 요청을 자동 완료 처리한다
+   * 특정 피평가자에 대한 1차 하향평가를 제출하고,
+   * 해당 평가기간에 발생한 1차 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
+   */
+  async 일차_하향평가를_제출하고_재작성요청을_완료한다(
+    evaluateeId: string,
+    periodId: string,
+    wbsId: string,
+    evaluatorId: string,
+    submittedBy: string,
+  ): Promise<void> {
+    this.logger.log(
+      `1차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+    );
+
+    // 1. 1차 하향평가 제출
+    await this.performanceEvaluationService.일차_하향평가를_제출한다(
+      evaluateeId,
+      periodId,
+      wbsId,
+      evaluatorId,
+      submittedBy,
+    );
+
+    // 2. 해당 평가기간에 발생한 1차 하향평가에 대한 재작성 요청 자동 완료 처리
+    // 1차평가자에게 요청된 재작성 요청 완료 처리
+    await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
+      periodId,
+      evaluateeId,
+      'primary',
+      evaluatorId,
+      RecipientType.PRIMARY_EVALUATOR,
+      '1차 하향평가 제출로 인한 재작성 완료 처리',
+    );
+
+    this.logger.log(
+      `1차 하향평가 제출 및 재작성 요청 완료 처리 완료 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+    );
+  }
+
+  /**
+   * 2차 하향평가를 제출하고 재작성 요청을 자동 완료 처리한다
+   * 특정 피평가자에 대한 2차 하향평가를 제출하고,
+   * 해당 평가기간에 발생한 2차 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
+   */
+  async 이차_하향평가를_제출하고_재작성요청을_완료한다(
+    evaluateeId: string,
+    periodId: string,
+    wbsId: string,
+    evaluatorId: string,
+    submittedBy: string,
+  ): Promise<void> {
+    this.logger.log(
+      `2차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+    );
+
+    // 1. 2차 하향평가 제출
+    await this.performanceEvaluationService.이차_하향평가를_제출한다(
+      evaluateeId,
+      periodId,
+      wbsId,
+      evaluatorId,
+      submittedBy,
+    );
+
+    // 2. 해당 평가기간에 발생한 2차 하향평가에 대한 재작성 요청 자동 완료 처리
+    // 2차평가자에게 요청된 재작성 요청 완료 처리
+    await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
+      periodId,
+      evaluateeId,
+      'secondary',
+      evaluatorId,
+      RecipientType.SECONDARY_EVALUATOR,
+      '2차 하향평가 제출로 인한 재작성 완료 처리',
+    );
+
+    this.logger.log(
+      `2차 하향평가 제출 및 재작성 요청 완료 처리 완료 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+    );
   }
 }

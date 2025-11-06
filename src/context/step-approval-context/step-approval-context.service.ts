@@ -174,7 +174,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         // 피평가자 추가
         recipients.push({
           recipientId: employeeId,
-          recipientType: 'evaluatee' as RecipientType,
+          recipientType: RecipientType.EVALUATEE,
         });
 
         // 1차평가자 추가
@@ -185,7 +185,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         if (primaryEvaluator) {
           recipients.push({
             recipientId: primaryEvaluator,
-            recipientType: 'primary_evaluator' as RecipientType,
+            recipientType: RecipientType.PRIMARY_EVALUATOR,
           });
         }
         break;
@@ -199,7 +199,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         if (primaryOnly) {
           recipients.push({
             recipientId: primaryOnly,
-            recipientType: 'primary_evaluator' as RecipientType,
+            recipientType: RecipientType.PRIMARY_EVALUATOR,
           });
         }
         break;
@@ -213,7 +213,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         secondaryEvaluators.forEach((evaluatorId) => {
           recipients.push({
             recipientId: evaluatorId,
-            recipientType: 'secondary_evaluator' as RecipientType,
+            recipientType: RecipientType.SECONDARY_EVALUATOR,
           });
         });
         break;
@@ -476,7 +476,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
     const recipients = [
       {
         recipientId: evaluatorId,
-        recipientType: 'secondary_evaluator' as RecipientType,
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
       },
     ];
 

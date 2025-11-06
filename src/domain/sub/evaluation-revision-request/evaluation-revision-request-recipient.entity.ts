@@ -1,10 +1,10 @@
 import { Entity, Column, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '@libs/database/base/base.entity';
 import { IEvaluationRevisionRequestRecipient } from './interfaces/evaluation-revision-request-recipient.interface';
-import type {
+import {
   RecipientType,
-  EvaluationRevisionRequestRecipientDto,
-  CreateRecipientData,
+  type EvaluationRevisionRequestRecipientDto,
+  type CreateRecipientData,
 } from './evaluation-revision-request.types';
 import {
   EmptyResponseCommentException,
@@ -43,7 +43,7 @@ export class EvaluationRevisionRequestRecipient
 
   @Column({
     type: 'enum',
-    enum: ['evaluatee', 'primary_evaluator', 'secondary_evaluator'],
+    enum: RecipientType,
     comment: '수신자 타입',
   })
   recipientType: RecipientType;

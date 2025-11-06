@@ -17,7 +17,10 @@ import {
   EvaluationPeriodStatus,
   EvaluationPeriodPhase,
 } from '@domain/core/evaluation-period/evaluation-period.types';
-import { RevisionRequestStepType } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.types';
+import {
+  RevisionRequestStepType,
+  RecipientType,
+} from '@domain/sub/evaluation-revision-request/evaluation-revision-request.types';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
 
 /**
@@ -232,7 +235,7 @@ describe('RevisionRequestContextService', () => {
     const recipient = recipientRepository.create({
       revisionRequestId: revisionRequestId,
       recipientId: evaluatorId,
-      recipientType: 'primary_evaluator',
+      recipientType: RecipientType.PRIMARY_EVALUATOR,
       isRead: false,
       isCompleted: false,
       createdBy: adminId,
@@ -297,7 +300,7 @@ describe('RevisionRequestContextService', () => {
       const otherRecipient = recipientRepository.create({
         revisionRequestId: savedOtherRequest.id,
         recipientId: evaluatorId,
-        recipientType: 'primary_evaluator',
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -376,7 +379,7 @@ describe('RevisionRequestContextService', () => {
       const otherRecipient = recipientRepository.create({
         revisionRequestId: savedOtherRequest.id,
         recipientId: evaluatorId,
-        recipientType: 'primary_evaluator',
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: otherAdminId,
@@ -414,7 +417,7 @@ describe('RevisionRequestContextService', () => {
       const readRecipient = recipientRepository.create({
         revisionRequestId: savedReadRequest.id,
         recipientId: evaluatorId,
-        recipientType: 'primary_evaluator',
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
         isRead: true,
         readAt: new Date(),
         isCompleted: false,
@@ -460,7 +463,7 @@ describe('RevisionRequestContextService', () => {
       const completedRecipient = recipientRepository.create({
         revisionRequestId: savedCompletedRequest.id,
         recipientId: evaluatorId,
-        recipientType: 'primary_evaluator',
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
         isRead: true,
         isCompleted: true,
         completedAt: new Date(),
@@ -510,7 +513,7 @@ describe('RevisionRequestContextService', () => {
       const selfRecipient = recipientRepository.create({
         revisionRequestId: savedSelfRequest.id,
         recipientId: evaluatorId,
-        recipientType: 'primary_evaluator',
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -564,7 +567,7 @@ describe('RevisionRequestContextService', () => {
       const employeeRecipient = recipientRepository.create({
         revisionRequestId: revisionRequestId,
         recipientId: employeeId,
-        recipientType: 'evaluatee',
+        recipientType: RecipientType.EVALUATEE,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -608,7 +611,7 @@ describe('RevisionRequestContextService', () => {
       const deletedRecipient = recipientRepository.create({
         revisionRequestId: revisionRequestId,
         recipientId: employeeId,
-        recipientType: 'evaluatee',
+        recipientType: RecipientType.EVALUATEE,
         isRead: false,
         isCompleted: false,
         deletedAt: new Date(),
@@ -772,7 +775,7 @@ describe('RevisionRequestContextService', () => {
       const selfRecipient = recipientRepository.create({
         revisionRequestId: savedSelfRequest.id,
         recipientId: employeeId,
-        recipientType: 'evaluatee',
+        recipientType: RecipientType.EVALUATEE,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -821,7 +824,7 @@ describe('RevisionRequestContextService', () => {
       const primaryRecipient = recipientRepository.create({
         revisionRequestId: savedPrimaryRequest.id,
         recipientId: evaluatorId,
-        recipientType: 'primary_evaluator',
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -883,7 +886,7 @@ describe('RevisionRequestContextService', () => {
       const secondaryRecipient = recipientRepository.create({
         revisionRequestId: savedSecondaryRequest.id,
         recipientId: secondaryEvaluatorId,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -993,7 +996,7 @@ describe('RevisionRequestContextService', () => {
       const recipient = recipientRepository.create({
         revisionRequestId: savedRequest.id,
         recipientId: savedEvaluator.id,
-        recipientType: 'primary_evaluator',
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -1211,7 +1214,7 @@ describe('RevisionRequestContextService', () => {
       const employeeRecipient = recipientRepository.create({
         revisionRequestId: revisionRequestId,
         recipientId: employeeId,
-        recipientType: 'evaluatee',
+        recipientType: RecipientType.EVALUATEE,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -1265,7 +1268,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: revisionRequestId,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1322,7 +1325,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: revisionRequestId,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1390,7 +1393,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: savedSelfRequest.id,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1401,7 +1404,7 @@ describe('RevisionRequestContextService', () => {
         const evaluatorRecipient = recipientRepository.create({
           revisionRequestId: savedSelfRequest.id,
           recipientId: evaluatorId,
-          recipientType: 'primary_evaluator',
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1465,7 +1468,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: savedSelfRequest.id,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1476,7 +1479,7 @@ describe('RevisionRequestContextService', () => {
         const evaluatorRecipient = recipientRepository.create({
           revisionRequestId: savedSelfRequest.id,
           recipientId: evaluatorId,
-          recipientType: 'primary_evaluator',
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1541,7 +1544,7 @@ describe('RevisionRequestContextService', () => {
         const evaluatorRecipient = recipientRepository.create({
           revisionRequestId: savedPrimaryRequest.id,
           recipientId: evaluatorId,
-          recipientType: 'primary_evaluator',
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1552,7 +1555,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: savedPrimaryRequest.id,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1621,7 +1624,7 @@ describe('RevisionRequestContextService', () => {
         const secondaryEvaluatorRecipient = recipientRepository.create({
           revisionRequestId: savedSecondaryRequest.id,
           recipientId: secondaryEvaluatorId,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1632,7 +1635,7 @@ describe('RevisionRequestContextService', () => {
         const primaryEvaluatorRecipient = recipientRepository.create({
           revisionRequestId: savedSecondaryRequest.id,
           recipientId: evaluatorId,
-          recipientType: 'primary_evaluator',
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -1678,7 +1681,7 @@ describe('RevisionRequestContextService', () => {
       const additionalRecipient = recipientRepository.create({
         revisionRequestId: revisionRequestId,
         recipientId: employeeId,
-        recipientType: 'evaluatee',
+        recipientType: RecipientType.EVALUATEE,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -1743,7 +1746,7 @@ describe('RevisionRequestContextService', () => {
       const completedRecipient = recipientRepository.create({
         revisionRequestId: savedCompletedRequest.id,
         recipientId: evaluatorId,
-        recipientType: 'primary_evaluator',
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
         isRead: true,
         isCompleted: true,
         completedAt: new Date(),
@@ -1840,7 +1843,7 @@ describe('RevisionRequestContextService', () => {
       const recipient1 = recipientRepository.create({
         revisionRequestId: savedRequest1.id,
         recipientId: secondaryEvaluatorId1,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -1863,7 +1866,7 @@ describe('RevisionRequestContextService', () => {
       const recipient2 = recipientRepository.create({
         revisionRequestId: savedRequest2.id,
         recipientId: secondaryEvaluatorId2,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: adminId,
@@ -1900,7 +1903,7 @@ describe('RevisionRequestContextService', () => {
         r.recipients?.some(
           (rec) =>
             rec.recipientId === secondaryEvaluatorId1 &&
-            rec.recipientType === 'secondary_evaluator',
+            rec.recipientType === RecipientType.SECONDARY_EVALUATOR,
         ),
       );
 
@@ -2067,7 +2070,7 @@ describe('RevisionRequestContextService', () => {
         r.recipients?.some(
           (rec) =>
             rec.recipientId === secondaryEvaluatorId1 &&
-            rec.recipientType === 'secondary_evaluator',
+            rec.recipientType === RecipientType.SECONDARY_EVALUATOR,
         ),
       );
 
@@ -2088,7 +2091,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: revisionRequestId,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -2141,7 +2144,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: revisionRequestId,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -2205,7 +2208,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: savedSelfRequest.id,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -2216,7 +2219,7 @@ describe('RevisionRequestContextService', () => {
         const evaluatorRecipient = recipientRepository.create({
           revisionRequestId: savedSelfRequest.id,
           recipientId: evaluatorId,
-          recipientType: 'primary_evaluator',
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -2282,7 +2285,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: savedSelfRequest.id,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -2293,7 +2296,7 @@ describe('RevisionRequestContextService', () => {
         const evaluatorRecipient = recipientRepository.create({
           revisionRequestId: savedSelfRequest.id,
           recipientId: evaluatorId,
-          recipientType: 'primary_evaluator',
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -2360,7 +2363,7 @@ describe('RevisionRequestContextService', () => {
         const evaluatorRecipient = recipientRepository.create({
           revisionRequestId: savedPrimaryRequest.id,
           recipientId: evaluatorId,
-          recipientType: 'primary_evaluator',
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -2371,7 +2374,7 @@ describe('RevisionRequestContextService', () => {
         const employeeRecipient = recipientRepository.create({
           revisionRequestId: savedPrimaryRequest.id,
           recipientId: employeeId,
-          recipientType: 'evaluatee',
+          recipientType: RecipientType.EVALUATEE,
           isRead: false,
           isCompleted: false,
           createdBy: adminId,
@@ -2405,6 +2408,547 @@ describe('RevisionRequestContextService', () => {
         });
         expect(employeeRecipientAfter!.isCompleted).toBe(false);
       });
+    });
+  });
+
+  describe('제출자에게_요청된_재작성요청을_완료처리한다', () => {
+    it('제출자에게 요청된 재작성 요청이 존재하면 자동 완료 처리되어야 한다 (criteria 단계, evaluatee)', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 피평가자에게 전송된 재작성 요청 생성
+      const criteriaRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'criteria' as RevisionRequestStepType,
+        comment: '평가기준을 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedCriteriaRequest =
+        await revisionRequestRepository.save(criteriaRequest);
+
+      // 피평가자 수신자 생성
+      const employeeRecipient = recipientRepository.create({
+        revisionRequestId: savedCriteriaRequest.id,
+        recipientId: employeeId,
+        recipientType: RecipientType.EVALUATEE,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(employeeRecipient);
+
+      // 1차평가자 수신자 생성
+      const evaluatorRecipient = recipientRepository.create({
+        revisionRequestId: savedCriteriaRequest.id,
+        recipientId: evaluatorId,
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(evaluatorRecipient);
+
+      // When
+      await service.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'criteria',
+        employeeId,
+        RecipientType.EVALUATEE,
+        '평가기준 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 피평가자 완료 확인
+      const employeeRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedCriteriaRequest.id,
+          recipientId: employeeId,
+        },
+      });
+      expect(employeeRecipientAfter!.isCompleted).toBe(true);
+      expect(employeeRecipientAfter!.isRead).toBe(true);
+      expect(employeeRecipientAfter!.readAt).toBeDefined();
+      expect(employeeRecipientAfter!.responseComment).toBe(
+        '평가기준 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 1차평가자도 자동 완료 처리되었는지 확인 (criteria 단계)
+      const evaluatorRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedCriteriaRequest.id,
+          recipientId: evaluatorId,
+        },
+      });
+      expect(evaluatorRecipientAfter!.isCompleted).toBe(true);
+      expect(evaluatorRecipientAfter!.isRead).toBe(true);
+      expect(evaluatorRecipientAfter!.readAt).toBeDefined();
+      expect(evaluatorRecipientAfter!.responseComment).toBe(
+        '연계된 수신자의 재작성 완료로 인한 자동 완료 처리',
+      );
+    });
+
+    it('제출자에게 요청된 재작성 요청이 존재하면 자동 완료 처리되어야 한다 (self 단계, evaluatee)', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 자기평가 단계 재작성 요청 생성
+      const selfRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'self' as RevisionRequestStepType,
+        comment: '자기평가를 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedSelfRequest =
+        await revisionRequestRepository.save(selfRequest);
+
+      // 피평가자 수신자 생성
+      const employeeRecipient = recipientRepository.create({
+        revisionRequestId: savedSelfRequest.id,
+        recipientId: employeeId,
+        recipientType: RecipientType.EVALUATEE,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(employeeRecipient);
+
+      // 1차평가자 수신자 생성
+      const evaluatorRecipient = recipientRepository.create({
+        revisionRequestId: savedSelfRequest.id,
+        recipientId: evaluatorId,
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(evaluatorRecipient);
+
+      // When
+      await service.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'self',
+        employeeId,
+        RecipientType.EVALUATEE,
+        '자기평가 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 피평가자 완료 확인
+      const employeeRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedSelfRequest.id,
+          recipientId: employeeId,
+        },
+      });
+      expect(employeeRecipientAfter!.isCompleted).toBe(true);
+      expect(employeeRecipientAfter!.isRead).toBe(true);
+
+      // Then - 1차평가자도 자동 완료 처리되었는지 확인 (self 단계)
+      const evaluatorRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedSelfRequest.id,
+          recipientId: evaluatorId,
+        },
+      });
+      expect(evaluatorRecipientAfter!.isCompleted).toBe(true);
+      expect(evaluatorRecipientAfter!.isRead).toBe(true);
+    });
+
+    it('제출자에게 요청된 재작성 요청이 존재하면 자동 완료 처리되어야 한다 (primary 단계, primary_evaluator)', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 1차평가 단계 재작성 요청 생성
+      const primaryRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'primary' as RevisionRequestStepType,
+        comment: '1차평가를 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedPrimaryRequest =
+        await revisionRequestRepository.save(primaryRequest);
+
+      // 1차평가자 수신자 생성
+      const evaluatorRecipient = recipientRepository.create({
+        revisionRequestId: savedPrimaryRequest.id,
+        recipientId: evaluatorId,
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(evaluatorRecipient);
+
+      // When
+      await service.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'primary',
+        evaluatorId,
+        RecipientType.PRIMARY_EVALUATOR,
+        '1차 하향평가 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 1차평가자 완료 확인
+      const evaluatorRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedPrimaryRequest.id,
+          recipientId: evaluatorId,
+        },
+      });
+      expect(evaluatorRecipientAfter!.isCompleted).toBe(true);
+      expect(evaluatorRecipientAfter!.isRead).toBe(true);
+      expect(evaluatorRecipientAfter!.responseComment).toBe(
+        '1차 하향평가 제출로 인한 재작성 완료 처리',
+      );
+    });
+
+    it('제출자에게 요청된 재작성 요청이 존재하면 자동 완료 처리되어야 한다 (secondary 단계, secondary_evaluator)', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      const secondaryEvaluatorId = '123e4567-e89b-12d3-a456-426614174002';
+
+      // 2차평가 단계 재작성 요청 생성
+      const secondaryRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'secondary' as RevisionRequestStepType,
+        comment: '2차평가를 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedSecondaryRequest =
+        await revisionRequestRepository.save(secondaryRequest);
+
+      // 2차평가자 수신자 생성
+      const secondaryEvaluatorRecipient = recipientRepository.create({
+        revisionRequestId: savedSecondaryRequest.id,
+        recipientId: secondaryEvaluatorId,
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(secondaryEvaluatorRecipient);
+
+      // When
+      await service.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'secondary',
+        secondaryEvaluatorId,
+        RecipientType.SECONDARY_EVALUATOR,
+        '2차 하향평가 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 2차평가자 완료 확인
+      const secondaryEvaluatorRecipientAfter =
+        await recipientRepository.findOne({
+          where: {
+            revisionRequestId: savedSecondaryRequest.id,
+            recipientId: secondaryEvaluatorId,
+          },
+        });
+      expect(secondaryEvaluatorRecipientAfter!.isCompleted).toBe(true);
+      expect(secondaryEvaluatorRecipientAfter!.isRead).toBe(true);
+      expect(secondaryEvaluatorRecipientAfter!.responseComment).toBe(
+        '2차 하향평가 제출로 인한 재작성 완료 처리',
+      );
+    });
+
+    it('primary/secondary 단계의 경우 다른 수신자는 자동 완료 처리되지 않아야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 1차평가 단계 재작성 요청 생성
+      const primaryRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'primary' as RevisionRequestStepType,
+        comment: '1차평가를 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedPrimaryRequest =
+        await revisionRequestRepository.save(primaryRequest);
+
+      // 1차평가자 수신자 생성
+      const evaluatorRecipient = recipientRepository.create({
+        revisionRequestId: savedPrimaryRequest.id,
+        recipientId: evaluatorId,
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(evaluatorRecipient);
+
+      // 피평가자 수신자 생성 (1차평가 단계에서는 보통 피평가자에게는 요청이 가지 않지만, 테스트를 위해 추가)
+      const employeeRecipient = recipientRepository.create({
+        revisionRequestId: savedPrimaryRequest.id,
+        recipientId: employeeId,
+        recipientType: RecipientType.EVALUATEE,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(employeeRecipient);
+
+      // When
+      await service.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'primary',
+        evaluatorId,
+        RecipientType.PRIMARY_EVALUATOR,
+        '1차 하향평가 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 1차평가자 완료 확인
+      const evaluatorRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedPrimaryRequest.id,
+          recipientId: evaluatorId,
+        },
+      });
+      expect(evaluatorRecipientAfter!.isCompleted).toBe(true);
+
+      // Then - 피평가자는 자동 완료 처리되지 않아야 함 (primary 단계)
+      const employeeRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedPrimaryRequest.id,
+          recipientId: employeeId,
+        },
+      });
+      expect(employeeRecipientAfter!.isCompleted).toBe(false);
+    });
+
+    it('재작성 요청이 없으면 아무것도 하지 않아야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 존재하지 않는 평가기간 ID 사용
+      const nonExistentPeriodId = '123e4567-e89b-12d3-a456-426614174999';
+
+      // When - 예외가 발생하지 않아야 함
+      await expect(
+        service.제출자에게_요청된_재작성요청을_완료처리한다(
+          nonExistentPeriodId,
+          employeeId,
+          'criteria',
+          employeeId,
+          RecipientType.EVALUATEE,
+          '평가기준 제출로 인한 재작성 완료 처리',
+        ),
+      ).resolves.not.toThrow();
+    });
+
+    it('이미 완료된 요청은 건너뛰어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 평가기준 단계 재작성 요청 생성
+      const criteriaRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'criteria' as RevisionRequestStepType,
+        comment: '평가기준을 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedCriteriaRequest =
+        await revisionRequestRepository.save(criteriaRequest);
+
+      // 이미 완료된 피평가자 수신자 생성
+      const employeeRecipient = recipientRepository.create({
+        revisionRequestId: savedCriteriaRequest.id,
+        recipientId: employeeId,
+        recipientType: RecipientType.EVALUATEE,
+        isRead: true,
+        isCompleted: true,
+        readAt: new Date(),
+        completedAt: new Date(),
+        responseComment: '이미 완료된 요청',
+        createdBy: adminId,
+      });
+      await recipientRepository.save(employeeRecipient);
+
+      // 1차평가자 수신자 생성 (미완료)
+      const evaluatorRecipient = recipientRepository.create({
+        revisionRequestId: savedCriteriaRequest.id,
+        recipientId: evaluatorId,
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(evaluatorRecipient);
+
+      // When
+      await service.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'criteria',
+        employeeId,
+        RecipientType.EVALUATEE,
+        '평가기준 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 이미 완료된 요청은 그대로 유지되어야 함
+      const employeeRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedCriteriaRequest.id,
+          recipientId: employeeId,
+        },
+      });
+      expect(employeeRecipientAfter!.isCompleted).toBe(true);
+      expect(employeeRecipientAfter!.responseComment).toBe('이미 완료된 요청');
+
+      // Then - 1차평가자는 완료되지 않아야 함 (피평가자가 이미 완료되어 있어서 자동 완료가 트리거되지 않음)
+      const evaluatorRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedCriteriaRequest.id,
+          recipientId: evaluatorId,
+        },
+      });
+      expect(evaluatorRecipientAfter!.isCompleted).toBe(false);
+    });
+
+    it('다른 recipientType의 요청은 건너뛰어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 평가기준 단계 재작성 요청 생성
+      const criteriaRequest = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'criteria' as RevisionRequestStepType,
+        comment: '평가기준을 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedCriteriaRequest =
+        await revisionRequestRepository.save(criteriaRequest);
+
+      // 1차평가자 수신자만 생성 (evaluatee는 없음)
+      const evaluatorRecipient = recipientRepository.create({
+        revisionRequestId: savedCriteriaRequest.id,
+        recipientId: evaluatorId,
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(evaluatorRecipient);
+
+      // When - evaluatee 타입으로 요청하지만 실제로는 primary_evaluator만 존재
+      await service.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'criteria',
+        employeeId,
+        RecipientType.EVALUATEE,
+        '평가기준 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 1차평가자는 완료되지 않아야 함 (다른 recipientType이므로)
+      const evaluatorRecipientAfter = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedCriteriaRequest.id,
+          recipientId: evaluatorId,
+        },
+      });
+      expect(evaluatorRecipientAfter!.isCompleted).toBe(false);
+    });
+
+    it('여러 재작성 요청이 있는 경우 모두 처리되어야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 첫 번째 재작성 요청 생성
+      const request1 = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'primary' as RevisionRequestStepType,
+        comment: '1차평가를 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedRequest1 = await revisionRequestRepository.save(request1);
+
+      const recipient1 = recipientRepository.create({
+        revisionRequestId: savedRequest1.id,
+        recipientId: evaluatorId,
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(recipient1);
+
+      // 두 번째 재작성 요청 생성
+      const request2 = revisionRequestRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        step: 'primary' as RevisionRequestStepType,
+        comment: '다른 1차평가를 다시 작성해주세요.',
+        requestedBy: adminId,
+        requestedAt: new Date(),
+        createdBy: adminId,
+      });
+      const savedRequest2 = await revisionRequestRepository.save(request2);
+
+      const recipient2 = recipientRepository.create({
+        revisionRequestId: savedRequest2.id,
+        recipientId: evaluatorId,
+        recipientType: RecipientType.PRIMARY_EVALUATOR,
+        isRead: false,
+        isCompleted: false,
+        createdBy: adminId,
+      });
+      await recipientRepository.save(recipient2);
+
+      // When
+      await service.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'primary',
+        evaluatorId,
+        RecipientType.PRIMARY_EVALUATOR,
+        '1차 하향평가 제출로 인한 재작성 완료 처리',
+      );
+
+      // Then - 두 요청 모두 완료되어야 함
+      const recipient1After = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedRequest1.id,
+          recipientId: evaluatorId,
+        },
+      });
+      expect(recipient1After!.isCompleted).toBe(true);
+
+      const recipient2After = await recipientRepository.findOne({
+        where: {
+          revisionRequestId: savedRequest2.id,
+          recipientId: evaluatorId,
+        },
+      });
+      expect(recipient2After!.isCompleted).toBe(true);
     });
   });
 });

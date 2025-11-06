@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
-import { EvaluationRevisionRequestService } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.service';
 import type { SubmitAllWbsSelfEvaluationsResponse } from '@context/performance-evaluation-context/handlers/self-evaluation';
+import { RecipientType } from '@domain/sub/evaluation-revision-request';
 
 /**
  * WBS 자기평가 비즈니스 서비스
@@ -19,7 +19,6 @@ export class WbsSelfEvaluationBusinessService {
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
-    private readonly revisionRequestService: EvaluationRevisionRequestService,
   ) {}
 
   /**
@@ -37,92 +36,24 @@ export class WbsSelfEvaluationBusinessService {
     );
 
     // 1. 자기평가 제출
-    const result = await this.performanceEvaluationService.직원의_전체_WBS자기평가를_제출한다(
-      employeeId,
-      periodId,
-      submittedBy,
-    );
-
-    // 2. 해당 평가기간에 발생한 자기평가에 대한 재작성 요청 조회
-    const revisionRequests = await this.revisionRequestService.필터로_조회한다({
-      evaluationPeriodId: periodId,
-      employeeId,
-      step: 'self',
-    });
-
-    // 3. 재작성 요청이 존재하면 자동 완료 처리
-    if (revisionRequests.length > 0) {
-      this.logger.log(
-        `자기평가 재작성 요청 발견 - 요청 수: ${revisionRequests.length}`,
+    const result =
+      await this.performanceEvaluationService.직원의_전체_WBS자기평가를_제출한다(
+        employeeId,
+        periodId,
+        submittedBy,
       );
 
-      for (const request of revisionRequests) {
-        if (!request.recipients || request.recipients.length === 0) {
-          continue;
-        }
-
-        // 피평가자에게 전송된 재작성 요청 찾기
-        const evaluateeRecipient = request.recipients.find(
-          (r) =>
-            !r.deletedAt &&
-            r.recipientId === employeeId &&
-            r.recipientType === 'evaluatee' &&
-            !r.isCompleted,
-        );
-
-        if (evaluateeRecipient) {
-          try {
-            // 재작성 완료 응답 제출 (피평가자)
-            // 재작성완료_응답을_제출한다 메서드가 자동으로 같은 재작성 요청의 다른 수신자(1차평가자)도 함께 완료 처리함
-            await this.revisionRequestContextService.재작성완료_응답을_제출한다(
-              request.id,
-              employeeId,
-              '자기평가 제출로 인한 재작성 완료 처리',
-            );
-
-            this.logger.log(
-              `자기평가 재작성 요청 완료 처리 성공 (피평가자 및 1차평가자 자동 완료) - 요청 ID: ${request.id}, 수신자 ID: ${employeeId}`,
-            );
-          } catch (error) {
-            this.logger.error(
-              `자기평가 재작성 요청 완료 처리 실패 (피평가자) - 요청 ID: ${request.id}, 수신자 ID: ${employeeId}`,
-              error,
-            );
-            // 재작성 요청 완료 처리 실패는 로그만 남기고 계속 진행
-          }
-        } else {
-          // 피평가자에게 전송된 재작성 요청이 없으면 1차평가자에게 전송된 재작성 요청 처리
-          const primaryEvaluatorRecipient = request.recipients.find(
-            (r) =>
-              !r.deletedAt &&
-              r.recipientType === 'primary_evaluator' &&
-              !r.isCompleted,
-          );
-
-          if (primaryEvaluatorRecipient) {
-            try {
-              // 재작성 완료 응답 제출 (1차평가자)
-              // 재작성완료_응답을_제출한다 메서드가 자동으로 같은 재작성 요청의 다른 수신자(피평가자)도 함께 완료 처리함
-              await this.revisionRequestContextService.재작성완료_응답을_제출한다(
-                request.id,
-                primaryEvaluatorRecipient.recipientId,
-                '자기평가 제출로 인한 재작성 완료 처리',
-              );
-
-              this.logger.log(
-                `자기평가 재작성 요청 완료 처리 성공 (1차평가자 및 피평가자 자동 완료) - 요청 ID: ${request.id}, 수신자 ID: ${primaryEvaluatorRecipient.recipientId}`,
-              );
-            } catch (error) {
-              this.logger.error(
-                `자기평가 재작성 요청 완료 처리 실패 (1차평가자) - 요청 ID: ${request.id}, 수신자 ID: ${primaryEvaluatorRecipient.recipientId}`,
-                error,
-              );
-              // 재작성 요청 완료 처리 실패는 로그만 남기고 계속 진행
-            }
-          }
-        }
-      }
-    }
+    // 2. 해당 평가기간에 발생한 자기평가에 대한 재작성 요청 자동 완료 처리
+    // 피평가자에게 요청된 재작성 요청 완료 처리
+    // (criteria, self 단계의 경우 자동으로 1차평가자도 함께 완료 처리됨)
+    await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
+      periodId,
+      employeeId,
+      'self',
+      employeeId,
+      RecipientType.EVALUATEE,
+      '자기평가 제출로 인한 재작성 완료 처리',
+    );
 
     this.logger.log(
       `직원의 전체 WBS 자기평가 제출 및 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${periodId}`,
@@ -131,4 +62,3 @@ export class WbsSelfEvaluationBusinessService {
     return result;
   }
 }
-

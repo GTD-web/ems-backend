@@ -116,6 +116,7 @@ export class DownwardEvaluationManagementController {
 
   /**
    * 1차 하향평가 제출
+   * 해당 평가기간에 발생한 1차 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
    */
   @SubmitPrimaryDownwardEvaluation()
   async submitPrimaryDownwardEvaluation(
@@ -127,7 +128,7 @@ export class DownwardEvaluationManagementController {
   ): Promise<void> {
     const evaluatorId = submitDto.evaluatorId;
     const submittedBy = user.id;
-    await this.performanceEvaluationService.일차_하향평가를_제출한다(
+    await this.downwardEvaluationBusinessService.일차_하향평가를_제출하고_재작성요청을_완료한다(
       evaluateeId,
       periodId,
       wbsId,
@@ -138,6 +139,7 @@ export class DownwardEvaluationManagementController {
 
   /**
    * 2차 하향평가 제출
+   * 해당 평가기간에 발생한 2차 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
    */
   @SubmitSecondaryDownwardEvaluation()
   async submitSecondaryDownwardEvaluation(
@@ -149,7 +151,7 @@ export class DownwardEvaluationManagementController {
   ): Promise<void> {
     const evaluatorId = submitDto.evaluatorId;
     const submittedBy = user.id;
-    await this.performanceEvaluationService.이차_하향평가를_제출한다(
+    await this.downwardEvaluationBusinessService.이차_하향평가를_제출하고_재작성요청을_완료한다(
       evaluateeId,
       periodId,
       wbsId,

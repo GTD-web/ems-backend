@@ -3,6 +3,7 @@ import type {
   EvaluationRevisionRequestRecipientDto,
   RevisionRequestStepType,
 } from '@domain/sub/evaluation-revision-request';
+import type { RecipientType } from '@domain/sub/evaluation-revision-request';
 import type { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 
 /**
@@ -98,6 +99,21 @@ export interface IRevisionRequestContext {
     employeeId: string,
     evaluatorId: string,
     step: RevisionRequestStepType,
+    responseComment: string,
+  ): Promise<void>;
+
+  /**
+   * 제출자에게 요청된 재작성 요청을 자동 완료 처리한다
+   * 
+   * 평가 제출 시 해당 제출자에게 전송된 재작성 요청이 존재하면 자동으로 완료 처리합니다.
+   * 비즈니스 서비스에서 선언적으로 사용할 수 있도록 제공되는 함수입니다.
+   */
+  제출자에게_요청된_재작성요청을_완료처리한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    step: RevisionRequestStepType,
+    recipientId: string,
+    recipientType: RecipientType,
     responseComment: string,
   ): Promise<void>;
 }

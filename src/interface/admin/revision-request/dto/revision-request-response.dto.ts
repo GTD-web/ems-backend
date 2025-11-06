@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { StepApprovalStatusEnum } from '@interface/admin/step-approval/dto/update-step-approval.dto';
+import { RecipientType } from '@domain/sub/evaluation-revision-request';
 
 /**
  * 직원 정보 DTO
@@ -75,10 +76,10 @@ export class RevisionRequestResponseDto {
 
   @ApiProperty({
     description: '수신자 타입',
-    enum: ['evaluatee', 'primary_evaluator', 'secondary_evaluator'],
-    example: 'evaluatee',
+    enum: RecipientType,
+    example: RecipientType.EVALUATEE,
   })
-  recipientType: string;
+  recipientType: RecipientType;
 
   // ==================== 읽음/완료 상태 ====================
   @ApiProperty({ description: '읽음 여부', example: false })
