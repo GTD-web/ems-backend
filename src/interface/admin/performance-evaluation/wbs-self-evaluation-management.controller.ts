@@ -3,6 +3,7 @@ import {
   GetWbsSelfEvaluationDetailQuery,
 } from '@context/performance-evaluation-context/handlers/self-evaluation';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
+import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
 import type { AuthenticatedUser } from '@interface/decorators';
 import { CurrentUser, ParseUUID } from '@interface/decorators';
 import { Body, Controller, Query } from '@nestjs/common';
@@ -52,6 +53,7 @@ import {
 export class WbsSelfEvaluationManagementController {
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
+    private readonly wbsSelfEvaluationBusinessService: WbsSelfEvaluationBusinessService,
   ) {}
 
   /**
@@ -111,6 +113,7 @@ export class WbsSelfEvaluationManagementController {
   /**
    * 직원의 전체 WBS 자기평가 제출 (1차 평가자 → 관리자)
    * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 관리자에게 한 번에 제출합니다.
+   * 해당 평가기간에 발생한 자기평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
    */
   @SubmitAllWbsSelfEvaluationsByEmployeePeriod()
   async submitAllWbsSelfEvaluationsByEmployeePeriod(
@@ -119,7 +122,7 @@ export class WbsSelfEvaluationManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<SubmitAllWbsSelfEvaluationsResponseDto> {
     const submittedBy = user.id;
-    return await this.performanceEvaluationService.직원의_전체_WBS자기평가를_제출한다(
+    return await this.wbsSelfEvaluationBusinessService.직원의_전체_WBS자기평가를_제출하고_재작성요청을_완료한다(
       employeeId,
       periodId,
       submittedBy,

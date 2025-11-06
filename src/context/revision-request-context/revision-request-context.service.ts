@@ -335,6 +335,37 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     // 저장
     await this.revisionRequestService.수신자를_저장한다(recipient);
 
+    // 평가기준(criteria)과 자기평가(self) 단계의 경우,
+    // 같은 재작성 요청 내에서 피평가자와 1차평가자가 한 쌍으로 처리
+    // 한쪽이 완료하면 다른 쪽도 자동 완료 처리
+    if (request.step === 'criteria' || request.step === 'self') {
+      // 같은 재작성 요청의 다른 수신자도 함께 완료 처리
+      if (request.recipients && request.recipients.length > 0) {
+        for (const otherRecipient of request.recipients) {
+          // 삭제되지 않았고, 아직 완료되지 않았으며, 현재 수신자가 아닌 경우
+          if (
+            !otherRecipient.deletedAt &&
+            !otherRecipient.isCompleted &&
+            otherRecipient.recipientId !== recipientId
+          ) {
+            this.logger.log(
+              `같은 재작성 요청의 다른 수신자도 함께 완료 처리 - 요청 ID: ${requestId}, 수신자 ID: ${otherRecipient.recipientId}`,
+            );
+
+            // 재작성 완료 응답
+            otherRecipient.재작성완료_응답한다(
+              `연계된 수신자의 재작성 완료로 인한 자동 완료 처리`,
+            );
+
+            // 저장
+            await this.revisionRequestService.수신자를_저장한다(
+              otherRecipient,
+            );
+          }
+        }
+      }
+    }
+
     // 모든 수신자가 완료했는지 확인
     // 2차 평가의 경우, 모든 평가자에게 전송된 모든 재작성 요청이 완료되었는지 확인
     let allCompleted: boolean;
@@ -428,6 +459,37 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
 
     // 저장
     await this.revisionRequestService.수신자를_저장한다(targetRecipient);
+
+    // 평가기준(criteria)과 자기평가(self) 단계의 경우,
+    // 같은 재작성 요청 내에서 피평가자와 1차평가자가 한 쌍으로 처리
+    // 한쪽이 완료하면 다른 쪽도 자동 완료 처리
+    if (targetRequest.step === 'criteria' || targetRequest.step === 'self') {
+      // 같은 재작성 요청의 다른 수신자도 함께 완료 처리
+      if (targetRequest.recipients && targetRequest.recipients.length > 0) {
+        for (const otherRecipient of targetRequest.recipients) {
+          // 삭제되지 않았고, 아직 완료되지 않았으며, 현재 수신자가 아닌 경우
+          if (
+            !otherRecipient.deletedAt &&
+            !otherRecipient.isCompleted &&
+            otherRecipient.recipientId !== evaluatorId
+          ) {
+            this.logger.log(
+              `같은 재작성 요청의 다른 수신자도 함께 완료 처리 - 요청 ID: ${targetRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`,
+            );
+
+            // 재작성 완료 응답
+            otherRecipient.재작성완료_응답한다(
+              `연계된 수신자의 재작성 완료로 인한 자동 완료 처리`,
+            );
+
+            // 저장
+            await this.revisionRequestService.수신자를_저장한다(
+              otherRecipient,
+            );
+          }
+        }
+      }
+    }
 
     // 모든 수신자가 완료했는지 확인
     // 2차 평가의 경우, 모든 평가자에게 전송된 모든 재작성 요청이 완료되었는지 확인
