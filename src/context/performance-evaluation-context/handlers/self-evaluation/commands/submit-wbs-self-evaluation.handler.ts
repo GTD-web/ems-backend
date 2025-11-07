@@ -1,6 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 
@@ -26,6 +27,7 @@ export class SubmitWbsSelfEvaluationHandler
 
   constructor(
     private readonly wbsSelfEvaluationService: WbsSelfEvaluationService,
+    private readonly evaluationPeriodService: EvaluationPeriodService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
 
@@ -34,10 +36,9 @@ export class SubmitWbsSelfEvaluationHandler
   ): Promise<WbsSelfEvaluationDto> {
     const { evaluationId, submittedBy } = command;
 
-    this.logger.log(
-      'WBS 자기평가 제출 핸들러 실행 (1차 평가자 → 관리자)',
-      { evaluationId },
-    );
+    this.logger.log('WBS 자기평가 제출 핸들러 실행 (1차 평가자 → 관리자)', {
+      evaluationId,
+    });
 
     return await this.transactionManager.executeTransaction(async () => {
       // 자기평가 조회 검증
@@ -47,13 +48,33 @@ export class SubmitWbsSelfEvaluationHandler
         throw new BadRequestException('존재하지 않는 자기평가입니다.');
       }
 
-      // 점수 검증
+      // 평가 내용과 점수 검증
       if (
         !evaluation.selfEvaluationContent ||
         !evaluation.selfEvaluationScore
       ) {
         throw new BadRequestException(
           '평가 내용과 점수는 필수 입력 항목입니다.',
+        );
+      }
+
+      // 평가기간 조회 및 점수 범위 확인
+      const evaluationPeriod = await this.evaluationPeriodService.ID로_조회한다(
+        evaluation.periodId,
+      );
+
+      if (!evaluationPeriod) {
+        throw new BadRequestException(
+          `평가기간을 찾을 수 없습니다. (periodId: ${evaluation.periodId})`,
+        );
+      }
+
+      const maxScore = evaluationPeriod.자기평가_달성률_최대값();
+
+      // 점수 유효성 검증
+      if (!evaluation.점수가_유효한가(maxScore)) {
+        throw new BadRequestException(
+          `평가 점수가 유효하지 않습니다 (0 ~ ${maxScore} 사이여야 함).`,
         );
       }
 
