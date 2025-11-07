@@ -427,9 +427,8 @@ export class WbsSelfEvaluationDetailResponseDto {
     type: 'object',
     properties: {
       id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440007' },
-      name: { type: 'string', example: '시스템 개발' },
-      description: { type: 'string', example: '고객 관리 시스템 개발 업무' },
-      plannedHours: { type: 'number', example: 160 },
+      wbsCode: { type: 'string', example: 'WBS-001' },
+      title: { type: 'string', example: '시스템 개발' },
       startDate: {
         type: 'string',
         format: 'date-time',
@@ -441,16 +440,22 @@ export class WbsSelfEvaluationDetailResponseDto {
         example: '2024-03-31T18:00:00Z',
       },
       status: { type: 'string', example: 'IN_PROGRESS' },
+      progressPercentage: { type: 'number', example: 75 },
+      projectId: {
+        type: 'string',
+        example: '550e8400-e29b-41d4-a716-446655440008',
+      },
     },
   })
   wbsItem?: {
     id: string;
-    name: string;
-    description?: string;
-    plannedHours?: number;
+    wbsCode: string;
+    title: string;
     startDate?: Date;
     endDate?: Date;
     status: string;
+    progressPercentage?: number;
+    projectId: string;
   };
 }
 
@@ -474,7 +479,8 @@ export class EmployeeSelfEvaluationsResponseDto {
         submittedToManager: false,
         submittedToManagerAt: null,
         evaluationDate: '2024-01-15T09:00:00Z',
-        performanceResult: 'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
+        performanceResult:
+          'WBS 항목 A를 100% 완료하였으며, 고객 만족도 95%를 달성했습니다.',
         selfEvaluationContent: '이번 분기 목표를 성공적으로 달성했습니다.',
         selfEvaluationScore: 100,
         createdAt: '2024-01-15T09:00:00Z',
@@ -545,7 +551,8 @@ export class SubmittedWbsSelfEvaluationDetailDto {
   submittedToManagerAt?: Date;
 
   @ApiPropertyOptional({
-    description: '1차 평가자에게 제출한 일시 (피평가자 → 1차 평가자 제출 시 사용)',
+    description:
+      '1차 평가자에게 제출한 일시 (피평가자 → 1차 평가자 제출 시 사용)',
     example: '2024-01-15T10:00:00Z',
   })
   submittedToEvaluatorAt?: Date;

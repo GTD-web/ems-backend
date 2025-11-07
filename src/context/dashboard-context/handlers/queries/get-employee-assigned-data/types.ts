@@ -49,20 +49,6 @@ export interface WbsPerformance {
 }
 
 /**
- * WBS 자기평가 정보
- */
-export interface WbsSelfEvaluationInfo {
-  selfEvaluationId?: string;
-  evaluationContent?: string;
-  score?: number;
-  submittedToEvaluator: boolean;
-  submittedToEvaluatorAt?: Date;
-  submittedToManager: boolean;
-  submittedToManagerAt?: Date;
-  submittedAt?: Date;
-}
-
-/**
  * WBS 하향평가 정보
  */
 export interface WbsDownwardEvaluationInfo {
@@ -86,7 +72,6 @@ export interface AssignedWbsInfo {
   assignedAt: Date;
   criteria: WbsEvaluationCriterion[];
   performance?: WbsPerformance | null;
-  selfEvaluation?: WbsSelfEvaluationInfo | null;
   primaryDownwardEvaluation?: WbsDownwardEvaluationInfo | null;
   secondaryDownwardEvaluation?: WbsDownwardEvaluationInfo | null;
   deliverables: DeliverableInfo[];

@@ -58,16 +58,14 @@ export async function 자기평가_진행_상태를_조회한다(
 
   // 모든 자기평가가 1차 평가자에게 제출되었는지 확인
   const isSubmittedToEvaluator =
-    totalMappingCount > 0 &&
-    submittedToEvaluatorCount === totalMappingCount;
+    totalMappingCount > 0 && submittedToEvaluatorCount === totalMappingCount;
 
   // 관리자에게 제출된 WBS 자기평가 수는 completedMappingCount와 동일
   const submittedToManagerCount = completedMappingCount;
 
   // 모든 자기평가가 관리자에게 제출되었는지 확인
   const isSubmittedToManager =
-    totalMappingCount > 0 &&
-    submittedToManagerCount === totalMappingCount;
+    totalMappingCount > 0 && submittedToManagerCount === totalMappingCount;
 
   // 가중치 기반 자기평가 총점 및 등급 계산
   let totalScore: number | null = null;
@@ -209,11 +207,14 @@ export async function 가중치_기반_자기평가_점수를_계산한다(
     // 최종 점수 (0-100 범위)
     const finalScore = totalWeightedScore;
 
+    // 소수점일 때는 내림을 통해 정수로 변환
+    const integerScore = Math.floor(finalScore);
+
     logger.log(
-      `가중치 기반 자기평가 점수 계산 완료: ${finalScore.toFixed(2)} (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`,
+      `가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`,
     );
 
-    return Math.round(finalScore * 100) / 100; // 소수점 2자리로 반올림
+    return integerScore;
   } catch (error) {
     logger.error(
       `가중치 기반 자기평가 점수 계산 실패: ${error.message}`,

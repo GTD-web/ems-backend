@@ -319,11 +319,7 @@ describe('단계 승인 관리 E2E 테스트', () => {
             },
           );
 
-        const wbs = 할당데이터.projects[0].wbsList.find(
-          (w: any) => w.wbsId === wbsItemIds[0],
-        );
-        expect(wbs.selfEvaluation.submittedToEvaluator).toBe(true);
-        expect(wbs.selfEvaluation.submittedToManager).toBe(true);
+        // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
         expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
           true,
         );
@@ -627,15 +623,11 @@ describe('단계 승인 관리 E2E 테스트', () => {
             },
           );
 
-        const wbs = 할당데이터.projects[0].wbsList.find(
-          (w: any) => w.wbsId === wbsItemIds[0],
-        );
-        expect(wbs.selfEvaluation.submittedToManager).toBe(false);
+        // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
         expect(할당데이터.summary.selfEvaluation.isSubmittedToManager).toBe(
           false,
         );
         // submittedToEvaluator는 유지됨
-        expect(wbs.selfEvaluation.submittedToEvaluator).toBe(true);
         expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
           true,
         );

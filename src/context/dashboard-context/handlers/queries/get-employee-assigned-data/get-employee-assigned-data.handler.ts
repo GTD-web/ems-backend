@@ -153,24 +153,14 @@ export class GetEmployeeAssignedDataHandler
 
     // 6. 요약 정보 계산
     let completedPerformances = 0;
-    let completedSelfEvaluations = 0;
-    let submittedToEvaluatorCount = 0;
-    let submittedToManagerCount = 0;
     const totalWbs = projects.reduce((sum, project) => {
       project.wbsList.forEach((wbs) => {
         if (wbs.performance?.isCompleted) completedPerformances++;
-        if (wbs.selfEvaluation?.submittedToEvaluator) {
-          submittedToEvaluatorCount++;
-        }
-        if (wbs.selfEvaluation?.submittedToManager) {
-          completedSelfEvaluations++;
-          submittedToManagerCount++;
-        }
       });
       return sum + project.wbsList.length;
     }, 0);
 
-    // 전체 자기평가 수 조회
+    // 전체 자기평가 수 및 제출 상태 조회
     const totalSelfEvaluations = await this.selfEvaluationRepository.count({
       where: {
         periodId: evaluationPeriodId,
@@ -178,6 +168,30 @@ export class GetEmployeeAssignedDataHandler
         deletedAt: null as any,
       },
     });
+
+    // 1차 평가자에게 제출된 자기평가 수
+    const submittedToEvaluatorCount = await this.selfEvaluationRepository.count(
+      {
+        where: {
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          submittedToEvaluator: true,
+          deletedAt: null as any,
+        },
+      },
+    );
+
+    // 관리자에게 제출된 자기평가 수 (완료된 자기평가)
+    const submittedToManagerCount = await this.selfEvaluationRepository.count({
+      where: {
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+        submittedToManager: true,
+        deletedAt: null as any,
+      },
+    });
+
+    const completedSelfEvaluations = submittedToManagerCount;
 
     // 7. 자기평가 점수/등급 계산
     const selfEvaluationScore = await calculateSelfEvaluationScore(

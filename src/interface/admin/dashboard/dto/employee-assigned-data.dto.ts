@@ -7,7 +7,6 @@ import type {
   AssignedWbsInfo,
   WbsEvaluationCriterion,
   WbsPerformance,
-  WbsSelfEvaluationInfo,
   WbsDownwardEvaluationInfo,
   EmployeeAssignedDataResult,
   DeliverableInfo,
@@ -219,72 +218,6 @@ export class WbsPerformanceDto implements WbsPerformance {
 }
 
 /**
- * WBS 자기평가 DTO
- * Context의 WbsSelfEvaluationInfo 타입과 일치해야 함
- */
-export class WbsSelfEvaluationDto implements WbsSelfEvaluationInfo {
-  @ApiProperty({
-    description: '자기평가 ID',
-    example: '123e4567-e89b-12d3-a456-426614174013',
-    nullable: true,
-  })
-  selfEvaluationId?: string;
-
-  @ApiProperty({
-    description: '자기평가 내용',
-    example: '계획 대비 110% 달성, 품질 기준 초과 달성',
-    nullable: true,
-  })
-  evaluationContent?: string;
-
-  @ApiProperty({
-    description: '자기평가 점수 (1-5)',
-    example: 4,
-    nullable: true,
-  })
-  score?: number;
-
-  @ApiProperty({
-    description: '피평가자가 1차 평가자에게 제출한 여부',
-    example: true,
-  })
-  submittedToEvaluator: boolean;
-
-  @ApiPropertyOptional({
-    description: '1차 평가자에게 제출한 일시',
-    type: 'string',
-    format: 'date-time',
-    example: '2024-04-01T10:00:00.000Z',
-    nullable: true,
-  })
-  submittedToEvaluatorAt?: Date;
-
-  @ApiProperty({
-    description: '1차 평가자가 관리자에게 제출한 여부',
-    example: true,
-  })
-  submittedToManager: boolean;
-
-  @ApiPropertyOptional({
-    description: '관리자에게 제출한 일시',
-    type: 'string',
-    format: 'date-time',
-    example: '2024-04-01T10:00:00.000Z',
-    nullable: true,
-  })
-  submittedToManagerAt?: Date;
-
-  @ApiProperty({
-    description: '제출일',
-    type: 'string',
-    format: 'date-time',
-    example: '2024-04-01T10:00:00.000Z',
-    nullable: true,
-  })
-  submittedAt?: Date;
-}
-
-/**
  * 산출물 정보 DTO
  * Context의 DeliverableInfo 타입과 일치해야 함
  */
@@ -467,14 +400,6 @@ export class AssignedWbsInfoDto implements AssignedWbsInfo {
   })
   @Type(() => WbsPerformanceDto)
   performance?: WbsPerformanceDto | null;
-
-  @ApiProperty({
-    description: 'WBS 자기평가 정보',
-    type: WbsSelfEvaluationDto,
-    nullable: true,
-  })
-  @Type(() => WbsSelfEvaluationDto)
-  selfEvaluation?: WbsSelfEvaluationDto | null;
 
   @ApiProperty({
     description: 'WBS 1차 하향평가 정보 (PRIMARY 평가자가 작성)',

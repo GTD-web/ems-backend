@@ -15,7 +15,6 @@ import {
   AssignedWbsInfo,
   WbsEvaluationCriterion,
   WbsPerformance,
-  WbsSelfEvaluationInfo,
   WbsDownwardEvaluationInfo,
   DeliverableInfo,
 } from './types';
@@ -163,26 +162,14 @@ export async function getProjectsWithWbs(
     }
   }
 
-  // 6. 배치 조회: 자기평가 (WHERE periodId = :p AND employeeId = :e AND wbsItemId IN (:...wbsItemIds))
-  const selfEvaluationMap = new Map<
-    string,
-    {
-      performance: WbsPerformance | null;
-      selfEvaluation: WbsSelfEvaluationInfo | null;
-    }
-  >();
+  // 6. 배치 조회: 성과 정보 (WHERE periodId = :p AND employeeId = :e AND wbsItemId IN (:...wbsItemIds))
+  const performanceMap = new Map<string, WbsPerformance | null>();
   if (wbsItemIds.length > 0) {
     const selfEvaluationRows = await selfEvaluationRepository
       .createQueryBuilder('evaluation')
       .select([
-        'evaluation.id AS evaluation_id',
         'evaluation.wbsItemId AS evaluation_wbs_item_id',
         'evaluation.performanceResult AS evaluation_performance_result',
-        'evaluation.selfEvaluationContent AS evaluation_self_evaluation_content',
-        'evaluation.selfEvaluationScore AS evaluation_self_evaluation_score',
-        'evaluation.submittedToEvaluator AS evaluation_submitted_to_evaluator',
-        'evaluation.submittedToEvaluatorAt AS evaluation_submitted_to_evaluator_at',
-        'evaluation.submittedToManager AS evaluation_submitted_to_manager',
         'evaluation.submittedToManagerAt AS evaluation_submitted_to_manager_at',
       ])
       .where('evaluation.periodId = :periodId', {
@@ -205,21 +192,7 @@ export async function getProjectsWithWbs(
           : undefined,
       };
 
-      const selfEvaluation: WbsSelfEvaluationInfo = {
-        selfEvaluationId: row.evaluation_id,
-        evaluationContent: row.evaluation_self_evaluation_content,
-        score: row.evaluation_self_evaluation_score,
-        submittedToEvaluator: row.evaluation_submitted_to_evaluator || false,
-        submittedToEvaluatorAt: row.evaluation_submitted_to_evaluator_at,
-        submittedToManager: row.evaluation_submitted_to_manager || false,
-        submittedToManagerAt: row.evaluation_submitted_to_manager_at,
-        submittedAt: row.evaluation_submitted_to_manager_at,
-      };
-
-      selfEvaluationMap.set(wbsId, {
-        performance,
-        selfEvaluation,
-      });
+      performanceMap.set(wbsId, performance);
     }
   }
 
@@ -509,7 +482,7 @@ export async function getProjectsWithWbs(
       }
 
       const criteria = criteriaMap.get(wbsItemId) || [];
-      const selfEvalData = selfEvaluationMap.get(wbsItemId);
+      const performance = performanceMap.get(wbsItemId) || null;
       const downwardEvalData =
         downwardEvaluationMap.get(wbsItemId) || {
           primary: null,
@@ -524,8 +497,7 @@ export async function getProjectsWithWbs(
         weight: parseFloat(wbsRow.assignment_weight) || 0,
         assignedAt: wbsRow.assignment_assigned_date,
         criteria,
-        performance: selfEvalData?.performance || null,
-        selfEvaluation: selfEvalData?.selfEvaluation || null,
+        performance,
         primaryDownwardEvaluation: downwardEvalData.primary || null,
         secondaryDownwardEvaluation: downwardEvalData.secondary || null,
         deliverables,

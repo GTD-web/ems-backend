@@ -151,23 +151,20 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
       expect(할당데이터.projects).toBeDefined();
       expect(할당데이터.projects.length).toBeGreaterThan(0);
 
-      // 해당 WBS의 selfEvaluation 객체 검증
-      const wbsItem = 할당데이터.projects[0].wbsList.find(
-        (wbs: any) => wbs.wbsId === wbsItemIds[0],
-      );
-      expect(wbsItem).toBeDefined();
-      expect(wbsItem.selfEvaluation).toBeDefined();
-      expect(wbsItem.selfEvaluation.selfEvaluationId).toBe(저장결과.id);
-      expect(wbsItem.selfEvaluation.evaluationContent).toBe(
-        '자기평가 내용입니다.',
-      );
-      expect(wbsItem.selfEvaluation.score).toBe(85);
-      expect(wbsItem.selfEvaluation.submittedToManager).toBe(false); // 미제출 상태
-      expect(wbsItem.selfEvaluation.submittedAt).toBeNull();
-
-      // summary 검증
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
       expect(할당데이터.summary).toBeDefined();
       expect(할당데이터.summary.completedSelfEvaluations).toBe(0); // 제출 전
+      expect(할당데이터.summary.selfEvaluation.totalSelfEvaluations).toBe(1); // 저장된 자기평가 수
+      expect(할당데이터.summary.selfEvaluation.submittedToEvaluatorCount).toBe(
+        0,
+      ); // 미제출
+      expect(할당데이터.summary.selfEvaluation.submittedToManagerCount).toBe(0); // 미제출
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
+        false,
+      );
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToManager).toBe(
+        false,
+      );
       expect(할당데이터.summary.selfEvaluation.totalScore).toBeNull();
       expect(할당데이터.summary.selfEvaluation.grade).toBeNull();
 
@@ -224,7 +221,9 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
         '상세 조회 테스트용 자기평가 내용',
       );
       expect(상세조회결과.selfEvaluationScore).toBe(90);
-      expect(상세조회결과.performanceResult).toBe('상세 조회 테스트용 성과 결과');
+      expect(상세조회결과.performanceResult).toBe(
+        '상세 조회 테스트용 성과 결과',
+      );
       expect(상세조회결과.employeeId).toBe(employeeIds[0]);
       expect(상세조회결과.wbsItemId).toBe(wbsItemIds[0]);
       expect(상세조회결과.periodId).toBe(evaluationPeriodId);
@@ -251,21 +250,7 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
       expect(나의할당데이터.projects).toBeDefined();
       expect(나의할당데이터.projects.length).toBeGreaterThan(0);
 
-      // 해당 WBS의 selfEvaluation 객체 검증
-      const wbsItem = 나의할당데이터.projects[0].wbsList.find(
-        (wbs: any) => wbs.wbsId === wbsItemIds[0],
-      );
-      expect(wbsItem).toBeDefined();
-      expect(wbsItem.selfEvaluation).toBeDefined();
-      expect(wbsItem.selfEvaluation.selfEvaluationId).toBe(저장결과.id);
-      expect(wbsItem.selfEvaluation.evaluationContent).toBe(
-        '상세 조회 테스트용 자기평가 내용',
-      );
-      expect(wbsItem.selfEvaluation.score).toBe(90);
-      expect(wbsItem.selfEvaluation.submittedToManager).toBe(false); // 미제출 상태
-      expect(wbsItem.selfEvaluation.submittedAt).toBeNull();
-
-      // summary 검증
+      // summary 검증 (wbsList 내 selfEvaluation은 제거되었으므로 summary만 검증)
       expect(나의할당데이터.summary).toBeDefined();
       expect(나의할당데이터.summary.completedSelfEvaluations).toBe(0); // 제출 전
       expect(나의할당데이터.summary.selfEvaluation.totalScore).toBeNull();
@@ -318,15 +303,21 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
           employeeId: employeeIds[0],
         });
 
-      const wbsItem = 할당데이터.projects[0].wbsList.find(
-        (wbs: any) => wbs.wbsId === wbsItemIds[0],
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
+      expect(할당데이터.summary).toBeDefined();
+      expect(할당데이터.summary.selfEvaluation.totalSelfEvaluations).toBe(1);
+      expect(할당데이터.summary.selfEvaluation.submittedToEvaluatorCount).toBe(
+        0,
       );
-      expect(wbsItem.selfEvaluation.evaluationContent).toBe(
-        '수정된 자기평가 내용',
+      expect(할당데이터.summary.selfEvaluation.submittedToManagerCount).toBe(0);
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
+        false,
       );
-      expect(wbsItem.selfEvaluation.score).toBe(90);
-      expect(wbsItem.selfEvaluation.submittedToManager).toBe(false); // 제출 전이므로 false
-      expect(wbsItem.selfEvaluation.selfEvaluationId).toBe(저장된ID); // 동일한 ID
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToManager).toBe(
+        false,
+      );
+      expect(할당데이터.summary.selfEvaluation.totalScore).toBeNull();
+      expect(할당데이터.summary.selfEvaluation.grade).toBeNull();
 
       const 개별직원현황 =
         await wbsSelfEvaluationScenario.직원의_평가기간_현황을_조회한다({
@@ -438,14 +429,16 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
           employeeId: employeeIds[0],
         });
 
-      const wbsItem = 할당데이터.projects[0].wbsList.find(
-        (wbs: any) => wbs.wbsId === wbsItemIds[0],
-      );
-      expect(wbsItem.selfEvaluation.submittedToManager).toBe(true);
-      expect(wbsItem.selfEvaluation.submittedToManagerAt).toBeDefined();
-
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
       expect(할당데이터.summary.completedSelfEvaluations).toBe(1);
+      expect(할당데이터.summary.selfEvaluation.totalSelfEvaluations).toBe(1);
+      expect(할당데이터.summary.selfEvaluation.submittedToEvaluatorCount).toBe(
+        1,
+      );
       expect(할당데이터.summary.selfEvaluation.submittedToManagerCount).toBe(1);
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
+        true,
+      );
       expect(할당데이터.summary.selfEvaluation.isSubmittedToManager).toBe(true);
 
       // 점수 계산 검증 (모든 자기평가 제출 완료 시)
@@ -493,17 +486,17 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
           employeeId: employeeIds[0],
         });
 
-      const wbsItem = 할당데이터.projects[0].wbsList.find(
-        (wbs: any) => wbs.wbsId === wbsItemIds[0],
-      );
-      expect(wbsItem.selfEvaluation.evaluationContent).toBe(
-        '수정된 자기평가 내용',
-      );
-      expect(wbsItem.selfEvaluation.score).toBe(90);
-      expect(wbsItem.selfEvaluation.submittedToManager).toBe(true); // 제출 상태 유지
-      expect(wbsItem.selfEvaluation.submittedToManagerAt).toBeDefined();
-
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
       expect(할당데이터.summary.completedSelfEvaluations).toBe(1); // 제출 상태 유지
+      expect(할당데이터.summary.selfEvaluation.totalSelfEvaluations).toBe(1);
+      expect(할당데이터.summary.selfEvaluation.submittedToEvaluatorCount).toBe(
+        1,
+      );
+      expect(할당데이터.summary.selfEvaluation.submittedToManagerCount).toBe(1);
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
+        true,
+      );
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToManager).toBe(true);
       expect(할당데이터.summary.selfEvaluation.totalScore).toBeDefined(); // 재계산
       expect(할당데이터.summary.selfEvaluation.grade).toBeDefined(); // 재계산
     });
@@ -549,18 +542,7 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
           employeeId: employeeIds[0],
         });
 
-      const wbsItem = 할당데이터.projects[0].wbsList.find(
-        (wbs: any) => wbs.wbsId === wbsItemIds[0],
-      );
-
-      // Clear 후에는 자기평가 레코드는 존재하지만 내용은 빈 문자열(""), 점수는 0점이어야 함
-      expect(wbsItem).toBeDefined();
-      expect(wbsItem.selfEvaluation).toBeDefined();
-      expect(wbsItem.selfEvaluation.evaluationContent).toBe('');
-      expect(wbsItem.selfEvaluation.score).toBe(0);
-      expect(wbsItem.selfEvaluation.submittedToManager).toBe(false); // 제출 상태 초기화
-      expect(wbsItem.selfEvaluation.submittedToManagerAt).toBeNull();
-
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
       const 개별직원현황 =
         await wbsSelfEvaluationScenario.직원의_평가기간_현황을_조회한다({
           periodId: evaluationPeriodId,
@@ -573,6 +555,17 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
       expect(개별직원현황.selfEvaluation.grade).toBeNull();
 
       expect(할당데이터.summary.completedSelfEvaluations).toBe(0);
+      expect(할당데이터.summary.selfEvaluation.totalSelfEvaluations).toBe(1); // 레코드는 존재
+      expect(할당데이터.summary.selfEvaluation.submittedToEvaluatorCount).toBe(
+        0,
+      );
+      expect(할당데이터.summary.selfEvaluation.submittedToManagerCount).toBe(0);
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
+        false,
+      );
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToManager).toBe(
+        false,
+      );
       expect(할당데이터.summary.selfEvaluation.totalScore).toBeNull();
       expect(할당데이터.summary.selfEvaluation.grade).toBeNull();
     });
@@ -680,16 +673,16 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
           employeeId: employeeIds[0],
         });
 
-      const wbsItem = 할당데이터.projects[0].wbsList.find(
-        (wbs: any) => wbs.wbsId === wbsItemIds[0],
-      );
-      expect(wbsItem.selfEvaluation.submittedToManager).toBe(false);
-      // Reset 시에는 submittedToManagerAt을 초기화하지 않고 유지 (내용도 유지)
-      expect(wbsItem.selfEvaluation.evaluationContent).toBe('자기평가 내용'); // 내용 유지
-      expect(wbsItem.selfEvaluation.score).toBe(85); // 내용 유지
-
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
       expect(할당데이터.summary.completedSelfEvaluations).toBe(0);
+      expect(할당데이터.summary.selfEvaluation.totalSelfEvaluations).toBe(1);
+      expect(할당데이터.summary.selfEvaluation.submittedToEvaluatorCount).toBe(
+        1,
+      ); // 1차 평가자 제출 상태 유지
       expect(할당데이터.summary.selfEvaluation.submittedToManagerCount).toBe(0);
+      expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
+        true,
+      ); // 1차 평가자 제출 상태 유지
       expect(할당데이터.summary.selfEvaluation.isSubmittedToManager).toBe(
         false,
       );

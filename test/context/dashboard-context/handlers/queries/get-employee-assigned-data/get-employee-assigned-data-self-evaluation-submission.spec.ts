@@ -108,9 +108,10 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
     handler = module.get<GetEmployeeAssignedDataHandler>(
       GetEmployeeAssignedDataHandler,
     );
-    submitToEvaluatorHandler = module.get<SubmitWbsSelfEvaluationToEvaluatorHandler>(
-      SubmitWbsSelfEvaluationToEvaluatorHandler,
-    );
+    submitToEvaluatorHandler =
+      module.get<SubmitWbsSelfEvaluationToEvaluatorHandler>(
+        SubmitWbsSelfEvaluationToEvaluatorHandler,
+      );
     submitToManagerHandler = module.get<SubmitWbsSelfEvaluationHandler>(
       SubmitWbsSelfEvaluationHandler,
     );
@@ -126,12 +127,8 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
     projectAssignmentRepository = dataSource.getRepository(
       EvaluationProjectAssignment,
     );
-    wbsAssignmentRepository = dataSource.getRepository(
-      EvaluationWbsAssignment,
-    );
-    wbsSelfEvaluationRepository = dataSource.getRepository(
-      WbsSelfEvaluation,
-    );
+    wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
+    wbsSelfEvaluationRepository = dataSource.getRepository(WbsSelfEvaluation);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
 
@@ -228,9 +225,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);
@@ -319,9 +313,8 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
       selfEvaluationScore: 100,
       createdBy: systemAdminId,
     });
-    const savedEvaluation1 = await wbsSelfEvaluationRepository.save(
-      evaluation1,
-    );
+    const savedEvaluation1 =
+      await wbsSelfEvaluationRepository.save(evaluation1);
     evaluationId1 = savedEvaluation1.id;
 
     const evaluation2 = wbsSelfEvaluationRepository.create({
@@ -336,14 +329,13 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
       selfEvaluationScore: 110,
       createdBy: systemAdminId,
     });
-    const savedEvaluation2 = await wbsSelfEvaluationRepository.save(
-      evaluation2,
-    );
+    const savedEvaluation2 =
+      await wbsSelfEvaluationRepository.save(evaluation2);
     evaluationId2 = savedEvaluation2.id;
   }
 
   describe('자기평가 제출 상태 조회 (할당 데이터)', () => {
-    it('자기평가가 1차 평가자에게 제출되지 않은 경우 submittedToEvaluator가 false여야 한다', async () => {
+    it('자기평가가 1차 평가자에게 제출되지 않은 경우 summary의 submittedToEvaluator가 false여야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
 
@@ -358,23 +350,17 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
       expect(result).toBeDefined();
       expect(result.projects.length).toBeGreaterThan(0);
 
-      const project = result.projects[0];
-      expect(project.wbsList.length).toBeGreaterThan(0);
-
-      const wbs1 = project.wbsList.find((w) => w.wbsId === wbsItemId1);
-      expect(wbs1).toBeDefined();
-      expect(wbs1?.selfEvaluation).toBeDefined();
-      expect(wbs1?.selfEvaluation?.submittedToEvaluator).toBe(false);
-      expect(wbs1?.selfEvaluation?.submittedToManager).toBe(false);
-
-      const wbs2 = project.wbsList.find((w) => w.wbsId === wbsItemId2);
-      expect(wbs2).toBeDefined();
-      expect(wbs2?.selfEvaluation).toBeDefined();
-      expect(wbs2?.selfEvaluation?.submittedToEvaluator).toBe(false);
-      expect(wbs2?.selfEvaluation?.submittedToManager).toBe(false);
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
+      expect(result.summary).toBeDefined();
+      expect(result.summary.selfEvaluation).toBeDefined();
+      expect(result.summary.selfEvaluation.totalSelfEvaluations).toBe(2);
+      expect(result.summary.selfEvaluation.submittedToEvaluatorCount).toBe(0);
+      expect(result.summary.selfEvaluation.submittedToManagerCount).toBe(0);
+      expect(result.summary.selfEvaluation.isSubmittedToEvaluator).toBe(false);
+      expect(result.summary.selfEvaluation.isSubmittedToManager).toBe(false);
     });
 
-    it('자기평가가 1차 평가자에게 제출된 경우 submittedToEvaluator가 true여야 한다', async () => {
+    it('자기평가가 1차 평가자에게 제출된 경우 summary의 submittedToEvaluator가 true여야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
 
@@ -400,34 +386,34 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
 
       // Then
       expect(result).toBeDefined();
-      const project = result.projects[0];
 
-      const wbs1 = project.wbsList.find((w) => w.wbsId === wbsItemId1);
-      expect(wbs1?.selfEvaluation?.submittedToEvaluator).toBe(true);
-      expect(wbs1?.selfEvaluation?.submittedToEvaluatorAt).toBeDefined();
-      expect(wbs1?.selfEvaluation?.submittedToManager).toBe(false); // 관리자에게는 아직 제출 안함
-
-      const wbs2 = project.wbsList.find((w) => w.wbsId === wbsItemId2);
-      expect(wbs2?.selfEvaluation?.submittedToEvaluator).toBe(true);
-      expect(wbs2?.selfEvaluation?.submittedToEvaluatorAt).toBeDefined();
-      expect(wbs2?.selfEvaluation?.submittedToManager).toBe(false);
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
+      expect(result.summary).toBeDefined();
+      expect(result.summary.selfEvaluation).toBeDefined();
+      expect(result.summary.selfEvaluation.totalSelfEvaluations).toBe(2);
+      expect(result.summary.selfEvaluation.submittedToEvaluatorCount).toBe(2);
+      expect(result.summary.selfEvaluation.submittedToManagerCount).toBe(0);
+      expect(result.summary.selfEvaluation.isSubmittedToEvaluator).toBe(true);
+      expect(result.summary.selfEvaluation.isSubmittedToManager).toBe(false); // 관리자에게는 아직 제출 안함
     });
 
-    it('자기평가가 1차 평가자에게 제출 후 관리자에게도 제출한 경우 두 상태가 모두 true여야 한다', async () => {
+    it('자기평가가 1차 평가자에게 제출 후 관리자에게도 제출한 경우 summary의 두 상태가 모두 true여야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
 
       // 1차 평가자에게 제출
-      const submitToEvaluatorCommand1 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId1,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand1 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId1,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand1);
 
-      const submitToEvaluatorCommand2 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId2,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand2 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId2,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand2);
 
       // 관리자에게 제출
@@ -452,22 +438,18 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
 
       // Then
       expect(result).toBeDefined();
-      const project = result.projects[0];
 
-      const wbs1 = project.wbsList.find((w) => w.wbsId === wbsItemId1);
-      expect(wbs1?.selfEvaluation?.submittedToEvaluator).toBe(true);
-      expect(wbs1?.selfEvaluation?.submittedToEvaluatorAt).toBeDefined();
-      expect(wbs1?.selfEvaluation?.submittedToManager).toBe(true);
-      expect(wbs1?.selfEvaluation?.submittedToManagerAt).toBeDefined();
-
-      const wbs2 = project.wbsList.find((w) => w.wbsId === wbsItemId2);
-      expect(wbs2?.selfEvaluation?.submittedToEvaluator).toBe(true);
-      expect(wbs2?.selfEvaluation?.submittedToEvaluatorAt).toBeDefined();
-      expect(wbs2?.selfEvaluation?.submittedToManager).toBe(true);
-      expect(wbs2?.selfEvaluation?.submittedToManagerAt).toBeDefined();
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
+      expect(result.summary).toBeDefined();
+      expect(result.summary.selfEvaluation).toBeDefined();
+      expect(result.summary.selfEvaluation.totalSelfEvaluations).toBe(2);
+      expect(result.summary.selfEvaluation.submittedToEvaluatorCount).toBe(2);
+      expect(result.summary.selfEvaluation.submittedToManagerCount).toBe(2);
+      expect(result.summary.selfEvaluation.isSubmittedToEvaluator).toBe(true);
+      expect(result.summary.selfEvaluation.isSubmittedToManager).toBe(true);
     });
 
-    it('일부 자기평가만 1차 평가자에게 제출된 경우 각각의 상태가 올바르게 조회되어야 한다', async () => {
+    it('일부 자기평가만 1차 평가자에게 제출된 경우 summary의 상태가 올바르게 조회되어야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
 
@@ -487,20 +469,18 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
 
       // Then
       expect(result).toBeDefined();
-      const project = result.projects[0];
 
-      const wbs1 = project.wbsList.find((w) => w.wbsId === wbsItemId1);
-      expect(wbs1?.selfEvaluation?.submittedToEvaluator).toBe(true);
-      expect(wbs1?.selfEvaluation?.submittedToEvaluatorAt).toBeDefined();
-      expect(wbs1?.selfEvaluation?.submittedToManager).toBe(false);
-
-      const wbs2 = project.wbsList.find((w) => w.wbsId === wbsItemId2);
-      expect(wbs2?.selfEvaluation?.submittedToEvaluator).toBe(false);
-      expect(wbs2?.selfEvaluation?.submittedToEvaluatorAt).toBeFalsy(); // null 또는 undefined일 수 있음
-      expect(wbs2?.selfEvaluation?.submittedToManager).toBe(false);
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
+      expect(result.summary).toBeDefined();
+      expect(result.summary.selfEvaluation).toBeDefined();
+      expect(result.summary.selfEvaluation.totalSelfEvaluations).toBe(2);
+      expect(result.summary.selfEvaluation.submittedToEvaluatorCount).toBe(1);
+      expect(result.summary.selfEvaluation.submittedToManagerCount).toBe(0);
+      expect(result.summary.selfEvaluation.isSubmittedToEvaluator).toBe(false); // 모두 제출되지 않음
+      expect(result.summary.selfEvaluation.isSubmittedToManager).toBe(false);
     });
 
-    it('자기평가가 없는 경우 selfEvaluation이 null이어야 한다', async () => {
+    it('자기평가가 없는 경우 summary의 totalSelfEvaluations가 0이어야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
 
@@ -519,13 +499,15 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
 
       // Then
       expect(result).toBeDefined();
-      const project = result.projects[0];
 
-      const wbs1 = project.wbsList.find((w) => w.wbsId === wbsItemId1);
-      expect(wbs1?.selfEvaluation).toBeNull();
-
-      const wbs2 = project.wbsList.find((w) => w.wbsId === wbsItemId2);
-      expect(wbs2?.selfEvaluation).toBeNull();
+      // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
+      expect(result.summary).toBeDefined();
+      expect(result.summary.selfEvaluation).toBeDefined();
+      expect(result.summary.selfEvaluation.totalSelfEvaluations).toBe(0);
+      expect(result.summary.selfEvaluation.submittedToEvaluatorCount).toBe(0);
+      expect(result.summary.selfEvaluation.submittedToManagerCount).toBe(0);
+      expect(result.summary.selfEvaluation.isSubmittedToEvaluator).toBe(false);
+      expect(result.summary.selfEvaluation.isSubmittedToManager).toBe(false);
     });
   });
 
@@ -645,16 +627,18 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
       await 기본_테스트데이터를_생성한다();
 
       // 모든 자기평가를 1차 평가자에게 제출
-      const submitToEvaluatorCommand1 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId1,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand1 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId1,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand1);
 
-      const submitToEvaluatorCommand2 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId2,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand2 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId2,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand2);
 
       // 첫 번째 평가만 관리자에게 제출
@@ -686,16 +670,18 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
       await 기본_테스트데이터를_생성한다();
 
       // 모든 자기평가를 1차 평가자에게 제출
-      const submitToEvaluatorCommand1 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId1,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand1 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId1,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand1);
 
-      const submitToEvaluatorCommand2 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId2,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand2 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId2,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand2);
 
       // 모든 자기평가를 관리자에게 제출
@@ -728,7 +714,7 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
       expect(result.summary.selfEvaluation.isSubmittedToManager).toBe(true); // 모두 제출됨
     });
 
-    it('summary의 제출 상태가 실제 WBS별 제출 상태와 일치해야 한다', async () => {
+    it('summary의 제출 상태가 DB에서 직접 집계한 값과 일치해야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
 
@@ -750,45 +736,55 @@ describe('Dashboard Context - Self Evaluation Submission Status (Assigned Data)'
       expect(result.summary).toBeDefined();
       expect(result.summary.selfEvaluation).toBeDefined();
 
-      // 실제 WBS별 제출 상태 집계
-      let actualSubmittedToEvaluatorCount = 0;
-      let actualSubmittedToManagerCount = 0;
+      // DB에서 직접 집계한 값과 비교
+      const totalSelfEvaluations = await wbsSelfEvaluationRepository.count({
+        where: {
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          deletedAt: null as any,
+        },
+      });
 
-      for (const project of result.projects) {
-        for (const wbs of project.wbsList) {
-          if (wbs.selfEvaluation?.submittedToEvaluator) {
-            actualSubmittedToEvaluatorCount++;
-          }
-          if (wbs.selfEvaluation?.submittedToManager) {
-            actualSubmittedToManagerCount++;
-          }
-        }
-      }
+      const submittedToEvaluatorCount = await wbsSelfEvaluationRepository.count(
+        {
+          where: {
+            periodId: evaluationPeriodId,
+            employeeId: employeeId,
+            submittedToEvaluator: true,
+            deletedAt: null as any,
+          },
+        },
+      );
 
-      // summary와 실제 집계 비교
+      const submittedToManagerCount = await wbsSelfEvaluationRepository.count({
+        where: {
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          submittedToManager: true,
+          deletedAt: null as any,
+        },
+      });
+
+      // summary와 DB 집계 비교
+      expect(result.summary.selfEvaluation.totalSelfEvaluations).toBe(
+        totalSelfEvaluations,
+      );
       expect(result.summary.selfEvaluation.submittedToEvaluatorCount).toBe(
-        actualSubmittedToEvaluatorCount,
+        submittedToEvaluatorCount,
       );
       expect(result.summary.selfEvaluation.submittedToManagerCount).toBe(
-        actualSubmittedToManagerCount,
+        submittedToManagerCount,
       );
 
       // isSubmittedToEvaluator는 모든 자기평가가 제출되었는지 확인
-      const totalWbsWithSelfEvaluation = result.projects.reduce(
-        (sum, project) =>
-          sum +
-          project.wbsList.filter((w) => w.selfEvaluation !== null).length,
-        0,
-      );
       expect(result.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
-        totalWbsWithSelfEvaluation > 0 &&
-          actualSubmittedToEvaluatorCount === totalWbsWithSelfEvaluation,
+        totalSelfEvaluations > 0 &&
+          submittedToEvaluatorCount === totalSelfEvaluations,
       );
       expect(result.summary.selfEvaluation.isSubmittedToManager).toBe(
-        totalWbsWithSelfEvaluation > 0 &&
-          actualSubmittedToManagerCount === totalWbsWithSelfEvaluation,
+        totalSelfEvaluations > 0 &&
+          submittedToManagerCount === totalSelfEvaluations,
       );
     });
   });
 });
-
