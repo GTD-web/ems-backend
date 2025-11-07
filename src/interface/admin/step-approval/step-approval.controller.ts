@@ -9,6 +9,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StepApprovalContextService } from '@context/step-approval-context';
 import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
+import { StepApprovalBusinessService } from '@business/step-approval/step-approval-business.service';
 import { UpdateStepApprovalDto } from './dto/update-step-approval.dto';
 import { UpdateSecondaryStepApprovalDto } from './dto/update-secondary-step-approval.dto';
 import { StepApprovalEnumsResponseDto } from './dto/step-approval-enums.dto';
@@ -38,6 +39,7 @@ export class StepApprovalController {
     private readonly stepApprovalContextService: StepApprovalContextService,
     private readonly wbsSelfEvaluationBusinessService: WbsSelfEvaluationBusinessService,
     private readonly downwardEvaluationBusinessService: DownwardEvaluationBusinessService,
+    private readonly stepApprovalBusinessService: StepApprovalBusinessService,
   ) {}
 
   /**
@@ -94,6 +96,7 @@ export class StepApprovalController {
   /**
    * 자기평가 단계 승인 상태를 변경한다
    * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
+   * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
    */
   @UpdateSelfStepApproval()
   async updateSelfStepApproval(
@@ -116,7 +119,16 @@ export class StepApprovalController {
         updatedBy,
       );
     } else {
-      // 재작성 요청이 아닌 경우 기존 로직대로 처리
+      // 승인 상태로 변경 시 제출 상태도 함께 변경
+      if (dto.status === StepApprovalStatusEnum.APPROVED) {
+        await this.stepApprovalBusinessService.자기평가_승인_시_제출상태_변경(
+          evaluationPeriodId,
+          employeeId,
+          updatedBy,
+        );
+      }
+
+      // 단계 승인 상태 변경
       await this.stepApprovalContextService.자기평가_확인상태를_변경한다({
         evaluationPeriodId,
         employeeId,
@@ -130,6 +142,7 @@ export class StepApprovalController {
   /**
    * 1차 하향평가 단계 승인 상태를 변경한다
    * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
+   * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
    */
   @UpdatePrimaryStepApproval()
   async updatePrimaryStepApproval(
@@ -152,7 +165,16 @@ export class StepApprovalController {
         updatedBy,
       );
     } else {
-      // 재작성 요청이 아닌 경우 기존 로직대로 처리
+      // 승인 상태로 변경 시 제출 상태도 함께 변경
+      if (dto.status === StepApprovalStatusEnum.APPROVED) {
+        await this.stepApprovalBusinessService.일차_하향평가_승인_시_제출상태_변경(
+          evaluationPeriodId,
+          employeeId,
+          updatedBy,
+        );
+      }
+
+      // 단계 승인 상태 변경
       await this.stepApprovalContextService.일차하향평가_확인상태를_변경한다({
         evaluationPeriodId,
         employeeId,
@@ -166,6 +188,7 @@ export class StepApprovalController {
   /**
    * 2차 하향평가 단계 승인 상태를 평가자별로 변경한다
    * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
+   * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
    */
   @UpdateSecondaryStepApproval()
   async updateSecondaryStepApproval(
@@ -190,7 +213,17 @@ export class StepApprovalController {
         updatedBy,
       );
     } else {
-      // 재작성 요청이 아닌 경우 기존 로직대로 처리
+      // 승인 상태로 변경 시 제출 상태도 함께 변경
+      if (dto.status === StepApprovalStatusEnum.APPROVED) {
+        await this.stepApprovalBusinessService.이차_하향평가_승인_시_제출상태_변경(
+          evaluationPeriodId,
+          employeeId,
+          evaluatorId,
+          updatedBy,
+        );
+      }
+
+      // 단계 승인 상태 변경
       await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
         evaluationPeriodId,
         employeeId,

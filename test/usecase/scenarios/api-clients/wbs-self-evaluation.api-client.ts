@@ -62,7 +62,7 @@ export class WbsSelfEvaluationApiClient {
     const response = await this.testSuite
       .request()
       .patch(
-        `/admin/performance-evaluation/wbs-self-evaluations/employee/${data.employeeId}/period/${data.periodId}/submit-all-to-evaluator`,
+        `/admin/performance-evaluation/wbs-self-evaluations/employee/${data.employeeId}/period/${data.periodId}/submit-to-evaluator`,
       )
       .expect(200);
 
@@ -95,9 +95,7 @@ export class WbsSelfEvaluationApiClient {
   async submitWbsSelfEvaluation(id: string) {
     const response = await this.testSuite
       .request()
-      .patch(
-        `/admin/performance-evaluation/wbs-self-evaluations/${id}/submit`,
-      )
+      .patch(`/admin/performance-evaluation/wbs-self-evaluations/${id}/submit`)
       .expect(200);
 
     return response.body;
@@ -197,9 +195,7 @@ export class WbsSelfEvaluationApiClient {
   async resetWbsSelfEvaluation(id: string) {
     const response = await this.testSuite
       .request()
-      .patch(
-        `/admin/performance-evaluation/wbs-self-evaluations/${id}/reset`,
-      )
+      .patch(`/admin/performance-evaluation/wbs-self-evaluations/${id}/reset`)
       .expect(200);
 
     return response.body;
@@ -248,9 +244,7 @@ export class WbsSelfEvaluationApiClient {
   async clearWbsSelfEvaluation(id: string) {
     const response = await this.testSuite
       .request()
-      .patch(
-        `/admin/performance-evaluation/wbs-self-evaluations/${id}/clear`,
-      )
+      .patch(`/admin/performance-evaluation/wbs-self-evaluations/${id}/clear`)
       .expect(200);
 
     return response.body;
@@ -328,4 +322,3 @@ export class WbsSelfEvaluationApiClient {
     return response.body;
   }
 }
-

@@ -4,6 +4,7 @@ import { WbsAssignmentBusinessModule } from './wbs-assignment/wbs-assignment-bus
 import { EvaluationPeriodBusinessModule } from './evaluation-period/evaluation-period-business.module';
 import { DownwardEvaluationBusinessModule } from './downward-evaluation/downward-evaluation-business.module';
 import { WbsSelfEvaluationBusinessModule } from './wbs-self-evaluation/wbs-self-evaluation-business.module';
+import { StepApprovalBusinessModule } from './step-approval/step-approval-business.module';
 
 /**
  * 비즈니스 레이어 통합 모듈
@@ -17,6 +18,7 @@ import { WbsSelfEvaluationBusinessModule } from './wbs-self-evaluation/wbs-self-
     DownwardEvaluationBusinessModule,
     EvaluationPeriodBusinessModule,
     WbsSelfEvaluationBusinessModule,
+    StepApprovalBusinessModule,
   ],
   exports: [
     PeerEvaluationBusinessModule,
@@ -24,6 +26,7 @@ import { WbsSelfEvaluationBusinessModule } from './wbs-self-evaluation/wbs-self-
     DownwardEvaluationBusinessModule,
     EvaluationPeriodBusinessModule,
     WbsSelfEvaluationBusinessModule,
+    StepApprovalBusinessModule,
   ],
 })
 export class BusinessModule {}
