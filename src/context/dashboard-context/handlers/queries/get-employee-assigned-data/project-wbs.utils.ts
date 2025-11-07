@@ -52,7 +52,7 @@ export async function getProjectsWithWbs(
     .leftJoin(
       Employee,
       'manager',
-      "manager.id::text = project.managerId AND manager.deletedAt IS NULL",
+      'manager.id::text = project.managerId AND manager.deletedAt IS NULL',
     )
     .select([
       'assignment.id AS assignment_id',
@@ -124,7 +124,9 @@ export async function getProjectsWithWbs(
   // 4. 모든 WBS ID 수집
   const wbsItemIds = [
     ...new Set(
-      wbsAssignments.map((row) => row.assignment_wbs_item_id || row.wbs_item_id),
+      wbsAssignments.map(
+        (row) => row.assignment_wbs_item_id || row.wbs_item_id,
+      ),
     ),
   ].filter((id): id is string => !!id);
 
@@ -197,7 +199,10 @@ export async function getProjectsWithWbs(
   }
 
   // 7. 배치 조회: 하향평가 평가자 매핑 (1차, 2차)
-  const primaryEvaluatorMap = new Map<string, { evaluatorId: string; evaluatorName: string }>();
+  const primaryEvaluatorMap = new Map<
+    string,
+    { evaluatorId: string; evaluatorName: string }
+  >();
   const secondaryEvaluatorMap = new Map<
     string,
     { evaluatorId: string; evaluatorName: string }
@@ -220,7 +225,9 @@ export async function getProjectsWithWbs(
       'line',
       'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
     )
-    .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+    .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+      evaluationPeriodId,
+    })
     .andWhere('mapping.employeeId = :employeeId', { employeeId })
     .andWhere('mapping.wbsItemId IS NULL')
     .andWhere('mapping.deletedAt IS NULL')
@@ -259,7 +266,9 @@ export async function getProjectsWithWbs(
         'line',
         'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
       )
-      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
       .andWhere('mapping.deletedAt IS NULL')
@@ -348,7 +357,11 @@ export async function getProjectsWithWbs(
             ? new Date(row.downward_completed_at)
             : undefined;
 
-      if (row.downward_evaluation_type === 'primary' && primaryEvaluator) {
+      if (
+        row.downward_evaluation_type === 'primary' &&
+        primaryEvaluator &&
+        row.downward_evaluator_id === primaryEvaluator.evaluatorId
+      ) {
         evalData.primary = {
           downwardEvaluationId: row.downward_id,
           evaluatorId: primaryEvaluator.evaluatorId,
@@ -360,7 +373,8 @@ export async function getProjectsWithWbs(
         };
       } else if (
         row.downward_evaluation_type === 'secondary' &&
-        secondaryEvaluator
+        secondaryEvaluator &&
+        row.downward_evaluator_id === secondaryEvaluator.evaluatorId
       ) {
         evalData.secondary = {
           downwardEvaluationId: row.downward_id,
@@ -473,8 +487,7 @@ export async function getProjectsWithWbs(
     const wbsList: AssignedWbsInfo[] = [];
 
     for (const wbsRow of projectWbsAssignments) {
-      const wbsItemId =
-        wbsRow.assignment_wbs_item_id || wbsRow.wbs_item_id;
+      const wbsItemId = wbsRow.assignment_wbs_item_id || wbsRow.wbs_item_id;
 
       if (!wbsItemId) {
         logger.warn('WBS ID가 없는 할당 발견', { wbsRow });
@@ -483,11 +496,10 @@ export async function getProjectsWithWbs(
 
       const criteria = criteriaMap.get(wbsItemId) || [];
       const performance = performanceMap.get(wbsItemId) || null;
-      const downwardEvalData =
-        downwardEvaluationMap.get(wbsItemId) || {
-          primary: null,
-          secondary: null,
-        };
+      const downwardEvalData = downwardEvaluationMap.get(wbsItemId) || {
+        primary: null,
+        secondary: null,
+      };
       const deliverables = deliverablesMap.get(wbsItemId) || [];
 
       wbsList.push({

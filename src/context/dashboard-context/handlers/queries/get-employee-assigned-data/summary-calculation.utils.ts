@@ -86,7 +86,7 @@ export async function calculatePrimaryDownwardEvaluationScore(
   let primaryDownwardScore: number | null = null;
   let primaryDownwardGrade: string | null = null;
 
-  // 1차 평가자 조회
+  // 1차 평가자 조회 (직원별 고정 담당자, wbsItemId IS NULL)
   const primaryEvaluatorMapping = await evaluationLineMappingRepository
     .createQueryBuilder('mapping')
     .leftJoin(
@@ -94,8 +94,11 @@ export async function calculatePrimaryDownwardEvaluationScore(
       'line',
       'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
     )
-    .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+    .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+      evaluationPeriodId,
+    })
     .andWhere('mapping.employeeId = :employeeId', { employeeId })
+    .andWhere('mapping.wbsItemId IS NULL') // 1차 평가자는 직원별 고정 담당자
     .andWhere('line.evaluatorType = :evaluatorType', {
       evaluatorType: EvaluatorType.PRIMARY,
     })
@@ -105,33 +108,21 @@ export async function calculatePrimaryDownwardEvaluationScore(
   if (primaryEvaluatorMapping) {
     const primaryEvaluatorId = primaryEvaluatorMapping.evaluatorId;
 
-    // 1차 평가자에게 할당된 WBS 목록 조회 (wbsItemId 포함)
-    const primaryAssignedMappings = await evaluationLineMappingRepository
-      .createQueryBuilder('mapping')
-      .select(['mapping.id', 'mapping.wbsItemId'])
-      .leftJoin(
-        EvaluationLine,
-        'line',
-        'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
-      )
-      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
-      .andWhere('mapping.employeeId = :employeeId', { employeeId })
-      .andWhere('mapping.evaluatorId = :evaluatorId', {
-        evaluatorId: primaryEvaluatorId,
+    // 1차 평가자는 직원별 고정 담당자이므로, 할당된 WBS 목록은 WBS 할당 테이블에서 조회
+    const primaryAssignedWbs = await wbsAssignmentRepository
+      .createQueryBuilder('assignment')
+      .select(['assignment.wbsItemId AS wbs_item_id'])
+      .where('assignment.periodId = :evaluationPeriodId', {
+        evaluationPeriodId,
       })
-      .andWhere('line.evaluatorType = :evaluatorType', {
-        evaluatorType: EvaluatorType.PRIMARY,
-      })
-      .andWhere('mapping.deletedAt IS NULL')
-      .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
+      .andWhere('assignment.employeeId = :employeeId', { employeeId })
+      .andWhere('assignment.deletedAt IS NULL')
       .getRawMany();
 
-    const primaryAssignedCount = primaryAssignedMappings.length;
+    const primaryAssignedCount = primaryAssignedWbs.length;
 
     // 할당된 WBS ID 목록 추출
-    const primaryAssignedWbsIds = primaryAssignedMappings.map(
-      (m) => m.mapping_wbsItemId,
-    );
+    const primaryAssignedWbsIds = primaryAssignedWbs.map((w) => w.wbs_item_id);
 
     // 할당된 WBS에 대한 완료된 평가 수 조회
     let primaryCompletedCount = 0;
@@ -211,7 +202,9 @@ export async function calculateSecondaryDownwardEvaluationScore(
       'line',
       'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
     )
-    .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+    .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+      evaluationPeriodId,
+    })
     .andWhere('mapping.employeeId = :employeeId', { employeeId })
     .andWhere('line.evaluatorType = :evaluatorType', {
       evaluatorType: EvaluatorType.SECONDARY,
@@ -237,7 +230,9 @@ export async function calculateSecondaryDownwardEvaluationScore(
             'line',
             'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
           )
-          .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+          .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+          })
           .andWhere('mapping.employeeId = :employeeId', { employeeId })
           .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
           .andWhere('line.evaluatorType = :evaluatorType', {
@@ -267,8 +262,8 @@ export async function calculateSecondaryDownwardEvaluationScore(
               evaluationType: DownwardEvaluationType.SECONDARY,
             })
             .andWhere('eval.isCompleted = :isCompleted', {
-          isCompleted: true,
-        })
+              isCompleted: true,
+            })
             .andWhere('eval.deletedAt IS NULL')
             .getCount();
         }
