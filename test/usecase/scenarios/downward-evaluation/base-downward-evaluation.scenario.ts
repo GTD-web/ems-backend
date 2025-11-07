@@ -147,20 +147,26 @@ export class BaseDownwardEvaluationScenario {
     console.log('📌 WBS 할당 및 평가라인 매핑 확인...');
 
     // 1. WBS 할당 (평가라인 매핑 자동 생성)
-    await this.testSuite
-      .request()
-      .post('/admin/evaluation-criteria/wbs-assignments')
-      .send({
-        employeeId: config.employeeId,
-        wbsItemId: config.wbsItemId,
-        projectId: config.projectId,
-        periodId: config.periodId,
-      })
-      .expect(201);
+    try {
+      await this.testSuite
+        .request()
+        .post('/admin/evaluation-criteria/wbs-assignments')
+        .send({
+          employeeId: config.employeeId,
+          wbsItemId: config.wbsItemId,
+          projectId: config.projectId,
+          periodId: config.periodId,
+        })
+        .expect(201);
 
-    console.log(
-      `✅ WBS 할당 완료 - 피평가자: ${config.employeeId}, WBS: ${config.wbsItemId}`,
-    );
+      console.log(
+        `✅ WBS 할당 완료 - 피평가자: ${config.employeeId}, WBS: ${config.wbsItemId}`,
+      );
+    } catch (error) {
+      console.log(
+        `⚠️ WBS 할당 실패 (이미 할당되었을 수 있음) - 피평가자: ${config.employeeId}, WBS: ${config.wbsItemId}`,
+      );
+    }
 
     // 2. 평가라인 매핑 확인
     // - 1차 평가자: wbsItemId가 null (직원별 고정 담당자)

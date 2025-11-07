@@ -64,63 +64,65 @@ export class DownwardEvaluationDashboardScenario {
     console.log('  ✓ downwardEvaluation 필드 존재');
 
     // 1차 하향평가 확인
-    let primary하향평가: any | null = null;
+    let 일차하향평가: any | null = null;
     if (대시보드데이터.downwardEvaluation.primary) {
-      primary하향평가 = 대시보드데이터.downwardEvaluation.primary;
+      일차하향평가 = 대시보드데이터.downwardEvaluation.primary;
       console.log('  ✓ primary 하향평가 데이터 발견');
-      console.log(`    - 상태: ${primary하향평가.status}`);
-      console.log(`    - 할당된 WBS 수: ${primary하향평가.assignedWbsCount}`);
+      console.log(`    - 상태: ${일차하향평가.status}`);
+      console.log(`    - 할당된 WBS 수: ${일차하향평가.assignedWbsCount}`);
       console.log(
-        `    - 완료된 평가 수: ${primary하향평가.completedEvaluationCount}`,
+        `    - 완료된 평가 수: ${일차하향평가.completedEvaluationCount}`,
       );
-      console.log(`    - 총점: ${primary하향평가.totalScore || 'N/A'}`);
-      console.log(`    - 등급: ${primary하향평가.grade || 'N/A'}`);
+      console.log(`    - 총점: ${일차하향평가.totalScore || 'N/A'}`);
+      console.log(`    - 등급: ${일차하향평가.grade || 'N/A'}`);
 
       // 검증
-      expect(primary하향평가).toBeDefined();
-      expect(primary하향평가.assignedWbsCount).toBeGreaterThan(0);
-      
+      expect(일차하향평가).toBeDefined();
+      expect(일차하향평가.assignedWbsCount).toBeGreaterThan(0);
+
       // 상태 검증 - 하향평가가 완료된 경우 상태가 'complete'이어야 함
-      if (primary하향평가.completedEvaluationCount >= primary하향평가.assignedWbsCount) {
-        expect(primary하향평가.status).toBe('complete');
+      if (
+        일차하향평가.completedEvaluationCount >= 일차하향평가.assignedWbsCount
+      ) {
+        expect(일차하향평가.status).toBe('complete');
         console.log('  ✓ 1차 하향평가 상태가 올바르게 완료됨');
-      } else if (primary하향평가.completedEvaluationCount > 0) {
-        expect(primary하향평가.status).toBe('in_progress');
+      } else if (일차하향평가.completedEvaluationCount > 0) {
+        expect(일차하향평가.status).toBe('in_progress');
         console.log('  ✓ 1차 하향평가 상태가 올바르게 진행중');
       } else {
-        expect(primary하향평가.status).toBe('none');
+        expect(일차하향평가.status).toBe('none');
         console.log('  ✓ 1차 하향평가 상태가 올바르게 없음');
       }
     }
 
     // 2차 하향평가 확인
-    let secondary하향평가: any | null = null;
+    let 이차하향평가: any | null = null;
     if (대시보드데이터.downwardEvaluation.secondary) {
-      secondary하향평가 = 대시보드데이터.downwardEvaluation.secondary;
+      이차하향평가 = 대시보드데이터.downwardEvaluation.secondary;
       console.log('  ✓ secondary 하향평가 데이터 발견');
-      console.log(
-        `    - 평가자 수: ${secondary하향평가.evaluators?.length || 0}`,
-      );
-      console.log(`    - 총점: ${secondary하향평가.totalScore || 'N/A'}`);
-      console.log(`    - 등급: ${secondary하향평가.grade || 'N/A'}`);
+      console.log(`    - 평가자 수: ${이차하향평가.evaluators?.length || 0}`);
+      console.log(`    - 총점: ${이차하향평가.totalScore || 'N/A'}`);
+      console.log(`    - 등급: ${이차하향평가.grade || 'N/A'}`);
 
       // 검증
-      expect(secondary하향평가).toBeDefined();
-      if (
-        secondary하향평가.evaluators &&
-        secondary하향평가.evaluators.length > 0
-      ) {
-        expect(
-          secondary하향평가.evaluators[0].assignedWbsCount,
-        ).toBeGreaterThan(0);
-        
+      expect(이차하향평가).toBeDefined();
+      if (이차하향평가.evaluators && 이차하향평가.evaluators.length > 0) {
+        expect(이차하향평가.evaluators[0].assignedWbsCount).toBeGreaterThan(0);
+
         // 2차 하향평가 상태 검증
-        const firstEvaluator = secondary하향평가.evaluators[0];
+        const firstEvaluator = 이차하향평가.evaluators[0];
         console.log(`    - 첫 번째 평가자 상태: ${firstEvaluator.status}`);
-        console.log(`    - 첫 번째 평가자 할당 WBS 수: ${firstEvaluator.assignedWbsCount}`);
-        console.log(`    - 첫 번째 평가자 완료된 평가 수: ${firstEvaluator.completedEvaluationCount}`);
-        
-        if (firstEvaluator.completedEvaluationCount >= firstEvaluator.assignedWbsCount) {
+        console.log(
+          `    - 첫 번째 평가자 할당 WBS 수: ${firstEvaluator.assignedWbsCount}`,
+        );
+        console.log(
+          `    - 첫 번째 평가자 완료된 평가 수: ${firstEvaluator.completedEvaluationCount}`,
+        );
+
+        if (
+          firstEvaluator.completedEvaluationCount >=
+          firstEvaluator.assignedWbsCount
+        ) {
           expect(firstEvaluator.status).toBe('complete');
           console.log('  ✓ 2차 하향평가 첫 번째 평가자 상태가 올바르게 완료됨');
         } else if (firstEvaluator.completedEvaluationCount > 0) {
@@ -137,8 +139,8 @@ export class DownwardEvaluationDashboardScenario {
 
     return {
       대시보드데이터,
-      primary하향평가,
-      secondary하향평가,
+      primary하향평가: 일차하향평가,
+      secondary하향평가: 이차하향평가,
     };
   }
 
