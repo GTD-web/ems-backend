@@ -201,14 +201,23 @@ export class StepApprovalBusinessService {
     });
 
     // 2. 활동 내역 기록
-    await this.단계승인_상태변경_활동내역을_기록한다({
-      evaluationPeriodId: params.evaluationPeriodId,
-      employeeId: params.employeeId,
-      step: 'criteria',
-      status: params.status,
-      revisionComment: params.revisionComment,
-      updatedBy: params.updatedBy,
-    });
+    try {
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
+        {
+          evaluationPeriodId: params.evaluationPeriodId,
+          employeeId: params.employeeId,
+          step: 'criteria',
+          status: params.status,
+          revisionComment: params.revisionComment,
+          updatedBy: params.updatedBy,
+        },
+      );
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
+      this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+        error: error.message,
+      });
+    }
   }
 
   /**
@@ -231,14 +240,23 @@ export class StepApprovalBusinessService {
     });
 
     // 2. 활동 내역 기록
-    await this.단계승인_상태변경_활동내역을_기록한다({
-      evaluationPeriodId: params.evaluationPeriodId,
-      employeeId: params.employeeId,
-      step: 'self',
-      status: params.status,
-      revisionComment: params.revisionComment,
-      updatedBy: params.updatedBy,
-    });
+    try {
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
+        {
+          evaluationPeriodId: params.evaluationPeriodId,
+          employeeId: params.employeeId,
+          step: 'self',
+          status: params.status,
+          revisionComment: params.revisionComment,
+          updatedBy: params.updatedBy,
+        },
+      );
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
+      this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+        error: error.message,
+      });
+    }
   }
 
   /**
@@ -261,14 +279,23 @@ export class StepApprovalBusinessService {
     });
 
     // 2. 활동 내역 기록
-    await this.단계승인_상태변경_활동내역을_기록한다({
-      evaluationPeriodId: params.evaluationPeriodId,
-      employeeId: params.employeeId,
-      step: 'primary',
-      status: params.status,
-      revisionComment: params.revisionComment,
-      updatedBy: params.updatedBy,
-    });
+    try {
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
+        {
+          evaluationPeriodId: params.evaluationPeriodId,
+          employeeId: params.employeeId,
+          step: 'primary',
+          status: params.status,
+          revisionComment: params.revisionComment,
+          updatedBy: params.updatedBy,
+        },
+      );
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
+      this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+        error: error.message,
+      });
+    }
   }
 
   /**
@@ -293,89 +320,18 @@ export class StepApprovalBusinessService {
     });
 
     // 2. 활동 내역 기록
-    await this.단계승인_상태변경_활동내역을_기록한다({
-      evaluationPeriodId: params.evaluationPeriodId,
-      employeeId: params.employeeId,
-      step: 'secondary',
-      status: params.status,
-      revisionComment: params.revisionComment,
-      updatedBy: params.updatedBy,
-      evaluatorId: params.evaluatorId,
-    });
-  }
-
-  /**
-   * 단계 승인 상태 변경 시 활동 내역을 기록한다
-   */
-  private async 단계승인_상태변경_활동내역을_기록한다(params: {
-    evaluationPeriodId: string;
-    employeeId: string;
-    step: string;
-    status: StepApprovalStatus;
-    revisionComment?: string;
-    updatedBy: string;
-    evaluatorId?: string; // 2차 하향평가의 경우 필요
-  }): Promise<void> {
-    this.logger.log('단계 승인 상태 변경 활동 내역 기록 시작', {
-      evaluationPeriodId: params.evaluationPeriodId,
-      employeeId: params.employeeId,
-      step: params.step,
-      status: params.status,
-    });
-
     try {
-      // 단계별 제목 결정
-      let activityTitle = '';
-      let activityAction: 'approved' | 'rejected' | 'revision_requested' =
-        'approved';
-
-      switch (params.step) {
-        case 'criteria':
-          activityTitle = '평가기준 설정';
-          break;
-        case 'self':
-          activityTitle = '자기평가';
-          break;
-        case 'primary':
-          activityTitle = '1차 하향평가';
-          break;
-        case 'secondary':
-          activityTitle = '2차 하향평가';
-          break;
-        default:
-          activityTitle = '단계 승인';
-      }
-
-      // 상태에 따른 액션 결정
-      if (params.status === StepApprovalStatus.APPROVED) {
-        activityAction = 'approved';
-        activityTitle += ' 승인';
-      } else if (params.status === StepApprovalStatus.REVISION_REQUESTED) {
-        activityAction = 'revision_requested';
-        activityTitle += ' 재작성 요청';
-      } else {
-        // 다른 상태는 기록하지 않음
-        return;
-      }
-
-      // 활동 내역 기록
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId: params.evaluationPeriodId,
-        employeeId: params.employeeId,
-        activityType: 'step_approval',
-        activityAction,
-        activityTitle,
-        relatedEntityType: 'step_approval',
-        performedBy: params.updatedBy,
-        activityMetadata: {
-          step: params.step,
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
+        {
+          evaluationPeriodId: params.evaluationPeriodId,
+          employeeId: params.employeeId,
+          step: 'secondary',
           status: params.status,
           revisionComment: params.revisionComment,
+          updatedBy: params.updatedBy,
           evaluatorId: params.evaluatorId,
         },
-      });
-
-      this.logger.log('단계 승인 상태 변경 활동 내역 기록 완료');
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
       this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {

@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EvaluationActivityLogService } from '@domain/core/evaluation-activity-log/evaluation-activity-log.service';
 import { EmployeeService } from '@domain/common/employee/employee.service';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
+import type { RevisionRequestStepType } from '@domain/sub/evaluation-revision-request';
 import type {
   EvaluationActivityLogDto,
   EvaluationActivityType,
@@ -118,6 +120,135 @@ export class EvaluationActivityLogContextService {
   }
 
   /**
+   * 단계 승인 상태 변경 시 활동 내역을 기록한다
+   */
+  async 단계승인_상태변경_활동내역을_기록한다(params: {
+    evaluationPeriodId: string;
+    employeeId: string;
+    step: string;
+    status: StepApprovalStatus;
+    revisionComment?: string;
+    updatedBy: string;
+    evaluatorId?: string; // 2차 하향평가의 경우 필요
+  }): Promise<EvaluationActivityLogDto> {
+    this.logger.log('단계 승인 상태 변경 활동 내역 기록 시작', {
+      evaluationPeriodId: params.evaluationPeriodId,
+      employeeId: params.employeeId,
+      step: params.step,
+      status: params.status,
+    });
+
+    // 단계별 제목 결정
+    let activityTitle = '';
+    let activityAction: 'approved' | 'revision_requested' = 'approved';
+
+    switch (params.step) {
+      case 'criteria':
+        activityTitle = '평가기준 설정';
+        break;
+      case 'self':
+        activityTitle = '자기평가';
+        break;
+      case 'primary':
+        activityTitle = '1차 하향평가';
+        break;
+      case 'secondary':
+        activityTitle = '2차 하향평가';
+        break;
+      default:
+        activityTitle = '단계 승인';
+    }
+
+    // 상태에 따른 액션 결정
+    if (params.status === StepApprovalStatus.APPROVED) {
+      activityAction = 'approved';
+      activityTitle += ' 승인';
+    } else if (params.status === StepApprovalStatus.REVISION_REQUESTED) {
+      activityAction = 'revision_requested';
+      activityTitle += ' 재작성 요청';
+    } else {
+      // 다른 상태는 기록하지 않음
+      this.logger.log('기록하지 않는 상태입니다', {
+        status: params.status,
+      });
+      throw new Error(`기록하지 않는 상태입니다: ${params.status}`);
+    }
+
+    // 활동 내역 기록
+    return await this.활동내역을_기록한다({
+      periodId: params.evaluationPeriodId,
+      employeeId: params.employeeId,
+      activityType: 'step_approval',
+      activityAction,
+      activityTitle,
+      relatedEntityType: 'step_approval',
+      performedBy: params.updatedBy,
+      activityMetadata: {
+        step: params.step,
+        status: params.status,
+        revisionComment: params.revisionComment,
+        evaluatorId: params.evaluatorId,
+      },
+    });
+  }
+
+  /**
+   * 재작성 완료 시 활동 내역을 기록한다
+   */
+  async 재작성완료_활동내역을_기록한다(params: {
+    evaluationPeriodId: string;
+    employeeId: string;
+    step: RevisionRequestStepType;
+    requestId: string;
+    performedBy: string;
+    responseComment: string;
+    allCompleted: boolean;
+  }): Promise<EvaluationActivityLogDto> {
+    this.logger.log('재작성 완료 활동 내역 기록 시작', {
+      evaluationPeriodId: params.evaluationPeriodId,
+      employeeId: params.employeeId,
+      step: params.step,
+      requestId: params.requestId,
+    });
+
+    // 단계별 제목 결정
+    let activityTitle = '';
+    switch (params.step) {
+      case 'criteria':
+        activityTitle = '평가기준 설정 재작성 완료';
+        break;
+      case 'self':
+        activityTitle = '자기평가 재작성 완료';
+        break;
+      case 'primary':
+        activityTitle = '1차 하향평가 재작성 완료';
+        break;
+      case 'secondary':
+        activityTitle = '2차 하향평가 재작성 완료';
+        break;
+      default:
+        activityTitle = '재작성 완료';
+    }
+
+    // 활동 내역 기록
+    return await this.활동내역을_기록한다({
+      periodId: params.evaluationPeriodId,
+      employeeId: params.employeeId,
+      activityType: 'revision_request',
+      activityAction: 'revision_completed',
+      activityTitle,
+      relatedEntityType: 'revision_request',
+      relatedEntityId: params.requestId,
+      performedBy: params.performedBy,
+      activityMetadata: {
+        step: params.step,
+        responseComment: params.responseComment,
+        allCompleted: params.allCompleted,
+      },
+    });
+  }
+
+  /**
    * 활동 액션을 텍스트로 변환한다
    */
   private 액션을_텍스트로_변환한다(action: string): string {
@@ -130,6 +261,10 @@ export class EvaluationActivityLogContextService {
       deleted: '삭제',
       assigned: '할당',
       unassigned: '할당 해제',
+      approved: '승인',
+      rejected: '거부',
+      revision_requested: '재작성 요청',
+      revision_completed: '재작성 완료',
     };
 
     return actionMap[action] || action;

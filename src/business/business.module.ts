@@ -22,6 +22,7 @@ import { RevisionRequestBusinessModule } from './revision-request/revision-reque
     WbsSelfEvaluationBusinessModule,
     StepApprovalBusinessModule,
     DeliverableBusinessModule,
+    RevisionRequestBusinessModule,
   ],
   exports: [
     PeerEvaluationBusinessModule,

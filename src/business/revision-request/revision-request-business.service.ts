@@ -43,24 +43,6 @@ export class RevisionRequestBusinessService {
 
     // 2. 활동 내역 기록
     try {
-      let activityTitle = '';
-      switch (request.step) {
-        case 'criteria':
-          activityTitle = '평가기준 설정 재작성 완료';
-          break;
-        case 'self':
-          activityTitle = '자기평가 재작성 완료';
-          break;
-        case 'primary':
-          activityTitle = '1차 하향평가 재작성 완료';
-          break;
-        case 'secondary':
-          activityTitle = '2차 하향평가 재작성 완료';
-          break;
-        default:
-          activityTitle = '재작성 완료';
-      }
-
       // 모든 수신자가 완료했는지 확인
       let allCompleted: boolean;
       if (request.step === 'secondary') {
@@ -76,20 +58,14 @@ export class RevisionRequestBusinessService {
           );
       }
 
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId: request.evaluationPeriodId,
+      await this.activityLogContextService.재작성완료_활동내역을_기록한다({
+        evaluationPeriodId: request.evaluationPeriodId,
         employeeId: request.employeeId,
-        activityType: 'revision_request',
-        activityAction: 'revision_completed',
-        activityTitle,
-        relatedEntityType: 'revision_request',
-        relatedEntityId: requestId,
+        step: request.step,
+        requestId,
         performedBy: recipientId,
-        activityMetadata: {
-          step: request.step,
-          responseComment,
-          allCompleted,
-        },
+        responseComment,
+        allCompleted,
       });
 
       this.logger.log('재작성 완료 활동 내역 기록 완료');
@@ -133,24 +109,6 @@ export class RevisionRequestBusinessService {
 
     // 2. 활동 내역 기록
     try {
-      let activityTitle = '';
-      switch (request.step) {
-        case 'criteria':
-          activityTitle = '평가기준 설정 재작성 완료';
-          break;
-        case 'self':
-          activityTitle = '자기평가 재작성 완료';
-          break;
-        case 'primary':
-          activityTitle = '1차 하향평가 재작성 완료';
-          break;
-        case 'secondary':
-          activityTitle = '2차 하향평가 재작성 완료';
-          break;
-        default:
-          activityTitle = '재작성 완료';
-      }
-
       // 모든 수신자가 완료했는지 확인
       let allCompleted: boolean;
       if (request.step === 'secondary') {
@@ -166,20 +124,14 @@ export class RevisionRequestBusinessService {
           );
       }
 
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId: request.evaluationPeriodId,
+      await this.activityLogContextService.재작성완료_활동내역을_기록한다({
+        evaluationPeriodId: request.evaluationPeriodId,
         employeeId: request.employeeId,
-        activityType: 'revision_request',
-        activityAction: 'revision_completed',
-        activityTitle,
-        relatedEntityType: 'revision_request',
-        relatedEntityId: request.id,
+        step: request.step,
+        requestId: request.id,
         performedBy: evaluatorId,
-        activityMetadata: {
-          step: request.step,
-          responseComment,
-          allCompleted,
-        },
+        responseComment,
+        allCompleted,
       });
 
       this.logger.log('재작성 완료 활동 내역 기록 완료');
