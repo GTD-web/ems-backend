@@ -57,14 +57,8 @@ export class SubmitWbsSelfEvaluationHandler
         );
       }
 
-      // 피평가자가 1차 평가자에게 제출했는지 확인
-      if (!evaluation.submittedToEvaluator) {
-        throw new BadRequestException(
-          '피평가자가 1차 평가자에게 먼저 제출해야 합니다.',
-        );
-      }
-
       // 1차 평가자가 관리자에게 제출 처리
+      // (관리자에게 제출할 때는 평가자에게도 자동으로 제출한 것으로 처리됨)
       const updatedEvaluation = await this.wbsSelfEvaluationService.수정한다(
         evaluationId,
         { submittedToManager: true },

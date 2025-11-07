@@ -156,8 +156,14 @@ export class WbsSelfEvaluation
 
   /**
    * 1차 평가자가 관리자에게 제출한다
+   * 관리자에게 제출할 때는 평가자에게도 제출한 것으로 간주한다
    */
   일차평가자가_관리자에게_제출한다(): void {
+    // 평가자에게 제출하지 않았으면 자동으로 제출한 것으로 설정
+    if (!this.submittedToEvaluator) {
+      this.submittedToEvaluator = true;
+      this.submittedToEvaluatorAt = new Date();
+    }
     this.submittedToManager = true;
     this.submittedToManagerAt = new Date();
   }

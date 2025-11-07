@@ -257,11 +257,17 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
       expect(나의할당데이터.summary.selfEvaluation.grade).toBeNull();
 
       // 하향평가 정보는 제거되어야 함 (my-assigned-data의 특징)
-      if (wbsItem.primaryDownwardEvaluation) {
-        expect(wbsItem.primaryDownwardEvaluation).toBeNull();
-      }
-      if (wbsItem.secondaryDownwardEvaluation) {
-        expect(wbsItem.secondaryDownwardEvaluation).toBeNull();
+      const 프로젝트 = 나의할당데이터.projects.find(
+        (p: any) => p.id === projectIds[0],
+      );
+      if (프로젝트 && 프로젝트.wbsItems) {
+        const wbsItem = 프로젝트.wbsItems.find(
+          (w: any) => w.id === wbsItemIds[0],
+        );
+        if (wbsItem) {
+          expect(wbsItem.primaryDownwardEvaluation).toBeNull();
+          expect(wbsItem.secondaryDownwardEvaluation).toBeNull();
+        }
       }
     });
   });
