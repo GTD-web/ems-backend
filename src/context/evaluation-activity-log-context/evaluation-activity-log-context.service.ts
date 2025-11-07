@@ -65,7 +65,14 @@ export class EvaluationActivityLogContextService {
     let activityDescription = params.activityDescription;
     if (!activityDescription && performedByName && params.activityTitle) {
       const actionText = this.액션을_텍스트로_변환한다(params.activityAction);
-      activityDescription = `${performedByName}님이 ${params.activityTitle}을(를) ${actionText}했습니다.`;
+      // activityTitle에서 액션을 제거하고 객체명만 추출
+      const objectName = this.객체명을_추출한다(
+        params.activityTitle,
+        actionText,
+      );
+      // 조사(을/를) 결정
+      const particle = this.조사를_결정한다(objectName);
+      activityDescription = `${performedByName}님이 ${objectName}${particle} ${actionText}했습니다.`;
     }
 
     const result = await this.activityLogService.생성한다({
@@ -126,5 +133,48 @@ export class EvaluationActivityLogContextService {
     };
 
     return actionMap[action] || action;
+  }
+
+  /**
+   * activityTitle에서 객체명을 추출한다
+   * 예: "WBS 자기평가 제출" → "WBS 자기평가"
+   *     "하향평가 완료" → "하향평가"
+   */
+  private 객체명을_추출한다(activityTitle: string, actionText: string): string {
+    // activityTitle에서 액션 텍스트를 제거
+    let objectName = activityTitle;
+
+    // 액션이 포함되어 있으면 제거
+    if (objectName.includes(actionText)) {
+      objectName = objectName
+        .replace(new RegExp(`\\s*${actionText}\\s*`), '')
+        .trim();
+    }
+
+    // 괄호 안의 내용 제거 (예: "(1차 평가자)" → "")
+    objectName = objectName.replace(/\s*\([^)]*\)\s*/g, '').trim();
+
+    return objectName || activityTitle; // 추출 실패 시 원본 반환
+  }
+
+  /**
+   * 조사(을/를)를 결정한다
+   * 받침이 있으면 "을", 없으면 "를"
+   */
+  private 조사를_결정한다(text: string): string {
+    if (!text) return '를';
+
+    // 마지막 글자의 받침 여부 확인
+    const lastChar = text[text.length - 1];
+    const lastCharCode = lastChar.charCodeAt(0);
+
+    // 한글인 경우
+    if (lastCharCode >= 0xac00 && lastCharCode <= 0xd7a3) {
+      const hasBatchim = (lastCharCode - 0xac00) % 28 !== 0;
+      return hasBatchim ? '을' : '를';
+    }
+
+    // 한글이 아닌 경우 기본값
+    return '를';
   }
 }

@@ -2,6 +2,7 @@ import { Controller, Query, Param, Body, ParseUUIDPipe } from '@nestjs/common';
 import { ParseUUID } from '@interface/decorators';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CompleteRevisionRequestByEvaluatorQueryDto } from './dto/complete-revision-request-by-evaluator-query.dto';
+import { RevisionRequestBusinessService } from '@business/revision-request/revision-request-business.service';
 import { RevisionRequestContextService } from '@context/revision-request-context';
 import {
   GetRevisionRequests,
@@ -30,6 +31,7 @@ import { StepApprovalStatusEnum } from '@interface/admin/step-approval/dto/updat
 @Controller('admin/revision-requests')
 export class RevisionRequestController {
   constructor(
+    private readonly revisionRequestBusinessService: RevisionRequestBusinessService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
   ) {}
 
@@ -146,7 +148,7 @@ export class RevisionRequestController {
     @Body() dto: CompleteRevisionRequestDto,
     @CurrentUser('id') recipientId: string,
   ): Promise<void> {
-    await this.revisionRequestContextService.재작성완료_응답을_제출한다(
+    await this.revisionRequestBusinessService.재작성완료_응답을_제출한다(
       requestId,
       recipientId,
       dto.responseComment,
@@ -164,7 +166,7 @@ export class RevisionRequestController {
     @Query() queryDto: CompleteRevisionRequestByEvaluatorQueryDto,
     @Body() dto: CompleteRevisionRequestByEvaluatorDto,
   ): Promise<void> {
-    await this.revisionRequestContextService.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+    await this.revisionRequestBusinessService.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
       evaluationPeriodId,
       employeeId,
       evaluatorId,

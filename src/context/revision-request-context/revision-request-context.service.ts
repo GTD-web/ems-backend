@@ -292,13 +292,14 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
   }
 
   /**
-   * 재작성 완료 응답을 제출한다
+   * 재작성 완료 응답을 제출한다 (내부 메서드 - 비즈니스 서비스에서 호출)
+   * 활동 내역 기록은 비즈니스 서비스에서 처리합니다.
    */
-  async 재작성완료_응답을_제출한다(
+  async 재작성완료_응답을_제출한다_내부(
     requestId: string,
     recipientId: string,
     responseComment: string,
-  ): Promise<void> {
+  ): Promise<EvaluationRevisionRequest> {
     this.logger.log(
       `재작성 완료 응답 제출 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`,
     );
@@ -391,18 +392,38 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     this.logger.log(
       `재작성 완료 응답 제출 완료 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`,
     );
+
+    // 재작성 요청 반환 (비즈니스 서비스에서 활동 내역 기록에 사용)
+    return request;
   }
 
   /**
-   * 평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출한다 (관리자용)
+   * 재작성 완료 응답을 제출한다 (기존 메서드 - 하위 호환성 유지)
+   * @deprecated 비즈니스 서비스를 사용하세요
    */
-  async 평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+  async 재작성완료_응답을_제출한다(
+    requestId: string,
+    recipientId: string,
+    responseComment: string,
+  ): Promise<void> {
+    await this.재작성완료_응답을_제출한다_내부(
+      requestId,
+      recipientId,
+      responseComment,
+    );
+  }
+
+  /**
+   * 평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출한다 (내부 메서드 - 비즈니스 서비스에서 호출)
+   * 활동 내역 기록은 비즈니스 서비스에서 처리합니다.
+   */
+  async 평가기간_직원_평가자로_재작성완료_응답을_제출한다_내부(
     evaluationPeriodId: string,
     employeeId: string,
     evaluatorId: string,
     step: RevisionRequestStepType,
     responseComment: string,
-  ): Promise<void> {
+  ): Promise<EvaluationRevisionRequest> {
     this.logger.log(
       `재작성 완료 응답 제출 (관리자용) - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 평가자: ${evaluatorId}, 단계: ${step}`,
     );
@@ -514,6 +535,29 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     this.logger.log(
       `재작성 완료 응답 제출 완료 (관리자용) - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 평가자: ${evaluatorId}`,
     );
+
+    // 재작성 요청 반환 (비즈니스 서비스에서 활동 내역 기록에 사용)
+    return targetRequest;
+  }
+
+  /**
+   * 평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출한다 (기존 메서드 - 하위 호환성 유지)
+   * @deprecated 비즈니스 서비스를 사용하세요
+   */
+  async 평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    evaluatorId: string,
+    step: RevisionRequestStepType,
+    responseComment: string,
+  ): Promise<void> {
+    await this.평가기간_직원_평가자로_재작성완료_응답을_제출한다_내부(
+      evaluationPeriodId,
+      employeeId,
+      evaluatorId,
+      step,
+      responseComment,
+    );
   }
 
   /**
@@ -603,6 +647,13 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
   }
 
   /**
+   * 모든 수신자가 완료했는지 확인한다 (내부 메서드 - 비즈니스 서비스에서 호출)
+   */
+  async 모든_수신자가_완료했는가_내부(requestId: string): Promise<boolean> {
+    return await this.모든_수신자가_완료했는가(requestId);
+  }
+
+  /**
    * 모든 수신자가 완료했는지 확인한다
    */
   private async 모든_수신자가_완료했는가(requestId: string): Promise<boolean> {
@@ -621,6 +672,19 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
 
     // 모든 수신자가 완료했는지 확인
     return activeRecipients.every((r) => r.isCompleted);
+  }
+
+  /**
+   * 모든 2차 평가자의 재작성 요청이 완료했는지 확인한다 (내부 메서드 - 비즈니스 서비스에서 호출)
+   */
+  async 모든_2차평가자의_재작성요청이_완료했는가_내부(
+    evaluationPeriodId: string,
+    employeeId: string,
+  ): Promise<boolean> {
+    return await this.모든_2차평가자의_재작성요청이_완료했는가(
+      evaluationPeriodId,
+      employeeId,
+    );
   }
 
   /**

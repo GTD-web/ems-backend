@@ -13,4 +13,3 @@ import { EvaluationActivityLogContextService } from './evaluation-activity-log-c
   exports: [EvaluationActivityLogContextService],
 })
 export class EvaluationActivityLogContextModule {}
-

@@ -2,7 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
-import type { SubmitAllWbsSelfEvaluationsResponse } from '@context/performance-evaluation-context/handlers/self-evaluation';
+import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import type {
+  SubmitAllWbsSelfEvaluationsResponse,
+  SubmitAllWbsSelfEvaluationsToEvaluatorResponse,
+  ResetAllWbsSelfEvaluationsToEvaluatorResponse,
+} from '@context/performance-evaluation-context/handlers/self-evaluation';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 
@@ -22,6 +27,7 @@ export class WbsSelfEvaluationBusinessService {
     private readonly performanceEvaluationService: PerformanceEvaluationService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
     private readonly stepApprovalContextService: StepApprovalContextService,
+    private readonly activityLogContextService: EvaluationActivityLogContextService,
   ) {}
 
   /**
@@ -57,6 +63,26 @@ export class WbsSelfEvaluationBusinessService {
       RecipientType.EVALUATEE,
       '자기평가 제출로 인한 재작성 완료 처리',
     );
+
+    // 3. 활동 내역 기록
+    try {
+      await this.activityLogContextService.활동내역을_기록한다({
+        periodId,
+        employeeId,
+        activityType: 'wbs_self_evaluation',
+        activityAction: 'submitted',
+        activityTitle: 'WBS 자기평가 제출',
+        relatedEntityType: 'wbs_self_evaluation',
+        performedBy: submittedBy,
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 평가 제출은 정상 처리
+      this.logger.warn('활동 내역 기록 실패', {
+        employeeId,
+        periodId,
+        error: error.message,
+      });
+    }
 
     this.logger.log(
       `직원의 전체 WBS 자기평가 제출 및 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${periodId}`,
@@ -103,5 +129,101 @@ export class WbsSelfEvaluationBusinessService {
     this.logger.log(
       `자기평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
     );
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가를 1차 평가자에게 제출한다 (피평가자 → 1차 평가자)
+   * 특정 직원의 특정 평가기간에 대한 모든 WBS 자기평가를 1차 평가자에게 제출합니다.
+   */
+  async 직원의_전체_자기평가를_1차평가자에게_제출한다(
+    employeeId: string,
+    periodId: string,
+    submittedBy: string,
+  ): Promise<SubmitAllWbsSelfEvaluationsToEvaluatorResponse> {
+    this.logger.log(
+      `직원의 전체 WBS 자기평가를 1차 평가자에게 제출 시작 - 직원: ${employeeId}, 평가기간: ${periodId}`,
+    );
+
+    // 1. 자기평가 제출
+    const result =
+      await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자에게_제출한다(
+        employeeId,
+        periodId,
+        submittedBy,
+      );
+
+    // 2. 활동 내역 기록
+    try {
+      await this.activityLogContextService.활동내역을_기록한다({
+        periodId,
+        employeeId,
+        activityType: 'wbs_self_evaluation',
+        activityAction: 'submitted',
+        activityTitle: 'WBS 자기평가 제출 (1차 평가자)',
+        relatedEntityType: 'wbs_self_evaluation',
+        performedBy: submittedBy,
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 평가 제출은 정상 처리
+      this.logger.warn('활동 내역 기록 실패', {
+        employeeId,
+        periodId,
+        error: error.message,
+      });
+    }
+
+    this.logger.log(
+      `직원의 전체 WBS 자기평가를 1차 평가자에게 제출 완료 - 직원: ${employeeId}, 평가기간: ${periodId}`,
+    );
+
+    return result;
+  }
+
+  /**
+   * 직원의 전체 WBS 자기평가를 1차 평가자 제출 취소한다 (피평가자 → 1차 평가자 제출 취소)
+   * 특정 직원의 특정 평가기간에 대한 모든 1차 평가자 제출 완료된 WBS 자기평가를 취소합니다.
+   */
+  async 직원의_전체_자기평가를_1차평가자_제출_취소한다(
+    employeeId: string,
+    periodId: string,
+    resetBy: string,
+  ): Promise<ResetAllWbsSelfEvaluationsToEvaluatorResponse> {
+    this.logger.log(
+      `직원의 전체 WBS 자기평가를 1차 평가자 제출 취소 시작 - 직원: ${employeeId}, 평가기간: ${periodId}`,
+    );
+
+    // 1. 자기평가 제출 취소
+    const result =
+      await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자_제출_취소한다(
+        employeeId,
+        periodId,
+        resetBy,
+      );
+
+    // 2. 활동 내역 기록
+    try {
+      await this.activityLogContextService.활동내역을_기록한다({
+        periodId,
+        employeeId,
+        activityType: 'wbs_self_evaluation',
+        activityAction: 'cancelled',
+        activityTitle: 'WBS 자기평가 제출 취소 (1차 평가자)',
+        relatedEntityType: 'wbs_self_evaluation',
+        performedBy: resetBy,
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 평가 취소는 정상 처리
+      this.logger.warn('활동 내역 기록 실패', {
+        employeeId,
+        periodId,
+        error: error.message,
+      });
+    }
+
+    this.logger.log(
+      `직원의 전체 WBS 자기평가를 1차 평가자 제출 취소 완료 - 직원: ${employeeId}, 평가기간: ${periodId}`,
+    );
+
+    return result;
   }
 }

@@ -4,6 +4,7 @@ import { EvaluationCriteriaManagementService } from '@context/evaluation-criteri
 import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
+import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 
@@ -27,6 +28,7 @@ export class DownwardEvaluationBusinessService {
     private readonly evaluationPeriodManagementContextService: EvaluationPeriodManagementContextService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
     private readonly stepApprovalContextService: StepApprovalContextService,
+    private readonly activityLogContextService: EvaluationActivityLogContextService,
     // private readonly notificationService: NotificationService, // TODO: 알림 서비스 추가 시 주입
   ) {}
 
@@ -365,5 +367,84 @@ export class DownwardEvaluationBusinessService {
     this.logger.log(
       `2차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`,
     );
+  }
+
+  /**
+   * 피평가자의 모든 하향평가를 일괄 제출한다 (활동 내역 기록 포함)
+   */
+  async 피평가자의_모든_하향평가를_일괄_제출한다(
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    evaluationType: DownwardEvaluationType,
+    submittedBy: string,
+  ): Promise<{
+    submittedCount: number;
+    skippedCount: number;
+    failedCount: number;
+    submittedIds: string[];
+    skippedIds: string[];
+    failedItems: Array<{ evaluationId: string; error: string }>;
+  }> {
+    this.logger.log('하향평가 일괄 제출 시작', {
+      evaluatorId,
+      evaluateeId,
+      periodId,
+      evaluationType,
+    });
+
+    // 1. 하향평가 일괄 제출
+    const result =
+      await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(
+        evaluatorId,
+        evaluateeId,
+        periodId,
+        evaluationType,
+        submittedBy,
+      );
+
+    // 2. 활동 내역 기록
+    try {
+      const evaluationTypeText =
+        evaluationType === DownwardEvaluationType.PRIMARY
+          ? '1차 하향평가'
+          : '2차 하향평가';
+      const activityTitle = `${evaluationTypeText} 일괄 제출`;
+
+      await this.activityLogContextService.활동내역을_기록한다({
+        periodId,
+        employeeId: evaluateeId,
+        activityType: 'downward_evaluation',
+        activityAction: 'submitted',
+        activityTitle,
+        relatedEntityType: 'downward_evaluation',
+        performedBy: submittedBy,
+        activityMetadata: {
+          evaluatorId,
+          evaluationType,
+          submittedCount: result.submittedCount,
+          skippedCount: result.skippedCount,
+          failedCount: result.failedCount,
+          submittedIds: result.submittedIds,
+          bulkOperation: true,
+        },
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 하향평가 제출은 정상 처리
+      this.logger.warn('활동 내역 기록 실패', {
+        evaluatorId,
+        evaluateeId,
+        periodId,
+        error: error.message,
+      });
+    }
+
+    this.logger.log('하향평가 일괄 제출 완료', {
+      submittedCount: result.submittedCount,
+      skippedCount: result.skippedCount,
+      failedCount: result.failedCount,
+    });
+
+    return result;
   }
 }

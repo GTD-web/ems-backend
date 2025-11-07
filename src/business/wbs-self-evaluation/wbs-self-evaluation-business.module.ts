@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
 import { StepApprovalContextModule } from '@context/step-approval-context/step-approval-context.module';
+import { EvaluationActivityLogContextModule } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.module';
 import { WbsSelfEvaluationBusinessService } from './wbs-self-evaluation-business.service';
 
 /**
@@ -12,6 +13,7 @@ import { WbsSelfEvaluationBusinessService } from './wbs-self-evaluation-business
     PerformanceEvaluationContextModule,
     RevisionRequestContextModule,
     StepApprovalContextModule,
+    EvaluationActivityLogContextModule,
   ],
   providers: [WbsSelfEvaluationBusinessService],
   exports: [WbsSelfEvaluationBusinessService],

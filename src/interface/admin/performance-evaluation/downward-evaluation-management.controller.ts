@@ -240,7 +240,7 @@ export class DownwardEvaluationManagementController {
     const evaluatorId = submitDto.evaluatorId;
     const submittedBy = user.id;
 
-    return await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(
+    return await this.downwardEvaluationBusinessService.피평가자의_모든_하향평가를_일괄_제출한다(
       evaluatorId,
       evaluateeId,
       periodId,

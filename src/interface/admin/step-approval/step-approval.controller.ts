@@ -84,7 +84,7 @@ export class StepApprovalController {
     @Body() dto: UpdateStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
   ): Promise<void> {
-    await this.stepApprovalContextService.평가기준설정_확인상태를_변경한다({
+    await this.stepApprovalBusinessService.평가기준설정_확인상태를_변경한다({
       evaluationPeriodId,
       employeeId,
       status: dto.status as any,
@@ -129,7 +129,7 @@ export class StepApprovalController {
       }
 
       // 단계 승인 상태 변경
-      await this.stepApprovalContextService.자기평가_확인상태를_변경한다({
+      await this.stepApprovalBusinessService.자기평가_확인상태를_변경한다({
         evaluationPeriodId,
         employeeId,
         status: dto.status as any,
@@ -175,7 +175,7 @@ export class StepApprovalController {
       }
 
       // 단계 승인 상태 변경
-      await this.stepApprovalContextService.일차하향평가_확인상태를_변경한다({
+      await this.stepApprovalBusinessService.일차하향평가_확인상태를_변경한다({
         evaluationPeriodId,
         employeeId,
         status: dto.status as any,
@@ -224,7 +224,7 @@ export class StepApprovalController {
       }
 
       // 단계 승인 상태 변경
-      await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+      await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다({
         evaluationPeriodId,
         employeeId,
         evaluatorId,

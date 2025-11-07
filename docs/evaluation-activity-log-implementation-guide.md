@@ -148,6 +148,8 @@ CREATE TABLE evaluation_activity_log (
 | `additional_evaluation` | 추가평가 | AdditionalEvaluation |
 | `deliverable` | 산출물 | Deliverable |
 | `evaluation_status` | 평가 상태 변경 | EmployeeEvaluationStatus |
+| `step_approval` | 단계 승인 | StepApproval |
+| `revision_request` | 재작성 요청 | RevisionRequest |
 
 #### 활동 액션 (activity_action)
 
@@ -161,6 +163,10 @@ CREATE TABLE evaluation_activity_log (
 | `deleted` | 삭제 |
 | `assigned` | 할당 |
 | `unassigned` | 할당 해제 |
+| `approved` | 승인 |
+| `rejected` | 거부 |
+| `revision_requested` | 재작성 요청 |
+| `revision_completed` | 재작성 완료 |
 
 ---
 

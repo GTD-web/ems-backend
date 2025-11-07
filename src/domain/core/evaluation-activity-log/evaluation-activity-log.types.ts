@@ -11,7 +11,9 @@ export type EvaluationActivityType =
   | 'peer_evaluation'
   | 'additional_evaluation'
   | 'deliverable'
-  | 'evaluation_status';
+  | 'evaluation_status'
+  | 'step_approval'
+  | 'revision_request';
 
 /**
  * 활동 액션
@@ -24,7 +26,11 @@ export type EvaluationActivityAction =
   | 'cancelled'
   | 'deleted'
   | 'assigned'
-  | 'unassigned';
+  | 'unassigned'
+  | 'approved'
+  | 'rejected'
+  | 'revision_requested'
+  | 'revision_completed';
 
 /**
  * 평가 활동 내역 DTO
@@ -123,4 +129,3 @@ export interface EvaluationActivityLogFilter {
   /** 페이지 크기 */
   limit?: number;
 }
-

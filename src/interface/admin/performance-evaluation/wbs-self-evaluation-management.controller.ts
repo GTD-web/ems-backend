@@ -140,22 +140,11 @@ export class WbsSelfEvaluationManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<SubmitAllWbsSelfEvaluationsResponseDto> {
     const submittedBy = user.id;
-    const result = await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자에게_제출한다(
+    return await this.wbsSelfEvaluationBusinessService.직원의_전체_자기평가를_1차평가자에게_제출한다(
       employeeId,
       periodId,
       submittedBy,
     );
-    // 피평가자 → 1차 평가자 제출 응답을 DTO 형식으로 변환
-    return {
-      ...result,
-      completedEvaluations: result.completedEvaluations.map((e) => {
-        const { submittedToEvaluatorAt, ...rest } = e;
-        return {
-          ...rest,
-          submittedToEvaluatorAt,
-        };
-      }),
-    } as SubmitAllWbsSelfEvaluationsResponseDto;
   }
 
   /**
@@ -224,12 +213,13 @@ export class WbsSelfEvaluationManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<SubmitWbsSelfEvaluationsByProjectResponseDto> {
     const submittedBy = user.id;
-    const result = await this.performanceEvaluationService.프로젝트별_자기평가를_1차평가자에게_제출한다(
-      employeeId,
-      periodId,
-      projectId,
-      submittedBy,
-    );
+    const result =
+      await this.performanceEvaluationService.프로젝트별_자기평가를_1차평가자에게_제출한다(
+        employeeId,
+        periodId,
+        projectId,
+        submittedBy,
+      );
     // 피평가자 → 1차 평가자 제출 응답을 DTO 형식으로 변환
     return {
       ...result,
@@ -290,18 +280,26 @@ export class WbsSelfEvaluationManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ResetAllWbsSelfEvaluationsResponseDto> {
     const resetBy = user.id;
-    const result = await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자_제출_취소한다(
-      employeeId,
-      periodId,
-      resetBy,
-    );
-    // 피평가자 → 1차 평가자 제출 취소 응답을 DTO 형식으로 변환
+    const result =
+      await this.wbsSelfEvaluationBusinessService.직원의_전체_자기평가를_1차평가자_제출_취소한다(
+        employeeId,
+        periodId,
+        resetBy,
+      );
+    // 1차 평가자 제출 취소 응답을 DTO 형식으로 변환
     return {
-      ...result,
+      resetCount: result.resetCount,
+      failedCount: result.failedCount,
+      totalCount: result.totalCount,
       resetEvaluations: result.resetEvaluations.map((e) => ({
-        ...e,
+        evaluationId: e.evaluationId,
+        wbsItemId: e.wbsItemId,
+        selfEvaluationContent: e.selfEvaluationContent,
+        selfEvaluationScore: e.selfEvaluationScore,
+        performanceResult: e.performanceResult,
         wasSubmittedToManager: false, // 1차 평가자 제출 취소는 관리자 제출과 무관
       })),
+      failedResets: result.failedResets,
     } as ResetAllWbsSelfEvaluationsResponseDto;
   }
 
@@ -317,12 +315,13 @@ export class WbsSelfEvaluationManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ResetWbsSelfEvaluationsByProjectResponseDto> {
     const resetBy = user.id;
-    const result = await this.performanceEvaluationService.프로젝트별_자기평가를_1차평가자_제출_취소한다(
-      employeeId,
-      periodId,
-      projectId,
-      resetBy,
-    );
+    const result =
+      await this.performanceEvaluationService.프로젝트별_자기평가를_1차평가자_제출_취소한다(
+        employeeId,
+        periodId,
+        projectId,
+        resetBy,
+      );
     // 피평가자 → 1차 평가자 제출 취소 응답을 DTO 형식으로 변환
     return {
       ...result,
