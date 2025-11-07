@@ -33,6 +33,7 @@ import { StepApprovalContextModule } from '../../context/step-approval-context/s
 import { RevisionRequestContextModule } from '../../context/revision-request-context/revision-request-context.module';
 import { AuditLogContextModule } from '../../context/audit-log-context/audit-log-context.module';
 import { AuditLogController } from './audit-log/audit-log.controller';
+import { EvaluationActivityLogController } from './evaluation-activity-log/evaluation-activity-log.controller';
 
 /**
  * 관리자 인터페이스 모듈
@@ -78,6 +79,7 @@ import { AuditLogController } from './audit-log/audit-log.controller';
     StepApprovalController, // 단계 승인 컨트롤러
     RevisionRequestController, // 재작성 요청 컨트롤러
     AuditLogController, // Audit 로그 컨트롤러
+    EvaluationActivityLogController, // 평가 활동 내역 컨트롤러
   ],
   providers: [],
   exports: [],
