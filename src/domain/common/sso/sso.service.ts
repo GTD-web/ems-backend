@@ -508,7 +508,9 @@ export class SSOService implements OnModuleInit {
     // 실제 SSO 데이터 구조에 맞게 매핑
     // status가 "재직중"이면 isTerminated는 false, 그 외는 true
     const isTerminated =
-      data.status !== '재직중' && data.status !== 'ACTIVE' && data.status !== 'active';
+      data.status !== '재직중' &&
+      data.status !== 'ACTIVE' &&
+      data.status !== 'active';
 
     return {
       id: data.id,
@@ -516,7 +518,8 @@ export class SSOService implements OnModuleInit {
       name: data.name,
       email: data.email,
       phoneNumber: data.phoneNumber || undefined,
-      isTerminated: data.isTerminated !== undefined ? data.isTerminated : isTerminated,
+      isTerminated:
+        data.isTerminated !== undefined ? data.isTerminated : isTerminated,
       department: data.department
         ? {
             id: data.department.id,
@@ -528,7 +531,8 @@ export class SSOService implements OnModuleInit {
       position: data.position
         ? {
             id: data.position.id,
-            positionName: data.position.positionTitle || data.position.positionName,
+            positionName:
+              data.position.positionTitle || data.position.positionName,
             positionLevel: data.position.level || data.position.positionLevel,
           }
         : undefined,
@@ -551,7 +555,7 @@ export class SSOService implements OnModuleInit {
   private mapToDepartmentNode(data: any): DepartmentNode {
     // SSO SDK는 children 대신 childDepartments를 사용
     const childDepartments = data.childDepartments || data.children || [];
-    
+
     return {
       id: data.id,
       departmentCode: data.departmentCode,

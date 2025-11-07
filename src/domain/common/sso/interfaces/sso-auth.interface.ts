@@ -64,14 +64,22 @@ export interface LoginResult {
 }
 
 /**
+ * SSO 서버에서 반환하는 사용자 정보
+ */
+export interface SSOUserInfo {
+  id: string;
+  name: string;
+  email: string;
+  employee_number: string;
+}
+
+/**
  * 토큰 검증 결과
  */
 export interface VerifyTokenResult {
   valid: boolean;
-  id?: string;
-  email?: string;
-  name?: string;
-  employeeNumber?: string;
+  user_info: SSOUserInfo;
+  expires_in: number;
 }
 
 /**
