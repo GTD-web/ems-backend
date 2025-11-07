@@ -184,6 +184,101 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
       expect(직원정보.selfEvaluation.status).toBe('in_progress');
       expect(직원정보.selfEvaluation.completedMappingCount).toBe(0);
     });
+
+    it('자기평가를 저장하고 상세 조회 및 my-assigned-data를 검증한다', async () => {
+      // Given - 현재 사용자를 employeeIds[0]로 설정 (my-assigned-data 조회를 위해)
+      testSuite.setCurrentUser({
+        id: employeeIds[0],
+        email: 'test@example.com',
+        name: '테스트 사용자',
+        employeeNumber: 'TEST001',
+      });
+
+      // Given - 자기평가 저장
+      const 저장결과 = await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+        employeeId: employeeIds[0],
+        wbsItemId: wbsItemIds[0],
+        periodId: evaluationPeriodId,
+        selfEvaluationContent: '상세 조회 테스트용 자기평가 내용',
+        selfEvaluationScore: 90,
+        performanceResult: '상세 조회 테스트용 성과 결과',
+      });
+
+      // Then - 저장 검증
+      expect(저장결과.id).toBeDefined();
+      expect(저장결과.selfEvaluationContent).toBe(
+        '상세 조회 테스트용 자기평가 내용',
+      );
+      expect(저장결과.selfEvaluationScore).toBe(90);
+      expect(저장결과.performanceResult).toBe('상세 조회 테스트용 성과 결과');
+
+      // 상세 조회 검증
+      const 상세조회결과 =
+        await wbsSelfEvaluationScenario.WBS자기평가_상세정보를_조회한다(
+          저장결과.id,
+        );
+
+      expect(상세조회결과).toBeDefined();
+      expect(상세조회결과.id).toBe(저장결과.id);
+      expect(상세조회결과.selfEvaluationContent).toBe(
+        '상세 조회 테스트용 자기평가 내용',
+      );
+      expect(상세조회결과.selfEvaluationScore).toBe(90);
+      expect(상세조회결과.performanceResult).toBe('상세 조회 테스트용 성과 결과');
+      expect(상세조회결과.employeeId).toBe(employeeIds[0]);
+      expect(상세조회결과.wbsItemId).toBe(wbsItemIds[0]);
+      expect(상세조회결과.periodId).toBe(evaluationPeriodId);
+      expect(상세조회결과.submittedToEvaluator).toBe(false); // 미제출 상태
+      expect(상세조회결과.submittedToManager).toBe(false); // 미제출 상태
+
+      // 관련 엔티티 정보 검증
+      expect(상세조회결과.evaluationPeriod).toBeDefined();
+      expect(상세조회결과.evaluationPeriod.id).toBe(evaluationPeriodId);
+      expect(상세조회결과.employee).toBeDefined();
+      expect(상세조회결과.employee.id).toBe(employeeIds[0]);
+      expect(상세조회결과.wbsItem).toBeDefined();
+      expect(상세조회결과.wbsItem.id).toBe(wbsItemIds[0]);
+
+      // my-assigned-data 조회 검증
+      const 나의할당데이터 =
+        await wbsSelfEvaluationScenario.나의_할당_데이터를_조회한다(
+          evaluationPeriodId,
+        );
+
+      expect(나의할당데이터).toBeDefined();
+      expect(나의할당데이터.evaluationPeriod).toBeDefined();
+      expect(나의할당데이터.employee).toBeDefined();
+      expect(나의할당데이터.projects).toBeDefined();
+      expect(나의할당데이터.projects.length).toBeGreaterThan(0);
+
+      // 해당 WBS의 selfEvaluation 객체 검증
+      const wbsItem = 나의할당데이터.projects[0].wbsList.find(
+        (wbs: any) => wbs.wbsId === wbsItemIds[0],
+      );
+      expect(wbsItem).toBeDefined();
+      expect(wbsItem.selfEvaluation).toBeDefined();
+      expect(wbsItem.selfEvaluation.selfEvaluationId).toBe(저장결과.id);
+      expect(wbsItem.selfEvaluation.evaluationContent).toBe(
+        '상세 조회 테스트용 자기평가 내용',
+      );
+      expect(wbsItem.selfEvaluation.score).toBe(90);
+      expect(wbsItem.selfEvaluation.submittedToManager).toBe(false); // 미제출 상태
+      expect(wbsItem.selfEvaluation.submittedAt).toBeNull();
+
+      // summary 검증
+      expect(나의할당데이터.summary).toBeDefined();
+      expect(나의할당데이터.summary.completedSelfEvaluations).toBe(0); // 제출 전
+      expect(나의할당데이터.summary.selfEvaluation.totalScore).toBeNull();
+      expect(나의할당데이터.summary.selfEvaluation.grade).toBeNull();
+
+      // 하향평가 정보는 제거되어야 함 (my-assigned-data의 특징)
+      if (wbsItem.primaryDownwardEvaluation) {
+        expect(wbsItem.primaryDownwardEvaluation).toBeNull();
+      }
+      if (wbsItem.secondaryDownwardEvaluation) {
+        expect(wbsItem.secondaryDownwardEvaluation).toBeNull();
+      }
+    });
   });
 
   describe('자기평가 수정 (제출 전)', () => {

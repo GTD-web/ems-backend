@@ -28,7 +28,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: corejong/lumir-evaluation-management-system:0.0.21
+    image: corejong/lumir-evaluation-management-system:0.0.22
     container_name: lumir-evaluation-app
     restart: unless-stopped
     environment:
