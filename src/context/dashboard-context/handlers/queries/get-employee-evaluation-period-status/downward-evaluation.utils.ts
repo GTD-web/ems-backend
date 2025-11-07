@@ -148,6 +148,7 @@ export async function 하향평가_상태를_조회한다(
       completedEvaluationCount: number;
       isSubmitted: boolean;
     }>;
+    isSubmitted: boolean; // 모든 2차 평가자가 제출했는지 통합 상태
     totalScore: number | null;
     grade: string | null;
   };
@@ -379,6 +380,11 @@ export async function 하향평가_상태를_조회한다(
     }
   }
 
+  // 2차 평가 통합 제출 상태 계산 (모든 평가자가 제출했는지 확인)
+  const secondaryIsSubmitted =
+    secondaryStatuses.length > 0 &&
+    secondaryStatuses.every((status) => status.isSubmitted);
+
   return {
     primary: {
       evaluator: primaryEvaluatorInfo,
@@ -391,6 +397,7 @@ export async function 하향평가_상태를_조회한다(
     },
     secondary: {
       evaluators: secondaryStatuses,
+      isSubmitted: secondaryIsSubmitted,
       totalScore: secondaryTotalScore,
       grade: secondaryGrade,
     },

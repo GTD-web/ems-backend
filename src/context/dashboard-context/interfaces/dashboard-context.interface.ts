@@ -131,7 +131,6 @@ export interface EmployeeEvaluationPeriodStatusDto {
     excludedAt?: Date | null;
   };
 
-
   /** 평가항목 설정 정보 */
   evaluationCriteria: {
     /** 평가항목 설정 상태 */
@@ -163,7 +162,13 @@ export interface EmployeeEvaluationPeriodStatusDto {
   /** 평가기준 설정 정보 (평가항목, WBS 평가기준, 평가라인을 통합) */
   criteriaSetup: {
     /** 평가기준 설정 상태 (계산된 상태) */
-    status: 'none' | 'in_progress' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+    status:
+      | 'none'
+      | 'in_progress'
+      | 'pending'
+      | 'approved'
+      | 'revision_requested'
+      | 'revision_completed';
     /** 평가항목 설정 정보 */
     evaluationCriteria: {
       /** 평가항목 설정 상태 */
@@ -231,7 +236,12 @@ export interface EmployeeEvaluationPeriodStatusDto {
         rankName?: string;
       } | null;
       /** 하향평가 통합 상태 (진행 상태 + 승인 상태) */
-      status: DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+      status:
+        | DownwardEvaluationStatus
+        | 'pending'
+        | 'approved'
+        | 'revision_requested'
+        | 'revision_completed';
       /** 할당된 WBS 수 */
       assignedWbsCount: number;
       /** 완료된 하향평가 수 */
@@ -246,7 +256,12 @@ export interface EmployeeEvaluationPeriodStatusDto {
     /** 2차 평가 정보 (여러 명 가능) */
     secondary: {
       /** 2차 평가 전체 통합 상태 (모든 평가자 통합) */
-      status: DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+      status:
+        | DownwardEvaluationStatus
+        | 'pending'
+        | 'approved'
+        | 'revision_requested'
+        | 'revision_completed';
       /** 2차 평가자 목록 */
       evaluators: Array<{
         /** 평가자 정보 */
@@ -259,7 +274,12 @@ export interface EmployeeEvaluationPeriodStatusDto {
           rankName?: string;
         };
         /** 하향평가 통합 상태 (진행 상태 + 승인 상태) */
-        status: DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+        status:
+          | DownwardEvaluationStatus
+          | 'pending'
+          | 'approved'
+          | 'revision_requested'
+          | 'revision_completed';
         /** 할당된 WBS 수 */
         assignedWbsCount: number;
         /** 완료된 하향평가 수 */
@@ -267,6 +287,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
         /** 모든 하향평가가 제출되었는지 여부 */
         isSubmitted: boolean;
       }>;
+      /** 모든 2차 평가자가 제출했는지 통합 상태 */
+      isSubmitted: boolean;
       /** 가중치 기반 2차 하향평가 총점 (0-100) */
       totalScore: number | null;
       /** 평가기간 등급 기준에 따른 2차 하향평가 등급 (예: S+, A-, B 등) */
@@ -303,19 +325,31 @@ export interface EmployeeEvaluationPeriodStatusDto {
   /** 단계별 확인 상태 정보 */
   stepApproval: {
     /** 평가기준 설정 확인 상태 */
-    criteriaSettingStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+    criteriaSettingStatus:
+      | 'pending'
+      | 'approved'
+      | 'revision_requested'
+      | 'revision_completed';
     /** 평가기준 설정 승인자 ID */
     criteriaSettingApprovedBy: string | null;
     /** 평가기준 설정 승인 일시 */
     criteriaSettingApprovedAt: Date | null;
     /** 자기평가 확인 상태 */
-    selfEvaluationStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+    selfEvaluationStatus:
+      | 'pending'
+      | 'approved'
+      | 'revision_requested'
+      | 'revision_completed';
     /** 자기평가 승인자 ID */
     selfEvaluationApprovedBy: string | null;
     /** 자기평가 승인 일시 */
     selfEvaluationApprovedAt: Date | null;
     /** 1차 하향평가 확인 상태 */
-    primaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+    primaryEvaluationStatus:
+      | 'pending'
+      | 'approved'
+      | 'revision_requested'
+      | 'revision_completed';
     /** 1차 하향평가 승인자 ID */
     primaryEvaluationApprovedBy: string | null;
     /** 1차 하향평가 승인 일시 */
@@ -331,7 +365,11 @@ export interface EmployeeEvaluationPeriodStatusDto {
       /** 평가자 이메일 */
       evaluatorEmail: string;
       /** 확인 상태 */
-      status: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+      status:
+        | 'pending'
+        | 'approved'
+        | 'revision_requested'
+        | 'revision_completed';
       /** 승인자 ID */
       approvedBy: string | null;
       /** 승인 일시 */
@@ -348,7 +386,11 @@ export interface EmployeeEvaluationPeriodStatusDto {
       responseComment: string | null;
     }[];
     /** 2차 하향평가 확인 상태 (최종 상태, 모든 평가자 완료 여부 기반, 하위 호환성) */
-    secondaryEvaluationStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+    secondaryEvaluationStatus:
+      | 'pending'
+      | 'approved'
+      | 'revision_requested'
+      | 'revision_completed';
     /** 2차 하향평가 승인자 ID (하위 호환성) */
     secondaryEvaluationApprovedBy: string | null;
     /** 2차 하향평가 승인 일시 (하위 호환성) */
