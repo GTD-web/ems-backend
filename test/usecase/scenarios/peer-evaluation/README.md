@@ -1,0 +1,175 @@
+# 동료평가 관리 시나리오
+
+## 식별된 검증해야하는 시나리오
+
+각 하이라키별 시나리오 엔드포인트 순서대로 검증이 되어야 함.
+
+사용되는 컨트롤러
+- peer-evaluation-management
+- evaluation-question-management
+- dashboard
+- evaluation-period
+
+- **평가 질문 관리 (선행 조건)** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/evaluation-questions/question-groups (질문 그룹 생성) 
+        - 질문 그룹 생성 후 질문 관리에 사용
+        - 기본 그룹 설정 가능
+    - POST /admin/performance-evaluation/evaluation-questions (평가 질문 생성) 
+        - 동료평가에 사용할 질문 생성
+        - groupId 제공 시 해당 그룹에 자동 추가
+        - 질문 ID는 동료평가 요청 시 사용
+    - POST /admin/performance-evaluation/evaluation-questions/question-group-mappings (그룹에 질문 추가) 
+        - 질문을 그룹에 추가하여 질문 세트 구성
+        - displayOrder로 질문 순서 관리
+    - GET /admin/performance-evaluation/evaluation-questions/question-groups/{groupId}/questions (그룹의 질문 목록 조회) 
+        - 그룹에 속한 질문 목록 조회
+        - 동료평가 요청 시 questionIds로 사용
+        - **질문 ID 검증** 
+            - 질문 ID가 정확히 반환되는지 확인
+            - displayOrder 순서대로 정렬되는지 확인
+            - 질문 정보(text, minScore, maxScore) 포함 확인
+
+- **동료평가 요청 기본 관리** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/evaluation-questions/question-groups (질문 그룹 생성 - 선행 조건) 
+        - 테스트용 평가 질문 생성에 사용
+    - POST /admin/performance-evaluation/evaluation-questions (평가 질문 생성 - 선행 조건) 
+        - 테스트용 평가 질문 생성
+        - 동료평가 요청 시 questionIds로 사용
+    - POST /admin/performance-evaluation/peer-evaluations/requests (동료평가 요청) 
+        - evaluatorId, evaluateeId, periodId로 동료평가 요청 생성
+        - questionIds로 평가 질문 할당
+        - **응답 검증** 
+            - 결과.id가 정의되어 있는지 확인
+            - 결과.message에 "성공적으로 요청되었습니다" 포함 확인
+        - **대시보드 상태 변경 검증** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+                - peerEvaluation.status 확인 (in_progress)
+                - peerEvaluation.totalRequestCount 확인 (1)
+                - peerEvaluation.completedRequestCount 확인 (0)
+        - **상세 조회 검증** 
+            - GET /admin/performance-evaluation/peer-evaluations/{id} (동료평가 상세 조회)
+                - 상세조회결과.id가 요청 결과.id와 일치하는지 확인
+                - 상세조회결과.questions가 정의되어 있는지 확인
+                - 상세조회결과.questions가 배열인지 확인
+                - 상세조회결과.questions.length가 질문Ids.length와 일치하는지 확인
+    - GET /admin/performance-evaluation/peer-evaluations/{id} (동료평가 상세 조회) 
+        - 동료평가 ID로 상세 정보 조회
+        - **응답 구조 검증** 
+            - 상세조회결과.id가 요청결과.id와 일치하는지 확인
+            - 상세조회결과.evaluator가 정의되어 있는지 확인
+            - 상세조회결과.evaluatee가 정의되어 있는지 확인
+            - 상세조회결과.period가 정의되어 있는지 확인
+            - 상세조회결과.questions가 정의되어 있는지 확인
+            - 상세조회결과.questions.length가 질문Ids.length와 일치하는지 확인
+        - **질문 정보 검증** 
+            - 각 질문의 id가 질문Ids[index]와 일치하는지 확인
+            - 각 질문의 text가 정의되어 있는지 확인
+            - 각 질문의 displayOrder가 index와 일치하는지 확인
+
+- **동료평가 대량 요청 관리** (향후 구현 예정)
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/evaluation-questions (평가 질문 생성 - 선행 조건) 
+        - 대량 요청에 사용할 질문 생성
+    - POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluatee-to-many-evaluators (한 명의 피평가자를 여러 평가자에게 요청) 
+        - 한 명의 피평가자를 여러 평가자가 평가하도록 일괄 요청
+        - 모든 평가자에게 동일한 questionIds 할당
+        - **평가 질문 일괄 할당 검증** 
+            - 각 평가자에 대해 동일한 questionIds로 질문 매핑 생성 확인
+            - 모든 평가자가 동일한 질문 세트로 평가하는지 확인
+        - **대시보드 상태 변경 검증** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+                - peerEvaluation.status 확인 (none → in_progress 또는 in_progress 유지)
+                - peerEvaluation.totalRequestCount 확인 (요청한 평가자 수만큼 증가)
+                - peerEvaluation.completedRequestCount 확인 (0)
+    - POST /admin/performance-evaluation/peer-evaluations/requests/bulk/one-evaluator-to-many-evaluatees (한 명의 평가자가 여러 피평가자를 평가하도록 요청) 
+        - 한 명의 평가자가 여러 피평가자를 평가하도록 일괄 요청
+        - 모든 피평가자에 대해 동일한 questionIds 할당
+        - **평가 질문 일괄 할당 검증** 
+            - 각 피평가자에 대해 동일한 questionIds로 질문 매핑 생성 확인
+            - 한 평가자가 여러 피평가자를 동일한 질문 세트로 평가하는지 확인
+        - **대시보드 상태 변경 검증** 
+            - 각 피평가자에 대해 GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status 호출
+                - peerEvaluation.status 확인 (none → in_progress 또는 in_progress 유지)
+                - peerEvaluation.totalRequestCount 확인 (1 증가)
+                - peerEvaluation.completedRequestCount 확인 (0)
+
+- **동료평가 답변 관리** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/evaluation-questions/question-groups (질문 그룹 생성 - 선행 조건) 
+        - 테스트용 평가 질문 생성에 사용
+    - POST /admin/performance-evaluation/evaluation-questions (평가 질문 생성 - 선행 조건) 
+        - 테스트용 평가 질문 생성
+    - POST /admin/performance-evaluation/peer-evaluations/requests (동료평가 요청 - 선행 조건) 
+        - 답변 작성 대상 동료평가 생성
+        - questionIds로 평가 질문 할당
+    - POST /admin/performance-evaluation/peer-evaluations/{id}/answers (동료평가 질문 답변 저장/업데이트) 
+        - 동료평가에 매핑된 질문들에 대한 답변 저장 또는 업데이트
+        - questionId를 사용하여 답변 저장
+        - **응답 검증** 
+            - 답변저장결과.savedCount가 질문Ids.length와 일치하는지 확인
+            - 답변저장결과.message에 "성공적으로 저장되었습니다" 포함 확인
+        - **답변 저장 후 조회 검증** 
+            - GET /admin/performance-evaluation/peer-evaluations/{id} (동료평가 상세 조회)
+                - questions 배열의 각 질문에 answer가 정의되어 있는지 확인
+                - questions 배열의 각 질문에 score가 4인지 확인
+    - POST /admin/performance-evaluation/peer-evaluations/{id}/submit (동료평가 제출) 
+        - 동료평가를 제출 (내부에서 답변 저장 후 제출)
+        - **제출 후 상태 변경 검증** 
+            - GET /admin/performance-evaluation/peer-evaluations/{id} (동료평가 상세 조회)
+                - 상세조회결과.isCompleted가 true인지 확인
+                - 상세조회결과.completedAt이 정의되어 있는지 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+                - peerEvaluation.status 확인 (complete)
+                - peerEvaluation.totalRequestCount 확인 (1)
+                - peerEvaluation.completedRequestCount 확인 (1)
+
+- **동료평가 취소 관리** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/evaluation-questions/question-groups (질문 그룹 생성 - 선행 조건) 
+        - 테스트용 평가 질문 생성에 사용
+    - POST /admin/performance-evaluation/evaluation-questions (평가 질문 생성 - 선행 조건) 
+        - 테스트용 평가 질문 생성
+    - POST /admin/performance-evaluation/peer-evaluations/requests (동료평가 요청 - 선행 조건) 
+        - 취소 대상 동료평가 생성
+        - questionIds로 평가 질문 할당
+    - **취소 전 상태 조회** 
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+            - peerEvaluation.status 확인 (in_progress)
+            - peerEvaluation.totalRequestCount 확인 (1)
+            - peerEvaluation.completedRequestCount 확인 (0)
+    - DELETE /admin/performance-evaluation/peer-evaluations/{id} (동료평가 요청 취소) 
+        - 동료평가 요청 취소
+        - **취소 후 상태 변경 검증** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+                - peerEvaluation.status 확인 (none)
+                - peerEvaluation.totalRequestCount 확인 (0)
+                - peerEvaluation.completedRequestCount 확인 (0)
+
+- **동료평가 전체 시나리오** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/evaluation-questions/question-groups (질문 그룹 생성 - 선행 조건) 
+        - 테스트용 평가 질문 생성에 사용
+    - POST /admin/performance-evaluation/evaluation-questions (평가 질문 생성 - 선행 조건) 
+        - 테스트용 평가 질문 생성
+    - POST /admin/performance-evaluation/peer-evaluations/requests (동료평가 요청) 
+        - 평가 질문 생성, 동료평가 요청, 답변 저장, 제출, 상세 조회를 한 번에 실행
+    - POST /admin/performance-evaluation/peer-evaluations/{id}/answers (동료평가 질문 답변 저장) 
+        - 모든 질문에 답변 저장
+    - POST /admin/performance-evaluation/peer-evaluations/{id}/submit (동료평가 제출) 
+        - 동료평가 제출
+    - GET /admin/performance-evaluation/peer-evaluations/{id} (동료평가 상세 조회) 
+        - 제출 후 상세 정보 조회
+        - **전체 시나리오 결과 검증** 
+            - 결과.질문생성결과.질문들.length가 0보다 큰지 확인
+            - 결과.동료평가요청결과.id가 정의되어 있는지 확인
+            - 결과.답변저장결과.savedCount가 0보다 큰지 확인
+            - 결과.상세조회결과.isCompleted가 true인지 확인
+
