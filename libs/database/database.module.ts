@@ -2,7 +2,10 @@ import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TransactionManagerService } from './transaction-manager.service';
+import { config } from 'dotenv';
 
+// 환경 변수 로드
+config();
 /**
  * 데이터베이스 모듈
  *
