@@ -6,6 +6,23 @@ import { ProjectAssignmentScenario } from '../project-assignment/project-assignm
 import { WbsAssignmentScenario } from '../wbs-assignment/wbs-assignment.scenario';
 import { ComplexDownwardEvaluationScenario } from './complex-downward-evaluation.scenario';
 
+/**
+ * 복합 하향평가 시나리오 E2E 테스트
+ * 
+ * 📋 테스트 범위:
+ * - 여러 WBS가 할당된 복잡한 시나리오
+ * - 일부 WBS만 평가한 경우의 상태 관리 (in_progress)
+ * - 1차/2차 하향평가 전체 워크플로우
+ * - 다양한 직원/평가자 조합
+ * 
+ * 🎯 특징:
+ * - 직원 1명당 WBS 3개 할당 (복잡한 케이스)
+ * - 평가 진행 상태(Evaluation Progress Status) 검증
+ * - 다중 직원/프로젝트 시나리오
+ * 
+ * ⚠️ 참고:
+ * - 단계 승인 상태 테스트는 downward-evaluation-basic-management.e2e-spec.ts에서 관리
+ */
 describe('복합 하향평가 시나리오', () => {
   let testSuite: BaseE2ETest;
   let downwardEvaluationScenario: DownwardEvaluationScenario;
@@ -177,7 +194,7 @@ describe('복합 하향평가 시나리오', () => {
   });
 
   describe('하향평가 저장 후 제출 시나리오', () => {
-    it('1차 하향평가 저장 후 제출이 정상적으로 동작한다', async () => {
+    it('1차 하향평가 일부 WBS만 평가 시 in_progress 상태가 된다', async () => {
       const evaluateeId = employeeIds[0];
       const evaluatorId = employeeIds[1];
       const wbsId = wbsItemIds[0];
@@ -228,10 +245,31 @@ describe('복합 하향평가 시나리오', () => {
       expect(result.제출결과).toBeDefined();
       expect(result.제출결과.isSubmitted).toBe(true);
 
+      // 대시보드에서 status 확인
+      const 직원현황 = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${evaluateeId}/status`,
+        )
+        .expect(200);
+
+      expect(직원현황.body.downwardEvaluation).toBeDefined();
+      expect(직원현황.body.downwardEvaluation.primary).toBeDefined();
+
+      // ⚠️ 중요: employeeIds[0]에게는 3개의 WBS가 할당되었지만 1개만 평가했으므로
+      // status는 'in_progress'가 되어야 함 (completedEvaluationCount < assignedWbsCount)
+      expect(직원현황.body.downwardEvaluation.primary.status).toBe(
+        'in_progress',
+      );
+      expect(직원현황.body.downwardEvaluation.primary.assignedWbsCount).toBe(3);
+      expect(
+        직원현황.body.downwardEvaluation.primary.completedEvaluationCount,
+      ).toBe(1);
+
       console.log('✅ 1차 하향평가 저장 후 제출 시나리오 테스트 완료');
     });
 
-    it('2차 하향평가 저장 후 제출이 정상적으로 동작한다', async () => {
+    it('2차 하향평가 일부 WBS만 평가 시 in_progress 상태가 된다', async () => {
       const evaluateeId = employeeIds[0];
       const primaryEvaluatorId = employeeIds[1];
       const secondaryEvaluatorId = employeeIds[2];
@@ -293,6 +331,43 @@ describe('복합 하향평가 시나리오', () => {
       expect(result.저장결과.evaluatorId).toBe(secondaryEvaluatorId);
       expect(result.제출결과).toBeDefined();
       expect(result.제출결과.isSubmitted).toBe(true);
+
+      // 대시보드에서 status 확인
+      const 직원현황 = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${evaluateeId}/status`,
+        )
+        .expect(200);
+
+      expect(직원현황.body.downwardEvaluation).toBeDefined();
+      expect(직원현황.body.downwardEvaluation.secondary).toBeDefined();
+
+      // 2차 하향평가는 evaluators 배열 구조
+      const secondary평가자 =
+        직원현황.body.downwardEvaluation.secondary.evaluators.find(
+          (e: any) => e.evaluator.id === secondaryEvaluatorId,
+        );
+
+      expect(secondary평가자).toBeDefined();
+
+      // 실제 데이터 로그로 확인
+      console.log(`\n  📊 2차 평가자 (${secondaryEvaluatorId}) 상태 확인:`);
+      console.log(`     status: ${secondary평가자.status}`);
+      console.log(`     assignedWbsCount: ${secondary평가자.assignedWbsCount}`);
+      console.log(
+        `     completedEvaluationCount: ${secondary평가자.completedEvaluationCount}`,
+      );
+      console.log(`     isSubmitted: ${secondary평가자.isSubmitted}`);
+
+      // ⚠️ employeeIds[0]에게는 3개의 WBS가 할당되었지만 1개만 평가했으므로
+      // status는 'in_progress'가 되어야 함
+      expect(secondary평가자.assignedWbsCount).toBeGreaterThan(1);
+      expect(secondary평가자.completedEvaluationCount).toBeGreaterThan(0);
+      expect(secondary평가자.completedEvaluationCount).toBeLessThan(
+        secondary평가자.assignedWbsCount,
+      );
+      expect(secondary평가자.status).toBe('in_progress');
 
       console.log('✅ 2차 하향평가 저장 후 제출 시나리오 테스트 완료');
     });
@@ -383,6 +458,35 @@ describe('복합 하향평가 시나리오', () => {
         `  ✓ 2차 필터링 조회 결과: ${result.이차필터링조회.evaluations.length}건`,
       );
 
+      // 검증: 대시보드 status 확인
+      const 직원현황 = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${evaluateeId}/status`,
+        )
+        .expect(200);
+
+      expect(직원현황.body.downwardEvaluation).toBeDefined();
+      expect(직원현황.body.downwardEvaluation.primary).toBeDefined();
+
+      // ⚠️ 중요: employeeIds[0]에게는 3개의 WBS가 할당되었지만
+      // 전체 시나리오에서는 2개만 평가했으므로 (wbsItemIds[0]는 1차, wbsItemIds[1]는 2차)
+      // 1차 평가자 입장에서는 3개 중 1개만 평가 → in_progress
+      console.log(
+        `\n  📊 1차 하향평가 상태: ${직원현황.body.downwardEvaluation.primary.status}`,
+      );
+      console.log(
+        `     할당 WBS: ${직원현황.body.downwardEvaluation.primary.assignedWbsCount}개`,
+      );
+      console.log(
+        `     완료 평가: ${직원현황.body.downwardEvaluation.primary.completedEvaluationCount}개`,
+      );
+
+      expect(직원현황.body.downwardEvaluation.primary.status).toBe(
+        'in_progress',
+      );
+      expect(직원현황.body.downwardEvaluation.primary.assignedWbsCount).toBe(3);
+
       console.log('✅ 하향평가 관리 전체 시나리오 테스트 완료');
     });
   });
@@ -459,40 +563,20 @@ describe('복합 하향평가 시나리오', () => {
   });
 
   describe('복합 시나리오 조합 테스트', () => {
-    it('여러 직원에 대한 1차/2차 하향평가를 순차적으로 처리할 수 있다', async () => {
-      console.log('\n=== 여러 직원에 대한 하향평가 순차 처리 테스트 시작 ===');
+    describe('평가 진행 상태 (Evaluation Progress Status)', () => {
+      it('1차 하향평가 일부 WBS만 평가 시 평가 진행 상태(Evaluation Progress Status)는 in_progress가 된다', async () => {
+        console.log(
+          '\n=== 1차 하향평가 일부 WBS만 평가 시 평가 진행 상태 테스트 시작 ===',
+        );
 
-      const evaluateeIds = [employeeIds[0], employeeIds[3]];
-      const evaluatorId = employeeIds[1];
-      const results: Array<{
-        저장결과: any;
-        제출결과: any;
-      }> = [];
+        const evaluateeId = employeeIds[0]; // beforeEach에서 3개 WBS 할당됨
+        const evaluatorId = employeeIds[1];
+        const wbsId = wbsItemIds[0];
 
-      // 선행조건: 프로젝트 매니저 설정
-      await testSuite
-        .getRepository('Project')
-        .update(projectIds[0], { managerId: employeeIds[2] });
-
-      for (let i = 0; i < evaluateeIds.length; i++) {
-        const evaluateeId = evaluateeIds[i];
-        const wbsId = wbsItemIds[i];
-
-        console.log(`\n[직원 ${i + 1}/${evaluateeIds.length}] 처리 중...`);
-        console.log(`  피평가자: ${evaluateeId}`);
-        console.log(`  WBS: ${wbsId}`);
-
-        // WBS 할당
-        try {
-          await wbsAssignmentScenario.WBS를_할당한다({
-            employeeId: evaluateeId,
-            wbsItemId: wbsId,
-            projectId: projectIds[0],
-            periodId: evaluationPeriodId,
-          });
-        } catch (error) {
-          console.log('  ⚠️ WBS 이미 할당됨');
-        }
+        // 선행조건: 프로젝트 매니저 설정
+        await testSuite
+          .getRepository('Project')
+          .update(projectIds[0], { managerId: employeeIds[2] });
 
         // 평가라인 설정
         await testSuite
@@ -511,12 +595,12 @@ describe('복합 하향평가 시나리오', () => {
             employeeId: evaluateeId,
             wbsItemId: wbsId,
             periodId: evaluationPeriodId,
-            selfEvaluationContent: `직원 ${i + 1}의 자기평가`,
-            selfEvaluationScore: 85 + i * 5,
-            performanceResult: `직원 ${i + 1}의 성과`,
+            selfEvaluationContent: '자기평가 내용',
+            selfEvaluationScore: 85,
+            performanceResult: '성과 결과',
           });
 
-        // 1차 하향평가 저장 및 제출
+        // 1차 하향평가 저장 및 제출 (1개만 평가)
         const result =
           await complexDownwardEvaluationScenario.하향평가_저장_후_제출_시나리오를_실행한다(
             {
@@ -526,39 +610,53 @@ describe('복합 하향평가 시나리오', () => {
               evaluatorId,
               evaluatorType: 'primary',
               selfEvaluationId: selfEvaluationResult.selfEvaluationId,
-              downwardEvaluationContent: `직원 ${i + 1}에 대한 평가`,
-              downwardEvaluationScore: 80 + i * 5,
+              downwardEvaluationContent: '1차 하향평가 내용',
+              downwardEvaluationScore: 80,
             },
           );
 
-        results.push(result);
-        console.log(`  ✅ 직원 ${i + 1} 처리 완료`);
-      }
-
-      // 검증: 모든 평가가 정상적으로 처리되었는지 확인
-      expect(results.length).toBe(evaluateeIds.length);
-      results.forEach((result, index) => {
+        // 검증: 저장 및 제출 성공
         expect(result.저장결과).toBeDefined();
         expect(result.저장결과.id).toBeDefined();
         expect(result.제출결과.isSubmitted).toBe(true);
-        console.log(`  ✓ 직원 ${index + 1} 평가 ID: ${result.저장결과.id}`);
+
+        // 대시보드 상태 확인
+        const 직원현황 = await testSuite
+          .request()
+          .get(
+            `/admin/dashboard/${evaluationPeriodId}/employees/${evaluateeId}/status`,
+          )
+          .expect(200);
+
+        expect(직원현황.body.downwardEvaluation).toBeDefined();
+        expect(직원현황.body.downwardEvaluation.primary).toBeDefined();
+
+        const assignedCount =
+          직원현황.body.downwardEvaluation.primary.assignedWbsCount;
+        const completedCount =
+          직원현황.body.downwardEvaluation.primary.completedEvaluationCount;
+        const status = 직원현황.body.downwardEvaluation.primary.status;
+
+        console.log(`\n  📊 평가 진행 상태 확인:`);
+        console.log(`     할당 WBS: ${assignedCount}개`);
+        console.log(`     완료 평가: ${completedCount}개`);
+        console.log(`     평가 진행 상태 (Evaluation Progress): ${status}`);
+
+        // ⚠️ 중요: 3개 WBS 중 1개만 평가 완료
+        // → 평가 진행 상태 = 'in_progress' (일부만 완료)
+        expect(assignedCount).toBe(3);
+        expect(completedCount).toBe(1);
+        expect(completedCount).toBeLessThan(assignedCount);
+        expect(status).toBe('in_progress');
+
+        console.log(
+          '✅ 1차 하향평가 일부 WBS만 평가 시 평가 진행 상태 테스트 완료',
+        );
       });
-
-      // 평가자별 목록 조회로 전체 검증
-      const 평가자목록 =
-        await downwardEvaluationScenario.평가자별_하향평가_목록을_조회한다({
-          evaluatorId,
-          periodId: evaluationPeriodId,
-        });
-
-      expect(평가자목록.evaluations.length).toBeGreaterThanOrEqual(
-        evaluateeIds.length,
-      );
-      console.log(
-        `\n  ✓ 평가자의 전체 평가 건수: ${평가자목록.evaluations.length}건`,
-      );
-
-      console.log('✅ 여러 직원에 대한 하향평가 순차 처리 테스트 완료');
     });
+
+    // ⚠️ 단계 승인 상태 테스트는 downward-evaluation-basic-management.e2e-spec.ts에서 관리합니다.
+    // - 1차/2차 하향평가 저장, 제출, 승인 프로세스
+    // - pending → approved 상태 전환 검증
   });
 });

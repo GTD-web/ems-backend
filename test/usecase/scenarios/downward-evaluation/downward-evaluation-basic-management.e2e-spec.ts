@@ -6,6 +6,19 @@ import { ProjectAssignmentScenario } from '../project-assignment/project-assignm
 import { WbsAssignmentScenario } from '../wbs-assignment/wbs-assignment.scenario';
 import { EvaluationTargetScenario } from '../evaluation-target.scenario';
 
+/**
+ * 하향평가 기본 관리 시나리오 E2E 테스트
+ *
+ * 📋 테스트 범위:
+ * - 1차/2차 하향평가의 저장, 제출 기본 흐름
+ * - 단계 승인 상태 관리 (pending → approved)
+ * - 1개 WBS 할당 기준의 단순 시나리오
+ *
+ * 🎯 특징:
+ * - 기본적인 CRUD 및 상태 전환에 집중
+ * - 직원 1명당 WBS 1개 할당 (단순 케이스)
+ * - 대시보드 API 검증 포함
+ */
 describe('하향평가 기본 관리 시나리오', () => {
   let testSuite: BaseE2ETest;
   let downwardEvaluationScenario: DownwardEvaluationScenario;
@@ -127,7 +140,7 @@ describe('하향평가 기본 관리 시나리오', () => {
   });
 
   describe('1차 하향평가 저장 및 제출', () => {
-    it('1차 하향평가 저장 및 제출이 정상적으로 동작하고 대시보드에 반영된다', async () => {
+    it('1차 하향평가 모든 WBS 평가 완료 시 단계 승인 상태(Step Approval Status)는 pending이 되고 승인 후 approved가 된다', async () => {
       const evaluateeId = employeeIds[0];
       const evaluatorId = employeeIds[1]; // 1차 평가자
       const wbsId = wbsItemIds[0];
@@ -257,6 +270,32 @@ describe('하향평가 기본 관리 시나리오', () => {
       // status 검증: 제출 후에는 'pending'(승인 대기) 상태여야 함
       expect(직원현황.body.downwardEvaluation.primary.status).toBe('pending');
 
+      // Step 5: 관리자가 1차 하향평가 단계를 승인한다
+      await testSuite
+        .request()
+        .patch(
+          `/admin/step-approvals/${evaluationPeriodId}/employees/${evaluateeId}/primary`,
+        )
+        .send({
+          status: 'approved',
+        })
+        .expect(200);
+
+      // Step 6: 승인 후 대시보드에서 status가 'approved'로 변경되었는지 확인
+      const 승인후직원현황 = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${evaluateeId}/status`,
+        )
+        .expect(200);
+
+      // 승인 후 status 검증: 'approved' 상태여야 함
+      expect(승인후직원현황.body.downwardEvaluation).toBeDefined();
+      expect(승인후직원현황.body.downwardEvaluation.primary).toBeDefined();
+      expect(승인후직원현황.body.downwardEvaluation.primary.status).toBe(
+        'approved',
+      );
+
       const 전체직원현황 = await testSuite
         .request()
         .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
@@ -274,8 +313,8 @@ describe('하향평가 기본 관리 시나리오', () => {
         해당직원현황.downwardEvaluation.primary.completedEvaluationCount,
       ).toBe(1);
 
-      // status 검증: 제출 후에는 'pending'(승인 대기) 상태여야 함
-      expect(해당직원현황.downwardEvaluation.primary.status).toBe('pending');
+      // status 검증: 승인 후에는 'approved' 상태여야 함
+      expect(해당직원현황.downwardEvaluation.primary.status).toBe('approved');
 
       const 통합정보 = await testSuite
         .request()
@@ -289,8 +328,8 @@ describe('하향평가 기본 관리 시나리오', () => {
       expect(통합정보.body.primaryDownwardEvaluation.completedCount).toBe(1);
       expect(통합정보.body.primaryDownwardEvaluation.isSubmitted).toBe(true);
 
-      // status 검증: 제출 후에는 'pending'(승인 대기) 상태여야 함
-      expect(통합정보.body.primaryDownwardEvaluation.status).toBe('pending');
+      // status 검증: 승인 후에는 'approved' 상태여야 함
+      expect(통합정보.body.primaryDownwardEvaluation.status).toBe('approved');
       // projects 내 WBS 정보도 확인
       const 통합정보WBS = 통합정보.body.projects.items
         .flatMap((p: any) => p.wbsList)
@@ -336,7 +375,7 @@ describe('하향평가 기본 관리 시나리오', () => {
   });
 
   describe('2차 하향평가 저장 및 제출', () => {
-    it('2차 하향평가 저장 및 제출이 정상적으로 동작하고 대시보드에 반영된다', async () => {
+    it('2차 하향평가 모든 WBS 평가 완료 시 단계 승인 상태(Step Approval Status)는 pending이 되고 승인 후 approved가 된다', async () => {
       const evaluateeId = employeeIds[0];
       const secondaryEvaluatorId = employeeIds[2]; // 2차 평가자
       const wbsId = wbsItemIds[0];
@@ -461,10 +500,32 @@ describe('하향평가 기본 관리 시나리오', () => {
       // status 검증: 제출 후에는 'pending'(승인 대기) 상태여야 함
       expect(secondary평가자.status).toBe('pending');
 
+      // Step 3: 관리자가 2차 하향평가 단계를 승인한다 (평가자별)
+      await testSuite
+        .request()
+        .patch(
+          `/admin/step-approvals/${evaluationPeriodId}/employees/${evaluateeId}/secondary/${secondaryEvaluatorId}`,
+        )
+        .send({
+          status: 'approved',
+        })
+        .expect(200);
+
+      // Step 4: 승인 후 대시보드에서 status가 'approved'로 변경되었는지 확인
+      const 승인후직원현황 = await testSuite
+        .request()
+        .get(
+          `/admin/dashboard/${evaluationPeriodId}/employees/${evaluateeId}/status`,
+        )
+        .expect(200);
+
+      // 승인 후 status 검증: 'approved' 상태여야 함
+      const 승인후평가자 =
+        승인후직원현황.body.downwardEvaluation.secondary.evaluators[0];
+      expect(승인후평가자).toBeDefined();
+      expect(승인후평가자.status).toBe('approved');
+
       // 4-3. getAllEmployeesEvaluationPeriodStatus - 전체 직원 목록에서 확인
-      console.log(
-        '\n📊 [검증 3] getAllEmployeesEvaluationPeriodStatus - 전체 직원 목록',
-      );
       const 전체직원현황 = await testSuite
         .request()
         .get(`/admin/dashboard/${evaluationPeriodId}/employees/status`)
@@ -483,8 +544,8 @@ describe('하향평가 기본 관리 시나리오', () => {
       expect(해당직원Secondary평가자.assignedWbsCount).toBe(1);
       expect(해당직원Secondary평가자.completedEvaluationCount).toBe(1);
 
-      // status 검증: 제출 후에는 'pending'(승인 대기) 상태여야 함
-      expect(해당직원Secondary평가자.status).toBe('pending');
+      // status 검증: 승인 후에는 'approved' 상태여야 함
+      expect(해당직원Secondary평가자.status).toBe('approved');
 
       const 통합정보 = await testSuite
         .request()
@@ -498,8 +559,8 @@ describe('하향평가 기본 관리 시나리오', () => {
       expect(통합정보.body.secondaryDownwardEvaluation.completedCount).toBe(1);
       expect(통합정보.body.secondaryDownwardEvaluation.isSubmitted).toBe(true);
 
-      // status 검증: 제출 후에는 'pending'(승인 대기) 상태여야 함
-      expect(통합정보.body.secondaryDownwardEvaluation.status).toBe('pending');
+      // status 검증: 승인 후에는 'approved' 상태여야 함
+      expect(통합정보.body.secondaryDownwardEvaluation.status).toBe('approved');
 
       // projects 내 WBS 정보도 확인
       const 통합정보WBS = 통합정보.body.projects.items
