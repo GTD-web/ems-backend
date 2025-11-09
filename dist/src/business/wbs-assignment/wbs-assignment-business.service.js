@@ -1,0 +1,484 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var WbsAssignmentBusinessService_1;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.WbsAssignmentBusinessService = void 0;
+const common_1 = require("@nestjs/common");
+const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const employee_service_1 = require("../../domain/common/employee/employee.service");
+const project_service_1 = require("../../domain/common/project/project.service");
+const evaluation_line_service_1 = require("../../domain/core/evaluation-line/evaluation-line.service");
+const evaluation_line_mapping_service_1 = require("../../domain/core/evaluation-line-mapping/evaluation-line-mapping.service");
+const evaluation_wbs_assignment_service_1 = require("../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service");
+const evaluation_line_types_1 = require("../../domain/core/evaluation-line/evaluation-line.types");
+const wbs_item_types_1 = require("../../domain/common/wbs-item/wbs-item.types");
+let WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = class WbsAssignmentBusinessService {
+    evaluationCriteriaManagementService;
+    employeeService;
+    projectService;
+    evaluationLineService;
+    evaluationLineMappingService;
+    evaluationWbsAssignmentService;
+    logger = new common_1.Logger(WbsAssignmentBusinessService_1.name);
+    constructor(evaluationCriteriaManagementService, employeeService, projectService, evaluationLineService, evaluationLineMappingService, evaluationWbsAssignmentService) {
+        this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
+        this.employeeService = employeeService;
+        this.projectService = projectService;
+        this.evaluationLineService = evaluationLineService;
+        this.evaluationLineMappingService = evaluationLineMappingService;
+        this.evaluationWbsAssignmentService = evaluationWbsAssignmentService;
+    }
+    async WBS를_할당한다(params) {
+        this.logger.log('WBS 할당 비즈니스 로직 시작', {
+            employeeId: params.employeeId,
+            wbsItemId: params.wbsItemId,
+            projectId: params.projectId,
+        });
+        const data = {
+            employeeId: params.employeeId,
+            wbsItemId: params.wbsItemId,
+            projectId: params.projectId,
+            periodId: params.periodId,
+            assignedBy: params.assignedBy,
+        };
+        const assignment = await this.evaluationCriteriaManagementService.WBS를_할당한다(data, params.assignedBy);
+        const existingCriteria = await this.evaluationCriteriaManagementService.특정_WBS항목의_평가기준을_조회한다(params.wbsItemId);
+        if (!existingCriteria || existingCriteria.length === 0) {
+            this.logger.log('WBS 평가기준이 없어 빈 기준을 생성합니다', {
+                wbsItemId: params.wbsItemId,
+            });
+            await this.evaluationCriteriaManagementService.WBS_평가기준을_생성한다({
+                wbsItemId: params.wbsItemId,
+                criteria: '',
+                importance: 5,
+            }, params.assignedBy);
+        }
+        await this.평가라인을_자동으로_구성한다(params.employeeId, params.wbsItemId, params.projectId, params.periodId, params.assignedBy);
+        this.logger.log('WBS별 평가라인 구성 시작', {
+            employeeId: params.employeeId,
+            wbsItemId: params.wbsItemId,
+            periodId: params.periodId,
+        });
+        const wbsEvaluationLineResult = await this.evaluationCriteriaManagementService.직원_WBS별_평가라인을_구성한다(params.employeeId, params.wbsItemId, params.periodId, params.assignedBy);
+        this.logger.log('WBS별 평가라인 구성 완료', {
+            createdLines: wbsEvaluationLineResult.createdLines,
+            createdMappings: wbsEvaluationLineResult.createdMappings,
+        });
+        this.logger.log('WBS 할당, 평가기준 생성, 평가라인 구성 완료', {
+            assignmentId: assignment.id,
+        });
+        return assignment;
+    }
+    async WBS_할당을_취소한다(params) {
+        this.logger.log('WBS 할당 취소 비즈니스 로직 시작', {
+            assignmentId: params.assignmentId,
+        });
+        const assignment = await this.evaluationWbsAssignmentService.ID로_조회한다(params.assignmentId);
+        if (!assignment) {
+            this.logger.log('WBS 할당을 찾을 수 없습니다. 평가기준 정리를 생략합니다.', {
+                assignmentId: params.assignmentId,
+            });
+            return;
+        }
+        const employeeId = assignment.employeeId;
+        const wbsItemId = assignment.wbsItemId;
+        const periodId = assignment.periodId;
+        await this.evaluationCriteriaManagementService.WBS_할당을_취소한다(params.assignmentId, params.cancelledBy);
+        await this.평가라인_매핑을_삭제한다(employeeId, wbsItemId, periodId, params.cancelledBy);
+        const remainingAssignments = await this.evaluationCriteriaManagementService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(wbsItemId, periodId);
+        if (!remainingAssignments || remainingAssignments.length === 0) {
+            this.logger.log('마지막 WBS 할당이 취소되어 평가기준을 삭제합니다', {
+                wbsItemId,
+            });
+            await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(wbsItemId, params.cancelledBy);
+        }
+        this.logger.log('WBS 할당 취소, 평가라인 매핑 삭제 및 평가기준 정리 완료', {
+            assignmentId: params.assignmentId,
+            criteriaDeleted: !remainingAssignments || remainingAssignments.length === 0,
+        });
+    }
+    async WBS_할당을_WBS_ID로_취소한다(params) {
+        this.logger.log('WBS ID 기반 할당 취소 비즈니스 로직 시작', {
+            employeeId: params.employeeId,
+            wbsItemId: params.wbsItemId,
+            projectId: params.projectId,
+            periodId: params.periodId,
+        });
+        const assignmentDetail = await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(params.employeeId, params.wbsItemId, params.projectId, params.periodId);
+        if (!assignmentDetail) {
+            this.logger.log('WBS 할당을 찾을 수 없습니다. 평가기준 정리를 생략합니다.', {
+                employeeId: params.employeeId,
+                wbsItemId: params.wbsItemId,
+                projectId: params.projectId,
+                periodId: params.periodId,
+            });
+            return;
+        }
+        await this.WBS_할당을_취소한다({
+            assignmentId: assignmentDetail.id,
+            cancelledBy: params.cancelledBy,
+        });
+    }
+    async WBS를_대량으로_할당한다(params) {
+        this.logger.log('WBS 대량 할당 비즈니스 로직 시작', {
+            count: params.assignments.length,
+        });
+        const assignmentsData = params.assignments.map((assignment) => ({
+            employeeId: assignment.employeeId,
+            wbsItemId: assignment.wbsItemId,
+            projectId: assignment.projectId,
+            periodId: assignment.periodId,
+            assignedBy: params.assignedBy,
+        }));
+        const assignments = await this.evaluationCriteriaManagementService.WBS를_대량으로_할당한다(assignmentsData, params.assignedBy);
+        const uniqueWbsItemIds = [
+            ...new Set(params.assignments.map((a) => a.wbsItemId)),
+        ];
+        await Promise.all(uniqueWbsItemIds.map(async (wbsItemId) => {
+            const existingCriteria = await this.evaluationCriteriaManagementService.특정_WBS항목의_평가기준을_조회한다(wbsItemId);
+            if (!existingCriteria || existingCriteria.length === 0) {
+                this.logger.log('WBS 평가기준이 없어 빈 기준을 생성합니다', {
+                    wbsItemId,
+                });
+                await this.evaluationCriteriaManagementService.WBS_평가기준을_생성한다({
+                    wbsItemId,
+                    criteria: '',
+                    importance: 5,
+                }, params.assignedBy);
+            }
+        }));
+        await Promise.all(params.assignments.map(async (assignment) => {
+            await this.평가라인을_자동으로_구성한다(assignment.employeeId, assignment.wbsItemId, assignment.projectId, assignment.periodId, params.assignedBy);
+        }));
+        this.logger.log('WBS 대량 할당, 평가기준 생성, 평가라인 구성 완료', {
+            count: assignments.length,
+        });
+        return assignments;
+    }
+    async WBS_할당_순서를_변경한다(params) {
+        this.logger.log('WBS 할당 순서 변경 비즈니스 로직 시작', {
+            assignmentId: params.assignmentId,
+            direction: params.direction,
+        });
+        const assignment = await this.evaluationCriteriaManagementService.WBS_할당_순서를_변경한다(params.assignmentId, params.direction, params.updatedBy);
+        this.logger.log('WBS 할당 순서 변경 완료', {
+            assignmentId: params.assignmentId,
+        });
+        return assignment;
+    }
+    async WBS_할당_순서를_WBS_ID로_변경한다(params) {
+        this.logger.log('WBS ID 기반 할당 순서 변경 비즈니스 로직 시작', {
+            employeeId: params.employeeId,
+            wbsItemId: params.wbsItemId,
+            projectId: params.projectId,
+            periodId: params.periodId,
+            direction: params.direction,
+        });
+        const assignmentDetail = await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(params.employeeId, params.wbsItemId, params.projectId, params.periodId);
+        if (!assignmentDetail) {
+            throw new common_1.NotFoundException(`WBS 할당을 찾을 수 없습니다. (employeeId: ${params.employeeId}, wbsItemId: ${params.wbsItemId}, projectId: ${params.projectId}, periodId: ${params.periodId})`);
+        }
+        const assignment = await this.evaluationCriteriaManagementService.WBS_할당_순서를_변경한다(assignmentDetail.id, params.direction, params.updatedBy);
+        this.logger.log('WBS ID 기반 할당 순서 변경 완료', {
+            assignmentId: assignmentDetail.id,
+        });
+        return assignment;
+    }
+    async 평가기간의_WBS_할당을_초기화한다(params) {
+        this.logger.log('평가기간 WBS 할당 초기화 비즈니스 로직 시작', {
+            periodId: params.periodId,
+        });
+        const allAssignments = await this.evaluationCriteriaManagementService.WBS_할당_목록을_조회한다({ periodId: params.periodId }, 1, 10000);
+        const affectedWbsItemIds = [
+            ...new Set(allAssignments.assignments.map((a) => a.wbsItemId)),
+        ];
+        await this.evaluationCriteriaManagementService.평가기간의_WBS_할당을_초기화한다(params.periodId, params.resetBy);
+        await Promise.all(affectedWbsItemIds.map(async (wbsItemId) => {
+            const remainingAssignments = await this.evaluationCriteriaManagementService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(wbsItemId, params.periodId);
+            if (!remainingAssignments || remainingAssignments.length === 0) {
+                this.logger.log('고아 평가기준 삭제', { wbsItemId });
+                await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(wbsItemId, params.resetBy);
+            }
+        }));
+        this.logger.log('평가기간 WBS 할당 초기화 및 평가기준 정리 완료', {
+            periodId: params.periodId,
+            cleanedWbsItems: affectedWbsItemIds.length,
+        });
+    }
+    async 프로젝트의_WBS_할당을_초기화한다(params) {
+        this.logger.log('프로젝트 WBS 할당 초기화 비즈니스 로직 시작', {
+            projectId: params.projectId,
+            periodId: params.periodId,
+        });
+        const allAssignments = await this.evaluationCriteriaManagementService.WBS_할당_목록을_조회한다({ projectId: params.projectId, periodId: params.periodId }, 1, 10000);
+        const affectedWbsItemIds = [
+            ...new Set(allAssignments.assignments.map((a) => a.wbsItemId)),
+        ];
+        await this.evaluationCriteriaManagementService.프로젝트의_WBS_할당을_초기화한다(params.projectId, params.periodId, params.resetBy);
+        await Promise.all(affectedWbsItemIds.map(async (wbsItemId) => {
+            const remainingAssignments = await this.evaluationCriteriaManagementService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(wbsItemId, params.periodId);
+            if (!remainingAssignments || remainingAssignments.length === 0) {
+                this.logger.log('고아 평가기준 삭제', { wbsItemId });
+                await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(wbsItemId, params.resetBy);
+            }
+        }));
+        this.logger.log('프로젝트 WBS 할당 초기화 및 평가기준 정리 완료', {
+            projectId: params.projectId,
+            cleanedWbsItems: affectedWbsItemIds.length,
+        });
+    }
+    async 직원의_WBS_할당을_초기화한다(params) {
+        this.logger.log('직원 WBS 할당 초기화 비즈니스 로직 시작', {
+            employeeId: params.employeeId,
+            periodId: params.periodId,
+        });
+        const allAssignments = await this.evaluationCriteriaManagementService.WBS_할당_목록을_조회한다({ employeeId: params.employeeId, periodId: params.periodId }, 1, 10000);
+        const affectedWbsItemIds = [
+            ...new Set(allAssignments.assignments.map((a) => a.wbsItemId)),
+        ];
+        await this.evaluationCriteriaManagementService.직원의_WBS_할당을_초기화한다(params.employeeId, params.periodId, params.resetBy);
+        await Promise.all(affectedWbsItemIds.map(async (wbsItemId) => {
+            const remainingAssignments = await this.evaluationCriteriaManagementService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(wbsItemId, params.periodId);
+            if (!remainingAssignments || remainingAssignments.length === 0) {
+                this.logger.log('고아 평가기준 삭제', { wbsItemId });
+                await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(wbsItemId, params.resetBy);
+            }
+        }));
+        this.logger.log('직원 WBS 할당 초기화 및 평가기준 정리 완료', {
+            employeeId: params.employeeId,
+            cleanedWbsItems: affectedWbsItemIds.length,
+        });
+    }
+    async WBS_할당_목록을_조회한다(params) {
+        this.logger.log('WBS 할당 목록 조회 비즈니스 로직', {
+            periodId: params.periodId,
+            employeeId: params.employeeId,
+        });
+        const filter = {
+            periodId: params.periodId,
+            employeeId: params.employeeId,
+            wbsItemId: params.wbsItemId,
+            projectId: params.projectId,
+        };
+        return await this.evaluationCriteriaManagementService.WBS_할당_목록을_조회한다(filter, params.page, params.limit, params.orderBy, params.orderDirection);
+    }
+    async WBS_할당_상세를_조회한다(employeeId, wbsItemId, projectId, periodId) {
+        this.logger.log('WBS 할당 상세 조회 비즈니스 로직', {
+            employeeId,
+            wbsItemId,
+            projectId,
+            periodId,
+        });
+        return await this.evaluationCriteriaManagementService.WBS_할당_상세를_조회한다(employeeId, wbsItemId, projectId, periodId);
+    }
+    async 특정_평가기간에_직원에게_할당된_WBS를_조회한다(employeeId, periodId) {
+        this.logger.log('직원 WBS 할당 조회 비즈니스 로직', {
+            employeeId,
+            periodId,
+        });
+        return await this.evaluationCriteriaManagementService.특정_평가기간에_직원에게_할당된_WBS를_조회한다(employeeId, periodId);
+    }
+    async 특정_평가기간에_프로젝트의_WBS_할당을_조회한다(projectId, periodId) {
+        this.logger.log('프로젝트 WBS 할당 조회 비즈니스 로직', {
+            projectId,
+            periodId,
+        });
+        return await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트의_WBS_할당을_조회한다(projectId, periodId);
+    }
+    async 특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(wbsItemId, periodId) {
+        this.logger.log('WBS 항목 할당 직원 조회 비즈니스 로직', {
+            wbsItemId,
+            periodId,
+        });
+        return await this.evaluationCriteriaManagementService.특정_평가기간에_WBS_항목에_할당된_직원을_조회한다(wbsItemId, periodId);
+    }
+    async 특정_평가기간에_프로젝트에서_할당되지_않은_WBS_항목_목록을_조회한다(projectId, periodId, employeeId) {
+        this.logger.log('할당되지 않은 WBS 항목 조회 비즈니스 로직', {
+            projectId,
+            periodId,
+            employeeId,
+        });
+        return await this.evaluationCriteriaManagementService.특정_평가기간에_프로젝트에서_할당되지_않은_WBS_항목_목록을_조회한다(projectId, periodId, employeeId);
+    }
+    async 평가라인을_자동으로_구성한다(employeeId, wbsItemId, projectId, periodId, createdBy) {
+        this.logger.log('평가라인 자동 구성 시작', {
+            employeeId,
+            wbsItemId,
+            projectId,
+        });
+        const employee = await this.employeeService.ID로_조회한다(employeeId);
+        if (!employee) {
+            this.logger.warn('직원을 찾을 수 없습니다', { employeeId });
+            return;
+        }
+        console.log('🔍 직원 정보:', {
+            id: employee.id,
+            name: employee.name,
+            managerId: employee.managerId,
+            departmentId: employee.departmentId,
+        });
+        const project = await this.projectService.ID로_조회한다(projectId);
+        if (!project) {
+            this.logger.warn('프로젝트를 찾을 수 없습니다', { projectId });
+            return;
+        }
+        console.log('🔍 프로젝트 정보:', {
+            id: project.id,
+            name: project.name,
+            managerId: project.managerId,
+        });
+        const existingPrimaryEvaluator = await this.기존_1차_평가자를_조회한다(employeeId, periodId);
+        let primaryEvaluatorId = existingPrimaryEvaluator;
+        if (!primaryEvaluatorId && employee.managerId) {
+            primaryEvaluatorId = employee.managerId;
+            this.logger.log('기존 1차 평가자가 없어 담당 평가자를 사용', {
+                evaluatorId: employee.managerId,
+            });
+        }
+        else if (existingPrimaryEvaluator) {
+            this.logger.log('기존 1차 평가자를 사용', {
+                evaluatorId: existingPrimaryEvaluator,
+            });
+        }
+        if (primaryEvaluatorId) {
+            await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(employeeId, periodId, primaryEvaluatorId, createdBy);
+        }
+        else {
+            this.logger.warn('1차 평가자를 설정할 수 없습니다', {
+                employeeId,
+                hasExistingEvaluator: !!existingPrimaryEvaluator,
+                hasManagerId: !!employee.managerId,
+            });
+        }
+        if (project.managerId) {
+            this.logger.log('2차 평가자(프로젝트 PM) 구성', {
+                evaluatorId: project.managerId,
+                employeeId,
+            });
+            await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(employeeId, wbsItemId, periodId, project.managerId, createdBy);
+        }
+        else {
+            this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {
+                projectId,
+            });
+        }
+        this.logger.log('평가라인 자동 구성 완료', {
+            employeeId,
+            wbsItemId,
+            primaryEvaluator: employee.managerId,
+            secondaryEvaluator: project.managerId !== employee.managerId ? project.managerId : null,
+        });
+    }
+    async 평가라인_매핑을_삭제한다(employeeId, wbsItemId, periodId, deletedBy) {
+        this.logger.log('평가라인 매핑 삭제 시작', {
+            employeeId,
+            wbsItemId,
+            periodId,
+        });
+        const mappings = await this.evaluationLineMappingService.필터_조회한다({
+            evaluationPeriodId: periodId,
+            employeeId,
+            wbsItemId,
+        });
+        for (const mapping of mappings) {
+            const mappingId = mapping.DTO로_변환한다().id;
+            await this.evaluationLineMappingService.삭제한다(mappingId, deletedBy);
+            this.logger.log('평가라인 매핑 삭제 완료', {
+                mappingId,
+                evaluatorId: mapping.DTO로_변환한다().evaluatorId,
+            });
+        }
+        this.logger.log('평가라인 매핑 삭제 완료', {
+            deletedCount: mappings.length,
+        });
+    }
+    async 기존_1차_평가자를_조회한다(employeeId, periodId) {
+        const evaluationLines = await this.evaluationLineService.필터_조회한다({
+            evaluatorType: evaluation_line_types_1.EvaluatorType.PRIMARY,
+            orderFrom: 1,
+            orderTo: 1,
+        });
+        if (evaluationLines.length === 0) {
+            return null;
+        }
+        const primaryEvaluationLineId = evaluationLines[0].DTO로_변환한다().id;
+        const existingMappings = await this.evaluationLineMappingService.필터_조회한다({
+            evaluationPeriodId: periodId,
+            employeeId,
+            evaluationLineId: primaryEvaluationLineId,
+        });
+        const primaryMappings = existingMappings.filter((mapping) => !mapping.wbsItemId);
+        if (primaryMappings.length > 0) {
+            return primaryMappings[0].DTO로_변환한다().evaluatorId;
+        }
+        return null;
+    }
+    async WBS를_생성하고_할당한다(params) {
+        this.logger.log('WBS 생성 및 할당 비즈니스 로직 시작', {
+            title: params.title,
+            projectId: params.projectId,
+            employeeId: params.employeeId,
+        });
+        const wbsItem = await this.evaluationCriteriaManagementService.WBS_항목을_생성하고_코드를_자동_생성한다({
+            title: params.title,
+            status: wbs_item_types_1.WbsItemStatus.PENDING,
+            level: 1,
+            assignedToId: params.employeeId,
+            projectId: params.projectId,
+            parentWbsId: undefined,
+            startDate: undefined,
+            endDate: undefined,
+            progressPercentage: 0,
+        }, params.createdBy);
+        this.logger.log('WBS 항목 생성 완료', {
+            wbsItemId: wbsItem.id,
+            wbsCode: wbsItem.wbsCode,
+        });
+        const assignment = await this.WBS를_할당한다({
+            employeeId: params.employeeId,
+            wbsItemId: wbsItem.id,
+            projectId: params.projectId,
+            periodId: params.periodId,
+            assignedBy: params.createdBy,
+        });
+        this.logger.log('WBS 생성 및 할당 완료', {
+            wbsItemId: wbsItem.id,
+            assignmentId: assignment.id,
+        });
+        return {
+            wbsItem,
+            assignment,
+        };
+    }
+    async WBS_항목_이름을_수정한다(params) {
+        this.logger.log('WBS 항목 이름 수정 시작', {
+            wbsItemId: params.wbsItemId,
+            title: params.title,
+        });
+        const updatedWbsItem = await this.evaluationCriteriaManagementService.WBS_항목을_수정한다(params.wbsItemId, { title: params.title }, params.updatedBy);
+        this.logger.log('WBS 항목 이름 수정 완료', {
+            wbsItemId: params.wbsItemId,
+            newTitle: params.title,
+        });
+        return updatedWbsItem;
+    }
+};
+exports.WbsAssignmentBusinessService = WbsAssignmentBusinessService;
+exports.WbsAssignmentBusinessService = WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
+        employee_service_1.EmployeeService,
+        project_service_1.ProjectService,
+        evaluation_line_service_1.EvaluationLineService,
+        evaluation_line_mapping_service_1.EvaluationLineMappingService,
+        evaluation_wbs_assignment_service_1.EvaluationWbsAssignmentService])
+], WbsAssignmentBusinessService);
+//# sourceMappingURL=wbs-assignment-business.service.js.map

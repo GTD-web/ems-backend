@@ -1,0 +1,217 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.calculateSelfEvaluationScore = calculateSelfEvaluationScore;
+exports.calculatePrimaryDownwardEvaluationScore = calculatePrimaryDownwardEvaluationScore;
+exports.calculateSecondaryDownwardEvaluationScore = calculateSecondaryDownwardEvaluationScore;
+const typeorm_1 = require("typeorm");
+const evaluation_line_entity_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.entity");
+const evaluation_line_types_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.types");
+const downward_evaluation_types_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.types");
+const self_evaluation_utils_1 = require("../get-employee-evaluation-period-status/self-evaluation.utils");
+const downward_evaluation_score_utils_1 = require("../get-employee-evaluation-period-status/downward-evaluation-score.utils");
+async function calculateSelfEvaluationScore(evaluationPeriodId, employeeId, completedSelfEvaluations, selfEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository) {
+    let selfEvaluationScore = null;
+    let selfEvaluationGrade = null;
+    const totalSelfEvaluations = await selfEvaluationRepository.count({
+        where: {
+            periodId: evaluationPeriodId,
+            employeeId: employeeId,
+            deletedAt: null,
+        },
+    });
+    if (totalSelfEvaluations > 0 &&
+        completedSelfEvaluations === totalSelfEvaluations) {
+        selfEvaluationScore = await (0, self_evaluation_utils_1.가중치_기반_자기평가_점수를_계산한다)(evaluationPeriodId, employeeId, selfEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository);
+        if (selfEvaluationScore !== null) {
+            selfEvaluationGrade = await (0, self_evaluation_utils_1.자기평가_등급을_조회한다)(evaluationPeriodId, selfEvaluationScore, evaluationPeriodRepository);
+        }
+    }
+    return {
+        totalScore: selfEvaluationScore,
+        grade: selfEvaluationGrade,
+    };
+}
+async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, employeeId, evaluationLineMappingRepository, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository) {
+    let primaryDownwardScore = null;
+    let primaryDownwardGrade = null;
+    const primaryEvaluatorMapping = await evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+    })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.wbsItemId IS NULL')
+        .andWhere('line.evaluatorType = :evaluatorType', {
+        evaluatorType: evaluation_line_types_1.EvaluatorType.PRIMARY,
+    })
+        .andWhere('mapping.deletedAt IS NULL')
+        .getOne();
+    if (primaryEvaluatorMapping) {
+        const primaryEvaluatorId = primaryEvaluatorMapping.evaluatorId;
+        const primaryAssignedWbs = await wbsAssignmentRepository
+            .createQueryBuilder('assignment')
+            .select(['assignment.wbsItemId AS wbs_item_id'])
+            .where('assignment.periodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+        })
+            .andWhere('assignment.employeeId = :employeeId', { employeeId })
+            .andWhere('assignment.deletedAt IS NULL')
+            .getRawMany();
+        const primaryAssignedCount = primaryAssignedWbs.length;
+        const primaryAssignedWbsIds = primaryAssignedWbs.map((w) => w.wbs_item_id);
+        let primaryCompletedCount = 0;
+        if (primaryAssignedWbsIds.length > 0) {
+            primaryCompletedCount = await downwardEvaluationRepository
+                .createQueryBuilder('eval')
+                .where('eval.periodId = :periodId', { periodId: evaluationPeriodId })
+                .andWhere('eval.employeeId = :employeeId', { employeeId })
+                .andWhere('eval.evaluatorId = :evaluatorId', {
+                evaluatorId: primaryEvaluatorId,
+            })
+                .andWhere('eval.wbsId IN (:...wbsIds)', {
+                wbsIds: primaryAssignedWbsIds,
+            })
+                .andWhere('eval.evaluationType = :evaluationType', {
+                evaluationType: downward_evaluation_types_1.DownwardEvaluationType.PRIMARY,
+            })
+                .andWhere('eval.isCompleted = :isCompleted', {
+                isCompleted: true,
+            })
+                .andWhere('eval.deletedAt IS NULL')
+                .getCount();
+        }
+        if (primaryAssignedCount > 0 &&
+            primaryCompletedCount === primaryAssignedCount) {
+            primaryDownwardScore = await (0, downward_evaluation_score_utils_1.가중치_기반_1차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, primaryEvaluatorId, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository);
+            if (primaryDownwardScore !== null) {
+                primaryDownwardGrade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, primaryDownwardScore, evaluationPeriodRepository);
+            }
+        }
+        const primaryIsSubmitted = primaryAssignedCount > 0 &&
+            primaryCompletedCount === primaryAssignedCount &&
+            primaryCompletedCount > 0;
+        return {
+            totalScore: primaryDownwardScore,
+            grade: primaryDownwardGrade,
+            isSubmitted: primaryIsSubmitted,
+        };
+    }
+    return {
+        totalScore: null,
+        grade: null,
+        isSubmitted: false,
+    };
+}
+async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, employeeId, evaluationLineMappingRepository, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository, employeeRepository) {
+    let secondaryDownwardScore = null;
+    let secondaryDownwardGrade = null;
+    const secondaryEvaluatorMappings = await evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+    })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('line.evaluatorType = :evaluatorType', {
+        evaluatorType: evaluation_line_types_1.EvaluatorType.SECONDARY,
+    })
+        .andWhere('mapping.deletedAt IS NULL')
+        .getMany();
+    if (secondaryEvaluatorMappings.length > 0) {
+        const secondaryEvaluatorIds = [
+            ...new Set(secondaryEvaluatorMappings.map((m) => m.evaluatorId)),
+        ];
+        const evaluatorStats = await Promise.all(secondaryEvaluatorIds.map(async (evaluatorId) => {
+            const assignedMappings = await evaluationLineMappingRepository
+                .createQueryBuilder('mapping')
+                .select(['mapping.id', 'mapping.wbsItemId'])
+                .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
+                .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+                evaluationPeriodId,
+            })
+                .andWhere('mapping.employeeId = :employeeId', { employeeId })
+                .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+                .andWhere('line.evaluatorType = :evaluatorType', {
+                evaluatorType: evaluation_line_types_1.EvaluatorType.SECONDARY,
+            })
+                .andWhere('mapping.deletedAt IS NULL')
+                .andWhere('mapping.wbsItemId IS NOT NULL')
+                .getRawMany();
+            const assignedCount = assignedMappings.length;
+            const assignedWbsIds = assignedMappings.map((m) => m.mapping_wbsItemId);
+            let completedCount = 0;
+            if (assignedWbsIds.length > 0) {
+                completedCount = await downwardEvaluationRepository
+                    .createQueryBuilder('eval')
+                    .where('eval.periodId = :periodId', {
+                    periodId: evaluationPeriodId,
+                })
+                    .andWhere('eval.employeeId = :employeeId', { employeeId })
+                    .andWhere('eval.evaluatorId = :evaluatorId', { evaluatorId })
+                    .andWhere('eval.wbsId IN (:...wbsIds)', { wbsIds: assignedWbsIds })
+                    .andWhere('eval.evaluationType = :evaluationType', {
+                    evaluationType: downward_evaluation_types_1.DownwardEvaluationType.SECONDARY,
+                })
+                    .andWhere('eval.isCompleted = :isCompleted', {
+                    isCompleted: true,
+                })
+                    .andWhere('eval.deletedAt IS NULL')
+                    .getCount();
+            }
+            return { evaluatorId, assignedCount, completedCount };
+        }));
+        const allCompleted = evaluatorStats.every((stat) => stat.assignedCount > 0 && stat.completedCount === stat.assignedCount);
+        if (evaluatorStats.length > 0 && allCompleted) {
+            secondaryDownwardScore = await (0, downward_evaluation_score_utils_1.가중치_기반_2차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, secondaryEvaluatorIds, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository);
+            if (secondaryDownwardScore !== null) {
+                secondaryDownwardGrade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, secondaryDownwardScore, evaluationPeriodRepository);
+            }
+        }
+        const secondaryIsSubmitted = evaluatorStats.length > 0 &&
+            evaluatorStats.every((stat) => stat.assignedCount > 0 &&
+                stat.completedCount === stat.assignedCount &&
+                stat.completedCount > 0);
+        const evaluators = await Promise.all(evaluatorStats.map(async (stat) => {
+            let evaluatorName = '알 수 없음';
+            let evaluatorEmployeeNumber = 'N/A';
+            let evaluatorEmail = 'N/A';
+            if (employeeRepository) {
+                const evaluator = await employeeRepository.findOne({
+                    where: { id: stat.evaluatorId, deletedAt: (0, typeorm_1.IsNull)() },
+                    select: ['id', 'name', 'employeeNumber', 'email'],
+                });
+                if (evaluator) {
+                    evaluatorName = evaluator.name;
+                    evaluatorEmployeeNumber = evaluator.employeeNumber;
+                    evaluatorEmail = evaluator.email;
+                }
+            }
+            const evaluatorIsSubmitted = stat.assignedCount > 0 &&
+                stat.completedCount === stat.assignedCount &&
+                stat.completedCount > 0;
+            return {
+                evaluatorId: stat.evaluatorId,
+                evaluatorName,
+                evaluatorEmployeeNumber,
+                evaluatorEmail,
+                assignedWbsCount: stat.assignedCount,
+                completedEvaluationCount: stat.completedCount,
+                isSubmitted: evaluatorIsSubmitted,
+            };
+        }));
+        return {
+            totalScore: secondaryDownwardScore,
+            grade: secondaryDownwardGrade,
+            isSubmitted: secondaryIsSubmitted,
+            evaluators,
+        };
+    }
+    return {
+        totalScore: null,
+        grade: null,
+        isSubmitted: false,
+        evaluators: [],
+    };
+}
+//# sourceMappingURL=summary-calculation.utils.js.map

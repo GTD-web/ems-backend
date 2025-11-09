@@ -1,0 +1,229 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var GetEmployeeAssignedDataHandler_1;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.GetEmployeeAssignedDataHandler = exports.GetEmployeeAssignedDataQuery = void 0;
+const cqrs_1 = require("@nestjs/cqrs");
+const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const evaluation_period_entity_1 = require("../../../../../domain/core/evaluation-period/evaluation-period.entity");
+const employee_entity_1 = require("../../../../../domain/common/employee/employee.entity");
+const department_entity_1 = require("../../../../../domain/common/department/department.entity");
+const evaluation_period_employee_mapping_entity_1 = require("../../../../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
+const evaluation_project_assignment_entity_1 = require("../../../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity");
+const evaluation_wbs_assignment_entity_1 = require("../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity");
+const wbs_item_entity_1 = require("../../../../../domain/common/wbs-item/wbs-item.entity");
+const wbs_evaluation_criteria_entity_1 = require("../../../../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity");
+const wbs_self_evaluation_entity_1 = require("../../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.entity");
+const downward_evaluation_entity_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.entity");
+const evaluation_line_entity_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.entity");
+const evaluation_line_mapping_entity_1 = require("../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity");
+const deliverable_entity_1 = require("../../../../../domain/core/deliverable/deliverable.entity");
+const project_wbs_utils_1 = require("./project-wbs.utils");
+const summary_calculation_utils_1 = require("./summary-calculation.utils");
+class GetEmployeeAssignedDataQuery {
+    evaluationPeriodId;
+    employeeId;
+    constructor(evaluationPeriodId, employeeId) {
+        this.evaluationPeriodId = evaluationPeriodId;
+        this.employeeId = employeeId;
+    }
+}
+exports.GetEmployeeAssignedDataQuery = GetEmployeeAssignedDataQuery;
+let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class GetEmployeeAssignedDataHandler {
+    evaluationPeriodRepository;
+    employeeRepository;
+    departmentRepository;
+    mappingRepository;
+    projectAssignmentRepository;
+    wbsAssignmentRepository;
+    wbsItemRepository;
+    criteriaRepository;
+    selfEvaluationRepository;
+    downwardEvaluationRepository;
+    evaluationLineRepository;
+    evaluationLineMappingRepository;
+    deliverableRepository;
+    logger = new common_1.Logger(GetEmployeeAssignedDataHandler_1.name);
+    constructor(evaluationPeriodRepository, employeeRepository, departmentRepository, mappingRepository, projectAssignmentRepository, wbsAssignmentRepository, wbsItemRepository, criteriaRepository, selfEvaluationRepository, downwardEvaluationRepository, evaluationLineRepository, evaluationLineMappingRepository, deliverableRepository) {
+        this.evaluationPeriodRepository = evaluationPeriodRepository;
+        this.employeeRepository = employeeRepository;
+        this.departmentRepository = departmentRepository;
+        this.mappingRepository = mappingRepository;
+        this.projectAssignmentRepository = projectAssignmentRepository;
+        this.wbsAssignmentRepository = wbsAssignmentRepository;
+        this.wbsItemRepository = wbsItemRepository;
+        this.criteriaRepository = criteriaRepository;
+        this.selfEvaluationRepository = selfEvaluationRepository;
+        this.downwardEvaluationRepository = downwardEvaluationRepository;
+        this.evaluationLineRepository = evaluationLineRepository;
+        this.evaluationLineMappingRepository = evaluationLineMappingRepository;
+        this.deliverableRepository = deliverableRepository;
+    }
+    async execute(query) {
+        const { evaluationPeriodId, employeeId } = query;
+        this.logger.log('사용자 할당 정보 조회 시작', {
+            evaluationPeriodId,
+            employeeId,
+        });
+        const evaluationPeriod = await this.evaluationPeriodRepository.findOne({
+            where: { id: evaluationPeriodId },
+        });
+        if (!evaluationPeriod) {
+            throw new common_1.NotFoundException(`평가기간을 찾을 수 없습니다. (evaluationPeriodId: ${evaluationPeriodId})`);
+        }
+        const employee = await this.employeeRepository.findOne({
+            where: { id: employeeId },
+        });
+        if (!employee) {
+            throw new common_1.NotFoundException(`직원을 찾을 수 없습니다. (employeeId: ${employeeId})`);
+        }
+        let departmentName;
+        if (employee.departmentId) {
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(employee.departmentId);
+            const department = await this.departmentRepository.findOne({
+                where: isUUID
+                    ? { id: employee.departmentId }
+                    : { code: employee.departmentId },
+            });
+            departmentName = department?.name;
+        }
+        const mapping = await this.mappingRepository.findOne({
+            where: {
+                evaluationPeriodId,
+                employeeId,
+            },
+        });
+        if (!mapping) {
+            throw new common_1.NotFoundException(`평가기간에 등록되지 않은 직원입니다. (evaluationPeriodId: ${evaluationPeriodId}, employeeId: ${employeeId})`);
+        }
+        const projects = await (0, project_wbs_utils_1.getProjectsWithWbs)(evaluationPeriodId, employeeId, mapping, this.projectAssignmentRepository, this.wbsAssignmentRepository, this.wbsItemRepository, this.criteriaRepository, this.selfEvaluationRepository, this.downwardEvaluationRepository, this.evaluationLineMappingRepository, this.deliverableRepository);
+        let completedPerformances = 0;
+        const totalWbs = projects.reduce((sum, project) => {
+            project.wbsList.forEach((wbs) => {
+                if (wbs.performance?.isCompleted)
+                    completedPerformances++;
+            });
+            return sum + project.wbsList.length;
+        }, 0);
+        const totalSelfEvaluations = await this.selfEvaluationRepository.count({
+            where: {
+                periodId: evaluationPeriodId,
+                employeeId: employeeId,
+                deletedAt: null,
+            },
+        });
+        const submittedToEvaluatorCount = await this.selfEvaluationRepository.count({
+            where: {
+                periodId: evaluationPeriodId,
+                employeeId: employeeId,
+                submittedToEvaluator: true,
+                deletedAt: null,
+            },
+        });
+        const submittedToManagerCount = await this.selfEvaluationRepository.count({
+            where: {
+                periodId: evaluationPeriodId,
+                employeeId: employeeId,
+                submittedToManager: true,
+                deletedAt: null,
+            },
+        });
+        const completedSelfEvaluations = submittedToManagerCount;
+        const selfEvaluationScore = await (0, summary_calculation_utils_1.calculateSelfEvaluationScore)(evaluationPeriodId, employeeId, completedSelfEvaluations, this.selfEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
+        const isSubmittedToEvaluator = totalSelfEvaluations > 0 &&
+            submittedToEvaluatorCount === totalSelfEvaluations;
+        const isSubmittedToManager = totalSelfEvaluations > 0 &&
+            submittedToManagerCount === totalSelfEvaluations;
+        const selfEvaluation = {
+            ...selfEvaluationScore,
+            totalSelfEvaluations,
+            submittedToEvaluatorCount,
+            submittedToManagerCount,
+            isSubmittedToEvaluator,
+            isSubmittedToManager,
+        };
+        const primaryDownwardEvaluation = await (0, summary_calculation_utils_1.calculatePrimaryDownwardEvaluationScore)(evaluationPeriodId, employeeId, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
+        const secondaryDownwardEvaluation = await (0, summary_calculation_utils_1.calculateSecondaryDownwardEvaluationScore)(evaluationPeriodId, employeeId, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository, this.employeeRepository);
+        const summary = {
+            totalProjects: projects.length,
+            totalWbs,
+            completedPerformances,
+            completedSelfEvaluations,
+            selfEvaluation,
+            primaryDownwardEvaluation,
+            secondaryDownwardEvaluation,
+        };
+        return {
+            evaluationPeriod: {
+                id: evaluationPeriod.id,
+                name: evaluationPeriod.name,
+                startDate: evaluationPeriod.startDate,
+                endDate: evaluationPeriod.endDate,
+                status: evaluationPeriod.status,
+                currentPhase: evaluationPeriod.currentPhase,
+                description: evaluationPeriod.description,
+                criteriaSettingEnabled: evaluationPeriod.criteriaSettingEnabled,
+                selfEvaluationSettingEnabled: evaluationPeriod.selfEvaluationSettingEnabled,
+                finalEvaluationSettingEnabled: evaluationPeriod.finalEvaluationSettingEnabled,
+                maxSelfEvaluationRate: evaluationPeriod.maxSelfEvaluationRate,
+            },
+            employee: {
+                id: employee.id,
+                employeeNumber: employee.employeeNumber,
+                name: employee.name,
+                email: employee.email,
+                phoneNumber: employee.phoneNumber,
+                departmentId: employee.departmentId || '',
+                departmentName,
+                status: employee.status,
+            },
+            projects,
+            summary,
+        };
+    }
+};
+exports.GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler;
+exports.GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = __decorate([
+    (0, common_1.Injectable)(),
+    (0, cqrs_1.QueryHandler)(GetEmployeeAssignedDataQuery),
+    __param(0, (0, typeorm_1.InjectRepository)(evaluation_period_entity_1.EvaluationPeriod)),
+    __param(1, (0, typeorm_1.InjectRepository)(employee_entity_1.Employee)),
+    __param(2, (0, typeorm_1.InjectRepository)(department_entity_1.Department)),
+    __param(3, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
+    __param(4, (0, typeorm_1.InjectRepository)(evaluation_project_assignment_entity_1.EvaluationProjectAssignment)),
+    __param(5, (0, typeorm_1.InjectRepository)(evaluation_wbs_assignment_entity_1.EvaluationWbsAssignment)),
+    __param(6, (0, typeorm_1.InjectRepository)(wbs_item_entity_1.WbsItem)),
+    __param(7, (0, typeorm_1.InjectRepository)(wbs_evaluation_criteria_entity_1.WbsEvaluationCriteria)),
+    __param(8, (0, typeorm_1.InjectRepository)(wbs_self_evaluation_entity_1.WbsSelfEvaluation)),
+    __param(9, (0, typeorm_1.InjectRepository)(downward_evaluation_entity_1.DownwardEvaluation)),
+    __param(10, (0, typeorm_1.InjectRepository)(evaluation_line_entity_1.EvaluationLine)),
+    __param(11, (0, typeorm_1.InjectRepository)(evaluation_line_mapping_entity_1.EvaluationLineMapping)),
+    __param(12, (0, typeorm_1.InjectRepository)(deliverable_entity_1.Deliverable)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository])
+], GetEmployeeAssignedDataHandler);
+//# sourceMappingURL=get-employee-assigned-data.handler.js.map
