@@ -1,11 +1,97 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { ExpressAdapter } from '@nestjs/platform-express';
 import { join } from 'path';
 import { setupSwagger } from '../libs/config/swagger.config';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import express, { Request, Response } from 'express';
 
+// Vercel 서버리스 함수를 위한 전역 변수
+let cachedApp: express.Application;
+
+async function createApp(): Promise<express.Application> {
+  if (cachedApp) {
+    return cachedApp;
+  }
+
+  const expressApp = express();
+  const app = await NestFactory.create<NestExpressApplication>(
+    AppModule,
+    new ExpressAdapter(expressApp),
+  );
+
+  // ConfigService 가져오기
+  const configService = app.get(ConfigService);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
+
+  // 정적 파일 서빙 설정 (public 폴더)
+  app.useStaticAssets(join(process.cwd(), 'public'));
+
+  // 관리자용 Swagger 설정
+  setupSwagger(app, {
+    title: 'Lumir Admin API',
+    description: '루미르 평가 관리 시스템 - 관리자용 API 문서입니다.',
+    version: '1.0',
+    path: 'admin/api-docs',
+  });
+
+  // 사용자용 Swagger 설정
+  setupSwagger(app, {
+    title: 'Lumir User API',
+    description: '루미르 평가 관리 시스템 - 일반 사용자용 API 문서입니다.',
+    version: '1.0',
+    path: 'user/api-docs',
+  });
+
+  // 평가자용 Swagger 설정
+  setupSwagger(app, {
+    title: 'Lumir Evaluator API',
+    description: '루미르 평가 관리 시스템 - 평가자용 API 문서입니다.',
+    version: '1.0',
+    path: 'evaluator/api-docs',
+  });
+
+  // CORS 설정
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
+
+  // 앱 초기화 (listen 호출하지 않음)
+  await app.init();
+
+  cachedApp = expressApp;
+  return expressApp;
+}
+
+// Vercel 서버리스 함수 핸들러
+export default async function handler(req: Request, res: Response) {
+  try {
+    const app = await createApp();
+    return new Promise((resolve, reject) => {
+      app(req, res, (err: any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(res);
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Error in Vercel handler:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}
+
+// 로컬 개발용 bootstrap 함수
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
@@ -45,8 +131,12 @@ async function bootstrap() {
     path: 'evaluator/api-docs',
   });
 
-  // CORS 설정 (필요한 경우)
-  app.enableCors();
+  // CORS 설정
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+  });
 
   // 환경변수에서 포트 가져오기
   const port = configService.get<number>('PORT', 4000);
@@ -63,4 +153,8 @@ async function bootstrap() {
     `📚 Evaluator API documentation: http://localhost:${port}/evaluator/api-docs`,
   );
 }
-bootstrap();
+
+// 로컬 개발 환경에서만 bootstrap 실행
+if (require.main === module) {
+  bootstrap();
+}
