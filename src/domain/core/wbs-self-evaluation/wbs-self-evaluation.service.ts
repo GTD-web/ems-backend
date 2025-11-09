@@ -153,15 +153,16 @@ export class WbsSelfEvaluationService {
 
   /**
    * 피평가자가 1차 평가자에게 제출한다
+   * 엔티티를 파라미터로 받아 처리합니다.
    */
   async 피평가자가_1차평가자에게_제출한다(
-    id: string,
+    wbsSelfEvaluation: WbsSelfEvaluation,
     submittedBy: string,
     manager?: EntityManager,
   ): Promise<WbsSelfEvaluation> {
     return this.executeSafeDomainOperation(async () => {
       this.logger.log(
-        `피평가자가 1차 평가자에게 자기평가 제출 시작 - ID: ${id}`,
+        `피평가자가 1차 평가자에게 자기평가 제출 시작 - ID: ${wbsSelfEvaluation.id}`,
       );
 
       const repository = this.transactionManager.getRepository(
@@ -170,29 +171,16 @@ export class WbsSelfEvaluationService {
         manager,
       );
 
-      const wbsSelfEvaluation = await repository.findOne({ where: { id } });
-      if (!wbsSelfEvaluation) {
-        throw new WbsSelfEvaluationNotFoundException(id);
-      }
-
-      // 자기평가 내용과 점수가 있는지 확인
-      if (
-        !wbsSelfEvaluation.selfEvaluationContent ||
-        !wbsSelfEvaluation.selfEvaluationScore
-      ) {
-        throw new WbsSelfEvaluationValidationException(
-          '평가 내용과 점수는 필수 입력 항목입니다.',
-        );
-      }
-
       // 피평가자가 1차 평가자에게 제출
       wbsSelfEvaluation.피평가자가_1차평가자에게_제출한다();
-      wbsSelfEvaluation.메타데이터를_업데이트한다(submittedBy);
+      // 메타데이터 업데이트 (updatedBy 설정, updatedAt은 @UpdateDateColumn이 자동 처리)
+      wbsSelfEvaluation.수정자를_설정한다(submittedBy);
 
+      // TypeORM 변경 감지를 위해 명시적으로 저장
       const saved = await repository.save(wbsSelfEvaluation);
 
       this.logger.log(
-        `피평가자가 1차 평가자에게 자기평가 제출 완료 - ID: ${id}`,
+        `피평가자가 1차 평가자에게 자기평가 제출 완료 - ID: ${wbsSelfEvaluation.id}`,
       );
       return saved;
     }, '피평가자가_1차평가자에게_제출한다');
@@ -339,27 +327,39 @@ export class WbsSelfEvaluationService {
       }
 
       if (filter.submittedToEvaluatorOnly) {
-        queryBuilder.andWhere('evaluation.submittedToEvaluator = :submittedToEvaluator', {
-          submittedToEvaluator: true,
-        });
+        queryBuilder.andWhere(
+          'evaluation.submittedToEvaluator = :submittedToEvaluator',
+          {
+            submittedToEvaluator: true,
+          },
+        );
       }
 
       if (filter.notSubmittedToEvaluatorOnly) {
-        queryBuilder.andWhere('evaluation.submittedToEvaluator = :submittedToEvaluator', {
-          submittedToEvaluator: false,
-        });
+        queryBuilder.andWhere(
+          'evaluation.submittedToEvaluator = :submittedToEvaluator',
+          {
+            submittedToEvaluator: false,
+          },
+        );
       }
 
       if (filter.submittedToManagerOnly) {
-        queryBuilder.andWhere('evaluation.submittedToManager = :submittedToManager', {
-          submittedToManager: true,
-        });
+        queryBuilder.andWhere(
+          'evaluation.submittedToManager = :submittedToManager',
+          {
+            submittedToManager: true,
+          },
+        );
       }
 
       if (filter.notSubmittedToManagerOnly) {
-        queryBuilder.andWhere('evaluation.submittedToManager = :submittedToManager', {
-          submittedToManager: false,
-        });
+        queryBuilder.andWhere(
+          'evaluation.submittedToManager = :submittedToManager',
+          {
+            submittedToManager: false,
+          },
+        );
       }
 
       if (filter.assignedDateFrom) {
@@ -375,27 +375,39 @@ export class WbsSelfEvaluationService {
       }
 
       if (filter.submittedToEvaluatorDateFrom) {
-        queryBuilder.andWhere('evaluation.submittedToEvaluatorAt >= :submittedToEvaluatorDateFrom', {
-          submittedToEvaluatorDateFrom: filter.submittedToEvaluatorDateFrom,
-        });
+        queryBuilder.andWhere(
+          'evaluation.submittedToEvaluatorAt >= :submittedToEvaluatorDateFrom',
+          {
+            submittedToEvaluatorDateFrom: filter.submittedToEvaluatorDateFrom,
+          },
+        );
       }
 
       if (filter.submittedToEvaluatorDateTo) {
-        queryBuilder.andWhere('evaluation.submittedToEvaluatorAt <= :submittedToEvaluatorDateTo', {
-          submittedToEvaluatorDateTo: filter.submittedToEvaluatorDateTo,
-        });
+        queryBuilder.andWhere(
+          'evaluation.submittedToEvaluatorAt <= :submittedToEvaluatorDateTo',
+          {
+            submittedToEvaluatorDateTo: filter.submittedToEvaluatorDateTo,
+          },
+        );
       }
 
       if (filter.submittedToManagerDateFrom) {
-        queryBuilder.andWhere('evaluation.submittedToManagerAt >= :submittedToManagerDateFrom', {
-          submittedToManagerDateFrom: filter.submittedToManagerDateFrom,
-        });
+        queryBuilder.andWhere(
+          'evaluation.submittedToManagerAt >= :submittedToManagerDateFrom',
+          {
+            submittedToManagerDateFrom: filter.submittedToManagerDateFrom,
+          },
+        );
       }
 
       if (filter.submittedToManagerDateTo) {
-        queryBuilder.andWhere('evaluation.submittedToManagerAt <= :submittedToManagerDateTo', {
-          submittedToManagerDateTo: filter.submittedToManagerDateTo,
-        });
+        queryBuilder.andWhere(
+          'evaluation.submittedToManagerAt <= :submittedToManagerDateTo',
+          {
+            submittedToManagerDateTo: filter.submittedToManagerDateTo,
+          },
+        );
       }
 
       if (filter.evaluationDateFrom) {

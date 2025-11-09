@@ -100,12 +100,14 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
     submitSingleHandler = module.get<SubmitWbsSelfEvaluationToEvaluatorHandler>(
       SubmitWbsSelfEvaluationToEvaluatorHandler,
     );
-    submitAllHandler = module.get<SubmitAllWbsSelfEvaluationsToEvaluatorHandler>(
-      SubmitAllWbsSelfEvaluationsToEvaluatorHandler,
-    );
-    submitByProjectHandler = module.get<SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler>(
-      SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler,
-    );
+    submitAllHandler =
+      module.get<SubmitAllWbsSelfEvaluationsToEvaluatorHandler>(
+        SubmitAllWbsSelfEvaluationsToEvaluatorHandler,
+      );
+    submitByProjectHandler =
+      module.get<SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler>(
+        SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler,
+      );
     dataSource = module.get<DataSource>(DataSource);
 
     // Repository 초기화
@@ -118,12 +120,8 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
     projectAssignmentRepository = dataSource.getRepository(
       EvaluationProjectAssignment,
     );
-    wbsAssignmentRepository = dataSource.getRepository(
-      EvaluationWbsAssignment,
-    );
-    wbsSelfEvaluationRepository = dataSource.getRepository(
-      WbsSelfEvaluation,
-    );
+    wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
+    wbsSelfEvaluationRepository = dataSource.getRepository(WbsSelfEvaluation);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
 
@@ -331,9 +329,8 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
       selfEvaluationScore: 100,
       createdBy: systemAdminId,
     });
-    const savedEvaluation1 = await wbsSelfEvaluationRepository.save(
-      evaluation1,
-    );
+    const savedEvaluation1 =
+      await wbsSelfEvaluationRepository.save(evaluation1);
     evaluationId1 = savedEvaluation1.id;
 
     const evaluation2 = wbsSelfEvaluationRepository.create({
@@ -348,9 +345,8 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
       selfEvaluationScore: 110,
       createdBy: systemAdminId,
     });
-    const savedEvaluation2 = await wbsSelfEvaluationRepository.save(
-      evaluation2,
-    );
+    const savedEvaluation2 =
+      await wbsSelfEvaluationRepository.save(evaluation2);
     evaluationId2 = savedEvaluation2.id;
 
     const evaluation3 = wbsSelfEvaluationRepository.create({
@@ -365,9 +361,8 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
       selfEvaluationScore: 105,
       createdBy: systemAdminId,
     });
-    const savedEvaluation3 = await wbsSelfEvaluationRepository.save(
-      evaluation3,
-    );
+    const savedEvaluation3 =
+      await wbsSelfEvaluationRepository.save(evaluation3);
     evaluationId3 = savedEvaluation3.id;
   }
 
@@ -433,8 +428,9 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
         // selfEvaluationContent와 selfEvaluationScore 없음
         createdBy: systemAdminId,
       });
-      const savedEvaluation =
-        await wbsSelfEvaluationRepository.save(evaluationWithoutContent);
+      const savedEvaluation = await wbsSelfEvaluationRepository.save(
+        evaluationWithoutContent,
+      );
 
       // When & Then
       const command = new SubmitWbsSelfEvaluationToEvaluatorCommand(
@@ -478,6 +474,137 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
       savedEvaluations.forEach((evaluation) => {
         expect(evaluation.submittedToEvaluator).toBe(true);
         expect(evaluation.submittedToEvaluatorAt).toBeDefined();
+      });
+    });
+
+    it('자신의 평가를 자신이 제출했을 때 제출 상태가 정상적으로 변경되어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+      // submittedBy가 employeeId와 같은 경우 (자신이 제출)
+      const selfSubmittedBy = employeeId;
+
+      // When
+      const command = new SubmitAllWbsSelfEvaluationsToEvaluatorCommand(
+        employeeId,
+        evaluationPeriodId,
+        selfSubmittedBy,
+      );
+      const result = await submitAllHandler.execute(command);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result.totalCount).toBe(3);
+      expect(result.submittedCount).toBe(3);
+      expect(result.failedCount).toBe(0);
+
+      // 모든 평가가 제출되었는지 확인
+      const savedEvaluations = await wbsSelfEvaluationRepository.find({
+        where: {
+          employeeId: employeeId,
+          periodId: evaluationPeriodId,
+          deletedAt: IsNull(),
+        },
+      });
+      expect(savedEvaluations.length).toBe(3);
+      savedEvaluations.forEach((evaluation) => {
+        expect(evaluation.submittedToEvaluator).toBe(true);
+        expect(evaluation.submittedToEvaluatorAt).toBeDefined();
+        expect(evaluation.submittedToEvaluatorAt).not.toBeNull();
+        // updatedBy가 제출한 사람으로 설정되었는지 확인
+        expect(evaluation.updatedBy).toBe(selfSubmittedBy);
+      });
+    });
+
+    it('자신의 평가를 다른 사람이 제출했을 때 제출 상태가 정상적으로 변경되어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+      // submittedBy가 employeeId와 다른 경우 (다른 사람이 제출)
+      const otherSubmittedBy = 'other-user-id-12345';
+
+      // When
+      const command = new SubmitAllWbsSelfEvaluationsToEvaluatorCommand(
+        employeeId,
+        evaluationPeriodId,
+        otherSubmittedBy,
+      );
+      const result = await submitAllHandler.execute(command);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result.totalCount).toBe(3);
+      expect(result.submittedCount).toBe(3);
+      expect(result.failedCount).toBe(0);
+
+      // 모든 평가가 제출되었는지 확인
+      const savedEvaluations = await wbsSelfEvaluationRepository.find({
+        where: {
+          employeeId: employeeId,
+          periodId: evaluationPeriodId,
+          deletedAt: IsNull(),
+        },
+      });
+      expect(savedEvaluations.length).toBe(3);
+      savedEvaluations.forEach((evaluation) => {
+        expect(evaluation.submittedToEvaluator).toBe(true);
+        expect(evaluation.submittedToEvaluatorAt).toBeDefined();
+        expect(evaluation.submittedToEvaluatorAt).not.toBeNull();
+        // updatedBy가 제출한 사람으로 설정되었는지 확인
+        expect(evaluation.updatedBy).toBe(otherSubmittedBy);
+      });
+    });
+
+    it('자신이 제출한 후 다른 사람이 다시 제출해도 상태가 유지되어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+      const selfSubmittedBy = employeeId;
+      const otherSubmittedBy = 'other-user-id-12345';
+
+      // When - 자신이 먼저 제출
+      const command1 = new SubmitAllWbsSelfEvaluationsToEvaluatorCommand(
+        employeeId,
+        evaluationPeriodId,
+        selfSubmittedBy,
+      );
+      const result1 = await submitAllHandler.execute(command1);
+
+      // Then - 첫 번째 제출 확인
+      expect(result1.submittedCount).toBe(3);
+      const savedEvaluations1 = await wbsSelfEvaluationRepository.find({
+        where: {
+          employeeId: employeeId,
+          periodId: evaluationPeriodId,
+          deletedAt: IsNull(),
+        },
+      });
+      savedEvaluations1.forEach((evaluation) => {
+        expect(evaluation.submittedToEvaluator).toBe(true);
+        expect(evaluation.updatedBy).toBe(selfSubmittedBy);
+      });
+
+      // When - 다른 사람이 다시 제출 (이미 제출된 상태이므로 스킵되어야 함)
+      const command2 = new SubmitAllWbsSelfEvaluationsToEvaluatorCommand(
+        employeeId,
+        evaluationPeriodId,
+        otherSubmittedBy,
+      );
+      const result2 = await submitAllHandler.execute(command2);
+
+      // Then - 두 번째 제출도 성공해야 함 (이미 제출된 평가는 스킵)
+      expect(result2.submittedCount).toBe(3);
+      expect(result2.failedCount).toBe(0);
+
+      // 제출 상태는 유지되어야 함
+      const savedEvaluations2 = await wbsSelfEvaluationRepository.find({
+        where: {
+          employeeId: employeeId,
+          periodId: evaluationPeriodId,
+          deletedAt: IsNull(),
+        },
+      });
+      savedEvaluations2.forEach((evaluation) => {
+        expect(evaluation.submittedToEvaluator).toBe(true);
+        // 이미 제출된 평가는 스킵되므로 updatedBy는 변경되지 않음
+        expect(evaluation.updatedBy).toBe(selfSubmittedBy);
       });
     });
 
@@ -534,7 +661,11 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
       // Then
       expect(result.totalCount).toBe(3);
       expect(result.submittedCount).toBe(3);
-      expect(result.completedEvaluations.some((e) => e.evaluationId === evaluationId1)).toBe(true);
+      expect(
+        result.completedEvaluations.some(
+          (e) => e.evaluationId === evaluationId1,
+        ),
+      ).toBe(true);
     });
   });
 
@@ -613,4 +744,3 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
     });
   });
 });
-
