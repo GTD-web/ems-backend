@@ -6,8 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build && npm run build:vercel",
-    "build:vercel": "node -e \"const fs = require('fs'); const path = require('path'); fs.mkdirSync('api', { recursive: true }); fs.copyFileSync('dist/src/main.js', 'api/index.js');\"",
+    "build": "nest build",
     "build:docker": "node scripts/sync-version.js && docker compose build && docker compose push",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
