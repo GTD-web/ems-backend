@@ -86,6 +86,7 @@ export interface EvaluationPeriodInfo {
   startDate: Date;
   endDate?: Date;
   status: string;
+  currentPhase?: string;
   description?: string;
   criteriaSettingEnabled: boolean;
   selfEvaluationSettingEnabled: boolean;

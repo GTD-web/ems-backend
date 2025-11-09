@@ -53,6 +53,15 @@ export class EvaluationPeriodInfoDto implements EvaluationPeriodInfo {
   status: string;
 
   @ApiProperty({
+    description: '현재 평가 단계',
+    type: 'string',
+    example: 'performance',
+    enum: ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'],
+    nullable: true,
+  })
+  currentPhase?: string;
+
+  @ApiProperty({
     description: '평가 기준 설정 수동 허용 여부',
     type: 'boolean',
     example: false,
