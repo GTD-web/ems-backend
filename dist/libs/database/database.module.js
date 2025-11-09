@@ -11,8 +11,6 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const transaction_manager_service_1 = require("./transaction-manager.service");
-const dotenv_1 = require("dotenv");
-(0, dotenv_1.config)();
 let DatabaseModule = class DatabaseModule {
 };
 exports.DatabaseModule = DatabaseModule;

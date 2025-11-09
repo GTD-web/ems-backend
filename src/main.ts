@@ -4,9 +4,13 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { setupSwagger } from '../libs/config/swagger.config';
 import { ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // ConfigService 가져오기
+  const configService = app.get(ConfigService);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -44,9 +48,10 @@ async function bootstrap() {
   // CORS 설정 (필요한 경우)
   app.enableCors();
 
-  await app.listen(process.env.PORT || 4000);
+  // 환경변수에서 포트 가져오기
+  const port = configService.get<number>('PORT', 4000);
+  await app.listen(port);
 
-  const port = process.env.PORT || 4000;
   console.log(`🚀 Application is running on: http://localhost:${port}`);
   console.log(
     `📚 Admin API documentation: http://localhost:${port}/admin/api-docs`,

@@ -5,8 +5,10 @@ const app_module_1 = require("./app.module");
 const path_1 = require("path");
 const swagger_config_1 = require("../libs/config/swagger.config");
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const configService = app.get(config_1.ConfigService);
     app.useGlobalPipes(new common_1.ValidationPipe({
         transform: true,
     }));
@@ -30,8 +32,8 @@ async function bootstrap() {
         path: 'evaluator/api-docs',
     });
     app.enableCors();
-    await app.listen(process.env.PORT || 4000);
-    const port = process.env.PORT || 4000;
+    const port = configService.get('PORT', 4000);
+    await app.listen(port);
     console.log(`🚀 Application is running on: http://localhost:${port}`);
     console.log(`📚 Admin API documentation: http://localhost:${port}/admin/api-docs`);
     console.log(`📚 User API documentation: http://localhost:${port}/user/api-docs`);

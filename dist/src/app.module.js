@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const database_module_1 = require("../libs/database/database.module");
 const common_1 = require("@nestjs/common");
+const config_1 = require("@nestjs/config");
 const common_domain_module_1 = require("./domain/common/common-domain.module");
 const core_domain_module_1 = require("./domain/core/core-domain.module");
 const sub_domain_module_1 = require("./domain/sub/sub-domain.module");
@@ -21,6 +22,10 @@ exports.AppModule = AppModule;
 exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            config_1.ConfigModule.forRoot({
+                isGlobal: true,
+                envFilePath: ['.env.local', '.env'],
+            }),
             database_module_1.DatabaseModule,
             common_domain_module_1.CommonDomainModule,
             core_domain_module_1.CoreDomainModule,
