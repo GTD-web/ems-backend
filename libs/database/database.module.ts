@@ -17,10 +17,20 @@ import { TransactionManagerService } from './transaction-manager.service';
         const databaseUrl = configService.get<string>('DATABASE_URL');
         const nodeEnv = configService.get<string>('NODE_ENV', 'development');
         const isTest = nodeEnv === 'test';
+        const isVercel = !!process.env.VERCEL;
+        const isProduction = nodeEnv === 'production';
 
         if (!databaseUrl) {
           throw new Error('DATABASE_URL environment variable is required');
         }
+
+        // SSL 설정: 프로덕션 환경 또는 Vercel 환경에서 SSL 활성화
+        // DATABASE_URL에 sslmode 파라미터가 있으면 자동으로 SSL이 필요함
+        const needsSSL =
+          isProduction ||
+          isVercel ||
+          databaseUrl.includes('sslmode=require') ||
+          databaseUrl.includes('sslmode=prefer');
 
         return {
           type: 'postgres',
@@ -36,7 +46,8 @@ import { TransactionManagerService } from './transaction-manager.service';
             'DB_LOGGING',
             nodeEnv === 'development' && !isTest,
           ),
-          ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+          // SSL 설정: 자체 서명 인증서를 허용
+          ssl: needsSSL ? { rejectUnauthorized: false } : false,
           // 연결 풀 설정 (개발 환경에서 안정성 향상)
           extra: {
             connectionLimit: 10,

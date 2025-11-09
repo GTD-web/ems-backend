@@ -24,9 +24,15 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                     const databaseUrl = configService.get('DATABASE_URL');
                     const nodeEnv = configService.get('NODE_ENV', 'development');
                     const isTest = nodeEnv === 'test';
+                    const isVercel = !!process.env.VERCEL;
+                    const isProduction = nodeEnv === 'production';
                     if (!databaseUrl) {
                         throw new Error('DATABASE_URL environment variable is required');
                     }
+                    const needsSSL = isProduction ||
+                        isVercel ||
+                        databaseUrl.includes('sslmode=require') ||
+                        databaseUrl.includes('sslmode=prefer');
                     return {
                         type: 'postgres',
                         url: databaseUrl,
@@ -34,7 +40,7 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                         dropSchema: isTest,
                         synchronize: configService.get('DB_SYNCHRONIZE', nodeEnv === 'development' || isTest),
                         logging: configService.get('DB_LOGGING', nodeEnv === 'development' && !isTest),
-                        ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+                        ssl: needsSSL ? { rejectUnauthorized: false } : false,
                         extra: {
                             connectionLimit: 10,
                             acquireTimeout: 60000,
