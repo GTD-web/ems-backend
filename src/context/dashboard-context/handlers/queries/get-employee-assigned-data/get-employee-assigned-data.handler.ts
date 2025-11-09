@@ -240,6 +240,7 @@ export class GetEmployeeAssignedDataHandler
         this.downwardEvaluationRepository,
         this.wbsAssignmentRepository,
         this.evaluationPeriodRepository,
+        this.employeeRepository,
       );
 
     const summary = {

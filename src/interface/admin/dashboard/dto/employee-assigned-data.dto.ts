@@ -210,6 +210,13 @@ export class WbsPerformanceDto implements WbsPerformance {
   })
   performanceResult?: string;
 
+  @ApiPropertyOptional({
+    description: '성과달성률 점수 (0 ~ maxSelfEvaluationRate)',
+    example: 100,
+    nullable: true,
+  })
+  score?: number;
+
   @ApiProperty({
     description: '완료 여부',
     example: true,
@@ -469,6 +476,92 @@ export class EvaluationScoreDto implements EvaluationScore {
     nullable: true,
   })
   grade: string | null;
+
+  @ApiProperty({
+    description: '모든 하향평가가 제출되었는지 여부',
+    example: true,
+  })
+  isSubmitted: boolean;
+}
+
+/**
+ * 2차 평가자 정보 DTO
+ */
+export class SecondaryEvaluatorDto {
+  @ApiProperty({
+    description: '평가자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174015',
+  })
+  evaluatorId: string;
+
+  @ApiProperty({
+    description: '평가자 이름',
+    example: '김평가',
+  })
+  evaluatorName: string;
+
+  @ApiProperty({
+    description: '평가자 사번',
+    example: 'EMP-001',
+  })
+  evaluatorEmployeeNumber: string;
+
+  @ApiProperty({
+    description: '평가자 이메일',
+    example: 'evaluator@example.com',
+  })
+  evaluatorEmail: string;
+
+  @ApiProperty({
+    description: '할당된 WBS 수',
+    example: 5,
+  })
+  assignedWbsCount: number;
+
+  @ApiProperty({
+    description: '완료된 평가 수',
+    example: 3,
+  })
+  completedEvaluationCount: number;
+
+  @ApiProperty({
+    description: '해당 평가자의 모든 평가가 제출되었는지 여부',
+    example: false,
+  })
+  isSubmitted: boolean;
+}
+
+/**
+ * 2차 하향평가 점수 및 등급 정보 DTO
+ * Context의 secondaryDownwardEvaluation 타입과 일치해야 함
+ */
+export class SecondaryDownwardEvaluationDto {
+  @ApiProperty({
+    description: '총점 (0-100 범위, 미완료 시 null)',
+    example: 75.5,
+    nullable: true,
+  })
+  totalScore: number | null;
+
+  @ApiProperty({
+    description: '등급 (S, A, B, C, D 등, 미완료 시 null)',
+    example: 'C',
+    nullable: true,
+  })
+  grade: string | null;
+
+  @ApiProperty({
+    description: '모든 2차 평가자가 제출했는지 여부',
+    example: true,
+  })
+  isSubmitted: boolean;
+
+  @ApiProperty({
+    description: '2차 평가자 목록',
+    type: [SecondaryEvaluatorDto],
+  })
+  @Type(() => SecondaryEvaluatorDto)
+  evaluators: SecondaryEvaluatorDto[];
 }
 
 /**
@@ -565,11 +658,11 @@ export class AssignmentSummaryDto implements AssignmentSummary {
   primaryDownwardEvaluation: EvaluationScoreDto;
 
   @ApiProperty({
-    description: '2차 하향평가 총점 및 등급',
-    type: EvaluationScoreDto,
+    description: '2차 하향평가 총점 및 등급 (평가자별 정보 포함)',
+    type: SecondaryDownwardEvaluationDto,
   })
-  @Type(() => EvaluationScoreDto)
-  secondaryDownwardEvaluation: EvaluationScoreDto;
+  @Type(() => SecondaryDownwardEvaluationDto)
+  secondaryDownwardEvaluation: SecondaryDownwardEvaluationDto;
 }
 
 /**

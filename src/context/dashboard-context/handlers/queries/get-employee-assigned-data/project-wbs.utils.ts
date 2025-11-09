@@ -172,6 +172,7 @@ export async function getProjectsWithWbs(
       .select([
         'evaluation.wbsItemId AS evaluation_wbs_item_id',
         'evaluation.performanceResult AS evaluation_performance_result',
+        'evaluation.selfEvaluationScore AS evaluation_self_evaluation_score',
         'evaluation.submittedToManagerAt AS evaluation_submitted_to_manager_at',
       ])
       .where('evaluation.periodId = :periodId', {
@@ -188,6 +189,11 @@ export async function getProjectsWithWbs(
 
       const performance: WbsPerformance = {
         performanceResult: row.evaluation_performance_result,
+        score:
+          row.evaluation_self_evaluation_score !== null &&
+          row.evaluation_self_evaluation_score !== undefined
+            ? Number(row.evaluation_self_evaluation_score)
+            : undefined,
         isCompleted: row.evaluation_performance_result ? true : false,
         completedAt: row.evaluation_performance_result
           ? row.evaluation_submitted_to_manager_at

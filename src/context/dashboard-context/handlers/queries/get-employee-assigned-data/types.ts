@@ -44,6 +44,7 @@ export interface WbsEvaluationCriterion {
  */
 export interface WbsPerformance {
   performanceResult?: string;
+  score?: number;
   isCompleted: boolean;
   completedAt?: Date;
 }
@@ -137,10 +138,21 @@ export interface EmployeeAssignedDataResult {
     primaryDownwardEvaluation: {
       totalScore: number | null;
       grade: string | null;
+      isSubmitted: boolean;
     };
     secondaryDownwardEvaluation: {
       totalScore: number | null;
       grade: string | null;
+      isSubmitted: boolean;
+      evaluators: Array<{
+        evaluatorId: string;
+        evaluatorName: string;
+        evaluatorEmployeeNumber: string;
+        evaluatorEmail: string;
+        assignedWbsCount: number;
+        completedEvaluationCount: number;
+        isSubmitted: boolean;
+      }>;
     };
   };
 }

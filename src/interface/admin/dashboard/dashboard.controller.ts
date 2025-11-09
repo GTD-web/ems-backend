@@ -152,10 +152,13 @@ export class DashboardController {
       primaryDownwardEvaluation: {
         totalScore: null,
         grade: null,
+        isSubmitted: false,
       },
       secondaryDownwardEvaluation: {
         totalScore: null,
         grade: null,
+        isSubmitted: false,
+        evaluators: [],
       },
     };
 
