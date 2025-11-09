@@ -7,12 +7,24 @@ const swagger_config_1 = require("../libs/config/swagger.config");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 async function bootstrap() {
-    const app = await core_1.NestFactory.create(app_module_1.AppModule);
+    const app = await core_1.NestFactory.create(app_module_1.AppModule, {
+        bodyParser: true,
+        logger: ['error', 'warn', 'log', 'debug', 'verbose'],
+    });
     const configService = app.get(config_1.ConfigService);
     app.useGlobalPipes(new common_1.ValidationPipe({
         transform: true,
+        transformOptions: {
+            enableImplicitConversion: true,
+        },
     }));
     app.useStaticAssets((0, path_1.join)(process.cwd(), 'public'));
+    app.enableCors({
+        origin: true,
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+        credentials: true,
+    });
+    const port = configService.get('PORT', 4000);
     (0, swagger_config_1.setupSwagger)(app, {
         title: 'Lumir Admin API',
         description: '루미르 평가 관리 시스템 - 관리자용 API 문서입니다.',
@@ -31,8 +43,6 @@ async function bootstrap() {
         version: '1.0',
         path: 'evaluator/api-docs',
     });
-    app.enableCors();
-    const port = configService.get('PORT', 4000);
     await app.listen(port);
     console.log(`🚀 Application is running on: http://localhost:${port}`);
     console.log(`📚 Admin API documentation: http://localhost:${port}/admin/api-docs`);
