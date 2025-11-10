@@ -225,9 +225,7 @@ describe('StepApprovalContextService', () => {
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
+      isExcluded: false,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);
@@ -368,24 +366,43 @@ describe('StepApprovalContextService', () => {
         StepApprovalStatus.REVISION_REQUESTED,
       );
 
-      // Then - 재작성 요청 생성 확인
+      // Then - 재작성 요청 생성 확인 (각 수신자별로 별도 요청 생성)
       const revisionRequests = await revisionRequestRepository.find({
         relations: ['recipients'],
+        where: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'criteria',
+        },
       });
-      expect(revisionRequests.length).toBe(1);
-      expect(revisionRequests[0].evaluationPeriodId).toBe(evaluationPeriodId);
-      expect(revisionRequests[0].employeeId).toBe(employeeId);
-      expect(revisionRequests[0].step).toBe('criteria');
-      expect(revisionRequests[0].comment).toBe(revisionComment);
-      expect(revisionRequests[0].requestedBy).toBe(adminId);
+      expect(revisionRequests.length).toBe(2); // 피평가자용 1개, 1차평가자용 1개
 
-      // Then - 수신자 확인 (평가기준: 피평가자 + 1차 평가자)
-      const recipients = revisionRequests[0].recipients;
-      expect(recipients.length).toBe(2);
+      // 각 요청의 속성 확인
+      revisionRequests.forEach((request) => {
+        expect(request.evaluationPeriodId).toBe(evaluationPeriodId);
+        expect(request.employeeId).toBe(employeeId);
+        expect(request.step).toBe('criteria');
+        expect(request.comment).toBe(revisionComment);
+        expect(request.requestedBy).toBe(adminId);
+        expect(request.recipients.length).toBe(1); // 각 요청은 1개의 수신자만 가짐
+      });
 
-      const recipientIds = recipients.map((r) => r.recipientId);
+      // 수신자 확인 (피평가자용 요청과 1차평가자용 요청이 각각 생성되어야 함)
+      const recipientIds = revisionRequests.flatMap((r) =>
+        r.recipients.map((recipient) => recipient.recipientId),
+      );
       expect(recipientIds).toContain(employeeId);
       expect(recipientIds).toContain(primaryEvaluatorId);
+
+      // 각 수신자별로 별도 요청이 생성되었는지 확인
+      const employeeRequest = revisionRequests.find(
+        (r) => r.recipients[0]?.recipientId === employeeId,
+      );
+      const primaryEvaluatorRequest = revisionRequests.find(
+        (r) => r.recipients[0]?.recipientId === primaryEvaluatorId,
+      );
+      expect(employeeRequest).toBeDefined();
+      expect(primaryEvaluatorRequest).toBeDefined();
     });
 
     it('자기평가를 재작성 요청 상태로 변경하면 피평가자와 1차평가자에게 요청이 전송되어야 한다', async () => {
@@ -403,18 +420,43 @@ describe('StepApprovalContextService', () => {
         updatedBy: adminId,
       });
 
-      // Then
+      // Then - 재작성 요청 생성 확인 (각 수신자별로 별도 요청 생성)
       const revisionRequests = await revisionRequestRepository.find({
         relations: ['recipients'],
+        where: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'self',
+        },
       });
-      expect(revisionRequests.length).toBe(1);
+      expect(revisionRequests.length).toBe(2); // 피평가자용 1개, 1차평가자용 1개
 
-      const recipients = revisionRequests[0].recipients;
-      expect(recipients.length).toBe(2);
+      // 각 요청의 속성 확인
+      revisionRequests.forEach((request) => {
+        expect(request.evaluationPeriodId).toBe(evaluationPeriodId);
+        expect(request.employeeId).toBe(employeeId);
+        expect(request.step).toBe('self');
+        expect(request.comment).toBe(revisionComment);
+        expect(request.requestedBy).toBe(adminId);
+        expect(request.recipients.length).toBe(1); // 각 요청은 1개의 수신자만 가짐
+      });
 
-      const recipientIds = recipients.map((r) => r.recipientId);
+      // 수신자 확인 (피평가자용 요청과 1차평가자용 요청이 각각 생성되어야 함)
+      const recipientIds = revisionRequests.flatMap((r) =>
+        r.recipients.map((recipient) => recipient.recipientId),
+      );
       expect(recipientIds).toContain(employeeId); // 피평가자
       expect(recipientIds).toContain(primaryEvaluatorId); // 1차 평가자
+
+      // 각 수신자별로 별도 요청이 생성되었는지 확인
+      const employeeRequest = revisionRequests.find(
+        (r) => r.recipients[0]?.recipientId === employeeId,
+      );
+      const primaryEvaluatorRequest = revisionRequests.find(
+        (r) => r.recipients[0]?.recipientId === primaryEvaluatorId,
+      );
+      expect(employeeRequest).toBeDefined();
+      expect(primaryEvaluatorRequest).toBeDefined();
     });
 
     it('1차평가를 재작성 요청 상태로 변경하면 1차평가자에게만 요청이 전송되어야 한다', async () => {
@@ -598,8 +640,7 @@ describe('StepApprovalContextService', () => {
     it('존재하지 않는 평가자 ID를 전달하면 예외가 발생해야 한다', async () => {
       // Given
       await 테스트데이터를_생성한다();
-      const nonExistentEvaluatorId =
-        '123e4567-e89b-12d3-a456-426614174999';
+      const nonExistentEvaluatorId = '123e4567-e89b-12d3-a456-426614174999';
 
       // When & Then
       await expect(
