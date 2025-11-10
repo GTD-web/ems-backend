@@ -68,11 +68,13 @@ export class VerifyAndSyncUserHandler {
         status: employee.status,
       };
 
+      this.logger.log('토큰 검증 성공:', userInfo);
       return {
         user: userInfo,
         isSynced: false, // 더 이상 동기화하지 않음
       };
     } catch (error) {
+      this.logger.error('토큰 검증 실패:', error);
       if (error instanceof UnauthorizedException) {
         throw error;
       }

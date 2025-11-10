@@ -39,9 +39,11 @@ async function bootstrap() {
     }));
     app.useStaticAssets((0, path_1.join)(process.cwd(), 'public'));
     app.enableCors({
-        origin: true,
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-        credentials: true,
+        origin: '*',
+        methods: '*',
+        allowedHeaders: '*',
+        exposedHeaders: '*',
+        credentials: false,
     });
     (0, swagger_config_1.setupSwagger)(app, {
         title: 'Lumir Admin API',
