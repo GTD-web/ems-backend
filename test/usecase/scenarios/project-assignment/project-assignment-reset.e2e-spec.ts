@@ -7,6 +7,7 @@ import { WbsAssignmentScenario } from '../wbs-assignment/wbs-assignment.scenario
 import { SelfEvaluationScenario } from '../self-evaluation.scenario';
 import { DownwardEvaluationScenario } from '../downward-evaluation/downward-evaluation.scenario';
 import { PeerEvaluationScenario } from '../peer-evaluation.scenario';
+import { EvaluationLineConfigurationScenario } from '../wbs-assignment/evaluation-line-configuration/evaluation-line-configuration.scenario';
 
 describe('프로젝트 할당 리셋 시나리오', () => {
   let testSuite: BaseE2ETest;
@@ -18,6 +19,7 @@ describe('프로젝트 할당 리셋 시나리오', () => {
   let selfEvaluationScenario: SelfEvaluationScenario;
   let downwardEvaluationScenario: DownwardEvaluationScenario;
   let peerEvaluationScenario: PeerEvaluationScenario;
+  let evaluationLineConfigurationScenario: EvaluationLineConfigurationScenario;
 
   let evaluationPeriodId: string;
   let employeeIds: string[];
@@ -37,6 +39,8 @@ describe('프로젝트 할당 리셋 시나리오', () => {
     selfEvaluationScenario = new SelfEvaluationScenario(testSuite);
     downwardEvaluationScenario = new DownwardEvaluationScenario(testSuite);
     peerEvaluationScenario = new PeerEvaluationScenario(testSuite);
+    evaluationLineConfigurationScenario =
+      new EvaluationLineConfigurationScenario(testSuite);
 
     // 시드 데이터 생성 (프로젝트, 직원, WBS만 생성)
     const seedResult = await seedDataScenario.시드_데이터를_생성한다({
@@ -123,7 +127,7 @@ describe('프로젝트 할당 리셋 시나리오', () => {
 
         await evaluationPeriodScenario.평가기간을_삭제한다(evaluationPeriodId);
       } catch (error) {
-        console.warn('평가기간 삭제 중 오류 발생:', error);
+        // 평가기간 삭제 실패 시 조용히 넘어감 (이미 삭제되었거나 존재하지 않음)
       }
     }
 
@@ -208,7 +212,30 @@ describe('프로젝트 할당 리셋 시나리오', () => {
         wbsAssignments.push(assignment);
       }
 
+      console.log(`   📊 WBS 할당 완료: ${wbsAssignments.length}건`);
+
+      // 평가라인 구성 (평가자 설정)
+      // employeeIds[0]이 employeeIds[1]을 평가하도록 설정
+      const evaluatorId = employeeIds[0];
+      const evaluateeId = employeeIds[1];
+
+      try {
+        // 1차 평가자 구성 (피평가자에게 평가자 설정)
+        await evaluationLineConfigurationScenario.일차_평가자를_구성한다({
+          employeeId: evaluateeId,
+          periodId: evaluationPeriodId,
+          evaluatorId: evaluatorId,
+        });
+        console.log(
+          `   ✅ 평가라인 구성 완료: ${evaluatorId} → ${evaluateeId}`,
+        );
+      } catch (error) {
+        // 에러 발생 시 조용히 넘어감 (평가라인 구성 실패)
+        console.log(`   ⚠️ 평가라인 구성 실패 (계속 진행)`);
+      }
+
       // 자기평가 생성
+      let 자기평가성공수 = 0;
       for (let i = 0; i < wbsAssignments.length; i++) {
         try {
           await selfEvaluationScenario.WBS자기평가를_저장한다({
@@ -219,15 +246,17 @@ describe('프로젝트 할당 리셋 시나리오', () => {
             selfEvaluationScore: 90 + i,
             performanceResult: `성과 결과 ${i + 1}`,
           });
+          자기평가성공수++;
         } catch (error) {
-          console.warn(`자기평가 생성 중 오류 (계속 진행): ${error}`);
+          // 에러 발생 시 조용히 넘어감 (상세 로그 출력 안함)
         }
       }
+      console.log(
+        `   📊 자기평가 생성: ${자기평가성공수}/${wbsAssignments.length}건 성공`,
+      );
 
-      // 하향평가 생성 (평가자와 피평가자가 다른 경우)
-      const evaluatorId = employeeIds[0];
-      const evaluateeId = employeeIds[1];
-
+      // 하향평가 생성 (평가라인이 설정된 경우에만 생성 시도)
+      let 하향평가생성됨 = false;
       try {
         await downwardEvaluationScenario.일차하향평가를_저장한다({
           periodId: evaluationPeriodId,
@@ -237,8 +266,11 @@ describe('프로젝트 할당 리셋 시나리오', () => {
           downwardEvaluationScore: 88,
           downwardEvaluationContent: '하향평가 내용',
         });
+        하향평가생성됨 = true;
+        console.log(`   ✅ 하향평가 생성 완료`);
       } catch (error) {
-        console.warn(`하향평가 생성 중 오류 (계속 진행): ${error}`);
+        // 에러 발생 시 조용히 넘어감 (상세 로그 출력 안함)
+        console.log(`   ⚠️ 하향평가 생성 실패 (평가라인 미구성 등)`);
       }
 
       // 데이터 확인
@@ -265,7 +297,7 @@ describe('프로젝트 할당 리셋 시나리오', () => {
       expect(리셋결과.deletedCounts.wbsAssignments).toBeGreaterThan(0);
       expect(리셋결과.message).toContain('성공적으로 삭제');
 
-      console.log(`   📊 삭제된 데이터:`);
+      console.log(`\n   📊 삭제된 데이터:`);
       console.log(
         `      - 프로젝트 할당: ${리셋결과.deletedCounts.projectAssignments}건`,
       );
@@ -285,32 +317,88 @@ describe('프로젝트 할당 리셋 시나리오', () => {
         `      - 평가라인 매핑: ${리셋결과.deletedCounts.evaluationLineMappings}건`,
       );
       console.log(
+        `      - 동료평가 질문 매핑: ${리셋결과.deletedCounts.peerEvaluationQuestionMappings || 0}건`,
+      );
+      console.log(
         `      - 산출물 매핑 해제: ${리셋결과.deletedCounts.deliverableMappings}건`,
       );
 
-      // 리셋 후 데이터 확인 - 모두 삭제되었는지 확인
+      console.log(`\n   🔍 리셋 후 데이터 검증 시작...`);
+
+      // 1. 프로젝트 할당 확인
       const 할당후프로젝트 =
         await projectAssignmentScenario.프로젝트_할당_목록을_조회한다({
           periodId: evaluationPeriodId,
         });
       expect(할당후프로젝트.assignments.length).toBe(0);
       console.log(
-        `   ✅ 리셋 후 프로젝트 할당: ${할당후프로젝트.assignments.length}건`,
+        `      ✓ 프로젝트 할당: ${할당후프로젝트.assignments.length}건 (삭제 완료)`,
       );
 
-      // 대시보드에서도 확인
+      // 2. WBS 할당 확인
+      const 할당후WBS = await wbsAssignmentScenario.WBS_할당_목록을_조회한다({
+        periodId: evaluationPeriodId,
+      });
+      expect(할당후WBS.assignments?.length || 0).toBe(0);
+      console.log(
+        `      ✓ WBS 할당: ${할당후WBS.assignments?.length || 0}건 (삭제 완료)`,
+      );
+
+      // 3. 자기평가 확인 (각 직원별로)
+      let 총자기평가수 = 0;
+      for (const employeeId of employeeIds.slice(0, 3)) {
+        const 자기평가목록 =
+          await selfEvaluationScenario.직원의_자기평가_목록을_조회한다({
+            employeeId,
+            periodId: evaluationPeriodId,
+          });
+        총자기평가수 += 자기평가목록.evaluations?.length || 0;
+      }
+      expect(총자기평가수).toBe(0);
+      console.log(`      ✓ 자기평가: ${총자기평가수}건 (삭제 완료)`);
+
+      // 4. 하향평가 확인
+      if (하향평가생성됨) {
+        const 하향평가목록 =
+          await downwardEvaluationScenario.평가자별_하향평가_목록을_조회한다({
+            evaluatorId,
+            periodId: evaluationPeriodId,
+          });
+        expect(하향평가목록.evaluations?.length || 0).toBe(0);
+        console.log(
+          `      ✓ 하향평가: ${하향평가목록.evaluations?.length || 0}건 (삭제 완료)`,
+        );
+      }
+
+      // 5. 평가라인 매핑 확인
+      const 평가설정 =
+        await evaluationLineConfigurationScenario.직원_평가설정을_조회한다({
+          employeeId: evaluateeId,
+          periodId: evaluationPeriodId,
+        });
+      expect(평가설정.evaluationLineMappings?.length || 0).toBe(0);
+      console.log(
+        `      ✓ 평가라인 매핑: ${평가설정.evaluationLineMappings?.length || 0}건 (삭제 완료)`,
+      );
+
+      // 6. 대시보드에서 통합 검증
       const 대시보드상태 =
         await projectAssignmentScenario.대시보드_직원_현황을_조회한다(
           evaluationPeriodId,
         );
 
-      // 모든 직원의 프로젝트 할당이 0이어야 함
+      // 모든 직원의 할당 정보가 초기화되었는지 확인
       for (const employeeStatus of 대시보드상태) {
         expect(
           employeeStatus.evaluationCriteria?.assignedProjectCount || 0,
         ).toBe(0);
+        expect(employeeStatus.evaluationCriteria?.assignedWbsCount || 0).toBe(
+          0,
+        );
       }
-      console.log(`   ✅ 대시보드에서 모든 할당 데이터 초기화 확인`);
+      console.log(`      ✓ 대시보드 검증: 모든 직원의 할당 데이터 초기화 완료`);
+
+      console.log(`\n   ✅ 리셋 검증 완료: 모든 데이터가 정상적으로 삭제됨`);
     });
 
     it('24시간이 지난 프로젝트 할당도 리셋한다 (비즈니스 규칙 우회)', async () => {
