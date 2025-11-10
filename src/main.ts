@@ -50,11 +50,13 @@ async function bootstrap() {
   // 정적 파일 서빙 설정 (public 폴더)
   app.useStaticAssets(join(process.cwd(), 'public'));
 
-  // CORS 설정
+  // CORS 설정 - 전체 허용
   app.enableCors({
-    origin: true,
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    credentials: true,
+    origin: '*',
+    methods: '*',
+    allowedHeaders: '*',
+    exposedHeaders: '*',
+    credentials: false, // origin이 '*'일 때는 credentials를 false로 설정해야 함
   });
 
   // 관리자용 Swagger 설정
