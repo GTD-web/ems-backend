@@ -134,7 +134,7 @@ describe('Performance Evaluation Context - Upsert Final Evaluation', () => {
       startDate: new Date('2024-01-01'),
       endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
-      currentPhase: EvaluationPeriodPhase.FINAL_EVALUATION,
+      currentPhase: EvaluationPeriodPhase.CLOSURE,
       criteriaSettingEnabled: false,
       selfEvaluationSettingEnabled: false,
       finalEvaluationSettingEnabled: false,
@@ -193,6 +193,8 @@ describe('Performance Evaluation Context - Upsert Final Evaluation', () => {
         where: { id: result },
       });
       expect(savedEvaluation).toBeDefined();
+      expect(savedEvaluation).not.toBeNull();
+      if (!savedEvaluation) return;
       expect(savedEvaluation.employeeId).toBe(employeeId);
       expect(savedEvaluation.periodId).toBe(evaluationPeriodId);
       expect(savedEvaluation.evaluationGrade).toBe('A');
@@ -227,6 +229,8 @@ describe('Performance Evaluation Context - Upsert Final Evaluation', () => {
         where: { id: result },
       });
       expect(savedEvaluation).toBeDefined();
+      expect(savedEvaluation).not.toBeNull();
+      if (!savedEvaluation) return;
       expect(savedEvaluation.evaluationGrade).toBe('S');
     });
   });
@@ -267,6 +271,8 @@ describe('Performance Evaluation Context - Upsert Final Evaluation', () => {
         where: { id: updatedId },
       });
       expect(savedEvaluation).toBeDefined();
+      expect(savedEvaluation).not.toBeNull();
+      if (!savedEvaluation) return;
       expect(savedEvaluation.evaluationGrade).toBe('S');
       expect(savedEvaluation.jobGrade).toBe(JobGrade.T3);
       expect(savedEvaluation.jobDetailedGrade).toBe(JobDetailedGrade.A);
@@ -308,6 +314,9 @@ describe('Performance Evaluation Context - Upsert Final Evaluation', () => {
       const savedEvaluation = await finalEvaluationRepository.findOne({
         where: { id: result },
       });
+      expect(savedEvaluation).toBeDefined();
+      expect(savedEvaluation).not.toBeNull();
+      if (!savedEvaluation) return;
       expect(savedEvaluation.evaluationGrade).toBe('A');
     });
 
