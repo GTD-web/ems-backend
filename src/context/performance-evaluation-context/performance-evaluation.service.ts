@@ -98,6 +98,7 @@ import {
   DeleteDeliverableCommand,
   BulkCreateDeliverablesCommand,
   BulkDeleteDeliverablesCommand,
+  DeleteAllDeliverablesCommand,
   type BulkDeliverableData,
 } from './handlers/deliverable/command';
 import {
@@ -1335,6 +1336,24 @@ export class PerformanceEvaluationService
     failedIds: Array<{ id: string; error: string }>;
   }> {
     const command = new BulkDeleteDeliverablesCommand(data.ids, data.deletedBy);
+
+    const result = await this.commandBus.execute(command);
+    return {
+      successCount: result.successCount,
+      failedCount: result.failedCount,
+      failedIds: result.failedIds,
+    };
+  }
+
+  /**
+   * 모든 산출물을 삭제한다
+   */
+  async 모든_산출물을_삭제한다(deletedBy: string): Promise<{
+    successCount: number;
+    failedCount: number;
+    failedIds: Array<{ id: string; error: string }>;
+  }> {
+    const command = new DeleteAllDeliverablesCommand(deletedBy);
 
     const result = await this.commandBus.execute(command);
     return {

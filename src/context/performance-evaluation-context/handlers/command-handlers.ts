@@ -66,6 +66,7 @@ import {
   DeleteDeliverableHandler,
   BulkCreateDeliverablesHandler,
   BulkDeleteDeliverablesHandler,
+  DeleteAllDeliverablesHandler,
 } from './deliverable';
 
 export const CommandHandlers = [
@@ -128,4 +129,5 @@ export const CommandHandlers = [
   DeleteDeliverableHandler,
   BulkCreateDeliverablesHandler,
   BulkDeleteDeliverablesHandler,
+  DeleteAllDeliverablesHandler,
 ];

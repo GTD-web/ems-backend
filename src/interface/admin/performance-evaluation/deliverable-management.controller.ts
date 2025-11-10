@@ -13,6 +13,7 @@ import {
   GetEmployeeDeliverables,
   GetWbsDeliverables,
   GetDeliverableDetail,
+  DeleteAllDeliverables,
 } from './decorators/deliverable-api.decorators';
 import {
   CreateDeliverableDto,
@@ -143,6 +144,26 @@ export class DeliverableManagementController {
       });
 
     return this.toResponseDto(deliverable);
+  }
+
+  /**
+   * 모든 산출물 삭제
+   * NOTE: Delete(':id') 앞에 위치해야 라우트 충돌을 방지할 수 있습니다
+   */
+  @DeleteAllDeliverables()
+  async deleteAllDeliverables(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<BulkDeleteResultDto> {
+    const deletedBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
+
+    const result =
+      await this.performanceEvaluationService.모든_산출물을_삭제한다(deletedBy);
+
+    return {
+      successCount: result.successCount,
+      failedCount: result.failedCount,
+      failedIds: result.failedIds,
+    };
   }
 
   /**

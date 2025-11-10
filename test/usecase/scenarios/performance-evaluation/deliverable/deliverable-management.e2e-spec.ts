@@ -1337,5 +1337,175 @@ describe('산출물 관리 시나리오', () => {
       });
     });
   });
+
+  describe('모든 산출물 삭제', () => {
+    let testEmployeeId: string;
+    let testProjectId: string;
+    let testWbsItemIds: string[];
+
+    beforeEach(async () => {
+      testEmployeeId = employeeIds[0];
+      testProjectId = projectIds[0];
+      testWbsItemIds = [wbsItemIds[0], wbsItemIds[1], wbsItemIds[2]];
+
+      // 프로젝트 할당
+      await projectAssignmentScenario.프로젝트를_할당한다({
+        periodId: evaluationPeriodId,
+        employeeId: testEmployeeId,
+        projectId: testProjectId,
+      });
+
+      // WBS 할당 (여러 개)
+      for (const wbsItemId of testWbsItemIds) {
+        await wbsAssignmentScenario.WBS를_할당한다({
+          periodId: evaluationPeriodId,
+          employeeId: testEmployeeId,
+          wbsItemId,
+          projectId: testProjectId,
+        });
+      }
+    });
+
+    it('여러 산출물이 있을 때 모두 삭제할 수 있어야 한다', async () => {
+      // Given - 여러 산출물 생성
+      const 생성된산출물Ids: string[] = [];
+      for (let i = 0; i < 5; i++) {
+        const 생성결과 = await deliverableManagementScenario.산출물을_생성한다({
+          name: `모든 산출물 삭제 테스트 ${i + 1}`,
+          type: 'document',
+          employeeId: testEmployeeId,
+          wbsItemId: testWbsItemIds[i % testWbsItemIds.length],
+        });
+        생성된산출물Ids.push(생성결과.id);
+      }
+
+      // When - 모든 산출물 삭제
+      const 삭제결과 = await testSuite
+        .request()
+        .delete('/admin/performance-evaluation/deliverables/all')
+        .expect(HttpStatus.OK);
+
+      // Then - 삭제 결과 검증
+      expect(삭제결과.body.successCount).toBe(5);
+      expect(삭제결과.body.failedCount).toBe(0);
+      expect(삭제결과.body.failedIds).toBeDefined();
+      expect(Array.isArray(삭제결과.body.failedIds)).toBe(true);
+
+      // 삭제된 산출물은 상세 조회 시 404 에러 발생
+      for (const id of 생성된산출물Ids) {
+        await testSuite
+          .request()
+          .get(`/admin/performance-evaluation/deliverables/${id}`)
+          .expect(HttpStatus.NOT_FOUND);
+      }
+    });
+
+    it('삭제 후 새로운 산출물 생성 및 조회가 가능해야 한다', async () => {
+      // Given - 여러 산출물 생성
+      for (let i = 0; i < 3; i++) {
+        await deliverableManagementScenario.산출물을_생성한다({
+          name: `삭제 전 산출물 ${i + 1}`,
+          type: 'document',
+          employeeId: testEmployeeId,
+          wbsItemId: testWbsItemIds[i % testWbsItemIds.length],
+        });
+      }
+
+      // When - 모든 산출물 삭제
+      await testSuite
+        .request()
+        .delete('/admin/performance-evaluation/deliverables/all')
+        .expect(HttpStatus.OK);
+
+      // Then - 새로운 산출물 생성 가능
+      const 새산출물 = await deliverableManagementScenario.산출물을_생성한다({
+        name: '삭제 후 새 산출물',
+        type: 'code',
+        employeeId: testEmployeeId,
+        wbsItemId: testWbsItemIds[0],
+      });
+
+      expect(새산출물.id).toBeDefined();
+      expect(새산출물.name).toBe('삭제 후 새 산출물');
+
+      // 상세 조회 가능
+      const 상세조회 =
+        await deliverableManagementScenario.산출물_상세를_조회한다(새산출물.id);
+
+      expect(상세조회.id).toBe(새산출물.id);
+    });
+
+    it('산출물이 없을 때도 정상 처리되어야 한다', async () => {
+      // Given - 산출물이 없는 상태
+
+      // When & Then - 모든 산출물 삭제 (에러 없이 처리)
+      const 삭제결과 = await testSuite
+        .request()
+        .delete('/admin/performance-evaluation/deliverables/all')
+        .expect(HttpStatus.OK);
+
+      expect(삭제결과.body.successCount).toBe(0);
+      expect(삭제결과.body.failedCount).toBe(0);
+      expect(삭제결과.body.failedIds).toEqual([]);
+    });
+
+    it('성공/실패 개수가 정확하게 반환되어야 한다', async () => {
+      // Given - 여러 산출물 생성
+      const 생성개수 = 10;
+      for (let i = 0; i < 생성개수; i++) {
+        await deliverableManagementScenario.산출물을_생성한다({
+          name: `삭제 대상 산출물 ${i + 1}`,
+          type: i % 2 === 0 ? 'document' : 'code',
+          employeeId: testEmployeeId,
+          wbsItemId: testWbsItemIds[i % testWbsItemIds.length],
+        });
+      }
+
+      // When - 모든 산출물 삭제
+      const 삭제결과 = await testSuite
+        .request()
+        .delete('/admin/performance-evaluation/deliverables/all')
+        .expect(HttpStatus.OK);
+
+      // Then - 성공/실패 개수 검증
+      expect(삭제결과.body.successCount).toBe(생성개수);
+      expect(삭제결과.body.failedCount).toBe(0);
+    });
+
+    it('삭제된 산출물은 조회 시 제외되어야 한다', async () => {
+      // Given - 여러 산출물 생성
+      for (let i = 0; i < 3; i++) {
+        await deliverableManagementScenario.산출물을_생성한다({
+          name: `조회 테스트 산출물 ${i + 1}`,
+          type: 'document',
+          employeeId: testEmployeeId,
+          wbsItemId: testWbsItemIds[i % testWbsItemIds.length],
+        });
+      }
+
+      // 삭제 전 조회
+      const 삭제전조회 =
+        await deliverableManagementScenario.직원별_산출물을_조회한다({
+          employeeId: testEmployeeId,
+          activeOnly: true,
+        });
+      expect(삭제전조회.total).toBeGreaterThanOrEqual(3);
+
+      // When - 모든 산출물 삭제
+      await testSuite
+        .request()
+        .delete('/admin/performance-evaluation/deliverables/all')
+        .expect(HttpStatus.OK);
+
+      // Then - 삭제 후 조회 시 제외됨
+      const 삭제후조회 =
+        await deliverableManagementScenario.직원별_산출물을_조회한다({
+          employeeId: testEmployeeId,
+          activeOnly: true,
+        });
+      expect(삭제후조회.total).toBe(0);
+      expect(삭제후조회.deliverables).toEqual([]);
+    });
+  });
 });
 
