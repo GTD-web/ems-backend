@@ -602,4 +602,191 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
       expect(할당데이터.summary.selfEvaluation.grade).toBeNull();
     });
   });
+
+  describe('자기평가 달성률 입력 검증', () => {
+    it('달성률이 최대값을 초과하면 에러가 발생한다', async () => {
+      // Given - maxSelfEvaluationRate = 120
+      // When & Then - 120 초과 시 에러 발생
+      await expect(
+        wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+          employeeId: employeeIds[0],
+          wbsItemId: wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          selfEvaluationScore: 150, // 120 초과
+          selfEvaluationContent: '초과된 달성률 테스트',
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('달성률이 음수이면 에러가 발생한다', async () => {
+      // When & Then - 음수 입력 시 에러 발생
+      await expect(
+        wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+          employeeId: employeeIds[0],
+          wbsItemId: wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          selfEvaluationScore: -10,
+          selfEvaluationContent: '음수 달성률 테스트',
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('달성률이 소수점이면 에러가 발생한다', async () => {
+      // When & Then - 소수점 입력 시 에러 발생
+      await expect(
+        wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+          employeeId: employeeIds[0],
+          wbsItemId: wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          selfEvaluationScore: 85.5,
+          selfEvaluationContent: '소수점 달성률 테스트',
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('0점 달성률도 정상적으로 저장되고 대시보드 API를 검증한다', async () => {
+      // When - 0점 저장
+      const 저장결과 = await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+        employeeId: employeeIds[0],
+        wbsItemId: wbsItemIds[0],
+        periodId: evaluationPeriodId,
+        selfEvaluationScore: 0,
+        selfEvaluationContent: '0점 달성률 테스트',
+      });
+
+      // Then - 저장 검증
+      expect(저장결과.id).toBeDefined();
+      expect(저장결과.selfEvaluationScore).toBe(0);
+
+      // 대시보드 API 검증
+      const 할당데이터 =
+        await wbsSelfEvaluationScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: employeeIds[0],
+        });
+
+      const wbsItem = 할당데이터.projects[0].wbsList.find(
+        (wbs: any) => wbs.wbsId === wbsItemIds[0],
+      );
+      expect(wbsItem.selfEvaluation.score).toBe(0);
+    });
+
+    it('최대 달성률(120점)이 정상적으로 저장되고 대시보드 API를 검증한다', async () => {
+      // When - 최대값(120점) 저장
+      const 저장결과 = await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+        employeeId: employeeIds[0],
+        wbsItemId: wbsItemIds[0],
+        periodId: evaluationPeriodId,
+        selfEvaluationScore: 120,
+        selfEvaluationContent: '최대 달성률 테스트',
+      });
+
+      // Then - 저장 검증
+      expect(저장결과.id).toBeDefined();
+      expect(저장결과.selfEvaluationScore).toBe(120);
+
+      // 대시보드 API 검증
+      const 할당데이터 =
+        await wbsSelfEvaluationScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: employeeIds[0],
+        });
+
+      const wbsItem = 할당데이터.projects[0].wbsList.find(
+        (wbs: any) => wbs.wbsId === wbsItemIds[0],
+      );
+      expect(wbsItem.selfEvaluation.score).toBe(120);
+    });
+
+    it('정상 범위 내 다양한 달성률을 검증한다', async () => {
+      // Given - 여러 WBS에 다양한 달성률 저장
+      const testScores = [0, 50, 80, 100, 110, 120];
+
+      for (let i = 0; i < testScores.length && i < wbsItemIds.length; i++) {
+        // WBS가 할당되어 있지 않으면 먼저 할당
+        if (i > 0) {
+          await wbsAssignmentScenario.WBS를_할당한다({
+            periodId: evaluationPeriodId,
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[i],
+            projectId: projectIds[0],
+          });
+        }
+
+        // When - 각 달성률로 저장
+        const 저장결과 = await wbsSelfEvaluationScenario.WBS자기평가를_저장한다(
+          {
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[i],
+            periodId: evaluationPeriodId,
+            selfEvaluationScore: testScores[i],
+            selfEvaluationContent: `${testScores[i]}점 달성률 테스트`,
+          },
+        );
+
+        // Then - 각 저장 결과 검증
+        expect(저장결과.selfEvaluationScore).toBe(testScores[i]);
+      }
+
+      // 대시보드 API로 전체 검증
+      const 할당데이터 =
+        await wbsSelfEvaluationScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: employeeIds[0],
+        });
+
+      // 각 WBS의 점수가 올바르게 저장되었는지 확인
+      for (let i = 0; i < testScores.length && i < wbsItemIds.length; i++) {
+        const wbsItem = 할당데이터.projects[0].wbsList.find(
+          (wbs: any) => wbs.wbsId === wbsItemIds[i],
+        );
+        expect(wbsItem).toBeDefined();
+        expect(wbsItem.selfEvaluation.score).toBe(testScores[i]);
+      }
+    });
+
+    it('달성률을 제출 후에도 정상적으로 수정할 수 있다', async () => {
+      // Given - 자기평가 저장 및 제출
+      const 저장결과 = await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+        employeeId: employeeIds[0],
+        wbsItemId: wbsItemIds[0],
+        periodId: evaluationPeriodId,
+        selfEvaluationScore: 80,
+        selfEvaluationContent: '초기 달성률',
+      });
+
+      await wbsSelfEvaluationScenario.WBS자기평가를_1차평가자에게_제출한다(
+        저장결과.id,
+      );
+      await wbsSelfEvaluationScenario.WBS자기평가를_관리자에게_제출한다(
+        저장결과.id,
+      );
+
+      // When - 제출 후 달성률 수정
+      const 수정결과 = await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+        employeeId: employeeIds[0],
+        wbsItemId: wbsItemIds[0],
+        periodId: evaluationPeriodId,
+        selfEvaluationScore: 110,
+        selfEvaluationContent: '수정된 달성률',
+      });
+
+      // Then - 수정 검증
+      expect(수정결과.selfEvaluationScore).toBe(110);
+      expect(수정결과.submittedToManager).toBe(true); // 제출 상태 유지
+
+      // 대시보드 API 검증
+      const 할당데이터 =
+        await wbsSelfEvaluationScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: employeeIds[0],
+        });
+
+      const wbsItem = 할당데이터.projects[0].wbsList.find(
+        (wbs: any) => wbs.wbsId === wbsItemIds[0],
+      );
+      expect(wbsItem.selfEvaluation.score).toBe(110);
+      expect(wbsItem.selfEvaluation.submittedToManager).toBe(true);
+    });
+  });
 });

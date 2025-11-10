@@ -42,6 +42,13 @@ import { WbsItemModule } from '@domain/common/wbs-item/wbs-item.module';
 import { WbsAssignmentWeightCalculationService } from './services/wbs-assignment-weight-calculation.service';
 import { WbsAssignmentValidationService } from './services/wbs-assignment-validation.service';
 
+// Performance Evaluation Modules (for reset handler)
+import { WbsSelfEvaluationModule } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.module';
+import { DownwardEvaluationModule } from '@domain/core/downward-evaluation/downward-evaluation.module';
+import { PeerEvaluationModule } from '@domain/core/peer-evaluation/peer-evaluation.module';
+import { DeliverableModule } from '@domain/core/deliverable/deliverable.module';
+import { PeerEvaluationQuestionMappingModule } from '@domain/core/peer-evaluation-question-mapping/peer-evaluation-question-mapping.module';
+
 /**
  * 평가기준관리 컨텍스트 모듈 (MVP 버전)
  *
@@ -76,6 +83,12 @@ import { WbsAssignmentValidationService } from './services/wbs-assignment-valida
     EmployeeModule,
     EvaluationPeriodModule,
     WbsItemModule,
+    // Performance Evaluation Modules (for reset handler)
+    WbsSelfEvaluationModule,
+    DownwardEvaluationModule,
+    PeerEvaluationModule,
+    DeliverableModule,
+    PeerEvaluationQuestionMappingModule,
   ],
   providers: [
     EvaluationCriteriaManagementService,

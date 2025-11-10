@@ -52,8 +52,12 @@ export class ProjectAssignmentScenario {
     const 할당결과 = await this.프로젝트를_할당한다(config);
 
     // 2. 대시보드에서 상태 조회
-    const 대시보드상태 = await this.대시보드_직원_현황을_조회한다(config.periodId);
-    const 직원상태 = 대시보드상태.find((emp: any) => emp.employeeId === config.employeeId);
+    const 대시보드상태 = await this.대시보드_직원_현황을_조회한다(
+      config.periodId,
+    );
+    const 직원상태 = 대시보드상태.find(
+      (emp: any) => emp.employeeId === config.employeeId,
+    );
 
     // 3. 직원 할당 데이터 조회
     const 할당데이터 = await this.직원_할당_데이터를_조회한다({
@@ -64,7 +68,8 @@ export class ProjectAssignmentScenario {
     // 4. evaluationCriteria 정보 추출
     const evaluationCriteria = {
       status: 직원상태?.evaluationCriteria?.status || 'unknown',
-      assignedProjectCount: 직원상태?.evaluationCriteria?.assignedProjectCount || 0,
+      assignedProjectCount:
+        직원상태?.evaluationCriteria?.assignedProjectCount || 0,
     };
 
     // 5. 할당 데이터에서 프로젝트 정보 추출
@@ -84,11 +89,13 @@ export class ProjectAssignmentScenario {
   /**
    * 프로젝트를 대량으로 할당한다
    */
-  async 프로젝트를_대량으로_할당한다(assignments: Array<{
-    employeeId: string;
-    projectId: string;
-    periodId: string;
-  }>): Promise<any[]> {
+  async 프로젝트를_대량으로_할당한다(
+    assignments: Array<{
+      employeeId: string;
+      projectId: string;
+      periodId: string;
+    }>,
+  ): Promise<any[]> {
     return await this.apiClient.bulkCreate({ assignments });
   }
 
@@ -202,10 +209,11 @@ export class ProjectAssignmentScenario {
     총프로젝트수: number;
   }> {
     // 1. 순서 변경 전 할당 데이터 조회
-    const 변경전할당데이터 = await this.dashboardApiClient.getEmployeeAssignedData({
-      periodId: config.evaluationPeriodId,
-      employeeId: config.employeeId,
-    });
+    const 변경전할당데이터 =
+      await this.dashboardApiClient.getEmployeeAssignedData({
+        periodId: config.evaluationPeriodId,
+        employeeId: config.employeeId,
+      });
 
     // 2. 프로젝트 할당 순서 변경
     const 순서변경결과 = await this.프로젝트_할당_순서를_변경한다(
@@ -214,10 +222,11 @@ export class ProjectAssignmentScenario {
     );
 
     // 3. 순서 변경 후 할당 데이터 조회
-    const 변경후할당데이터 = await this.dashboardApiClient.getEmployeeAssignedData({
-      periodId: config.evaluationPeriodId,
-      employeeId: config.employeeId,
-    });
+    const 변경후할당데이터 =
+      await this.dashboardApiClient.getEmployeeAssignedData({
+        periodId: config.evaluationPeriodId,
+        employeeId: config.employeeId,
+      });
 
     return {
       순서변경결과,
@@ -242,24 +251,28 @@ export class ProjectAssignmentScenario {
     총프로젝트수: number;
   }> {
     // 1. 순서 변경 전 할당 데이터 조회
-    const 변경전할당데이터 = await this.dashboardApiClient.getEmployeeAssignedData({
-      periodId: config.periodId,
-      employeeId: config.employeeId,
-    });
+    const 변경전할당데이터 =
+      await this.dashboardApiClient.getEmployeeAssignedData({
+        periodId: config.periodId,
+        employeeId: config.employeeId,
+      });
 
     // 2. 프로젝트 할당 순서 변경 (프로젝트 ID 기반)
-    const 순서변경결과 = await this.프로젝트_할당_순서를_프로젝트_ID로_변경한다({
-      employeeId: config.employeeId,
-      projectId: config.projectId,
-      periodId: config.periodId,
-      direction: config.direction,
-    });
+    const 순서변경결과 = await this.프로젝트_할당_순서를_프로젝트_ID로_변경한다(
+      {
+        employeeId: config.employeeId,
+        projectId: config.projectId,
+        periodId: config.periodId,
+        direction: config.direction,
+      },
+    );
 
     // 3. 순서 변경 후 할당 데이터 조회
-    const 변경후할당데이터 = await this.dashboardApiClient.getEmployeeAssignedData({
-      periodId: config.periodId,
-      employeeId: config.employeeId,
-    });
+    const 변경후할당데이터 =
+      await this.dashboardApiClient.getEmployeeAssignedData({
+        periodId: config.periodId,
+        employeeId: config.employeeId,
+      });
 
     return {
       순서변경결과,
@@ -290,6 +303,43 @@ export class ProjectAssignmentScenario {
     return await this.apiClient.cancelByProject(config);
   }
 
+  /**
+   * 평가기간의 모든 할당을 리셋한다
+   */
+  async 평가기간_전체_할당을_리셋한다(periodId: string): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .delete(
+        `/admin/evaluation-criteria/project-assignments/period/${periodId}/reset`,
+      )
+      .expect(200);
+
+    console.log(`✅ 평가기간 전체 할당 리셋 완료: ${periodId}`);
+    console.log(
+      `   - 프로젝트 할당: ${response.body.deletedCounts.projectAssignments}건`,
+    );
+    console.log(
+      `   - WBS 할당: ${response.body.deletedCounts.wbsAssignments}건`,
+    );
+    console.log(
+      `   - 자기평가: ${response.body.deletedCounts.selfEvaluations}건`,
+    );
+    console.log(
+      `   - 하향평가: ${response.body.deletedCounts.downwardEvaluations}건`,
+    );
+    console.log(
+      `   - 동료평가: ${response.body.deletedCounts.peerEvaluations}건`,
+    );
+    console.log(
+      `   - 평가라인 매핑: ${response.body.deletedCounts.evaluationLineMappings}건`,
+    );
+    console.log(
+      `   - 산출물 매핑 해제: ${response.body.deletedCounts.deliverableMappings}건`,
+    );
+
+    return response.body;
+  }
+
   // ==================== 대시보드 검증 ====================
 
   /**
@@ -299,7 +349,10 @@ export class ProjectAssignmentScenario {
     evaluationPeriodId: string,
     includeUnregistered: boolean = false,
   ): Promise<any> {
-    return await this.dashboardApiClient.getEmployeesStatus(evaluationPeriodId, includeUnregistered);
+    return await this.dashboardApiClient.getEmployeesStatus(
+      evaluationPeriodId,
+      includeUnregistered,
+    );
   }
 
   /**
@@ -311,7 +364,6 @@ export class ProjectAssignmentScenario {
   }): Promise<any> {
     return await this.dashboardApiClient.getEmployeeAssignedData(config);
   }
-
 
   // ==================== 복합 시나리오 ====================
 
@@ -334,11 +386,12 @@ export class ProjectAssignmentScenario {
     const { employeeIds, projectIds, periodId } = config;
 
     // 1. 단일 할당 + 대시보드 검증
-    const 단일할당검증결과 = await this.프로젝트를_할당하고_대시보드에서_검증한다({
-      employeeId: employeeIds[0],
-      projectId: projectIds[0],
-      periodId,
-    });
+    const 단일할당검증결과 =
+      await this.프로젝트를_할당하고_대시보드에서_검증한다({
+        employeeId: employeeIds[0],
+        projectId: projectIds[0],
+        periodId,
+      });
 
     // 2. 대량 할당
     const 대량할당데이터 = employeeIds.slice(1).map((employeeId, index) => ({
@@ -346,7 +399,8 @@ export class ProjectAssignmentScenario {
       projectId: projectIds[index % projectIds.length],
       periodId,
     }));
-    const 대량할당결과 = await this.프로젝트를_대량으로_할당한다(대량할당데이터);
+    const 대량할당결과 =
+      await this.프로젝트를_대량으로_할당한다(대량할당데이터);
 
     // 3. 할당 목록 조회
     const 할당목록조회결과 = await this.프로젝트_할당_목록을_조회한다({
@@ -374,11 +428,12 @@ export class ProjectAssignmentScenario {
     });
 
     // 7. 할당 가능한 프로젝트 조회
-    const 할당가능프로젝트조회결과 = await this.할당_가능한_프로젝트_목록을_조회한다({
-      periodId,
-      page: 1,
-      limit: 10,
-    });
+    const 할당가능프로젝트조회결과 =
+      await this.할당_가능한_프로젝트_목록을_조회한다({
+        periodId,
+        page: 1,
+        limit: 10,
+      });
 
     return {
       단일할당검증결과,
@@ -390,6 +445,4 @@ export class ProjectAssignmentScenario {
       할당가능프로젝트조회결과,
     };
   }
-
-
 }

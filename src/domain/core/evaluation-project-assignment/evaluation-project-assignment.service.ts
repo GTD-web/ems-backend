@@ -161,6 +161,7 @@ export class EvaluationProjectAssignmentService
     id: string,
     deletedBy: string,
     manager?: EntityManager,
+    options?: { skipValidation?: boolean },
   ): Promise<void> {
     return this.executeSafeDomainOperation(async () => {
       const repository = this.transactionManager.getRepository(
@@ -175,7 +176,10 @@ export class EvaluationProjectAssignmentService
       }
 
       // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
-      await this.validationService.할당삭제비즈니스규칙검증한다(assignment);
+      // skipValidation 옵션이 true이면 검증을 건너뜀 (관리자 강제 삭제 등)
+      if (!options?.skipValidation) {
+        await this.validationService.할당삭제비즈니스규칙검증한다(assignment);
+      }
 
       // 소프트 삭제 수행 및 삭제자 정보 업데이트
       assignment.메타데이터를_업데이트한다(deletedBy);

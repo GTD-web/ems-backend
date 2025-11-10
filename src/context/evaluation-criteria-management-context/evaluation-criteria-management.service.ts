@@ -25,8 +25,10 @@ import {
   GetProjectAssignmentListQuery,
   GetUnassignedEmployeesQuery,
   GetAvailableProjectsQuery,
+  ResetPeriodAssignmentsCommand,
   type ProjectAssignmentListResult,
   type AvailableProjectsResult,
+  type ResetPeriodAssignmentsResult,
 } from './handlers/project-assignment';
 
 // WBS Assignment Commands & Queries
@@ -278,6 +280,27 @@ export class EvaluationCriteriaManagementService
       direction,
       updatedBy,
     );
+  }
+
+  /**
+   * 평가기간의 모든 할당 데이터를 리셋한다
+   * 
+   * 다음 데이터를 모두 삭제합니다:
+   * - 동료평가 질문 매핑
+   * - 동료평가
+   * - 하향평가
+   * - 자기평가
+   * - WBS 할당
+   * - 프로젝트 할당
+   * - 평가라인 매핑
+   * - 산출물 매핑
+   */
+  async 평가기간_전체_할당을_리셋한다(
+    periodId: string,
+    resetBy: string,
+  ): Promise<ResetPeriodAssignmentsResult> {
+    const command = new ResetPeriodAssignmentsCommand(periodId, resetBy);
+    return await this.commandBus.execute(command);
   }
 
   // ============================================================================

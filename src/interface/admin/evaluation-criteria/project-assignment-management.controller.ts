@@ -16,6 +16,7 @@ import {
   GetProjectAssignmentDetail,
   GetProjectAssignmentList,
   GetUnassignedEmployees,
+  ResetPeriodAssignments,
 } from './decorators/project-assignment-api.decorators';
 import {
   BulkCreateProjectAssignmentDto,
@@ -188,6 +189,22 @@ export class ProjectAssignmentManagementController {
       sortBy: result.sortBy,
       sortOrder: result.sortOrder,
     };
+  }
+
+  /**
+   * 평가기간 전체 할당 리셋
+   * 주의: 구체적인 경로를 :id 경로보다 먼저 정의해야 함
+   */
+  @ResetPeriodAssignments()
+  async resetPeriodAssignments(
+    @Param('periodId', ParseUUIDPipe) periodId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<any> {
+    const resetBy = user.id;
+    return await this.evaluationCriteriaManagementService.평가기간_전체_할당을_리셋한다(
+      periodId,
+      resetBy,
+    );
   }
 
   /**

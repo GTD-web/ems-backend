@@ -841,3 +841,130 @@ export function ChangeProjectAssignmentOrderByProject() {
     }),
   );
 }
+
+/**
+ * 평가기간 전체 할당 리셋 엔드포인트 데코레이터
+ */
+export function ResetPeriodAssignments() {
+  return applyDecorators(
+    Delete('period/:periodId/reset'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '평가기간 전체 할당 리셋',
+      description: `⚠️ **위험**: 특정 평가기간의 모든 할당 및 평가 데이터를 완전히 삭제합니다. 이 작업은 되돌릴 수 없습니다.
+
+**삭제되는 데이터:**
+- 동료평가 질문 매핑
+- 동료평가
+- 하향평가
+- 자기평가
+- 산출물 매핑
+- WBS 할당
+- 평가라인 매핑
+- 프로젝트 할당
+
+**동작:**
+- 모든 삭제는 하나의 트랜잭션으로 처리되어 원자성 보장
+- 소프트 삭제 방식으로 deletedAt 필드 업데이트
+- 삭제된 데이터는 목록 조회에서 자동 제외
+- 각 단계별 삭제 개수가 응답에 포함
+
+**사용 시나리오:**
+- 평가기간 데이터 초기화
+- 테스트 데이터 정리
+- 평가 설정 재구성
+
+**테스트 케이스:**
+- 기본 리셋: 평가기간의 모든 데이터 성공적으로 삭제
+- 트랜잭션 보장: 중간에 오류 발생 시 전체 롤백
+- 삭제 개수 확인: 각 엔티티별 삭제 개수가 정확히 반환됨
+- 목록 제외: 리셋 후 해당 평가기간의 모든 할당이 목록에서 제외됨
+- 빈 평가기간: 할당이 없는 평가기간 리셋 시 성공 반환 (개수 0)
+- 잘못된 UUID: UUID 형식이 올바르지 않을 때 400 에러
+- 존재하지 않는 평가기간: 유효하지 않은 평가기간 ID로 요청 시 삭제 개수 0 반환
+- 동시 리셋 방지: 동일한 평가기간에 대한 동시 리셋 요청 처리
+- 대용량 데이터: 1000개 이상의 할당이 있는 평가기간 리셋 성능 테스트
+- 캐스케이드 삭제: 연관된 모든 데이터가 올바른 순서로 삭제됨`,
+    }),
+    ApiParam({
+      name: 'periodId',
+      description: '평가기간 ID (UUID 형식)',
+      type: 'string',
+      format: 'uuid',
+      example: '123e4567-e89b-12d3-a456-426614174002',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '평가기간의 모든 할당 데이터가 성공적으로 삭제되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          periodId: {
+            type: 'string',
+            format: 'uuid',
+            description: '평가기간 ID',
+            example: '123e4567-e89b-12d3-a456-426614174002',
+          },
+          deletedCounts: {
+            type: 'object',
+            properties: {
+              peerEvaluationQuestionMappings: {
+                type: 'number',
+                description: '삭제된 동료평가 질문 매핑 수',
+                example: 150,
+              },
+              peerEvaluations: {
+                type: 'number',
+                description: '삭제된 동료평가 수',
+                example: 30,
+              },
+              downwardEvaluations: {
+                type: 'number',
+                description: '삭제된 하향평가 수',
+                example: 50,
+              },
+              selfEvaluations: {
+                type: 'number',
+                description: '삭제된 자기평가 수',
+                example: 50,
+              },
+              wbsAssignments: {
+                type: 'number',
+                description: '삭제된 WBS 할당 수',
+                example: 200,
+              },
+              projectAssignments: {
+                type: 'number',
+                description: '삭제된 프로젝트 할당 수',
+                example: 100,
+              },
+              evaluationLineMappings: {
+                type: 'number',
+                description: '삭제된 평가라인 매핑 수',
+                example: 150,
+              },
+              deliverableMappings: {
+                type: 'number',
+                description: '해제된 산출물 매핑 수',
+                example: 75,
+              },
+            },
+          },
+          message: {
+            type: 'string',
+            description: '성공 메시지',
+            example: '평가기간의 모든 할당 데이터가 성공적으로 삭제되었습니다.',
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 (UUID 형식 오류 등)',
+    }),
+    ApiResponse({
+      status: 500,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
