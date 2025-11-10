@@ -13,15 +13,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationPeriodBusinessService = void 0;
 const common_1 = require("@nestjs/common");
 const evaluation_period_management_service_1 = require("../../context/evaluation-period-management-context/evaluation-period-management.service");
+const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
 let EvaluationPeriodBusinessService = EvaluationPeriodBusinessService_1 = class EvaluationPeriodBusinessService {
     evaluationPeriodManagementService;
+    evaluationCriteriaManagementService;
     logger = new common_1.Logger(EvaluationPeriodBusinessService_1.name);
-    constructor(evaluationPeriodManagementService) {
+    constructor(evaluationPeriodManagementService, evaluationCriteriaManagementService) {
         this.evaluationPeriodManagementService = evaluationPeriodManagementService;
+        this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
     }
     async 평가기간을_생성한다(createData, createdBy) {
-        const result = await this.evaluationPeriodManagementService
-            .평가기간을_대상자와_함께_생성한다(createData, createdBy);
+        const result = await this.evaluationPeriodManagementService.평가기간을_대상자와_함께_생성한다(createData, createdBy);
+        try {
+            await this.evaluationCriteriaManagementService.평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(result.evaluationPeriod.id, createdBy);
+        }
+        catch (error) {
+            this.logger.warn(`전직원 1차 평가라인 자동 구성 실패 - 평가기간: ${result.evaluationPeriod.id}`, error.stack);
+            result.warnings.push(`전직원 1차 평가라인 자동 구성 실패: ${error.message}`);
+        }
         return result;
     }
     async 평가대상자를_대량_등록한다(evaluationPeriodId, employeeIds, createdBy) {
@@ -29,8 +38,7 @@ let EvaluationPeriodBusinessService = EvaluationPeriodBusinessService_1 = class 
         const results = [];
         for (const employeeId of employeeIds) {
             try {
-                const result = await this.evaluationPeriodManagementService
-                    .평가대상자를_자동평가자와_함께_등록한다(evaluationPeriodId, employeeId, createdBy);
+                const result = await this.evaluationPeriodManagementService.평가대상자를_자동평가자와_함께_등록한다(evaluationPeriodId, employeeId, createdBy);
                 results.push(result);
             }
             catch (error) {
@@ -43,8 +51,8 @@ let EvaluationPeriodBusinessService = EvaluationPeriodBusinessService_1 = class 
                 });
             }
         }
-        const successCount = results.filter(r => r.primaryEvaluatorAssigned).length;
-        const warningCount = results.filter(r => r.warning).length;
+        const successCount = results.filter((r) => r.primaryEvaluatorAssigned).length;
+        const warningCount = results.filter((r) => r.warning).length;
         this.logger.log(`평가 대상자 대량 등록 비즈니스 로직 완료 - 평가기간: ${evaluationPeriodId}, ` +
             `총 직원: ${employeeIds.length}명, 성공: ${successCount}명, 경고: ${warningCount}개`);
         return results;
@@ -65,6 +73,7 @@ let EvaluationPeriodBusinessService = EvaluationPeriodBusinessService_1 = class 
 exports.EvaluationPeriodBusinessService = EvaluationPeriodBusinessService;
 exports.EvaluationPeriodBusinessService = EvaluationPeriodBusinessService = EvaluationPeriodBusinessService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [evaluation_period_management_service_1.EvaluationPeriodManagementContextService])
+    __metadata("design:paramtypes", [evaluation_period_management_service_1.EvaluationPeriodManagementContextService,
+        evaluation_criteria_management_service_1.EvaluationCriteriaManagementService])
 ], EvaluationPeriodBusinessService);
 //# sourceMappingURL=evaluation-period-business.service.js.map

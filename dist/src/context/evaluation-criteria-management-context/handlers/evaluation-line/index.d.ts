@@ -1,6 +1,7 @@
 export { ConfigureEmployeeWbsEvaluationLineCommand, ConfigureEmployeeWbsEvaluationLineHandler, type ConfigureEmployeeWbsEvaluationLineResult, } from './commands/configure-employee-wbs-evaluation-line.handler';
 export { ConfigurePrimaryEvaluatorCommand, ConfigurePrimaryEvaluatorHandler, type ConfigurePrimaryEvaluatorResult, } from './commands/configure-primary-evaluator.handler';
 export { ConfigureSecondaryEvaluatorCommand, ConfigureSecondaryEvaluatorHandler, type ConfigureSecondaryEvaluatorResult, } from './commands/configure-secondary-evaluator.handler';
+export { AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesCommand, AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler, type AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesResult, } from './commands/auto-configure-primary-evaluator-by-manager-for-all-employees.handler';
 export { GetEmployeeEvaluationLineMappingsQuery, GetEmployeeEvaluationLineMappingsHandler, } from './queries/get-employee-evaluation-line-mappings.handler';
 export { GetEmployeeEvaluationSettingsQuery, GetEmployeeEvaluationSettingsHandler, type EmployeeEvaluationSettingsResult, } from './queries/get-employee-evaluation-settings.handler';
 export { GetEvaluationLineListQuery, GetEvaluationLineListHandler, } from './queries/get-evaluation-line-list.handler';
@@ -10,12 +11,13 @@ export { GetEvaluatorsByPeriodQuery, GetEvaluatorsByPeriodHandler, type Evaluato
 import { ConfigureEmployeeWbsEvaluationLineHandler } from './commands/configure-employee-wbs-evaluation-line.handler';
 import { ConfigurePrimaryEvaluatorHandler } from './commands/configure-primary-evaluator.handler';
 import { ConfigureSecondaryEvaluatorHandler } from './commands/configure-secondary-evaluator.handler';
+import { AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler } from './commands/auto-configure-primary-evaluator-by-manager-for-all-employees.handler';
 import { GetEmployeeEvaluationLineMappingsHandler } from './queries/get-employee-evaluation-line-mappings.handler';
 import { GetEmployeeEvaluationSettingsHandler } from './queries/get-employee-evaluation-settings.handler';
 import { GetEvaluationLineListHandler } from './queries/get-evaluation-line-list.handler';
 import { GetEvaluatorEmployeesHandler } from './queries/get-evaluator-employees.handler';
 import { GetUpdaterEvaluationLineMappingsHandler } from './queries/get-updater-evaluation-line-mappings.handler';
 import { GetEvaluatorsByPeriodHandler } from './queries/get-evaluators-by-period.handler';
-export declare const EVALUATION_LINE_COMMAND_HANDLERS: (typeof ConfigurePrimaryEvaluatorHandler | typeof ConfigureEmployeeWbsEvaluationLineHandler | typeof ConfigureSecondaryEvaluatorHandler)[];
+export declare const EVALUATION_LINE_COMMAND_HANDLERS: (typeof ConfigurePrimaryEvaluatorHandler | typeof ConfigureEmployeeWbsEvaluationLineHandler | typeof ConfigureSecondaryEvaluatorHandler | typeof AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler)[];
 export declare const EVALUATION_LINE_QUERY_HANDLERS: (typeof GetEmployeeEvaluationLineMappingsHandler | typeof GetEmployeeEvaluationSettingsHandler | typeof GetEvaluationLineListHandler | typeof GetEvaluatorEmployeesHandler | typeof GetUpdaterEvaluationLineMappingsHandler | typeof GetEvaluatorsByPeriodHandler)[];
-export declare const EVALUATION_LINE_HANDLERS: (typeof ConfigurePrimaryEvaluatorHandler | typeof ConfigureEmployeeWbsEvaluationLineHandler | typeof ConfigureSecondaryEvaluatorHandler | typeof GetEmployeeEvaluationLineMappingsHandler | typeof GetEmployeeEvaluationSettingsHandler | typeof GetEvaluationLineListHandler | typeof GetEvaluatorEmployeesHandler | typeof GetUpdaterEvaluationLineMappingsHandler | typeof GetEvaluatorsByPeriodHandler)[];
+export declare const EVALUATION_LINE_HANDLERS: (typeof ConfigurePrimaryEvaluatorHandler | typeof ConfigureEmployeeWbsEvaluationLineHandler | typeof ConfigureSecondaryEvaluatorHandler | typeof AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler | typeof GetEmployeeEvaluationLineMappingsHandler | typeof GetEmployeeEvaluationSettingsHandler | typeof GetEvaluationLineListHandler | typeof GetEvaluatorEmployeesHandler | typeof GetUpdaterEvaluationLineMappingsHandler | typeof GetEvaluatorsByPeriodHandler)[];

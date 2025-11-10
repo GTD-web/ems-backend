@@ -14,13 +14,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var EvaluationCriteriaManagementService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationCriteriaManagementService = void 0;
+const evaluation_line_mapping_entity_1 = require("../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity");
+const evaluation_line_entity_1 = require("../../domain/core/evaluation-line/evaluation-line.entity");
+const evaluation_line_types_1 = require("../../domain/core/evaluation-line/evaluation-line.types");
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const evaluation_line_mapping_entity_1 = require("../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity");
-const evaluation_line_entity_1 = require("../../domain/core/evaluation-line/evaluation-line.entity");
-const evaluation_line_types_1 = require("../../domain/core/evaluation-line/evaluation-line.types");
 const wbs_assignment_validation_service_1 = require("./services/wbs-assignment-validation.service");
 const project_assignment_1 = require("./handlers/project-assignment");
 const wbs_assignment_1 = require("./handlers/wbs-assignment");
@@ -176,6 +176,10 @@ let EvaluationCriteriaManagementService = EvaluationCriteriaManagementService_1 
     }
     async 일차_평가자를_구성한다(employeeId, periodId, evaluatorId, createdBy) {
         const command = new evaluation_line_1.ConfigurePrimaryEvaluatorCommand(employeeId, periodId, evaluatorId, createdBy);
+        return await this.commandBus.execute(command);
+    }
+    async 평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(periodId, createdBy) {
+        const command = new evaluation_line_1.AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesCommand(periodId, createdBy);
         return await this.commandBus.execute(command);
     }
     async 이차_평가자를_구성한다(employeeId, wbsItemId, periodId, evaluatorId, createdBy) {

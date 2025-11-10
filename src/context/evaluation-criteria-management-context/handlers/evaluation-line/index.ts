@@ -17,6 +17,12 @@ export {
   type ConfigureSecondaryEvaluatorResult,
 } from './commands/configure-secondary-evaluator.handler';
 
+export {
+  AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesCommand,
+  AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler,
+  type AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesResult,
+} from './commands/auto-configure-primary-evaluator-by-manager-for-all-employees.handler';
+
 // Queries
 export {
   GetEmployeeEvaluationLineMappingsQuery,
@@ -59,6 +65,7 @@ export {
 import { ConfigureEmployeeWbsEvaluationLineHandler } from './commands/configure-employee-wbs-evaluation-line.handler';
 import { ConfigurePrimaryEvaluatorHandler } from './commands/configure-primary-evaluator.handler';
 import { ConfigureSecondaryEvaluatorHandler } from './commands/configure-secondary-evaluator.handler';
+import { AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler } from './commands/auto-configure-primary-evaluator-by-manager-for-all-employees.handler';
 import { GetEmployeeEvaluationLineMappingsHandler } from './queries/get-employee-evaluation-line-mappings.handler';
 import { GetEmployeeEvaluationSettingsHandler } from './queries/get-employee-evaluation-settings.handler';
 import { GetEvaluationLineListHandler } from './queries/get-evaluation-line-list.handler';
@@ -70,6 +77,7 @@ export const EVALUATION_LINE_COMMAND_HANDLERS = [
   ConfigureEmployeeWbsEvaluationLineHandler,
   ConfigurePrimaryEvaluatorHandler,
   ConfigureSecondaryEvaluatorHandler,
+  AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler,
 ];
 
 export const EVALUATION_LINE_QUERY_HANDLERS = [
