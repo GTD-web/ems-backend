@@ -45,12 +45,14 @@ let VerifyAndSyncUserHandler = VerifyAndSyncUserHandler_1 = class VerifyAndSyncU
                 roles: employee['roles'] || [],
                 status: employee.status,
             };
+            this.logger.log('토큰 검증 성공:', userInfo);
             return {
                 user: userInfo,
                 isSynced: false,
             };
         }
         catch (error) {
+            this.logger.error('토큰 검증 실패:', error);
             if (error instanceof common_1.UnauthorizedException) {
                 throw error;
             }
