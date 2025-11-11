@@ -1,0 +1,9 @@
+import { AuthService } from '@context/auth-context/auth.service';
+import type { AuthenticatedUser } from '@interface/decorators/current-user.decorator';
+import { LoginDto, LoginResponseDto, UserInfoDto } from './dto';
+export declare class AuthController {
+    private readonly authService;
+    constructor(authService: AuthService);
+    login(loginDto: LoginDto): Promise<LoginResponseDto>;
+    getMe(user: AuthenticatedUser): Promise<UserInfoDto>;
+}

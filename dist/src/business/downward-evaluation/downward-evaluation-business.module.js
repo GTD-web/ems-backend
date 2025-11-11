@@ -1,0 +1,29 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DownwardEvaluationBusinessModule = void 0;
+const common_1 = require("@nestjs/common");
+const downward_evaluation_business_service_1 = require("./downward-evaluation-business.service");
+const performance_evaluation_context_module_1 = require("../../context/performance-evaluation-context/performance-evaluation-context.module");
+const evaluation_criteria_management_context_module_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module");
+const evaluation_period_management_context_module_1 = require("../../context/evaluation-period-management-context/evaluation-period-management-context.module");
+let DownwardEvaluationBusinessModule = class DownwardEvaluationBusinessModule {
+};
+exports.DownwardEvaluationBusinessModule = DownwardEvaluationBusinessModule;
+exports.DownwardEvaluationBusinessModule = DownwardEvaluationBusinessModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            performance_evaluation_context_module_1.PerformanceEvaluationContextModule,
+            evaluation_criteria_management_context_module_1.EvaluationCriteriaManagementContextModule,
+            evaluation_period_management_context_module_1.EvaluationPeriodManagementContextModule,
+        ],
+        providers: [downward_evaluation_business_service_1.DownwardEvaluationBusinessService],
+        exports: [downward_evaluation_business_service_1.DownwardEvaluationBusinessService],
+    })
+], DownwardEvaluationBusinessModule);
+//# sourceMappingURL=downward-evaluation-business.module.js.map

@@ -1,0 +1,16 @@
+import { Repository } from 'typeorm';
+import { EvaluationPeriod } from './evaluation-period.entity';
+import { EvaluationPeriodService } from './evaluation-period.service';
+export declare class EvaluationPeriodAutoPhaseService {
+    private readonly evaluationPeriodRepository;
+    private readonly evaluationPeriodService;
+    private readonly logger;
+    constructor(evaluationPeriodRepository: Repository<EvaluationPeriod>, evaluationPeriodService: EvaluationPeriodService);
+    autoPhaseTransition(): Promise<number>;
+    private checkAndTransitionPhase;
+    private getNextPhase;
+    private shouldTransitionToNextPhase;
+    private getPhaseDeadline;
+    manualPhaseTransition(periodId: string): Promise<EvaluationPeriod | null>;
+    checkAllActivePeriods(): Promise<number>;
+}

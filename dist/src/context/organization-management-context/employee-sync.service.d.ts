@@ -1,0 +1,32 @@
+import { OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Employee } from '../../domain/common/employee/employee.entity';
+import { EmployeeService } from '../../domain/common/employee/employee.service';
+import { EmployeeSyncResult } from '../../domain/common/employee/employee.types';
+import { SSOService } from '@domain/common/sso/sso.service';
+export declare class EmployeeSyncService implements OnModuleInit {
+    private readonly employeeService;
+    private readonly configService;
+    private readonly ssoService;
+    private readonly logger;
+    private readonly syncEnabled;
+    private readonly systemUserId;
+    constructor(employeeService: EmployeeService, configService: ConfigService, ssoService: SSOService);
+    onModuleInit(): Promise<void>;
+    fetchExternalEmployees(useHierarchyAPI?: boolean): Promise<any[]>;
+    private mapSSOEmployeeToDto;
+    syncEmployees(forceSync?: boolean, useHierarchyAPI?: boolean): Promise<EmployeeSyncResult>;
+    scheduledSync(): Promise<void>;
+    triggerManualSync(): Promise<EmployeeSyncResult>;
+    getEmployees(forceRefresh?: boolean): Promise<Employee[]>;
+    getEmployeeById(id: string, forceRefresh?: boolean): Promise<Employee | null>;
+    getEmployeeByExternalId(externalId: string, forceRefresh?: boolean): Promise<Employee | null>;
+    getEmployeeByEmployeeNumber(employeeNumber: string, forceRefresh?: boolean): Promise<Employee | null>;
+    getEmployeeByEmail(email: string, forceRefresh?: boolean): Promise<Employee | null>;
+    private 직원을_처리한다;
+    private 업데이트가_필요한가;
+    private 직원들을_저장한다;
+    private 개별_저장으로_재시도한다;
+    private 직원을_개별_저장한다;
+    private 중복_키_에러_처리한다;
+}
