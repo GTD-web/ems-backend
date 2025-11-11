@@ -64,7 +64,13 @@ export class UpsertFinalEvaluationHandler
 
     return await this.transactionManager.executeTransaction(async (manager) => {
       // 기존 최종평가 확인 (employeeId + periodId 조합으로 유니크)
-      const existingEvaluation = await this.finalEvaluationRepository.findOne({
+      // 트랜잭션 내에서 조회하기 위해 manager를 사용한 repository를 사용
+      const repository = this.transactionManager.getRepository(
+        FinalEvaluation,
+        this.finalEvaluationRepository,
+        manager,
+      );
+      const existingEvaluation = await repository.findOne({
         where: {
           employeeId,
           periodId,

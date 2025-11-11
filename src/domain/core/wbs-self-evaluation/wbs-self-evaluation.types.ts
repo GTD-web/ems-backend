@@ -124,8 +124,12 @@ export interface UpdateWbsSelfEvaluationData {
   assignedBy?: string;
   /** 피평가자가 1차 평가자에게 제출한 여부 */
   submittedToEvaluator?: boolean;
+  /** submittedToEvaluator를 false로 설정할 때 submittedToEvaluatorAt도 초기화할지 여부 (재작성 요청 생성 시 사용) */
+  resetSubmittedToEvaluatorAt?: boolean;
   /** 1차 평가자가 관리자에게 제출한 여부 */
   submittedToManager?: boolean;
+  /** submittedToManager를 false로 설정할 때 submittedToManagerAt도 초기화할지 여부 (재작성 요청 생성 시 사용) */
+  resetSubmittedToManagerAt?: boolean;
   /** 성과 입력 (실제 달성한 성과 및 결과) */
   performanceResult?: string;
   /** 자가평가 내용 */

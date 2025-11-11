@@ -2,6 +2,7 @@ import { Controller, Query, Param, Body, ParseUUIDPipe } from '@nestjs/common';
 import { ParseUUID } from '@interface/decorators';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CompleteRevisionRequestByEvaluatorQueryDto } from './dto/complete-revision-request-by-evaluator-query.dto';
+import { RevisionRequestBusinessService } from '@business/revision-request/revision-request-business.service';
 import { RevisionRequestContextService } from '@context/revision-request-context';
 import {
   GetRevisionRequests,
@@ -19,6 +20,7 @@ import { GetRevisionRequestsQueryDto } from './dto/get-revision-requests-query.d
 import { CompleteRevisionRequestDto } from './dto/complete-revision-request.dto';
 import { CompleteRevisionRequestByEvaluatorDto } from './dto/complete-revision-request-by-evaluator.dto';
 import { CurrentUser } from '@interface/decorators/current-user.decorator';
+import { StepApprovalStatusEnum } from '@interface/admin/step-approval/dto/update-step-approval.dto';
 
 /**
  * 재작성 요청 컨트롤러
@@ -29,6 +31,7 @@ import { CurrentUser } from '@interface/decorators/current-user.decorator';
 @Controller('admin/revision-requests')
 export class RevisionRequestController {
   constructor(
+    private readonly revisionRequestBusinessService: RevisionRequestBusinessService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
   ) {}
 
@@ -51,9 +54,7 @@ export class RevisionRequestController {
 
     return requests.map((req) => ({
       requestId: req.request.id,
-      evaluationPeriodId: req.request.evaluationPeriodId,
       evaluationPeriod: req.evaluationPeriod,
-      employeeId: req.request.employeeId,
       employee: req.employee,
       step: req.request.step,
       comment: req.request.comment,
@@ -66,8 +67,7 @@ export class RevisionRequestController {
       isCompleted: req.recipientInfo.isCompleted,
       completedAt: req.recipientInfo.completedAt,
       responseComment: req.recipientInfo.responseComment,
-      createdAt: req.recipientInfo.createdAt,
-      updatedAt: req.recipientInfo.updatedAt,
+      approvalStatus: req.approvalStatus as unknown as StepApprovalStatusEnum,
     }));
   }
 
@@ -84,6 +84,7 @@ export class RevisionRequestController {
         recipientId,
         {
           evaluationPeriodId: query.evaluationPeriodId,
+          employeeId: query.employeeId,
           isRead: query.isRead,
           isCompleted: query.isCompleted,
           step: query.step as any,
@@ -92,9 +93,7 @@ export class RevisionRequestController {
 
     return requests.map((req) => ({
       requestId: req.request.id,
-      evaluationPeriodId: req.request.evaluationPeriodId,
       evaluationPeriod: req.evaluationPeriod,
-      employeeId: req.request.employeeId,
       employee: req.employee,
       step: req.request.step,
       comment: req.request.comment,
@@ -107,8 +106,7 @@ export class RevisionRequestController {
       isCompleted: req.recipientInfo.isCompleted,
       completedAt: req.recipientInfo.completedAt,
       responseComment: req.recipientInfo.responseComment,
-      createdAt: req.recipientInfo.createdAt,
-      updatedAt: req.recipientInfo.updatedAt,
+      approvalStatus: req.approvalStatus as unknown as StepApprovalStatusEnum,
     }));
   }
 
@@ -150,7 +148,7 @@ export class RevisionRequestController {
     @Body() dto: CompleteRevisionRequestDto,
     @CurrentUser('id') recipientId: string,
   ): Promise<void> {
-    await this.revisionRequestContextService.재작성완료_응답을_제출한다(
+    await this.revisionRequestBusinessService.재작성완료_응답을_제출한다(
       requestId,
       recipientId,
       dto.responseComment,
@@ -168,7 +166,7 @@ export class RevisionRequestController {
     @Query() queryDto: CompleteRevisionRequestByEvaluatorQueryDto,
     @Body() dto: CompleteRevisionRequestByEvaluatorDto,
   ): Promise<void> {
-    await this.revisionRequestContextService.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+    await this.revisionRequestBusinessService.평가기간_직원_평가자로_재작성완료_응답을_제출한다(
       evaluationPeriodId,
       employeeId,
       evaluatorId,

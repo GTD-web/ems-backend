@@ -1,6 +1,7 @@
 import { Repository, IsNull } from 'typeorm';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
+import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 
 /**
@@ -56,7 +57,7 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
     .andWhere('request.step = :step', { step: 'secondary' })
     .andWhere('recipient.recipientId = :evaluatorId', { evaluatorId })
     .andWhere('recipient.recipientType = :recipientType', {
-      recipientType: 'secondary_evaluator',
+      recipientType: RecipientType.SECONDARY_EVALUATOR,
     })
     .andWhere('recipient.deletedAt IS NULL')
     .andWhere('request.deletedAt IS NULL')

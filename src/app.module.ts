@@ -1,5 +1,6 @@
 import { DatabaseModule } from '@libs/database/database.module';
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { CommonDomainModule } from './domain/common/common-domain.module';
 import { CoreDomainModule } from './domain/core/core-domain.module';
 import { SubDomainModule } from './domain/sub/sub-domain.module';
@@ -9,6 +10,10 @@ import { InterfaceModule } from './interface/interface.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env.local', '.env'],
+    }),
     DatabaseModule,
     CommonDomainModule,
     CoreDomainModule,

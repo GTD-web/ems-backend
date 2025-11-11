@@ -131,19 +131,8 @@ export class SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler
             continue;
           }
 
-          // 피평가자가 1차 평가자에게 제출했는지 확인
-          if (!evaluation.피평가자가_1차평가자에게_제출했는가()) {
-            failedEvaluations.push({
-              evaluationId: evaluation.id,
-              wbsItemId: evaluation.wbsItemId,
-              reason: '피평가자가 1차 평가자에게 먼저 제출해야 합니다.',
-              selfEvaluationContent: evaluation.selfEvaluationContent,
-              selfEvaluationScore: evaluation.selfEvaluationScore,
-            });
-            continue;
-          }
-
           // 평가 내용과 점수 검증
+          // (관리자에게 제출할 때는 평가자에게도 자동으로 제출한 것으로 처리됨)
           if (
             !evaluation.selfEvaluationContent ||
             !evaluation.selfEvaluationScore

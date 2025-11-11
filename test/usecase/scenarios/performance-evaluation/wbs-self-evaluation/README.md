@@ -40,6 +40,22 @@
         - selfEvaluationContent, selfEvaluationScore, performanceResult 입력
         - 저장된 자기평가 ID 반환 확인
         - HTTP 200 응답 확인
+    - **상세 조회 검증**
+        - GET /admin/performance-evaluation/wbs-self-evaluations/{id} (WBS 자기평가 상세정보 조회)
+            - 저장된 자기평가 ID로 상세정보 조회
+            - HTTP 200 응답 확인
+            - **저장된 내용 검증**
+                - id가 저장된 ID와 일치하는지 확인
+                - selfEvaluationContent가 저장한 내용과 일치하는지 확인
+                - selfEvaluationScore가 저장한 점수와 일치하는지 확인
+                - performanceResult가 저장한 성과 결과와 일치하는지 확인
+                - employeeId, wbsItemId, periodId가 저장 시 사용한 값과 일치하는지 확인
+                - submittedToEvaluator가 false인지 확인 (미제출 상태)
+                - submittedToManager가 false인지 확인 (미제출 상태)
+            - **관련 엔티티 정보 검증**
+                - evaluationPeriod 객체가 포함되어 있으며 id, name, startDate, endDate, status 등을 포함하는지 확인
+                - employee 객체가 포함되어 있으며 id, employeeNumber, name, email 등을 포함하는지 확인
+                - wbsItem 객체가 포함되어 있으며 id, wbsCode, title, status, projectId 등을 포함하는지 확인
     - **대시보드 API 저장 후 검증**
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (개별 직원 평가기간 현황 조회)
             - employeeId 확인
@@ -61,6 +77,28 @@
                 - summary.completedSelfEvaluations가 변경되지 않는지 확인 (제출 전)
                 - summary.selfEvaluation.totalScore가 null인지 확인 (모든 자기평가 제출 전)
                 - summary.selfEvaluation.grade가 null인지 확인 (모든 자기평가 제출 전)
+        - GET /admin/dashboard/{evaluationPeriodId}/my-assigned-data (나의 할당 데이터 조회)
+            - 현재 로그인한 사용자의 할당 데이터 조회
+            - HTTP 200 응답 확인
+            - **저장된 자기평가가 제대로 표시되는지 검증**
+                - evaluationPeriod 객체가 포함되어 있는지 확인
+                - employee 객체가 포함되어 있는지 확인
+                - projects 배열이 포함되어 있으며 길이가 0보다 큰지 확인
+                - **해당 WBS의 selfEvaluation 객체 검증**
+                    - projects[].wbsList[].selfEvaluation.selfEvaluationId가 저장된 ID와 일치하는지 확인
+                    - projects[].wbsList[].selfEvaluation.evaluationContent가 저장한 내용과 일치하는지 확인
+                    - projects[].wbsList[].selfEvaluation.score가 저장한 점수와 일치하는지 확인
+                    - projects[].wbsList[].selfEvaluation.submittedToManager가 false인지 확인 (미제출 상태)
+                    - projects[].wbsList[].selfEvaluation.submittedAt이 null인지 확인
+            - **summary 검증**
+                - summary.completedSelfEvaluations가 0인지 확인 (제출 전)
+                - summary.selfEvaluation.totalScore가 null인지 확인 (모든 자기평가 제출 전)
+                - summary.selfEvaluation.grade가 null인지 확인 (모든 자기평가 제출 전)
+            - **하향평가 정보 제거 검증 (my-assigned-data의 특징)**
+                - WBS별 primaryDownwardEvaluation이 null인지 확인
+                - WBS별 secondaryDownwardEvaluation이 null인지 확인
+                - summary의 primaryDownwardEvaluation.totalScore, grade가 null인지 확인
+                - summary의 secondaryDownwardEvaluation.totalScore, grade가 null인지 확인
         - GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 전체 직원 현황 조회)
             - 응답 배열에서 해당 직원 정보 조회
             - **selfEvaluation 객체 검증**

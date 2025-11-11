@@ -10,6 +10,8 @@ import { EvaluationQuestionManagementContextModule } from './evaluation-question
 import { SeedDataContextModule } from './seed-data-context/seed-data-context.module';
 import { StepApprovalContextModule } from './step-approval-context/step-approval-context.module';
 import { RevisionRequestContextModule } from './revision-request-context/revision-request-context.module';
+import { AuditLogContextModule } from './audit-log-context/audit-log-context.module';
+import { EvaluationActivityLogContextModule } from './evaluation-activity-log-context/evaluation-activity-log-context.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { RevisionRequestContextModule } from './revision-request-context/revisio
     SeedDataContextModule,
     StepApprovalContextModule,
     RevisionRequestContextModule,
+    AuditLogContextModule,
+    EvaluationActivityLogContextModule,
   ],
   providers: [],
   exports: [
@@ -38,6 +42,8 @@ import { RevisionRequestContextModule } from './revision-request-context/revisio
     SeedDataContextModule,
     StepApprovalContextModule,
     RevisionRequestContextModule,
+    AuditLogContextModule,
+    EvaluationActivityLogContextModule,
   ],
 })
 export class DomainContextModule {}

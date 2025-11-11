@@ -152,10 +152,13 @@ export class DashboardController {
       primaryDownwardEvaluation: {
         totalScore: null,
         grade: null,
+        isSubmitted: false,
       },
       secondaryDownwardEvaluation: {
         totalScore: null,
         grade: null,
+        isSubmitted: false,
+        evaluators: [],
       },
     };
 
@@ -483,9 +486,10 @@ export class DashboardController {
         hasPrimaryEvaluator: statusData.evaluationLine.hasPrimaryEvaluator,
         hasSecondaryEvaluator: statusData.evaluationLine.hasSecondaryEvaluator,
         primaryEvaluator: statusData.downwardEvaluation.primary.evaluator,
-        secondaryEvaluators: statusData.downwardEvaluation.secondary.evaluators.map(
-          (e) => e.evaluator,
-        ),
+        secondaryEvaluators:
+          statusData.downwardEvaluation.secondary.evaluators.map(
+            (e) => e.evaluator,
+          ),
       },
       wbsCriteria: {
         status: statusData.wbsCriteria.status,
@@ -523,9 +527,7 @@ export class DashboardController {
         completedCount:
           statusData.downwardEvaluation.secondary.evaluators[0]
             ?.completedEvaluationCount || 0,
-        isSubmitted:
-          statusData.downwardEvaluation.secondary.evaluators[0]?.isSubmitted ||
-          false,
+        isSubmitted: statusData.downwardEvaluation.secondary.isSubmitted,
         totalScore: statusData.downwardEvaluation.secondary.totalScore,
         grade: statusData.downwardEvaluation.secondary.grade,
       },

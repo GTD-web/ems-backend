@@ -1,0 +1,212 @@
+# 단계 승인 관리 시나리오
+
+## 식별된 검증해야하는 시나리오
+
+각 단계별 승인 상태 변경 및 승인 시 제출 상태 자동 변경을 검증합니다.
+
+사용되는 컨트롤러
+- step-approval
+- performance-evaluation (제출 상태 검증용)
+- dashboard (승인 상태 검증용)
+
+- **단계 승인 기본 관리** 
+    - GET /admin/step-approvals/enums (단계 승인 Enum 목록 조회)
+        - steps 배열 확인 (criteria, self, primary, secondary)
+        - statuses 배열 확인 (pending, approved, revision_requested, revision_completed)
+    - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 승인 상태 변경)
+        - status: pending, approved, revision_requested 중 하나
+        - revisionComment: revision_requested 상태일 때 필수
+        - **승인 상태 변경 검증**
+            - pending → approved: 평가기준 설정 상태가 approved로 변경됨
+            - approved → revision_requested: 평가기준 설정 상태가 revision_requested로 변경되고 재작성 요청 생성됨
+            - revision_requested → approved: 평가기준 설정 상태가 approved로 변경됨
+        - **재작성 요청 생성 검증**
+            - revision_requested 상태로 변경 시 재작성 요청이 자동 생성됨
+            - 재작성 요청은 피평가자 + 1차평가자에게 전송됨
+    - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인 상태 변경)
+        - status: pending, approved, revision_requested 중 하나
+        - revisionComment: revision_requested 상태일 때 필수
+        - **승인 상태 변경 검증**
+            - pending → approved: 자기평가 상태가 approved로 변경됨
+            - approved → revision_requested: 자기평가 상태가 revision_requested로 변경되고 재작성 요청 생성됨
+            - revision_requested → approved: 자기평가 상태가 approved로 변경됨
+        - **재작성 요청 생성 시 제출 상태 초기화 검증**
+            - revision_requested 상태로 변경 시 자기평가 제출 상태가 초기화됨
+            - submittedToManager, submittedToManagerAt이 초기화됨
+            - 재작성 요청은 피평가자 + 1차평가자에게 전송됨
+        - **승인 시 제출 상태 자동 변경 검증**
+            - approved 상태로 변경 시 제출 상태도 자동으로 변경됨
+            - submittedToEvaluator가 true로 설정됨 (피평가자 → 1차 평가자 제출)
+            - submittedToManager가 true로 설정됨 (1차 평가자 → 관리자 제출)
+            - GET /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId} (자기평가 목록 조회)
+                - submittedToEvaluator 확인
+                - submittedToManager 확인
+                - submittedToEvaluatorAt 확인
+                - submittedToManagerAt 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - selfEvaluation.isSubmittedToEvaluator 확인 (자기평가 1차 평가자 제출 여부)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                - projects[].wbsList[].selfEvaluation.submittedToEvaluator 확인 (WBS별 자기평가 1차 평가자 제출 여부)
+                - projects[].wbsList[].selfEvaluation.submittedToManager 확인 (WBS별 자기평가 관리자 제출 여부)
+                - summary.selfEvaluation.isSubmittedToEvaluator 확인 (전체 자기평가 1차 평가자 제출 여부)
+                - summary.selfEvaluation.isSubmittedToManager 확인 (전체 자기평가 관리자 제출 여부)
+    - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/primary (1차 하향평가 단계 승인 상태 변경)
+        - status: pending, approved, revision_requested 중 하나
+        - revisionComment: revision_requested 상태일 때 필수
+        - **승인 상태 변경 검증**
+            - pending → approved: 1차 하향평가 상태가 approved로 변경됨
+            - approved → revision_requested: 1차 하향평가 상태가 revision_requested로 변경되고 재작성 요청 생성됨
+            - revision_requested → approved: 1차 하향평가 상태가 approved로 변경됨
+        - **재작성 요청 생성 시 제출 상태 초기화 검증**
+            - revision_requested 상태로 변경 시 1차 하향평가 제출 상태가 초기화됨
+            - isCompleted, completedAt이 초기화됨
+            - 재작성 요청은 1차평가자에게 전송됨
+        - **승인 시 제출 상태 자동 변경 검증**
+            - approved 상태로 변경 시 제출 상태도 자동으로 변경됨
+            - 해당 피평가자의 모든 1차 하향평가의 isCompleted가 true로 설정됨
+            - GET /admin/performance-evaluation/downward-evaluations/evaluator/{evaluatorId} (하향평가 목록 조회)
+                - isCompleted 확인
+                - completedAt 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - downwardEvaluation.primary.isSubmitted 확인 (1차 하향평가 제출 여부)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                - projects[].wbsList[].primaryDownwardEvaluation.isCompleted 확인 (WBS별 1차 하향평가 완료 여부)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/complete-status (직원 평가 현황 및 할당 데이터 통합 조회)
+                - primaryDownwardEvaluation.isSubmitted 확인 (1차 하향평가 제출 여부)
+    - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/secondary/{evaluatorId} (2차 하향평가 단계 승인 상태 변경)
+        - status: pending, approved, revision_requested 중 하나
+        - revisionComment: revision_requested 상태일 때 필수
+        - evaluatorId: 2차 평가자 ID (URL 파라미터)
+        - **승인 상태 변경 검증**
+            - pending → approved: 2차 하향평가 상태가 approved로 변경됨
+            - approved → revision_requested: 2차 하향평가 상태가 revision_requested로 변경되고 재작성 요청 생성됨
+            - revision_requested → approved: 2차 하향평가 상태가 approved로 변경됨
+        - **재작성 요청 생성 시 제출 상태 초기화 검증**
+            - revision_requested 상태로 변경 시 해당 평가자의 2차 하향평가 제출 상태가 초기화됨
+            - isCompleted, completedAt이 초기화됨
+            - 재작성 요청은 지정된 2차평가자에게만 전송됨 (평가자별 부분 처리)
+        - **승인 시 제출 상태 자동 변경 검증**
+            - approved 상태로 변경 시 제출 상태도 자동으로 변경됨
+            - 해당 평가자의 모든 2차 하향평가의 isCompleted가 true로 설정됨
+            - GET /admin/performance-evaluation/downward-evaluations/evaluator/{evaluatorId} (하향평가 목록 조회)
+                - isCompleted 확인
+                - completedAt 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - downwardEvaluation.secondary.evaluators[].isSubmitted 확인 (2차 하향평가 제출 여부, 평가자별)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                - projects[].wbsList[].secondaryDownwardEvaluation.isCompleted 확인 (WBS별 2차 하향평가 완료 여부)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/complete-status (직원 평가 현황 및 할당 데이터 통합 조회)
+                - secondaryDownwardEvaluation.isSubmitted 확인 (2차 하향평가 제출 여부)
+
+- **승인 시 제출 상태 자동 변경 검증** 
+    - **초기 구성 데이터 생성 (beforeEach에서 수행)**
+        - POST /admin/seed-data (시드 데이터 생성)
+            - 직원, 프로젝트, WBS 생성
+        - POST /admin/evaluation-periods (평가기간 생성)
+        - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+        - POST /admin/evaluation-periods/{id}/targets/bulk (평가 대상자 대량 등록)
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+        - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+        - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 매핑 구성)
+            - 직원의 managerId가 없으면 자동 구성되지 않으므로 수동 구성 필요
+    - **자기평가 승인 시 제출 상태 자동 변경**
+        - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId} (자기평가 저장)
+            - 제출하지 않은 상태로 저장
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
+            - status: approved로 변경
+            - **제출 상태 자동 변경 검증**
+                - GET /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId} (자기평가 목록 조회)
+                    - submittedToEvaluator가 true로 변경되었는지 확인
+                    - submittedToManager가 true로 변경되었는지 확인
+                    - submittedToEvaluatorAt이 설정되었는지 확인
+                    - submittedToManagerAt이 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - selfEvaluation.isSubmittedToEvaluator가 true로 변경되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - projects[].wbsList[].selfEvaluation.submittedToEvaluator가 true로 변경되었는지 확인
+                    - projects[].wbsList[].selfEvaluation.submittedToManager가 true로 변경되었는지 확인
+                    - summary.selfEvaluation.isSubmittedToEvaluator가 true로 변경되었는지 확인
+                    - summary.selfEvaluation.isSubmittedToManager가 true로 변경되었는지 확인
+        - **이미 제출된 상태에서 승인 검증**
+            - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/submit-to-evaluator (피평가자 → 1차 평가자 제출)
+            - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/project/{projectId}/submit (1차 평가자 → 관리자 제출)
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
+                - status: approved로 변경
+                - 이미 제출된 상태에서 승인해도 에러 없이 처리됨 (idempotent)
+                - 제출 상태는 이미 true이므로 변경되지 않음
+    - **1차 하향평가 승인 시 제출 상태 자동 변경**
+        - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId} (자기평가 저장 - 하향평가를 위한 선행 조건)
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/primary (1차 하향평가 저장)
+            - 제출하지 않은 상태로 저장
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/primary (1차 하향평가 단계 승인)
+            - status: approved로 변경
+            - **제출 상태 자동 변경 검증**
+                - GET /admin/performance-evaluation/downward-evaluations/evaluator/{evaluatorId} (하향평가 목록 조회)
+                    - evaluationType: 'primary' 필터 적용
+                    - 해당 피평가자의 모든 1차 하향평가의 isCompleted가 true로 변경되었는지 확인
+                    - completedAt이 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - downwardEvaluation.primary.isSubmitted가 true로 변경되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - projects[].wbsList[].primaryDownwardEvaluation.isCompleted가 true로 변경되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/complete-status (직원 평가 현황 및 할당 데이터 통합 조회)
+                    - primaryDownwardEvaluation.isSubmitted가 true로 변경되었는지 확인
+    - **2차 하향평가 승인 시 제출 상태 자동 변경**
+        - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId} (자기평가 저장 - 하향평가를 위한 선행 조건)
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/secondary (2차 하향평가 저장)
+            - 제출하지 않은 상태로 저장
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/secondary/{evaluatorId} (2차 하향평가 단계 승인)
+            - status: approved로 변경
+            - **제출 상태 자동 변경 검증**
+                - GET /admin/performance-evaluation/downward-evaluations/evaluator/{evaluatorId} (하향평가 목록 조회)
+                    - evaluationType: 'secondary' 필터 적용
+                    - 해당 평가자의 모든 2차 하향평가의 isCompleted가 true로 변경되었는지 확인
+                    - completedAt이 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - downwardEvaluation.secondary.evaluators[].isSubmitted가 true로 변경되었는지 확인 (해당 평가자 기준)
+
+- **재작성 요청 생성 시 제출 상태 초기화 검증** 
+    - **자기평가 재작성 요청 생성 시 제출 상태 초기화**
+        - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId} (자기평가 저장)
+        - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/submit-to-evaluator (피평가자 → 1차 평가자 제출)
+        - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/project/{projectId}/submit (1차 평가자 → 관리자 제출)
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 재작성 요청)
+            - status: revision_requested로 변경
+            - revisionComment: 재작성 요청 코멘트 필수
+            - **제출 상태 초기화 검증**
+                - GET /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId} (자기평가 목록 조회)
+                    - submittedToManager가 false로 변경되었는지 확인
+                    - submittedToManagerAt이 초기화되었는지 확인 (null)
+                    - submittedToEvaluator는 유지됨 (1차 평가자 제출 상태는 유지)
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - projects[].wbsList[].selfEvaluation.submittedToManager가 false로 변경되었는지 확인
+                    - summary.selfEvaluation.isSubmittedToManager가 false로 변경되었는지 확인
+                    - projects[].wbsList[].selfEvaluation.submittedToEvaluator는 유지됨 (1차 평가자 제출 상태는 유지)
+                    - summary.selfEvaluation.isSubmittedToEvaluator는 유지됨 (1차 평가자 제출 상태는 유지)
+
+- **승인 상태 전환 검증** 
+    - **자기평가 승인 상태 전환: pending → approved → revision_requested**
+        - **1단계: 초기 상태 (pending)** 
+            - 기본적으로 단계 승인 상태는 pending으로 시작
+        - **2단계: 승인 상태로 변경 (pending → approved)** 
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
+                - status: approved로 변경
+                - 자기평가 상태가 approved로 변경됨
+                - 제출 상태도 자동으로 변경됨 (submittedToEvaluator, submittedToManager 모두 true)
+        - **3단계: 재작성 요청 상태로 변경 (approved → revision_requested)** 
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
+                - status: revision_requested로 변경
+                - revisionComment: 재작성 요청 코멘트 필수
+                - 자기평가 상태가 revision_requested로 변경됨
+                - 제출 상태가 초기화됨 (submittedToManager, submittedToManagerAt 초기화)
+                - 재작성 요청이 생성됨
+
+- **엣지 케이스 검증** 
+    - **재작성 요청 코멘트 누락**
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
+            - revisionComment 누락: revision_requested 상태인데 revisionComment 누락 시 400 에러
+            - revisionComment 빈 문자열: revisionComment가 빈 문자열인 경우 400 에러
+    - **존재하지 않는 리소스**
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
+            - 존재하지 않는 평가기간-직원 조합: 존재하지 않는 평가기간-직원 조합으로 요청 시 404 에러
+

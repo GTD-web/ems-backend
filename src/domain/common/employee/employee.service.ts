@@ -427,9 +427,12 @@ export class EmployeeService {
    * @returns 직원 엔티티 (없으면 null)
    */
   async findByEmployeeNumber(employeeNumber: string): Promise<Employee | null> {
-    return this.employeeRepository.findOne({
-      where: { employeeNumber, deletedAt: IsNull() },
-    });
+    // 명시적으로 사번이 정확히 일치하는 경우만 조회
+    return this.employeeRepository
+      .createQueryBuilder('employee')
+      .where('employee.employeeNumber = :employeeNumber', { employeeNumber })
+      .andWhere('employee.deletedAt IS NULL')
+      .getOne();
   }
 
   /**
@@ -509,8 +512,7 @@ export class EmployeeService {
    * @returns 직원 엔티티 목록
    */
   async findByFilter(filter: EmployeeFilter): Promise<Employee[]> {
-    const queryBuilder =
-      this.employeeRepository.createQueryBuilder('employee');
+    const queryBuilder = this.employeeRepository.createQueryBuilder('employee');
 
     if (filter.departmentId) {
       queryBuilder.andWhere('employee.departmentId = :departmentId', {

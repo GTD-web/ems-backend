@@ -15,7 +15,6 @@ import {
   AssignedWbsInfo,
   WbsEvaluationCriterion,
   WbsPerformance,
-  WbsSelfEvaluationInfo,
   WbsDownwardEvaluationInfo,
   DeliverableInfo,
 } from './types';
@@ -53,7 +52,7 @@ export async function getProjectsWithWbs(
     .leftJoin(
       Employee,
       'manager',
-      "manager.id::text = project.managerId AND manager.deletedAt IS NULL",
+      'manager.id::text = project.managerId AND manager.deletedAt IS NULL',
     )
     .select([
       'assignment.id AS assignment_id',
@@ -125,7 +124,9 @@ export async function getProjectsWithWbs(
   // 4. 모든 WBS ID 수집
   const wbsItemIds = [
     ...new Set(
-      wbsAssignments.map((row) => row.assignment_wbs_item_id || row.wbs_item_id),
+      wbsAssignments.map(
+        (row) => row.assignment_wbs_item_id || row.wbs_item_id,
+      ),
     ),
   ].filter((id): id is string => !!id);
 
@@ -163,26 +164,15 @@ export async function getProjectsWithWbs(
     }
   }
 
-  // 6. 배치 조회: 자기평가 (WHERE periodId = :p AND employeeId = :e AND wbsItemId IN (:...wbsItemIds))
-  const selfEvaluationMap = new Map<
-    string,
-    {
-      performance: WbsPerformance | null;
-      selfEvaluation: WbsSelfEvaluationInfo | null;
-    }
-  >();
+  // 6. 배치 조회: 성과 정보 (WHERE periodId = :p AND employeeId = :e AND wbsItemId IN (:...wbsItemIds))
+  const performanceMap = new Map<string, WbsPerformance | null>();
   if (wbsItemIds.length > 0) {
     const selfEvaluationRows = await selfEvaluationRepository
       .createQueryBuilder('evaluation')
       .select([
-        'evaluation.id AS evaluation_id',
         'evaluation.wbsItemId AS evaluation_wbs_item_id',
         'evaluation.performanceResult AS evaluation_performance_result',
-        'evaluation.selfEvaluationContent AS evaluation_self_evaluation_content',
         'evaluation.selfEvaluationScore AS evaluation_self_evaluation_score',
-        'evaluation.submittedToEvaluator AS evaluation_submitted_to_evaluator',
-        'evaluation.submittedToEvaluatorAt AS evaluation_submitted_to_evaluator_at',
-        'evaluation.submittedToManager AS evaluation_submitted_to_manager',
         'evaluation.submittedToManagerAt AS evaluation_submitted_to_manager_at',
       ])
       .where('evaluation.periodId = :periodId', {
@@ -199,32 +189,26 @@ export async function getProjectsWithWbs(
 
       const performance: WbsPerformance = {
         performanceResult: row.evaluation_performance_result,
+        score:
+          row.evaluation_self_evaluation_score !== null &&
+          row.evaluation_self_evaluation_score !== undefined
+            ? Number(row.evaluation_self_evaluation_score)
+            : undefined,
         isCompleted: row.evaluation_performance_result ? true : false,
         completedAt: row.evaluation_performance_result
           ? row.evaluation_submitted_to_manager_at
           : undefined,
       };
 
-      const selfEvaluation: WbsSelfEvaluationInfo = {
-        selfEvaluationId: row.evaluation_id,
-        evaluationContent: row.evaluation_self_evaluation_content,
-        score: row.evaluation_self_evaluation_score,
-        submittedToEvaluator: row.evaluation_submitted_to_evaluator || false,
-        submittedToEvaluatorAt: row.evaluation_submitted_to_evaluator_at,
-        submittedToManager: row.evaluation_submitted_to_manager || false,
-        submittedToManagerAt: row.evaluation_submitted_to_manager_at,
-        submittedAt: row.evaluation_submitted_to_manager_at,
-      };
-
-      selfEvaluationMap.set(wbsId, {
-        performance,
-        selfEvaluation,
-      });
+      performanceMap.set(wbsId, performance);
     }
   }
 
   // 7. 배치 조회: 하향평가 평가자 매핑 (1차, 2차)
-  const primaryEvaluatorMap = new Map<string, { evaluatorId: string; evaluatorName: string }>();
+  const primaryEvaluatorMap = new Map<
+    string,
+    { evaluatorId: string; evaluatorName: string }
+  >();
   const secondaryEvaluatorMap = new Map<
     string,
     { evaluatorId: string; evaluatorName: string }
@@ -247,7 +231,9 @@ export async function getProjectsWithWbs(
       'line',
       'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
     )
-    .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+    .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+      evaluationPeriodId,
+    })
     .andWhere('mapping.employeeId = :employeeId', { employeeId })
     .andWhere('mapping.wbsItemId IS NULL')
     .andWhere('mapping.deletedAt IS NULL')
@@ -286,7 +272,9 @@ export async function getProjectsWithWbs(
         'line',
         'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
       )
-      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
       .andWhere('mapping.deletedAt IS NULL')
@@ -375,7 +363,11 @@ export async function getProjectsWithWbs(
             ? new Date(row.downward_completed_at)
             : undefined;
 
-      if (row.downward_evaluation_type === 'primary' && primaryEvaluator) {
+      if (
+        row.downward_evaluation_type === 'primary' &&
+        primaryEvaluator &&
+        row.downward_evaluator_id === primaryEvaluator.evaluatorId
+      ) {
         evalData.primary = {
           downwardEvaluationId: row.downward_id,
           evaluatorId: primaryEvaluator.evaluatorId,
@@ -387,7 +379,8 @@ export async function getProjectsWithWbs(
         };
       } else if (
         row.downward_evaluation_type === 'secondary' &&
-        secondaryEvaluator
+        secondaryEvaluator &&
+        row.downward_evaluator_id === secondaryEvaluator.evaluatorId
       ) {
         evalData.secondary = {
           downwardEvaluationId: row.downward_id,
@@ -500,8 +493,7 @@ export async function getProjectsWithWbs(
     const wbsList: AssignedWbsInfo[] = [];
 
     for (const wbsRow of projectWbsAssignments) {
-      const wbsItemId =
-        wbsRow.assignment_wbs_item_id || wbsRow.wbs_item_id;
+      const wbsItemId = wbsRow.assignment_wbs_item_id || wbsRow.wbs_item_id;
 
       if (!wbsItemId) {
         logger.warn('WBS ID가 없는 할당 발견', { wbsRow });
@@ -509,12 +501,11 @@ export async function getProjectsWithWbs(
       }
 
       const criteria = criteriaMap.get(wbsItemId) || [];
-      const selfEvalData = selfEvaluationMap.get(wbsItemId);
-      const downwardEvalData =
-        downwardEvaluationMap.get(wbsItemId) || {
-          primary: null,
-          secondary: null,
-        };
+      const performance = performanceMap.get(wbsItemId) || null;
+      const downwardEvalData = downwardEvaluationMap.get(wbsItemId) || {
+        primary: null,
+        secondary: null,
+      };
       const deliverables = deliverablesMap.get(wbsItemId) || [];
 
       wbsList.push({
@@ -524,8 +515,7 @@ export async function getProjectsWithWbs(
         weight: parseFloat(wbsRow.assignment_weight) || 0,
         assignedAt: wbsRow.assignment_assigned_date,
         criteria,
-        performance: selfEvalData?.performance || null,
-        selfEvaluation: selfEvalData?.selfEvaluation || null,
+        performance,
         primaryDownwardEvaluation: downwardEvalData.primary || null,
         secondaryDownwardEvaluation: downwardEvalData.secondary || null,
         deliverables,

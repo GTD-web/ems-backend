@@ -3,7 +3,7 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { ParseUUID, CurrentUser } from '@interface/decorators';
 import type { AuthenticatedUser } from '@interface/decorators';
-import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
+import { DeliverableBusinessService } from '@business/deliverable/deliverable-business.service';
 import {
   CreateDeliverable,
   UpdateDeliverable,
@@ -38,7 +38,7 @@ import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 @Controller('admin/performance-evaluation/deliverables')
 export class DeliverableManagementController {
   constructor(
-    private readonly performanceEvaluationService: PerformanceEvaluationService,
+    private readonly deliverableBusinessService: DeliverableBusinessService,
   ) {}
 
   /**
@@ -51,8 +51,8 @@ export class DeliverableManagementController {
   ): Promise<DeliverableResponseDto> {
     const createdBy = user?.id || dto.createdBy || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
 
-    const deliverable =
-      await this.performanceEvaluationService.산출물을_생성한다({
+    const deliverable = await this.deliverableBusinessService.산출물을_생성한다(
+      {
         name: dto.name,
         type: dto.type,
         employeeId: dto.employeeId,
@@ -60,7 +60,8 @@ export class DeliverableManagementController {
         description: dto.description,
         filePath: dto.filePath,
         createdBy,
-      });
+      },
+    );
 
     return this.toResponseDto(deliverable);
   }
@@ -75,8 +76,8 @@ export class DeliverableManagementController {
   ): Promise<BulkCreateResultDto> {
     const createdBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
 
-    const result =
-      await this.performanceEvaluationService.산출물을_벌크_생성한다({
+    const result = await this.deliverableBusinessService.산출물을_벌크_생성한다(
+      {
         deliverables: dto.deliverables.map((d) => ({
           name: d.name,
           description: d.description,
@@ -86,7 +87,8 @@ export class DeliverableManagementController {
           wbsItemId: d.wbsItemId,
         })),
         createdBy,
-      });
+      },
+    );
 
     return {
       successCount: result.successCount,
@@ -106,11 +108,12 @@ export class DeliverableManagementController {
   ): Promise<BulkDeleteResultDto> {
     const deletedBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
 
-    const result =
-      await this.performanceEvaluationService.산출물을_벌크_삭제한다({
+    const result = await this.deliverableBusinessService.산출물을_벌크_삭제한다(
+      {
         ids: dto.deliverableIds,
         deletedBy,
-      });
+      },
+    );
 
     return {
       successCount: result.successCount,
@@ -149,8 +152,8 @@ export class DeliverableManagementController {
   ): Promise<DeliverableResponseDto> {
     const updatedBy = user?.id || dto.updatedBy || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
 
-    const deliverable =
-      await this.performanceEvaluationService.산출물을_수정한다({
+    const deliverable = await this.deliverableBusinessService.산출물을_수정한다(
+      {
         id,
         updatedBy,
         name: dto.name,
@@ -160,7 +163,8 @@ export class DeliverableManagementController {
         employeeId: dto.employeeId,
         wbsItemId: dto.wbsItemId,
         isActive: dto.isActive,
-      });
+      },
+    );
 
     return this.toResponseDto(deliverable);
   }
@@ -175,7 +179,7 @@ export class DeliverableManagementController {
   ): Promise<void> {
     const deletedBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
 
-    await this.performanceEvaluationService.산출물을_삭제한다(id, deletedBy);
+    await this.deliverableBusinessService.산출물을_삭제한다(id, deletedBy);
   }
 
   /**
@@ -189,7 +193,7 @@ export class DeliverableManagementController {
     const activeOnly = query.activeOnly ?? true;
 
     const deliverables =
-      await this.performanceEvaluationService.직원별_산출물을_조회한다(
+      await this.deliverableBusinessService.직원별_산출물을_조회한다(
         employeeId,
         activeOnly,
       );
@@ -211,7 +215,7 @@ export class DeliverableManagementController {
     const activeOnly = query.activeOnly ?? true;
 
     const deliverables =
-      await this.performanceEvaluationService.WBS항목별_산출물을_조회한다(
+      await this.deliverableBusinessService.WBS항목별_산출물을_조회한다(
         wbsItemId,
         activeOnly,
       );
@@ -230,7 +234,7 @@ export class DeliverableManagementController {
     @ParseUUID('id') id: string,
   ): Promise<DeliverableResponseDto> {
     const deliverable =
-      await this.performanceEvaluationService.산출물_상세를_조회한다(id);
+      await this.deliverableBusinessService.산출물_상세를_조회한다(id);
 
     return this.toResponseDto(deliverable);
   }

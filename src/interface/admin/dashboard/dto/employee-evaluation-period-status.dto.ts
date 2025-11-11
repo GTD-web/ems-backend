@@ -455,6 +455,12 @@ export class SecondaryDownwardEvaluationDto {
   })
   evaluators: SecondaryEvaluatorDto[];
 
+  @ApiProperty({
+    description: '모든 2차 평가자가 제출했는지 통합 상태',
+    example: true,
+  })
+  isSubmitted: boolean;
+
   @ApiPropertyOptional({
     description: '가중치 기반 2차 하향평가 총점 (0-100)',
     example: 82.3,

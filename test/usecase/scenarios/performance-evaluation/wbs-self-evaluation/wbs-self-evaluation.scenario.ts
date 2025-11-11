@@ -257,6 +257,13 @@ export class WbsSelfEvaluationScenario {
   }
 
   /**
+   * 나의 할당 데이터를 조회한다 (현재 로그인 사용자)
+   */
+  async 나의_할당_데이터를_조회한다(periodId: string) {
+    return await this.dashboardApiClient.getMyAssignedData(periodId);
+  }
+
+  /**
    * 전체 직원 현황을 조회한다
    */
   async 전체_직원_현황을_조회한다(

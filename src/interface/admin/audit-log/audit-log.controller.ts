@@ -1,0 +1,156 @@
+import {
+  Controller,
+  Get,
+  Query,
+  Param,
+  UseGuards,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '@interface/guards/jwt-auth.guard';
+import { RolesGuard } from '@interface/guards/roles.guard';
+import { Roles } from '@interface/decorators/roles.decorator';
+import { AuditLogContextService } from '@context/audit-log-context/audit-log-context.service';
+import { GetAuditLogListQueryDto } from './dto/get-audit-log-list-query.dto';
+import {
+  AuditLogResponseDto,
+  AuditLogListResponseDto,
+} from './dto/audit-log-response.dto';
+
+@ApiTags('A-0-5. 관리자 - 감사 로그')
+@ApiBearerAuth('Bearer')
+@Controller('admin/audit-logs')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('admin')
+export class AuditLogController {
+  constructor(
+    private readonly auditLogContextService: AuditLogContextService,
+  ) {}
+
+  /**
+   * Audit 로그 목록을 조회한다
+   */
+  @Get()
+  @ApiOperation({
+    summary: 'Audit 로그 목록 조회',
+    description: '필터 조건에 따라 Audit 로그 목록을 페이징으로 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Audit 로그 목록 조회 성공',
+    type: AuditLogListResponseDto,
+  })
+  @ApiQuery({ name: 'userId', required: false, description: '사용자 ID' })
+  @ApiQuery({
+    name: 'userEmail',
+    required: false,
+    description: '사용자 이메일',
+  })
+  @ApiQuery({
+    name: 'employeeNumber',
+    required: false,
+    description: '직원 번호',
+  })
+  @ApiQuery({
+    name: 'requestMethod',
+    required: false,
+    description: 'HTTP 메서드 (GET, POST, PUT, DELETE 등)',
+  })
+  @ApiQuery({
+    name: 'requestUrl',
+    required: false,
+    description: '요청 URL (부분 일치)',
+  })
+  @ApiQuery({
+    name: 'responseStatusCode',
+    required: false,
+    description: '응답 상태 코드',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: '시작 날짜 (ISO 8601)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: '종료 날짜 (ISO 8601)',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '페이지 번호 (기본값: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: '페이지 크기 (기본값: 10)',
+  })
+  async getAuditLogs(
+    @Query() query: GetAuditLogListQueryDto,
+  ): Promise<AuditLogListResponseDto> {
+    const {
+      userId,
+      userEmail,
+      employeeNumber,
+      requestMethod,
+      requestUrl,
+      responseStatusCode,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 10,
+    } = query;
+
+    const filter = {
+      userId,
+      userEmail,
+      employeeNumber,
+      requestMethod,
+      requestUrl,
+      responseStatusCode: responseStatusCode
+        ? parseInt(responseStatusCode.toString(), 10)
+        : undefined,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+    };
+
+    return await this.auditLogContextService.audit로그목록을_조회한다(
+      filter,
+      parseInt(page.toString(), 10),
+      parseInt(limit.toString(), 10),
+    );
+  }
+
+  /**
+   * Audit 로그 상세 정보를 조회한다
+   */
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Audit 로그 상세 조회',
+    description: 'Audit 로그의 상세 정보를 조회합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Audit 로그 상세 조회 성공',
+    type: AuditLogResponseDto,
+  })
+  async getAuditLogDetail(
+    @Param('id') id: string,
+  ): Promise<AuditLogResponseDto> {
+    const auditLog =
+      await this.auditLogContextService.audit로그상세를_조회한다(id);
+
+    if (!auditLog) {
+      throw new NotFoundException('Audit 로그를 찾을 수 없습니다.');
+    }
+
+    return auditLog;
+  }
+}

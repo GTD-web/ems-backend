@@ -1,0 +1,268 @@
+# 최종평가 관리 시나리오
+
+## 식별된 검증해야하는 시나리오
+
+각 하이라키별 시나리오 엔드포인트 순서대로 검증이 되어야 함.
+
+사용되는 컨트롤러
+- final-evaluation-management
+- dashboard
+- evaluation-period
+
+- **최종평가 저장 기본 관리** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 저장) 
+        - 직원-평가기간 조합으로 최종평가를 Upsert (없으면 생성, 있으면 수정)
+        - 평가등급, 직무등급, 직무 상세등급 필수 입력
+        - 최종 평가 의견은 선택사항
+        - 초기 생성 시 isConfirmed는 false로 설정
+        - **응답 검증** 
+            - 결과.id가 정의되어 있는지 확인
+            - 결과.message에 "성공적으로 저장되었습니다" 포함 확인
+        - **대시보드 상태 변경 검증** 
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+                - finalEvaluation.status 확인 (none → in_progress)
+                - finalEvaluation.evaluationGrade 확인 (입력한 평가등급)
+                - finalEvaluation.jobGrade 확인 (입력한 직무등급)
+                - finalEvaluation.jobDetailedGrade 확인 (입력한 직무 상세등급)
+                - finalEvaluation.isConfirmed 확인 (false)
+                - finalEvaluation.confirmedAt 확인 (null)
+        - **상세 조회 검증** 
+            - GET /admin/performance-evaluation/final-evaluations/{id} (최종평가 상세 조회)
+                - 상세조회결과.id가 저장 결과.id와 일치하는지 확인
+                - 상세조회결과.employee가 정의되어 있는지 확인
+                - 상세조회결과.period가 정의되어 있는지 확인
+                - 상세조회결과.evaluationGrade가 입력한 값과 일치하는지 확인
+                - 상세조회결과.jobGrade가 입력한 값과 일치하는지 확인
+                - 상세조회결과.jobDetailedGrade가 입력한 값과 일치하는지 확인
+                - 상세조회결과.isConfirmed가 false인지 확인
+    - GET /admin/performance-evaluation/final-evaluations/{id} (최종평가 상세 조회) 
+        - 최종평가 ID로 상세 정보 조회
+        - **응답 구조 검증** 
+            - 상세조회결과.id가 정의되어 있는지 확인
+            - 상세조회결과.employee가 정의되어 있는지 확인
+            - 상세조회결과.employee.id, name, employeeNumber, email 포함 확인
+            - 상세조회결과.period가 정의되어 있는지 확인
+            - 상세조회결과.period.id, name, startDate, endDate, status 포함 확인
+            - 상세조회결과.evaluationGrade가 정의되어 있는지 확인
+            - 상세조회결과.jobGrade가 정의되어 있는지 확인
+            - 상세조회결과.jobDetailedGrade가 정의되어 있는지 확인
+            - 상세조회결과.isConfirmed가 정의되어 있는지 확인
+            - 상세조회결과.createdAt이 정의되어 있는지 확인
+            - 상세조회결과.updatedAt이 정의되어 있는지 확인
+            - 상세조회결과.version이 정의되어 있는지 확인
+        - **확정 정보 검증** 
+            - 미확정 평가는 isConfirmed가 false인지 확인
+            - 미확정 평가는 confirmedAt이 null인지 확인
+            - 미확정 평가는 confirmedBy가 null인지 확인
+
+- **최종평가 조회 관리** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 저장 - 선행 조건) 
+        - 조회 대상 최종평가 생성
+    - GET /admin/performance-evaluation/final-evaluations (최종평가 목록 조회) 
+        - 필터 조건에 따라 최종평가 목록 조회
+        - **기본 목록 조회 검증** 
+            - 응답에 evaluations 배열이 포함되어 있는지 확인
+            - 응답에 total, page, limit 필드가 포함되어 있는지 확인
+            - 각 항목에 직원 정보(employee)가 객체로 포함되어 있는지 확인
+            - 각 항목에 평가기간 정보(period)가 객체로 포함되어 있는지 확인
+        - **필터링 검증** 
+            - employeeId로 필터링할 수 있어야 한다
+            - periodId로 필터링할 수 있어야 한다
+            - evaluationGrade로 필터링할 수 있어야 한다
+            - jobGrade로 필터링할 수 있어야 한다
+            - jobDetailedGrade로 필터링할 수 있어야 한다
+            - confirmedOnly로 필터링할 수 있어야 한다
+        - **페이지네이션 검증** 
+            - page와 limit 파라미터로 페이지네이션이 작동해야 한다
+            - total 값이 전체 개수와 일치해야 한다
+            - createdAt 역순으로 정렬되어야 한다
+    - GET /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (직원-평가기간별 최종평가 조회) 
+        - 특정 직원의 특정 평가기간 최종평가를 조회
+        - **응답 구조 검증** 
+            - 직원 정보가 객체로 반환되어야 한다
+            - 평가기간 정보가 객체로 반환되어야 한다
+            - 평가 등급 정보가 정확히 반환되어야 한다
+            - 확정 정보가 정확히 반환되어야 한다
+        - **존재하지 않는 조합 검증** 
+            - 존재하지 않는 직원-평가기간 조합으로 조회 시 null 또는 404 응답이 반환되어야 한다
+
+- **최종평가 확정 관리** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 저장 - 선행 조건) 
+        - 확정 대상 최종평가 생성
+    - **확정 전 상태 조회** 
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+            - finalEvaluation.status 확인 (in_progress)
+            - finalEvaluation.isConfirmed 확인 (false)
+            - finalEvaluation.confirmedAt 확인 (null)
+    - POST /admin/performance-evaluation/final-evaluations/{id}/confirm (최종평가 확정) 
+        - 최종평가를 확정
+        - **응답 검증** 
+            - 결과.message에 "성공적으로 확정되었습니다" 포함 확인
+        - **확정 후 상태 변경 검증** 
+            - GET /admin/performance-evaluation/final-evaluations/{id} (최종평가 상세 조회)
+                - 상세조회결과.isConfirmed가 true인지 확인
+                - 상세조회결과.confirmedAt이 정의되어 있는지 확인
+                - 상세조회결과.confirmedBy가 정의되어 있는지 확인
+                - 상세조회결과.version이 증가했는지 확인
+                - 상세조회결과.updatedAt이 갱신되었는지 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+                - finalEvaluation.status 확인 (complete)
+                - finalEvaluation.isConfirmed 확인 (true)
+                - finalEvaluation.confirmedAt 확인 (정의됨)
+                - finalEvaluation.evaluationGrade 확인 (유지됨)
+                - finalEvaluation.jobGrade 확인 (유지됨)
+                - finalEvaluation.jobDetailedGrade 확인 (유지됨)
+        - **확정된 평가 수정 불가 검증** 
+            - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 수정 시도)
+                - 확정된 평가 수정 시도 시 422 에러가 발생해야 한다
+
+- **최종평가 확정 취소 관리** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 저장 - 선행 조건) 
+        - 확정 취소 대상 최종평가 생성
+    - POST /admin/performance-evaluation/final-evaluations/{id}/confirm (최종평가 확정 - 선행 조건) 
+        - 확정 취소 대상 최종평가를 확정
+    - **확정 취소 전 상태 조회** 
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+            - finalEvaluation.status 확인 (complete)
+            - finalEvaluation.isConfirmed 확인 (true)
+            - finalEvaluation.confirmedAt 확인 (정의됨)
+    - POST /admin/performance-evaluation/final-evaluations/{id}/cancel-confirmation (최종평가 확정 취소) 
+        - 확정된 최종평가의 확정을 취소
+        - **응답 검증** 
+            - 결과.message에 "성공적으로 취소되었습니다" 포함 확인
+        - **확정 취소 후 상태 변경 검증** 
+            - GET /admin/performance-evaluation/final-evaluations/{id} (최종평가 상세 조회)
+                - 상세조회결과.isConfirmed가 false인지 확인
+                - 상세조회결과.confirmedAt이 null인지 확인
+                - 상세조회결과.confirmedBy가 null인지 확인
+                - 상세조회결과.version이 증가했는지 확인
+                - 상세조회결과.updatedAt이 갱신되었는지 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/status (대시보드 직원 현황 조회)
+                - finalEvaluation.status 확인 (in_progress)
+                - finalEvaluation.isConfirmed 확인 (false)
+                - finalEvaluation.confirmedAt 확인 (null)
+                - finalEvaluation.evaluationGrade 확인 (유지됨)
+                - finalEvaluation.jobGrade 확인 (유지됨)
+                - finalEvaluation.jobDetailedGrade 확인 (유지됨)
+        - **확정 취소 후 수정 가능 검증** 
+            - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 수정)
+                - 확정 취소 후 다시 수정이 가능해야 한다
+
+- **최종평가 전체 시나리오** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 저장) 
+        - 최종평가 저장, 확정, 확정 취소, 상세 조회를 한 번에 실행
+    - POST /admin/performance-evaluation/final-evaluations/{id}/confirm (최종평가 확정) 
+        - 최종평가 확정
+    - POST /admin/performance-evaluation/final-evaluations/{id}/cancel-confirmation (최종평가 확정 취소) 
+        - 최종평가 확정 취소
+    - GET /admin/performance-evaluation/final-evaluations/{id} (최종평가 상세 조회) 
+        - 확정 취소 후 상세 정보 조회
+        - **전체 시나리오 결과 검증** 
+            - 결과.저장결과.id가 정의되어 있는지 확인
+            - 결과.확정결과.message에 "성공적으로 확정되었습니다" 포함 확인
+            - 결과.확정취소결과.message에 "성공적으로 취소되었습니다" 포함 확인
+            - 결과.상세조회결과.isConfirmed가 false인지 확인
+            - 결과.상세조회결과.evaluationGrade가 정의되어 있는지 확인
+            - 결과.상세조회결과.jobGrade가 정의되어 있는지 확인
+            - 결과.상세조회결과.jobDetailedGrade가 정의되어 있는지 확인
+
+- **최종평가 Upsert 동작 검증** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 저장 - 첫 번째) 
+        - 첫 번째 최종평가 저장 (생성)
+        - **첫 번째 저장 결과 검증** 
+            - 저장결과.id가 정의되어 있는지 확인
+            - 상세조회결과.evaluationGrade가 첫 번째 입력 값과 일치하는지 확인
+    - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 저장 - 두 번째) 
+        - 동일한 직원-평가기간 조합으로 최종평가 저장 (수정)
+        - **Upsert 동작 검증** 
+            - 저장결과.id가 첫 번째 저장 결과.id와 일치하는지 확인 (같은 레코드 수정)
+            - 상세조회결과.evaluationGrade가 두 번째 입력 값과 일치하는지 확인 (값 변경됨)
+            - 상세조회결과.updatedAt이 갱신되었는지 확인
+            - 상세조회결과.createdAt은 변경되지 않았는지 확인
+            - 동일한 직원-평가기간 조합에 대해 하나의 평가만 존재해야 한다
+
+- **최종평가 대시보드 목록 조회** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (최종평가 저장 - 선행 조건) 
+        - 여러 직원의 최종평가 생성
+    - GET /admin/dashboard/{evaluationPeriodId}/final-evaluations (평가기간별 최종평가 목록 조회) 
+        - 특정 평가기간의 모든 직원 최종평가를 조회
+        - **응답 구조 검증** 
+            - period 정보가 최상단에 한 번만 제공되는지 확인
+            - evaluations 배열에 직원별 최종평가가 포함되어 있는지 확인
+            - 직원 사번 오름차순으로 정렬되어 있는지 확인
+        - **직원 정보 검증** 
+            - 각 항목의 employee 객체에 id, name, employeeNumber, email, departmentName, rankName이 포함되어 있는지 확인
+        - **최종평가 정보 검증** 
+            - 각 항목의 evaluation 객체에 id, evaluationGrade, jobGrade, jobDetailedGrade, isConfirmed, createdAt, updatedAt이 포함되어 있는지 확인
+    - GET /admin/dashboard/employees/{employeeId}/final-evaluations (직원별 최종평가 목록 조회) 
+        - 특정 직원의 모든 평가기간 최종평가를 조회
+        - **응답 구조 검증** 
+            - employee 정보가 최상단에 한 번만 제공되는지 확인
+            - finalEvaluations 배열에 평가기간별 최종평가가 포함되어 있는지 확인
+            - 평가기간 시작일 내림차순으로 정렬되어 있는지 확인
+        - **평가기간 정보 검증** 
+            - 각 항목의 period 객체에 id, name, startDate, endDate가 포함되어 있는지 확인
+        - **날짜 필터링 검증** 
+            - startDate 파라미터로 특정 날짜 이후 평가만 조회할 수 있어야 한다
+            - endDate 파라미터로 특정 날짜 이전 평가만 조회할 수 있어야 한다
+            - startDate와 endDate 모두 지정하여 기간 범위 내 평가만 조회할 수 있어야 한다
+    - GET /admin/dashboard/final-evaluations (전체 직원별 최종평가 목록 조회) 
+        - 지정한 날짜 범위 내 평가기간의 모든 직원 최종평가를 조회
+        - **응답 구조 검증** 
+            - evaluationPeriods 배열에 평가기간 목록이 포함되어 있는지 확인 (시작일 내림차순)
+            - employees 배열에 직원별 최종평가 목록이 포함되어 있는지 확인 (사번 오름차순)
+            - finalEvaluations 배열의 인덱스가 evaluationPeriods 배열의 인덱스와 일치하는지 확인
+            - 특정 평가기간에 평가가 없으면 해당 위치에 null이 들어가는지 확인
+        - **날짜 필터링 검증** 
+            - startDate 파라미터로 특정 날짜 이후 평가기간만 조회할 수 있어야 한다
+            - endDate 파라미터로 특정 날짜 이전 평가기간만 조회할 수 있어야 한다
+            - startDate와 endDate 모두 지정하여 기간 범위 내 평가기간만 조회할 수 있어야 한다
+
+- **최종평가 에러 케이스 검증** 
+    - POST /admin/evaluation-periods (평가기간 생성) 
+    - POST /admin/evaluation-periods/{id}/start (평가기간 시작) 
+    - **필수 필드 누락 검증** 
+        - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (evaluationGrade 누락)
+            - evaluationGrade 누락 시 400 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (jobGrade 누락)
+            - jobGrade 누락 시 400 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (jobDetailedGrade 누락)
+            - jobDetailedGrade 누락 시 400 에러가 발생해야 한다
+    - **잘못된 형식 검증** 
+        - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (잘못된 employeeId)
+            - 잘못된 형식의 employeeId로 요청 시 400 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (잘못된 periodId)
+            - 잘못된 형식의 periodId로 요청 시 400 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (잘못된 jobGrade)
+            - 잘못된 jobGrade 값으로 요청 시 400 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (잘못된 jobDetailedGrade)
+            - 잘못된 jobDetailedGrade 값으로 요청 시 400 에러가 발생해야 한다
+    - **존재하지 않는 리소스 검증** 
+        - GET /admin/performance-evaluation/final-evaluations/{id} (존재하지 않는 ID)
+            - 존재하지 않는 최종평가 ID로 조회 시 404 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/{id}/confirm (존재하지 않는 ID)
+            - 존재하지 않는 최종평가 ID로 확정 시 404 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/{id}/cancel-confirmation (존재하지 않는 ID)
+            - 존재하지 않는 최종평가 ID로 확정 취소 시 404 에러가 발생해야 한다
+    - **비즈니스 규칙 위반 검증** 
+        - POST /admin/performance-evaluation/final-evaluations/employee/:employeeId/period/:periodId (확정된 평가 수정 시도)
+            - 확정된 평가 수정 시도 시 422 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/{id}/confirm (이미 확정된 평가)
+            - 이미 확정된 평가를 다시 확정 시 409 에러가 발생해야 한다
+        - POST /admin/performance-evaluation/final-evaluations/{id}/cancel-confirmation (확정되지 않은 평가)
+            - 확정되지 않은 평가의 확정 취소 시 422 에러가 발생해야 한다
+

@@ -11,6 +11,7 @@ import {
   EvaluationRevisionRequest,
   EvaluationRevisionRequestRecipient,
   type RevisionRequestStepType,
+  RecipientType,
 } from '@domain/sub/evaluation-revision-request';
 import {
   EmployeeEvaluationStepApprovalService,
@@ -110,6 +111,14 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           continue;
         }
 
+        // 단계 승인 상태 조회
+        const approvalStatus = await this.단계_승인_상태를_조회한다(
+          request.evaluationPeriodId,
+          request.employeeId,
+          request.step,
+          recipient.recipientId,
+        );
+
         result.push({
           request: request.DTO로_변환한다(),
           recipientInfo: recipient.DTO로_변환한다(),
@@ -125,6 +134,7 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
             id: evaluationPeriod.id,
             name: evaluationPeriod.name,
           },
+          approvalStatus,
         });
       }
     }
@@ -153,6 +163,7 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           isRead: filter?.isRead,
           isCompleted: filter?.isCompleted,
           evaluationPeriodId: filter?.evaluationPeriodId,
+          employeeId: filter?.employeeId,
           step: filter?.step,
         },
       );
@@ -187,6 +198,14 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
         continue;
       }
 
+      // 단계 승인 상태 조회
+      const approvalStatus = await this.단계_승인_상태를_조회한다(
+        request.evaluationPeriodId,
+        request.employeeId,
+        request.step,
+        recipient.recipientId,
+      );
+
       result.push({
         request: request.DTO로_변환한다(),
         recipientInfo: recipient.DTO로_변환한다(),
@@ -202,6 +221,7 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           id: evaluationPeriod.id,
           name: evaluationPeriod.name,
         },
+        approvalStatus,
       });
     }
 
@@ -272,13 +292,14 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
   }
 
   /**
-   * 재작성 완료 응답을 제출한다
+   * 재작성 완료 응답을 제출한다 (내부 메서드 - 비즈니스 서비스에서 호출)
+   * 활동 내역 기록은 비즈니스 서비스에서 처리합니다.
    */
-  async 재작성완료_응답을_제출한다(
+  async 재작성완료_응답을_제출한다_내부(
     requestId: string,
     recipientId: string,
     responseComment: string,
-  ): Promise<void> {
+  ): Promise<EvaluationRevisionRequest> {
     this.logger.log(
       `재작성 완료 응답 제출 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`,
     );
@@ -317,6 +338,61 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     // 저장
     await this.revisionRequestService.수신자를_저장한다(recipient);
 
+    // 평가기준(criteria)과 자기평가(self) 단계의 경우,
+    // 각 수신자별로 별도의 재작성 요청이 생성되므로,
+    // 다른 수신자에게 보낸 별도의 재작성 요청도 함께 완료 처리
+    if (request.step === 'criteria' || request.step === 'self') {
+      // 현재 수신자의 타입 확인
+      const currentRecipientType = recipient.recipientType;
+
+      // 다른 수신자 타입 결정 (피평가자면 1차평가자, 1차평가자면 피평가자)
+      const otherRecipientType =
+        currentRecipientType === RecipientType.EVALUATEE
+          ? RecipientType.PRIMARY_EVALUATOR
+          : RecipientType.EVALUATEE;
+
+      // 같은 평가기간, 직원, 단계의 다른 재작성 요청 조회
+      const otherRequests = await this.revisionRequestService.필터로_조회한다({
+        evaluationPeriodId: request.evaluationPeriodId,
+        employeeId: request.employeeId,
+        step: request.step,
+      });
+
+      // 다른 수신자에게 보낸 재작성 요청 찾기
+      for (const otherRequest of otherRequests) {
+        // 현재 요청이 아닌 경우
+        if (otherRequest.id === requestId) {
+          continue;
+        }
+
+        if (!otherRequest.recipients || otherRequest.recipients.length === 0) {
+          continue;
+        }
+
+        // 다른 수신자 타입의 미완료 요청 찾기
+        const otherRecipient = otherRequest.recipients.find(
+          (r) =>
+            !r.deletedAt &&
+            r.recipientType === otherRecipientType &&
+            !r.isCompleted,
+        );
+
+        if (otherRecipient) {
+          this.logger.log(
+            `다른 수신자에게 보낸 재작성 요청도 함께 완료 처리 - 요청 ID: ${otherRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`,
+          );
+
+          // 재작성 완료 응답
+          otherRecipient.재작성완료_응답한다(
+            `연계된 수신자의 재작성 완료로 인한 자동 완료 처리`,
+          );
+
+          // 저장
+          await this.revisionRequestService.수신자를_저장한다(otherRecipient);
+        }
+      }
+    }
+
     // 모든 수신자가 완료했는지 확인
     // 2차 평가의 경우, 모든 평가자에게 전송된 모든 재작성 요청이 완료되었는지 확인
     let allCompleted: boolean;
@@ -342,18 +418,38 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     this.logger.log(
       `재작성 완료 응답 제출 완료 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`,
     );
+
+    // 재작성 요청 반환 (비즈니스 서비스에서 활동 내역 기록에 사용)
+    return request;
   }
 
   /**
-   * 평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출한다 (관리자용)
+   * 재작성 완료 응답을 제출한다 (기존 메서드 - 하위 호환성 유지)
+   * @deprecated 비즈니스 서비스를 사용하세요
    */
-  async 평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+  async 재작성완료_응답을_제출한다(
+    requestId: string,
+    recipientId: string,
+    responseComment: string,
+  ): Promise<void> {
+    await this.재작성완료_응답을_제출한다_내부(
+      requestId,
+      recipientId,
+      responseComment,
+    );
+  }
+
+  /**
+   * 평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출한다 (내부 메서드 - 비즈니스 서비스에서 호출)
+   * 활동 내역 기록은 비즈니스 서비스에서 처리합니다.
+   */
+  async 평가기간_직원_평가자로_재작성완료_응답을_제출한다_내부(
     evaluationPeriodId: string,
     employeeId: string,
     evaluatorId: string,
     step: RevisionRequestStepType,
     responseComment: string,
-  ): Promise<void> {
+  ): Promise<EvaluationRevisionRequest> {
     this.logger.log(
       `재작성 완료 응답 제출 (관리자용) - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 평가자: ${evaluatorId}, 단계: ${step}`,
     );
@@ -386,9 +482,9 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           !r.deletedAt &&
           r.recipientId === evaluatorId &&
           (step === 'secondary'
-            ? r.recipientType === 'secondary_evaluator'
+            ? r.recipientType === RecipientType.SECONDARY_EVALUATOR
             : step === 'primary'
-              ? r.recipientType === 'primary_evaluator'
+              ? r.recipientType === RecipientType.PRIMARY_EVALUATOR
               : true),
       );
 
@@ -410,6 +506,54 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
 
     // 저장
     await this.revisionRequestService.수신자를_저장한다(targetRecipient);
+
+    // 평가기준(criteria)과 자기평가(self) 단계의 경우,
+    // 각 수신자별로 별도의 재작성 요청이 생성되므로,
+    // 다른 수신자에게 보낸 별도의 재작성 요청도 함께 완료 처리
+    if (targetRequest.step === 'criteria' || targetRequest.step === 'self') {
+      // 현재 수신자의 타입 확인
+      const currentRecipientType = targetRecipient.recipientType;
+
+      // 다른 수신자 타입 결정 (피평가자면 1차평가자, 1차평가자면 피평가자)
+      const otherRecipientType =
+        currentRecipientType === RecipientType.EVALUATEE
+          ? RecipientType.PRIMARY_EVALUATOR
+          : RecipientType.EVALUATEE;
+
+      // 다른 수신자에게 보낸 재작성 요청 찾기
+      for (const otherRequest of requests) {
+        // 현재 요청이 아닌 경우
+        if (otherRequest.id === targetRequest.id) {
+          continue;
+        }
+
+        if (!otherRequest.recipients || otherRequest.recipients.length === 0) {
+          continue;
+        }
+
+        // 다른 수신자 타입의 미완료 요청 찾기
+        const otherRecipient = otherRequest.recipients.find(
+          (r) =>
+            !r.deletedAt &&
+            r.recipientType === otherRecipientType &&
+            !r.isCompleted,
+        );
+
+        if (otherRecipient) {
+          this.logger.log(
+            `다른 수신자에게 보낸 재작성 요청도 함께 완료 처리 - 요청 ID: ${otherRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`,
+          );
+
+          // 재작성 완료 응답
+          otherRecipient.재작성완료_응답한다(
+            `연계된 수신자의 재작성 완료로 인한 자동 완료 처리`,
+          );
+
+          // 저장
+          await this.revisionRequestService.수신자를_저장한다(otherRecipient);
+        }
+      }
+    }
 
     // 모든 수신자가 완료했는지 확인
     // 2차 평가의 경우, 모든 평가자에게 전송된 모든 재작성 요청이 완료되었는지 확인
@@ -436,6 +580,164 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     this.logger.log(
       `재작성 완료 응답 제출 완료 (관리자용) - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 평가자: ${evaluatorId}`,
     );
+
+    // 재작성 요청 반환 (비즈니스 서비스에서 활동 내역 기록에 사용)
+    return targetRequest;
+  }
+
+  /**
+   * 평가기간, 직원, 평가자 기반으로 재작성 완료 응답을 제출한다 (기존 메서드 - 하위 호환성 유지)
+   * @deprecated 비즈니스 서비스를 사용하세요
+   */
+  async 평가기간_직원_평가자로_재작성완료_응답을_제출한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    evaluatorId: string,
+    step: RevisionRequestStepType,
+    responseComment: string,
+  ): Promise<void> {
+    await this.평가기간_직원_평가자로_재작성완료_응답을_제출한다_내부(
+      evaluationPeriodId,
+      employeeId,
+      evaluatorId,
+      step,
+      responseComment,
+    );
+  }
+
+  /**
+   * 제출자에게 요청된 재작성 요청을 자동 완료 처리한다
+   *
+   * 평가 제출 시 해당 제출자에게 전송된 재작성 요청이 존재하면 자동으로 완료 처리합니다.
+   * 비즈니스 서비스에서 선언적으로 사용할 수 있도록 제공되는 함수입니다.
+   *
+   * @param evaluationPeriodId 평가기간 ID
+   * @param employeeId 피평가자 ID
+   * @param step 재작성 요청 단계
+   * @param recipientId 제출자 ID (재작성 요청 수신자 ID)
+   * @param recipientType 제출자 타입
+   * @param responseComment 완료 처리 응답 코멘트
+   */
+  async 제출자에게_요청된_재작성요청을_완료처리한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    step: RevisionRequestStepType,
+    recipientId: string,
+    recipientType: RecipientType,
+    responseComment: string,
+  ): Promise<void> {
+    this.logger.log(
+      `제출자에게 요청된 재작성 요청 자동 완료 처리 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 단계: ${step}, 제출자: ${recipientId}, 타입: ${recipientType}`,
+    );
+
+    // 해당 조건에 맞는 재작성 요청 조회
+    const revisionRequests = await this.revisionRequestService.필터로_조회한다({
+      evaluationPeriodId,
+      employeeId,
+      step,
+    });
+
+    if (revisionRequests.length === 0) {
+      this.logger.log(
+        `제출자에게 요청된 재작성 요청 없음 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 단계: ${step}, 제출자: ${recipientId}`,
+      );
+      return;
+    }
+
+    this.logger.log(
+      `제출자에게 요청된 재작성 요청 발견 - 요청 수: ${revisionRequests.length}`,
+    );
+
+    // 각 재작성 요청에 대해 제출자에게 전송된 미완료 요청을 찾아서 완료 처리
+    for (const request of revisionRequests) {
+      if (!request.recipients || request.recipients.length === 0) {
+        continue;
+      }
+
+      // 제출자에게 전송된 재작성 요청 찾기
+      const recipient = request.recipients.find(
+        (r) =>
+          !r.deletedAt &&
+          r.recipientId === recipientId &&
+          r.recipientType === recipientType &&
+          !r.isCompleted,
+      );
+
+      if (recipient) {
+        try {
+          // 재작성 완료 응답 제출
+          await this.재작성완료_응답을_제출한다(
+            request.id,
+            recipientId,
+            responseComment,
+          );
+
+          this.logger.log(
+            `제출자에게 요청된 재작성 요청 완료 처리 성공 - 요청 ID: ${request.id}, 수신자 ID: ${recipientId}`,
+          );
+        } catch (error) {
+          this.logger.error(
+            `제출자에게 요청된 재작성 요청 완료 처리 실패 - 요청 ID: ${request.id}, 수신자 ID: ${recipientId}`,
+            error,
+          );
+          // 재작성 요청 완료 처리 실패는 로그만 남기고 계속 진행
+        }
+      }
+    }
+
+    // criteria와 self 단계의 경우, 1차평가자에게 보낸 재작성 요청도 함께 완료 처리
+    // (각 수신자별로 별도의 재작성 요청이 생성되므로, 1차평가자 요청도 별도로 완료 처리해야 함)
+    if (
+      (step === 'criteria' || step === 'self') &&
+      recipientType === RecipientType.EVALUATEE
+    ) {
+      // 1차평가자에게 보낸 재작성 요청 찾기
+      for (const request of revisionRequests) {
+        if (!request.recipients || request.recipients.length === 0) {
+          continue;
+        }
+
+        // 1차평가자에게 보낸 재작성 요청 찾기
+        const primaryEvaluatorRecipient = request.recipients.find(
+          (r) =>
+            !r.deletedAt &&
+            r.recipientType === RecipientType.PRIMARY_EVALUATOR &&
+            !r.isCompleted,
+        );
+
+        if (primaryEvaluatorRecipient) {
+          try {
+            // 1차평가자 재작성 요청도 완료 처리
+            await this.재작성완료_응답을_제출한다(
+              request.id,
+              primaryEvaluatorRecipient.recipientId,
+              responseComment,
+            );
+
+            this.logger.log(
+              `1차평가자에게 요청된 재작성 요청 완료 처리 성공 - 요청 ID: ${request.id}, 수신자 ID: ${primaryEvaluatorRecipient.recipientId}`,
+            );
+          } catch (error) {
+            this.logger.error(
+              `1차평가자에게 요청된 재작성 요청 완료 처리 실패 - 요청 ID: ${request.id}, 수신자 ID: ${primaryEvaluatorRecipient.recipientId}`,
+              error,
+            );
+            // 재작성 요청 완료 처리 실패는 로그만 남기고 계속 진행
+          }
+        }
+      }
+    }
+
+    this.logger.log(
+      `제출자에게 요청된 재작성 요청 자동 완료 처리 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 단계: ${step}, 제출자: ${recipientId}`,
+    );
+  }
+
+  /**
+   * 모든 수신자가 완료했는지 확인한다 (내부 메서드 - 비즈니스 서비스에서 호출)
+   */
+  async 모든_수신자가_완료했는가_내부(requestId: string): Promise<boolean> {
+    return await this.모든_수신자가_완료했는가(requestId);
   }
 
   /**
@@ -457,6 +759,19 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
 
     // 모든 수신자가 완료했는지 확인
     return activeRecipients.every((r) => r.isCompleted);
+  }
+
+  /**
+   * 모든 2차 평가자의 재작성 요청이 완료했는지 확인한다 (내부 메서드 - 비즈니스 서비스에서 호출)
+   */
+  async 모든_2차평가자의_재작성요청이_완료했는가_내부(
+    evaluationPeriodId: string,
+    employeeId: string,
+  ): Promise<boolean> {
+    return await this.모든_2차평가자의_재작성요청이_완료했는가(
+      evaluationPeriodId,
+      employeeId,
+    );
   }
 
   /**
@@ -488,7 +803,8 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
 
       // 삭제되지 않은 수신자들만 확인
       const activeRecipients = request.recipients.filter(
-        (r) => !r.deletedAt && r.recipientType === 'secondary_evaluator',
+        (r) =>
+          !r.deletedAt && r.recipientType === RecipientType.SECONDARY_EVALUATOR,
       );
 
       if (activeRecipients.length === 0) {
@@ -506,6 +822,94 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     }
 
     return true;
+  }
+
+  /**
+   * 단계 승인 상태를 조회한다
+   */
+  private async 단계_승인_상태를_조회한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    step: RevisionRequestStepType,
+    recipientId: string,
+  ): Promise<StepApprovalStatus> {
+    // 맵핑 조회
+    const mapping = await this.mappingRepository.findOne({
+      where: {
+        evaluationPeriodId,
+        employeeId,
+        deletedAt: null as any,
+      },
+    });
+
+    if (!mapping) {
+      // 맵핑이 없으면 기본 상태 반환
+      return StepApprovalStatus.PENDING;
+    }
+
+    // 단계 승인 정보 조회
+    const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+      mapping.id,
+    );
+
+    if (!stepApproval) {
+      // 단계 승인 정보가 없으면 기본 상태 반환
+      return StepApprovalStatus.PENDING;
+    }
+
+    // 2차 하향평가의 경우, 평가자별 상태 조회
+    if (step === 'secondary') {
+      // 재작성 요청이 있는지 확인
+      const revisionRequests =
+        await this.revisionRequestService.필터로_조회한다({
+          evaluationPeriodId,
+          employeeId,
+          step: 'secondary',
+        });
+
+      // 해당 평가자에게 전송된 재작성 요청 찾기
+      for (const revisionRequest of revisionRequests) {
+        if (
+          !revisionRequest.recipients ||
+          revisionRequest.recipients.length === 0
+        ) {
+          continue;
+        }
+
+        const recipient = revisionRequest.recipients.find(
+          (r) =>
+            !r.deletedAt &&
+            r.recipientId === recipientId &&
+            r.recipientType === RecipientType.SECONDARY_EVALUATOR,
+        );
+
+        if (recipient) {
+          // 재작성 요청이 있으면 완료 여부에 따라 상태 결정
+          if (recipient.isCompleted) {
+            return StepApprovalStatus.REVISION_COMPLETED;
+          } else {
+            return StepApprovalStatus.REVISION_REQUESTED;
+          }
+        }
+      }
+
+      // 재작성 요청이 없으면 단계 승인 엔티티의 상태 확인
+      // 2차 하향평가는 단계 승인 엔티티에 하나의 상태만 있으므로
+      // 재작성 요청이 없으면 단계 승인 엔티티의 상태를 반환
+      return stepApproval.secondaryEvaluationStatus;
+    }
+
+    // 평가기준, 자기평가, 1차 하향평가의 경우 단계 승인 엔티티에서 직접 조회
+    switch (step) {
+      case 'criteria':
+        return stepApproval.criteriaSettingStatus;
+      case 'self':
+        return stepApproval.selfEvaluationStatus;
+      case 'primary':
+        return stepApproval.primaryEvaluationStatus;
+      default:
+        return StepApprovalStatus.PENDING;
+    }
   }
 
   /**

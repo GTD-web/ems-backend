@@ -12,6 +12,7 @@ import { WbsEvaluationCriteriaModule } from './wbs-evaluation-criteria/wbs-evalu
 import { WbsSelfEvaluationModule } from './wbs-self-evaluation/wbs-self-evaluation.module';
 import { EvaluationWbsAssignmentModule } from './evaluation-wbs-assignment';
 import { EvaluationProjectAssignmentModule } from './evaluation-project-assignment/evaluation-project-assignment.module';
+import { EvaluationActivityLogModule } from './evaluation-activity-log/evaluation-activity-log.module';
 
 /**
  * 코어 도메인 모듈
@@ -41,6 +42,9 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
     // 산출물 관리
     DeliverableModule,
 
+    // 평가 활동 내역 관리
+    EvaluationActivityLogModule,
+
     // 매핑 테이블 관리
     EvaluationLineMappingModule,
     PeerEvaluationQuestionMappingModule,
@@ -66,6 +70,9 @@ import { EvaluationProjectAssignmentModule } from './evaluation-project-assignme
 
     // 산출물 관리
     DeliverableModule,
+
+    // 평가 활동 내역 관리
+    EvaluationActivityLogModule,
 
     // 매핑 테이블 관리
     EvaluationLineMappingModule,

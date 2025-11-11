@@ -1,12 +1,23 @@
 /**
  * 재작성 요청 단계 타입
  */
-export type RevisionRequestStepType = 'criteria' | 'self' | 'primary' | 'secondary';
+export type RevisionRequestStepType =
+  | 'criteria'
+  | 'self'
+  | 'primary'
+  | 'secondary';
 
 /**
- * 수신자 타입
+ * 수신자 타입 Enum
  */
-export type RecipientType = 'evaluatee' | 'primary_evaluator' | 'secondary_evaluator';
+export enum RecipientType {
+  /** 피평가자 */
+  EVALUATEE = 'evaluatee',
+  /** 1차 평가자 */
+  PRIMARY_EVALUATOR = 'primary_evaluator',
+  /** 2차 평가자 */
+  SECONDARY_EVALUATOR = 'secondary_evaluator',
+}
 
 /**
  * 재작성 요청 생성 데이터
@@ -124,9 +135,8 @@ export interface RevisionRequestRecipientFilter {
   isCompleted?: boolean;
   /** 평가기간 ID (join 필요) */
   evaluationPeriodId?: string;
+  /** 피평가자 ID (join 필요) */
+  employeeId?: string;
   /** 단계 (join 필요) */
   step?: RevisionRequestStepType;
 }
-
-
-

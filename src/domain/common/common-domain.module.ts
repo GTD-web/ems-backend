@@ -4,6 +4,7 @@ import { DepartmentModule } from './department/department.module';
 import { ProjectModule } from './project/project.module';
 import { WbsItemModule } from './wbs-item/wbs-item.module';
 import { SSOModule } from './sso/sso.module';
+import { AuditLogModule } from './audit-log/audit-log.module';
 
 /**
  * 외부 도메인 모듈
@@ -17,6 +18,7 @@ import { SSOModule } from './sso/sso.module';
     ProjectModule,
     WbsItemModule,
     SSOModule,
+    AuditLogModule,
   ],
   exports: [
     EmployeeModule,
@@ -24,6 +26,7 @@ import { SSOModule } from './sso/sso.module';
     ProjectModule,
     WbsItemModule,
     SSOModule,
+    AuditLogModule,
   ],
 })
 export class CommonDomainModule {}

@@ -178,6 +178,12 @@ export class EvaluationRevisionRequestService
       });
     }
 
+    if (filter?.employeeId) {
+      queryBuilder.andWhere('request.employeeId = :employeeId', {
+        employeeId: filter.employeeId,
+      });
+    }
+
     if (filter?.step) {
       queryBuilder.andWhere('request.step = :step', { step: filter.step });
     }

@@ -1,12 +1,14 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
 import {
   EmployeeEvaluationStepApprovalService,
   StepApprovalStatus,
 } from '@domain/sub/employee-evaluation-step-approval';
 import {
   EvaluationRevisionRequestService,
+  EvaluationRevisionRequest,
+  EvaluationRevisionRequestRecipient,
   RevisionRequestStepType,
   RecipientType,
 } from '@domain/sub/evaluation-revision-request';
@@ -34,6 +36,8 @@ export class StepApprovalContextService implements IStepApprovalContext {
     private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
     @InjectRepository(EvaluationLineMapping)
     private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -62,8 +66,9 @@ export class StepApprovalContextService implements IStepApprovalContext {
     }
 
     // 2. 단계 승인 정보 조회 또는 생성
-    let stepApproval =
-      await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+    let stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+      mapping.id,
+    );
 
     if (!stepApproval) {
       this.logger.log(
@@ -108,6 +113,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
 
   /**
    * 재작성 요청을 생성한다 (private)
+   * 각 수신자별로 별도 트랜잭션을 사용하여 동시성 문제를 방지합니다.
    */
   private async 재작성요청을_생성한다(
     evaluationPeriodId: string,
@@ -120,7 +126,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
       `재작성 요청 생성 시작 - 직원: ${employeeId}, 단계: ${step}`,
     );
 
-    // 수신자 목록 결정
+    // 수신자 목록 결정 (트랜잭션 밖에서 조회)
     const recipients = await this.재작성요청_수신자를_조회한다(
       evaluationPeriodId,
       employeeId,
@@ -133,19 +139,79 @@ export class StepApprovalContextService implements IStepApprovalContext {
       );
     }
 
-    // 재작성 요청 생성
-    await this.revisionRequestService.생성한다({
-      evaluationPeriodId,
-      employeeId,
-      step,
-      comment,
-      requestedBy,
-      recipients,
-      createdBy: requestedBy,
-    });
+    // 각 수신자별로 별도의 재작성 요청 생성
+    // criteria와 self 단계의 경우 피평가자와 1차평가자에게 각각 별도 요청 생성
+    // 각 수신자별로 별도 트랜잭션을 사용하여 동시성 문제 방지
+    for (const recipient of recipients) {
+      await this.dataSource.transaction(async (manager) => {
+        // 기존 미완료 재작성 요청 확인 (수신자별로)
+        // 먼저 request만 조회 (FOR UPDATE와 호환)
+        const existingRequests = await manager
+          .createQueryBuilder(EvaluationRevisionRequest, 'request')
+          .where('request.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+          })
+          .andWhere('request.employeeId = :employeeId', { employeeId })
+          .andWhere('request.step = :step', { step })
+          .andWhere('request.deletedAt IS NULL')
+          .setLock('pessimistic_write')
+          .getMany();
+
+        // 각 요청의 recipients를 조회하여 해당 수신자에게 보낸 미완료 요청 찾기
+        let existingRequestForRecipient: EvaluationRevisionRequest | null =
+          null;
+        for (const request of existingRequests) {
+          const requestRecipients = await manager
+            .createQueryBuilder(EvaluationRevisionRequestRecipient, 'recipient')
+            .where('recipient.revisionRequestId = :requestId', {
+              requestId: request.id,
+            })
+            .andWhere('recipient.deletedAt IS NULL')
+            .getMany();
+
+          // 해당 수신자에게 보낸 미완료 요청인지 확인
+          const matchingRecipient = requestRecipients.find(
+            (r) =>
+              r.recipientId === recipient.recipientId &&
+              r.recipientType === recipient.recipientType &&
+              !r.isCompleted,
+          );
+
+          if (matchingRecipient) {
+            existingRequestForRecipient = request;
+            break;
+          }
+        }
+
+        // 기존 미완료 요청이 있으면 삭제
+        if (existingRequestForRecipient) {
+          this.logger.log(
+            `기존 미완료 재작성 요청 삭제 (수신자별) - 요청 ID: ${existingRequestForRecipient.id}, 수신자: ${recipient.recipientId}`,
+          );
+          existingRequestForRecipient.deletedAt = new Date();
+          existingRequestForRecipient.메타데이터를_업데이트한다(requestedBy);
+          await manager.save(
+            EvaluationRevisionRequest,
+            existingRequestForRecipient,
+          );
+        }
+
+        // 수신자별로 별도의 재작성 요청 생성
+        const newRequest = new EvaluationRevisionRequest({
+          evaluationPeriodId,
+          employeeId,
+          step,
+          comment,
+          requestedBy,
+          recipients: [recipient], // 각 수신자별로 별도 요청
+          createdBy: requestedBy,
+        });
+        await manager.save(EvaluationRevisionRequest, newRequest);
+      });
+    }
 
     this.logger.log(
-      `재작성 요청 생성 완료 - 직원: ${employeeId}, 단계: ${step}, 수신자 수: ${recipients.length}`,
+      `재작성 요청 생성 완료 - 직원: ${employeeId}, 단계: ${step}`,
     );
   }
 
@@ -174,7 +240,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         // 피평가자 추가
         recipients.push({
           recipientId: employeeId,
-          recipientType: 'evaluatee' as RecipientType,
+          recipientType: RecipientType.EVALUATEE,
         });
 
         // 1차평가자 추가
@@ -185,7 +251,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         if (primaryEvaluator) {
           recipients.push({
             recipientId: primaryEvaluator,
-            recipientType: 'primary_evaluator' as RecipientType,
+            recipientType: RecipientType.PRIMARY_EVALUATOR,
           });
         }
         break;
@@ -199,7 +265,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         if (primaryOnly) {
           recipients.push({
             recipientId: primaryOnly,
-            recipientType: 'primary_evaluator' as RecipientType,
+            recipientType: RecipientType.PRIMARY_EVALUATOR,
           });
         }
         break;
@@ -213,7 +279,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         secondaryEvaluators.forEach((evaluatorId) => {
           recipients.push({
             recipientId: evaluatorId,
-            recipientType: 'secondary_evaluator' as RecipientType,
+            recipientType: RecipientType.SECONDARY_EVALUATOR,
           });
         });
         break;
@@ -225,7 +291,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
   /**
    * 1차평가자를 조회한다
    */
-  private async 일차평가자를_조회한다(
+  async 일차평가자를_조회한다(
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<string | null> {
@@ -246,7 +312,11 @@ export class StepApprovalContextService implements IStepApprovalContext {
     // PRIMARY 타입의 평가라인을 통해 평가자 조회
     const lineMapping = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+      .leftJoin(
+        'evaluation_lines',
+        'line',
+        'line.id = mapping.evaluationLineId',
+      )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
       })
@@ -285,7 +355,11 @@ export class StepApprovalContextService implements IStepApprovalContext {
     // SECONDARY 타입의 평가라인을 통해 평가자들 조회
     const lineMappings = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+      .leftJoin(
+        'evaluation_lines',
+        'line',
+        'line.id = mapping.evaluationLineId',
+      )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
       })
@@ -319,10 +393,14 @@ export class StepApprovalContextService implements IStepApprovalContext {
 
   /**
    * 자기평가 단계 승인 상태를 변경한다
+   * 재작성 요청 생성 시 비즈니스 서비스를 통해 제출 상태 초기화를 함께 처리합니다.
    */
   async 자기평가_확인상태를_변경한다(
     request: UpdateStepApprovalByStepRequest,
   ): Promise<void> {
+    // 재작성 요청 생성 시 비즈니스 서비스를 통해 제출 상태 초기화를 함께 처리
+    // 비즈니스 서비스는 step-approval-context를 의존하므로 순환 의존성을 피하기 위해
+    // 여기서는 직접 처리하지 않고, 컨트롤러에서 비즈니스 서비스를 호출하도록 합니다.
     await this.단계별_확인상태를_변경한다({
       evaluationPeriodId: request.evaluationPeriodId,
       employeeId: request.employeeId,
@@ -388,8 +466,9 @@ export class StepApprovalContextService implements IStepApprovalContext {
     }
 
     // 3. 단계 승인 정보 조회 또는 생성
-    let stepApproval =
-      await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+    let stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+      mapping.id,
+    );
 
     if (!stepApproval) {
       this.logger.log(
@@ -442,7 +521,11 @@ export class StepApprovalContextService implements IStepApprovalContext {
   ): Promise<boolean> {
     const lineMapping = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+      .leftJoin(
+        'evaluation_lines',
+        'line',
+        'line.id = mapping.evaluationLineId',
+      )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
       })
@@ -460,6 +543,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
 
   /**
    * 재작성 요청을 특정 평가자에게만 생성한다 (평가자별 부분 처리)
+   * 트랜잭션으로 처리하여 동시성 문제를 방지합니다.
    */
   private async 재작성요청을_평가자별로_생성한다(
     evaluationPeriodId: string,
@@ -472,23 +556,80 @@ export class StepApprovalContextService implements IStepApprovalContext {
       `재작성 요청 생성 시작 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
     );
 
-    // 특정 평가자에게만 재작성 요청 전송
-    const recipients = [
-      {
-        recipientId: evaluatorId,
-        recipientType: 'secondary_evaluator' as RecipientType,
-      },
-    ];
+    // 트랜잭션으로 처리하여 동시성 문제 방지
+    await this.dataSource.transaction(async (manager) => {
+      // SELECT FOR UPDATE를 사용하여 락을 걸고 기존 미완료 재작성 요청 확인
+      // leftJoinAndSelect는 FOR UPDATE와 호환되지 않으므로 먼저 request만 조회
+      const existingRequests = await manager
+        .createQueryBuilder(EvaluationRevisionRequest, 'request')
+        .where('request.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
+        .andWhere('request.employeeId = :employeeId', { employeeId })
+        .andWhere('request.step = :step', { step: 'secondary' })
+        .andWhere('request.deletedAt IS NULL')
+        .setLock('pessimistic_write') // SELECT FOR UPDATE
+        .getMany();
 
-    // 재작성 요청 생성
-    await this.revisionRequestService.생성한다({
-      evaluationPeriodId,
-      employeeId,
-      step: 'secondary',
-      comment,
-      requestedBy,
-      recipients,
-      createdBy: requestedBy,
+      // recipients는 별도로 조회
+      for (const request of existingRequests) {
+        request.recipients = await manager
+          .createQueryBuilder(EvaluationRevisionRequestRecipient, 'recipient')
+          .where('recipient.revisionRequestId = :requestId', {
+            requestId: request.id,
+          })
+          .andWhere('recipient.deletedAt IS NULL')
+          .getMany();
+      }
+
+      // 해당 평가자에게 전송된 미완료 요청이 있으면 삭제
+      for (const existingRequest of existingRequests) {
+        if (
+          !existingRequest.recipients ||
+          existingRequest.recipients.length === 0
+        ) {
+          continue;
+        }
+
+        // 해당 평가자에게 전송된 수신자 찾기
+        const recipient = existingRequest.recipients.find(
+          (r) =>
+            !r.deletedAt &&
+            r.recipientId === evaluatorId &&
+            r.recipientType === RecipientType.SECONDARY_EVALUATOR,
+        );
+
+        if (recipient && !recipient.isCompleted) {
+          this.logger.log(
+            `기존 미완료 재작성 요청 삭제 (평가자별) - 요청 ID: ${existingRequest.id}, 평가자: ${evaluatorId}`,
+          );
+          // 트랜잭션 내에서 직접 삭제 처리
+          existingRequest.deletedAt = new Date();
+          existingRequest.메타데이터를_업데이트한다(requestedBy);
+          await manager.save(EvaluationRevisionRequest, existingRequest);
+          break; // 하나만 삭제하면 됨
+        }
+      }
+
+      // 특정 평가자에게만 재작성 요청 전송
+      const recipients = [
+        {
+          recipientId: evaluatorId,
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
+        },
+      ];
+
+      // 재작성 요청 생성 (트랜잭션 내에서)
+      const newRequest = new EvaluationRevisionRequest({
+        evaluationPeriodId,
+        employeeId,
+        step: 'secondary',
+        comment,
+        requestedBy,
+        recipients,
+        createdBy: requestedBy,
+      });
+      await manager.save(EvaluationRevisionRequest, newRequest);
     });
 
     this.logger.log(
@@ -496,4 +637,3 @@ export class StepApprovalContextService implements IStepApprovalContext {
     );
   }
 }
-

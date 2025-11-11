@@ -156,8 +156,14 @@ export class WbsSelfEvaluation
 
   /**
    * 1차 평가자가 관리자에게 제출한다
+   * 관리자에게 제출할 때는 평가자에게도 제출한 것으로 간주한다
    */
   일차평가자가_관리자에게_제출한다(): void {
+    // 평가자에게 제출하지 않았으면 자동으로 제출한 것으로 설정
+    if (!this.submittedToEvaluator) {
+      this.submittedToEvaluator = true;
+      this.submittedToEvaluatorAt = new Date();
+    }
     this.submittedToManager = true;
     this.submittedToManagerAt = new Date();
   }
@@ -171,11 +177,29 @@ export class WbsSelfEvaluation
   }
 
   /**
+   * 피평가자 제출을 완전히 초기화한다 (제출 상태와 제출 일시 모두 초기화)
+   * 재작성 요청 생성 시 사용됩니다.
+   */
+  피평가자_제출을_완전히_초기화한다(): void {
+    this.submittedToEvaluator = false;
+    this.submittedToEvaluatorAt = null as any;
+  }
+
+  /**
    * 1차 평가자 제출을 취소한다 (제출 상태만 false로 변경, submittedToManagerAt은 유지)
    */
   일차평가자_제출을_취소한다(): void {
     this.submittedToManager = false;
     // Reset 시에는 submittedToManagerAt을 초기화하지 않고 유지
+  }
+
+  /**
+   * 1차 평가자 제출을 완전히 초기화한다 (제출 상태와 제출 일시 모두 초기화)
+   * 재작성 요청 생성 시 사용됩니다.
+   */
+  일차평가자_제출을_완전히_초기화한다(): void {
+    this.submittedToManager = false;
+    this.submittedToManagerAt = null as any;
   }
 
   /**
