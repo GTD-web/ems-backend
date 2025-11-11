@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build && tsc-alias",
+    "build": "nest build",
     "build:docker": "node scripts/sync-version.js && docker compose build && docker compose push",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
