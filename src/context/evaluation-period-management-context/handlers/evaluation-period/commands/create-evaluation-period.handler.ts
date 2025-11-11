@@ -1,6 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { EvaluationPeriodService } from '../../../../../domain/core/evaluation-period/evaluation-period.service';
+import { EvaluationPeriod } from '../../../../../domain/core/evaluation-period/evaluation-period.entity';
+import {
+  EvaluationPeriodNameDuplicateException,
+  EvaluationPeriodOverlapException,
+} from '../../../../../domain/core/evaluation-period/evaluation-period.exceptions';
 import { EvaluationPeriodDto } from '../../../../../domain/core/evaluation-period/evaluation-period.types';
 import { CreateEvaluationPeriodMinimalDto } from '../../../interfaces/evaluation-period-creation.interface';
 
@@ -24,6 +31,8 @@ export class CreateEvaluationPeriodCommandHandler
 {
   constructor(
     private readonly evaluationPeriodService: EvaluationPeriodService,
+    @InjectRepository(EvaluationPeriod)
+    private readonly evaluationPeriodRepository: Repository<EvaluationPeriod>,
   ) {}
 
   async execute(
@@ -41,13 +50,64 @@ export class CreateEvaluationPeriodCommandHandler
       gradeRanges: createData.gradeRanges,
     };
 
-    // 도메인 서비스를 통해 평가 기간 생성
+    // 컨텍스트 핸들러에서 비즈니스 규칙 검증 수행
+    await this.이름중복검증한다(createDto.name);
+    await this.기간겹침검증한다(
+      createDto.startDate,
+      createDto.peerEvaluationDeadline,
+    );
+
+    // 도메인 서비스를 통해 평가 기간 생성 (검증은 이미 완료됨)
     const createdPeriod = await this.evaluationPeriodService.생성한다(
       createDto,
       createdBy,
     );
 
     return createdPeriod as EvaluationPeriodDto;
+  }
+
+  /**
+   * 이름 중복을 검증한다
+   */
+  private async 이름중복검증한다(name: string): Promise<void> {
+    const count = await this.evaluationPeriodRepository
+      .createQueryBuilder('period')
+      .where('period.name = :name', { name })
+      .getCount();
+
+    if (count > 0) {
+      throw new EvaluationPeriodNameDuplicateException(name);
+    }
+  }
+
+  /**
+   * 기간 겹침을 검증한다
+   * endDate 대신 peerEvaluationDeadline을 기준으로 검증합니다.
+   * endDate는 결재 완료 날짜이므로 겹침 검증에는 사용하지 않습니다.
+   */
+  private async 기간겹침검증한다(
+    startDate: Date,
+    peerEvaluationDeadline?: Date,
+  ): Promise<void> {
+    if (!peerEvaluationDeadline) {
+      return;
+    }
+
+    const conflictingPeriod = await this.evaluationPeriodRepository
+      .createQueryBuilder('period')
+      .where(
+        '(period.startDate <= :peerEvaluationDeadline AND period.peerEvaluationDeadline >= :startDate)',
+        { startDate, peerEvaluationDeadline },
+      )
+      .getOne();
+
+    if (conflictingPeriod) {
+      throw new EvaluationPeriodOverlapException(
+        startDate,
+        peerEvaluationDeadline,
+        conflictingPeriod.id,
+      );
+    }
   }
 }
 

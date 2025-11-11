@@ -2,6 +2,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import type { UpdateWbsSelfEvaluationData } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 
 /**
  * 직원의 전체 WBS 자기평가 초기화 커맨드 (1차 평가자 → 관리자 제출 취소)
@@ -96,7 +97,10 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler
       // 각 평가를 초기화 처리
       for (const evaluation of evaluations) {
         try {
-          const wasSubmittedToManager = evaluation.일차평가자가_관리자에게_제출했는가();
+          const wasSubmittedToManager =
+            evaluation.일차평가자가_관리자에게_제출했는가();
+          const wasSubmittedToEvaluator =
+            evaluation.피평가자가_1차평가자에게_제출했는가();
 
           // 이미 관리자에게 미제출 상태면 스킵
           if (!wasSubmittedToManager) {
@@ -106,10 +110,20 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler
             continue;
           }
 
-          // 1차 평가자 → 관리자 제출 상태 초기화 (재작성 요청 생성 시 submittedToManagerAt도 초기화)
+          // 피평가자 → 1차 평가자, 1차 평가자 → 관리자 제출 상태 초기화 (재작성 요청 생성 시 모든 제출 상태 초기화)
+          const updateData: UpdateWbsSelfEvaluationData = {
+            submittedToManager: false,
+            resetSubmittedToManagerAt: true,
+          };
+
+          if (wasSubmittedToEvaluator) {
+            updateData.submittedToEvaluator = false;
+            updateData.resetSubmittedToEvaluatorAt = true;
+          }
+
           await this.wbsSelfEvaluationService.수정한다(
             evaluation.id,
-            { submittedToManager: false, resetSubmittedToManagerAt: true },
+            updateData,
             resetBy,
           );
 

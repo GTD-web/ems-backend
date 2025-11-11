@@ -60,7 +60,8 @@ let UpsertFinalEvaluationHandler = UpsertFinalEvaluationHandler_1 = class Upsert
             jobDetailedGrade,
         });
         return await this.transactionManager.executeTransaction(async (manager) => {
-            const existingEvaluation = await this.finalEvaluationRepository.findOne({
+            const repository = this.transactionManager.getRepository(final_evaluation_entity_1.FinalEvaluation, this.finalEvaluationRepository, manager);
+            const existingEvaluation = await repository.findOne({
                 where: {
                     employeeId,
                     periodId,

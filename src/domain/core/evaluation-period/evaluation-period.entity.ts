@@ -191,8 +191,10 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.EVALUATION_SETUP;
-    // 평가기간 시작 시 평가 기준 설정 수동 허용을 자동으로 활성화
-    this.criteriaSettingEnabled = true;
+    // 평가기간 시작 시 모든 수동 설정을 기본값(false)으로 설정
+    this.criteriaSettingEnabled = false;
+    this.selfEvaluationSettingEnabled = false;
+    this.finalEvaluationSettingEnabled = false;
     this.updatedBy = startedBy;
     this.updatedAt = new Date();
   }
@@ -258,10 +260,18 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.EVALUATION_SETUP;
-    // 평가설정 단계에서는 평가 기준 설정만 활성화
-    this.criteriaSettingEnabled = true;
-    this.selfEvaluationSettingEnabled = false;
-    this.finalEvaluationSettingEnabled = false;
+
+    // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
+    if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
+      this.criteriaSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('selfEvaluationSettingEnabled')) {
+      this.selfEvaluationSettingEnabled = false;
+    }
+    if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
+      this.finalEvaluationSettingEnabled = false;
+    }
+
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -281,7 +291,7 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.PERFORMANCE;
-    
+
     // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
     if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
       this.criteriaSettingEnabled = false;
@@ -292,7 +302,7 @@ export class EvaluationPeriod
     if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
       this.finalEvaluationSettingEnabled = false;
     }
-    
+
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -312,18 +322,18 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.SELF_EVALUATION;
-    
+
     // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
     if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
       this.criteriaSettingEnabled = false;
     }
     if (!this.수동설정이_있는가('selfEvaluationSettingEnabled')) {
-      this.selfEvaluationSettingEnabled = true;
+      this.selfEvaluationSettingEnabled = false;
     }
     if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
       this.finalEvaluationSettingEnabled = false;
     }
-    
+
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -343,7 +353,7 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.PEER_EVALUATION;
-    
+
     // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
     if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
       this.criteriaSettingEnabled = false;
@@ -352,9 +362,9 @@ export class EvaluationPeriod
       this.selfEvaluationSettingEnabled = false;
     }
     if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
-      this.finalEvaluationSettingEnabled = true;
+      this.finalEvaluationSettingEnabled = false;
     }
-    
+
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
@@ -374,7 +384,7 @@ export class EvaluationPeriod
 
     this.status = EvaluationPeriodStatus.IN_PROGRESS;
     this.currentPhase = EvaluationPeriodPhase.CLOSURE;
-    
+
     // 하이브리드 방식: 수동 설정이 없는 경우에만 기본값 적용
     if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
       this.criteriaSettingEnabled = false;
@@ -385,11 +395,10 @@ export class EvaluationPeriod
     if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
       this.finalEvaluationSettingEnabled = false;
     }
-    
+
     this.updatedBy = movedBy;
     this.updatedAt = new Date();
   }
-
 
   /**
    * 자기평가 달성률 최대값을 설정한다

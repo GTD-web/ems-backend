@@ -579,7 +579,7 @@ export class EvaluationPeriodValidationService {
     await this.이름중복검증한다(createDto.name, undefined, manager);
     await this.기간겹침검증한다(
       createDto.startDate,
-      createDto.endDate,
+      createDto.peerEvaluationDeadline,
       undefined,
       manager,
     );
@@ -616,22 +616,7 @@ export class EvaluationPeriodValidationService {
     }
   }
 
-  /**
-   * 평가 기간 생성 비즈니스 규칙을 검증한다
-   */
-  async 평가기간생성비즈니스규칙검증한다(
-    createDto: CreateEvaluationPeriodDto,
-    manager?: EntityManager,
-  ): Promise<void> {
-    // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
-    await this.이름중복검증한다(createDto.name, undefined, manager);
-    await this.기간겹침검증한다(
-      createDto.startDate,
-      createDto.peerEvaluationDeadline,
-      undefined,
-      manager,
-    );
-  }
+
 
   /**
    * 평가 기간 업데이트 비즈니스 규칙을 검증한다
@@ -775,10 +760,12 @@ export class EvaluationPeriodValidationService {
 
   /**
    * 기간 겹침을 검증한다
+   * endDate 대신 peerEvaluationDeadline을 기준으로 검증합니다.
+   * endDate는 결재 완료 날짜이므로 겹침 검증에는 사용하지 않습니다.
    */
   private async 기간겹침검증한다(
     startDate: Date,
-    endDate?: Date,
+    peerEvaluationDeadline?: Date,
     excludeId?: string,
     manager?: EntityManager,
   ): Promise<void> {
@@ -791,8 +778,8 @@ export class EvaluationPeriodValidationService {
     const queryBuilder = repository
       .createQueryBuilder('period')
       .where(
-        '(period.startDate <= :endDate AND (period.endDate >= :startDate OR period.peerEvaluationDeadline >= :startDate))',
-        { startDate, endDate },
+        '(period.startDate <= :peerEvaluationDeadline AND period.peerEvaluationDeadline >= :startDate)',
+        { startDate, peerEvaluationDeadline },
       );
 
     if (excludeId) {
@@ -803,7 +790,7 @@ export class EvaluationPeriodValidationService {
     if (conflictingPeriod) {
       throw new EvaluationPeriodOverlapException(
         startDate,
-        endDate || new Date(),
+        peerEvaluationDeadline || new Date(),
         conflictingPeriod.id,
       );
     }

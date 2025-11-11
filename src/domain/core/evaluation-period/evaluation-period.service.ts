@@ -298,13 +298,8 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
     return this.executeSafeDomainOperation(async () => {
       const entityManager = manager || this.dataSource.manager;
 
-      // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
-      await this.validationService.평가기간생성비즈니스규칙검증한다(
-        createDto,
-        entityManager,
-      );
-
       // 엔티티 생성 (불변성 검증 자동 실행)
+      // 비즈니스 규칙 검증은 컨텍스트 핸들러에서 수행됨
       const evaluationPeriod = new EvaluationPeriod();
       Object.assign(evaluationPeriod, {
         ...createDto,
