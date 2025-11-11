@@ -26,10 +26,15 @@ let VerifyAndSyncUserHandler = VerifyAndSyncUserHandler_1 = class VerifyAndSyncU
         const { accessToken } = command;
         try {
             const verifyResult = await this.ssoService.토큰을검증한다(accessToken);
-            const employee = await this.employeeService.findByEmployeeNumber(verifyResult.employeeNumber);
+            const requestedEmployeeNumber = verifyResult.user_info.employee_number;
+            const employee = await this.employeeService.findByEmployeeNumber(requestedEmployeeNumber);
             if (!employee) {
-                this.logger.warn(`시스템에 등록되지 않은 직원의 토큰 검증 시도: ${verifyResult.employeeNumber}`);
+                this.logger.warn(`시스템에 등록되지 않은 직원의 토큰 검증 시도: ${requestedEmployeeNumber}`);
                 throw new common_1.UnauthorizedException('시스템에 등록되지 않은 사용자입니다. 관리자에게 문의하세요.');
+            }
+            if (employee.employeeNumber !== requestedEmployeeNumber) {
+                this.logger.warn(`사번 불일치: 요청된 사번(${requestedEmployeeNumber})과 조회된 사번(${employee.employeeNumber})이 일치하지 않습니다.`);
+                throw new common_1.UnauthorizedException('사용자 정보가 일치하지 않습니다. 관리자에게 문의하세요.');
             }
             const userInfo = {
                 id: employee.id,
@@ -40,12 +45,14 @@ let VerifyAndSyncUserHandler = VerifyAndSyncUserHandler_1 = class VerifyAndSyncU
                 roles: employee['roles'] || [],
                 status: employee.status,
             };
+            this.logger.log('토큰 검증 성공:', userInfo);
             return {
                 user: userInfo,
                 isSynced: false,
             };
         }
         catch (error) {
+            this.logger.error('토큰 검증 실패:', error);
             if (error instanceof common_1.UnauthorizedException) {
                 throw error;
             }

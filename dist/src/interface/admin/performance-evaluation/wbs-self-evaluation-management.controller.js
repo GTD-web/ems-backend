@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WbsSelfEvaluationManagementController = void 0;
 const self_evaluation_1 = require("../../../context/performance-evaluation-context/handlers/self-evaluation");
 const performance_evaluation_service_1 = require("../../../context/performance-evaluation-context/performance-evaluation.service");
+const wbs_self_evaluation_business_service_1 = require("../../../business/wbs-self-evaluation/wbs-self-evaluation-business.service");
 const decorators_1 = require("../../decorators");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
@@ -22,8 +23,10 @@ const wbs_self_evaluation_api_decorators_1 = require("./decorators/wbs-self-eval
 const wbs_self_evaluation_dto_1 = require("./dto/wbs-self-evaluation.dto");
 let WbsSelfEvaluationManagementController = class WbsSelfEvaluationManagementController {
     performanceEvaluationService;
-    constructor(performanceEvaluationService) {
+    wbsSelfEvaluationBusinessService;
+    constructor(performanceEvaluationService, wbsSelfEvaluationBusinessService) {
         this.performanceEvaluationService = performanceEvaluationService;
+        this.wbsSelfEvaluationBusinessService = wbsSelfEvaluationBusinessService;
     }
     async upsertWbsSelfEvaluation(employeeId, wbsItemId, periodId, dto, user) {
         const actionBy = user.id;
@@ -39,21 +42,11 @@ let WbsSelfEvaluationManagementController = class WbsSelfEvaluationManagementCon
     }
     async submitAllWbsSelfEvaluationsByEmployeePeriod(employeeId, periodId, user) {
         const submittedBy = user.id;
-        return await this.performanceEvaluationService.직원의_전체_WBS자기평가를_제출한다(employeeId, periodId, submittedBy);
+        return await this.wbsSelfEvaluationBusinessService.직원의_전체_WBS자기평가를_제출하고_재작성요청을_완료한다(employeeId, periodId, submittedBy);
     }
     async submitAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod(employeeId, periodId, user) {
         const submittedBy = user.id;
-        const result = await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자에게_제출한다(employeeId, periodId, submittedBy);
-        return {
-            ...result,
-            completedEvaluations: result.completedEvaluations.map((e) => {
-                const { submittedToEvaluatorAt, ...rest } = e;
-                return {
-                    ...rest,
-                    submittedToEvaluatorAt,
-                };
-            }),
-        };
+        return await this.wbsSelfEvaluationBusinessService.직원의_전체_자기평가를_1차평가자에게_제출한다(employeeId, periodId, submittedBy);
     }
     async resetWbsSelfEvaluation(id, user) {
         const resetBy = user.id;
@@ -91,13 +84,20 @@ let WbsSelfEvaluationManagementController = class WbsSelfEvaluationManagementCon
     }
     async resetAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod(employeeId, periodId, user) {
         const resetBy = user.id;
-        const result = await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자_제출_취소한다(employeeId, periodId, resetBy);
+        const result = await this.wbsSelfEvaluationBusinessService.직원의_전체_자기평가를_1차평가자_제출_취소한다(employeeId, periodId, resetBy);
         return {
-            ...result,
+            resetCount: result.resetCount,
+            failedCount: result.failedCount,
+            totalCount: result.totalCount,
             resetEvaluations: result.resetEvaluations.map((e) => ({
-                ...e,
+                evaluationId: e.evaluationId,
+                wbsItemId: e.wbsItemId,
+                selfEvaluationContent: e.selfEvaluationContent,
+                selfEvaluationScore: e.selfEvaluationScore,
+                performanceResult: e.performanceResult,
                 wasSubmittedToManager: false,
             })),
+            failedResets: result.failedResets,
         };
     }
     async resetWbsSelfEvaluationsToEvaluatorByProject(employeeId, periodId, projectId, user) {
@@ -310,6 +310,7 @@ exports.WbsSelfEvaluationManagementController = WbsSelfEvaluationManagementContr
     (0, swagger_1.ApiTags)('C-1. 관리자 - 성과평가 - WBS 자기평가'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/performance-evaluation/wbs-self-evaluations'),
-    __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService])
+    __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
+        wbs_self_evaluation_business_service_1.WbsSelfEvaluationBusinessService])
 ], WbsSelfEvaluationManagementController);
 //# sourceMappingURL=wbs-self-evaluation-management.controller.js.map

@@ -16,6 +16,7 @@ exports.RevisionRequestController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const complete_revision_request_by_evaluator_query_dto_1 = require("./dto/complete-revision-request-by-evaluator-query.dto");
+const revision_request_business_service_1 = require("../../../business/revision-request/revision-request-business.service");
 const revision_request_context_1 = require("../../../context/revision-request-context");
 const revision_request_api_decorators_1 = require("./decorators/revision-request-api.decorators");
 const get_revision_requests_query_dto_1 = require("./dto/get-revision-requests-query.dto");
@@ -23,8 +24,10 @@ const complete_revision_request_dto_1 = require("./dto/complete-revision-request
 const complete_revision_request_by_evaluator_dto_1 = require("./dto/complete-revision-request-by-evaluator.dto");
 const current_user_decorator_1 = require("../../decorators/current-user.decorator");
 let RevisionRequestController = class RevisionRequestController {
+    revisionRequestBusinessService;
     revisionRequestContextService;
-    constructor(revisionRequestContextService) {
+    constructor(revisionRequestBusinessService, revisionRequestContextService) {
+        this.revisionRequestBusinessService = revisionRequestBusinessService;
         this.revisionRequestContextService = revisionRequestContextService;
     }
     async getRevisionRequests(query) {
@@ -38,9 +41,7 @@ let RevisionRequestController = class RevisionRequestController {
         });
         return requests.map((req) => ({
             requestId: req.request.id,
-            evaluationPeriodId: req.request.evaluationPeriodId,
             evaluationPeriod: req.evaluationPeriod,
-            employeeId: req.request.employeeId,
             employee: req.employee,
             step: req.request.step,
             comment: req.request.comment,
@@ -53,22 +54,20 @@ let RevisionRequestController = class RevisionRequestController {
             isCompleted: req.recipientInfo.isCompleted,
             completedAt: req.recipientInfo.completedAt,
             responseComment: req.recipientInfo.responseComment,
-            createdAt: req.recipientInfo.createdAt,
-            updatedAt: req.recipientInfo.updatedAt,
+            approvalStatus: req.approvalStatus,
         }));
     }
     async getMyRevisionRequests(query, recipientId) {
         const requests = await this.revisionRequestContextService.내_재작성요청목록을_조회한다(recipientId, {
             evaluationPeriodId: query.evaluationPeriodId,
+            employeeId: query.employeeId,
             isRead: query.isRead,
             isCompleted: query.isCompleted,
             step: query.step,
         });
         return requests.map((req) => ({
             requestId: req.request.id,
-            evaluationPeriodId: req.request.evaluationPeriodId,
             evaluationPeriod: req.evaluationPeriod,
-            employeeId: req.request.employeeId,
             employee: req.employee,
             step: req.request.step,
             comment: req.request.comment,
@@ -81,8 +80,7 @@ let RevisionRequestController = class RevisionRequestController {
             isCompleted: req.recipientInfo.isCompleted,
             completedAt: req.recipientInfo.completedAt,
             responseComment: req.recipientInfo.responseComment,
-            createdAt: req.recipientInfo.createdAt,
-            updatedAt: req.recipientInfo.updatedAt,
+            approvalStatus: req.approvalStatus,
         }));
     }
     async getMyUnreadCount(recipientId) {
@@ -93,10 +91,10 @@ let RevisionRequestController = class RevisionRequestController {
         await this.revisionRequestContextService.재작성요청을_읽음처리한다(requestId, recipientId);
     }
     async completeRevisionRequest(requestId, dto, recipientId) {
-        await this.revisionRequestContextService.재작성완료_응답을_제출한다(requestId, recipientId, dto.responseComment);
+        await this.revisionRequestBusinessService.재작성완료_응답을_제출한다(requestId, recipientId, dto.responseComment);
     }
     async completeRevisionRequestByEvaluator(evaluationPeriodId, employeeId, evaluatorId, queryDto, dto) {
-        await this.revisionRequestContextService.평가기간_직원_평가자로_재작성완료_응답을_제출한다(evaluationPeriodId, employeeId, evaluatorId, queryDto.step, dto.responseComment);
+        await this.revisionRequestBusinessService.평가기간_직원_평가자로_재작성완료_응답을_제출한다(evaluationPeriodId, employeeId, evaluatorId, queryDto.step, dto.responseComment);
     }
 };
 exports.RevisionRequestController = RevisionRequestController;
@@ -155,6 +153,7 @@ exports.RevisionRequestController = RevisionRequestController = __decorate([
     (0, swagger_1.ApiTags)('A-0-4. 관리자 - 재작성 요청'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/revision-requests'),
-    __metadata("design:paramtypes", [revision_request_context_1.RevisionRequestContextService])
+    __metadata("design:paramtypes", [revision_request_business_service_1.RevisionRequestBusinessService,
+        revision_request_context_1.RevisionRequestContextService])
 ], RevisionRequestController);
 //# sourceMappingURL=revision-request.controller.js.map

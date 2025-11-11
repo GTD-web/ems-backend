@@ -287,6 +287,18 @@ export interface IEvaluationCriteriaManagementService {
    */
   모든_평가라인을_리셋한다(deletedBy: string): Promise<any>;
 
+  /**
+   * 평가기간의 모든 직원에 대해 managerId로 1차 평가자를 자동 구성한다
+   */
+  평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(
+    periodId: string,
+    createdBy: string,
+  ): Promise<{
+    successCount: number;
+    failureCount: number;
+    warnings: string[];
+  }>;
+
   // ============================================================================
   // WBS 평가기준 관리
   // ============================================================================

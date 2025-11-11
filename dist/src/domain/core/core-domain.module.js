@@ -21,6 +21,7 @@ const wbs_evaluation_criteria_module_1 = require("./wbs-evaluation-criteria/wbs-
 const wbs_self_evaluation_module_1 = require("./wbs-self-evaluation/wbs-self-evaluation.module");
 const evaluation_wbs_assignment_1 = require("./evaluation-wbs-assignment");
 const evaluation_project_assignment_module_1 = require("./evaluation-project-assignment/evaluation-project-assignment.module");
+const evaluation_activity_log_module_1 = require("./evaluation-activity-log/evaluation-activity-log.module");
 let CoreDomainModule = class CoreDomainModule {
 };
 exports.CoreDomainModule = CoreDomainModule;
@@ -38,6 +39,7 @@ exports.CoreDomainModule = CoreDomainModule = __decorate([
             peer_evaluation_module_1.PeerEvaluationModule,
             final_evaluation_module_1.FinalEvaluationModule,
             deliverable_module_1.DeliverableModule,
+            evaluation_activity_log_module_1.EvaluationActivityLogModule,
             evaluation_line_mapping_module_1.EvaluationLineMappingModule,
             peer_evaluation_question_mapping_module_1.PeerEvaluationQuestionMappingModule,
         ],
@@ -53,6 +55,7 @@ exports.CoreDomainModule = CoreDomainModule = __decorate([
             peer_evaluation_module_1.PeerEvaluationModule,
             final_evaluation_module_1.FinalEvaluationModule,
             deliverable_module_1.DeliverableModule,
+            evaluation_activity_log_module_1.EvaluationActivityLogModule,
             evaluation_line_mapping_module_1.EvaluationLineMappingModule,
             peer_evaluation_question_mapping_module_1.PeerEvaluationQuestionMappingModule,
         ],

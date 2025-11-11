@@ -19,6 +19,8 @@ const evaluation_question_management_context_module_1 = require("./evaluation-qu
 const seed_data_context_module_1 = require("./seed-data-context/seed-data-context.module");
 const step_approval_context_module_1 = require("./step-approval-context/step-approval-context.module");
 const revision_request_context_module_1 = require("./revision-request-context/revision-request-context.module");
+const audit_log_context_module_1 = require("./audit-log-context/audit-log-context.module");
+const evaluation_activity_log_context_module_1 = require("./evaluation-activity-log-context/evaluation-activity-log-context.module");
 let DomainContextModule = class DomainContextModule {
 };
 exports.DomainContextModule = DomainContextModule;
@@ -36,6 +38,8 @@ exports.DomainContextModule = DomainContextModule = __decorate([
             seed_data_context_module_1.SeedDataContextModule,
             step_approval_context_module_1.StepApprovalContextModule,
             revision_request_context_module_1.RevisionRequestContextModule,
+            audit_log_context_module_1.AuditLogContextModule,
+            evaluation_activity_log_context_module_1.EvaluationActivityLogContextModule,
         ],
         providers: [],
         exports: [
@@ -50,6 +54,8 @@ exports.DomainContextModule = DomainContextModule = __decorate([
             seed_data_context_module_1.SeedDataContextModule,
             step_approval_context_module_1.StepApprovalContextModule,
             revision_request_context_module_1.RevisionRequestContextModule,
+            audit_log_context_module_1.AuditLogContextModule,
+            evaluation_activity_log_context_module_1.EvaluationActivityLogContextModule,
         ],
     })
 ], DomainContextModule);

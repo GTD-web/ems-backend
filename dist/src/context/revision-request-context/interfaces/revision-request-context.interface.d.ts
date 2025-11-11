@@ -1,4 +1,6 @@
 import type { EvaluationRevisionRequestDto, EvaluationRevisionRequestRecipientDto, RevisionRequestStepType } from '@domain/sub/evaluation-revision-request';
+import type { RecipientType } from '@domain/sub/evaluation-revision-request';
+import type { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 export interface RevisionRequestWithDetailsDto {
     request: EvaluationRevisionRequestDto;
     recipientInfo: EvaluationRevisionRequestRecipientDto;
@@ -14,6 +16,7 @@ export interface RevisionRequestWithDetailsDto {
         id: string;
         name: string;
     };
+    approvalStatus: StepApprovalStatus;
 }
 export interface GetRevisionRequestsFilter {
     evaluationPeriodId?: string;
@@ -30,4 +33,5 @@ export interface IRevisionRequestContext {
     재작성요청을_읽음처리한다(requestId: string, recipientId: string): Promise<void>;
     재작성완료_응답을_제출한다(requestId: string, recipientId: string, responseComment: string): Promise<void>;
     평가기간_직원_평가자로_재작성완료_응답을_제출한다(evaluationPeriodId: string, employeeId: string, evaluatorId: string, step: RevisionRequestStepType, responseComment: string): Promise<void>;
+    제출자에게_요청된_재작성요청을_완료처리한다(evaluationPeriodId: string, employeeId: string, step: RevisionRequestStepType, recipientId: string, recipientType: RecipientType, responseComment: string): Promise<void>;
 }

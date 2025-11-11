@@ -113,6 +113,7 @@ export interface EmployeeEvaluationPeriodStatusDto {
                 completedEvaluationCount: number;
                 isSubmitted: boolean;
             }>;
+            isSubmitted: boolean;
             totalScore: number | null;
             grade: string | null;
         };

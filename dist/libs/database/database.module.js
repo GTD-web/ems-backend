@@ -24,21 +24,48 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                     const databaseUrl = configService.get('DATABASE_URL');
                     const nodeEnv = configService.get('NODE_ENV', 'development');
                     const isTest = nodeEnv === 'test';
+                    const isDevelopment = nodeEnv === 'development';
                     if (!databaseUrl) {
                         throw new Error('DATABASE_URL environment variable is required');
+                    }
+                    const needsSSL = configService.get('DATABASE_SSL', 'false') === 'true';
+                    const urlPattern = /^(postgresql|postgres):\/\/([^:@]+)(?::([^@]+))?@([^:/]+)(?::(\d+))?\/([^?]+)(?:\?(.+))?$/;
+                    const match = databaseUrl.match(urlPattern);
+                    if (match) {
+                        const [, , username, password, host, port, database] = match;
+                        return {
+                            type: 'postgres',
+                            host,
+                            port: port ? parseInt(port, 10) : 5432,
+                            username,
+                            password: password || '',
+                            database: database.split('?')[0],
+                            autoLoadEntities: true,
+                            dropSchema: isTest,
+                            synchronize: configService.get('DB_SYNCHRONIZE', isDevelopment || isTest),
+                            logging: configService.get('DB_LOGGING', isDevelopment && !isTest),
+                            ssl: needsSSL ? { rejectUnauthorized: false } : false,
+                            extra: {
+                                max: 10,
+                                connectionTimeoutMillis: 60000,
+                                idleTimeoutMillis: 30000,
+                                ...(needsSSL && { ssl: { rejectUnauthorized: false } }),
+                            },
+                        };
                     }
                     return {
                         type: 'postgres',
                         url: databaseUrl,
                         autoLoadEntities: true,
                         dropSchema: isTest,
-                        synchronize: configService.get('DB_SYNCHRONIZE', nodeEnv === 'development' || isTest),
-                        logging: configService.get('DB_LOGGING', nodeEnv === 'development' && !isTest),
-                        ssl: nodeEnv === 'production' ? { rejectUnauthorized: false } : false,
+                        synchronize: configService.get('DB_SYNCHRONIZE', isDevelopment || isTest),
+                        logging: configService.get('DB_LOGGING', isDevelopment && !isTest),
+                        ssl: needsSSL ? { rejectUnauthorized: false } : false,
                         extra: {
-                            connectionLimit: 10,
-                            acquireTimeout: 60000,
-                            timeout: 60000,
+                            max: 10,
+                            connectionTimeoutMillis: 60000,
+                            idleTimeoutMillis: 30000,
+                            ...(needsSSL && { ssl: { rejectUnauthorized: false } }),
                         },
                     };
                 },

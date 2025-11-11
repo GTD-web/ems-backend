@@ -111,20 +111,10 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
         }
         const projects = await (0, project_wbs_utils_1.getProjectsWithWbs)(evaluationPeriodId, employeeId, mapping, this.projectAssignmentRepository, this.wbsAssignmentRepository, this.wbsItemRepository, this.criteriaRepository, this.selfEvaluationRepository, this.downwardEvaluationRepository, this.evaluationLineMappingRepository, this.deliverableRepository);
         let completedPerformances = 0;
-        let completedSelfEvaluations = 0;
-        let submittedToEvaluatorCount = 0;
-        let submittedToManagerCount = 0;
         const totalWbs = projects.reduce((sum, project) => {
             project.wbsList.forEach((wbs) => {
                 if (wbs.performance?.isCompleted)
                     completedPerformances++;
-                if (wbs.selfEvaluation?.submittedToEvaluator) {
-                    submittedToEvaluatorCount++;
-                }
-                if (wbs.selfEvaluation?.submittedToManager) {
-                    completedSelfEvaluations++;
-                    submittedToManagerCount++;
-                }
             });
             return sum + project.wbsList.length;
         }, 0);
@@ -135,6 +125,23 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
                 deletedAt: null,
             },
         });
+        const submittedToEvaluatorCount = await this.selfEvaluationRepository.count({
+            where: {
+                periodId: evaluationPeriodId,
+                employeeId: employeeId,
+                submittedToEvaluator: true,
+                deletedAt: null,
+            },
+        });
+        const submittedToManagerCount = await this.selfEvaluationRepository.count({
+            where: {
+                periodId: evaluationPeriodId,
+                employeeId: employeeId,
+                submittedToManager: true,
+                deletedAt: null,
+            },
+        });
+        const completedSelfEvaluations = submittedToManagerCount;
         const selfEvaluationScore = await (0, summary_calculation_utils_1.calculateSelfEvaluationScore)(evaluationPeriodId, employeeId, completedSelfEvaluations, this.selfEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
         const isSubmittedToEvaluator = totalSelfEvaluations > 0 &&
             submittedToEvaluatorCount === totalSelfEvaluations;
@@ -149,7 +156,7 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
             isSubmittedToManager,
         };
         const primaryDownwardEvaluation = await (0, summary_calculation_utils_1.calculatePrimaryDownwardEvaluationScore)(evaluationPeriodId, employeeId, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
-        const secondaryDownwardEvaluation = await (0, summary_calculation_utils_1.calculateSecondaryDownwardEvaluationScore)(evaluationPeriodId, employeeId, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
+        const secondaryDownwardEvaluation = await (0, summary_calculation_utils_1.calculateSecondaryDownwardEvaluationScore)(evaluationPeriodId, employeeId, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository, this.employeeRepository);
         const summary = {
             totalProjects: projects.length,
             totalWbs,
@@ -166,6 +173,7 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
                 startDate: evaluationPeriod.startDate,
                 endDate: evaluationPeriod.endDate,
                 status: evaluationPeriod.status,
+                currentPhase: evaluationPeriod.currentPhase,
                 description: evaluationPeriod.description,
                 criteriaSettingEnabled: evaluationPeriod.criteriaSettingEnabled,
                 selfEvaluationSettingEnabled: evaluationPeriod.selfEvaluationSettingEnabled,

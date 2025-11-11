@@ -1,5 +1,5 @@
 import { Repository } from 'typeorm';
-import { EvaluationRevisionRequestService, type RevisionRequestStepType } from '@domain/sub/evaluation-revision-request';
+import { EvaluationRevisionRequestService, EvaluationRevisionRequest, type RevisionRequestStepType, RecipientType } from '@domain/sub/evaluation-revision-request';
 import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
@@ -17,9 +17,15 @@ export declare class RevisionRequestContextService implements IRevisionRequestCo
     내_재작성요청목록을_조회한다(recipientId: string, filter?: GetRevisionRequestsFilter): Promise<RevisionRequestWithDetailsDto[]>;
     읽지않은_재작성요청수를_조회한다(recipientId: string): Promise<number>;
     재작성요청을_읽음처리한다(requestId: string, recipientId: string): Promise<void>;
+    재작성완료_응답을_제출한다_내부(requestId: string, recipientId: string, responseComment: string): Promise<EvaluationRevisionRequest>;
     재작성완료_응답을_제출한다(requestId: string, recipientId: string, responseComment: string): Promise<void>;
+    평가기간_직원_평가자로_재작성완료_응답을_제출한다_내부(evaluationPeriodId: string, employeeId: string, evaluatorId: string, step: RevisionRequestStepType, responseComment: string): Promise<EvaluationRevisionRequest>;
     평가기간_직원_평가자로_재작성완료_응답을_제출한다(evaluationPeriodId: string, employeeId: string, evaluatorId: string, step: RevisionRequestStepType, responseComment: string): Promise<void>;
+    제출자에게_요청된_재작성요청을_완료처리한다(evaluationPeriodId: string, employeeId: string, step: RevisionRequestStepType, recipientId: string, recipientType: RecipientType, responseComment: string): Promise<void>;
+    모든_수신자가_완료했는가_내부(requestId: string): Promise<boolean>;
     private 모든_수신자가_완료했는가;
+    모든_2차평가자의_재작성요청이_완료했는가_내부(evaluationPeriodId: string, employeeId: string): Promise<boolean>;
     private 모든_2차평가자의_재작성요청이_완료했는가;
+    private 단계_승인_상태를_조회한다;
     private 단계_승인_상태를_재작성완료로_변경한다;
 }

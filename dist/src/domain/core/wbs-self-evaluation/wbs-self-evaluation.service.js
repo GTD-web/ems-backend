@@ -71,7 +71,12 @@ let WbsSelfEvaluationService = WbsSelfEvaluationService_1 = class WbsSelfEvaluat
                     wbsSelfEvaluation.일차평가자가_관리자에게_제출한다();
                 }
                 else {
-                    wbsSelfEvaluation.일차평가자_제출을_취소한다();
+                    if (updateData.resetSubmittedToManagerAt) {
+                        wbsSelfEvaluation.일차평가자_제출을_완전히_초기화한다();
+                    }
+                    else {
+                        wbsSelfEvaluation.일차평가자_제출을_취소한다();
+                    }
                 }
             }
             if (updateData.selfEvaluationContent !== undefined ||
@@ -84,22 +89,14 @@ let WbsSelfEvaluationService = WbsSelfEvaluationService_1 = class WbsSelfEvaluat
             return saved;
         }, '수정한다');
     }
-    async 피평가자가_1차평가자에게_제출한다(id, submittedBy, manager) {
+    async 피평가자가_1차평가자에게_제출한다(wbsSelfEvaluation, submittedBy, manager) {
         return this.executeSafeDomainOperation(async () => {
-            this.logger.log(`피평가자가 1차 평가자에게 자기평가 제출 시작 - ID: ${id}`);
+            this.logger.log(`피평가자가 1차 평가자에게 자기평가 제출 시작 - ID: ${wbsSelfEvaluation.id}`);
             const repository = this.transactionManager.getRepository(wbs_self_evaluation_entity_1.WbsSelfEvaluation, this.wbsSelfEvaluationRepository, manager);
-            const wbsSelfEvaluation = await repository.findOne({ where: { id } });
-            if (!wbsSelfEvaluation) {
-                throw new wbs_self_evaluation_exceptions_1.WbsSelfEvaluationNotFoundException(id);
-            }
-            if (!wbsSelfEvaluation.selfEvaluationContent ||
-                !wbsSelfEvaluation.selfEvaluationScore) {
-                throw new wbs_self_evaluation_exceptions_1.WbsSelfEvaluationValidationException('평가 내용과 점수는 필수 입력 항목입니다.');
-            }
             wbsSelfEvaluation.피평가자가_1차평가자에게_제출한다();
-            wbsSelfEvaluation.메타데이터를_업데이트한다(submittedBy);
+            wbsSelfEvaluation.수정자를_설정한다(submittedBy);
             const saved = await repository.save(wbsSelfEvaluation);
-            this.logger.log(`피평가자가 1차 평가자에게 자기평가 제출 완료 - ID: ${id}`);
+            this.logger.log(`피평가자가 1차 평가자에게 자기평가 제출 완료 - ID: ${wbsSelfEvaluation.id}`);
             return saved;
         }, '피평가자가_1차평가자에게_제출한다');
     }

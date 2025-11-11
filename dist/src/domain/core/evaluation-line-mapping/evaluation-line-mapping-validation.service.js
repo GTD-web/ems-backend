@@ -97,7 +97,10 @@ let EvaluationLineMappingValidationService = EvaluationLineMappingValidationServ
         const repository = this.transactionManager.getRepository(evaluation_line_mapping_entity_1.EvaluationLineMapping, this.evaluationLineMappingRepository, manager);
         let queryBuilder = repository
             .createQueryBuilder('mapping')
-            .where('mapping.employeeId = :employeeId', {
+            .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId: createData.evaluationPeriodId,
+        })
+            .andWhere('mapping.employeeId = :employeeId', {
             employeeId: createData.employeeId,
         })
             .andWhere('mapping.evaluatorId = :evaluatorId', {

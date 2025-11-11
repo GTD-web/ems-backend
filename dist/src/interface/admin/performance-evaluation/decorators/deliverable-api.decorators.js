@@ -8,7 +8,6 @@ exports.BulkDeleteDeliverables = BulkDeleteDeliverables;
 exports.GetEmployeeDeliverables = GetEmployeeDeliverables;
 exports.GetWbsDeliverables = GetWbsDeliverables;
 exports.GetDeliverableDetail = GetDeliverableDetail;
-exports.DeleteAllDeliverables = DeleteAllDeliverables;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const deliverable_dto_1 = require("../dto/deliverable.dto");
@@ -284,30 +283,6 @@ function GetDeliverableDetail() {
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: '산출물을 찾을 수 없습니다.',
-    }));
-}
-function DeleteAllDeliverables() {
-    return (0, common_1.applyDecorators)((0, common_1.Delete)('all'), (0, common_1.HttpCode)(common_1.HttpStatus.OK), (0, swagger_1.ApiOperation)({
-        summary: '모든 산출물 삭제',
-        description: `시스템의 모든 산출물을 한 번에 삭제합니다 (소프트 삭제).
-
-**동작:**
-- 모든 산출물을 소프트 삭제 방식으로 삭제
-- 실제 데이터는 DB에 유지됨 (deletedAt 설정)
-- 삭제된 산출물은 조회 시 제외됨
-- 성공/실패 개수 및 실패한 ID 목록 반환
-
-**테스트 케이스:**
-- 여러 산출물이 있을 때 모두 삭제할 수 있어야 한다
-- 성공/실패 개수가 정확하게 반환되어야 한다
-- 실패한 산출물 ID 목록이 반환되어야 한다
-- 삭제된 산출물은 조회 시 제외되어야 한다
-- 산출물이 없을 때도 정상 처리되어야 한다
-- 삭제 후 새로운 산출물 생성 및 조회가 가능해야 한다`,
-    }), (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.OK,
-        description: '모든 산출물이 삭제되었습니다.',
-        type: deliverable_dto_1.BulkDeleteResultDto,
     }));
 }
 //# sourceMappingURL=deliverable-api.decorators.js.map

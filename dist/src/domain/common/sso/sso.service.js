@@ -316,7 +316,9 @@ let SSOService = SSOService_1 = class SSOService {
         return employees;
     }
     mapToEmployeeInfo(data) {
-        const isTerminated = data.status !== '재직중' && data.status !== 'ACTIVE' && data.status !== 'active';
+        const isTerminated = data.status !== '재직중' &&
+            data.status !== 'ACTIVE' &&
+            data.status !== 'active';
         return {
             id: data.id,
             employeeNumber: data.employeeNumber,

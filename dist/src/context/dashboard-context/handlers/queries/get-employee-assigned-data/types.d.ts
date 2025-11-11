@@ -29,18 +29,9 @@ export interface WbsEvaluationCriterion {
 }
 export interface WbsPerformance {
     performanceResult?: string;
+    score?: number;
     isCompleted: boolean;
     completedAt?: Date;
-}
-export interface WbsSelfEvaluationInfo {
-    selfEvaluationId?: string;
-    evaluationContent?: string;
-    score?: number;
-    submittedToEvaluator: boolean;
-    submittedToEvaluatorAt?: Date;
-    submittedToManager: boolean;
-    submittedToManagerAt?: Date;
-    submittedAt?: Date;
 }
 export interface WbsDownwardEvaluationInfo {
     downwardEvaluationId?: string;
@@ -59,7 +50,6 @@ export interface AssignedWbsInfo {
     assignedAt: Date;
     criteria: WbsEvaluationCriterion[];
     performance?: WbsPerformance | null;
-    selfEvaluation?: WbsSelfEvaluationInfo | null;
     primaryDownwardEvaluation?: WbsDownwardEvaluationInfo | null;
     secondaryDownwardEvaluation?: WbsDownwardEvaluationInfo | null;
     deliverables: DeliverableInfo[];
@@ -70,6 +60,7 @@ export interface EvaluationPeriodInfo {
     startDate: Date;
     endDate?: Date;
     status: string;
+    currentPhase?: string;
     description?: string;
     criteriaSettingEnabled: boolean;
     selfEvaluationSettingEnabled: boolean;
@@ -107,10 +98,21 @@ export interface EmployeeAssignedDataResult {
         primaryDownwardEvaluation: {
             totalScore: number | null;
             grade: string | null;
+            isSubmitted: boolean;
         };
         secondaryDownwardEvaluation: {
             totalScore: number | null;
             grade: string | null;
+            isSubmitted: boolean;
+            evaluators: Array<{
+                evaluatorId: string;
+                evaluatorName: string;
+                evaluatorEmployeeNumber: string;
+                evaluatorEmail: string;
+                assignedWbsCount: number;
+                completedEvaluationCount: number;
+                isSubmitted: boolean;
+            }>;
         };
     };
 }

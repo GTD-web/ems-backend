@@ -14,6 +14,7 @@ exports.SubmitWbsSelfEvaluationHandler = exports.SubmitWbsSelfEvaluationCommand 
 const cqrs_1 = require("@nestjs/cqrs");
 const common_1 = require("@nestjs/common");
 const wbs_self_evaluation_service_1 = require("../../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.service");
+const evaluation_period_service_1 = require("../../../../../domain/core/evaluation-period/evaluation-period.service");
 const transaction_manager_service_1 = require("../../../../../../libs/database/transaction-manager.service");
 class SubmitWbsSelfEvaluationCommand {
     evaluationId;
@@ -26,15 +27,19 @@ class SubmitWbsSelfEvaluationCommand {
 exports.SubmitWbsSelfEvaluationCommand = SubmitWbsSelfEvaluationCommand;
 let SubmitWbsSelfEvaluationHandler = SubmitWbsSelfEvaluationHandler_1 = class SubmitWbsSelfEvaluationHandler {
     wbsSelfEvaluationService;
+    evaluationPeriodService;
     transactionManager;
     logger = new common_1.Logger(SubmitWbsSelfEvaluationHandler_1.name);
-    constructor(wbsSelfEvaluationService, transactionManager) {
+    constructor(wbsSelfEvaluationService, evaluationPeriodService, transactionManager) {
         this.wbsSelfEvaluationService = wbsSelfEvaluationService;
+        this.evaluationPeriodService = evaluationPeriodService;
         this.transactionManager = transactionManager;
     }
     async execute(command) {
         const { evaluationId, submittedBy } = command;
-        this.logger.log('WBS 자기평가 제출 핸들러 실행 (1차 평가자 → 관리자)', { evaluationId });
+        this.logger.log('WBS 자기평가 제출 핸들러 실행 (1차 평가자 → 관리자)', {
+            evaluationId,
+        });
         return await this.transactionManager.executeTransaction(async () => {
             const evaluation = await this.wbsSelfEvaluationService.조회한다(evaluationId);
             if (!evaluation) {
@@ -44,8 +49,13 @@ let SubmitWbsSelfEvaluationHandler = SubmitWbsSelfEvaluationHandler_1 = class Su
                 !evaluation.selfEvaluationScore) {
                 throw new common_1.BadRequestException('평가 내용과 점수는 필수 입력 항목입니다.');
             }
-            if (!evaluation.submittedToEvaluator) {
-                throw new common_1.BadRequestException('피평가자가 1차 평가자에게 먼저 제출해야 합니다.');
+            const evaluationPeriod = await this.evaluationPeriodService.ID로_조회한다(evaluation.periodId);
+            if (!evaluationPeriod) {
+                throw new common_1.BadRequestException(`평가기간을 찾을 수 없습니다. (periodId: ${evaluation.periodId})`);
+            }
+            const maxScore = evaluationPeriod.자기평가_달성률_최대값();
+            if (!evaluation.점수가_유효한가(maxScore)) {
+                throw new common_1.BadRequestException(`평가 점수가 유효하지 않습니다 (0 ~ ${maxScore} 사이여야 함).`);
             }
             const updatedEvaluation = await this.wbsSelfEvaluationService.수정한다(evaluationId, { submittedToManager: true }, submittedBy);
             this.logger.log('WBS 자기평가 제출 완료 (1차 평가자 → 관리자)', {
@@ -60,6 +70,7 @@ exports.SubmitWbsSelfEvaluationHandler = SubmitWbsSelfEvaluationHandler = Submit
     (0, common_1.Injectable)(),
     (0, cqrs_1.CommandHandler)(SubmitWbsSelfEvaluationCommand),
     __metadata("design:paramtypes", [wbs_self_evaluation_service_1.WbsSelfEvaluationService,
+        evaluation_period_service_1.EvaluationPeriodService,
         transaction_manager_service_1.TransactionManagerService])
 ], SubmitWbsSelfEvaluationHandler);
 //# sourceMappingURL=submit-wbs-self-evaluation.handler.js.map

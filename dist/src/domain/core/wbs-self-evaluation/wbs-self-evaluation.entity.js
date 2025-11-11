@@ -57,14 +57,26 @@ let WbsSelfEvaluation = class WbsSelfEvaluation extends base_entity_1.BaseEntity
         this.submittedToEvaluatorAt = new Date();
     }
     일차평가자가_관리자에게_제출한다() {
+        if (!this.submittedToEvaluator) {
+            this.submittedToEvaluator = true;
+            this.submittedToEvaluatorAt = new Date();
+        }
         this.submittedToManager = true;
         this.submittedToManagerAt = new Date();
     }
     피평가자_제출을_취소한다() {
         this.submittedToEvaluator = false;
     }
+    피평가자_제출을_완전히_초기화한다() {
+        this.submittedToEvaluator = false;
+        this.submittedToEvaluatorAt = null;
+    }
     일차평가자_제출을_취소한다() {
         this.submittedToManager = false;
+    }
+    일차평가자_제출을_완전히_초기화한다() {
+        this.submittedToManager = false;
+        this.submittedToManagerAt = null;
     }
     피평가자가_1차평가자에게_제출했는가() {
         return this.submittedToEvaluator;

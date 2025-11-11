@@ -39,7 +39,9 @@ let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
         }
         this.status = evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS;
         this.currentPhase = evaluation_period_types_1.EvaluationPeriodPhase.EVALUATION_SETUP;
-        this.criteriaSettingEnabled = true;
+        this.criteriaSettingEnabled = false;
+        this.selfEvaluationSettingEnabled = false;
+        this.finalEvaluationSettingEnabled = false;
         this.updatedBy = startedBy;
         this.updatedAt = new Date();
     }
@@ -72,9 +74,15 @@ let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
         }
         this.status = evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS;
         this.currentPhase = evaluation_period_types_1.EvaluationPeriodPhase.EVALUATION_SETUP;
-        this.criteriaSettingEnabled = true;
-        this.selfEvaluationSettingEnabled = false;
-        this.finalEvaluationSettingEnabled = false;
+        if (!this.수동설정이_있는가('criteriaSettingEnabled')) {
+            this.criteriaSettingEnabled = false;
+        }
+        if (!this.수동설정이_있는가('selfEvaluationSettingEnabled')) {
+            this.selfEvaluationSettingEnabled = false;
+        }
+        if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
+            this.finalEvaluationSettingEnabled = false;
+        }
         this.updatedBy = movedBy;
         this.updatedAt = new Date();
     }
@@ -106,7 +114,7 @@ let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
             this.criteriaSettingEnabled = false;
         }
         if (!this.수동설정이_있는가('selfEvaluationSettingEnabled')) {
-            this.selfEvaluationSettingEnabled = true;
+            this.selfEvaluationSettingEnabled = false;
         }
         if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
             this.finalEvaluationSettingEnabled = false;
@@ -127,7 +135,7 @@ let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
             this.selfEvaluationSettingEnabled = false;
         }
         if (!this.수동설정이_있는가('finalEvaluationSettingEnabled')) {
-            this.finalEvaluationSettingEnabled = true;
+            this.finalEvaluationSettingEnabled = false;
         }
         this.updatedBy = movedBy;
         this.updatedAt = new Date();

@@ -120,6 +120,7 @@ let GetEvaluatorAssignedEmployeesDataHandler = GetEvaluatorAssignedEmployeesData
                 startDate: evaluationPeriod.startDate,
                 endDate: evaluationPeriod.endDate,
                 status: evaluationPeriod.status,
+                currentPhase: evaluationPeriod.currentPhase,
                 description: evaluationPeriod.description,
                 criteriaSettingEnabled: evaluationPeriod.criteriaSettingEnabled,
                 selfEvaluationSettingEnabled: evaluationPeriod.selfEvaluationSettingEnabled,

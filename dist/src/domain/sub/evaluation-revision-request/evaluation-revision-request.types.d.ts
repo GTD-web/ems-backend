@@ -1,5 +1,9 @@
 export type RevisionRequestStepType = 'criteria' | 'self' | 'primary' | 'secondary';
-export type RecipientType = 'evaluatee' | 'primary_evaluator' | 'secondary_evaluator';
+export declare enum RecipientType {
+    EVALUATEE = "evaluatee",
+    PRIMARY_EVALUATOR = "primary_evaluator",
+    SECONDARY_EVALUATOR = "secondary_evaluator"
+}
 export interface CreateRevisionRequestData {
     evaluationPeriodId: string;
     employeeId: string;
@@ -55,5 +59,6 @@ export interface RevisionRequestRecipientFilter {
     isRead?: boolean;
     isCompleted?: boolean;
     evaluationPeriodId?: string;
+    employeeId?: string;
     step?: RevisionRequestStepType;
 }

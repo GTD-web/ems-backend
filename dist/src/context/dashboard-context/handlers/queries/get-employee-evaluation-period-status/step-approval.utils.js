@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.평가자별_2차평가_단계승인_상태를_조회한다 = 평가자별_2차평가_단계승인_상태를_조회한다;
 exports.평가자들별_2차평가_단계승인_상태를_조회한다 = 평가자들별_2차평가_단계승인_상태를_조회한다;
+const evaluation_revision_request_1 = require("../../../../../domain/sub/evaluation-revision-request");
 async function 평가자별_2차평가_단계승인_상태를_조회한다(evaluationPeriodId, employeeId, evaluatorId, revisionRequestRepository, revisionRequestRecipientRepository) {
     const recipient = await revisionRequestRecipientRepository
         .createQueryBuilder('recipient')
@@ -13,7 +14,7 @@ async function 평가자별_2차평가_단계승인_상태를_조회한다(evalu
         .andWhere('request.step = :step', { step: 'secondary' })
         .andWhere('recipient.recipientId = :evaluatorId', { evaluatorId })
         .andWhere('recipient.recipientType = :recipientType', {
-        recipientType: 'secondary_evaluator',
+        recipientType: evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR,
     })
         .andWhere('recipient.deletedAt IS NULL')
         .andWhere('request.deletedAt IS NULL')

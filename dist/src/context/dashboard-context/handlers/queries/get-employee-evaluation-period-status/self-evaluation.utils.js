@@ -31,11 +31,9 @@ async function 자기평가_진행_상태를_조회한다(evaluationPeriodId, em
             deletedAt: (0, typeorm_1.IsNull)(),
         },
     });
-    const isSubmittedToEvaluator = totalMappingCount > 0 &&
-        submittedToEvaluatorCount === totalMappingCount;
+    const isSubmittedToEvaluator = totalMappingCount > 0 && submittedToEvaluatorCount === totalMappingCount;
     const submittedToManagerCount = completedMappingCount;
-    const isSubmittedToManager = totalMappingCount > 0 &&
-        submittedToManagerCount === totalMappingCount;
+    const isSubmittedToManager = totalMappingCount > 0 && submittedToManagerCount === totalMappingCount;
     let totalScore = null;
     let grade = null;
     if (totalMappingCount > 0 && completedMappingCount === totalMappingCount) {
@@ -117,8 +115,9 @@ async function 가중치_기반_자기평가_점수를_계산한다(evaluationPe
             return null;
         }
         const finalScore = totalWeightedScore;
-        logger.log(`가중치 기반 자기평가 점수 계산 완료: ${finalScore.toFixed(2)} (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`);
-        return Math.round(finalScore * 100) / 100;
+        const integerScore = Math.floor(finalScore);
+        logger.log(`가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`);
+        return integerScore;
     }
     catch (error) {
         logger.error(`가중치 기반 자기평가 점수 계산 실패: ${error.message}`, error.stack);

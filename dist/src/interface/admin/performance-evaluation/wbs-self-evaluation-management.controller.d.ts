@@ -1,9 +1,11 @@
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
+import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
 import type { AuthenticatedUser } from '@interface/decorators';
 import { ClearAllWbsSelfEvaluationsResponseDto, ClearWbsSelfEvaluationsByProjectResponseDto, CreateWbsSelfEvaluationBodyDto, EmployeeSelfEvaluationsResponseDto, ResetAllWbsSelfEvaluationsResponseDto, ResetWbsSelfEvaluationsByProjectResponseDto, SubmitAllWbsSelfEvaluationsResponseDto, SubmitWbsSelfEvaluationsByProjectResponseDto, WbsSelfEvaluationDetailResponseDto, WbsSelfEvaluationFilterDto, WbsSelfEvaluationResponseDto } from './dto/wbs-self-evaluation.dto';
 export declare class WbsSelfEvaluationManagementController {
     private readonly performanceEvaluationService;
-    constructor(performanceEvaluationService: PerformanceEvaluationService);
+    private readonly wbsSelfEvaluationBusinessService;
+    constructor(performanceEvaluationService: PerformanceEvaluationService, wbsSelfEvaluationBusinessService: WbsSelfEvaluationBusinessService);
     upsertWbsSelfEvaluation(employeeId: string, wbsItemId: string, periodId: string, dto: CreateWbsSelfEvaluationBodyDto, user: AuthenticatedUser): Promise<WbsSelfEvaluationResponseDto>;
     submitWbsSelfEvaluation(id: string, user: AuthenticatedUser): Promise<WbsSelfEvaluationResponseDto>;
     submitWbsSelfEvaluationToEvaluator(id: string, user: AuthenticatedUser): Promise<WbsSelfEvaluationResponseDto>;

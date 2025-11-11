@@ -493,9 +493,8 @@ __decorate([
         type: 'object',
         properties: {
             id: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440007' },
-            name: { type: 'string', example: '시스템 개발' },
-            description: { type: 'string', example: '고객 관리 시스템 개발 업무' },
-            plannedHours: { type: 'number', example: 160 },
+            wbsCode: { type: 'string', example: 'WBS-001' },
+            title: { type: 'string', example: '시스템 개발' },
             startDate: {
                 type: 'string',
                 format: 'date-time',
@@ -507,6 +506,11 @@ __decorate([
                 example: '2024-03-31T18:00:00Z',
             },
             status: { type: 'string', example: 'IN_PROGRESS' },
+            progressPercentage: { type: 'number', example: 75 },
+            projectId: {
+                type: 'string',
+                example: '550e8400-e29b-41d4-a716-446655440008',
+            },
         },
     }),
     __metadata("design:type", Object)

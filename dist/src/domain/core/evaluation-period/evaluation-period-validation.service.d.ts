@@ -22,7 +22,6 @@ export declare class EvaluationPeriodValidationService {
     private 자기평가달성률검증한다;
     private 생성비즈니스규칙검증한다;
     private 업데이트비즈니스규칙검증한다;
-    평가기간생성비즈니스규칙검증한다(createDto: CreateEvaluationPeriodDto, manager?: EntityManager): Promise<void>;
     평가기간업데이트비즈니스규칙검증한다(id: string, updateDto: UpdateEvaluationPeriodDto, manager?: EntityManager): Promise<void>;
     평가기간시작비즈니스규칙검증한다(id: string, manager?: EntityManager): Promise<void>;
     평가기간삭제비즈니스규칙검증한다(evaluationPeriod: any): Promise<void>;

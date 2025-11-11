@@ -36,6 +36,7 @@ import { WBS_ITEM_HANDLERS } from './handlers/wbs-item';
 // Domain Modules
 import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
 import { EvaluationPeriodEmployeeMappingModule } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.module';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 
@@ -70,6 +71,7 @@ import { PeerEvaluationQuestionMappingModule } from '@domain/core/peer-evaluatio
       Department,
       Project,
       EvaluationPeriod,
+      EvaluationPeriodEmployeeMapping,
       EvaluationWbsAssignment,
       WbsEvaluationCriteria,
       EvaluationLine,

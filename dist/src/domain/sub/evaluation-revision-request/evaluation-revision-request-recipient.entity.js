@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationRevisionRequestRecipient = void 0;
 const typeorm_1 = require("typeorm");
 const base_entity_1 = require("../../../../libs/database/base/base.entity");
+const evaluation_revision_request_types_1 = require("./evaluation-revision-request.types");
 const evaluation_revision_request_exceptions_1 = require("./evaluation-revision-request.exceptions");
 const evaluation_revision_request_entity_1 = require("./evaluation-revision-request.entity");
 let EvaluationRevisionRequestRecipient = class EvaluationRevisionRequestRecipient extends base_entity_1.BaseEntity {
@@ -119,7 +120,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
-        enum: ['evaluatee', 'primary_evaluator', 'secondary_evaluator'],
+        enum: evaluation_revision_request_types_1.RecipientType,
         comment: '수신자 타입',
     }),
     __metadata("design:type", String)

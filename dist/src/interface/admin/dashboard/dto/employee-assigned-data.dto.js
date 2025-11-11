@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EvaluatorAssignedEmployeesDataResponseDto = exports.EvaluateeAssignedDataDto = exports.EmployeeAssignedDataResponseDto = exports.AssignedProjectWithWbsDto = exports.AssignmentSummaryDto = exports.SelfEvaluationSummaryDto = exports.EvaluationScoreDto = exports.ProjectManagerDto = exports.AssignedWbsInfoDto = exports.WbsDownwardEvaluationDto = exports.DeliverableInfoDto = exports.WbsSelfEvaluationDto = exports.WbsPerformanceDto = exports.WbsEvaluationCriterionDto = exports.EmployeeInfoDto = exports.EvaluationPeriodInfoDto = void 0;
+exports.EvaluatorAssignedEmployeesDataResponseDto = exports.EvaluateeAssignedDataDto = exports.EmployeeAssignedDataResponseDto = exports.AssignedProjectWithWbsDto = exports.AssignmentSummaryDto = exports.SelfEvaluationSummaryDto = exports.SecondaryDownwardEvaluationDto = exports.SecondaryEvaluatorDto = exports.EvaluationScoreDto = exports.ProjectManagerDto = exports.AssignedWbsInfoDto = exports.WbsDownwardEvaluationDto = exports.DeliverableInfoDto = exports.WbsPerformanceDto = exports.WbsEvaluationCriterionDto = exports.EmployeeInfoDto = exports.EvaluationPeriodInfoDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 class EvaluationPeriodInfoDto {
@@ -17,6 +17,7 @@ class EvaluationPeriodInfoDto {
     name;
     startDate;
     status;
+    currentPhase;
     criteriaSettingEnabled;
     selfEvaluationSettingEnabled;
     finalEvaluationSettingEnabled;
@@ -57,6 +58,16 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], EvaluationPeriodInfoDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '현재 평가 단계',
+        type: 'string',
+        example: 'performance',
+        enum: ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'],
+        nullable: true,
+    }),
+    __metadata("design:type", String)
+], EvaluationPeriodInfoDto.prototype, "currentPhase", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '평가 기준 설정 수동 허용 여부',
@@ -219,6 +230,7 @@ __decorate([
 ], WbsEvaluationCriterionDto.prototype, "createdAt", void 0);
 class WbsPerformanceDto {
     performanceResult;
+    score;
     isCompleted;
     completedAt;
 }
@@ -231,6 +243,14 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], WbsPerformanceDto.prototype, "performanceResult", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '성과달성률 점수 (0 ~ maxSelfEvaluationRate)',
+        example: 100,
+        nullable: true,
+    }),
+    __metadata("design:type", Number)
+], WbsPerformanceDto.prototype, "score", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '완료 여부',
@@ -248,85 +268,6 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], WbsPerformanceDto.prototype, "completedAt", void 0);
-class WbsSelfEvaluationDto {
-    selfEvaluationId;
-    evaluationContent;
-    score;
-    submittedToEvaluator;
-    submittedToEvaluatorAt;
-    submittedToManager;
-    submittedToManagerAt;
-    submittedAt;
-}
-exports.WbsSelfEvaluationDto = WbsSelfEvaluationDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '자기평가 ID',
-        example: '123e4567-e89b-12d3-a456-426614174013',
-        nullable: true,
-    }),
-    __metadata("design:type", String)
-], WbsSelfEvaluationDto.prototype, "selfEvaluationId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '자기평가 내용',
-        example: '계획 대비 110% 달성, 품질 기준 초과 달성',
-        nullable: true,
-    }),
-    __metadata("design:type", String)
-], WbsSelfEvaluationDto.prototype, "evaluationContent", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '자기평가 점수 (1-5)',
-        example: 4,
-        nullable: true,
-    }),
-    __metadata("design:type", Number)
-], WbsSelfEvaluationDto.prototype, "score", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '피평가자가 1차 평가자에게 제출한 여부',
-        example: true,
-    }),
-    __metadata("design:type", Boolean)
-], WbsSelfEvaluationDto.prototype, "submittedToEvaluator", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '1차 평가자에게 제출한 일시',
-        type: 'string',
-        format: 'date-time',
-        example: '2024-04-01T10:00:00.000Z',
-        nullable: true,
-    }),
-    __metadata("design:type", Date)
-], WbsSelfEvaluationDto.prototype, "submittedToEvaluatorAt", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '1차 평가자가 관리자에게 제출한 여부',
-        example: true,
-    }),
-    __metadata("design:type", Boolean)
-], WbsSelfEvaluationDto.prototype, "submittedToManager", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '관리자에게 제출한 일시',
-        type: 'string',
-        format: 'date-time',
-        example: '2024-04-01T10:00:00.000Z',
-        nullable: true,
-    }),
-    __metadata("design:type", Date)
-], WbsSelfEvaluationDto.prototype, "submittedToManagerAt", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '제출일',
-        type: 'string',
-        format: 'date-time',
-        example: '2024-04-01T10:00:00.000Z',
-        nullable: true,
-    }),
-    __metadata("design:type", Date)
-], WbsSelfEvaluationDto.prototype, "submittedAt", void 0);
 class DeliverableInfoDto {
     id;
     name;
@@ -495,7 +436,6 @@ class AssignedWbsInfoDto {
     assignedAt;
     criteria;
     performance;
-    selfEvaluation;
     primaryDownwardEvaluation;
     secondaryDownwardEvaluation;
     deliverables;
@@ -557,15 +497,6 @@ __decorate([
 ], AssignedWbsInfoDto.prototype, "performance", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'WBS 자기평가 정보',
-        type: WbsSelfEvaluationDto,
-        nullable: true,
-    }),
-    (0, class_transformer_1.Type)(() => WbsSelfEvaluationDto),
-    __metadata("design:type", Object)
-], AssignedWbsInfoDto.prototype, "selfEvaluation", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
         description: 'WBS 1차 하향평가 정보 (PRIMARY 평가자가 작성)',
         type: WbsDownwardEvaluationDto,
         nullable: true,
@@ -612,6 +543,7 @@ __decorate([
 class EvaluationScoreDto {
     totalScore;
     grade;
+    isSubmitted;
 }
 exports.EvaluationScoreDto = EvaluationScoreDto;
 __decorate([
@@ -630,6 +562,110 @@ __decorate([
     }),
     __metadata("design:type", Object)
 ], EvaluationScoreDto.prototype, "grade", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '모든 하향평가가 제출되었는지 여부',
+        example: true,
+    }),
+    __metadata("design:type", Boolean)
+], EvaluationScoreDto.prototype, "isSubmitted", void 0);
+class SecondaryEvaluatorDto {
+    evaluatorId;
+    evaluatorName;
+    evaluatorEmployeeNumber;
+    evaluatorEmail;
+    assignedWbsCount;
+    completedEvaluationCount;
+    isSubmitted;
+}
+exports.SecondaryEvaluatorDto = SecondaryEvaluatorDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가자 ID',
+        example: '123e4567-e89b-12d3-a456-426614174015',
+    }),
+    __metadata("design:type", String)
+], SecondaryEvaluatorDto.prototype, "evaluatorId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가자 이름',
+        example: '김평가',
+    }),
+    __metadata("design:type", String)
+], SecondaryEvaluatorDto.prototype, "evaluatorName", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가자 사번',
+        example: 'EMP-001',
+    }),
+    __metadata("design:type", String)
+], SecondaryEvaluatorDto.prototype, "evaluatorEmployeeNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가자 이메일',
+        example: 'evaluator@example.com',
+    }),
+    __metadata("design:type", String)
+], SecondaryEvaluatorDto.prototype, "evaluatorEmail", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '할당된 WBS 수',
+        example: 5,
+    }),
+    __metadata("design:type", Number)
+], SecondaryEvaluatorDto.prototype, "assignedWbsCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '완료된 평가 수',
+        example: 3,
+    }),
+    __metadata("design:type", Number)
+], SecondaryEvaluatorDto.prototype, "completedEvaluationCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '해당 평가자의 모든 평가가 제출되었는지 여부',
+        example: false,
+    }),
+    __metadata("design:type", Boolean)
+], SecondaryEvaluatorDto.prototype, "isSubmitted", void 0);
+class SecondaryDownwardEvaluationDto {
+    totalScore;
+    grade;
+    isSubmitted;
+    evaluators;
+}
+exports.SecondaryDownwardEvaluationDto = SecondaryDownwardEvaluationDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '총점 (0-100 범위, 미완료 시 null)',
+        example: 75.5,
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], SecondaryDownwardEvaluationDto.prototype, "totalScore", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '등급 (S, A, B, C, D 등, 미완료 시 null)',
+        example: 'C',
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], SecondaryDownwardEvaluationDto.prototype, "grade", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '모든 2차 평가자가 제출했는지 여부',
+        example: true,
+    }),
+    __metadata("design:type", Boolean)
+], SecondaryDownwardEvaluationDto.prototype, "isSubmitted", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '2차 평가자 목록',
+        type: [SecondaryEvaluatorDto],
+    }),
+    (0, class_transformer_1.Type)(() => SecondaryEvaluatorDto),
+    __metadata("design:type", Array)
+], SecondaryDownwardEvaluationDto.prototype, "evaluators", void 0);
 class SelfEvaluationSummaryDto {
     totalScore;
     grade;
@@ -747,11 +783,11 @@ __decorate([
 ], AssignmentSummaryDto.prototype, "primaryDownwardEvaluation", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: '2차 하향평가 총점 및 등급',
-        type: EvaluationScoreDto,
+        description: '2차 하향평가 총점 및 등급 (평가자별 정보 포함)',
+        type: SecondaryDownwardEvaluationDto,
     }),
-    (0, class_transformer_1.Type)(() => EvaluationScoreDto),
-    __metadata("design:type", EvaluationScoreDto)
+    (0, class_transformer_1.Type)(() => SecondaryDownwardEvaluationDto),
+    __metadata("design:type", SecondaryDownwardEvaluationDto)
 ], AssignmentSummaryDto.prototype, "secondaryDownwardEvaluation", void 0);
 class AssignedProjectWithWbsDto {
     projectId;

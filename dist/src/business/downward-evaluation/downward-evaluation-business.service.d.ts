@@ -1,12 +1,19 @@
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
+import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
+import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
+import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 export declare class DownwardEvaluationBusinessService {
     private readonly performanceEvaluationService;
     private readonly evaluationCriteriaManagementService;
     private readonly evaluationPeriodManagementContextService;
+    private readonly revisionRequestContextService;
+    private readonly stepApprovalContextService;
+    private readonly activityLogContextService;
     private readonly logger;
-    constructor(performanceEvaluationService: PerformanceEvaluationService, evaluationCriteriaManagementService: EvaluationCriteriaManagementService, evaluationPeriodManagementContextService: EvaluationPeriodManagementContextService);
+    constructor(performanceEvaluationService: PerformanceEvaluationService, evaluationCriteriaManagementService: EvaluationCriteriaManagementService, evaluationPeriodManagementContextService: EvaluationPeriodManagementContextService, revisionRequestContextService: RevisionRequestContextService, stepApprovalContextService: StepApprovalContextService, activityLogContextService: EvaluationActivityLogContextService);
     일차_하향평가를_저장한다(params: {
         evaluatorId: string;
         evaluateeId: string;
@@ -27,4 +34,19 @@ export declare class DownwardEvaluationBusinessService {
         downwardEvaluationScore?: number;
         actionBy: string;
     }): Promise<string>;
+    일차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId: string, periodId: string, wbsId: string, evaluatorId: string, submittedBy: string): Promise<void>;
+    이차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId: string, periodId: string, wbsId: string, evaluatorId: string, submittedBy: string): Promise<void>;
+    일차_하향평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId: string, employeeId: string, revisionComment: string, requestedBy: string): Promise<void>;
+    이차_하향평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId: string, employeeId: string, evaluatorId: string, revisionComment: string, requestedBy: string): Promise<void>;
+    피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId: string, evaluateeId: string, periodId: string, evaluationType: DownwardEvaluationType, submittedBy: string): Promise<{
+        submittedCount: number;
+        skippedCount: number;
+        failedCount: number;
+        submittedIds: string[];
+        skippedIds: string[];
+        failedItems: Array<{
+            evaluationId: string;
+            error: string;
+        }>;
+    }>;
 }

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculateSelfEvaluationScore = calculateSelfEvaluationScore;
 exports.calculatePrimaryDownwardEvaluationScore = calculatePrimaryDownwardEvaluationScore;
 exports.calculateSecondaryDownwardEvaluationScore = calculateSecondaryDownwardEvaluationScore;
+const typeorm_1 = require("typeorm");
 const evaluation_line_entity_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.entity");
 const evaluation_line_types_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.types");
 const downward_evaluation_types_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.types");
@@ -36,8 +37,11 @@ async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, emplo
     const primaryEvaluatorMapping = await evaluationLineMappingRepository
         .createQueryBuilder('mapping')
         .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
-        .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+    })
         .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.wbsItemId IS NULL')
         .andWhere('line.evaluatorType = :evaluatorType', {
         evaluatorType: evaluation_line_types_1.EvaluatorType.PRIMARY,
     })
@@ -45,23 +49,17 @@ async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, emplo
         .getOne();
     if (primaryEvaluatorMapping) {
         const primaryEvaluatorId = primaryEvaluatorMapping.evaluatorId;
-        const primaryAssignedMappings = await evaluationLineMappingRepository
-            .createQueryBuilder('mapping')
-            .select(['mapping.id', 'mapping.wbsItemId'])
-            .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
-            .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
-            .andWhere('mapping.employeeId = :employeeId', { employeeId })
-            .andWhere('mapping.evaluatorId = :evaluatorId', {
-            evaluatorId: primaryEvaluatorId,
+        const primaryAssignedWbs = await wbsAssignmentRepository
+            .createQueryBuilder('assignment')
+            .select(['assignment.wbsItemId AS wbs_item_id'])
+            .where('assignment.periodId = :evaluationPeriodId', {
+            evaluationPeriodId,
         })
-            .andWhere('line.evaluatorType = :evaluatorType', {
-            evaluatorType: evaluation_line_types_1.EvaluatorType.PRIMARY,
-        })
-            .andWhere('mapping.deletedAt IS NULL')
-            .andWhere('mapping.wbsItemId IS NOT NULL')
+            .andWhere('assignment.employeeId = :employeeId', { employeeId })
+            .andWhere('assignment.deletedAt IS NULL')
             .getRawMany();
-        const primaryAssignedCount = primaryAssignedMappings.length;
-        const primaryAssignedWbsIds = primaryAssignedMappings.map((m) => m.mapping_wbsItemId);
+        const primaryAssignedCount = primaryAssignedWbs.length;
+        const primaryAssignedWbsIds = primaryAssignedWbs.map((w) => w.wbs_item_id);
         let primaryCompletedCount = 0;
         if (primaryAssignedWbsIds.length > 0) {
             primaryCompletedCount = await downwardEvaluationRepository
@@ -90,19 +88,30 @@ async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, emplo
                 primaryDownwardGrade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, primaryDownwardScore, evaluationPeriodRepository);
             }
         }
+        const primaryIsSubmitted = primaryAssignedCount > 0 &&
+            primaryCompletedCount === primaryAssignedCount &&
+            primaryCompletedCount > 0;
+        return {
+            totalScore: primaryDownwardScore,
+            grade: primaryDownwardGrade,
+            isSubmitted: primaryIsSubmitted,
+        };
     }
     return {
-        totalScore: primaryDownwardScore,
-        grade: primaryDownwardGrade,
+        totalScore: null,
+        grade: null,
+        isSubmitted: false,
     };
 }
-async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, employeeId, evaluationLineMappingRepository, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository) {
+async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, employeeId, evaluationLineMappingRepository, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository, employeeRepository) {
     let secondaryDownwardScore = null;
     let secondaryDownwardGrade = null;
     const secondaryEvaluatorMappings = await evaluationLineMappingRepository
         .createQueryBuilder('mapping')
         .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
-        .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+    })
         .andWhere('mapping.employeeId = :employeeId', { employeeId })
         .andWhere('line.evaluatorType = :evaluatorType', {
         evaluatorType: evaluation_line_types_1.EvaluatorType.SECONDARY,
@@ -118,7 +127,9 @@ async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, emp
                 .createQueryBuilder('mapping')
                 .select(['mapping.id', 'mapping.wbsItemId'])
                 .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
-                .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+                .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+                evaluationPeriodId,
+            })
                 .andWhere('mapping.employeeId = :employeeId', { employeeId })
                 .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
                 .andWhere('line.evaluatorType = :evaluatorType', {
@@ -157,10 +168,50 @@ async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, emp
                 secondaryDownwardGrade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, secondaryDownwardScore, evaluationPeriodRepository);
             }
         }
+        const secondaryIsSubmitted = evaluatorStats.length > 0 &&
+            evaluatorStats.every((stat) => stat.assignedCount > 0 &&
+                stat.completedCount === stat.assignedCount &&
+                stat.completedCount > 0);
+        const evaluators = await Promise.all(evaluatorStats.map(async (stat) => {
+            let evaluatorName = '알 수 없음';
+            let evaluatorEmployeeNumber = 'N/A';
+            let evaluatorEmail = 'N/A';
+            if (employeeRepository) {
+                const evaluator = await employeeRepository.findOne({
+                    where: { id: stat.evaluatorId, deletedAt: (0, typeorm_1.IsNull)() },
+                    select: ['id', 'name', 'employeeNumber', 'email'],
+                });
+                if (evaluator) {
+                    evaluatorName = evaluator.name;
+                    evaluatorEmployeeNumber = evaluator.employeeNumber;
+                    evaluatorEmail = evaluator.email;
+                }
+            }
+            const evaluatorIsSubmitted = stat.assignedCount > 0 &&
+                stat.completedCount === stat.assignedCount &&
+                stat.completedCount > 0;
+            return {
+                evaluatorId: stat.evaluatorId,
+                evaluatorName,
+                evaluatorEmployeeNumber,
+                evaluatorEmail,
+                assignedWbsCount: stat.assignedCount,
+                completedEvaluationCount: stat.completedCount,
+                isSubmitted: evaluatorIsSubmitted,
+            };
+        }));
+        return {
+            totalScore: secondaryDownwardScore,
+            grade: secondaryDownwardGrade,
+            isSubmitted: secondaryIsSubmitted,
+            evaluators,
+        };
     }
     return {
-        totalScore: secondaryDownwardScore,
-        grade: secondaryDownwardGrade,
+        totalScore: null,
+        grade: null,
+        isSubmitted: false,
+        evaluators: [],
     };
 }
 //# sourceMappingURL=summary-calculation.utils.js.map

@@ -53,11 +53,20 @@ let ResetAllWbsSelfEvaluationsByEmployeePeriodHandler = ResetAllWbsSelfEvaluatio
             for (const evaluation of evaluations) {
                 try {
                     const wasSubmittedToManager = evaluation.일차평가자가_관리자에게_제출했는가();
+                    const wasSubmittedToEvaluator = evaluation.피평가자가_1차평가자에게_제출했는가();
                     if (!wasSubmittedToManager) {
                         this.logger.debug(`이미 관리자에게 미제출 상태 스킵 - ID: ${evaluation.id}`);
                         continue;
                     }
-                    await this.wbsSelfEvaluationService.수정한다(evaluation.id, { submittedToManager: false }, resetBy);
+                    const updateData = {
+                        submittedToManager: false,
+                        resetSubmittedToManagerAt: true,
+                    };
+                    if (wasSubmittedToEvaluator) {
+                        updateData.submittedToEvaluator = false;
+                        updateData.resetSubmittedToEvaluatorAt = true;
+                    }
+                    await this.wbsSelfEvaluationService.수정한다(evaluation.id, updateData, resetBy);
                     resetEvaluations.push({
                         evaluationId: evaluation.id,
                         wbsItemId: evaluation.wbsItemId,

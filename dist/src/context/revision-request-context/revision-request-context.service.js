@@ -72,6 +72,7 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
                     recipient.isCompleted !== filter.isCompleted) {
                     continue;
                 }
+                const approvalStatus = await this.단계_승인_상태를_조회한다(request.evaluationPeriodId, request.employeeId, request.step, recipient.recipientId);
                 result.push({
                     request: request.DTO로_변환한다(),
                     recipientInfo: recipient.DTO로_변환한다(),
@@ -87,6 +88,7 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
                         id: evaluationPeriod.id,
                         name: evaluationPeriod.name,
                     },
+                    approvalStatus,
                 });
             }
         }
@@ -99,6 +101,7 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
             isRead: filter?.isRead,
             isCompleted: filter?.isCompleted,
             evaluationPeriodId: filter?.evaluationPeriodId,
+            employeeId: filter?.employeeId,
             step: filter?.step,
         });
         const result = [];
@@ -118,6 +121,7 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
                 this.logger.warn(`평가기간을 찾을 수 없습니다. - 평가기간 ID: ${request.evaluationPeriodId}`);
                 continue;
             }
+            const approvalStatus = await this.단계_승인_상태를_조회한다(request.evaluationPeriodId, request.employeeId, request.step, recipient.recipientId);
             result.push({
                 request: request.DTO로_변환한다(),
                 recipientInfo: recipient.DTO로_변환한다(),
@@ -133,6 +137,7 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
                     id: evaluationPeriod.id,
                     name: evaluationPeriod.name,
                 },
+                approvalStatus,
             });
         }
         this.logger.log(`내 재작성 요청 목록 조회 완료 - 수신자 ID: ${recipientId}, 요청 수: ${result.length}`);
@@ -157,7 +162,7 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
         await this.revisionRequestService.수신자를_저장한다(recipient);
         this.logger.log(`재작성 요청 읽음 처리 완료 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`);
     }
-    async 재작성완료_응답을_제출한다(requestId, recipientId, responseComment) {
+    async 재작성완료_응답을_제출한다_내부(requestId, recipientId, responseComment) {
         this.logger.log(`재작성 완료 응답 제출 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`);
         const request = await this.revisionRequestService.ID로_조회한다(requestId);
         if (!request) {
@@ -172,6 +177,33 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
         }
         recipient.재작성완료_응답한다(responseComment);
         await this.revisionRequestService.수신자를_저장한다(recipient);
+        if (request.step === 'criteria' || request.step === 'self') {
+            const currentRecipientType = recipient.recipientType;
+            const otherRecipientType = currentRecipientType === evaluation_revision_request_1.RecipientType.EVALUATEE
+                ? evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR
+                : evaluation_revision_request_1.RecipientType.EVALUATEE;
+            const otherRequests = await this.revisionRequestService.필터로_조회한다({
+                evaluationPeriodId: request.evaluationPeriodId,
+                employeeId: request.employeeId,
+                step: request.step,
+            });
+            for (const otherRequest of otherRequests) {
+                if (otherRequest.id === requestId) {
+                    continue;
+                }
+                if (!otherRequest.recipients || otherRequest.recipients.length === 0) {
+                    continue;
+                }
+                const otherRecipient = otherRequest.recipients.find((r) => !r.deletedAt &&
+                    r.recipientType === otherRecipientType &&
+                    !r.isCompleted);
+                if (otherRecipient) {
+                    this.logger.log(`다른 수신자에게 보낸 재작성 요청도 함께 완료 처리 - 요청 ID: ${otherRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`);
+                    otherRecipient.재작성완료_응답한다(`연계된 수신자의 재작성 완료로 인한 자동 완료 처리`);
+                    await this.revisionRequestService.수신자를_저장한다(otherRecipient);
+                }
+            }
+        }
         let allCompleted;
         if (request.step === 'secondary') {
             allCompleted = await this.모든_2차평가자의_재작성요청이_완료했는가(request.evaluationPeriodId, request.employeeId);
@@ -183,8 +215,12 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
             await this.단계_승인_상태를_재작성완료로_변경한다(request.evaluationPeriodId, request.employeeId, request.step, recipientId);
         }
         this.logger.log(`재작성 완료 응답 제출 완료 - 요청 ID: ${requestId}, 수신자 ID: ${recipientId}`);
+        return request;
     }
-    async 평가기간_직원_평가자로_재작성완료_응답을_제출한다(evaluationPeriodId, employeeId, evaluatorId, step, responseComment) {
+    async 재작성완료_응답을_제출한다(requestId, recipientId, responseComment) {
+        await this.재작성완료_응답을_제출한다_내부(requestId, recipientId, responseComment);
+    }
+    async 평가기간_직원_평가자로_재작성완료_응답을_제출한다_내부(evaluationPeriodId, employeeId, evaluatorId, step, responseComment) {
         this.logger.log(`재작성 완료 응답 제출 (관리자용) - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 평가자: ${evaluatorId}, 단계: ${step}`);
         const requests = await this.revisionRequestService.필터로_조회한다({
             evaluationPeriodId,
@@ -203,9 +239,9 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
             const recipient = request.recipients.find((r) => !r.deletedAt &&
                 r.recipientId === evaluatorId &&
                 (step === 'secondary'
-                    ? r.recipientType === 'secondary_evaluator'
+                    ? r.recipientType === evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR
                     : step === 'primary'
-                        ? r.recipientType === 'primary_evaluator'
+                        ? r.recipientType === evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR
                         : true));
             if (recipient) {
                 targetRequest = request;
@@ -218,6 +254,28 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
         }
         targetRecipient.재작성완료_응답한다(responseComment);
         await this.revisionRequestService.수신자를_저장한다(targetRecipient);
+        if (targetRequest.step === 'criteria' || targetRequest.step === 'self') {
+            const currentRecipientType = targetRecipient.recipientType;
+            const otherRecipientType = currentRecipientType === evaluation_revision_request_1.RecipientType.EVALUATEE
+                ? evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR
+                : evaluation_revision_request_1.RecipientType.EVALUATEE;
+            for (const otherRequest of requests) {
+                if (otherRequest.id === targetRequest.id) {
+                    continue;
+                }
+                if (!otherRequest.recipients || otherRequest.recipients.length === 0) {
+                    continue;
+                }
+                const otherRecipient = otherRequest.recipients.find((r) => !r.deletedAt &&
+                    r.recipientType === otherRecipientType &&
+                    !r.isCompleted);
+                if (otherRecipient) {
+                    this.logger.log(`다른 수신자에게 보낸 재작성 요청도 함께 완료 처리 - 요청 ID: ${otherRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`);
+                    otherRecipient.재작성완료_응답한다(`연계된 수신자의 재작성 완료로 인한 자동 완료 처리`);
+                    await this.revisionRequestService.수신자를_저장한다(otherRecipient);
+                }
+            }
+        }
         let allCompleted;
         if (targetRequest.step === 'secondary') {
             allCompleted = await this.모든_2차평가자의_재작성요청이_완료했는가(targetRequest.evaluationPeriodId, targetRequest.employeeId);
@@ -229,6 +287,65 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
             await this.단계_승인_상태를_재작성완료로_변경한다(targetRequest.evaluationPeriodId, targetRequest.employeeId, targetRequest.step, evaluatorId);
         }
         this.logger.log(`재작성 완료 응답 제출 완료 (관리자용) - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 평가자: ${evaluatorId}`);
+        return targetRequest;
+    }
+    async 평가기간_직원_평가자로_재작성완료_응답을_제출한다(evaluationPeriodId, employeeId, evaluatorId, step, responseComment) {
+        await this.평가기간_직원_평가자로_재작성완료_응답을_제출한다_내부(evaluationPeriodId, employeeId, evaluatorId, step, responseComment);
+    }
+    async 제출자에게_요청된_재작성요청을_완료처리한다(evaluationPeriodId, employeeId, step, recipientId, recipientType, responseComment) {
+        this.logger.log(`제출자에게 요청된 재작성 요청 자동 완료 처리 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 단계: ${step}, 제출자: ${recipientId}, 타입: ${recipientType}`);
+        const revisionRequests = await this.revisionRequestService.필터로_조회한다({
+            evaluationPeriodId,
+            employeeId,
+            step,
+        });
+        if (revisionRequests.length === 0) {
+            this.logger.log(`제출자에게 요청된 재작성 요청 없음 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 단계: ${step}, 제출자: ${recipientId}`);
+            return;
+        }
+        this.logger.log(`제출자에게 요청된 재작성 요청 발견 - 요청 수: ${revisionRequests.length}`);
+        for (const request of revisionRequests) {
+            if (!request.recipients || request.recipients.length === 0) {
+                continue;
+            }
+            const recipient = request.recipients.find((r) => !r.deletedAt &&
+                r.recipientId === recipientId &&
+                r.recipientType === recipientType &&
+                !r.isCompleted);
+            if (recipient) {
+                try {
+                    await this.재작성완료_응답을_제출한다(request.id, recipientId, responseComment);
+                    this.logger.log(`제출자에게 요청된 재작성 요청 완료 처리 성공 - 요청 ID: ${request.id}, 수신자 ID: ${recipientId}`);
+                }
+                catch (error) {
+                    this.logger.error(`제출자에게 요청된 재작성 요청 완료 처리 실패 - 요청 ID: ${request.id}, 수신자 ID: ${recipientId}`, error);
+                }
+            }
+        }
+        if ((step === 'criteria' || step === 'self') &&
+            recipientType === evaluation_revision_request_1.RecipientType.EVALUATEE) {
+            for (const request of revisionRequests) {
+                if (!request.recipients || request.recipients.length === 0) {
+                    continue;
+                }
+                const primaryEvaluatorRecipient = request.recipients.find((r) => !r.deletedAt &&
+                    r.recipientType === evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR &&
+                    !r.isCompleted);
+                if (primaryEvaluatorRecipient) {
+                    try {
+                        await this.재작성완료_응답을_제출한다(request.id, primaryEvaluatorRecipient.recipientId, responseComment);
+                        this.logger.log(`1차평가자에게 요청된 재작성 요청 완료 처리 성공 - 요청 ID: ${request.id}, 수신자 ID: ${primaryEvaluatorRecipient.recipientId}`);
+                    }
+                    catch (error) {
+                        this.logger.error(`1차평가자에게 요청된 재작성 요청 완료 처리 실패 - 요청 ID: ${request.id}, 수신자 ID: ${primaryEvaluatorRecipient.recipientId}`, error);
+                    }
+                }
+            }
+        }
+        this.logger.log(`제출자에게 요청된 재작성 요청 자동 완료 처리 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 단계: ${step}, 제출자: ${recipientId}`);
+    }
+    async 모든_수신자가_완료했는가_내부(requestId) {
+        return await this.모든_수신자가_완료했는가(requestId);
     }
     async 모든_수신자가_완료했는가(requestId) {
         const request = await this.revisionRequestService.ID로_조회한다(requestId);
@@ -240,6 +357,9 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
             return false;
         }
         return activeRecipients.every((r) => r.isCompleted);
+    }
+    async 모든_2차평가자의_재작성요청이_완료했는가_내부(evaluationPeriodId, employeeId) {
+        return await this.모든_2차평가자의_재작성요청이_완료했는가(evaluationPeriodId, employeeId);
     }
     async 모든_2차평가자의_재작성요청이_완료했는가(evaluationPeriodId, employeeId) {
         const requests = await this.revisionRequestService.필터로_조회한다({
@@ -254,7 +374,7 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
             if (!request.recipients || request.recipients.length === 0) {
                 return false;
             }
-            const activeRecipients = request.recipients.filter((r) => !r.deletedAt && r.recipientType === 'secondary_evaluator');
+            const activeRecipients = request.recipients.filter((r) => !r.deletedAt && r.recipientType === evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR);
             if (activeRecipients.length === 0) {
                 return false;
             }
@@ -264,6 +384,57 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
             }
         }
         return true;
+    }
+    async 단계_승인_상태를_조회한다(evaluationPeriodId, employeeId, step, recipientId) {
+        const mapping = await this.mappingRepository.findOne({
+            where: {
+                evaluationPeriodId,
+                employeeId,
+                deletedAt: null,
+            },
+        });
+        if (!mapping) {
+            return employee_evaluation_step_approval_1.StepApprovalStatus.PENDING;
+        }
+        const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+        if (!stepApproval) {
+            return employee_evaluation_step_approval_1.StepApprovalStatus.PENDING;
+        }
+        if (step === 'secondary') {
+            const revisionRequests = await this.revisionRequestService.필터로_조회한다({
+                evaluationPeriodId,
+                employeeId,
+                step: 'secondary',
+            });
+            for (const revisionRequest of revisionRequests) {
+                if (!revisionRequest.recipients ||
+                    revisionRequest.recipients.length === 0) {
+                    continue;
+                }
+                const recipient = revisionRequest.recipients.find((r) => !r.deletedAt &&
+                    r.recipientId === recipientId &&
+                    r.recipientType === evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR);
+                if (recipient) {
+                    if (recipient.isCompleted) {
+                        return employee_evaluation_step_approval_1.StepApprovalStatus.REVISION_COMPLETED;
+                    }
+                    else {
+                        return employee_evaluation_step_approval_1.StepApprovalStatus.REVISION_REQUESTED;
+                    }
+                }
+            }
+            return stepApproval.secondaryEvaluationStatus;
+        }
+        switch (step) {
+            case 'criteria':
+                return stepApproval.criteriaSettingStatus;
+            case 'self':
+                return stepApproval.selfEvaluationStatus;
+            case 'primary':
+                return stepApproval.primaryEvaluationStatus;
+            default:
+                return employee_evaluation_step_approval_1.StepApprovalStatus.PENDING;
+        }
     }
     async 단계_승인_상태를_재작성완료로_변경한다(evaluationPeriodId, employeeId, step, updatedBy) {
         this.logger.log(`단계 승인 상태를 재작성 완료로 변경 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 단계: ${step}`);

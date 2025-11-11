@@ -1,3 +1,5 @@
+import { StepApprovalStatusEnum } from '@interface/admin/step-approval/dto/update-step-approval.dto';
+import { RecipientType } from '@domain/sub/evaluation-revision-request';
 export declare class EmployeeInfoDto {
     id: string;
     name: string;
@@ -12,23 +14,20 @@ export declare class EvaluationPeriodInfoDto {
 }
 export declare class RevisionRequestResponseDto {
     requestId: string;
-    evaluationPeriodId: string;
     evaluationPeriod: EvaluationPeriodInfoDto;
-    employeeId: string;
     employee: EmployeeInfoDto;
     step: string;
     comment: string;
     requestedBy: string;
     requestedAt: Date;
     recipientId: string;
-    recipientType: string;
+    recipientType: RecipientType;
     isRead: boolean;
     readAt: Date | null;
     isCompleted: boolean;
     completedAt: Date | null;
     responseComment: string | null;
-    createdAt: Date;
-    updatedAt: Date;
+    approvalStatus: StepApprovalStatusEnum;
 }
 export declare class UnreadCountResponseDto {
     unreadCount: number;

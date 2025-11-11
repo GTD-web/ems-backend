@@ -398,34 +398,10 @@ export function GetDeliverableDetail() {
 }
 
 /**
- * 모든 산출물 삭제 API 데코레이터
+ * 모든 산출물 리셋 API 데코레이터
+ * 
+ * @deprecated 이 기능은 admin-utils로 이동되었습니다.
+ * @see AdminUtilsController.resetAllDeliverables()
+ * 
+ * 새 엔드포인트: POST /admin/utils/deliverables/reset
  */
-export function DeleteAllDeliverables() {
-  return applyDecorators(
-    Delete('all'),
-    HttpCode(HttpStatus.OK),
-    ApiOperation({
-      summary: '모든 산출물 삭제',
-      description: `시스템의 모든 산출물을 한 번에 삭제합니다 (소프트 삭제).
-
-**동작:**
-- 모든 산출물을 소프트 삭제 방식으로 삭제
-- 실제 데이터는 DB에 유지됨 (deletedAt 설정)
-- 삭제된 산출물은 조회 시 제외됨
-- 성공/실패 개수 및 실패한 ID 목록 반환
-
-**테스트 케이스:**
-- 여러 산출물이 있을 때 모두 삭제할 수 있어야 한다
-- 성공/실패 개수가 정확하게 반환되어야 한다
-- 실패한 산출물 ID 목록이 반환되어야 한다
-- 삭제된 산출물은 조회 시 제외되어야 한다
-- 산출물이 없을 때도 정상 처리되어야 한다
-- 삭제 후 새로운 산출물 생성 및 조회가 가능해야 한다`,
-    }),
-    ApiResponse({
-      status: HttpStatus.OK,
-      description: '모든 산출물이 삭제되었습니다.',
-      type: BulkDeleteResultDto,
-    }),
-  );
-}

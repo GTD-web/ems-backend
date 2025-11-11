@@ -76,12 +76,13 @@ export declare class WbsSelfEvaluationDetailResponseDto {
     };
     wbsItem?: {
         id: string;
-        name: string;
-        description?: string;
-        plannedHours?: number;
+        wbsCode: string;
+        title: string;
         startDate?: Date;
         endDate?: Date;
         status: string;
+        progressPercentage?: number;
+        projectId: string;
     };
 }
 export declare class EmployeeSelfEvaluationsResponseDto {

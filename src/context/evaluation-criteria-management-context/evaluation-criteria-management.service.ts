@@ -116,6 +116,8 @@ import type {
 import type { WbsEvaluationCriteriaListResponseDto } from '@interface/admin/evaluation-criteria/dto/wbs-evaluation-criteria.dto';
 import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
+import { Employee } from '@domain/common/employee/employee.entity';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 
 /**
  * 평가기준관리 서비스 (MVP 버전)
@@ -139,6 +141,10 @@ export class EvaluationCriteriaManagementService
     private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
     @InjectRepository(EvaluationLine)
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
+    @InjectRepository(Employee)
+    private readonly employeeRepository: Repository<Employee>,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly evaluationPeriodEmployeeMappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
     private readonly wbsAssignmentValidationService: WbsAssignmentValidationService,
   ) {}
 
@@ -854,6 +860,111 @@ export class EvaluationCriteriaManagementService
   async 모든_평가라인을_리셋한다(deletedBy: string): Promise<any> {
     const command = new ResetAllEvaluationLinesCommand(deletedBy);
     return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가기간의 모든 직원에 대해 managerId로 1차 평가자를 자동 구성한다
+   *
+   * 각 직원의 managerId를 조회하여 1차 평가자로 자동 설정합니다.
+   * managerId가 없는 직원은 건너뜁니다.
+   */
+  async 평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(
+    periodId: string,
+    createdBy: string,
+  ): Promise<{
+    successCount: number;
+    failureCount: number;
+    warnings: string[];
+  }> {
+    this.logger.log(
+      `평가기간의 모든 직원에 대해 managerId로 1차 평가자 자동 구성 시작 - 평가기간: ${periodId}`,
+    );
+
+    const warnings: string[] = [];
+    let successCount = 0;
+    let failureCount = 0;
+
+    try {
+      // 1. 평가기간의 모든 평가 대상자 매핑 조회
+      const mappings = await this.evaluationPeriodEmployeeMappingRepository.find(
+        {
+          where: {
+            evaluationPeriodId: periodId,
+            isExcluded: false,
+            deletedAt: IsNull(),
+          },
+        },
+      );
+
+      this.logger.log(
+        `평가 대상자 ${mappings.length}명 조회 완료 - 평가기간: ${periodId}`,
+      );
+
+      // 2. 각 직원의 정보를 조회하고 managerId를 기반으로 1차 평가자 구성
+      for (const mapping of mappings) {
+        const employeeId = mapping.employeeId;
+
+        // 직원 정보 조회
+        const employee = await this.employeeRepository.findOne({
+          where: { id: employeeId, deletedAt: IsNull() },
+        });
+
+        if (!employee) {
+          warnings.push(`직원 ${employeeId}를 찾을 수 없어 건너뜁니다.`);
+          continue;
+        }
+
+        // managerId가 없으면 건너뛰기
+        if (!employee.managerId) {
+          warnings.push(
+            `직원 ${employee.name}의 managerId가 없어 건너뜁니다.`,
+          );
+          continue;
+        }
+
+        try {
+          // 1차 평가자 구성
+          await this.일차_평가자를_구성한다(
+            employeeId,
+            periodId,
+            employee.managerId,
+            createdBy,
+          );
+
+          successCount++;
+          this.logger.debug(
+            `1차 평가자 자동 구성 성공 - 직원: ${employee.name}(${employeeId}), 평가자: ${employee.managerId}`,
+          );
+        } catch (error) {
+          failureCount++;
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          warnings.push(
+            `직원 ${employee.name}의 1차 평가자 구성 실패: ${errorMessage}`,
+          );
+          this.logger.warn(
+            `1차 평가자 자동 구성 실패 - 직원: ${employee.name}(${employeeId}), 평가자: ${employee.managerId}, 오류: ${errorMessage}`,
+          );
+        }
+      }
+
+      this.logger.log(
+        `평가기간의 모든 직원에 대해 managerId로 1차 평가자 자동 구성 완료 - ` +
+          `평가기간: ${periodId}, 성공: ${successCount}, 실패: ${failureCount}`,
+      );
+
+      return {
+        successCount,
+        failureCount,
+        warnings,
+      };
+    } catch (error) {
+      this.logger.error(
+        `평가기간의 모든 직원에 대해 managerId로 1차 평가자 자동 구성 실패 - 평가기간: ${periodId}`,
+        error.stack,
+      );
+      throw error;
+    }
   }
 
   // ============================================================================

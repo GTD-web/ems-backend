@@ -13,6 +13,7 @@ const department_module_1 = require("./department/department.module");
 const project_module_1 = require("./project/project.module");
 const wbs_item_module_1 = require("./wbs-item/wbs-item.module");
 const sso_module_1 = require("./sso/sso.module");
+const audit_log_module_1 = require("./audit-log/audit-log.module");
 let CommonDomainModule = class CommonDomainModule {
 };
 exports.CommonDomainModule = CommonDomainModule;
@@ -24,6 +25,7 @@ exports.CommonDomainModule = CommonDomainModule = __decorate([
             project_module_1.ProjectModule,
             wbs_item_module_1.WbsItemModule,
             sso_module_1.SSOModule,
+            audit_log_module_1.AuditLogModule,
         ],
         exports: [
             employee_module_1.EmployeeModule,
@@ -31,6 +33,7 @@ exports.CommonDomainModule = CommonDomainModule = __decorate([
             project_module_1.ProjectModule,
             wbs_item_module_1.WbsItemModule,
             sso_module_1.SSOModule,
+            audit_log_module_1.AuditLogModule,
         ],
     })
 ], CommonDomainModule);

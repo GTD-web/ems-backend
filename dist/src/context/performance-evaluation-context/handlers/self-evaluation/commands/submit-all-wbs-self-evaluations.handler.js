@@ -72,16 +72,6 @@ let SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler = SubmitAllWbsSelfEvaluat
                         });
                         continue;
                     }
-                    if (!evaluation.피평가자가_1차평가자에게_제출했는가()) {
-                        failedEvaluations.push({
-                            evaluationId: evaluation.id,
-                            wbsItemId: evaluation.wbsItemId,
-                            reason: '피평가자가 1차 평가자에게 먼저 제출해야 합니다.',
-                            selfEvaluationContent: evaluation.selfEvaluationContent,
-                            selfEvaluationScore: evaluation.selfEvaluationScore,
-                        });
-                        continue;
-                    }
                     if (!evaluation.selfEvaluationContent ||
                         !evaluation.selfEvaluationScore) {
                         failedEvaluations.push({

@@ -70,12 +70,12 @@ let DownwardEvaluationManagementController = class DownwardEvaluationManagementC
     async submitPrimaryDownwardEvaluation(evaluateeId, periodId, wbsId, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
         const submittedBy = user.id;
-        await this.performanceEvaluationService.일차_하향평가를_제출한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy);
+        await this.downwardEvaluationBusinessService.일차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy);
     }
     async submitSecondaryDownwardEvaluation(evaluateeId, periodId, wbsId, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
         const submittedBy = user.id;
-        await this.performanceEvaluationService.이차_하향평가를_제출한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy);
+        await this.downwardEvaluationBusinessService.이차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy);
     }
     async resetPrimaryDownwardEvaluation(evaluateeId, periodId, wbsId, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
@@ -94,7 +94,7 @@ let DownwardEvaluationManagementController = class DownwardEvaluationManagementC
     async bulkSubmitDownwardEvaluations(evaluateeId, periodId, queryDto, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
         const submittedBy = user.id;
-        return await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, evaluateeId, periodId, queryDto.evaluationType, submittedBy);
+        return await this.downwardEvaluationBusinessService.피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, evaluateeId, periodId, queryDto.evaluationType, submittedBy);
     }
     async bulkResetDownwardEvaluations(evaluateeId, periodId, queryDto, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;

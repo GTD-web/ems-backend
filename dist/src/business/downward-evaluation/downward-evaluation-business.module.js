@@ -12,6 +12,9 @@ const downward_evaluation_business_service_1 = require("./downward-evaluation-bu
 const performance_evaluation_context_module_1 = require("../../context/performance-evaluation-context/performance-evaluation-context.module");
 const evaluation_criteria_management_context_module_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module");
 const evaluation_period_management_context_module_1 = require("../../context/evaluation-period-management-context/evaluation-period-management-context.module");
+const revision_request_context_module_1 = require("../../context/revision-request-context/revision-request-context.module");
+const step_approval_context_module_1 = require("../../context/step-approval-context/step-approval-context.module");
+const evaluation_activity_log_context_module_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.module");
 let DownwardEvaluationBusinessModule = class DownwardEvaluationBusinessModule {
 };
 exports.DownwardEvaluationBusinessModule = DownwardEvaluationBusinessModule;
@@ -21,6 +24,9 @@ exports.DownwardEvaluationBusinessModule = DownwardEvaluationBusinessModule = __
             performance_evaluation_context_module_1.PerformanceEvaluationContextModule,
             evaluation_criteria_management_context_module_1.EvaluationCriteriaManagementContextModule,
             evaluation_period_management_context_module_1.EvaluationPeriodManagementContextModule,
+            revision_request_context_module_1.RevisionRequestContextModule,
+            step_approval_context_module_1.StepApprovalContextModule,
+            evaluation_activity_log_context_module_1.EvaluationActivityLogContextModule,
         ],
         providers: [downward_evaluation_business_service_1.DownwardEvaluationBusinessService],
         exports: [downward_evaluation_business_service_1.DownwardEvaluationBusinessService],

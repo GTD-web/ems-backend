@@ -1,6 +1,6 @@
 import { BaseEntity } from '@libs/database/base/base.entity';
 import { IEvaluationRevisionRequestRecipient } from './interfaces/evaluation-revision-request-recipient.interface';
-import type { RecipientType, EvaluationRevisionRequestRecipientDto, CreateRecipientData } from './evaluation-revision-request.types';
+import { RecipientType, type EvaluationRevisionRequestRecipientDto, type CreateRecipientData } from './evaluation-revision-request.types';
 import { EvaluationRevisionRequest } from './evaluation-revision-request.entity';
 export declare class EvaluationRevisionRequestRecipient extends BaseEntity<EvaluationRevisionRequestRecipientDto> implements IEvaluationRevisionRequestRecipient {
     revisionRequestId: string;

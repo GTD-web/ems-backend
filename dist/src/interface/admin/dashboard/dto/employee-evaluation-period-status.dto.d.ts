@@ -84,6 +84,7 @@ export declare class SecondaryEvaluatorDto {
 export declare class SecondaryDownwardEvaluationDto {
     status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
     evaluators: SecondaryEvaluatorDto[];
+    isSubmitted: boolean;
     totalScore: number | null;
     grade: string | null;
 }

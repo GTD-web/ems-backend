@@ -178,6 +178,8 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
             primaryGrade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, primaryTotalScore, periodRepository);
         }
     }
+    const secondaryIsSubmitted = secondaryStatuses.length > 0 &&
+        secondaryStatuses.every((status) => status.isSubmitted);
     return {
         primary: {
             evaluator: primaryEvaluatorInfo,
@@ -190,6 +192,7 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
         },
         secondary: {
             evaluators: secondaryStatuses,
+            isSubmitted: secondaryIsSubmitted,
             totalScore: secondaryTotalScore,
             grade: secondaryGrade,
         },

@@ -341,6 +341,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                             const approvalInfo = secondaryEvaluationStatusesWithEvaluatorInfo.find((s) => s.evaluatorId === evaluatorInfo.evaluator.id);
                             return (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending');
                         })),
+                        isSubmitted: secondary.isSubmitted,
                         totalScore: secondary.totalScore,
                         grade: secondary.grade,
                     },
@@ -371,10 +372,10 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     secondaryEvaluationStatuses: secondaryEvaluationStatusesWithEvaluatorInfo,
                     secondaryEvaluationStatus: finalSecondaryStatus,
                     secondaryEvaluationApprovedBy: finalSecondaryStatus === 'approved'
-                        ? stepApproval?.secondaryEvaluationApprovedBy ?? null
+                        ? (stepApproval?.secondaryEvaluationApprovedBy ?? null)
                         : null,
                     secondaryEvaluationApprovedAt: finalSecondaryStatus === 'approved'
-                        ? stepApproval?.secondaryEvaluationApprovedAt ?? null
+                        ? (stepApproval?.secondaryEvaluationApprovedAt ?? null)
                         : null,
                 },
             };

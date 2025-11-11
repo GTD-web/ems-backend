@@ -537,6 +537,7 @@ __decorate([
 class SecondaryDownwardEvaluationDto {
     status;
     evaluators;
+    isSubmitted;
     totalScore;
     grade;
 }
@@ -556,6 +557,13 @@ __decorate([
     }),
     __metadata("design:type", Array)
 ], SecondaryDownwardEvaluationDto.prototype, "evaluators", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '모든 2차 평가자가 제출했는지 통합 상태',
+        example: true,
+    }),
+    __metadata("design:type", Boolean)
+], SecondaryDownwardEvaluationDto.prototype, "isSubmitted", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '가중치 기반 2차 하향평가 총점 (0-100)',

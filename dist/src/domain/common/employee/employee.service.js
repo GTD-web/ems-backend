@@ -235,9 +235,11 @@ let EmployeeService = class EmployeeService {
         });
     }
     async findByEmployeeNumber(employeeNumber) {
-        return this.employeeRepository.findOne({
-            where: { employeeNumber, deletedAt: (0, typeorm_2.IsNull)() },
-        });
+        return this.employeeRepository
+            .createQueryBuilder('employee')
+            .where('employee.employeeNumber = :employeeNumber', { employeeNumber })
+            .andWhere('employee.deletedAt IS NULL')
+            .getOne();
     }
     async create(data) {
         const employee = this.employeeRepository.create(data);

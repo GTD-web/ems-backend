@@ -1,4 +1,4 @@
-import type { EvaluationPeriodInfo, EmployeeInfo, AssignedProjectWithWbs, AssignedWbsInfo, WbsEvaluationCriterion, WbsPerformance, WbsSelfEvaluationInfo, WbsDownwardEvaluationInfo, EmployeeAssignedDataResult, DeliverableInfo } from '@context/dashboard-context/handlers/queries/get-employee-assigned-data/types';
+import type { EvaluationPeriodInfo, EmployeeInfo, AssignedProjectWithWbs, AssignedWbsInfo, WbsEvaluationCriterion, WbsPerformance, WbsDownwardEvaluationInfo, EmployeeAssignedDataResult, DeliverableInfo } from '@context/dashboard-context/handlers/queries/get-employee-assigned-data/types';
 type AssignmentSummary = EmployeeAssignedDataResult['summary'];
 type EvaluationScore = AssignmentSummary['primaryDownwardEvaluation'];
 type SelfEvaluationSummary = AssignmentSummary['selfEvaluation'];
@@ -7,6 +7,7 @@ export declare class EvaluationPeriodInfoDto implements EvaluationPeriodInfo {
     name: string;
     startDate: Date;
     status: string;
+    currentPhase?: string;
     criteriaSettingEnabled: boolean;
     selfEvaluationSettingEnabled: boolean;
     finalEvaluationSettingEnabled: boolean;
@@ -32,18 +33,9 @@ export declare class WbsEvaluationCriterionDto implements WbsEvaluationCriterion
 }
 export declare class WbsPerformanceDto implements WbsPerformance {
     performanceResult?: string;
+    score?: number;
     isCompleted: boolean;
     completedAt?: Date;
-}
-export declare class WbsSelfEvaluationDto implements WbsSelfEvaluationInfo {
-    selfEvaluationId?: string;
-    evaluationContent?: string;
-    score?: number;
-    submittedToEvaluator: boolean;
-    submittedToEvaluatorAt?: Date;
-    submittedToManager: boolean;
-    submittedToManagerAt?: Date;
-    submittedAt?: Date;
 }
 export declare class DeliverableInfoDto implements DeliverableInfo {
     id: string;
@@ -74,7 +66,6 @@ export declare class AssignedWbsInfoDto implements AssignedWbsInfo {
     assignedAt: Date;
     criteria: WbsEvaluationCriterionDto[];
     performance?: WbsPerformanceDto | null;
-    selfEvaluation?: WbsSelfEvaluationDto | null;
     primaryDownwardEvaluation?: WbsDownwardEvaluationDto | null;
     secondaryDownwardEvaluation?: WbsDownwardEvaluationDto | null;
     deliverables: DeliverableInfoDto[];
@@ -86,6 +77,22 @@ export declare class ProjectManagerDto {
 export declare class EvaluationScoreDto implements EvaluationScore {
     totalScore: number | null;
     grade: string | null;
+    isSubmitted: boolean;
+}
+export declare class SecondaryEvaluatorDto {
+    evaluatorId: string;
+    evaluatorName: string;
+    evaluatorEmployeeNumber: string;
+    evaluatorEmail: string;
+    assignedWbsCount: number;
+    completedEvaluationCount: number;
+    isSubmitted: boolean;
+}
+export declare class SecondaryDownwardEvaluationDto {
+    totalScore: number | null;
+    grade: string | null;
+    isSubmitted: boolean;
+    evaluators: SecondaryEvaluatorDto[];
 }
 export declare class SelfEvaluationSummaryDto implements SelfEvaluationSummary {
     totalScore: number | null;
@@ -103,7 +110,7 @@ export declare class AssignmentSummaryDto implements AssignmentSummary {
     completedSelfEvaluations: number;
     selfEvaluation: SelfEvaluationSummaryDto;
     primaryDownwardEvaluation: EvaluationScoreDto;
-    secondaryDownwardEvaluation: EvaluationScoreDto;
+    secondaryDownwardEvaluation: SecondaryDownwardEvaluationDto;
 }
 export declare class AssignedProjectWithWbsDto implements AssignedProjectWithWbs {
     projectId: string;

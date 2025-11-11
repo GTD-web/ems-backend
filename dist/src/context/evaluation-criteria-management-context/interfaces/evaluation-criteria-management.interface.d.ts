@@ -66,6 +66,11 @@ export interface IEvaluationCriteriaManagementService {
         createdMappings: number;
     }>;
     모든_평가라인을_리셋한다(deletedBy: string): Promise<any>;
+    평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(periodId: string, createdBy: string): Promise<{
+        successCount: number;
+        failureCount: number;
+        warnings: string[];
+    }>;
     WBS_평가기준을_생성한다(data: CreateWbsEvaluationCriteriaData, createdBy: string): Promise<WbsEvaluationCriteriaDto>;
     WBS_평가기준을_수정한다(id: string, data: UpdateWbsEvaluationCriteriaData, updatedBy: string): Promise<WbsEvaluationCriteriaDto>;
     WBS_평가기준을_삭제한다(id: string, deletedBy: string): Promise<boolean>;

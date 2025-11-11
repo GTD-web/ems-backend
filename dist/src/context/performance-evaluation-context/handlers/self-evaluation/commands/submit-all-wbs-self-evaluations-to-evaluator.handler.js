@@ -93,7 +93,18 @@ let SubmitAllWbsSelfEvaluationsToEvaluatorHandler = SubmitAllWbsSelfEvaluationsT
                         });
                         continue;
                     }
-                    const updatedEvaluation = await this.wbsSelfEvaluationService.피평가자가_1차평가자에게_제출한다(evaluation.id, submittedBy);
+                    await this.wbsSelfEvaluationService.피평가자가_1차평가자에게_제출한다(evaluation, submittedBy);
+                    const updatedEvaluation = await this.wbsSelfEvaluationService.조회한다(evaluation.id);
+                    if (!updatedEvaluation) {
+                        failedEvaluations.push({
+                            evaluationId: evaluation.id,
+                            wbsItemId: evaluation.wbsItemId,
+                            reason: '저장 후 조회 실패: 자기평가를 찾을 수 없습니다.',
+                            selfEvaluationContent: evaluation.selfEvaluationContent,
+                            selfEvaluationScore: evaluation.selfEvaluationScore,
+                        });
+                        continue;
+                    }
                     completedEvaluations.push({
                         evaluationId: updatedEvaluation.id,
                         wbsItemId: updatedEvaluation.wbsItemId,

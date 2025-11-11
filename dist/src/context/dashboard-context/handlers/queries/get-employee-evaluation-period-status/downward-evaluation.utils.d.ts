@@ -40,6 +40,7 @@ export declare function 하향평가_상태를_조회한다(evaluationPeriodId: 
             completedEvaluationCount: number;
             isSubmitted: boolean;
         }>;
+        isSubmitted: boolean;
         totalScore: number | null;
         grade: string | null;
     };

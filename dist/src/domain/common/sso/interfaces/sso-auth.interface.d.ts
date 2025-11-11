@@ -14,12 +14,16 @@ export interface LoginResult {
     refreshToken: string;
     systemRoles?: Record<string, string[]>;
 }
+export interface SSOUserInfo {
+    id: string;
+    name: string;
+    email: string;
+    employee_number: string;
+}
 export interface VerifyTokenResult {
     valid: boolean;
-    id?: string;
-    email?: string;
-    name?: string;
-    employeeNumber?: string;
+    user_info: SSOUserInfo;
+    expires_in: number;
 }
 export interface RefreshTokenResult {
     accessToken: string;

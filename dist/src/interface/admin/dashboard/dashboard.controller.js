@@ -63,10 +63,13 @@ let DashboardController = class DashboardController {
             primaryDownwardEvaluation: {
                 totalScore: null,
                 grade: null,
+                isSubmitted: false,
             },
             secondaryDownwardEvaluation: {
                 totalScore: null,
                 grade: null,
+                isSubmitted: false,
+                evaluators: [],
             },
         };
         return {
@@ -290,8 +293,7 @@ let DashboardController = class DashboardController {
                     ?.assignedWbsCount || 0,
                 completedCount: statusData.downwardEvaluation.secondary.evaluators[0]
                     ?.completedEvaluationCount || 0,
-                isSubmitted: statusData.downwardEvaluation.secondary.evaluators[0]?.isSubmitted ||
-                    false,
+                isSubmitted: statusData.downwardEvaluation.secondary.isSubmitted,
                 totalScore: statusData.downwardEvaluation.secondary.totalScore,
                 grade: statusData.downwardEvaluation.secondary.grade,
             },

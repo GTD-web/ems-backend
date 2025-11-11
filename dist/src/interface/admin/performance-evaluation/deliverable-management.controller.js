@@ -17,17 +17,17 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const uuid_1 = require("uuid");
 const decorators_1 = require("../../decorators");
-const performance_evaluation_service_1 = require("../../../context/performance-evaluation-context/performance-evaluation.service");
+const deliverable_business_service_1 = require("../../../business/deliverable/deliverable-business.service");
 const deliverable_api_decorators_1 = require("./decorators/deliverable-api.decorators");
 const deliverable_dto_1 = require("./dto/deliverable.dto");
 let DeliverableManagementController = class DeliverableManagementController {
-    performanceEvaluationService;
-    constructor(performanceEvaluationService) {
-        this.performanceEvaluationService = performanceEvaluationService;
+    deliverableBusinessService;
+    constructor(deliverableBusinessService) {
+        this.deliverableBusinessService = deliverableBusinessService;
     }
     async createDeliverable(dto, user) {
         const createdBy = user?.id || dto.createdBy || (0, uuid_1.v4)();
-        const deliverable = await this.performanceEvaluationService.산출물을_생성한다({
+        const deliverable = await this.deliverableBusinessService.산출물을_생성한다({
             name: dto.name,
             type: dto.type,
             employeeId: dto.employeeId,
@@ -40,7 +40,7 @@ let DeliverableManagementController = class DeliverableManagementController {
     }
     async bulkCreateDeliverables(dto, user) {
         const createdBy = user?.id || (0, uuid_1.v4)();
-        const result = await this.performanceEvaluationService.산출물을_벌크_생성한다({
+        const result = await this.deliverableBusinessService.산출물을_벌크_생성한다({
             deliverables: dto.deliverables.map((d) => ({
                 name: d.name,
                 description: d.description,
@@ -60,7 +60,7 @@ let DeliverableManagementController = class DeliverableManagementController {
     }
     async bulkDeleteDeliverables(dto, user) {
         const deletedBy = user?.id || (0, uuid_1.v4)();
-        const result = await this.performanceEvaluationService.산출물을_벌크_삭제한다({
+        const result = await this.deliverableBusinessService.산출물을_벌크_삭제한다({
             ids: dto.deliverableIds,
             deletedBy,
         });
@@ -70,18 +70,9 @@ let DeliverableManagementController = class DeliverableManagementController {
             failedIds: result.failedIds,
         };
     }
-    async deleteAllDeliverables(user) {
-        const deletedBy = user?.id || (0, uuid_1.v4)();
-        const result = await this.performanceEvaluationService.모든_산출물을_삭제한다(deletedBy);
-        return {
-            successCount: result.successCount,
-            failedCount: result.failedCount,
-            failedIds: result.failedIds,
-        };
-    }
     async updateDeliverable(id, dto, user) {
         const updatedBy = user?.id || dto.updatedBy || (0, uuid_1.v4)();
-        const deliverable = await this.performanceEvaluationService.산출물을_수정한다({
+        const deliverable = await this.deliverableBusinessService.산출물을_수정한다({
             id,
             updatedBy,
             name: dto.name,
@@ -96,11 +87,11 @@ let DeliverableManagementController = class DeliverableManagementController {
     }
     async deleteDeliverable(id, user) {
         const deletedBy = user?.id || (0, uuid_1.v4)();
-        await this.performanceEvaluationService.산출물을_삭제한다(id, deletedBy);
+        await this.deliverableBusinessService.산출물을_삭제한다(id, deletedBy);
     }
     async getEmployeeDeliverables(employeeId, query) {
         const activeOnly = query.activeOnly ?? true;
-        const deliverables = await this.performanceEvaluationService.직원별_산출물을_조회한다(employeeId, activeOnly);
+        const deliverables = await this.deliverableBusinessService.직원별_산출물을_조회한다(employeeId, activeOnly);
         return {
             deliverables: deliverables.map((d) => this.toResponseDto(d)),
             total: deliverables.length,
@@ -108,14 +99,14 @@ let DeliverableManagementController = class DeliverableManagementController {
     }
     async getWbsDeliverables(wbsItemId, query) {
         const activeOnly = query.activeOnly ?? true;
-        const deliverables = await this.performanceEvaluationService.WBS항목별_산출물을_조회한다(wbsItemId, activeOnly);
+        const deliverables = await this.deliverableBusinessService.WBS항목별_산출물을_조회한다(wbsItemId, activeOnly);
         return {
             deliverables: deliverables.map((d) => this.toResponseDto(d)),
             total: deliverables.length,
         };
     }
     async getDeliverableDetail(id) {
-        const deliverable = await this.performanceEvaluationService.산출물_상세를_조회한다(id);
+        const deliverable = await this.deliverableBusinessService.산출물_상세를_조회한다(id);
         return this.toResponseDto(deliverable);
     }
     toResponseDto(deliverable) {
@@ -165,13 +156,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], DeliverableManagementController.prototype, "bulkDeleteDeliverables", null);
 __decorate([
-    (0, deliverable_api_decorators_1.DeleteAllDeliverables)(),
-    __param(0, (0, decorators_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], DeliverableManagementController.prototype, "deleteAllDeliverables", null);
-__decorate([
     (0, deliverable_api_decorators_1.UpdateDeliverable)(),
     __param(0, (0, decorators_1.ParseUUID)('id')),
     __param(1, (0, common_1.Body)()),
@@ -215,6 +199,6 @@ exports.DeliverableManagementController = DeliverableManagementController = __de
     (0, swagger_1.ApiTags)('C-2. 관리자 - 성과평가 - 산출물'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/performance-evaluation/deliverables'),
-    __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService])
+    __metadata("design:paramtypes", [deliverable_business_service_1.DeliverableBusinessService])
 ], DeliverableManagementController);
 //# sourceMappingURL=deliverable-management.controller.js.map

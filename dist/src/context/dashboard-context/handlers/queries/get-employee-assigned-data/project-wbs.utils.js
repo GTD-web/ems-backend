@@ -10,7 +10,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
     const projectAssignments = await projectAssignmentRepository
         .createQueryBuilder('assignment')
         .leftJoin(project_entity_1.Project, 'project', 'project.id = assignment.projectId AND project.deletedAt IS NULL')
-        .leftJoin(employee_entity_1.Employee, 'manager', "manager.id::text = project.managerId AND manager.deletedAt IS NULL")
+        .leftJoin(employee_entity_1.Employee, 'manager', 'manager.id::text = project.managerId AND manager.deletedAt IS NULL')
         .select([
         'assignment.id AS assignment_id',
         'assignment.projectId AS assignment_project_id',
@@ -97,19 +97,14 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             });
         }
     }
-    const selfEvaluationMap = new Map();
+    const performanceMap = new Map();
     if (wbsItemIds.length > 0) {
         const selfEvaluationRows = await selfEvaluationRepository
             .createQueryBuilder('evaluation')
             .select([
-            'evaluation.id AS evaluation_id',
             'evaluation.wbsItemId AS evaluation_wbs_item_id',
             'evaluation.performanceResult AS evaluation_performance_result',
-            'evaluation.selfEvaluationContent AS evaluation_self_evaluation_content',
             'evaluation.selfEvaluationScore AS evaluation_self_evaluation_score',
-            'evaluation.submittedToEvaluator AS evaluation_submitted_to_evaluator',
-            'evaluation.submittedToEvaluatorAt AS evaluation_submitted_to_evaluator_at',
-            'evaluation.submittedToManager AS evaluation_submitted_to_manager',
             'evaluation.submittedToManagerAt AS evaluation_submitted_to_manager_at',
         ])
             .where('evaluation.periodId = :periodId', {
@@ -125,25 +120,16 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
                 continue;
             const performance = {
                 performanceResult: row.evaluation_performance_result,
+                score: row.evaluation_self_evaluation_score !== null &&
+                    row.evaluation_self_evaluation_score !== undefined
+                    ? Number(row.evaluation_self_evaluation_score)
+                    : undefined,
                 isCompleted: row.evaluation_performance_result ? true : false,
                 completedAt: row.evaluation_performance_result
                     ? row.evaluation_submitted_to_manager_at
                     : undefined,
             };
-            const selfEvaluation = {
-                selfEvaluationId: row.evaluation_id,
-                evaluationContent: row.evaluation_self_evaluation_content,
-                score: row.evaluation_self_evaluation_score,
-                submittedToEvaluator: row.evaluation_submitted_to_evaluator || false,
-                submittedToEvaluatorAt: row.evaluation_submitted_to_evaluator_at,
-                submittedToManager: row.evaluation_submitted_to_manager || false,
-                submittedToManagerAt: row.evaluation_submitted_to_manager_at,
-                submittedAt: row.evaluation_submitted_to_manager_at,
-            };
-            selfEvaluationMap.set(wbsId, {
-                performance,
-                selfEvaluation,
-            });
+            performanceMap.set(wbsId, performance);
         }
     }
     const primaryEvaluatorMap = new Map();
@@ -156,7 +142,9 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
     ])
         .leftJoin(employee_entity_1.Employee, 'evaluator', 'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL')
         .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
-        .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+    })
         .andWhere('mapping.employeeId = :employeeId', { employeeId })
         .andWhere('mapping.wbsItemId IS NULL')
         .andWhere('mapping.deletedAt IS NULL')
@@ -183,7 +171,9 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
         ])
             .leftJoin(employee_entity_1.Employee, 'evaluator', 'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL')
             .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
-            .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+            .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+        })
             .andWhere('mapping.employeeId = :employeeId', { employeeId })
             .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
             .andWhere('mapping.deletedAt IS NULL')
@@ -250,7 +240,9 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
                 : row.downward_completed_at
                     ? new Date(row.downward_completed_at)
                     : undefined;
-            if (row.downward_evaluation_type === 'primary' && primaryEvaluator) {
+            if (row.downward_evaluation_type === 'primary' &&
+                primaryEvaluator &&
+                row.downward_evaluator_id === primaryEvaluator.evaluatorId) {
                 evalData.primary = {
                     downwardEvaluationId: row.downward_id,
                     evaluatorId: primaryEvaluator.evaluatorId,
@@ -262,7 +254,8 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
                 };
             }
             else if (row.downward_evaluation_type === 'secondary' &&
-                secondaryEvaluator) {
+                secondaryEvaluator &&
+                row.downward_evaluator_id === secondaryEvaluator.evaluatorId) {
                 evalData.secondary = {
                     downwardEvaluationId: row.downward_id,
                     evaluatorId: secondaryEvaluator.evaluatorId,
@@ -360,7 +353,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
                 continue;
             }
             const criteria = criteriaMap.get(wbsItemId) || [];
-            const selfEvalData = selfEvaluationMap.get(wbsItemId);
+            const performance = performanceMap.get(wbsItemId) || null;
             const downwardEvalData = downwardEvaluationMap.get(wbsItemId) || {
                 primary: null,
                 secondary: null,
@@ -373,8 +366,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
                 weight: parseFloat(wbsRow.assignment_weight) || 0,
                 assignedAt: wbsRow.assignment_assigned_date,
                 criteria,
-                performance: selfEvalData?.performance || null,
-                selfEvaluation: selfEvalData?.selfEvaluation || null,
+                performance,
                 primaryDownwardEvaluation: downwardEvalData.primary || null,
                 secondaryDownwardEvaluation: downwardEvalData.secondary || null,
                 deliverables,

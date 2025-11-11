@@ -10,12 +10,16 @@ exports.RevisionRequestModule = void 0;
 const common_1 = require("@nestjs/common");
 const revision_request_controller_1 = require("./revision-request.controller");
 const revision_request_context_1 = require("../../../context/revision-request-context");
+const revision_request_business_module_1 = require("../../../business/revision-request/revision-request-business.module");
 let RevisionRequestModule = class RevisionRequestModule {
 };
 exports.RevisionRequestModule = RevisionRequestModule;
 exports.RevisionRequestModule = RevisionRequestModule = __decorate([
     (0, common_1.Module)({
-        imports: [revision_request_context_1.RevisionRequestContextModule],
+        imports: [
+            revision_request_context_1.RevisionRequestContextModule,
+            revision_request_business_module_1.RevisionRequestBusinessModule,
+        ],
         controllers: [revision_request_controller_1.RevisionRequestController],
     })
 ], RevisionRequestModule);

@@ -10,12 +10,18 @@ exports.StepApprovalModule = void 0;
 const common_1 = require("@nestjs/common");
 const step_approval_controller_1 = require("./step-approval.controller");
 const step_approval_context_1 = require("../../../context/step-approval-context");
+const wbs_self_evaluation_business_module_1 = require("../../../business/wbs-self-evaluation/wbs-self-evaluation-business.module");
+const downward_evaluation_business_module_1 = require("../../../business/downward-evaluation/downward-evaluation-business.module");
 let StepApprovalModule = class StepApprovalModule {
 };
 exports.StepApprovalModule = StepApprovalModule;
 exports.StepApprovalModule = StepApprovalModule = __decorate([
     (0, common_1.Module)({
-        imports: [step_approval_context_1.StepApprovalContextModule],
+        imports: [
+            step_approval_context_1.StepApprovalContextModule,
+            wbs_self_evaluation_business_module_1.WbsSelfEvaluationBusinessModule,
+            downward_evaluation_business_module_1.DownwardEvaluationBusinessModule,
+        ],
         controllers: [step_approval_controller_1.StepApprovalController],
     })
 ], StepApprovalModule);

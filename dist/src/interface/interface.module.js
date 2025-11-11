@@ -12,7 +12,9 @@ const core_1 = require("@nestjs/core");
 const admin_interface_module_1 = require("./admin/admin-interface.module");
 const common_domain_module_1 = require("../domain/common/common-domain.module");
 const auth_context_1 = require("../context/auth-context");
+const audit_log_context_module_1 = require("../context/audit-log-context/audit-log-context.module");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const audit_log_interceptor_1 = require("./interceptors/audit-log.interceptor");
 let InterfaceModule = class InterfaceModule {
 };
 exports.InterfaceModule = InterfaceModule;
@@ -21,6 +23,7 @@ exports.InterfaceModule = InterfaceModule = __decorate([
         imports: [
             common_domain_module_1.CommonDomainModule,
             auth_context_1.AuthContextModule,
+            audit_log_context_module_1.AuditLogContextModule,
             admin_interface_module_1.AdminInterfaceModule,
         ],
         controllers: [],
@@ -28,6 +31,10 @@ exports.InterfaceModule = InterfaceModule = __decorate([
             {
                 provide: core_1.APP_GUARD,
                 useClass: jwt_auth_guard_1.JwtAuthGuard,
+            },
+            {
+                provide: core_1.APP_INTERCEPTOR,
+                useClass: audit_log_interceptor_1.AuditLogInterceptor,
             },
         ],
         exports: [

@@ -27,18 +27,24 @@ const wbs_assignment_1 = require("./handlers/wbs-assignment");
 const wbs_evaluation_criteria_1 = require("./handlers/wbs-evaluation-criteria");
 const wbs_item_1 = require("./handlers/wbs-item");
 const evaluation_line_1 = require("./handlers/evaluation-line");
+const employee_entity_1 = require("../../domain/common/employee/employee.entity");
+const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 let EvaluationCriteriaManagementService = EvaluationCriteriaManagementService_1 = class EvaluationCriteriaManagementService {
     commandBus;
     queryBus;
     evaluationLineMappingRepository;
     evaluationLineRepository;
+    employeeRepository;
+    evaluationPeriodEmployeeMappingRepository;
     wbsAssignmentValidationService;
     logger = new common_1.Logger(EvaluationCriteriaManagementService_1.name);
-    constructor(commandBus, queryBus, evaluationLineMappingRepository, evaluationLineRepository, wbsAssignmentValidationService) {
+    constructor(commandBus, queryBus, evaluationLineMappingRepository, evaluationLineRepository, employeeRepository, evaluationPeriodEmployeeMappingRepository, wbsAssignmentValidationService) {
         this.commandBus = commandBus;
         this.queryBus = queryBus;
         this.evaluationLineMappingRepository = evaluationLineMappingRepository;
         this.evaluationLineRepository = evaluationLineRepository;
+        this.employeeRepository = employeeRepository;
+        this.evaluationPeriodEmployeeMappingRepository = evaluationPeriodEmployeeMappingRepository;
         this.wbsAssignmentValidationService = wbsAssignmentValidationService;
     }
     async 프로젝트를_할당한다(data, assignedBy) {
@@ -286,6 +292,58 @@ let EvaluationCriteriaManagementService = EvaluationCriteriaManagementService_1 
         const command = new evaluation_line_1.ResetAllEvaluationLinesCommand(deletedBy);
         return await this.commandBus.execute(command);
     }
+    async 평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(periodId, createdBy) {
+        this.logger.log(`평가기간의 모든 직원에 대해 managerId로 1차 평가자 자동 구성 시작 - 평가기간: ${periodId}`);
+        const warnings = [];
+        let successCount = 0;
+        let failureCount = 0;
+        try {
+            const mappings = await this.evaluationPeriodEmployeeMappingRepository.find({
+                where: {
+                    evaluationPeriodId: periodId,
+                    isExcluded: false,
+                    deletedAt: (0, typeorm_2.IsNull)(),
+                },
+            });
+            this.logger.log(`평가 대상자 ${mappings.length}명 조회 완료 - 평가기간: ${periodId}`);
+            for (const mapping of mappings) {
+                const employeeId = mapping.employeeId;
+                const employee = await this.employeeRepository.findOne({
+                    where: { id: employeeId, deletedAt: (0, typeorm_2.IsNull)() },
+                });
+                if (!employee) {
+                    warnings.push(`직원 ${employeeId}를 찾을 수 없어 건너뜁니다.`);
+                    continue;
+                }
+                if (!employee.managerId) {
+                    warnings.push(`직원 ${employee.name}의 managerId가 없어 건너뜁니다.`);
+                    continue;
+                }
+                try {
+                    await this.일차_평가자를_구성한다(employeeId, periodId, employee.managerId, createdBy);
+                    successCount++;
+                    this.logger.debug(`1차 평가자 자동 구성 성공 - 직원: ${employee.name}(${employeeId}), 평가자: ${employee.managerId}`);
+                }
+                catch (error) {
+                    failureCount++;
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    warnings.push(`직원 ${employee.name}의 1차 평가자 구성 실패: ${errorMessage}`);
+                    this.logger.warn(`1차 평가자 자동 구성 실패 - 직원: ${employee.name}(${employeeId}), 평가자: ${employee.managerId}, 오류: ${errorMessage}`);
+                }
+            }
+            this.logger.log(`평가기간의 모든 직원에 대해 managerId로 1차 평가자 자동 구성 완료 - ` +
+                `평가기간: ${periodId}, 성공: ${successCount}, 실패: ${failureCount}`);
+            return {
+                successCount,
+                failureCount,
+                warnings,
+            };
+        }
+        catch (error) {
+            this.logger.error(`평가기간의 모든 직원에 대해 managerId로 1차 평가자 자동 구성 실패 - 평가기간: ${periodId}`, error.stack);
+            throw error;
+        }
+    }
     async WBS_평가기준을_생성한다(data, createdBy) {
         const command = new wbs_evaluation_criteria_1.CreateWbsEvaluationCriteriaCommand(data, createdBy);
         return await this.commandBus.execute(command);
@@ -439,8 +497,12 @@ exports.EvaluationCriteriaManagementService = EvaluationCriteriaManagementServic
     (0, common_1.Injectable)(),
     __param(2, (0, typeorm_1.InjectRepository)(evaluation_line_mapping_entity_1.EvaluationLineMapping)),
     __param(3, (0, typeorm_1.InjectRepository)(evaluation_line_entity_1.EvaluationLine)),
+    __param(4, (0, typeorm_1.InjectRepository)(employee_entity_1.Employee)),
+    __param(5, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
     __metadata("design:paramtypes", [cqrs_1.CommandBus,
         cqrs_1.QueryBus,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         wbs_assignment_validation_service_1.WbsAssignmentValidationService])
