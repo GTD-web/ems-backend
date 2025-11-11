@@ -19,6 +19,11 @@ export {
   DeleteWbsItemEvaluationCriteriaHandler,
 } from './commands/delete-wbs-item-evaluation-criteria.handler';
 
+export {
+  DeleteAllWbsEvaluationCriteriaCommand,
+  DeleteAllWbsEvaluationCriteriaHandler,
+} from './commands/delete-all-wbs-evaluation-criteria.handler';
+
 // Queries
 export {
   GetWbsEvaluationCriteriaListQuery,
@@ -40,6 +45,7 @@ import { CreateWbsEvaluationCriteriaHandler } from './commands/create-wbs-evalua
 import { UpdateWbsEvaluationCriteriaHandler } from './commands/update-wbs-evaluation-criteria.handler';
 import { DeleteWbsEvaluationCriteriaHandler } from './commands/delete-wbs-evaluation-criteria.handler';
 import { DeleteWbsItemEvaluationCriteriaHandler } from './commands/delete-wbs-item-evaluation-criteria.handler';
+import { DeleteAllWbsEvaluationCriteriaHandler } from './commands/delete-all-wbs-evaluation-criteria.handler';
 import { GetWbsEvaluationCriteriaListHandler } from './queries/get-wbs-evaluation-criteria-list.handler';
 import { GetWbsEvaluationCriteriaDetailHandler } from './queries/get-wbs-evaluation-criteria-detail.handler';
 import { GetWbsItemEvaluationCriteriaHandler } from './queries/get-wbs-item-evaluation-criteria.handler';
@@ -49,6 +55,7 @@ export const WBS_EVALUATION_CRITERIA_COMMAND_HANDLERS = [
   UpdateWbsEvaluationCriteriaHandler,
   DeleteWbsEvaluationCriteriaHandler,
   DeleteWbsItemEvaluationCriteriaHandler,
+  DeleteAllWbsEvaluationCriteriaHandler,
 ];
 
 export const WBS_EVALUATION_CRITERIA_QUERY_HANDLERS = [

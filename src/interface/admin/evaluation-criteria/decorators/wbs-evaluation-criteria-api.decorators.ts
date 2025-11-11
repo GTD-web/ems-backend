@@ -89,50 +89,50 @@ export const GetWbsEvaluationCriteriaList = () =>
         type: 'object',
         properties: {
           criteria: {
-        type: 'array',
+            type: 'array',
             description: 'WBS 평가기준 목록',
-        items: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            wbsItemId: { type: 'string', format: 'uuid' },
-            criteria: { type: 'string' },
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                wbsItemId: { type: 'string', format: 'uuid' },
+                criteria: { type: 'string' },
                 importance: { type: 'number' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-          },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+              },
             },
           },
           evaluationPeriodSettings: {
             type: 'object',
             description: '평가기간 수동 설정 상태 정보',
             properties: {
-              criteriaSettingEnabled: { 
-                type: 'boolean', 
-                description: '평가 기준 설정 수동 허용 여부' 
+              criteriaSettingEnabled: {
+                type: 'boolean',
+                description: '평가 기준 설정 수동 허용 여부',
               },
-              selfEvaluationSettingEnabled: { 
-                type: 'boolean', 
-                description: '자기 평가 설정 수동 허용 여부' 
+              selfEvaluationSettingEnabled: {
+                type: 'boolean',
+                description: '자기 평가 설정 수동 허용 여부',
               },
-              finalEvaluationSettingEnabled: { 
-                type: 'boolean', 
-                description: '하향/동료평가 설정 수동 허용 여부' 
+              finalEvaluationSettingEnabled: {
+                type: 'boolean',
+                description: '하향/동료평가 설정 수동 허용 여부',
               },
             },
           },
         },
         example: {
           criteria: [
-          {
-            id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
-            wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
-            criteria: '코드 품질 및 성능 최적화',
+            {
+              id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+              wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+              criteria: '코드 품질 및 성능 최적화',
               importance: 5,
-            createdAt: '2024-01-15T10:30:00.000Z',
-            updatedAt: '2024-01-15T10:30:00.000Z',
-          },
-        ],
+              createdAt: '2024-01-15T10:30:00.000Z',
+              updatedAt: '2024-01-15T10:30:00.000Z',
+            },
+          ],
           evaluationPeriodSettings: {
             criteriaSettingEnabled: true,
             selfEvaluationSettingEnabled: false,
@@ -619,5 +619,34 @@ export const DeleteWbsItemEvaluationCriteria = () =>
     ApiResponse({
       status: 404,
       description: 'WBS 항목을 찾을 수 없습니다.',
+    }),
+  );
+
+/**
+ * 모든 WBS 평가기준 삭제 API 데코레이터
+ */
+export const DeleteAllWbsEvaluationCriteria = () =>
+  applyDecorators(
+    Delete('all'),
+    HttpCode(HttpStatus.NO_CONTENT),
+    ApiOperation({
+      summary: '모든 WBS 평가기준 삭제',
+      description: `시스템의 모든 WBS 평가기준을 한 번에 삭제합니다 (소프트 삭제).
+
+**동작:**
+- 모든 WBS 평가기준을 소프트 삭제 방식으로 삭제
+- 실제 데이터는 DB에 유지됨 (deletedAt 설정)
+- 삭제된 평가기준은 조회 시 제외됨
+- id나 body 값 입력 없이 바로 삭제
+
+**테스트 케이스:**
+- 여러 평가기준이 있을 때 모두 삭제할 수 있어야 한다
+- 삭제된 평가기준은 조회 시 제외되어야 한다
+- 평가기준이 없을 때도 정상 처리되어야 한다
+- 삭제 후 새로운 평가기준 생성 및 조회가 가능해야 한다`,
+    }),
+    ApiResponse({
+      status: HttpStatus.NO_CONTENT,
+      description: '모든 WBS 평가기준이 삭제되었습니다.',
     }),
   );

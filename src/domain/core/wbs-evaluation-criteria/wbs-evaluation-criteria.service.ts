@@ -1,7 +1,7 @@
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, Repository, IsNull } from 'typeorm';
 import { WbsEvaluationCriteriaValidationService } from './wbs-evaluation-criteria-validation.service';
 import { WbsEvaluationCriteria } from './wbs-evaluation-criteria.entity';
 import { WbsEvaluationCriteriaNotFoundException } from './wbs-evaluation-criteria.exceptions';
@@ -329,6 +329,36 @@ export class WbsEvaluationCriteriaService
         `WBS 항목 평가 기준 전체 삭제 완료 - WBS 항목 ID: ${wbsItemId}, 삭제자: ${deletedBy}, 삭제된 기준 수: ${criteriaList.length}`,
       );
     }, 'WBS항목_평가기준_전체삭제한다');
+  }
+
+  /**
+   * 모든 WBS 평가 기준을 삭제한다
+   */
+  async 모든_평가기준을_삭제한다(
+    deletedBy: string,
+    manager?: EntityManager,
+  ): Promise<void> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        WbsEvaluationCriteria,
+        this.wbsEvaluationCriteriaRepository,
+        manager,
+      );
+
+      const criteriaList = await repository.find({
+        where: { deletedAt: IsNull() },
+      });
+
+      for (const criteria of criteriaList) {
+        criteria.deletedAt = new Date();
+        criteria.수정자를_설정한다(deletedBy);
+        await repository.save(criteria);
+      }
+
+      this.logger.log(
+        `모든 WBS 평가 기준 삭제 완료 - 삭제자: ${deletedBy}, 삭제된 기준 수: ${criteriaList.length}`,
+      );
+    }, '모든_평가기준을_삭제한다');
   }
 }
 

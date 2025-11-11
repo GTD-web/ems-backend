@@ -113,4 +113,14 @@ export interface IWbsEvaluationCriteriaService {
     deletedBy: string,
     manager?: EntityManager,
   ): Promise<void>;
+
+  /**
+   * 모든 WBS 평가 기준을 삭제한다
+   * @param deletedBy 삭제자 ID
+   * @param manager 트랜잭션 매니저 (선택적)
+   */
+  모든_평가기준을_삭제한다(
+    deletedBy: string,
+    manager?: EntityManager,
+  ): Promise<void>;
 }

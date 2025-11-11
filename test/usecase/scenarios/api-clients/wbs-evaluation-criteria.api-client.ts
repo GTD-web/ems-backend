@@ -127,6 +127,18 @@ export class WbsEvaluationCriteriaApiClient {
     return response.body;
   }
 
+  /**
+   * 모든 WBS 평가기준 삭제
+   *
+   * @returns void (204 No Content)
+   */
+  async deleteAllWbsEvaluationCriteria(): Promise<void> {
+    await this.testSuite
+      .request()
+      .delete('/admin/evaluation-criteria/wbs-evaluation-criteria/all')
+      .expect(204);
+  }
+
   // ==================== 에러 케이스 테스트용 메서드 ====================
 
   /**

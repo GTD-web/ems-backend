@@ -310,6 +310,11 @@ export interface IEvaluationCriteriaManagementService {
   ): Promise<boolean>;
 
   /**
+   * 모든 WBS 평가기준을 삭제한다
+   */
+  모든_WBS_평가기준을_삭제한다(deletedBy: string): Promise<boolean>;
+
+  /**
    * WBS 평가기준 목록을 조회한다
    */
   WBS_평가기준_목록을_조회한다(

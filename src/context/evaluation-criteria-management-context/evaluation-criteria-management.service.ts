@@ -56,6 +56,7 @@ import {
   UpdateWbsEvaluationCriteriaCommand,
   DeleteWbsEvaluationCriteriaCommand,
   DeleteWbsItemEvaluationCriteriaCommand,
+  DeleteAllWbsEvaluationCriteriaCommand,
   GetWbsEvaluationCriteriaListQuery,
   GetWbsEvaluationCriteriaDetailQuery,
   GetWbsItemEvaluationCriteriaQuery,
@@ -998,6 +999,11 @@ export class EvaluationCriteriaManagementService
       wbsItemId,
       deletedBy,
     );
+    return await this.commandBus.execute(command);
+  }
+
+  async 모든_WBS_평가기준을_삭제한다(deletedBy: string): Promise<boolean> {
+    const command = new DeleteAllWbsEvaluationCriteriaCommand(deletedBy);
     return await this.commandBus.execute(command);
   }
 
