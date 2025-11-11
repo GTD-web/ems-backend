@@ -79,6 +79,7 @@ import {
   ConfigureEmployeeWbsEvaluationLineCommand,
   ConfigurePrimaryEvaluatorCommand,
   ConfigureSecondaryEvaluatorCommand,
+  ResetAllEvaluationLinesCommand,
   GetEmployeeEvaluationSettingsQuery,
   GetEvaluatorEmployeesQuery,
   GetEvaluatorsByPeriodQuery,
@@ -839,6 +840,20 @@ export class EvaluationCriteriaManagementService
       createdMappings: totalCreatedMappings,
       results,
     };
+  }
+
+  /**
+   * 모든 평가라인 및 관련 평가 데이터를 리셋한다
+   *
+   * 다음 데이터를 모두 삭제합니다:
+   * - 동료평가 질문 매핑
+   * - 동료평가
+   * - 하향평가
+   * - 평가라인 매핑
+   */
+  async 모든_평가라인을_리셋한다(deletedBy: string): Promise<any> {
+    const command = new ResetAllEvaluationLinesCommand(deletedBy);
+    return await this.commandBus.execute(command);
   }
 
   // ============================================================================

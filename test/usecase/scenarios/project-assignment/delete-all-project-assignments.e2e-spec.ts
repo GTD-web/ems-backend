@@ -4,15 +4,15 @@ import { ProjectAssignmentApiClient } from '../api-clients/project-assignment.ap
 import { WbsAssignmentApiClient } from '../api-clients/wbs-assignment.api-client';
 
 /**
- * 모든 프로젝트 할당 삭제 검증 시나리오
+ * 모든 프로젝트 할당 리셋 검증 시나리오
  *
  * 테스트 목적:
- * - 모든 프로젝트 할당을 한 번에 삭제하는 기능 검증
- * - 관련된 모든 데이터(WBS 할당, 평가라인, 자기평가, 산출물, 하향평가, 동료평가 등)도 함께 삭제되는지 확인
- * - 삭제 후 조회 시 제외되는지 확인
- * - 삭제 후 새로운 할당 생성이 가능한지 확인
+ * - 모든 프로젝트 할당을 한 번에 리셋하는 기능 검증
+ * - 관련된 모든 데이터(WBS 할당, 평가라인, 자기평가, 산출물, 하향평가, 동료평가 등)도 함께 리셋되는지 확인
+ * - 리셋 후 조회 시 제외되는지 확인
+ * - 리셋 후 새로운 할당 생성이 가능한지 확인
  */
-describe('모든 프로젝트 할당 삭제 검증 시나리오', () => {
+describe('모든 프로젝트 할당 리셋 검증 시나리오', () => {
   let testSuite: BaseE2ETest;
   let seedDataScenario: SeedDataScenario;
   let projectAssignmentApiClient: ProjectAssignmentApiClient;
@@ -101,7 +101,7 @@ describe('모든 프로젝트 할당 삭제 검증 시나리오', () => {
       expect(beforeDeleteResponse.body.assignments.length).toBe(3);
 
       // When: 모든 프로젝트 할당 삭제
-      await projectAssignmentApiClient.deleteAll();
+      await projectAssignmentApiClient.resetAll();
       console.log('✅ 모든 프로젝트 할당 삭제 완료');
 
       // Then: 삭제 후 개수 확인
@@ -172,7 +172,7 @@ describe('모든 프로젝트 할당 삭제 검증 시나리오', () => {
       console.log('✅ 삭제 전 목록에 할당 포함됨');
 
       // When: 모든 할당 삭제
-      await projectAssignmentApiClient.deleteAll();
+      await projectAssignmentApiClient.resetAll();
       console.log('✅ 모든 프로젝트 할당 삭제 완료');
 
       // Then: 목록 조회 시 제외됨
@@ -231,7 +231,7 @@ describe('모든 프로젝트 할당 삭제 검증 시나리오', () => {
       );
 
       // When: 모든 할당 삭제 (할당이 없지만 정상 처리)
-      await projectAssignmentApiClient.deleteAll();
+      await projectAssignmentApiClient.resetAll();
       console.log('✅ 할당 없을 때도 정상 처리됨');
 
       // Then: 여전히 0개
@@ -282,7 +282,7 @@ describe('모든 프로젝트 할당 삭제 검증 시나리오', () => {
       periodId = periodResponse.body.id;
 
       // When: 모든 할당 삭제
-      await projectAssignmentApiClient.deleteAll();
+      await projectAssignmentApiClient.resetAll();
       console.log('✅ 기존 할당 삭제 완료');
 
       // 새로운 할당 생성

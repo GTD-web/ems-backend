@@ -110,4 +110,12 @@ export interface IEvaluationLineMappingService {
     deletedBy: string,
     manager?: EntityManager,
   ): Promise<void>;
+
+  /**
+   * 모든 평가라인 매핑을 삭제한다
+   */
+  모든_평가라인을_삭제한다(
+    deletedBy: string,
+    manager?: EntityManager,
+  ): Promise<number>;
 }

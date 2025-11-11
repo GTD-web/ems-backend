@@ -340,4 +340,25 @@ export class EvaluationLineApiClient {
 
     return response.body;
   }
+
+  /**
+   * 모든 평가라인 리셋
+   * 
+   * ⚠️ 주의: 관리자 유틸리티 엔드포인트
+   * 경로: /admin/utils/evaluation-lines/reset
+   * 
+   * 리셋되는 데이터:
+   * - 동료평가 질문 매핑
+   * - 동료평가
+   * - 하향평가
+   * - 평가라인 매핑
+   */
+  async resetAllEvaluationLines(): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .post('/admin/utils/evaluation-lines/reset')
+      .expect(200);
+
+    return response.body;
+  }
 }

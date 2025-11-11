@@ -432,16 +432,18 @@ export class ProjectAssignmentApiClient {
   }
 
   /**
-   * 모든 프로젝트 할당 삭제
+   * 모든 프로젝트 할당 리셋
    * 
    * ⚠️ 주의: 관리자 유틸리티 엔드포인트로 이동됨
-   * 경로: /admin/utils/project-assignments/all
+   * 경로: /admin/utils/project-assignments/reset
    */
-  async deleteAll(): Promise<void> {
-    await this.testSuite
+  async resetAll(): Promise<any> {
+    const response = await this.testSuite
       .request()
-      .delete('/admin/utils/project-assignments/all')
-      .expect(204);
+      .post('/admin/utils/project-assignments/reset')
+      .expect(200);
+
+    return response.body;
   }
 
   /**

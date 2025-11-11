@@ -228,4 +228,19 @@ export class DeliverableApiClient {
 
     return response;
   }
+
+  /**
+   * 모든 산출물 리셋
+   * 
+   * ⚠️ 주의: 관리자 유틸리티 엔드포인트
+   * 경로: /admin/utils/deliverables/reset
+   */
+  async resetAll(): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .post('/admin/utils/deliverables/reset')
+      .expect(200);
+
+    return response.body;
+  }
 }

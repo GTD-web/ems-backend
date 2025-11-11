@@ -4,15 +4,15 @@ import { SeedDataScenario } from '../../seed-data.scenario';
 import { WbsEvaluationCriteriaApiClient } from '../../api-clients/wbs-evaluation-criteria.api-client';
 
 /**
- * 모든 WBS 평가기준 삭제 검증 시나리오
+ * 모든 WBS 평가기준 리셋 검증 시나리오
  *
  * 테스트 목적:
- * - 모든 WBS 평가기준을 한 번에 삭제하는 기능 검증
- * - id나 body 값 입력 없이 바로 삭제되는지 확인
- * - 삭제 후 조회 시 제외되는지 확인
- * - 삭제 후 새로운 평가기준 생성이 가능한지 확인
+ * - 모든 WBS 평가기준을 한 번에 리셋하는 기능 검증
+ * - id나 body 값 입력 없이 바로 리셋되는지 확인
+ * - 리셋 후 조회 시 제외되는지 확인
+ * - 리셋 후 새로운 평가기준 생성이 가능한지 확인
  */
-describe('모든 WBS 평가기준 삭제 검증 시나리오', () => {
+describe('모든 WBS 평가기준 리셋 검증 시나리오', () => {
   let testSuite: BaseE2ETest;
   let seedDataScenario: SeedDataScenario;
   let wbsEvaluationCriteriaApiClient: WbsEvaluationCriteriaApiClient;
@@ -65,8 +65,8 @@ describe('모든 WBS 평가기준 삭제 검증 시나리오', () => {
   });
 
   describe('성공 케이스', () => {
-    it('여러 평가기준이 있을 때 모두 삭제할 수 있어야 한다', async () => {
-      console.log('\n📍 모든 평가기준 삭제 테스트 시작');
+    it('여러 평가기준이 있을 때 모두 리셋할 수 있어야 한다', async () => {
+      console.log('\n📍 모든 평가기준 리셋 테스트 시작');
 
       // Given: 여러 WBS 항목에 평가기준 생성
       const testWbsItemIds = wbsItemIds.slice(0, 3);
@@ -92,24 +92,24 @@ describe('모든 WBS 평가기준 삭제 검증 시나리오', () => {
         createdCriteriaIds.length,
       );
 
-      console.log(`📊 삭제 전 평가기준 개수: ${beforeDelete.criteria.length}`);
+      console.log(`📊 리셋 전 평가기준 개수: ${beforeDelete.criteria.length}`);
 
-      // When: 모든 평가기준 삭제
-      await wbsEvaluationCriteriaApiClient.deleteAllWbsEvaluationCriteria();
+      // When: 모든 평가기준 리셋
+      await wbsEvaluationCriteriaApiClient.resetAllWbsEvaluationCriteria();
 
-      console.log('✅ 모든 평가기준 삭제 완료');
+      console.log('✅ 모든 평가기준 리셋 완료');
 
-      // Then: 삭제 후 목록 조회 시 빈 배열 반환
+      // Then: 리셋 후 목록 조회 시 빈 배열 반환
       const afterDelete =
         await wbsEvaluationCriteriaApiClient.getWbsEvaluationCriteriaList();
       expect(afterDelete.criteria).toBeDefined();
       expect(afterDelete.criteria.length).toBe(0);
 
-      console.log(`📊 삭제 후 평가기준 개수: ${afterDelete.criteria.length}`);
+      console.log(`📊 리셋 후 평가기준 개수: ${afterDelete.criteria.length}`);
     });
 
-    it('삭제된 평가기준은 조회 시 제외되어야 한다', async () => {
-      console.log('\n📍 삭제된 평가기준 조회 제외 검증 시작');
+    it('리셋된 평가기준은 조회 시 제외되어야 한다', async () => {
+      console.log('\n📍 리셋된 평가기준 조회 제외 검증 시작');
 
       // Given: 평가기준 생성
       const testWbsItemId = wbsItemIds[0];
@@ -122,76 +122,76 @@ describe('모든 WBS 평가기준 삭제 검증 시나리오', () => {
 
       console.log(`✅ 평가기준 생성 완료 - ID: ${createdCriteria.id}`);
 
-      // 삭제 전 상세 조회
-      const beforeDelete =
+      // 리셋 전 상세 조회
+      const beforeReset =
         await wbsEvaluationCriteriaApiClient.getWbsEvaluationCriteriaDetail(
           createdCriteria.id,
         );
-      expect(beforeDelete).toBeDefined();
-      expect(beforeDelete.id).toBe(createdCriteria.id);
+      expect(beforeReset).toBeDefined();
+      expect(beforeReset.id).toBe(createdCriteria.id);
 
-      // When: 모든 평가기준 삭제
-      await wbsEvaluationCriteriaApiClient.deleteAllWbsEvaluationCriteria();
+      // When: 모든 평가기준 리셋
+      await wbsEvaluationCriteriaApiClient.resetAllWbsEvaluationCriteria();
 
-      console.log('✅ 모든 평가기준 삭제 완료');
+      console.log('✅ 모든 평가기준 리셋 완료');
 
-      // Then: 삭제된 평가기준은 상세 조회 시 빈 객체 반환
-      const afterDelete =
+      // Then: 리셋된 평가기준은 상세 조회 시 빈 객체 반환
+      const afterReset =
         await wbsEvaluationCriteriaApiClient.getWbsEvaluationCriteriaDetail(
           createdCriteria.id,
         );
-      expect(afterDelete).toBeDefined();
-      // 삭제된 평가기준은 빈 객체 또는 null 반환
-      expect(Object.keys(afterDelete).length).toBe(0);
+      expect(afterReset).toBeDefined();
+      // 리셋된 평가기준은 빈 객체 또는 null 반환
+      expect(Object.keys(afterReset).length).toBe(0);
 
-      console.log('✅ 삭제된 평가기준 조회 제외 확인');
+      console.log('✅ 리셋된 평가기준 조회 제외 확인');
     });
 
     it('평가기준이 없을 때도 정상 처리되어야 한다', async () => {
-      console.log('\n📍 평가기준 없을 때 삭제 테스트 시작');
+      console.log('\n📍 평가기준 없을 때 리셋 테스트 시작');
 
       // Given: 평가기준이 없는 상태 확인
-      const beforeDelete =
+      const beforeReset =
         await wbsEvaluationCriteriaApiClient.getWbsEvaluationCriteriaList();
-      expect(beforeDelete.criteria).toBeDefined();
-      expect(beforeDelete.criteria.length).toBe(0);
+      expect(beforeReset.criteria).toBeDefined();
+      expect(beforeReset.criteria.length).toBe(0);
 
-      console.log('📊 삭제 전 평가기준 개수: 0');
+      console.log('📊 리셋 전 평가기준 개수: 0');
 
-      // When: 모든 평가기준 삭제 (평가기준이 없어도 에러 없이 처리)
-      await wbsEvaluationCriteriaApiClient.deleteAllWbsEvaluationCriteria();
+      // When: 모든 평가기준 리셋 (평가기준이 없어도 에러 없이 처리)
+      await wbsEvaluationCriteriaApiClient.resetAllWbsEvaluationCriteria();
 
       console.log('✅ 평가기준 없을 때도 정상 처리됨');
 
       // Then: 여전히 빈 배열 반환
-      const afterDelete =
+      const afterReset =
         await wbsEvaluationCriteriaApiClient.getWbsEvaluationCriteriaList();
-      expect(afterDelete.criteria).toBeDefined();
-      expect(afterDelete.criteria.length).toBe(0);
+      expect(afterReset.criteria).toBeDefined();
+      expect(afterReset.criteria.length).toBe(0);
 
-      console.log('📊 삭제 후 평가기준 개수: 0');
+      console.log('📊 리셋 후 평가기준 개수: 0');
     });
 
-    it('삭제 후 새로운 평가기준 생성 및 조회가 가능해야 한다', async () => {
-      console.log('\n📍 삭제 후 재생성 테스트 시작');
+    it('리셋 후 새로운 평가기준 생성 및 조회가 가능해야 한다', async () => {
+      console.log('\n📍 리셋 후 재생성 테스트 시작');
 
-      // Given: 평가기준 생성 후 삭제
+      // Given: 평가기준 생성 후 리셋
       const testWbsItemId = wbsItemIds[0];
       await wbsEvaluationCriteriaApiClient.upsertWbsEvaluationCriteria({
         wbsItemId: testWbsItemId,
-        criteria: '삭제 전 평가기준',
+        criteria: '리셋 전 평가기준',
         importance: 5,
       });
 
-      await wbsEvaluationCriteriaApiClient.deleteAllWbsEvaluationCriteria();
+      await wbsEvaluationCriteriaApiClient.resetAllWbsEvaluationCriteria();
 
-      console.log('✅ 기존 평가기준 삭제 완료');
+      console.log('✅ 기존 평가기준 리셋 완료');
 
       // When: 새로운 평가기준 생성
       const newCriteria =
         await wbsEvaluationCriteriaApiClient.upsertWbsEvaluationCriteria({
           wbsItemId: testWbsItemId,
-          criteria: '삭제 후 재생성된 평가기준',
+          criteria: '리셋 후 재생성된 평가기준',
           importance: 7,
         });
 
@@ -204,11 +204,11 @@ describe('모든 WBS 평가기준 삭제 검증 시나리오', () => {
       expect(criteriaList.criteria.length).toBe(1);
       expect(criteriaList.criteria[0].id).toBe(newCriteria.id);
       expect(criteriaList.criteria[0].criteria).toBe(
-        '삭제 후 재생성된 평가기준',
+        '리셋 후 재생성된 평가기준',
       );
       expect(criteriaList.criteria[0].importance).toBe(7);
 
-      console.log('✅ 삭제 후 재생성 및 조회 성공');
+      console.log('✅ 리셋 후 재생성 및 조회 성공');
     });
   });
 });

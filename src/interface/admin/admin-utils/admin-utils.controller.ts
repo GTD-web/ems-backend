@@ -9,9 +9,10 @@ import { EvaluationCriteriaManagementService } from '../../../context/evaluation
 import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
 import {
   GetAllProjects,
-  DeleteAllWbsEvaluationCriteria,
-  DeleteAllDeliverables,
-  DeleteAllProjectAssignments,
+  ResetAllWbsEvaluationCriteria,
+  ResetAllDeliverables,
+  ResetAllProjectAssignments,
+  ResetAllEvaluationLines,
 } from './decorators/admin-utils-api.decorators';
 import type { BulkDeleteResultDto } from '../performance-evaluation/dto/deliverable.dto';
 
@@ -42,31 +43,33 @@ export class AdminUtilsController {
   }
 
   /**
-   * 모든 WBS 평가기준 삭제
+   * 모든 WBS 평가기준 리셋
    *
-   * 시스템의 모든 WBS 평가기준을 소프트 삭제 방식으로 삭제합니다.
+   * 시스템의 모든 WBS 평가기준을 소프트 삭제 방식으로 리셋합니다.
    * ⚠️ 주의: 이 작업은 되돌릴 수 없습니다 (소프트 삭제이지만 복구 기능 없음).
    */
-  @DeleteAllWbsEvaluationCriteria()
-  async deleteAllWbsEvaluationCriteria(
+  @ResetAllWbsEvaluationCriteria()
+  async resetAllWbsEvaluationCriteria(
     @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
+  ): Promise<{ success: boolean }> {
     const deletedBy = user.id;
-    await this.evaluationCriteriaManagementService.모든_WBS_평가기준을_삭제한다(
-      deletedBy,
-    );
+    const success =
+      await this.evaluationCriteriaManagementService.모든_WBS_평가기준을_삭제한다(
+        deletedBy,
+      );
+    return { success };
   }
 
   /**
-   * 모든 산출물 삭제
+   * 모든 산출물 리셋
    *
-   * 시스템의 모든 산출물을 소프트 삭제 방식으로 삭제하고 결과를 반환합니다.
+   * 시스템의 모든 산출물을 소프트 삭제 방식으로 리셋하고 결과를 반환합니다.
    * ⚠️ 주의: 이 작업은 되돌릴 수 없습니다 (소프트 삭제이지만 복구 기능 없음).
    *
-   * @returns 삭제 결과 (성공/실패 개수, 실패한 ID 목록)
+   * @returns 리셋 결과 (성공/실패 개수, 실패한 ID 목록)
    */
-  @DeleteAllDeliverables()
-  async deleteAllDeliverables(
+  @ResetAllDeliverables()
+  async resetAllDeliverables(
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<BulkDeleteResultDto> {
     const deletedBy = user?.id || uuidv4();
@@ -82,12 +85,12 @@ export class AdminUtilsController {
   }
 
   /**
-   * 모든 프로젝트 할당 삭제
+   * 모든 프로젝트 할당 리셋
    *
-   * 시스템의 모든 프로젝트 할당 및 관련 평가 데이터를 소프트 삭제 방식으로 삭제합니다.
+   * 시스템의 모든 프로젝트 할당 및 관련 평가 데이터를 소프트 삭제 방식으로 리셋합니다.
    * ⚠️ 주의: 이 작업은 되돌릴 수 없습니다 (소프트 삭제이지만 복구 기능 없음).
    *
-   * 삭제되는 데이터:
+   * 리셋되는 데이터:
    * - 동료평가 질문 매핑
    * - 동료평가
    * - 하향평가
@@ -97,15 +100,35 @@ export class AdminUtilsController {
    * - 평가라인 매핑
    * - 프로젝트 할당
    */
-  @DeleteAllProjectAssignments()
-  async deleteAllProjectAssignments(
+  @ResetAllProjectAssignments()
+  async resetAllProjectAssignments(
     @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
+  ): Promise<any> {
     const deletedBy = user.id;
-    await this.evaluationCriteriaManagementService.모든_프로젝트_할당을_삭제한다(
+    return await this.evaluationCriteriaManagementService.모든_프로젝트_할당을_삭제한다(
+      deletedBy,
+    );
+  }
+
+  /**
+   * 모든 평가라인 리셋
+   *
+   * 시스템의 모든 평가라인 매핑 및 관련 평가 데이터를 소프트 삭제 방식으로 리셋합니다.
+   * ⚠️ 주의: 이 작업은 되돌릴 수 없습니다 (소프트 삭제이지만 복구 기능 없음).
+   *
+   * 리셋되는 데이터:
+   * - 동료평가 질문 매핑
+   * - 동료평가
+   * - 하향평가
+   * - 평가라인 매핑
+   */
+  @ResetAllEvaluationLines()
+  async resetAllEvaluationLines(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<any> {
+    const deletedBy = user.id;
+    return await this.evaluationCriteriaManagementService.모든_평가라인을_리셋한다(
       deletedBy,
     );
   }
 }
-
-

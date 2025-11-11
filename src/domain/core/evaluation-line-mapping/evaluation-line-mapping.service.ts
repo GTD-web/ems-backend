@@ -517,4 +517,34 @@ export class EvaluationLineMappingService
       );
     }, 'WBS항목_맵핑_전체삭제한다');
   }
+
+  /**
+   * 모든 평가라인 매핑을 삭제한다
+   */
+  async 모든_평가라인을_삭제한다(
+    deletedBy: string,
+    manager?: EntityManager,
+  ): Promise<number> {
+    return this.executeSafeDomainOperation(async () => {
+      const repository = this.transactionManager.getRepository(
+        EvaluationLineMapping,
+        this.evaluationLineMappingRepository,
+        manager,
+      );
+
+      const mappings = await repository.find();
+
+      for (const mapping of mappings) {
+        mapping.deletedAt = new Date();
+        mapping.수정자를_설정한다(deletedBy);
+        await repository.save(mapping);
+      }
+
+      this.logger.log(
+        `모든 평가라인 매핑 삭제 완료 - 삭제자: ${deletedBy}, 삭제된 맵핑 수: ${mappings.length}`,
+      );
+
+      return mappings.length;
+    }, '모든_평가라인을_삭제한다');
+  }
 }
