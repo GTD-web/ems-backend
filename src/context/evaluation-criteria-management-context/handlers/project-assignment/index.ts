@@ -25,6 +25,12 @@ export {
   type ResetPeriodAssignmentsResult,
 } from './commands/reset-period-assignments.handler';
 
+export {
+  DeleteAllProjectAssignmentsCommand,
+  DeleteAllProjectAssignmentsHandler,
+  type DeleteAllProjectAssignmentsResult,
+} from './commands/delete-all-project-assignments.handler';
+
 // Queries
 export {
   GetProjectAssignmentListQuery,
@@ -64,6 +70,7 @@ import { CancelProjectAssignmentHandler } from './commands/cancel-project-assign
 import { BulkCreateProjectAssignmentHandler } from './commands/bulk-create-project-assignment.handler';
 import { ChangeProjectAssignmentOrderHandler } from './commands/change-project-assignment-order.handler';
 import { ResetPeriodAssignmentsHandler } from './commands/reset-period-assignments.handler';
+import { DeleteAllProjectAssignmentsHandler } from './commands/delete-all-project-assignments.handler';
 import { GetProjectAssignmentListHandler } from './queries/get-project-assignment-list.handler';
 import { GetEmployeeProjectAssignmentsHandler } from './queries/get-employee-project-assignments.handler';
 import { GetProjectAssignedEmployeesHandler } from './queries/get-project-assigned-employees.handler';
@@ -77,6 +84,7 @@ export const PROJECT_ASSIGNMENT_COMMAND_HANDLERS = [
   BulkCreateProjectAssignmentHandler,
   ChangeProjectAssignmentOrderHandler,
   ResetPeriodAssignmentsHandler,
+  DeleteAllProjectAssignmentsHandler,
 ];
 
 export const PROJECT_ASSIGNMENT_QUERY_HANDLERS = [

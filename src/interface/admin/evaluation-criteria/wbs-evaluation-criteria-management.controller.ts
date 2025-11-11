@@ -5,7 +5,6 @@ import { EvaluationCriteriaManagementService } from '../../../context/evaluation
 import {
   DeleteWbsEvaluationCriteria,
   DeleteWbsItemEvaluationCriteria,
-  DeleteAllWbsEvaluationCriteria,
   GetWbsEvaluationCriteriaDetail,
   GetWbsEvaluationCriteriaList,
   GetWbsItemEvaluationCriteria,
@@ -96,19 +95,6 @@ export class WbsEvaluationCriteriaManagementController {
       dto.criteria,
       dto.importance,
       actionBy,
-    );
-  }
-
-  /**
-   * 모든 WBS 평가기준 삭제
-   */
-  @DeleteAllWbsEvaluationCriteria()
-  async deleteAllWbsEvaluationCriteria(
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
-    const deletedBy = user.id;
-    await this.evaluationCriteriaManagementService.모든_WBS_평가기준을_삭제한다(
-      deletedBy,
     );
   }
 

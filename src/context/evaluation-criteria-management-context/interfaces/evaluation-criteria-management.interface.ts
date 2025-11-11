@@ -111,6 +111,13 @@ export interface IEvaluationCriteriaManagementService {
     updatedBy: string,
   ): Promise<EvaluationProjectAssignmentDto>;
 
+  /**
+   * 모든 프로젝트 할당 및 관련 데이터를 삭제한다
+   */
+  모든_프로젝트_할당을_삭제한다(
+    deletedBy: string,
+  ): Promise<any>;
+
   // ============================================================================
   // WBS 할당 관리
   // ============================================================================

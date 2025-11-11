@@ -11,6 +11,7 @@ import { EvaluationQuestionManagementContextModule } from '../../context/evaluat
 import { SeedDataContextModule } from '../../context/seed-data-context/seed-data-context.module';
 import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
 import { EmployeeModule } from '../../domain/common/employee/employee.module';
+import { ProjectModule } from '../../domain/common/project/project.module';
 import { AuthController } from './auth/auth.controller';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
@@ -29,6 +30,7 @@ import { EmployeeManagementController } from './employee-management/employee-man
 import { SeedDataController } from './seed-data/seed-data.controller';
 import { StepApprovalController } from './step-approval/step-approval.controller';
 import { RevisionRequestController } from './revision-request/revision-request.controller';
+import { AdminUtilsController } from './admin-utils/admin-utils.controller';
 import { StepApprovalContextModule } from '../../context/step-approval-context/step-approval-context.module';
 import { RevisionRequestContextModule } from '../../context/revision-request-context/revision-request-context.module';
 
@@ -54,6 +56,7 @@ import { RevisionRequestContextModule } from '../../context/revision-request-con
     BusinessModule, // 비즈니스 레이어 모듈 주입
     EvaluationPeriodModule, // 평가 기간 모듈 주입
     EmployeeModule, // 직원 모듈 주입
+    ProjectModule, // 프로젝트 모듈 주입
   ],
   controllers: [
     AuthController, // 인증 컨트롤러
@@ -74,6 +77,7 @@ import { RevisionRequestContextModule } from '../../context/revision-request-con
     SeedDataController, // 시드 데이터 컨트롤러
     StepApprovalController, // 단계 승인 컨트롤러
     RevisionRequestController, // 재작성 요청 컨트롤러
+    AdminUtilsController, // 관리자 유틸리티 컨트롤러
   ],
   providers: [],
   exports: [],

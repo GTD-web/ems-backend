@@ -431,4 +431,33 @@ export class ProjectAssignmentApiClient {
     return response.body;
   }
 
+  /**
+   * 모든 프로젝트 할당 삭제
+   * 
+   * ⚠️ 주의: 관리자 유틸리티 엔드포인트로 이동됨
+   * 경로: /admin/utils/project-assignments/all
+   */
+  async deleteAll(): Promise<void> {
+    await this.testSuite
+      .request()
+      .delete('/admin/utils/project-assignments/all')
+      .expect(204);
+  }
+
+  /**
+   * 프로젝트 할당 목록 조회 (간편 메서드)
+   * 
+   * getList() 메서드의 별칭으로, 페이징 파라미터를 간단히 전달할 수 있습니다.
+   */
+  async getProjectAssignmentList(
+    periodId: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<any> {
+    return await this.getList({
+      periodId,
+      page,
+      limit,
+    });
+  }
 }

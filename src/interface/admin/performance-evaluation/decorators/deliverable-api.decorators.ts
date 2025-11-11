@@ -217,7 +217,7 @@ export function BulkCreateDeliverables() {
 export function BulkDeleteDeliverables() {
   return applyDecorators(
     Delete('bulk'),
-    HttpCode(HttpStatus.NO_CONTENT),
+    HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '산출물 벌크 삭제',
       description: `여러 산출물을 한 번에 삭제합니다.
@@ -240,7 +240,7 @@ export function BulkDeleteDeliverables() {
       description: '삭제할 산출물 ID 목록',
     }),
     ApiResponse({
-      status: HttpStatus.NO_CONTENT,
+      status: HttpStatus.OK,
       description: '산출물이 삭제되었습니다.',
       type: BulkDeleteResultDto,
     }),
@@ -403,7 +403,7 @@ export function GetDeliverableDetail() {
 export function DeleteAllDeliverables() {
   return applyDecorators(
     Delete('all'),
-    HttpCode(HttpStatus.NO_CONTENT),
+    HttpCode(HttpStatus.OK),
     ApiOperation({
       summary: '모든 산출물 삭제',
       description: `시스템의 모든 산출물을 한 번에 삭제합니다 (소프트 삭제).
@@ -423,7 +423,7 @@ export function DeleteAllDeliverables() {
 - 삭제 후 새로운 산출물 생성 및 조회가 가능해야 한다`,
     }),
     ApiResponse({
-      status: HttpStatus.NO_CONTENT,
+      status: HttpStatus.OK,
       description: '모든 산출물이 삭제되었습니다.',
       type: BulkDeleteResultDto,
     }),

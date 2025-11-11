@@ -1,0 +1,222 @@
+import {
+  applyDecorators,
+  Get,
+  Delete,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiResponse,
+} from '@nestjs/swagger';
+
+/**
+ * 전체 프로젝트 목록 조회 API 데코레이터
+ */
+export function GetAllProjects() {
+  return applyDecorators(
+    Get('projects/all'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '전체 프로젝트 목록 조회',
+      description: `모든 프로젝트 목록을 조회합니다. 평가기간 ID나 다른 필터 없이 시스템에 등록된 모든 프로젝트를 반환합니다.
+
+**동작:**
+- 삭제되지 않은 모든 프로젝트 조회
+- 프로젝트명 기준 오름차순 정렬
+- 페이징 및 필터링 없이 전체 목록 반환
+
+**사용 사례:**
+- 시스템에 등록된 전체 프로젝트 확인
+- 프로젝트 선택을 위한 목록 제공
+- 데이터 검증 및 관리
+
+**테스트 케이스:**
+- 기본 조회: 모든 프로젝트 목록 조회 성공
+- 빈 결과: 프로젝트가 없을 때 빈 배열 반환
+- 프로젝트 정보: ID, 이름, 코드, 매니저ID, 시작일, 종료일, 상태 등 포함
+- 정렬 순서: 프로젝트명 기준 오름차순 정렬
+- 삭제된 프로젝트 제외: 소프트 삭제된 프로젝트는 목록에서 제외`,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '전체 프로젝트 목록이 성공적으로 조회되었습니다.',
+      schema: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            name: { type: 'string' },
+            projectCode: { type: 'string' },
+            description: { type: 'string' },
+            managerId: { type: 'string', format: 'uuid' },
+            startDate: { type: 'string', format: 'date' },
+            endDate: { type: 'string', format: 'date' },
+            status: {
+              type: 'string',
+              enum: ['ACTIVE', 'INACTIVE', 'COMPLETED', 'CANCELLED'],
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류',
+    }),
+  );
+}
+
+/**
+ * 모든 WBS 평가기준 삭제 API 데코레이터
+ */
+export function DeleteAllWbsEvaluationCriteria() {
+  return applyDecorators(
+    Delete('wbs-evaluation-criteria/all'),
+    HttpCode(HttpStatus.NO_CONTENT),
+    ApiOperation({
+      summary: '모든 WBS 평가기준 삭제',
+      description: `⚠️ **주의**: 시스템의 모든 WBS 평가기준을 한 번에 삭제합니다 (소프트 삭제).
+
+**동작:**
+- 모든 WBS 평가기준을 소프트 삭제 방식으로 삭제
+- 실제 데이터는 DB에 유지됨 (deletedAt 설정)
+- 삭제된 평가기준은 조회 시 제외됨
+- id나 body 값 입력 없이 바로 삭제
+
+**사용 사례:**
+- 개발/테스트 환경에서 데이터 초기화
+- 시스템 전체 평가기준 재설정
+- 평가 시스템 리셋
+
+**테스트 케이스:**
+- 여러 평가기준이 있을 때 모두 삭제: 모든 평가기준이 성공적으로 삭제됨
+- DB soft delete 확인: deletedAt이 설정되고 활성 평가기준이 없음
+- 목록 조회 결과: 삭제 후 빈 배열 반환
+- 평가기준 없는 경우: 평가기준이 없어도 204 반환
+- 중복 삭제 허용: 이미 삭제된 평가기준을 다시 삭제해도 에러 없음
+- 재생성 가능: 삭제 후 새로운 평가기준 생성 가능`,
+    }),
+    ApiResponse({
+      status: HttpStatus.NO_CONTENT,
+      description: '모든 WBS 평가기준이 삭제되었습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류',
+    }),
+  );
+}
+
+/**
+ * 모든 산출물 삭제 API 데코레이터
+ */
+export function DeleteAllDeliverables() {
+  return applyDecorators(
+    Delete('deliverables/all'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '모든 산출물 삭제',
+      description: `⚠️ **주의**: 시스템의 모든 산출물을 한 번에 삭제합니다 (소프트 삭제).
+
+**동작:**
+- 모든 산출물을 소프트 삭제 방식으로 삭제
+- 실제 데이터는 DB에 유지됨 (deletedAt 설정)
+- 삭제된 산출물은 조회 시 제외됨
+- 성공/실패 개수 및 실패한 ID 목록 반환
+
+**사용 사례:**
+- 개발/테스트 환경에서 데이터 초기화
+- 시스템 전체 산출물 재설정
+- 대량 데이터 정리
+
+**테스트 케이스:**
+- 여러 산출물이 있을 때 모두 삭제할 수 있어야 한다
+- 성공/실패 개수가 정확하게 반환되어야 한다
+- 실패한 산출물 ID 목록이 반환되어야 한다
+- 삭제된 산출물은 조회 시 제외되어야 한다
+- 산출물이 없을 때도 정상 처리되어야 한다
+- 삭제 후 새로운 산출물 생성 및 조회가 가능해야 한다`,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '모든 산출물이 삭제되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          successCount: {
+            type: 'number',
+            description: '삭제 성공 개수',
+          },
+          failedCount: {
+            type: 'number',
+            description: '삭제 실패 개수',
+          },
+          failedIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: '삭제 실패한 산출물 ID 목록',
+          },
+        },
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류',
+    }),
+  );
+}
+
+/**
+ * 모든 프로젝트 할당 삭제 API 데코레이터
+ */
+export function DeleteAllProjectAssignments() {
+  return applyDecorators(
+    Delete('project-assignments/all'),
+    HttpCode(HttpStatus.NO_CONTENT),
+    ApiOperation({
+      summary: '모든 프로젝트 할당 삭제',
+      description: `⚠️ **위험**: 모든 평가기간의 모든 프로젝트 할당 및 관련 평가 데이터를 완전히 삭제합니다. 이 작업은 되돌릴 수 없습니다.
+
+**삭제되는 데이터:**
+- 동료평가 질문 매핑
+- 동료평가
+- 하향평가
+- 자기평가
+- 산출물 매핑
+- WBS 할당
+- 평가라인 매핑
+- 프로젝트 할당
+
+**동작:**
+- 모든 삭제는 하나의 트랜잭션으로 처리되어 원자성 보장
+- 소프트 삭제 방식으로 deletedAt 필드 업데이트
+- 삭제된 데이터는 목록 조회에서 자동 제외
+
+**사용 사례:**
+- 개발/테스트 환경에서 데이터 초기화
+- 시스템 전체 데이터 재설정
+- 마이그레이션 전 데이터 정리
+
+**테스트 케이스:**
+- 여러 할당이 있을 때 모두 삭제할 수 있어야 한다
+- 트랜잭션 보장: 중간에 오류 발생 시 전체 롤백
+- 목록 제외: 삭제 후 모든 할당이 목록에서 제외됨
+- 빈 데이터: 할당이 없을 때 성공 반환
+- 캐스케이드 삭제: 연관된 모든 데이터가 올바른 순서로 삭제됨
+- 삭제 후 새로운 할당 생성 및 조회가 가능해야 한다`,
+    }),
+    ApiResponse({
+      status: HttpStatus.NO_CONTENT,
+      description: '모든 프로젝트 할당 데이터가 성공적으로 삭제되었습니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}
+
