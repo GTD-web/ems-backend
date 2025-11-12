@@ -107,6 +107,10 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
         const result = [];
         for (const recipient of recipients) {
             const request = recipient.revisionRequest;
+            if (!request) {
+                this.logger.warn(`재작성 요청이 존재하지 않습니다. - 수신자 ID: ${recipient.id}`);
+                continue;
+            }
             const employee = await this.employeeRepository.findOne({
                 where: { id: request.employeeId, deletedAt: null },
             });
