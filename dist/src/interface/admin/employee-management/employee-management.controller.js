@@ -31,12 +31,7 @@ let EmployeeManagementController = class EmployeeManagementController {
         return await this.organizationManagementService.부서하이라키_직원포함_조회();
     }
     async getAllEmployees(query) {
-        if (query.includeExcluded) {
-            return await this.organizationManagementService.전체직원목록조회();
-        }
-        else {
-            return await this.organizationManagementService.전체직원목록조회();
-        }
+        return await this.organizationManagementService.전체직원목록조회(query.includeExcluded || false, query.departmentId);
     }
     async getExcludedEmployees() {
         const allEmployees = await this.organizationManagementService.전체직원목록조회(true);
