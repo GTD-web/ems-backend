@@ -365,7 +365,6 @@ class PeriodBasicInfoDto {
     id;
     name;
     startDate;
-    endDate;
     status;
 }
 exports.PeriodBasicInfoDto = PeriodBasicInfoDto;
@@ -390,13 +389,6 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], PeriodBasicInfoDto.prototype, "startDate", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '종료일',
-        example: '2024-06-30T23:59:59Z',
-    }),
-    __metadata("design:type", Date)
-], PeriodBasicInfoDto.prototype, "endDate", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '상태',

@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { EvaluationPeriodService } from '../../../../../domain/core/evaluation-period/evaluation-period.service';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
+import { EvaluationPeriodAutoPhaseService } from '@domain/core/evaluation-period/evaluation-period-auto-phase.service';
 import {
   EvaluationPeriodDto,
   UpdateEvaluationPeriodDto,
-} from '../../../../../domain/core/evaluation-period/evaluation-period.types';
+} from '@domain/core/evaluation-period/evaluation-period.types';
 import { UpdateEvaluationPeriodStartDateDto } from '../../../interfaces/evaluation-period-creation.interface';
 
 /**
@@ -29,6 +30,7 @@ export class UpdateEvaluationPeriodStartDateCommandHandler
 {
   constructor(
     private readonly evaluationPeriodService: EvaluationPeriodService,
+    private readonly evaluationPeriodAutoPhaseService: EvaluationPeriodAutoPhaseService,
   ) {}
 
   async execute(
@@ -48,7 +50,14 @@ export class UpdateEvaluationPeriodStartDateCommandHandler
       updatedBy,
     );
 
-    return updatedPeriod as EvaluationPeriodDto;
+    // 시작일 수정 후 상태와 단계 자동 조정
+    const adjustedPeriod =
+      await this.evaluationPeriodAutoPhaseService.adjustStatusAndPhaseAfterScheduleUpdate(
+        periodId,
+        updatedBy,
+      );
+
+    return (adjustedPeriod || updatedPeriod) as EvaluationPeriodDto;
   }
 }
 

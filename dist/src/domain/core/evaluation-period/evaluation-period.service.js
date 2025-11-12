@@ -103,7 +103,6 @@ let EvaluationPeriodService = EvaluationPeriodService_1 = class EvaluationPeriod
                 where: {
                     status: evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
                     startDate: (0, typeorm_2.LessThanOrEqual)(now),
-                    endDate: (0, typeorm_2.MoreThanOrEqual)(now),
                 },
                 order: { startDate: 'DESC' },
             });
@@ -127,11 +126,6 @@ let EvaluationPeriodService = EvaluationPeriodService_1 = class EvaluationPeriod
             if (filter.startDateFrom) {
                 queryBuilder.andWhere('period.startDate >= :startDateFrom', {
                     startDateFrom: filter.startDateFrom,
-                });
-            }
-            if (filter.endDateTo) {
-                queryBuilder.andWhere('period.endDate <= :endDateTo', {
-                    endDateTo: filter.endDateTo,
                 });
             }
             if (filter.activeOnly) {

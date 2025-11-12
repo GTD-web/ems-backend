@@ -47,7 +47,6 @@ class EvaluationPeriodResponseDto {
     id;
     name;
     startDate;
-    endDate;
     description;
     status;
     currentPhase;
@@ -86,13 +85,6 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], EvaluationPeriodResponseDto.prototype, "startDate", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '평가 기간 종료일',
-        example: '2024-06-30T23:59:59.999Z',
-    }),
-    __metadata("design:type", Date)
-], EvaluationPeriodResponseDto.prototype, "endDate", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '평가 기간 설명',

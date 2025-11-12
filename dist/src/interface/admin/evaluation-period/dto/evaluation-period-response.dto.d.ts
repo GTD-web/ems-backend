@@ -8,7 +8,6 @@ export declare class EvaluationPeriodResponseDto implements EvaluationPeriodDto 
     id: string;
     name: string;
     startDate: Date;
-    endDate: Date;
     description?: string;
     status: EvaluationPeriodStatus;
     currentPhase?: EvaluationPeriodPhase;

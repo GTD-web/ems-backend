@@ -13,4 +13,5 @@ export declare class EvaluationPeriodAutoPhaseService {
     private getPhaseDeadline;
     manualPhaseTransition(periodId: string): Promise<EvaluationPeriod | null>;
     checkAllActivePeriods(): Promise<number>;
+    adjustStatusAndPhaseAfterScheduleUpdate(periodId: string, changedBy: string): Promise<EvaluationPeriod | null>;
 }

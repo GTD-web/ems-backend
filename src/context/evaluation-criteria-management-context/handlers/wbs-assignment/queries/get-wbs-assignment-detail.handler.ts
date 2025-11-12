@@ -83,7 +83,6 @@ export interface WbsAssignmentDetailResult {
     id: string;
     name: string;
     startDate: Date;
-    endDate: Date;
     status: string;
   } | null;
 
@@ -190,7 +189,6 @@ export class GetWbsAssignmentDetailHandler
         'period.id AS period_id',
         'period.name AS period_name',
         'period.startDate AS period_startdate',
-        'period.endDate AS period_enddate',
         'period.status AS period_status',
         // 할당자 정보
         'assignedByEmployee.id AS assignedbyemployee_id',
@@ -270,7 +268,6 @@ export class GetWbsAssignmentDetailHandler
             id: result.period_id,
             name: result.period_name,
             startDate: result.period_startdate,
-            endDate: result.period_enddate,
             status: result.period_status,
           }
         : null,

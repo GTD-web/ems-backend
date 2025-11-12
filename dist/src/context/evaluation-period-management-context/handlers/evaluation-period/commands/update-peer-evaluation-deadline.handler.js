@@ -13,6 +13,7 @@ exports.UpdatePeerEvaluationDeadlineCommandHandler = exports.UpdatePeerEvaluatio
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
 const evaluation_period_service_1 = require("../../../../../domain/core/evaluation-period/evaluation-period.service");
+const evaluation_period_auto_phase_service_1 = require("../../../../../domain/core/evaluation-period/evaluation-period-auto-phase.service");
 class UpdatePeerEvaluationDeadlineCommand {
     periodId;
     deadlineData;
@@ -26,8 +27,10 @@ class UpdatePeerEvaluationDeadlineCommand {
 exports.UpdatePeerEvaluationDeadlineCommand = UpdatePeerEvaluationDeadlineCommand;
 let UpdatePeerEvaluationDeadlineCommandHandler = class UpdatePeerEvaluationDeadlineCommandHandler {
     evaluationPeriodService;
-    constructor(evaluationPeriodService) {
+    evaluationPeriodAutoPhaseService;
+    constructor(evaluationPeriodService, evaluationPeriodAutoPhaseService) {
         this.evaluationPeriodService = evaluationPeriodService;
+        this.evaluationPeriodAutoPhaseService = evaluationPeriodAutoPhaseService;
     }
     async execute(command) {
         const { periodId, deadlineData, updatedBy } = command;
@@ -35,13 +38,15 @@ let UpdatePeerEvaluationDeadlineCommandHandler = class UpdatePeerEvaluationDeadl
             peerEvaluationDeadline: deadlineData.peerEvaluationDeadline,
         };
         const updatedPeriod = await this.evaluationPeriodService.업데이트한다(periodId, updateDto, updatedBy);
-        return updatedPeriod;
+        const adjustedPeriod = await this.evaluationPeriodAutoPhaseService.adjustStatusAndPhaseAfterScheduleUpdate(periodId, updatedBy);
+        return (adjustedPeriod || updatedPeriod);
     }
 };
 exports.UpdatePeerEvaluationDeadlineCommandHandler = UpdatePeerEvaluationDeadlineCommandHandler;
 exports.UpdatePeerEvaluationDeadlineCommandHandler = UpdatePeerEvaluationDeadlineCommandHandler = __decorate([
     (0, common_1.Injectable)(),
     (0, cqrs_1.CommandHandler)(UpdatePeerEvaluationDeadlineCommand),
-    __metadata("design:paramtypes", [evaluation_period_service_1.EvaluationPeriodService])
+    __metadata("design:paramtypes", [evaluation_period_service_1.EvaluationPeriodService,
+        evaluation_period_auto_phase_service_1.EvaluationPeriodAutoPhaseService])
 ], UpdatePeerEvaluationDeadlineCommandHandler);
 //# sourceMappingURL=update-peer-evaluation-deadline.handler.js.map

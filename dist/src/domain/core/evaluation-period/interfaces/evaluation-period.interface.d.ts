@@ -3,7 +3,6 @@ import { IBaseEntity } from '@libs/database/base/base.entity';
 export interface IEvaluationPeriod extends IBaseEntity {
     name: string;
     startDate: Date;
-    endDate?: Date;
     description?: string;
     status: EvaluationPeriodStatus;
     currentPhase?: EvaluationPeriodPhase;
@@ -46,7 +45,7 @@ export interface IEvaluationPeriod extends IBaseEntity {
     자기평가_달성률_유효한가(rate: number): boolean;
     자기평가_달성률_최대값(): number;
     정보_업데이트한다(name?: string, description?: string, updatedBy?: string): void;
-    일정_업데이트한다(startDate?: Date, endDate?: Date, updatedBy?: string): void;
+    일정_업데이트한다(startDate?: Date, updatedBy?: string): void;
     단계별_마감일_업데이트한다(evaluationSetupDeadline?: Date, performanceDeadline?: Date, selfEvaluationDeadline?: Date, peerEvaluationDeadline?: Date, updatedBy?: string): void;
     단계_마감일_설정한다(phase: EvaluationPeriodPhase, deadline: Date, setBy: string): void;
     단계_마감일_조회한다(phase: EvaluationPeriodPhase): Date | null;

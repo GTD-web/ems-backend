@@ -54,7 +54,6 @@ export declare class PeriodBasicInfoDto {
     id: string;
     name: string;
     startDate: Date;
-    endDate: Date;
     status: string;
 }
 export declare class FinalEvaluationDetailDto {

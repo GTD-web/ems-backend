@@ -82,8 +82,7 @@ export class CreateEvaluationPeriodCommandHandler
 
   /**
    * 기간 겹침을 검증한다
-   * endDate 대신 peerEvaluationDeadline을 기준으로 검증합니다.
-   * endDate는 결재 완료 날짜이므로 겹침 검증에는 사용하지 않습니다.
+   * peerEvaluationDeadline을 기준으로 검증합니다.
    */
   private async 기간겹침검증한다(
     startDate: Date,

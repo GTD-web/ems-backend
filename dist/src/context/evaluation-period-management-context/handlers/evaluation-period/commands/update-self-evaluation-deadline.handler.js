@@ -13,6 +13,7 @@ exports.UpdateSelfEvaluationDeadlineCommandHandler = exports.UpdateSelfEvaluatio
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
 const evaluation_period_service_1 = require("../../../../../domain/core/evaluation-period/evaluation-period.service");
+const evaluation_period_auto_phase_service_1 = require("../../../../../domain/core/evaluation-period/evaluation-period-auto-phase.service");
 class UpdateSelfEvaluationDeadlineCommand {
     periodId;
     deadlineData;
@@ -26,8 +27,10 @@ class UpdateSelfEvaluationDeadlineCommand {
 exports.UpdateSelfEvaluationDeadlineCommand = UpdateSelfEvaluationDeadlineCommand;
 let UpdateSelfEvaluationDeadlineCommandHandler = class UpdateSelfEvaluationDeadlineCommandHandler {
     evaluationPeriodService;
-    constructor(evaluationPeriodService) {
+    evaluationPeriodAutoPhaseService;
+    constructor(evaluationPeriodService, evaluationPeriodAutoPhaseService) {
         this.evaluationPeriodService = evaluationPeriodService;
+        this.evaluationPeriodAutoPhaseService = evaluationPeriodAutoPhaseService;
     }
     async execute(command) {
         const { periodId, deadlineData, updatedBy } = command;
@@ -35,13 +38,15 @@ let UpdateSelfEvaluationDeadlineCommandHandler = class UpdateSelfEvaluationDeadl
             selfEvaluationDeadline: deadlineData.selfEvaluationDeadline,
         };
         const updatedPeriod = await this.evaluationPeriodService.업데이트한다(periodId, updateDto, updatedBy);
-        return updatedPeriod;
+        const adjustedPeriod = await this.evaluationPeriodAutoPhaseService.adjustStatusAndPhaseAfterScheduleUpdate(periodId, updatedBy);
+        return (adjustedPeriod || updatedPeriod);
     }
 };
 exports.UpdateSelfEvaluationDeadlineCommandHandler = UpdateSelfEvaluationDeadlineCommandHandler;
 exports.UpdateSelfEvaluationDeadlineCommandHandler = UpdateSelfEvaluationDeadlineCommandHandler = __decorate([
     (0, common_1.Injectable)(),
     (0, cqrs_1.CommandHandler)(UpdateSelfEvaluationDeadlineCommand),
-    __metadata("design:paramtypes", [evaluation_period_service_1.EvaluationPeriodService])
+    __metadata("design:paramtypes", [evaluation_period_service_1.EvaluationPeriodService,
+        evaluation_period_auto_phase_service_1.EvaluationPeriodAutoPhaseService])
 ], UpdateSelfEvaluationDeadlineCommandHandler);
 //# sourceMappingURL=update-self-evaluation-deadline.handler.js.map

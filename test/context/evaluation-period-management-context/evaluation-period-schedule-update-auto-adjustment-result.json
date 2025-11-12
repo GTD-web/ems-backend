@@ -1,0 +1,107 @@
+{
+  "timestamp": "2025-11-12T22:56:52.286Z",
+  "testResults": [
+    {
+      "testName": "시작일을 과거 날짜로 수정하면 상태가 WAITING에서 IN_PROGRESS로 자동 변경되어야 한다",
+      "result": {
+        "periodId": "33f1388d-5639-4d37-a56d-f8184f2b1499",
+        "beforeStatus": "waiting",
+        "afterStatus": "in-progress",
+        "beforePhase": "waiting",
+        "afterPhase": "evaluation-setup",
+        "startDate": "2025-11-11T22:56:51.918Z"
+      }
+    },
+    {
+      "testName": "시작일을 미래 날짜로 수정하면 상태가 WAITING으로 유지되어야 한다",
+      "result": {
+        "periodId": "9091baf1-ae66-4ee1-8a8e-4a1f4baefbfd",
+        "status": "waiting",
+        "phase": "waiting",
+        "startDate": "2025-12-12T22:56:51.961Z"
+      }
+    },
+    {
+      "testName": "전체 일정을 수정할 때 시작일이 지났으면 상태와 단계가 자동으로 조정되어야 한다",
+      "result": {
+        "periodId": "461501d9-1ee9-4c16-9ece-16092b0c77c2",
+        "beforeStatus": "waiting",
+        "afterStatus": "in-progress",
+        "afterPhase": "performance",
+        "scheduleData": {
+          "startDate": "2025-11-11T22:56:51.979Z",
+          "evaluationSetupDeadline": "2025-11-12T10:56:51.979Z"
+        }
+      }
+    },
+    {
+      "testName": "평가설정 마감일을 과거 날짜로 수정하면 PERFORMANCE 단계로 자동 전이되어야 한다",
+      "result": {
+        "periodId": "642cb6b8-b934-4206-8138-568e2d3dcc5e",
+        "beforePhase": "evaluation-setup",
+        "afterPhase": "performance",
+        "deadline": "2025-11-11T22:56:52.022Z"
+      }
+    },
+    {
+      "testName": "평가설정 마감일을 미래 날짜로 수정하면 현재 단계가 유지되어야 한다",
+      "result": {
+        "periodId": "11b01ccd-8a62-436f-9d20-faff4df7aed6",
+        "phase": "evaluation-setup",
+        "deadline": "2025-11-19T22:56:52.051Z"
+      }
+    },
+    {
+      "testName": "업무 수행 마감일을 과거 날짜로 수정하면 SELF_EVALUATION 단계로 자동 전이되어야 한다",
+      "result": {
+        "periodId": "e8be223f-7f8c-4476-b6c1-01cb80066aaa",
+        "beforePhase": "performance",
+        "afterPhase": "self-evaluation",
+        "deadline": "2025-11-11T22:56:52.088Z"
+      }
+    },
+    {
+      "testName": "자기 평가 마감일을 과거 날짜로 수정하면 PEER_EVALUATION 단계로 자동 전이되어야 한다",
+      "result": {
+        "periodId": "de04b7e4-18fa-4b30-928c-16e1debfde29",
+        "beforePhase": "self-evaluation",
+        "afterPhase": "peer-evaluation",
+        "deadline": "2025-11-11T22:56:52.136Z"
+      }
+    },
+    {
+      "testName": "하향/동료평가 마감일을 과거 날짜로 수정하면 CLOSURE 단계로 자동 전이되어야 한다",
+      "result": {
+        "periodId": "3aff6a48-3d05-4717-96bf-fe2515c848fd",
+        "beforePhase": "peer-evaluation",
+        "afterPhase": "closure",
+        "deadline": "2025-11-11T22:56:52.189Z"
+      }
+    },
+    {
+      "testName": "WAITING 상태에서 시작일과 모든 마감일을 과거로 수정하면 최종 단계로 자동 전이되어야 한다",
+      "result": {
+        "periodId": "d102ee98-a3e9-4d16-b99a-bf769dc393d2",
+        "beforeStatus": "waiting",
+        "afterStatus": "in-progress",
+        "afterPhase": "closure",
+        "scheduleData": {
+          "startDate": "2025-10-13T22:56:52.207Z",
+          "evaluationSetupDeadline": "2025-10-18T22:56:52.207Z",
+          "performanceDeadline": "2025-10-23T22:56:52.207Z",
+          "selfEvaluationDeadline": "2025-10-28T22:56:52.207Z",
+          "peerEvaluationDeadline": "2025-11-02T22:56:52.207Z"
+        }
+      }
+    },
+    {
+      "testName": "이미 진행 중인 평가기간의 마감일을 과거로 수정하면 해당 단계로 자동 전이되어야 한다",
+      "result": {
+        "periodId": "38afeda1-6bdd-42c5-8831-b89554297fd5",
+        "beforePhase": "evaluation-setup",
+        "afterPhase": "performance",
+        "deadline": "2025-11-11T22:56:52.251Z"
+      }
+    }
+  ]
+}

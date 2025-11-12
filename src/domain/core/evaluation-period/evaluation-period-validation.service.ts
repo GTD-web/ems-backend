@@ -206,7 +206,7 @@ export class EvaluationPeriodValidationService {
       );
     }
 
-    // endDate는 시스템에서 자동으로 관리되므로 필수 검증에서 제외
+    // endDate는 제거되었으므로 검증 불필요
   }
 
   /**
@@ -350,7 +350,6 @@ export class EvaluationPeriodValidationService {
     existingPeriod: any,
   ): void {
     const newStartDate = updateDto.startDate || existingPeriod.startDate;
-    const existingEndDate = existingPeriod.endDate;
 
     // 평가설정 단계 마감일 검증
     if (updateDto.evaluationSetupDeadline) {
@@ -411,7 +410,6 @@ export class EvaluationPeriodValidationService {
   /**
    * 단계별 날짜 순서를 검증한다
    * 순서: startDate < evaluationSetupDeadline < performanceDeadline < selfEvaluationDeadline < peerEvaluationDeadline
-   * (endDate는 시스템에서 자동으로 peerEvaluationDeadline과 동일하게 설정됨)
    */
   private 단계별날짜순서검증한다(
     startDate: Date,
@@ -451,8 +449,6 @@ export class EvaluationPeriodValidationService {
         name: '하향/동료평가 단계 마감일',
       });
     }
-
-    // endDate는 시스템에서 자동으로 peerEvaluationDeadline과 동일하게 설정되므로 별도 검증 불필요
 
     // 순서 검증: 각 단계가 이전 단계보다 늦어야 함
     for (let i = 1; i < dateSteps.length; i++) {
@@ -760,8 +756,7 @@ export class EvaluationPeriodValidationService {
 
   /**
    * 기간 겹침을 검증한다
-   * endDate 대신 peerEvaluationDeadline을 기준으로 검증합니다.
-   * endDate는 결재 완료 날짜이므로 겹침 검증에는 사용하지 않습니다.
+   * peerEvaluationDeadline을 기준으로 검증합니다.
    */
   private async 기간겹침검증한다(
     startDate: Date,
@@ -813,7 +808,6 @@ export class EvaluationPeriodValidationService {
       where: {
         status: EvaluationPeriodStatus.IN_PROGRESS,
         startDate: LessThanOrEqual(now),
-        endDate: MoreThanOrEqual(now),
       },
       order: { startDate: 'DESC' },
     });

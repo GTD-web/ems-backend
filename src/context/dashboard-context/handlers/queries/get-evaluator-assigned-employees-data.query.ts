@@ -171,7 +171,6 @@ export class GetEvaluatorAssignedEmployeesDataHandler
         id: evaluationPeriod.id,
         name: evaluationPeriod.name,
         startDate: evaluationPeriod.startDate,
-        endDate: evaluationPeriod.endDate,
         status: evaluationPeriod.status,
         currentPhase: evaluationPeriod.currentPhase,
         description: evaluationPeriod.description,

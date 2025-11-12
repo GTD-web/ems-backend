@@ -30,7 +30,6 @@ import { IEvaluationPeriod } from './interfaces/evaluation-period.interface';
 @Index(['status'])
 @Index(['currentPhase'])
 @Index(['startDate'])
-@Index(['endDate'])
 @Index(['maxSelfEvaluationRate'])
 export class EvaluationPeriod
   extends BaseEntity<EvaluationPeriodDto>
@@ -51,16 +50,6 @@ export class EvaluationPeriod
     value instanceof Date ? value.toISOString() : value,
   )
   startDate: Date;
-
-  @Column({
-    type: 'timestamp',
-    nullable: true,
-    comment: '평가 기간 종료일',
-  })
-  @Transform(({ value }) =>
-    value instanceof Date ? value.toISOString() : value,
-  )
-  endDate?: Date;
 
   @Column({
     type: 'text',
@@ -509,9 +498,7 @@ export class EvaluationPeriod
    */
   평가기간_내인가(): boolean {
     const now = new Date();
-    return (
-      now >= this.startDate && (this.endDate ? now <= this.endDate : false)
-    );
+    return now >= this.startDate;
   }
 
   /**
@@ -519,8 +506,9 @@ export class EvaluationPeriod
    * @returns 만료 여부
    */
   만료된_상태인가(): boolean {
-    const now = new Date();
-    return this.endDate ? now > this.endDate : false;
+    // endDate가 제거되었으므로 항상 false 반환
+    // 만료 여부는 peerEvaluationDeadline을 기준으로 판단해야 함
+    return false;
   }
 
   /**
@@ -627,26 +615,13 @@ export class EvaluationPeriod
   /**
    * 평가 기간 일정을 업데이트한다
    * @param startDate 새로운 시작일
-   * @param endDate 새로운 종료일
    * @param updatedBy 수정자 ID
    */
   일정_업데이트한다(
     startDate?: Date,
-    endDate?: Date,
     updatedBy?: string,
   ): void {
-    const newStartDate = startDate || this.startDate;
-    const newEndDate = endDate || this.endDate;
-
-    // endDate가 있을 때만 날짜 범위 검증
-    if (newEndDate && newStartDate >= newEndDate) {
-      throw new InvalidEvaluationPeriodDateRangeException(
-        '시작일은 종료일보다 이전이어야 합니다.',
-      );
-    }
-
     if (startDate) this.startDate = startDate;
-    if (endDate) this.endDate = endDate;
 
     if (updatedBy) {
       this.updatedBy = updatedBy;
@@ -880,7 +855,6 @@ export class EvaluationPeriod
       id: this.id,
       name: this.name,
       startDate: this.startDate,
-      endDate: this.endDate,
       description: this.description,
       status: this.status,
       currentPhase: this.currentPhase,

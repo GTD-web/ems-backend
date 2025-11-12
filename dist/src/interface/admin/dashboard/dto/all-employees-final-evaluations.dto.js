@@ -99,7 +99,6 @@ class PeriodBasicDto {
     id;
     name;
     startDate;
-    endDate;
 }
 exports.PeriodBasicDto = PeriodBasicDto;
 __decorate([
@@ -125,16 +124,6 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], PeriodBasicDto.prototype, "startDate", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '평가기간 종료일',
-        type: 'string',
-        format: 'date-time',
-        example: '2024-06-30T23:59:59.999Z',
-        nullable: true,
-    }),
-    __metadata("design:type", Object)
-], PeriodBasicDto.prototype, "endDate", void 0);
 class FinalEvaluationBasicDto {
     id;
     evaluationGrade;

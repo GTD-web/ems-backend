@@ -18,7 +18,6 @@ const evaluation_period_types_1 = require("./evaluation-period.types");
 let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
     name;
     startDate;
-    endDate;
     description;
     status;
     currentPhase;
@@ -201,11 +200,10 @@ let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
     }
     평가기간_내인가() {
         const now = new Date();
-        return (now >= this.startDate && (this.endDate ? now <= this.endDate : false));
+        return now >= this.startDate;
     }
     만료된_상태인가() {
-        const now = new Date();
-        return this.endDate ? now > this.endDate : false;
+        return false;
     }
     상태전이_유효한가(targetStatus) {
         const validTransitions = {
@@ -259,16 +257,9 @@ let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
         }
         this.updatedAt = new Date();
     }
-    일정_업데이트한다(startDate, endDate, updatedBy) {
-        const newStartDate = startDate || this.startDate;
-        const newEndDate = endDate || this.endDate;
-        if (newEndDate && newStartDate >= newEndDate) {
-            throw new evaluation_period_exceptions_1.InvalidEvaluationPeriodDateRangeException('시작일은 종료일보다 이전이어야 합니다.');
-        }
+    일정_업데이트한다(startDate, updatedBy) {
         if (startDate)
             this.startDate = startDate;
-        if (endDate)
-            this.endDate = endDate;
         if (updatedBy) {
             this.updatedBy = updatedBy;
         }
@@ -403,7 +394,6 @@ let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
             id: this.id,
             name: this.name,
             startDate: this.startDate,
-            endDate: this.endDate,
             description: this.description,
             status: this.status,
             currentPhase: this.currentPhase,
@@ -493,15 +483,6 @@ __decorate([
     (0, class_transformer_1.Transform)(({ value }) => value instanceof Date ? value.toISOString() : value),
     __metadata("design:type", Date)
 ], EvaluationPeriod.prototype, "startDate", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: 'timestamp',
-        nullable: true,
-        comment: '평가 기간 종료일',
-    }),
-    (0, class_transformer_1.Transform)(({ value }) => value instanceof Date ? value.toISOString() : value),
-    __metadata("design:type", Date)
-], EvaluationPeriod.prototype, "endDate", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: 'text',
@@ -627,7 +608,6 @@ exports.EvaluationPeriod = EvaluationPeriod = __decorate([
     (0, typeorm_1.Index)(['status']),
     (0, typeorm_1.Index)(['currentPhase']),
     (0, typeorm_1.Index)(['startDate']),
-    (0, typeorm_1.Index)(['endDate']),
     (0, typeorm_1.Index)(['maxSelfEvaluationRate'])
 ], EvaluationPeriod);
 //# sourceMappingURL=evaluation-period.entity.js.map

@@ -346,12 +346,6 @@ export class PeriodBasicInfoDto {
   startDate: Date;
 
   @ApiProperty({
-    description: '종료일',
-    example: '2024-06-30T23:59:59Z',
-  })
-  endDate: Date;
-
-  @ApiProperty({
     description: '상태',
     example: 'in_progress',
     enum: ['scheduled', 'in_progress', 'completed', 'cancelled'],

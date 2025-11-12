@@ -56,7 +56,6 @@ export interface WbsAssignmentDetailResult {
         id: string;
         name: string;
         startDate: Date;
-        endDate: Date;
         status: string;
     } | null;
     assignedByEmployee: {

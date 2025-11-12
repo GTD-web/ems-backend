@@ -44,7 +44,6 @@ export interface DownwardEvaluationDetailResult {
         id: string;
         name: string;
         startDate: Date;
-        endDate: Date;
         status: string;
     } | null;
     selfEvaluation: {

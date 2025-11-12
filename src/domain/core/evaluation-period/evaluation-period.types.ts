@@ -36,8 +36,6 @@ export interface CreateEvaluationPeriodDto {
   name: string;
   /** 평가 기간 시작일 */
   startDate: Date;
-  /** 평가 기간 종료일 */
-  endDate?: Date;
   /** 평가 기간 설명 */
   description?: string;
   /** 평가설정 단계 마감일 */
@@ -62,8 +60,6 @@ export interface UpdateEvaluationPeriodDto {
   name?: string;
   /** 평가 기간 시작일 */
   startDate?: Date;
-  /** 평가 기간 종료일 */
-  endDate?: Date;
   /** 평가 기간 설명 */
   description?: string;
   /** 평가설정 단계 마감일 */
@@ -90,8 +86,6 @@ export interface EvaluationPeriodDto {
   name: string;
   /** 평가 기간 시작일 */
   startDate: Date;
-  /** 평가 기간 종료일 */
-  endDate?: Date;
   /** 평가 기간 설명 */
   description?: string;
   /** 평가 기간 상태 */

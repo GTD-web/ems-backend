@@ -77,7 +77,6 @@ let GetEmployeeEvaluationPeriodsHandler = GetEmployeeEvaluationPeriodsHandler_1 
                         id: period?.id || evaluationPeriodId,
                         name: period?.name || '알 수 없음',
                         startDate: period?.startDate || new Date(),
-                        endDate: period?.endDate || null,
                         status: period?.status || evaluation_period_types_1.EvaluationPeriodStatus.WAITING,
                         currentPhase: period?.currentPhase || null,
                     },

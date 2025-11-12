@@ -10,7 +10,6 @@ export declare class PeriodInfoDto {
     id: string;
     name: string;
     startDate: Date;
-    endDate: Date | null;
 }
 export declare class EvaluationInfoDto {
     id: string;

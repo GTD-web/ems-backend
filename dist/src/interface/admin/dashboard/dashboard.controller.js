@@ -93,7 +93,6 @@ let DashboardController = class DashboardController {
                     id: period.id,
                     name: period.name,
                     startDate: period.startDate,
-                    endDate: period.endDate ?? null,
                 },
                 evaluations: [],
             };
@@ -103,7 +102,6 @@ let DashboardController = class DashboardController {
             id: firstResult.periodId,
             name: firstResult.periodName,
             startDate: firstResult.periodStartDate,
-            endDate: firstResult.periodEndDate,
         };
         const evaluations = results.map((result) => ({
             employee: {
@@ -141,7 +139,6 @@ let DashboardController = class DashboardController {
                     id: result.periodId,
                     name: result.periodName,
                     startDate: result.periodStartDate,
-                    endDate: result.periodEndDate,
                 });
             }
         }
@@ -224,7 +221,6 @@ let DashboardController = class DashboardController {
                 id: result.periodId,
                 name: result.periodName,
                 startDate: result.periodStartDate,
-                endDate: result.periodEndDate,
             },
             evaluationGrade: result.evaluationGrade,
             jobGrade: result.jobGrade,
