@@ -1,3 +1,4 @@
+import { IsNull } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { DownwardEvaluationScenario } from './downward-evaluation.scenario';
 import { SeedDataScenario } from '../../seed-data.scenario';
@@ -964,6 +965,175 @@ describe('하향평가 시나리오', () => {
       console.log('   ✅ 평균이 아닌 현재 평가자 점수만 계산됨');
       console.log(
         `   ✅ 잘못된 평균 계산(70.83)이 아닌 올바른 점수(${교체후점수}) 반영됨`,
+      );
+    });
+  });
+
+  describe('시나리오 5-2: 1차 평가자 교체 후 점수 반영 검증', () => {
+    it('1차 평가자를 교체하면 이전 평가자의 점수는 제외되고 새 평가자의 점수만 반영되어야 한다', async () => {
+      // Given - 첫 번째 1차 평가자가 90점으로 평가 및 제출
+      const 첫번째평가자 = primaryEvaluatorId;
+      const 두번째평가자 = employeeIds[3]; // 다른 직원으로 교체
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 첫번째평가자,
+        selfEvaluationId,
+        downwardEvaluationContent: '첫 번째 1차 평가자의 평가입니다.',
+        downwardEvaluationScore: 90,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 첫번째평가자,
+      });
+
+      // 첫 번째 평가 후 점수 확인
+      const 첫번째평가후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 첫번째평가후점수 =
+        첫번째평가후현황.downwardEvaluation.primary.totalScore;
+
+      // maxRate가 120이므로: (90 / 120) * 100 = 75.00
+      expect(첫번째평가후점수).toBeCloseTo(75.0, 1);
+
+      console.log('✅ 첫 번째 1차 평가자 (90점) 평가 후:', {
+        평가자ID: 첫번째평가자.substring(0, 8),
+        입력점수: 90,
+        정규화점수: 첫번째평가후점수,
+        계산식: '(90 / 120) * 100 = 75.00',
+      });
+
+      // When - 1차 평가자를 교체 (데이터베이스에서 직접 평가라인 매핑 수정)
+      console.log('\n🔄 1차 평가자 교체 시작...');
+
+      // 평가라인 매핑 테이블에서 evaluatorId 변경
+      const EvaluationLineMapping = testSuite.getRepository(
+        'EvaluationLineMapping',
+      );
+
+      const 기존매핑 = await EvaluationLineMapping.findOne({
+        where: {
+          employeeId: evaluateeId,
+          wbsItemId: IsNull(), // 1차 평가자는 wbsItemId가 null
+          evaluationPeriodId: evaluationPeriodId,
+          evaluatorId: 첫번째평가자,
+          deletedAt: IsNull(),
+        },
+      });
+
+      expect(기존매핑).toBeDefined();
+      console.log('   기존 매핑 조회 완료:', 기존매핑?.id.substring(0, 8));
+
+      // 평가자 ID 변경
+      await EvaluationLineMapping.update(
+        { id: 기존매핑?.id },
+        { evaluatorId: 두번째평가자 },
+      );
+
+      console.log('✅ 평가자 교체 완료:', {
+        이전평가자: 첫번째평가자.substring(0, 8),
+        새평가자: 두번째평가자.substring(0, 8),
+      });
+
+      // 교체 직후 대시보드 확인 (이전 평가자의 평가가 제외되어야 함)
+      const 교체직후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 교체직후점수 = 교체직후현황.downwardEvaluation.primary.totalScore;
+
+      // 교체 후 새 평가자가 아직 평가를 제출하지 않았으므로 점수가 null이어야 함
+      expect(교체직후점수).toBeNull();
+      console.log('✅ 교체 직후 점수:', 교체직후점수, '(새 평가자 미제출)');
+
+      // Then - 새로운 1차 평가자가 60점으로 평가 및 제출
+      console.log('\n📝 새로운 1차 평가자 (60점) 평가 시작...');
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 두번째평가자,
+        selfEvaluationId,
+        downwardEvaluationContent: '두 번째 1차 평가자의 평가입니다.',
+        downwardEvaluationScore: 60,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 두번째평가자,
+      });
+
+      // 새 평가자의 평가 제출 후 점수 확인
+      const 교체후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 교체후점수 = 교체후현황.downwardEvaluation.primary.totalScore;
+
+      // maxRate가 120이므로: (60 / 120) * 100 = 50.00
+      // 이전 평가자의 90점이 포함되지 않아야 함
+      expect(교체후점수).toBeCloseTo(50.0, 1);
+
+      // 이전 평가자의 점수가 포함되면 (90 + 60) / 2 = 75, 정규화하면 62.5가 됨
+      // 이 값이 아니어야 함을 확인
+      expect(교체후점수).not.toBeCloseTo(62.5, 1);
+      expect(교체후점수).not.toBeCloseTo(75.0, 1); // 첫 번째 평가자 점수도 아님
+
+      console.log('✅ 새로운 1차 평가자 (60점) 평가 후:', {
+        평가자ID: 두번째평가자.substring(0, 8),
+        입력점수: 60,
+        정규화점수: 교체후점수,
+        계산식: '(60 / 120) * 100 = 50.00',
+      });
+
+      // 할당 데이터에서도 확인
+      const 할당데이터 =
+        await downwardEvaluationScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const wbsItem = 할당데이터.projects[0]?.wbsList?.[0];
+      expect(wbsItem.primaryDownwardEvaluation).toBeDefined();
+      expect(wbsItem.primaryDownwardEvaluation.score).toBe(60);
+      expect(wbsItem.primaryDownwardEvaluation.evaluatorId).toBe(두번째평가자);
+
+      // summary에서도 확인
+      const summaryScore =
+        할당데이터.summary.primaryDownwardEvaluation.totalScore;
+      expect(summaryScore).toBeCloseTo(50.0, 1);
+      expect(summaryScore).not.toBeCloseTo(62.5, 1); // 평균이 아님
+      expect(summaryScore).not.toBeCloseTo(75.0, 1); // 첫 번째 평가자 점수가 아님
+
+      console.log('\n✅ 1차 평가자 교체 시나리오 검증 완료!');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📊 점수 변화 요약:');
+      console.log(`   1️⃣  첫 번째 평가자 (90점) → 정규화: ${첫번째평가후점수}`);
+      console.log(`   🔄 평가자 교체 → 점수: ${교체직후점수} (미제출)`);
+      console.log(`   2️⃣  두 번째 평가자 (60점)  → 정규화: ${교체후점수}`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✨ 검증 결과:');
+      console.log('   ✅ 이전 평가자 점수(90점) 제외됨');
+      console.log('   ✅ 새 평가자 점수(60점)만 반영됨');
+      console.log('   ✅ 평균이 아닌 현재 평가자 점수만 계산됨');
+      console.log(
+        `   ✅ 잘못된 평균 계산(62.5)이 아닌 올바른 점수(${교체후점수}) 반영됨`,
       );
     });
   });

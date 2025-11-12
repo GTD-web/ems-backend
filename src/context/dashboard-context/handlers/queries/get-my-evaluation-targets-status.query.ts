@@ -416,7 +416,7 @@ export class GetMyEvaluationTargetsStatusHandler
         totalScore = await 가중치_기반_1차_하향평가_점수를_계산한다(
           evaluationPeriodId,
           employeeId,
-          evaluatorId,
+          [evaluatorId], // 현재 평가자만 배열로 전달
           this.downwardEvaluationRepository,
           this.wbsAssignmentRepository,
           this.evaluationPeriodRepository,

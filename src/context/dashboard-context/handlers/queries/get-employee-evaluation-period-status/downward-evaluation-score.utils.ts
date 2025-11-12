@@ -11,18 +11,20 @@ const logger = new Logger('DownwardEvaluationScoreUtils');
  * 가중치 기반 1차 하향평가 점수를 계산한다
  * 계산식: Σ(WBS 가중치 × 하향평가 점수 / maxRate × 100)
  * 하향평가 점수 범위: 0 ~ 평가기간의 최대 달성률
+ *
+ * @param evaluatorIds 현재 평가라인에 있는 평가자 ID 목록 (평가자 교체 시 현재 평가자만 점수 계산에 포함)
  */
 export async function 가중치_기반_1차_하향평가_점수를_계산한다(
   evaluationPeriodId: string,
   employeeId: string,
-  evaluatorId: string | null,
+  evaluatorIds: string[],
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   evaluationPeriodRepository: Repository<EvaluationPeriod>,
 ): Promise<number | null> {
   try {
     // 평가자가 없으면 계산 불가
-    if (!evaluatorId) {
+    if (!evaluatorIds || evaluatorIds.length === 0) {
       logger.warn(
         `1차 평가자가 지정되지 않았습니다. (평가기간: ${evaluationPeriodId}, 피평가자: ${employeeId})`,
       );
@@ -30,11 +32,12 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
     }
 
     // 완료된 1차 하향평가 목록 조회
+    // 현재 평가라인에 있는 평가자의 평가만 조회 (평가자 교체 시 이전 평가자 제외)
     const downwardEvaluations = await downwardEvaluationRepository.find({
       where: {
         periodId: evaluationPeriodId,
         employeeId: employeeId,
-        evaluatorId: evaluatorId,
+        evaluatorId: In(evaluatorIds),
         evaluationType: DownwardEvaluationType.PRIMARY,
         deletedAt: IsNull(),
       },
@@ -101,7 +104,7 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
     const finalScore = totalWeightedScore;
 
     logger.log(
-      `가중치 기반 1차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (피평가자: ${employeeId}, 평가자: ${evaluatorId}, 평가기간: ${evaluationPeriodId})`,
+      `가중치 기반 1차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (피평가자: ${employeeId}, 평가자: ${evaluatorIds.join(', ')}, 평가기간: ${evaluationPeriodId})`,
     );
 
     return Math.round(finalScore * 100) / 100; // 소수점 2자리로 반올림

@@ -52,9 +52,9 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
             deletedAt: (0, typeorm_1.IsNull)(),
         },
     });
-    let primaryEvaluatorId = null;
+    const primaryEvaluators = [];
     if (primaryLine) {
-        const primaryMapping = await evaluationLineMappingRepository
+        const primaryMappings = await evaluationLineMappingRepository
             .createQueryBuilder('mapping')
             .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
             .andWhere('mapping.employeeId = :employeeId', { employeeId })
@@ -64,12 +64,13 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
             .andWhere('mapping.wbsItemId IS NULL')
             .andWhere('mapping.deletedAt IS NULL')
             .orderBy('mapping.createdAt', 'ASC')
-            .limit(1)
-            .getOne();
-        if (primaryMapping) {
-            primaryEvaluatorId = primaryMapping.evaluatorId;
-        }
+            .getMany();
+        const uniqueEvaluatorIds = [
+            ...new Set(primaryMappings.map((m) => m.evaluatorId).filter((id) => !!id)),
+        ];
+        primaryEvaluators.push(...uniqueEvaluatorIds);
     }
+    const primaryEvaluatorId = primaryEvaluators.length > 0 ? primaryEvaluators[0] : null;
     const primaryStatus = await 평가자별_하향평가_상태를_조회한다(evaluationPeriodId, employeeId, downward_evaluation_types_1.DownwardEvaluationType.PRIMARY, primaryEvaluatorId, downwardEvaluationRepository, wbsAssignmentRepository);
     let primaryEvaluatorInfo = null;
     if (primaryEvaluatorId && employeeRepository) {
@@ -173,7 +174,7 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
     let primaryGrade = null;
     if (primaryStatus.assignedWbsCount > 0 &&
         primaryStatus.completedEvaluationCount === primaryStatus.assignedWbsCount) {
-        primaryTotalScore = await (0, downward_evaluation_score_utils_1.가중치_기반_1차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, primaryEvaluatorId, downwardEvaluationRepository, wbsAssignmentRepository, periodRepository);
+        primaryTotalScore = await (0, downward_evaluation_score_utils_1.가중치_기반_1차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, primaryEvaluators, downwardEvaluationRepository, wbsAssignmentRepository, periodRepository);
         if (primaryTotalScore !== null) {
             primaryGrade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, primaryTotalScore, periodRepository);
         }

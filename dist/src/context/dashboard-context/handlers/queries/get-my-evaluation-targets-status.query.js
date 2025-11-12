@@ -243,7 +243,7 @@ let GetMyEvaluationTargetsStatusHandler = GetMyEvaluationTargetsStatusHandler_1 
             let grade = null;
             if (assignedWbsCount > 0 &&
                 completedEvaluationCount === assignedWbsCount) {
-                totalScore = await (0, downward_evaluation_score_utils_1.가중치_기반_1차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, evaluatorId, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
+                totalScore = await (0, downward_evaluation_score_utils_1.가중치_기반_1차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, [evaluatorId], this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
                 if (totalScore !== null) {
                     grade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, totalScore, this.evaluationPeriodRepository);
                 }
