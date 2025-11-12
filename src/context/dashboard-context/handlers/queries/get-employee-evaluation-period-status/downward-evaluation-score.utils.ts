@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, In } from 'typeorm';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
@@ -136,11 +136,12 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
       return null;
     }
 
-    // 모든 2차 평가자의 완료된 하향평가 목록 조회
+    // 현재 평가라인에 있는 2차 평가자의 완료된 하향평가 목록만 조회
     const downwardEvaluations = await downwardEvaluationRepository.find({
       where: {
         periodId: evaluationPeriodId,
         employeeId: employeeId,
+        evaluatorId: In(evaluatorIds),
         evaluationType: DownwardEvaluationType.SECONDARY,
         deletedAt: IsNull(),
       },

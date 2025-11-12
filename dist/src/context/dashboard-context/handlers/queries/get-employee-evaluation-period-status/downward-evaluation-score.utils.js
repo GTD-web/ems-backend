@@ -77,6 +77,7 @@ async function 가중치_기반_2차_하향평가_점수를_계산한다(evaluat
             where: {
                 periodId: evaluationPeriodId,
                 employeeId: employeeId,
+                evaluatorId: (0, typeorm_1.In)(evaluatorIds),
                 evaluationType: downward_evaluation_types_1.DownwardEvaluationType.SECONDARY,
                 deletedAt: (0, typeorm_1.IsNull)(),
             },
