@@ -37,12 +37,13 @@ export class DownwardEvaluationService {
       `하향평가 생성 시작 - 피평가자: ${createData.employeeId}, 평가자: ${createData.evaluatorId}, 유형: ${createData.evaluationType}`,
     );
 
-    // 중복 검사
+    // 중복 검사 (wbsId 포함)
     await this.중복_검사를_수행한다(
       createData.employeeId,
       createData.evaluatorId,
       createData.periodId,
       createData.evaluationType,
+      createData.wbsId,
     );
 
     // 유효성 검사
@@ -384,20 +385,29 @@ export class DownwardEvaluationService {
 
   /**
    * 중복 검사를 수행한다
+   * 같은 피평가자, 평가자, 기간, WBS, 평가 유형에 대해 중복 평가를 방지한다
    */
   private async 중복_검사를_수행한다(
     employeeId: string,
     evaluatorId: string,
     periodId: string,
     evaluationType: DownwardEvaluationType,
+    wbsId?: string,
   ): Promise<void> {
+    const whereCondition: any = {
+      employeeId,
+      evaluatorId,
+      periodId,
+      evaluationType,
+    };
+
+    // wbsId가 있으면 중복 검사 조건에 포함
+    if (wbsId) {
+      whereCondition.wbsId = wbsId;
+    }
+
     const existing = await this.downwardEvaluationRepository.findOne({
-      where: {
-        employeeId,
-        evaluatorId,
-        periodId,
-        evaluationType,
-      },
+      where: whereCondition,
     });
 
     if (existing) {
