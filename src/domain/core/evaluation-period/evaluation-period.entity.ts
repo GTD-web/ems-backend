@@ -836,9 +836,9 @@ export class EvaluationPeriod
           `등급 ${range.grade}의 최소 범위는 최대 범위보다 작아야 합니다.`,
         );
       }
-      if (range.minRange < 0 || range.maxRange > 100) {
+      if (range.minRange < 0 || range.maxRange > 1000) {
         throw new EvaluationPeriodBusinessRuleViolationException(
-          `등급 ${range.grade}의 점수 범위는 0-100 사이여야 합니다.`,
+          `등급 ${range.grade}의 점수 범위는 0-1000 사이여야 합니다.`,
         );
       }
     }
