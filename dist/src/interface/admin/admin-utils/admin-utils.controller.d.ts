@@ -16,4 +16,5 @@ export declare class AdminUtilsController {
     resetAllDeliverables(user: AuthenticatedUser): Promise<BulkDeleteResultDto>;
     resetAllProjectAssignments(user: AuthenticatedUser): Promise<any>;
     resetAllEvaluationLines(user: AuthenticatedUser): Promise<any>;
+    resetAllSelfEvaluations(user: AuthenticatedUser): Promise<any>;
 }

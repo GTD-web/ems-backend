@@ -33,6 +33,9 @@ import { WBS_EVALUATION_CRITERIA_HANDLERS } from './handlers/wbs-evaluation-crit
 // WBS Item Handlers
 import { WBS_ITEM_HANDLERS } from './handlers/wbs-item';
 
+// Self Evaluation Handlers
+import { SELF_EVALUATION_HANDLERS } from './handlers/self-evaluation';
+
 // Domain Modules
 import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
 import { EvaluationPeriodEmployeeMappingModule } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.module';
@@ -109,6 +112,8 @@ import { PeerEvaluationQuestionMappingModule } from '@domain/core/peer-evaluatio
     ...WBS_EVALUATION_CRITERIA_HANDLERS,
     // WBS Item Handlers
     ...WBS_ITEM_HANDLERS,
+    // Self Evaluation Handlers
+    ...SELF_EVALUATION_HANDLERS,
   ],
   exports: [EvaluationCriteriaManagementService],
 })

@@ -6,6 +6,7 @@ import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.ent
 import { WbsAssignmentValidationService } from './services/wbs-assignment-validation.service';
 import { type ProjectAssignmentListResult, type AvailableProjectsResult, type ResetPeriodAssignmentsResult, type DeleteAllProjectAssignmentsResult } from './handlers/project-assignment';
 import { type WbsAssignmentListResult, type WbsAssignmentDetailResult } from './handlers/wbs-assignment';
+import { type ResetAllSelfEvaluationsResult } from './handlers/self-evaluation';
 import { ProjectInfoDto, EmployeeInfoDto } from '@interface/admin/evaluation-criteria/dto/project-assignment.dto';
 import type { EvaluationLineMappingDto } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type { CreateEvaluationProjectAssignmentData, EvaluationProjectAssignmentDto, EvaluationProjectAssignmentFilter, OrderDirection } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
@@ -164,6 +165,7 @@ export declare class EvaluationCriteriaManagementService implements IEvaluationC
         }>;
     }>;
     모든_평가라인을_리셋한다(deletedBy: string): Promise<any>;
+    모든_자기평가를_리셋한다(deletedBy: string): Promise<ResetAllSelfEvaluationsResult>;
     평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(periodId: string, createdBy: string): Promise<{
         successCount: number;
         failureCount: number;

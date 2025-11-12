@@ -27,6 +27,7 @@ const wbs_assignment_1 = require("./handlers/wbs-assignment");
 const wbs_evaluation_criteria_1 = require("./handlers/wbs-evaluation-criteria");
 const wbs_item_1 = require("./handlers/wbs-item");
 const evaluation_line_1 = require("./handlers/evaluation-line");
+const self_evaluation_1 = require("./handlers/self-evaluation");
 const employee_entity_1 = require("../../domain/common/employee/employee.entity");
 const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 let EvaluationCriteriaManagementService = EvaluationCriteriaManagementService_1 = class EvaluationCriteriaManagementService {
@@ -290,6 +291,10 @@ let EvaluationCriteriaManagementService = EvaluationCriteriaManagementService_1 
     }
     async 모든_평가라인을_리셋한다(deletedBy) {
         const command = new evaluation_line_1.ResetAllEvaluationLinesCommand(deletedBy);
+        return await this.commandBus.execute(command);
+    }
+    async 모든_자기평가를_리셋한다(deletedBy) {
+        const command = new self_evaluation_1.ResetAllSelfEvaluationsCommand(deletedBy);
         return await this.commandBus.execute(command);
     }
     async 평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(periodId, createdBy) {

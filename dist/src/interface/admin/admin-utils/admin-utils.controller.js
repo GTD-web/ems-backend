@@ -55,6 +55,10 @@ let AdminUtilsController = class AdminUtilsController {
         const deletedBy = user.id;
         return await this.evaluationCriteriaManagementService.모든_평가라인을_리셋한다(deletedBy);
     }
+    async resetAllSelfEvaluations(user) {
+        const deletedBy = user.id;
+        return await this.evaluationCriteriaManagementService.모든_자기평가를_리셋한다(deletedBy);
+    }
 };
 exports.AdminUtilsController = AdminUtilsController;
 __decorate([
@@ -91,6 +95,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AdminUtilsController.prototype, "resetAllEvaluationLines", null);
+__decorate([
+    (0, admin_utils_api_decorators_1.ResetAllSelfEvaluations)(),
+    __param(0, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AdminUtilsController.prototype, "resetAllSelfEvaluations", null);
 exports.AdminUtilsController = AdminUtilsController = __decorate([
     (0, swagger_1.ApiTags)('Z. 관리자 - 유틸리티'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),

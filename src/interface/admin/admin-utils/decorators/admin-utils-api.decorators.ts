@@ -307,3 +307,63 @@ export function ResetAllEvaluationLines() {
     }),
   );
 }
+
+/**
+ * 모든 자기평가 리셋 API 데코레이터
+ */
+export function ResetAllSelfEvaluations() {
+  return applyDecorators(
+    Post('self-evaluations/reset'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '모든 자기평가 리셋',
+      description: `⚠️ **위험**: 모든 자기평가 및 관련 하향평가 데이터를 완전히 리셋합니다. 이 작업은 되돌릴 수 없습니다.
+
+**리셋되는 데이터:**
+- 자기평가에 연결된 하향평가
+- 자기평가
+
+**동작:**
+- 모든 삭제는 하나의 트랜잭션으로 처리되어 원자성 보장
+- 소프트 삭제 방식으로 deletedAt 필드 업데이트
+- 삭제된 데이터는 목록 조회에서 자동 제외
+- 먼저 자기평가에 연결된 하향평가를 삭제한 후 자기평가를 삭제
+
+**사용 사례:**
+- 개발/테스트 환경에서 자기평가 데이터 초기화
+- 평가 시스템 전체 리셋
+- 평가 데이터 재설정
+
+**테스트 케이스:**
+- 여러 자기평가가 있을 때 모두 리셋할 수 있어야 한다
+- 자기평가에 연결된 하향평가도 함께 삭제되어야 한다
+- 트랜잭션 보장: 중간에 오류 발생 시 전체 롤백
+- 목록 제외: 리셋 후 모든 자기평가가 목록에서 제외됨
+- 빈 데이터: 자기평가가 없을 때 성공 반환
+- 캐스케이드 삭제: 연관된 모든 하향평가가 올바른 순서로 삭제됨
+- 리셋 후 새로운 자기평가 생성 및 조회가 가능해야 한다`,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '모든 자기평가 데이터가 성공적으로 리셋되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          deletedCounts: {
+            type: 'object',
+            description: '각 엔티티별 삭제 개수',
+            properties: {
+              downwardEvaluations: { type: 'number' },
+              selfEvaluations: { type: 'number' },
+            },
+          },
+          message: { type: 'string', description: '리셋 결과 메시지' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: HttpStatus.INTERNAL_SERVER_ERROR,
+      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
+    }),
+  );
+}

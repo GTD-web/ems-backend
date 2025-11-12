@@ -85,6 +85,12 @@ import {
   GetEvaluatorsByPeriodQuery,
 } from './handlers/evaluation-line';
 
+// Self Evaluation Commands & Queries
+import {
+  ResetAllSelfEvaluationsCommand,
+  type ResetAllSelfEvaluationsResult,
+} from './handlers/self-evaluation';
+
 import {
   ProjectInfoDto,
   EmployeeInfoDto,
@@ -859,6 +865,20 @@ export class EvaluationCriteriaManagementService
    */
   async 모든_평가라인을_리셋한다(deletedBy: string): Promise<any> {
     const command = new ResetAllEvaluationLinesCommand(deletedBy);
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 모든 자기평가 및 관련 하향평가 데이터를 리셋한다
+   *
+   * 다음 데이터를 모두 삭제합니다:
+   * - 자기평가에 연결된 하향평가
+   * - 자기평가
+   */
+  async 모든_자기평가를_리셋한다(
+    deletedBy: string,
+  ): Promise<ResetAllSelfEvaluationsResult> {
+    const command = new ResetAllSelfEvaluationsCommand(deletedBy);
     return await this.commandBus.execute(command);
   }
 

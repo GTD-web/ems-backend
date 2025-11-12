@@ -321,4 +321,29 @@ export class WbsSelfEvaluationApiClient {
 
     return response.body;
   }
+
+  // ==================== 관리자 유틸리티 - 모든 자기평가 리셋 ====================
+
+  /**
+   * 모든 자기평가 리셋
+   * 
+   * ⚠️ 주의: 관리자 유틸리티 엔드포인트
+   * 경로: /admin/utils/self-evaluations/reset
+   * 
+   * 모든 자기평가 및 연결된 하향평가를 삭제합니다.
+   */
+  async resetAll(): Promise<{
+    deletedCounts: {
+      downwardEvaluations: number;
+      selfEvaluations: number;
+    };
+    message: string;
+  }> {
+    const response = await this.testSuite
+      .request()
+      .post('/admin/utils/self-evaluations/reset')
+      .expect(200);
+
+    return response.body;
+  }
 }

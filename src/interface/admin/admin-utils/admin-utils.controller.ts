@@ -13,6 +13,7 @@ import {
   ResetAllDeliverables,
   ResetAllProjectAssignments,
   ResetAllEvaluationLines,
+  ResetAllSelfEvaluations,
 } from './decorators/admin-utils-api.decorators';
 import type { BulkDeleteResultDto } from '../performance-evaluation/dto/deliverable.dto';
 
@@ -128,6 +129,26 @@ export class AdminUtilsController {
   ): Promise<any> {
     const deletedBy = user.id;
     return await this.evaluationCriteriaManagementService.모든_평가라인을_리셋한다(
+      deletedBy,
+    );
+  }
+
+  /**
+   * 모든 자기평가 리셋
+   *
+   * 시스템의 모든 자기평가 및 관련 하향평가 데이터를 소프트 삭제 방식으로 리셋합니다.
+   * ⚠️ 주의: 이 작업은 되돌릴 수 없습니다 (소프트 삭제이지만 복구 기능 없음).
+   *
+   * 리셋되는 데이터:
+   * - 자기평가에 연결된 하향평가
+   * - 자기평가
+   */
+  @ResetAllSelfEvaluations()
+  async resetAllSelfEvaluations(
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<any> {
+    const deletedBy = user.id;
+    return await this.evaluationCriteriaManagementService.모든_자기평가를_리셋한다(
       deletedBy,
     );
   }
