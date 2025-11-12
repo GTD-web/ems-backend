@@ -17,6 +17,7 @@ import {
   GetDepartmentHierarchyParams,
   GetEmployeeParams,
   GetEmployeesParams,
+  GetEmployeesManagersResponse,
   GetFCMTokenParams,
   GetMultipleFCMTokensParams,
   LoginResult,
@@ -500,6 +501,21 @@ export class SSOService implements OnModuleInit {
     flattenEmployees(hierarchy.departments);
 
     return employees;
+  }
+
+  /**
+   * 전체 직원의 관리자 정보를 조회한다
+   * 각 직원의 소속 부서부터 최상위 부서까지 올라가면서 관리자 정보를 조회합니다.
+   */
+  async 직원관리자정보를조회한다(): Promise<GetEmployeesManagersResponse> {
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.organization.getEmployeesManagers();
+      return result;
+    } catch (error) {
+      this.logger.error('직원 관리자 정보 조회 실패', error);
+      throw error;
+    }
   }
 
   // ========== 헬퍼 메서드 ==========

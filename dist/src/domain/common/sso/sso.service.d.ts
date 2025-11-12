@@ -1,5 +1,5 @@
 import { OnModuleInit } from '@nestjs/common';
-import { ChangePasswordResult, CheckPasswordResult, DepartmentHierarchy, DepartmentInfo, EmployeeInfo, FCMTokenInfo, GetDepartmentHierarchyParams, GetEmployeeParams, GetEmployeesParams, GetFCMTokenParams, GetMultipleFCMTokensParams, LoginResult, MultipleFCMTokensInfo, RefreshTokenResult, SubscribeFCMParams, SubscribeFCMResult, UnsubscribeFCMParams, UnsubscribeFCMResult, VerifyTokenResult } from './interfaces';
+import { ChangePasswordResult, CheckPasswordResult, DepartmentHierarchy, DepartmentInfo, EmployeeInfo, FCMTokenInfo, GetDepartmentHierarchyParams, GetEmployeeParams, GetEmployeesParams, GetEmployeesManagersResponse, GetFCMTokenParams, GetMultipleFCMTokensParams, LoginResult, MultipleFCMTokensInfo, RefreshTokenResult, SubscribeFCMParams, SubscribeFCMResult, UnsubscribeFCMParams, UnsubscribeFCMResult, VerifyTokenResult } from './interfaces';
 export declare class SSOService implements OnModuleInit {
     private readonly config;
     private readonly injectedSystemName;
@@ -28,6 +28,7 @@ export declare class SSOService implements OnModuleInit {
     이메일로직원을조회한다(email: string): Promise<EmployeeInfo | null>;
     모든부서정보를조회한다(params?: GetDepartmentHierarchyParams): Promise<DepartmentInfo[]>;
     모든직원정보를조회한다(params?: GetDepartmentHierarchyParams): Promise<EmployeeInfo[]>;
+    직원관리자정보를조회한다(): Promise<GetEmployeesManagersResponse>;
     private mapToEmployeeInfo;
     private mapToDepartmentNode;
 }
