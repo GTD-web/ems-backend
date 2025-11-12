@@ -163,9 +163,10 @@ export async function 하향평가_상태를_조회한다(
 
   // 2. PRIMARY 평가자 조회
   // 1차 평가자는 직원별 고정 담당자이므로 wbsItemId가 null인 매핑만 조회
-  let primaryEvaluatorId: string | null = null;
+  // 평가자 교체를 고려하여 현재 매핑된 모든 평가자 조회
+  const primaryEvaluators: string[] = [];
   if (primaryLine) {
-    const primaryMapping = await evaluationLineMappingRepository
+    const primaryMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
@@ -174,14 +175,20 @@ export async function 하향평가_상태를_조회한다(
       })
       .andWhere('mapping.wbsItemId IS NULL') // 1차 평가자는 WBS와 무관하므로 null
       .andWhere('mapping.deletedAt IS NULL')
-      .orderBy('mapping.createdAt', 'ASC') // 가장 먼저 생성된 매핑 선택
-      .limit(1)
-      .getOne();
+      .orderBy('mapping.createdAt', 'ASC')
+      .getMany();
 
-    if (primaryMapping) {
-      primaryEvaluatorId = primaryMapping.evaluatorId;
-    }
+    // 중복된 evaluatorId 제거
+    const uniqueEvaluatorIds = [
+      ...new Set(
+        primaryMappings.map((m) => m.evaluatorId).filter((id) => !!id),
+      ),
+    ];
+    primaryEvaluators.push(...uniqueEvaluatorIds);
   }
+  
+  // 대표 평가자 ID (첫 번째 평가자, 하위 호환성 유지)
+  const primaryEvaluatorId = primaryEvaluators.length > 0 ? primaryEvaluators[0] : null;
 
   // 3. PRIMARY 평가자의 하향평가 상태 조회
   const primaryStatus = await 평가자별_하향평가_상태를_조회한다(
@@ -364,7 +371,7 @@ export async function 하향평가_상태를_조회한다(
     primaryTotalScore = await 가중치_기반_1차_하향평가_점수를_계산한다(
       evaluationPeriodId,
       employeeId,
-      primaryEvaluatorId,
+      primaryEvaluators, // 현재 평가라인에 있는 모든 평가자
       downwardEvaluationRepository,
       wbsAssignmentRepository,
       periodRepository,
