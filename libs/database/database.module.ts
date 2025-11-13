@@ -18,31 +18,21 @@ import { TransactionManagerService } from './transaction-manager.service';
         const nodeEnv = configService.get<string>('NODE_ENV', 'development');
         const isTest = nodeEnv === 'test';
         const isDevelopment = nodeEnv === 'development';
+        const isServerless = !!process.env.VERCEL;
 
-        // 개별 환경 변수로 데이터베이스 연결 정보 가져오기
-        const dbHost = configService.get<string>('DATABASE_HOST');
-        const dbPort = configService.get<number>('DATABASE_PORT', 5432);
-        const dbUsername = configService.get<string>('DATABASE_USERNAME');
-        const dbPassword = configService.get<string>('DATABASE_PASSWORD', '');
-        const dbName = configService.get<string>('DATABASE_NAME');
+        const host = configService.get<string>('DATABASE_HOST');
+        const port = configService.get<number>('DATABASE_PORT', 5432);
+        const username = configService.get<string>('DATABASE_USERNAME');
+        const password = configService.get<string>('DATABASE_PASSWORD', '');
+        const database = configService.get<string>('DATABASE_NAME');
+        const needsSSL = configService.get<string>('DATABASE_SSL', 'false') === 'true';
 
-        // 필수 환경 변수 검증
-        if (!dbHost || !dbUsername || !dbName) {
+        if (!host || !username || !database) {
           throw new Error(
             '데이터베이스 연결 정보가 누락되었습니다. ' +
             'DATABASE_HOST, DATABASE_USERNAME, DATABASE_NAME 환경 변수를 설정해주세요.',
           );
         }
-
-        const host = dbHost;
-        const port = dbPort;
-        const username = dbUsername;
-        const password = dbPassword;
-        const database = dbName;
-
-        // SSL 필요 여부 판단 (환경변수로 명시적 설정)
-        const needsSSL =
-          configService.get<string>('DATABASE_SSL', 'false') === 'true';
 
         return {
           type: 'postgres',
@@ -53,19 +43,25 @@ import { TransactionManagerService } from './transaction-manager.service';
           database,
           autoLoadEntities: true,
           dropSchema: isTest,
-          synchronize: configService.get<boolean>(
-            'DB_SYNCHRONIZE',
-            isDevelopment || isTest,
-          ),
-          logging: configService.get<boolean>(
-            'DB_LOGGING',
-            isDevelopment && !isTest,
-          ),
+          synchronize: configService.get<boolean>('DB_SYNCHRONIZE', isDevelopment || isTest),
+          logging: configService.get<boolean>('DB_LOGGING', isDevelopment && !isTest),
           ssl: needsSSL ? { rejectUnauthorized: false } : false,
           extra: {
-            max: 10,
-            connectionTimeoutMillis: 60000,
-            idleTimeoutMillis: 30000,
+            max: configService.get<number>('DATABASE_POOL_MAX', isServerless ? 2 : 10),
+            connectionTimeoutMillis: configService.get<number>(
+              'DATABASE_CONNECTION_TIMEOUT',
+              isServerless ? 5000 : 10000,
+            ),
+            idleTimeoutMillis: configService.get<number>(
+              'DATABASE_IDLE_TIMEOUT',
+              isServerless ? 10000 : 20000,
+            ),
+            statement_timeout: configService.get<number>(
+              'DATABASE_STATEMENT_TIMEOUT',
+              isServerless ? 20000 : 30000,
+            ),
+            keepAlive: !isServerless,
+            ...(!isServerless && { keepAliveInitialDelayMillis: 10000 }),
             ...(needsSSL && { ssl: { rejectUnauthorized: false } }),
           },
         };

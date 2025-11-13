@@ -68,7 +68,6 @@ export class VerifyAndSyncUserHandler {
         status: employee.status,
       };
 
-      this.logger.log('토큰 검증 성공:', userInfo);
       return {
         user: userInfo,
         isSynced: false, // 더 이상 동기화하지 않음

@@ -45,7 +45,6 @@ let VerifyAndSyncUserHandler = VerifyAndSyncUserHandler_1 = class VerifyAndSyncU
                 roles: employee['roles'] || [],
                 status: employee.status,
             };
-            this.logger.log('토큰 검증 성공:', userInfo);
             return {
                 user: userInfo,
                 isSynced: false,

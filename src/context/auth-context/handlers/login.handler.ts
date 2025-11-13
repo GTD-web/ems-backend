@@ -44,33 +44,71 @@ export class LoginHandler {
         throw error;
       }
 
+      // 외부 서버에서 던진 에러 메시지 추출
+      const errorMessage =
+        error?.message || error?.details || '로그인 처리 중 오류가 발생했습니다.';
+      const errorCode = error?.code;
+      const errorStatus = error?.status;
+
       // SSO SDK 에러를 적절한 HTTP 예외로 변환
-      if (error?.code) {
-        switch (error.code) {
+      if (errorCode) {
+        switch (errorCode) {
           case 'NOT_FOUND':
           case 'AUTHENTICATION_FAILED':
           case 'INVALID_CREDENTIALS':
-            // 사용자에게는 구체적인 에러를 노출하지 않음 (보안)
-            throw new UnauthorizedException(
-              '이메일 또는 패스워드가 올바르지 않습니다.',
-            );
+          case 'AUTHENTICATION_ERROR':
+            // 외부 서버에서 온 에러 메시지를 사용하거나 기본 메시지 사용
+            const authErrorMessage =
+              errorMessage && errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+                ? errorMessage
+                : '이메일 또는 패스워드가 올바르지 않습니다.';
+            this.logger.warn(`로그인 실패: ${email} - ${authErrorMessage}`);
+            throw new UnauthorizedException(authErrorMessage);
 
           case 'FORBIDDEN':
             throw new ForbiddenException(
-              '이 시스템에 대한 접근 권한이 없습니다.',
+              errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+                ? errorMessage
+                : '이 시스템에 대한 접근 권한이 없습니다.',
             );
 
           default:
-            this.logger.error(`예상치 못한 SSO 에러: ${error.code}`, error);
+            this.logger.error(
+              `예상치 못한 SSO 에러: ${errorCode} (status: ${errorStatus})`,
+              error,
+            );
             throw new InternalServerErrorException(
-              '로그인 처리 중 오류가 발생했습니다.',
+              errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+                ? errorMessage
+                : '로그인 처리 중 오류가 발생했습니다.',
             );
         }
       }
 
+      // status 코드가 있는 경우 (외부 서버에서 직접 던진 에러)
+      if (errorStatus) {
+        if (errorStatus === 401) {
+          const authErrorMessage =
+            errorMessage && errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+              ? errorMessage
+              : '이메일 또는 패스워드가 올바르지 않습니다.';
+          this.logger.warn(`로그인 실패: ${email} - ${authErrorMessage}`);
+          throw new UnauthorizedException(authErrorMessage);
+        } else if (errorStatus === 403) {
+          throw new ForbiddenException(
+            errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+              ? errorMessage
+              : '이 시스템에 대한 접근 권한이 없습니다.',
+          );
+        }
+      }
+
       // 기타 예외
+      this.logger.error('알 수 없는 SSO 에러:', error);
       throw new InternalServerErrorException(
-        '로그인 처리 중 오류가 발생했습니다.',
+        errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+          ? errorMessage
+          : '로그인 처리 중 오류가 발생했습니다.',
       );
     }
 

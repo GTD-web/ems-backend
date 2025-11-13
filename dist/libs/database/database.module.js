@@ -24,21 +24,17 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                     const nodeEnv = configService.get('NODE_ENV', 'development');
                     const isTest = nodeEnv === 'test';
                     const isDevelopment = nodeEnv === 'development';
-                    const dbHost = configService.get('DATABASE_HOST');
-                    const dbPort = configService.get('DATABASE_PORT', 5432);
-                    const dbUsername = configService.get('DATABASE_USERNAME');
-                    const dbPassword = configService.get('DATABASE_PASSWORD', '');
-                    const dbName = configService.get('DATABASE_NAME');
-                    if (!dbHost || !dbUsername || !dbName) {
+                    const isServerless = !!process.env.VERCEL;
+                    const host = configService.get('DATABASE_HOST');
+                    const port = configService.get('DATABASE_PORT', 5432);
+                    const username = configService.get('DATABASE_USERNAME');
+                    const password = configService.get('DATABASE_PASSWORD', '');
+                    const database = configService.get('DATABASE_NAME');
+                    const needsSSL = configService.get('DATABASE_SSL', 'false') === 'true';
+                    if (!host || !username || !database) {
                         throw new Error('데이터베이스 연결 정보가 누락되었습니다. ' +
                             'DATABASE_HOST, DATABASE_USERNAME, DATABASE_NAME 환경 변수를 설정해주세요.');
                     }
-                    const host = dbHost;
-                    const port = dbPort;
-                    const username = dbUsername;
-                    const password = dbPassword;
-                    const database = dbName;
-                    const needsSSL = configService.get('DATABASE_SSL', 'false') === 'true';
                     return {
                         type: 'postgres',
                         host,
@@ -52,9 +48,12 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                         logging: configService.get('DB_LOGGING', isDevelopment && !isTest),
                         ssl: needsSSL ? { rejectUnauthorized: false } : false,
                         extra: {
-                            max: 10,
-                            connectionTimeoutMillis: 60000,
-                            idleTimeoutMillis: 30000,
+                            max: configService.get('DATABASE_POOL_MAX', isServerless ? 2 : 10),
+                            connectionTimeoutMillis: configService.get('DATABASE_CONNECTION_TIMEOUT', isServerless ? 5000 : 10000),
+                            idleTimeoutMillis: configService.get('DATABASE_IDLE_TIMEOUT', isServerless ? 10000 : 20000),
+                            statement_timeout: configService.get('DATABASE_STATEMENT_TIMEOUT', isServerless ? 20000 : 30000),
+                            keepAlive: !isServerless,
+                            ...(!isServerless && { keepAliveInitialDelayMillis: 10000 }),
                             ...(needsSSL && { ssl: { rejectUnauthorized: false } }),
                         },
                     };
