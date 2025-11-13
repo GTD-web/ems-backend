@@ -1,4 +1,3 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { EvaluationPeriodScenario } from '../../evaluation-period.scenario';
@@ -8,7 +7,7 @@ import { DashboardApiClient } from '../../api-clients/dashboard.api-client';
 
 /**
  * 평가기간 시작 E2E 테스트
- * 
+ *
  * 시나리오:
  * - 평가기간 생성 (POST /admin/evaluation-periods)
  * - 평가기간 시작 (POST /admin/evaluation-periods/{id}/start)
@@ -62,7 +61,7 @@ describe('평가기간 시작 E2E 테스트', () => {
         console.log('평가기간 삭제 중 오류 (이미 삭제됨):', error.message);
       }
     }
-    
+
     await seedDataScenario.시드_데이터를_삭제한다();
     await testSuite.closeApp();
   });
@@ -88,72 +87,106 @@ describe('평가기간 시작 E2E 테스트', () => {
       };
 
       const result = await apiClient.createEvaluationPeriod(createData);
-      
+
       expect(result.id).toBeDefined();
       expect(result.name).toBe(createData.name);
       expect(result.status).toBe('waiting');
       expect(result.currentPhase).toBe('waiting');
-      
+
       evaluationPeriodId = result.id;
-      console.log(`✅ 시작 테스트용 평가기간 생성 완료: ${result.name} (${result.id})`);
+      console.log(
+        `✅ 시작 테스트용 평가기간 생성 완료: ${result.name} (${result.id})`,
+      );
     });
 
     it('평가기간을 시작한다', async () => {
       const result = await apiClient.startEvaluationPeriod(evaluationPeriodId);
-      
+
       expect(result.success).toBe(true);
-      
+
       console.log('✅ 평가기간 시작 완료');
     });
 
     it('활성 평가기간을 조회한다', async () => {
       const result = await apiClient.getActiveEvaluationPeriods();
-      
+
       expect(Array.isArray(result)).toBe(true);
-      
-      const startedPeriod = result.find(period => period.id === evaluationPeriodId);
+
+      const startedPeriod = result.find(
+        (period) => period.id === evaluationPeriodId,
+      );
       expect(startedPeriod).toBeDefined();
       expect(startedPeriod.status).toBe('in-progress');
       expect(startedPeriod.currentPhase).toBe('evaluation-setup');
-      
-      console.log('✅ 활성 평가기간 조회 완료 - 시작된 평가기간이 활성 목록에 포함됨');
+
+      console.log(
+        '✅ 활성 평가기간 조회 완료 - 시작된 평가기간이 활성 목록에 포함됨',
+      );
     });
 
     it('대시보드에서 평가기간 직원 현황을 조회한다', async () => {
-      const result = await dashboardApiClient.getEmployeesStatus(evaluationPeriodId);
-      
+      const result =
+        await dashboardApiClient.getEmployeesStatus(evaluationPeriodId);
+
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
-      
+
       // 첫 번째 직원의 평가기간 정보 확인
       const firstEmployee = result[0];
       expect(firstEmployee.evaluationPeriod).toBeDefined();
       expect(firstEmployee.evaluationPeriod.id).toBe(evaluationPeriodId);
-      expect(firstEmployee.evaluationPeriod.name).toBe('시작 테스트용 평가기간');
-      
+      expect(firstEmployee.evaluationPeriod.name).toBe(
+        '시작 테스트용 평가기간',
+      );
+
       // README.md 요구사항: evaluationPeriod.status 확인 (in-progress)
       expect(firstEmployee.evaluationPeriod.status).toBe('in-progress');
-      
+
       // README.md 요구사항: evaluationPeriod.currentPhase 확인 (evaluation-setup)
-      expect(firstEmployee.evaluationPeriod.currentPhase).toBe('evaluation-setup');
-      
+      expect(firstEmployee.evaluationPeriod.currentPhase).toBe(
+        'evaluation-setup',
+      );
+
       // currentPhase가 EvaluationPeriodPhase enum 값인지 확인
-      const validPhases = ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'];
-      expect(validPhases).toContain(firstEmployee.evaluationPeriod.currentPhase);
-      
-      // README.md 요구사항: evaluationPeriod.manualSettings.criteriaSettingEnabled 확인 (true)
+      const validPhases = [
+        'waiting',
+        'evaluation-setup',
+        'performance',
+        'self-evaluation',
+        'peer-evaluation',
+        'closure',
+      ];
+      expect(validPhases).toContain(
+        firstEmployee.evaluationPeriod.currentPhase,
+      );
+
+      // README.md 요구사항: evaluationPeriod.manualSettings.criteriaSettingEnabled 확인
+      // 평가기간 시작 시 모든 수동 설정은 false로 초기화됨 (정책 변경)
       expect(firstEmployee.evaluationPeriod.manualSettings).toBeDefined();
-      expect(firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(true);
-      expect(firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
-      expect(firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(false);
-      
-      console.log(`✅ 대시보드 직원 현황 조회 완료: ${result.length}명, status: ${firstEmployee.evaluationPeriod.status}, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}`);
-      console.log(`   - criteriaSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled} (기대값: true)`);
-      console.log(`   - selfEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled} (기대값: false)`);
-      console.log(`   - finalEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled} (기대값: false)`);
+      expect(
+        firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled,
+      ).toBe(false);
+      expect(
+        firstEmployee.evaluationPeriod.manualSettings
+          .selfEvaluationSettingEnabled,
+      ).toBe(false);
+      expect(
+        firstEmployee.evaluationPeriod.manualSettings
+          .finalEvaluationSettingEnabled,
+      ).toBe(false);
+
+      console.log(
+        `✅ 대시보드 직원 현황 조회 완료: ${result.length}명, status: ${firstEmployee.evaluationPeriod.status}, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}`,
+      );
+      console.log(
+        `   - criteriaSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled} (기대값: false)`,
+      );
+      console.log(
+        `   - selfEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled} (기대값: false)`,
+      );
+      console.log(
+        `   - finalEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled} (기대값: false)`,
+      );
     });
-
-
   });
-
 });
