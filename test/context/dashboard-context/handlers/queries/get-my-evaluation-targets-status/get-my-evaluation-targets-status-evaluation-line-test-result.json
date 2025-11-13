@@ -1,0 +1,69 @@
+{
+  "timestamp": "2025-11-12T23:54:26.101Z",
+  "testResults": [
+    {
+      "testName": "PRIMARY와 SECONDARY 평가자가 모두 지정되지 않은 경우 evaluationLineStatus가 none이어야 한다",
+      "result": {
+        "evaluationPeriodId": "a31dfd0c-8e2f-4363-98c5-0640fa9822b5",
+        "employeeId": "ff2c42f6-d638-403a-adc2-ca975e49e8a7",
+        "evaluationLineStatus": "none",
+        "hasPrimaryEvaluator": false,
+        "hasSecondaryEvaluator": false
+      }
+    },
+    {
+      "testName": "PRIMARY 평가자만 지정된 경우 evaluationLineStatus가 in_progress이어야 한다",
+      "result": {
+        "evaluationPeriodId": "f05e6f49-a1e1-4bc1-b94d-a3caa3dccd14",
+        "employeeId": "c55782d8-3939-4d3b-8869-671b5c0614b8",
+        "evaluationLineStatus": "in_progress",
+        "hasPrimaryEvaluator": true,
+        "hasSecondaryEvaluator": false
+      }
+    },
+    {
+      "testName": "SECONDARY 평가자만 지정된 경우 evaluationLineStatus가 in_progress이어야 한다",
+      "result": {
+        "evaluationPeriodId": "87d00065-2f64-4e68-9605-18b42728dcf8",
+        "employeeId": "7a123b24-28bd-4fb3-999b-7b415b04b29d",
+        "evaluationLineStatus": "in_progress",
+        "hasPrimaryEvaluator": false,
+        "hasSecondaryEvaluator": true
+      }
+    },
+    {
+      "testName": "PRIMARY와 SECONDARY 평가자가 모두 지정된 경우 evaluationLineStatus가 complete이어야 한다",
+      "result": {
+        "evaluationPeriodId": "80a78854-bf55-4a85-8992-71980aa68a49",
+        "employeeId": "5f2cf0fd-69ac-48b3-9f8c-08aa396b4819",
+        "evaluationLineStatus": "complete",
+        "hasPrimaryEvaluator": true,
+        "hasSecondaryEvaluator": true
+      }
+    },
+    {
+      "testName": "여러 피평가자의 평가라인 구성 상태가 올바르게 구분되어야 한다",
+      "result": {
+        "evaluationPeriodId": "36c760ad-d2e7-4194-86f4-4ff85d867a67",
+        "employees": [
+          {
+            "employeeId": "59917ab4-dd64-4eb0-bdc2-402366bf2d50",
+            "evaluationLineStatus": "none"
+          },
+          {
+            "employeeId": "3c66b0a3-1fd4-4600-9aaf-16d70732ecb3",
+            "evaluationLineStatus": "in_progress"
+          },
+          {
+            "employeeId": "5a06fcf6-6f5c-47ea-b9d0-376a687ea567",
+            "evaluationLineStatus": "in_progress"
+          },
+          {
+            "employeeId": "112cbb45-cbb1-4a25-9be9-0333c9f95e75",
+            "evaluationLineStatus": "complete"
+          }
+        ]
+      }
+    }
+  ]
+}
