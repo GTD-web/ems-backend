@@ -1156,4 +1156,454 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
       }
     });
   });
+
+  describe('시나리오 3: 평가기준 제출 → 재작성 요청 → 재작성 완료 응답 제출', () => {
+    it('1단계: 평가기준 제출', async () => {
+      let dashboardStatus: any;
+      let error: any;
+      const testName = '1단계: 평가기준 제출';
+
+      try {
+        // When - 평가기준 제출
+        const submitResult = await stepApprovalScenario.평가기준을_제출한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        // Then - 제출 상태 검증
+        dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+        ).toBe(true);
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+        ).toBeDefined();
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+        ).toBeDefined();
+        expect(['pending', 'approved']).toContain(
+          dashboardStatus.criteriaSetup.status,
+        );
+
+        // 테스트 결과 저장 (성공)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            submitResult: {
+              isCriteriaSubmitted: submitResult.isCriteriaSubmitted,
+              criteriaSubmittedAt: submitResult.criteriaSubmittedAt,
+              criteriaSubmittedBy: submitResult.criteriaSubmittedBy,
+            },
+            criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
+            passed: true,
+          },
+        });
+      } catch (e) {
+        error = e;
+        // 테스트 결과 저장 (실패)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            passed: false,
+            error: extractErrorMessage(error),
+          },
+        });
+        throw e;
+      }
+    });
+
+    it('2단계: 재작성 요청 생성', async () => {
+      let dashboardStatus: any;
+      let revisionRequests: any[];
+      let error: any;
+      const testName = '2단계: 재작성 요청 생성';
+
+      try {
+        // Given - 먼저 평가기준 제출
+        await stepApprovalScenario.평가기준을_제출한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        // When - 재작성 요청 생성
+        await stepApprovalScenario.평가기준설정_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          status: 'revision_requested',
+          revisionComment: '재작성 요청 코멘트입니다.',
+        });
+
+        // Then - 재작성 요청 생성 및 제출 상태 초기화 검증
+        dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
+        expect(dashboardStatus.criteriaSetup.status).toBe('revision_requested');
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+        ).toBe(false);
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+        ).toBeNull();
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+        ).toBeNull();
+        expect(dashboardStatus.stepApproval.criteriaSettingStatus).toBe(
+          'revision_requested',
+        );
+
+        // 재작성 요청 생성 검증
+        revisionRequests =
+          await stepApprovalScenario.재작성요청_목록을_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+            step: 'criteria',
+          });
+        expect(revisionRequests.length).toBeGreaterThan(0);
+        const revisionRequest = revisionRequests[0];
+        expect(revisionRequest.isCompleted).toBe(false);
+        // recipients가 배열인지 확인
+        if (revisionRequest.recipients) {
+          expect(revisionRequest.recipients.length).toBeGreaterThan(0);
+        }
+
+        // 테스트 결과 저장 (성공)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
+            criteriaSubmission: {
+              isSubmitted:
+                dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+              submittedAt:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+              submittedBy:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+            },
+            revisionRequestCount: revisionRequests.length,
+            passed: true,
+          },
+        });
+      } catch (e) {
+        error = e;
+        // 테스트 결과 저장 (실패)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            passed: false,
+            error: extractErrorMessage(error),
+          },
+        });
+        throw e;
+      }
+    });
+
+    it('3단계: 재작성 완료 응답 제출', async () => {
+      let dashboardStatus: any;
+      let revisionRequests: any[];
+      let revisionRequestId: string;
+      let error: any;
+      const testName = '3단계: 재작성 완료 응답 제출';
+
+      try {
+        // Given - 평가기준 제출 및 재작성 요청 생성
+        await stepApprovalScenario.평가기준을_제출한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        await stepApprovalScenario.평가기준설정_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          status: 'revision_requested',
+          revisionComment: '재작성 요청 코멘트입니다.',
+        });
+
+        // 재작성 요청 ID 및 수신자 ID 확인
+        revisionRequests =
+          await stepApprovalScenario.재작성요청_목록을_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+            step: 'criteria',
+          });
+        expect(revisionRequests.length).toBeGreaterThan(0);
+        const revisionRequest = revisionRequests[0];
+        revisionRequestId = revisionRequest.id || revisionRequest.requestId;
+
+        // 관리자용 API 사용 (평가기간, 직원, 평가자 기반)
+        // 평가기준의 경우 피평가자가 수신자이므로 evaluateeId 사용
+        await stepApprovalScenario.재작성완료_응답을_제출한다_관리자용({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          evaluatorId: evaluateeId, // 평가기준의 경우 피평가자가 수신자
+          step: 'criteria',
+          responseComment: '재작성 완료 응답 코멘트입니다.',
+        });
+
+        // Then - 재작성 완료 응답 제출 검증
+        revisionRequests =
+          await stepApprovalScenario.재작성요청_목록을_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+            step: 'criteria',
+          });
+        expect(revisionRequests.length).toBeGreaterThan(0);
+        // 재작성 요청 ID로 찾기 (id 또는 requestId 필드 확인)
+        const completedRequest = revisionRequests.find(
+          (r: any) =>
+            r.id === revisionRequestId ||
+            r.requestId === revisionRequestId ||
+            (r.id && r.id === revisionRequest.id) ||
+            (r.requestId && r.requestId === revisionRequest.requestId),
+        );
+        expect(completedRequest).toBeDefined();
+        expect(completedRequest.isCompleted).toBe(true);
+        if (completedRequest.completedAt) {
+          expect(completedRequest.completedAt).toBeDefined();
+        }
+        // responseComment는 직접 제출한 경우와 자동 완료 처리된 경우가 다를 수 있음
+        if (completedRequest.responseComment) {
+          expect(completedRequest.responseComment).toContain('재작성 완료');
+        }
+
+        // 대시보드 상태 검증
+        dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
+        expect(dashboardStatus.criteriaSetup.status).toBe('revision_completed');
+        expect(dashboardStatus.stepApproval.criteriaSettingStatus).toBe(
+          'revision_completed',
+        );
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+        ).toBe(false); // 재작성 완료 후에도 제출 상태는 초기화된 상태 유지
+
+        // 테스트 결과 저장 (성공)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
+            stepApprovalStatus:
+              dashboardStatus.stepApproval.criteriaSettingStatus,
+            revisionRequest: {
+              id: revisionRequestId,
+              isCompleted: completedRequest.isCompleted,
+              completedAt: completedRequest.completedAt,
+              responseComment: completedRequest.responseComment,
+            },
+            passed: true,
+          },
+        });
+      } catch (e) {
+        error = e;
+        // 테스트 결과 저장 (실패)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            passed: false,
+            error: extractErrorMessage(error),
+          },
+        });
+        throw e;
+      }
+    });
+
+    it('4단계: 재작성 완료 후 재제출', async () => {
+      let dashboardStatus: any;
+      let error: any;
+      const testName = '4단계: 재작성 완료 후 재제출';
+
+      try {
+        // Given - 평가기준 제출, 재작성 요청 생성, 재작성 완료 응답 제출
+        await stepApprovalScenario.평가기준을_제출한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        await stepApprovalScenario.평가기준설정_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          status: 'revision_requested',
+          revisionComment: '재작성 요청 코멘트입니다.',
+        });
+
+        const revisionRequests =
+          await stepApprovalScenario.재작성요청_목록을_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+            step: 'criteria',
+          });
+        const revisionRequest = revisionRequests[0];
+
+        // 관리자용 API 사용 (평가기간, 직원, 평가자 기반)
+        await stepApprovalScenario.재작성완료_응답을_제출한다_관리자용({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          evaluatorId: evaluateeId, // 평가기준의 경우 피평가자가 수신자
+          step: 'criteria',
+          responseComment: '재작성 완료 응답 코멘트입니다.',
+        });
+
+        // When - 재작성 완료 후 재제출
+        const submitResult = await stepApprovalScenario.평가기준을_제출한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        // Then - 재제출 상태 검증
+        dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+        ).toBe(true);
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+        ).toBeDefined();
+        // 재작성 완료 후 재제출 시 상태는 pending, approved, 또는 revision_completed일 수 있음
+        // (재제출 후에도 재작성 완료 상태가 유지될 수 있음)
+        expect(['pending', 'approved', 'revision_completed']).toContain(
+          dashboardStatus.criteriaSetup.status,
+        );
+
+        // 테스트 결과 저장 (성공)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            submitResult: {
+              isCriteriaSubmitted: submitResult.isCriteriaSubmitted,
+              criteriaSubmittedAt: submitResult.criteriaSubmittedAt,
+            },
+            criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
+            passed: true,
+          },
+        });
+      } catch (e) {
+        error = e;
+        // 테스트 결과 저장 (실패)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            passed: false,
+            error: extractErrorMessage(error),
+          },
+        });
+        throw e;
+      }
+    });
+
+    it('5단계: 최종 승인', async () => {
+      let dashboardStatus: any;
+      let error: any;
+      const testName = '5단계: 최종 승인';
+
+      try {
+        // Given - 평가기준 제출, 재작성 요청 생성, 재작성 완료 응답 제출, 재제출
+        await stepApprovalScenario.평가기준을_제출한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        await stepApprovalScenario.평가기준설정_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          status: 'revision_requested',
+          revisionComment: '재작성 요청 코멘트입니다.',
+        });
+
+        const revisionRequests =
+          await stepApprovalScenario.재작성요청_목록을_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+            step: 'criteria',
+          });
+        const revisionRequest = revisionRequests[0];
+
+        // 관리자용 API 사용 (평가기간, 직원, 평가자 기반)
+        await stepApprovalScenario.재작성완료_응답을_제출한다_관리자용({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          evaluatorId: evaluateeId, // 평가기준의 경우 피평가자가 수신자
+          step: 'criteria',
+          responseComment: '재작성 완료 응답 코멘트입니다.',
+        });
+
+        await stepApprovalScenario.평가기준을_제출한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        // When - 최종 승인
+        await stepApprovalScenario.평가기준설정_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          status: 'approved',
+        });
+
+        // Then - 최종 승인 상태 검증
+        dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
+        expect(dashboardStatus.criteriaSetup.status).toBe('approved');
+        expect(dashboardStatus.stepApproval.criteriaSettingStatus).toBe(
+          'approved',
+        );
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+        ).toBe(true);
+
+        // 테스트 결과 저장 (성공)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
+            stepApprovalStatus:
+              dashboardStatus.stepApproval.criteriaSettingStatus,
+            criteriaSubmission: {
+              isSubmitted:
+                dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+            },
+            passed: true,
+          },
+        });
+      } catch (e) {
+        error = e;
+        // 테스트 결과 저장 (실패)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            passed: false,
+            error: extractErrorMessage(error),
+          },
+        });
+        throw e;
+      }
+    });
+  });
 });

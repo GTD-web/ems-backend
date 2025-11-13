@@ -8,6 +8,7 @@
 - step-approval
 - performance-evaluation (제출 상태 검증용)
 - evaluation-criteria (평가기준 제출 검증용)
+- revision-request (재작성 요청 및 재작성 완료 응답 처리용)
 - dashboard (승인 상태 검증용)
 
 - **단계 승인 기본 관리** 
@@ -483,6 +484,181 @@
                     - stepApproval.criteriaStatus가 'approved'로 유지되는지 확인
                     - criteriaSetup.criteriaSubmission.isSubmitted가 true로 유지되는지 확인
                     - 에러 없이 처리됨 (idempotent)
+    - **시나리오 3: 평가기준 제출 → 재작성 요청 → 재작성 완료 응답 제출**
+        - **1단계: 평가기준 제출**
+            - POST /admin/evaluation-criteria/wbs-evaluation-criteria/submit (평가기준 제출)
+                - evaluationPeriodId, employeeId 전송
+            - **제출 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 true인지 확인
+                    - criteriaSetup.status가 'pending' 또는 'approved'인지 확인
+        - **2단계: 재작성 요청 생성**
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 재작성 요청)
+                - status: revision_requested로 변경
+                - revisionComment: 재작성 요청 코멘트 필수
+            - **재작성 요청 생성 및 제출 상태 초기화 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - criteriaSetup.status가 'revision_requested'인지 확인
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 false로 변경되었는지 확인
+                    - stepApproval.criteriaSettingStatus가 'revision_requested'인지 확인
+                - GET /admin/revision-requests (재작성 요청 목록 조회)
+                    - 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청이 피평가자 + 1차평가자에게 전송되었는지 확인
+                    - 재작성 요청의 isCompleted가 false인지 확인
+        - **3단계: 재작성 완료 응답 제출**
+            - GET /admin/revision-requests (재작성 요청 목록 조회)
+                - 재작성 요청 ID 확인
+            - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
+                - responseComment: 재작성 완료 응답 코멘트
+            - **재작성 완료 응답 제출 검증**
+                - GET /admin/revision-requests (재작성 요청 목록 조회)
+                    - 재작성 요청의 isCompleted가 true로 변경되었는지 확인
+                    - 재작성 요청의 completedAt이 설정되었는지 확인
+                    - 재작성 요청의 responseComment가 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - criteriaSetup.status가 'revision_completed'인지 확인
+                    - stepApproval.criteriaSettingStatus가 'revision_completed'인지 확인
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 false로 유지되는지 확인 (재작성 완료 후에도 제출 상태는 초기화된 상태 유지)
+        - **4단계: 재작성 완료 후 재제출**
+            - POST /admin/evaluation-criteria/wbs-evaluation-criteria/submit (평가기준 재제출)
+                - evaluationPeriodId, employeeId 전송
+            - **재제출 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 true로 변경되었는지 확인
+                    - criteriaSetup.status가 'pending' 또는 'approved'로 변경되었는지 확인 (재작성 완료 후 재제출 시 상태 변경)
+        - **5단계: 최종 승인**
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 승인)
+                - status: approved로 변경
+            - **최종 승인 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - criteriaSetup.status가 'approved'인지 확인
+                    - stepApproval.criteriaSettingStatus가 'approved'인지 확인
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 true로 유지되는지 확인
+
+- **재작성 요청 및 재작성 완료 응답 처리 시나리오 (다른 단계)**
+    - **자기평가 재작성 요청 및 재작성 완료 응답 처리**
+        - **초기 구성 데이터 생성 (beforeEach에서 수행)**
+            - POST /admin/seed-data (시드 데이터 생성)
+            - POST /admin/evaluation-periods (평가기간 생성)
+            - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+            - POST /admin/evaluation-periods/{id}/targets/bulk (평가 대상자 대량 등록)
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+            - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 매핑 구성)
+        - **1단계: 자기평가 저장 및 제출**
+            - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/wbs/{wbsItemId}/period/{periodId} (자기평가 저장)
+            - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/submit-to-evaluator (피평가자 → 1차 평가자 제출)
+        - **2단계: 재작성 요청 생성**
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 재작성 요청)
+                - status: revision_requested로 변경
+                - revisionComment: 재작성 요청 코멘트 필수
+            - **재작성 요청 생성 및 제출 상태 초기화 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - selfEvaluation.status가 'revision_requested'인지 확인
+                    - stepApproval.selfEvaluationStatus가 'revision_requested'인지 확인
+                - GET /admin/revision-requests (재작성 요청 목록 조회)
+                    - 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청이 피평가자 + 1차평가자에게 전송되었는지 확인
+        - **3단계: 재작성 완료 응답 제출**
+            - GET /admin/revision-requests (재작성 요청 목록 조회)
+                - 재작성 요청 ID 확인
+            - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
+                - responseComment: 재작성 완료 응답 코멘트
+            - **재작성 완료 응답 제출 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - selfEvaluation.status가 'revision_completed'인지 확인
+                    - stepApproval.selfEvaluationStatus가 'revision_completed'인지 확인
+        - **4단계: 재제출 및 최종 승인**
+            - POST /admin/performance-evaluation/wbs-self-evaluations/employee/{employeeId}/period/{periodId}/submit-to-evaluator (자기평가 재제출)
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
+                - status: approved로 변경
+            - **최종 승인 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - selfEvaluation.status가 'approved'인지 확인
+                    - stepApproval.selfEvaluationStatus가 'approved'인지 확인
+    - **1차 하향평가 재작성 요청 및 재작성 완료 응답 처리**
+        - **초기 구성 데이터 생성 (beforeEach에서 수행)**
+            - POST /admin/seed-data (시드 데이터 생성)
+            - POST /admin/evaluation-periods (평가기간 생성)
+            - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+            - POST /admin/evaluation-periods/{id}/targets/bulk (평가 대상자 대량 등록)
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+            - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 매핑 구성)
+        - **1단계: 1차 하향평가 저장 및 제출**
+            - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/primary (1차 하향평가 저장 - 모든 WBS)
+            - POST /admin/performance-evaluation/downward-evaluations/evaluator/{evaluatorId}/period/{periodId}/submit-primary (1차 하향평가 제출)
+        - **2단계: 재작성 요청 생성**
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/primary (1차 하향평가 단계 재작성 요청)
+                - status: revision_requested로 변경
+                - revisionComment: 재작성 요청 코멘트 필수
+            - **재작성 요청 생성 및 제출 상태 초기화 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - downwardEvaluation.primary.status가 'revision_requested'인지 확인
+                    - stepApproval.primaryEvaluationStatus가 'revision_requested'인지 확인
+                - GET /admin/revision-requests (재작성 요청 목록 조회)
+                    - 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청이 1차평가자에게 전송되었는지 확인
+        - **3단계: 재작성 완료 응답 제출**
+            - GET /admin/revision-requests (재작성 요청 목록 조회)
+                - 재작성 요청 ID 확인
+            - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
+                - responseComment: 재작성 완료 응답 코멘트
+            - **재작성 완료 응답 제출 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - downwardEvaluation.primary.status가 'revision_completed'인지 확인
+                    - stepApproval.primaryEvaluationStatus가 'revision_completed'인지 확인
+        - **4단계: 재제출 및 최종 승인**
+            - POST /admin/performance-evaluation/downward-evaluations/evaluator/{evaluatorId}/period/{periodId}/submit-primary (1차 하향평가 재제출)
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/primary (1차 하향평가 단계 승인)
+                - status: approved로 변경
+            - **최종 승인 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - downwardEvaluation.primary.status가 'approved'인지 확인
+                    - stepApproval.primaryEvaluationStatus가 'approved'인지 확인
+    - **2차 하향평가 재작성 요청 및 재작성 완료 응답 처리**
+        - **초기 구성 데이터 생성 (beforeEach에서 수행)**
+            - POST /admin/seed-data (시드 데이터 생성)
+            - POST /admin/evaluation-periods (평가기간 생성)
+            - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+            - POST /admin/evaluation-periods/{id}/targets/bulk (평가 대상자 대량 등록)
+            - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+            - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 매핑 구성)
+            - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/secondary-evaluator (2차 평가자 매핑 구성)
+        - **1단계: 2차 하향평가 저장 및 제출**
+            - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/secondary (2차 하향평가 저장 - 모든 WBS)
+            - POST /admin/performance-evaluation/downward-evaluations/evaluator/{evaluatorId}/period/{periodId}/submit-secondary (2차 하향평가 제출)
+        - **2단계: 재작성 요청 생성**
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/secondary/{evaluatorId} (2차 하향평가 단계 재작성 요청)
+                - status: revision_requested로 변경
+                - revisionComment: 재작성 요청 코멘트 필수
+            - **재작성 요청 생성 및 제출 상태 초기화 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - downwardEvaluation.secondary.status가 'revision_requested'인지 확인
+                    - downwardEvaluation.secondary.evaluators[].status가 'revision_requested'인지 확인 (해당 평가자)
+                    - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 status가 'revision_requested'인지 확인
+                - GET /admin/revision-requests (재작성 요청 목록 조회)
+                    - 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청이 지정된 2차평가자에게만 전송되었는지 확인
+        - **3단계: 재작성 완료 응답 제출**
+            - GET /admin/revision-requests (재작성 요청 목록 조회)
+                - 재작성 요청 ID 확인
+            - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
+                - responseComment: 재작성 완료 응답 코멘트
+            - **재작성 완료 응답 제출 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - downwardEvaluation.secondary.evaluators[].status가 'revision_completed'인지 확인 (해당 평가자)
+                    - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 status가 'revision_completed'인지 확인
+                    - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 isRevisionCompleted가 true인지 확인
+        - **4단계: 재제출 및 최종 승인**
+            - POST /admin/performance-evaluation/downward-evaluations/evaluator/{evaluatorId}/period/{periodId}/submit-secondary (2차 하향평가 재제출)
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/secondary/{evaluatorId} (2차 하향평가 단계 승인)
+                - status: approved로 변경
+            - **최종 승인 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - downwardEvaluation.secondary.evaluators[].status가 'approved'인지 확인 (해당 평가자)
+                    - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 status가 'approved'인지 확인
 
 - **엣지 케이스 검증** 
     - **재작성 요청 코멘트 누락**
