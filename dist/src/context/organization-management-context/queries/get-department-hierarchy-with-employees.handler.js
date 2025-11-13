@@ -27,13 +27,6 @@ let GetDepartmentHierarchyWithEmployeesQueryHandler = class GetDepartmentHierarc
     async execute(query) {
         const allDepartments = await this.departmentService.findAll();
         const allEmployees = await this.employeeService.findAll();
-        const kimEmployee = allEmployees.find((emp) => emp.name === '김종식');
-        console.log('🚀 김종식 직원:', kimEmployee);
-        const webDept = allDepartments.find((dept) => dept.name === 'Web파트');
-        console.log('🚀 Web파트 부서:', webDept);
-        console.log('🚀 매칭 여부:', kimEmployee?.departmentId === webDept?.externalId
-            ? '✅ 일치'
-            : '❌ 불일치');
         const employeesByDeptExternalId = allEmployees.reduce((acc, emp) => {
             const deptId = emp.departmentId;
             if (deptId) {
