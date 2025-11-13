@@ -426,6 +426,97 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
 
       await errorModule.close();
     });
+
+    it('타임아웃 에러 발생 시 적절히 처리해야 한다', async () => {
+      // Given
+      // SSO 서비스를 모킹하여 타임아웃 에러 발생 시뮬레이션
+      const timeoutError = new Error('Request timeout after 10000ms');
+      (timeoutError as any).code = 'TIMEOUT';
+      (timeoutError as any).status = undefined;
+      (timeoutError as any).requestId = undefined;
+
+      const mockSSOService = {
+        모든부서정보를조회한다: jest.fn().mockRejectedValue(timeoutError),
+      };
+
+      const timeoutModule = await Test.createTestingModule({
+        imports: [
+          DatabaseModule,
+          ConfigModule.forRoot({
+            isGlobal: true,
+          }),
+          ScheduleModule.forRoot(),
+          TypeOrmModule.forFeature([Department]),
+          DepartmentModule,
+          SSOModule,
+        ],
+        providers: [
+          DepartmentSyncService,
+          {
+            provide: SSOService,
+            useValue: mockSSOService,
+          },
+        ],
+      }).compile();
+
+      const timeoutService = timeoutModule.get<DepartmentSyncService>(
+        DepartmentSyncService,
+      );
+
+      // When
+      const result = await timeoutService.syncDepartments(true);
+
+      // Then
+      expect(result.success).toBe(false);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors.some((e) => e.includes('타임아웃'))).toBe(true);
+      expect(result.totalProcessed).toBe(0);
+      expect(result.created).toBe(0);
+      expect(result.updated).toBe(0);
+
+      await timeoutModule.close();
+    });
+
+    it('fetchExternalDepartments에서 타임아웃 에러 발생 시 REQUEST_TIMEOUT 예외를 던져야 한다', async () => {
+      // Given
+      const timeoutError = new Error('Request timeout after 10000ms');
+      (timeoutError as any).code = 'TIMEOUT';
+
+      const mockSSOService = {
+        모든부서정보를조회한다: jest.fn().mockRejectedValue(timeoutError),
+      };
+
+      const timeoutModule = await Test.createTestingModule({
+        imports: [
+          DatabaseModule,
+          ConfigModule.forRoot({
+            isGlobal: true,
+          }),
+          ScheduleModule.forRoot(),
+          TypeOrmModule.forFeature([Department]),
+          DepartmentModule,
+          SSOModule,
+        ],
+        providers: [
+          DepartmentSyncService,
+          {
+            provide: SSOService,
+            useValue: mockSSOService,
+          },
+        ],
+      }).compile();
+
+      const timeoutService = timeoutModule.get<DepartmentSyncService>(
+        DepartmentSyncService,
+      );
+
+      // When & Then
+      await expect(
+        timeoutService.fetchExternalDepartments(),
+      ).rejects.toThrow('SSO 부서 데이터 조회가 타임아웃되었습니다');
+
+      await timeoutModule.close();
+    });
   });
 
   describe('부서 조회 (히트미스 전략)', () => {

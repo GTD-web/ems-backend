@@ -96,6 +96,17 @@ export class DepartmentSyncService implements OnModuleInit {
 
       return departments;
     } catch (error) {
+      // 타임아웃 에러인 경우 더 자세한 로그
+      if (error?.code === 'TIMEOUT' || error?.message?.includes('timeout')) {
+        this.logger.error(
+          `SSO 부서 API 조회 타임아웃: ${error.message}. SSO 서버 응답이 지연되고 있습니다.`,
+        );
+        throw new HttpException(
+          'SSO 부서 데이터 조회가 타임아웃되었습니다. 잠시 후 다시 시도해주세요.',
+          HttpStatus.REQUEST_TIMEOUT,
+        );
+      }
+
       this.logger.error('SSO 부서 API 조회 실패:', error.message);
       throw new HttpException(
         'SSO 부서 데이터 조회에 실패했습니다.',
@@ -353,8 +364,18 @@ export class DepartmentSyncService implements OnModuleInit {
 
       return result;
     } catch (error) {
-      const errorMsg = `부서 동기화 실패: ${error.message}`;
-      this.logger.error(errorMsg);
+      // 타임아웃 에러인 경우 더 자세한 정보 제공
+      let errorMsg: string;
+      if (error?.code === 'TIMEOUT' || error?.message?.includes('timeout')) {
+        errorMsg = `부서 동기화 타임아웃: SSO 서버 응답이 지연되어 동기화를 완료할 수 없습니다. (${error.message})`;
+        this.logger.warn(
+          errorMsg +
+            ' 스케줄된 다음 동기화에서 재시도됩니다. SSO_TIMEOUT_MS 환경 변수를 늘려보세요.',
+        );
+      } else {
+        errorMsg = `부서 동기화 실패: ${error.message}`;
+        this.logger.error(errorMsg);
+      }
 
       return {
         success: false,
