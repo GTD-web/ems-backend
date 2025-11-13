@@ -15,59 +15,42 @@ import { TransactionManagerService } from './transaction-manager.service';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        const databaseUrl = configService.get<string>('DATABASE_URL');
         const nodeEnv = configService.get<string>('NODE_ENV', 'development');
         const isTest = nodeEnv === 'test';
         const isDevelopment = nodeEnv === 'development';
 
-        if (!databaseUrl) {
-          throw new Error('DATABASE_URL environment variable is required');
+        // 개별 환경 변수로 데이터베이스 연결 정보 가져오기
+        const dbHost = configService.get<string>('DATABASE_HOST');
+        const dbPort = configService.get<number>('DATABASE_PORT', 5432);
+        const dbUsername = configService.get<string>('DATABASE_USERNAME');
+        const dbPassword = configService.get<string>('DATABASE_PASSWORD', '');
+        const dbName = configService.get<string>('DATABASE_NAME');
+
+        // 필수 환경 변수 검증
+        if (!dbHost || !dbUsername || !dbName) {
+          throw new Error(
+            '데이터베이스 연결 정보가 누락되었습니다. ' +
+            'DATABASE_HOST, DATABASE_USERNAME, DATABASE_NAME 환경 변수를 설정해주세요.',
+          );
         }
+
+        const host = dbHost;
+        const port = dbPort;
+        const username = dbUsername;
+        const password = dbPassword;
+        const database = dbName;
 
         // SSL 필요 여부 판단 (환경변수로 명시적 설정)
         const needsSSL =
           configService.get<string>('DATABASE_SSL', 'false') === 'true';
 
-        // URL 형식 검증 및 파싱 (postgresql:// 또는 postgres://로 시작하는지 확인)
-        const urlPattern =
-          /^(postgresql|postgres):\/\/([^:@]+)(?::([^@]+))?@([^:/]+)(?::(\d+))?\/([^?]+)(?:\?(.+))?$/;
-        const match = databaseUrl.match(urlPattern);
-
-        if (match) {
-          // URL 형식이 유효하면 개별 파라미터로 변환
-          const [, , username, password, host, port, database] = match;
-
-          return {
-            type: 'postgres',
-            host,
-            port: port ? parseInt(port, 10) : 5432,
-            username,
-            password: password || '',
-            database: database.split('?')[0],
-            autoLoadEntities: true,
-            dropSchema: isTest,
-            synchronize: configService.get<boolean>(
-              'DB_SYNCHRONIZE',
-              isDevelopment || isTest,
-            ),
-            logging: configService.get<boolean>(
-              'DB_LOGGING',
-              isDevelopment && !isTest,
-            ),
-            ssl: needsSSL ? { rejectUnauthorized: false } : false,
-            extra: {
-              max: 10,
-              connectionTimeoutMillis: 60000,
-              idleTimeoutMillis: 30000,
-              ...(needsSSL && { ssl: { rejectUnauthorized: false } }),
-            },
-          };
-        }
-
-        // URL 형식이 아니면 기존 방식 사용
         return {
           type: 'postgres',
-          url: databaseUrl,
+          host,
+          port,
+          username,
+          password,
+          database,
           autoLoadEntities: true,
           dropSchema: isTest,
           synchronize: configService.get<boolean>(

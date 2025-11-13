@@ -13,10 +13,6 @@ import { EmptyGroupNameException } from './question-group.exceptions';
  * 하나의 질문은 여러 그룹에 속할 수 있습니다. (QuestionGroupMapping 사용)
  */
 @Entity('question_group')
-@Index('UQ_question_group_name_not_deleted', ['name'], {
-  unique: true,
-  where: '"deletedAt" IS NULL',
-})
 @Index(['isDefault'])
 export class QuestionGroup
   extends BaseEntity<QuestionGroupDto>

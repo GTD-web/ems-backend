@@ -32,7 +32,15 @@ services:
     container_name: lumir-evaluation-app
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://lumir_admin:lumir_password_2024@postgres:5432/lumir_evaluation_management
+      # 데이터베이스 연결 정보 (개별 환경 변수 사용 - 권장)
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: lumir_admin
+      DATABASE_PASSWORD: lumir_password_2024
+      DATABASE_NAME: lumir_evaluation_management
+      # DATABASE_URL을 사용할 수도 있지만, 개별 환경 변수 사용을 권장합니다
+      # DATABASE_URL: postgresql://lumir_admin:lumir_password_2024@postgres:5432/lumir_evaluation_management
+      
       NODE_ENV: development
       DB_SYNCHRONIZE: true
       DB_LOGGING: true
