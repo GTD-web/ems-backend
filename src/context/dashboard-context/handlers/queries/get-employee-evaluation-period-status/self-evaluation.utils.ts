@@ -126,7 +126,8 @@ export function 자기평가_상태를_계산한다(
 
 /**
  * 가중치 기반 자기평가 점수를 계산한다
- * 계산식: Σ(WBS 가중치 × 자기평가 점수 / maxSelfEvaluationRate × 100)
+ * 계산식: Σ(WBS 가중치 × 자기평가 점수)
+ * 최대 점수: 평가기간의 maxSelfEvaluationRate
  */
 export async function 가중치_기반_자기평가_점수를_계산한다(
   evaluationPeriodId: string,
@@ -191,11 +192,9 @@ export async function 가중치_기반_자기평가_점수를_계산한다(
       const weight = weightMap.get(evaluation.wbsItemId) || 0;
       const score = evaluation.selfEvaluationScore || 0;
 
-      // 정규화: (score / maxSelfEvaluationRate) × 100
-      const normalizedScore = (score / maxSelfEvaluationRate) * 100;
-
-      // 가중치 적용: weight × normalizedScore
-      totalWeightedScore += (weight / 100) * normalizedScore;
+      // 가중치 적용: (weight / 100) × score
+      // 점수는 0 ~ maxSelfEvaluationRate 범위를 유지
+      totalWeightedScore += (weight / 100) * score;
       totalWeight += weight;
     });
 
@@ -204,14 +203,14 @@ export async function 가중치_기반_자기평가_점수를_계산한다(
       return null;
     }
 
-    // 최종 점수 (0-100 범위)
+    // 최종 점수 (0 ~ maxSelfEvaluationRate 범위)
     const finalScore = totalWeightedScore;
 
     // 소수점일 때는 내림을 통해 정수로 변환
     const integerScore = Math.floor(finalScore);
 
     logger.log(
-      `가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`,
+      `가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}, 최대값: ${maxSelfEvaluationRate}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`,
     );
 
     return integerScore;

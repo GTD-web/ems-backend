@@ -203,7 +203,7 @@ let EvaluationPeriod = class EvaluationPeriod extends base_entity_1.BaseEntity {
         return now >= this.startDate;
     }
     만료된_상태인가() {
-        return false;
+        return this.completedDate !== undefined;
     }
     상태전이_유효한가(targetStatus) {
         const validTransitions = {

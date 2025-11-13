@@ -107,8 +107,7 @@ async function 가중치_기반_자기평가_점수를_계산한다(evaluationPe
         selfEvaluations.forEach((evaluation) => {
             const weight = weightMap.get(evaluation.wbsItemId) || 0;
             const score = evaluation.selfEvaluationScore || 0;
-            const normalizedScore = (score / maxSelfEvaluationRate) * 100;
-            totalWeightedScore += (weight / 100) * normalizedScore;
+            totalWeightedScore += (weight / 100) * score;
             totalWeight += weight;
         });
         if (totalWeight === 0) {
@@ -116,7 +115,7 @@ async function 가중치_기반_자기평가_점수를_계산한다(evaluationPe
         }
         const finalScore = totalWeightedScore;
         const integerScore = Math.floor(finalScore);
-        logger.log(`가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`);
+        logger.log(`가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}, 최대값: ${maxSelfEvaluationRate}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`);
         return integerScore;
     }
     catch (error) {

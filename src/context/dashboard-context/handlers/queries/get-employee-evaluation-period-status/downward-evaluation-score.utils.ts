@@ -9,7 +9,8 @@ const logger = new Logger('DownwardEvaluationScoreUtils');
 
 /**
  * 가중치 기반 1차 하향평가 점수를 계산한다
- * 계산식: Σ(WBS 가중치 × 하향평가 점수 / maxRate × 100)
+ * 계산식: Σ(WBS 가중치 × 하향평가 점수)
+ * 최대 점수: 평가기간의 maxSelfEvaluationRate
  * 하향평가 점수 범위: 0 ~ 평가기간의 최대 달성률
  *
  * @param evaluatorIds 현재 평가라인에 있는 평가자 ID 목록 (평가자 교체 시 현재 평가자만 점수 계산에 포함)
@@ -87,11 +88,9 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
       const weight = weightMap.get(evaluation.wbsId) || 0;
       const score = evaluation.downwardEvaluationScore || 0;
 
-      // 정규화: (score / maxRate) × 100 (하향평가는 0 ~ maxRate 범위)
-      const normalizedScore = (score / maxRate) * 100;
-
-      // 가중치 적용: weight × normalizedScore
-      totalWeightedScore += (weight / 100) * normalizedScore;
+      // 가중치 적용: (weight / 100) × score
+      // 점수는 0 ~ maxRate 범위를 유지
+      totalWeightedScore += (weight / 100) * score;
       totalWeight += weight;
     });
 
@@ -100,11 +99,11 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
       return null;
     }
 
-    // 최종 점수 (0-100 범위)
+    // 최종 점수 (0 ~ maxRate 범위)
     const finalScore = totalWeightedScore;
 
     logger.log(
-      `가중치 기반 1차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (피평가자: ${employeeId}, 평가자: ${evaluatorIds.join(', ')}, 평가기간: ${evaluationPeriodId})`,
+      `가중치 기반 1차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (최대값: ${maxRate}) (피평가자: ${employeeId}, 평가자: ${evaluatorIds.join(', ')}, 평가기간: ${evaluationPeriodId})`,
     );
 
     return Math.round(finalScore * 100) / 100; // 소수점 2자리로 반올림
@@ -120,7 +119,8 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
 /**
  * 가중치 기반 2차 하향평가 점수를 계산한다
  * 여러 명의 2차 평가자가 있을 경우, 모든 평가자의 평가를 종합하여 계산
- * 계산식: Σ(WBS 가중치 × 모든 2차 평가자의 평균 점수 / maxRate × 100)
+ * 계산식: Σ(WBS 가중치 × 모든 2차 평가자의 평균 점수)
+ * 최대 점수: 평가기간의 maxSelfEvaluationRate
  */
 export async function 가중치_기반_2차_하향평가_점수를_계산한다(
   evaluationPeriodId: string,
@@ -208,11 +208,9 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
       const averageScore =
         scores.reduce((sum, score) => sum + score, 0) / scores.length;
 
-      // 정규화: (averageScore / maxRate) × 100 (하향평가는 0 ~ maxRate 범위)
-      const normalizedScore = (averageScore / maxRate) * 100;
-
-      // 가중치 적용: weight × normalizedScore
-      totalWeightedScore += (weight / 100) * normalizedScore;
+      // 가중치 적용: (weight / 100) × averageScore
+      // 점수는 0 ~ maxRate 범위를 유지
+      totalWeightedScore += (weight / 100) * averageScore;
       totalWeight += weight;
     });
 
@@ -221,11 +219,11 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
       return null;
     }
 
-    // 최종 점수 (0-100 범위)
+    // 최종 점수 (0 ~ maxRate 범위)
     const finalScore = totalWeightedScore;
 
     logger.log(
-      `가중치 기반 2차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (피평가자: ${employeeId}, 평가자 수: ${evaluatorIds.length}, 평가기간: ${evaluationPeriodId})`,
+      `가중치 기반 2차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (최대값: ${maxRate}) (피평가자: ${employeeId}, 평가자 수: ${evaluatorIds.length}, 평가기간: ${evaluationPeriodId})`,
     );
 
     return Math.round(finalScore * 100) / 100; // 소수점 2자리로 반올림
