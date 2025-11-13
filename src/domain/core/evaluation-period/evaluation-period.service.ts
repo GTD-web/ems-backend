@@ -210,7 +210,6 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
         where: {
           status: EvaluationPeriodStatus.IN_PROGRESS,
           startDate: LessThanOrEqual(now),
-          endDate: MoreThanOrEqual(now),
         },
         order: { startDate: 'DESC' },
       });
@@ -253,11 +252,8 @@ export class EvaluationPeriodService implements IEvaluationPeriodService {
         });
       }
 
-      if (filter.endDateTo) {
-        queryBuilder.andWhere('period.endDate <= :endDateTo', {
-          endDateTo: filter.endDateTo,
-        });
-      }
+      // endDate 필터는 제거되었으므로 peerEvaluationDeadline을 기준으로 필터링해야 함
+      // 필요시 peerEvaluationDeadline 필터 추가 가능
 
       if (filter.activeOnly) {
         queryBuilder.andWhere('period.status = :activeStatus', {

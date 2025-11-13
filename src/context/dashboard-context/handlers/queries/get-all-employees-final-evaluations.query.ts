@@ -31,8 +31,6 @@ export interface AllEmployeesFinalEvaluationResult {
   periodName: string;
   /** 평가기간 시작일 */
   periodStartDate: Date;
-  /** 평가기간 종료일 */
-  periodEndDate: Date | null;
   /** 평가등급 (S, A, B, C, D 등) */
   evaluationGrade: string;
   /** 직무등급 (T1, T2, T3) */
@@ -119,7 +117,6 @@ export class GetAllEmployeesFinalEvaluationsHandler
         'period.id AS period_id',
         'period.name AS period_name',
         'period.startDate AS period_start_date',
-        'period.endDate AS period_end_date',
       ])
       .leftJoin(
         Employee,
@@ -169,7 +166,6 @@ export class GetAllEmployeesFinalEvaluationsHandler
       periodId: row.period_id,
       periodName: row.period_name,
       periodStartDate: row.period_start_date,
-      periodEndDate: row.period_end_date,
       evaluationGrade: row.evaluation_grade,
       jobGrade: row.job_grade,
       jobDetailedGrade: row.job_detailed_grade,

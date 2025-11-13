@@ -13,6 +13,7 @@ exports.UpdateEvaluationPeriodStartDateCommandHandler = exports.UpdateEvaluation
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
 const evaluation_period_service_1 = require("../../../../../domain/core/evaluation-period/evaluation-period.service");
+const evaluation_period_auto_phase_service_1 = require("../../../../../domain/core/evaluation-period/evaluation-period-auto-phase.service");
 class UpdateEvaluationPeriodStartDateCommand {
     periodId;
     startDateData;
@@ -26,8 +27,10 @@ class UpdateEvaluationPeriodStartDateCommand {
 exports.UpdateEvaluationPeriodStartDateCommand = UpdateEvaluationPeriodStartDateCommand;
 let UpdateEvaluationPeriodStartDateCommandHandler = class UpdateEvaluationPeriodStartDateCommandHandler {
     evaluationPeriodService;
-    constructor(evaluationPeriodService) {
+    evaluationPeriodAutoPhaseService;
+    constructor(evaluationPeriodService, evaluationPeriodAutoPhaseService) {
         this.evaluationPeriodService = evaluationPeriodService;
+        this.evaluationPeriodAutoPhaseService = evaluationPeriodAutoPhaseService;
     }
     async execute(command) {
         const { periodId, startDateData, updatedBy } = command;
@@ -35,13 +38,15 @@ let UpdateEvaluationPeriodStartDateCommandHandler = class UpdateEvaluationPeriod
             startDate: startDateData.startDate,
         };
         const updatedPeriod = await this.evaluationPeriodService.업데이트한다(periodId, updateDto, updatedBy);
-        return updatedPeriod;
+        const adjustedPeriod = await this.evaluationPeriodAutoPhaseService.adjustStatusAndPhaseAfterScheduleUpdate(periodId, updatedBy);
+        return (adjustedPeriod || updatedPeriod);
     }
 };
 exports.UpdateEvaluationPeriodStartDateCommandHandler = UpdateEvaluationPeriodStartDateCommandHandler;
 exports.UpdateEvaluationPeriodStartDateCommandHandler = UpdateEvaluationPeriodStartDateCommandHandler = __decorate([
     (0, common_1.Injectable)(),
     (0, cqrs_1.CommandHandler)(UpdateEvaluationPeriodStartDateCommand),
-    __metadata("design:paramtypes", [evaluation_period_service_1.EvaluationPeriodService])
+    __metadata("design:paramtypes", [evaluation_period_service_1.EvaluationPeriodService,
+        evaluation_period_auto_phase_service_1.EvaluationPeriodAutoPhaseService])
 ], UpdateEvaluationPeriodStartDateCommandHandler);
 //# sourceMappingURL=update-evaluation-period-start-date.handler.js.map

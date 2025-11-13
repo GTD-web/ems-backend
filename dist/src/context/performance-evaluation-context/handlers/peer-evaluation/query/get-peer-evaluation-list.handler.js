@@ -83,7 +83,6 @@ let GetPeerEvaluationListHandler = GetPeerEvaluationListHandler_1 = class GetPee
             'period.id AS period_id',
             'period.name AS period_name',
             'period.startDate AS period_startdate',
-            'period.endDate AS period_enddate',
             'period.status AS period_status',
             'evaluator.id AS evaluator_id',
             'evaluator.name AS evaluator_name',
@@ -176,7 +175,6 @@ let GetPeerEvaluationListHandler = GetPeerEvaluationListHandler_1 = class GetPee
                         id: evaluation.period_id,
                         name: evaluation.period_name,
                         startDate: evaluation.period_startdate,
-                        endDate: evaluation.period_enddate,
                         status: evaluation.period_status,
                     }
                     : null,

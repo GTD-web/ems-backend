@@ -155,6 +155,9 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
         const phoneNumber = ssoEmployee.phoneNumber && ssoEmployee.phoneNumber.trim() !== ''
             ? ssoEmployee.phoneNumber
             : undefined;
+        const managerId = ssoEmployee.managerId
+            ? ssoEmployee.managerId
+            : undefined;
         return {
             employeeNumber: ssoEmployee.employeeNumber,
             name: ssoEmployee.name,
@@ -163,7 +166,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             dateOfBirth: dateOfBirth,
             gender: gender,
             hireDate: hireDate,
-            managerId: undefined,
+            managerId: managerId,
             status: status,
             departmentId: departmentId,
             departmentName: departmentName,
@@ -200,9 +203,33 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             this.logger.log('직원 데이터 동기화를 시작합니다...');
             const ssoEmployees = await this.fetchExternalEmployees(useHierarchyAPI);
             totalProcessed = ssoEmployees.length;
-            this.logger.log(`SSO에서 ${totalProcessed}개의 직원 데이터를 조회했습니다. 동기화를 시작합니다...`);
+            this.logger.log(`SSO에서 ${totalProcessed}개의 직원 데이터를 조회했습니다.`);
+            this.logger.log('관리자 정보를 조회합니다...');
+            let managerMap = new Map();
+            try {
+                const managersResponse = await this.ssoService.직원관리자정보를조회한다();
+                for (const empManager of managersResponse.employees) {
+                    for (const deptManager of empManager.departments) {
+                        const ownDepartment = deptManager.managerLine.find((line) => line.depth === 0);
+                        if (ownDepartment && ownDepartment.managers.length > 0) {
+                            const managerId = ownDepartment.managers[0].employeeId;
+                            managerMap.set(empManager.employeeId, managerId);
+                            this.logger.debug(`직원 ${empManager.name} (${empManager.employeeNumber})의 관리자: ${managerId}`);
+                            break;
+                        }
+                    }
+                }
+                this.logger.log(`관리자 정보 ${managerMap.size}개를 조회했습니다. 동기화를 시작합니다...`);
+            }
+            catch (managerError) {
+                this.logger.warn(`관리자 정보 조회 실패 (동기화는 계속 진행): ${managerError.message}`);
+            }
             const employeesToSave = [];
             for (const ssoEmp of ssoEmployees) {
+                const managerId = managerMap.get(ssoEmp.id);
+                if (managerId) {
+                    ssoEmp.managerId = managerId;
+                }
                 const result = await this.직원을_처리한다(ssoEmp, forceSync, syncStartTime);
                 if (result.success && result.employee) {
                     employeesToSave.push(result.employee);
@@ -350,6 +377,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         name: mappedData.name,
                         email: mappedData.email,
                         phoneNumber: mappedData.phoneNumber,
+                        managerId: mappedData.managerId,
                         status: mappedData.status,
                         departmentId: mappedData.departmentId,
                         departmentName: mappedData.departmentName,

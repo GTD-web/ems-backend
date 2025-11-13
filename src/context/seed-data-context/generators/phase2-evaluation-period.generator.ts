@@ -98,14 +98,13 @@ export class Phase2EvaluationPeriodGenerator {
       period.name = `${year}년 ${halfYear} 평가-${uniqueSuffix}`;
 
       // 날짜 생성
-      const { startDate, endDate } = DateGeneratorUtil.generateDateRange(
+      const { startDate } = DateGeneratorUtil.generateDateRange(
         DateGeneratorUtil.addMonths(baseDate, -i * 6),
         dist.dateGeneration.evaluationPeriod.durationMonths.min,
         dist.dateGeneration.evaluationPeriod.durationMonths.max,
         'months',
       );
       period.startDate = startDate;
-      period.endDate = endDate;
       period.description = faker.lorem.sentence();
 
       // 상태 결정

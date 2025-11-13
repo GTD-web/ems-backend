@@ -7,7 +7,10 @@ import type { EmployeeDto } from '../../../domain/common/employee/employee.types
  * 전체 직원 목록 조회 쿼리
  */
 export class GetAllEmployeesQuery implements IQuery {
-  constructor(public readonly includeExcluded: boolean = false) {}
+  constructor(
+    public readonly includeExcluded: boolean = false,
+    public readonly departmentId?: string,
+  ) {}
 }
 
 /**
@@ -21,6 +24,15 @@ export class GetAllEmployeesQueryHandler
   constructor(private readonly employeeService: EmployeeService) {}
 
   async execute(query: GetAllEmployeesQuery): Promise<EmployeeDto[]> {
+    // departmentId가 있으면 필터 조회 사용
+    if (query.departmentId) {
+      return await this.employeeService.필터_조회한다({
+        departmentId: query.departmentId,
+        includeExcluded: query.includeExcluded,
+      });
+    }
+
+    // departmentId가 없으면 전체 조회
     const employees = await this.employeeService.findAll(
       query.includeExcluded,
     );

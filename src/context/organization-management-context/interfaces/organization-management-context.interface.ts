@@ -37,9 +37,13 @@ export interface IOrganizationManagementContext {
   /**
    * 모든 직원 목록을 조회합니다
    * @param includeExcluded 제외된 직원 포함 여부 (기본값: false)
-   * @returns 전체 직원 목록
+   * @param departmentId 부서 ID (선택, 지정 시 해당 부서 직원만 조회)
+   * @returns 전체 직원 목록 또는 부서별 직원 목록
    */
-  전체직원목록조회(includeExcluded?: boolean): Promise<EmployeeDto[]>;
+  전체직원목록조회(
+    includeExcluded?: boolean,
+    departmentId?: string,
+  ): Promise<EmployeeDto[]>;
 
   /**
    * 직원의 상급자를 조회합니다

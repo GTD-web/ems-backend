@@ -13,7 +13,7 @@ export declare class OrganizationManagementService implements IOrganizationManag
     부서정보조회(departmentId: string): Promise<DepartmentDto | null>;
     부서별직원목록조회(departmentId: string): Promise<EmployeeDto[]>;
     조직도조회(): Promise<OrganizationChartDto>;
-    전체직원목록조회(includeExcluded?: boolean): Promise<EmployeeDto[]>;
+    전체직원목록조회(includeExcluded?: boolean, departmentId?: string): Promise<EmployeeDto[]>;
     상급자조회(employeeId: string): Promise<EmployeeDto | null>;
     하급자목록조회(employeeId: string): Promise<EmployeeDto[]>;
     하위부서목록조회(departmentId: string): Promise<DepartmentDto[]>;

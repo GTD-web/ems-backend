@@ -82,9 +82,10 @@ export class OrganizationManagementService
    */
   async 전체직원목록조회(
     includeExcluded: boolean = false,
+    departmentId?: string,
   ): Promise<EmployeeDto[]> {
     return await this.queryBus.execute(
-      new GetAllEmployeesQuery(includeExcluded),
+      new GetAllEmployeesQuery(includeExcluded, departmentId),
     );
   }
 

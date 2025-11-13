@@ -54,12 +54,6 @@ export class EvaluationPeriodResponseDto implements EvaluationPeriodDto {
   })
   startDate: Date;
 
-  @ApiProperty({
-    description: '평가 기간 종료일',
-    example: '2024-06-30T23:59:59.999Z',
-  })
-  endDate: Date;
-
   @ApiPropertyOptional({
     description: '평가 기간 설명',
     example: '2024년 상반기 직원 평가를 진행합니다.',

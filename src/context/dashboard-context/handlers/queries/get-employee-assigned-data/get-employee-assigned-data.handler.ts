@@ -15,6 +15,7 @@ import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-ev
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
+import { ExcludedEvaluationTargetAccessException } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.exceptions';
 import { EmployeeAssignedDataResult } from './types';
 import { getProjectsWithWbs } from './project-wbs.utils';
 import {
@@ -136,7 +137,15 @@ export class GetEmployeeAssignedDataHandler
       );
     }
 
-    // 5. 프로젝트별 할당 정보 조회 (WBS 및 산출물 포함)
+    // 5. 평가 대상 제외 여부 확인
+    if (mapping.isExcluded) {
+      throw new ExcludedEvaluationTargetAccessException(
+        evaluationPeriodId,
+        employeeId,
+      );
+    }
+
+    // 6. 프로젝트별 할당 정보 조회 (WBS 및 산출물 포함)
     const projects = await getProjectsWithWbs(
       evaluationPeriodId,
       employeeId,
@@ -151,7 +160,7 @@ export class GetEmployeeAssignedDataHandler
       this.deliverableRepository,
     );
 
-    // 6. 요약 정보 계산
+    // 7. 요약 정보 계산
     let completedPerformances = 0;
     const totalWbs = projects.reduce((sum, project) => {
       project.wbsList.forEach((wbs) => {
@@ -258,7 +267,6 @@ export class GetEmployeeAssignedDataHandler
         id: evaluationPeriod.id,
         name: evaluationPeriod.name,
         startDate: evaluationPeriod.startDate,
-        endDate: evaluationPeriod.endDate,
         status: evaluationPeriod.status,
         currentPhase: evaluationPeriod.currentPhase,
         description: evaluationPeriod.description,

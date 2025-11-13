@@ -14,7 +14,6 @@ export interface FinalEvaluationByEmployeeResult {
     periodId: string;
     periodName: string;
     periodStartDate: Date;
-    periodEndDate: Date | null;
     evaluationGrade: string;
     jobGrade: string;
     jobDetailedGrade: string;

@@ -14,7 +14,6 @@ export declare enum EvaluationPeriodPhase {
 export interface CreateEvaluationPeriodDto {
     name: string;
     startDate: Date;
-    endDate?: Date;
     description?: string;
     evaluationSetupDeadline?: Date;
     performanceDeadline?: Date;
@@ -26,7 +25,6 @@ export interface CreateEvaluationPeriodDto {
 export interface UpdateEvaluationPeriodDto {
     name?: string;
     startDate?: Date;
-    endDate?: Date;
     description?: string;
     evaluationSetupDeadline?: Date;
     performanceDeadline?: Date;
@@ -39,7 +37,6 @@ export interface EvaluationPeriodDto {
     id: string;
     name: string;
     startDate: Date;
-    endDate?: Date;
     description?: string;
     status: EvaluationPeriodStatus;
     currentPhase?: EvaluationPeriodPhase;

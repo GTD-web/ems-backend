@@ -106,7 +106,6 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 'period.status AS period_status',
                 'period.currentPhase AS period_currentphase',
                 'period.startDate AS period_startdate',
-                'period.endDate AS period_enddate',
                 'period.criteriaSettingEnabled AS period_criteriasettingenabled',
                 'period.selfEvaluationSettingEnabled AS period_selfevaluationsettingenabled',
                 'period.finalEvaluationSettingEnabled AS period_finalevaluationsettingenabled',
@@ -249,7 +248,6 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                         status: result.period_status,
                         currentPhase: result.period_currentphase,
                         startDate: result.period_startdate,
-                        endDate: result.period_enddate,
                         manualSettings: {
                             criteriaSettingEnabled: result.period_criteriasettingenabled || false,
                             selfEvaluationSettingEnabled: result.period_selfevaluationsettingenabled || false,

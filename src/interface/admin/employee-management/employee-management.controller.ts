@@ -63,14 +63,11 @@ export class EmployeeManagementController {
   async getAllEmployees(
     @Query() query: GetEmployeesQueryDto,
   ): Promise<EmployeeDto[]> {
-    // includeExcluded 옵션에 따라 제외된 직원 포함 여부 결정
-    if (query.includeExcluded) {
-      // 제외된 직원 포함하여 전체 조회
-      return await this.organizationManagementService.전체직원목록조회();
-    } else {
-      // 기본적으로 제외되지 않은 직원만 조회
-      return await this.organizationManagementService.전체직원목록조회();
-    }
+    // departmentId와 includeExcluded 옵션을 전달하여 조회
+    return await this.organizationManagementService.전체직원목록조회(
+      query.includeExcluded || false,
+      query.departmentId,
+    );
   }
 
   /**

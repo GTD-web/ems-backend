@@ -149,7 +149,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'period.status AS period_status',
           'period.currentPhase AS period_currentphase',
           'period.startDate AS period_startdate',
-          'period.endDate AS period_enddate',
           'period.criteriaSettingEnabled AS period_criteriasettingenabled',
           'period.selfEvaluationSettingEnabled AS period_selfevaluationsettingenabled',
           'period.finalEvaluationSettingEnabled AS period_finalevaluationsettingenabled',
@@ -455,7 +454,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               status: result.period_status,
               currentPhase: result.period_currentphase,
               startDate: result.period_startdate,
-              endDate: result.period_enddate,
               // 수동 설정 상태 정보를 evaluationPeriod 안에 포함
               manualSettings: {
                 criteriaSettingEnabled:

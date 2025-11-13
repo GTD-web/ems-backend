@@ -315,6 +315,17 @@ let SSOService = SSOService_1 = class SSOService {
         flattenEmployees(hierarchy.departments);
         return employees;
     }
+    async 직원관리자정보를조회한다() {
+        this.초기화확인();
+        try {
+            const result = await this.sdkClient.organization.getEmployeesManagers();
+            return result;
+        }
+        catch (error) {
+            this.logger.error('직원 관리자 정보 조회 실패', error);
+            throw error;
+        }
+    }
     mapToEmployeeInfo(data) {
         const isTerminated = data.status !== '재직중' &&
             data.status !== 'ACTIVE' &&

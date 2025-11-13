@@ -17,8 +17,6 @@ export interface IEvaluationPeriod extends IBaseEntity {
   name: string;
   /** 평가 기간 시작일 */
   startDate: Date;
-  /** 평가 기간 종료일 */
-  endDate?: Date;
   /** 평가 기간 설명 */
   description?: string;
   /** 평가 기간 상태 */
@@ -238,10 +236,9 @@ export interface IEvaluationPeriod extends IBaseEntity {
   /**
    * 평가 기간 일정을 업데이트한다
    * @param startDate 새로운 시작일
-   * @param endDate 새로운 종료일
    * @param updatedBy 수정자 ID
    */
-  일정_업데이트한다(startDate?: Date, endDate?: Date, updatedBy?: string): void;
+  일정_업데이트한다(startDate?: Date, updatedBy?: string): void;
 
   /**
    * 단계별 마감일을 업데이트한다

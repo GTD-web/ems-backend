@@ -233,6 +233,11 @@ export class EmployeeSyncService implements OnModuleInit {
         ? ssoEmployee.phoneNumber
         : undefined;
 
+    // managerId 처리: getEmployeesManagers에서 매핑된 값 사용
+    const managerId = ssoEmployee.managerId
+      ? ssoEmployee.managerId
+      : undefined;
+
     return {
       employeeNumber: ssoEmployee.employeeNumber,
       name: ssoEmployee.name,
@@ -241,7 +246,7 @@ export class EmployeeSyncService implements OnModuleInit {
       dateOfBirth: dateOfBirth,
       gender: gender,
       hireDate: hireDate,
-      managerId: undefined, // SSO에서 제공하지 않음
+      managerId: managerId,
       status: status,
       departmentId: departmentId,
       departmentName: departmentName,
@@ -261,6 +266,7 @@ export class EmployeeSyncService implements OnModuleInit {
   /**
    * 직원 데이터 동기화
    * getEmployees API를 사용하여 직원 데이터를 동기화합니다.
+   * getEmployeesManagers API를 사용하여 관리자 정보를 조회하고 매핑합니다.
    *
    * @param forceSync 강제 동기화 여부
    * @param useHierarchyAPI 부서 계층 구조 API 사용 여부 (기본값: false, getEmployees 사용)
@@ -295,13 +301,56 @@ export class EmployeeSyncService implements OnModuleInit {
 
       totalProcessed = ssoEmployees.length;
       this.logger.log(
-        `SSO에서 ${totalProcessed}개의 직원 데이터를 조회했습니다. 동기화를 시작합니다...`,
+        `SSO에서 ${totalProcessed}개의 직원 데이터를 조회했습니다.`,
       );
 
-      // 2. 각 직원 데이터 처리
+      // 2. SSO에서 관리자 정보 조회
+      this.logger.log('관리자 정보를 조회합니다...');
+      let managerMap: Map<string, string> = new Map();
+      try {
+        const managersResponse = await this.ssoService.직원관리자정보를조회한다();
+        
+        // 각 직원의 소속 부서(depth=0)의 첫 번째 관리자를 managerId로 매핑
+        for (const empManager of managersResponse.employees) {
+          // 각 직원의 부서별 관리자 정보 확인
+          for (const deptManager of empManager.departments) {
+            // 소속 부서(depth=0)의 관리자 라인에서 첫 번째 관리자 찾기
+            const ownDepartment = deptManager.managerLine.find(
+              (line) => line.depth === 0,
+            );
+            
+            if (ownDepartment && ownDepartment.managers.length > 0) {
+              // 첫 번째 관리자의 employeeId를 managerId로 설정
+              const managerId = ownDepartment.managers[0].employeeId;
+              managerMap.set(empManager.employeeId, managerId);
+              this.logger.debug(
+                `직원 ${empManager.name} (${empManager.employeeNumber})의 관리자: ${managerId}`,
+              );
+              break; // 첫 번째 부서의 관리자를 찾으면 종료
+            }
+          }
+        }
+        
+        this.logger.log(
+          `관리자 정보 ${managerMap.size}개를 조회했습니다. 동기화를 시작합니다...`,
+        );
+      } catch (managerError) {
+        this.logger.warn(
+          `관리자 정보 조회 실패 (동기화는 계속 진행): ${managerError.message}`,
+        );
+        // 관리자 정보 조회 실패해도 직원 동기화는 계속 진행
+      }
+
+      // 3. 각 직원 데이터 처리
       const employeesToSave: Employee[] = [];
 
       for (const ssoEmp of ssoEmployees) {
+        // 관리자 정보가 있으면 매핑
+        const managerId = managerMap.get(ssoEmp.id);
+        if (managerId) {
+          ssoEmp.managerId = managerId;
+        }
+
         const result = await this.직원을_처리한다(
           ssoEmp,
           forceSync,
@@ -568,6 +617,7 @@ export class EmployeeSyncService implements OnModuleInit {
             name: mappedData.name,
             email: mappedData.email,
             phoneNumber: mappedData.phoneNumber,
+            managerId: mappedData.managerId,
             status: mappedData.status,
             departmentId: mappedData.departmentId,
             departmentName: mappedData.departmentName,

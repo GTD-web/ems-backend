@@ -1,5 +1,6 @@
 import { ICommandHandler } from '@nestjs/cqrs';
 import { EvaluationPeriodService } from '../../../../../domain/core/evaluation-period/evaluation-period.service';
+import { EvaluationPeriodAutoPhaseService } from '../../../../../domain/core/evaluation-period/evaluation-period-auto-phase.service';
 import { EvaluationPeriodDto } from '../../../../../domain/core/evaluation-period/evaluation-period.types';
 import { UpdatePeerEvaluationDeadlineDto } from '../../../interfaces/evaluation-period-creation.interface';
 export declare class UpdatePeerEvaluationDeadlineCommand {
@@ -10,6 +11,7 @@ export declare class UpdatePeerEvaluationDeadlineCommand {
 }
 export declare class UpdatePeerEvaluationDeadlineCommandHandler implements ICommandHandler<UpdatePeerEvaluationDeadlineCommand, EvaluationPeriodDto> {
     private readonly evaluationPeriodService;
-    constructor(evaluationPeriodService: EvaluationPeriodService);
+    private readonly evaluationPeriodAutoPhaseService;
+    constructor(evaluationPeriodService: EvaluationPeriodService, evaluationPeriodAutoPhaseService: EvaluationPeriodAutoPhaseService);
     execute(command: UpdatePeerEvaluationDeadlineCommand): Promise<EvaluationPeriodDto>;
 }

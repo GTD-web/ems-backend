@@ -168,7 +168,6 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
     }
     세부일정업데이트검증한다(updateDto, existingPeriod) {
         const newStartDate = updateDto.startDate || existingPeriod.startDate;
-        const existingEndDate = existingPeriod.endDate;
         if (updateDto.evaluationSetupDeadline) {
             if (updateDto.evaluationSetupDeadline <= newStartDate) {
                 throw new evaluation_period_exceptions_1.InvalidEvaluationPeriodDateRangeException('평가설정 단계 마감일은 평가 기간 시작일 이후여야 합니다.');
@@ -372,7 +371,6 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
             where: {
                 status: evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
                 startDate: (0, typeorm_2.LessThanOrEqual)(now),
-                endDate: (0, typeorm_2.MoreThanOrEqual)(now),
             },
             order: { startDate: 'DESC' },
         });

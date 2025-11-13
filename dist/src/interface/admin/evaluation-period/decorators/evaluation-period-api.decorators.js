@@ -440,7 +440,7 @@ function UpdateEvaluationPeriodGradeRanges() {
 - 존재하지 않는 리소스: 평가 기간 미존재 시 404 에러
 - 빈 배열: 등급 구간 최소 1개 이상 필수
 - 데이터 타입 검증: 문자열/숫자 타입 강제
-- 범위 검증: minRange(0-100), maxRange(0-100)
+- 범위 검증: minRange(0-1000), maxRange(0-1000)
 - 중복 등급: 동일한 등급명 중복 시 422 에러
 - 범위 순서: minRange < maxRange 필수
 - 범위 겹침: 등급 구간 간 점수 범위 겹침 금지

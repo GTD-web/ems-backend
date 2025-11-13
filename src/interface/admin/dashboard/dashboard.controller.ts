@@ -210,7 +210,6 @@ export class DashboardController {
           id: period.id,
           name: period.name,
           startDate: period.startDate,
-          endDate: period.endDate ?? null,
         },
         evaluations: [],
       };
@@ -222,7 +221,6 @@ export class DashboardController {
       id: firstResult.periodId,
       name: firstResult.periodName,
       startDate: firstResult.periodStartDate,
-      endDate: firstResult.periodEndDate,
     };
 
     // 각 직원별 최종평가 매핑
@@ -276,7 +274,6 @@ export class DashboardController {
         id: string;
         name: string;
         startDate: Date;
-        endDate: Date | null;
       }
     >();
 
@@ -286,7 +283,6 @@ export class DashboardController {
           id: result.periodId,
           name: result.periodName,
           startDate: result.periodStartDate,
-          endDate: result.periodEndDate,
         });
       }
     }
@@ -429,7 +425,6 @@ export class DashboardController {
         id: result.periodId,
         name: result.periodName,
         startDate: result.periodStartDate,
-        endDate: result.periodEndDate,
       },
       evaluationGrade: result.evaluationGrade,
       jobGrade: result.jobGrade,

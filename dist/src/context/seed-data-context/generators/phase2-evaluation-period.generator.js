@@ -70,9 +70,8 @@ let Phase2EvaluationPeriodGenerator = Phase2EvaluationPeriodGenerator_1 = class 
             const year = baseDate.getFullYear() - i;
             const halfYear = i % 2 === 0 ? '상반기' : '하반기';
             period.name = `${year}년 ${halfYear} 평가-${uniqueSuffix}`;
-            const { startDate, endDate } = utils_1.DateGeneratorUtil.generateDateRange(utils_1.DateGeneratorUtil.addMonths(baseDate, -i * 6), dist.dateGeneration.evaluationPeriod.durationMonths.min, dist.dateGeneration.evaluationPeriod.durationMonths.max, 'months');
+            const { startDate } = utils_1.DateGeneratorUtil.generateDateRange(utils_1.DateGeneratorUtil.addMonths(baseDate, -i * 6), dist.dateGeneration.evaluationPeriod.durationMonths.min, dist.dateGeneration.evaluationPeriod.durationMonths.max, 'months');
             period.startDate = startDate;
-            period.endDate = endDate;
             period.description = faker_1.faker.lorem.sentence();
             const statusKey = utils_1.ProbabilityUtil.selectByProbability(dist.evaluationPeriodStatus);
             period.status =

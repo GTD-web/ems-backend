@@ -90,7 +90,6 @@ let GetWbsAssignmentDetailHandler = class GetWbsAssignmentDetailHandler {
             'period.id AS period_id',
             'period.name AS period_name',
             'period.startDate AS period_startdate',
-            'period.endDate AS period_enddate',
             'period.status AS period_status',
             'assignedByEmployee.id AS assignedbyemployee_id',
             'assignedByEmployee.name AS assignedbyemployee_name',
@@ -162,7 +161,6 @@ let GetWbsAssignmentDetailHandler = class GetWbsAssignmentDetailHandler {
                     id: result.period_id,
                     name: result.period_name,
                     startDate: result.period_startdate,
-                    endDate: result.period_enddate,
                     status: result.period_status,
                 }
                 : null,
