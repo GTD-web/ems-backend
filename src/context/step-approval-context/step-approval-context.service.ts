@@ -243,12 +243,12 @@ export class StepApprovalContextService implements IStepApprovalContext {
           recipientType: RecipientType.EVALUATEE,
         });
 
-        // 1차평가자 추가
+        // 1차평가자 추가 (피평가자와 다른 경우만)
         const primaryEvaluator = await this.일차평가자를_조회한다(
           evaluationPeriodId,
           employeeId,
         );
-        if (primaryEvaluator) {
+        if (primaryEvaluator && primaryEvaluator !== employeeId) {
           recipients.push({
             recipientId: primaryEvaluator,
             recipientType: RecipientType.PRIMARY_EVALUATOR,
