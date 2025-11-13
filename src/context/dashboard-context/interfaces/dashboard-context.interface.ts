@@ -194,6 +194,15 @@ export interface EmployeeEvaluationPeriodStatusDto {
       /** SECONDARY 라인 평가자 지정 여부 */
       hasSecondaryEvaluator: boolean;
     };
+    /** 평가기준 제출 상태 */
+    criteriaSubmission: {
+      /** 평가기준 제출 여부 */
+      isSubmitted: boolean;
+      /** 평가기준 제출 일시 */
+      submittedAt?: Date | null;
+      /** 평가기준 제출 처리자 ID */
+      submittedBy?: string | null;
+    };
   };
 
   /** 성과 입력 정보 */

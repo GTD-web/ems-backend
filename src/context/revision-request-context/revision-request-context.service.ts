@@ -340,6 +340,11 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
       );
     }
 
+    // 읽음 처리 (아직 읽지 않은 경우)
+    if (!recipient.isRead) {
+      recipient.읽음처리한다();
+    }
+
     // 재작성 완료 응답
     recipient.재작성완료_응답한다(responseComment);
 
@@ -389,6 +394,11 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           this.logger.log(
             `다른 수신자에게 보낸 재작성 요청도 함께 완료 처리 - 요청 ID: ${otherRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`,
           );
+
+          // 읽음 처리 (아직 읽지 않은 경우)
+          if (!otherRecipient.isRead) {
+            otherRecipient.읽음처리한다();
+          }
 
           // 재작성 완료 응답
           otherRecipient.재작성완료_응답한다(
@@ -509,6 +519,11 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
       );
     }
 
+    // 읽음 처리 (아직 읽지 않은 경우)
+    if (!targetRecipient.isRead) {
+      targetRecipient.읽음처리한다();
+    }
+
     // 재작성 완료 응답
     targetRecipient.재작성완료_응답한다(responseComment);
 
@@ -551,6 +566,11 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
           this.logger.log(
             `다른 수신자에게 보낸 재작성 요청도 함께 완료 처리 - 요청 ID: ${otherRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`,
           );
+
+          // 읽음 처리 (아직 읽지 않은 경우)
+          if (!otherRecipient.isRead) {
+            otherRecipient.읽음처리한다();
+          }
 
           // 재작성 완료 응답
           otherRecipient.재작성완료_응답한다(

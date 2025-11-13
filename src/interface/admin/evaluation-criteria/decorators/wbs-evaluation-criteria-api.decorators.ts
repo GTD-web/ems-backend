@@ -621,3 +621,143 @@ export const DeleteWbsItemEvaluationCriteria = () =>
       description: 'WBS 항목을 찾을 수 없습니다.',
     }),
   );
+
+/**
+ * 평가기준 제출 API 데코레이터
+ */
+export const SubmitEvaluationCriteria = () =>
+  applyDecorators(
+    Post('submit'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '평가기준 제출',
+      description: `평가기간의 직원 평가기준을 제출합니다.
+
+**동작:**
+- 평가기간-직원 맵핑의 평가기준 제출 상태를 true로 변경
+- 제출 일시와 제출 처리자 정보 저장
+- 이미 제출된 경우에도 성공으로 처리 (멱등성 보장)
+
+**테스트 케이스:**
+- 기본 제출: 평가기간과 직원 ID로 평가기준 제출 성공
+- 제출 상태 확인: 제출 후 isCriteriaSubmitted가 true로 변경됨
+- 제출 일시 확인: 제출 후 criteriaSubmittedAt이 현재 시간으로 설정됨
+- 제출 처리자 확인: 제출 후 criteriaSubmittedBy가 요청자 ID로 설정됨
+- 중복 제출: 이미 제출된 평가기준을 다시 제출해도 성공 처리
+- 존재하지 않는 맵핑: 존재하지 않는 평가기간-직원 맵핑으로 제출 시 404 에러
+- 잘못된 UUID: 잘못된 UUID 형식의 evaluationPeriodId 또는 employeeId 입력 시 400 에러`,
+    }),
+    ApiBody({
+      schema: {
+        type: 'object',
+        properties: {
+          evaluationPeriodId: {
+            type: 'string',
+            format: 'uuid',
+            description: '평가기간 ID',
+            example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+          },
+          employeeId: {
+            type: 'string',
+            format: 'uuid',
+            description: '직원 ID',
+            example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+          },
+        },
+        required: ['evaluationPeriodId', 'employeeId'],
+      },
+    }),
+    ApiResponse({
+      status: 200,
+      description: '평가기준이 성공적으로 제출되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          evaluationPeriodId: { type: 'string', format: 'uuid' },
+          employeeId: { type: 'string', format: 'uuid' },
+          isCriteriaSubmitted: { type: 'boolean' },
+          criteriaSubmittedAt: { type: 'string', format: 'date-time', nullable: true },
+          criteriaSubmittedBy: { type: 'string', nullable: true },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '평가기간-직원 맵핑을 찾을 수 없습니다.',
+    }),
+  );
+
+/**
+ * 평가기준 제출 초기화 API 데코레이터
+ */
+export const ResetEvaluationCriteriaSubmission = () =>
+  applyDecorators(
+    Post('reset-submission'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '평가기준 제출 초기화',
+      description: `평가기간의 직원 평가기준 제출 상태를 초기화합니다.
+
+**동작:**
+- 평가기간-직원 맵핑의 평가기준 제출 상태를 false로 변경
+- 제출 일시와 제출 처리자 정보 초기화
+- 제출되지 않은 경우에도 성공으로 처리 (멱등성 보장)
+
+**테스트 케이스:**
+- 기본 초기화: 평가기간과 직원 ID로 평가기준 제출 초기화 성공
+- 초기화 상태 확인: 초기화 후 isCriteriaSubmitted가 false로 변경됨
+- 제출 일시 초기화: 초기화 후 criteriaSubmittedAt이 null로 변경됨
+- 제출 처리자 초기화: 초기화 후 criteriaSubmittedBy가 null로 변경됨
+- 중복 초기화: 이미 초기화된 평가기준을 다시 초기화해도 성공 처리
+- 존재하지 않는 맵핑: 존재하지 않는 평가기간-직원 맵핑으로 초기화 시 404 에러
+- 잘못된 UUID: 잘못된 UUID 형식의 evaluationPeriodId 또는 employeeId 입력 시 400 에러`,
+    }),
+    ApiBody({
+      schema: {
+        type: 'object',
+        properties: {
+          evaluationPeriodId: {
+            type: 'string',
+            format: 'uuid',
+            description: '평가기간 ID',
+            example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+          },
+          employeeId: {
+            type: 'string',
+            format: 'uuid',
+            description: '직원 ID',
+            example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+          },
+        },
+        required: ['evaluationPeriodId', 'employeeId'],
+      },
+    }),
+    ApiResponse({
+      status: 200,
+      description: '평가기준 제출이 성공적으로 초기화되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          evaluationPeriodId: { type: 'string', format: 'uuid' },
+          employeeId: { type: 'string', format: 'uuid' },
+          isCriteriaSubmitted: { type: 'boolean' },
+          criteriaSubmittedAt: { type: 'string', format: 'date-time', nullable: true },
+          criteriaSubmittedBy: { type: 'string', nullable: true },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: 404,
+      description: '평가기간-직원 맵핑을 찾을 수 없습니다.',
+    }),
+  );

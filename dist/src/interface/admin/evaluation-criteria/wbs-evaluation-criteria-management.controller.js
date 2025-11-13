@@ -16,13 +16,16 @@ exports.WbsEvaluationCriteriaManagementController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const evaluation_criteria_business_service_1 = require("../../../business/evaluation-criteria/evaluation-criteria-business.service");
 const wbs_evaluation_criteria_api_decorators_1 = require("./decorators/wbs-evaluation-criteria-api.decorators");
 const wbs_evaluation_criteria_dto_1 = require("./dto/wbs-evaluation-criteria.dto");
 const decorators_1 = require("../../decorators");
 let WbsEvaluationCriteriaManagementController = class WbsEvaluationCriteriaManagementController {
     evaluationCriteriaManagementService;
-    constructor(evaluationCriteriaManagementService) {
+    evaluationCriteriaBusinessService;
+    constructor(evaluationCriteriaManagementService, evaluationCriteriaBusinessService) {
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
+        this.evaluationCriteriaBusinessService = evaluationCriteriaBusinessService;
     }
     async getWbsEvaluationCriteriaList(filter) {
         return await this.evaluationCriteriaManagementService.WBS_평가기준_목록을_조회한다({
@@ -54,6 +57,30 @@ let WbsEvaluationCriteriaManagementController = class WbsEvaluationCriteriaManag
         const deletedBy = user.id;
         const success = await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(wbsItemId, deletedBy);
         return { success };
+    }
+    async submitEvaluationCriteria(dto, user) {
+        const submittedBy = user.id;
+        const result = await this.evaluationCriteriaBusinessService.평가기준을_제출하고_재작성요청을_완료한다(dto.evaluationPeriodId, dto.employeeId, submittedBy);
+        return {
+            id: result.id,
+            evaluationPeriodId: result.evaluationPeriodId,
+            employeeId: result.employeeId,
+            isCriteriaSubmitted: result.isCriteriaSubmitted,
+            criteriaSubmittedAt: result.criteriaSubmittedAt,
+            criteriaSubmittedBy: result.criteriaSubmittedBy,
+        };
+    }
+    async resetEvaluationCriteriaSubmission(dto, user) {
+        const updatedBy = user.id;
+        const result = await this.evaluationCriteriaManagementService.평가기준_제출을_초기화한다(dto.evaluationPeriodId, dto.employeeId, updatedBy);
+        return {
+            id: result.id,
+            evaluationPeriodId: result.evaluationPeriodId,
+            employeeId: result.employeeId,
+            isCriteriaSubmitted: result.isCriteriaSubmitted,
+            criteriaSubmittedAt: result.criteriaSubmittedAt,
+            criteriaSubmittedBy: result.criteriaSubmittedBy,
+        };
     }
 };
 exports.WbsEvaluationCriteriaManagementController = WbsEvaluationCriteriaManagementController;
@@ -103,10 +130,27 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], WbsEvaluationCriteriaManagementController.prototype, "deleteWbsItemEvaluationCriteria", null);
+__decorate([
+    (0, wbs_evaluation_criteria_api_decorators_1.SubmitEvaluationCriteria)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [wbs_evaluation_criteria_dto_1.SubmitEvaluationCriteriaDto, Object]),
+    __metadata("design:returntype", Promise)
+], WbsEvaluationCriteriaManagementController.prototype, "submitEvaluationCriteria", null);
+__decorate([
+    (0, wbs_evaluation_criteria_api_decorators_1.ResetEvaluationCriteriaSubmission)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, decorators_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [wbs_evaluation_criteria_dto_1.SubmitEvaluationCriteriaDto, Object]),
+    __metadata("design:returntype", Promise)
+], WbsEvaluationCriteriaManagementController.prototype, "resetEvaluationCriteriaSubmission", null);
 exports.WbsEvaluationCriteriaManagementController = WbsEvaluationCriteriaManagementController = __decorate([
     (0, swagger_1.ApiTags)('B-3. 관리자 - 평가 설정 - WBS 평가기준'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/evaluation-criteria/wbs-evaluation-criteria'),
-    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService])
+    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
+        evaluation_criteria_business_service_1.EvaluationCriteriaBusinessService])
 ], WbsEvaluationCriteriaManagementController);
 //# sourceMappingURL=wbs-evaluation-criteria-management.controller.js.map

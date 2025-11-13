@@ -25,6 +25,15 @@ export interface IEvaluationPeriodEmployeeMapping {
   /** 제외 처리 일시 */
   readonly excludedAt?: Date | null;
 
+  /** 평가기준 제출 여부 */
+  readonly isCriteriaSubmitted: boolean;
+
+  /** 평가기준 제출 일시 */
+  readonly criteriaSubmittedAt?: Date | null;
+
+  /** 평가기준 제출 처리자 ID */
+  readonly criteriaSubmittedBy?: string | null;
+
   /** 생성자 ID */
   readonly createdBy?: string;
 

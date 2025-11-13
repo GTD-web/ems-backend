@@ -7,6 +7,7 @@
 사용되는 컨트롤러
 - step-approval
 - performance-evaluation (제출 상태 검증용)
+- evaluation-criteria (평가기준 제출 검증용)
 - dashboard (승인 상태 검증용)
 
 - **단계 승인 기본 관리** 
@@ -23,6 +24,10 @@
         - **재작성 요청 생성 검증**
             - revision_requested 상태로 변경 시 재작성 요청이 자동 생성됨
             - 재작성 요청은 피평가자 + 1차평가자에게 전송됨
+        - **재작성 요청 생성 시 제출 상태 초기화 검증**
+            - revision_requested 상태로 변경 시 평가기준 제출 상태가 초기화됨
+            - isCriteriaSubmitted가 false로 변경됨
+            - criteriaSubmittedAt, criteriaSubmittedBy가 초기화됨
     - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인 상태 변경)
         - status: pending, approved, revision_requested 중 하나
         - revisionComment: revision_requested 상태일 때 필수
@@ -363,12 +368,133 @@
                 - downwardEvaluation.secondary.evaluators[0].status가 'in_progress'인지 확인
                 - downwardEvaluation.secondary.evaluators[1].status가 'pending'인지 확인
 
+- **평가기준 제출 및 재작성 요청 시나리오** 
+    - **초기 구성 데이터 생성 (beforeEach에서 수행)**
+        - POST /admin/seed-data (시드 데이터 생성)
+            - 직원, 프로젝트, WBS 생성
+        - POST /admin/evaluation-periods (평가기간 생성)
+        - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+        - POST /admin/evaluation-periods/{id}/targets/bulk (평가 대상자 대량 등록)
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+        - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+        - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 매핑 구성)
+    - **시나리오 1: 평가기준 제출 → 재작성 요청 → 재제출**
+        - **1단계: 평가기준 제출 전 상태 확인**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - criteriaSetup.criteriaSubmission.isSubmitted가 false인지 확인
+                - criteriaSetup.criteriaSubmission.submittedAt이 null인지 확인
+                - criteriaSetup.criteriaSubmission.submittedBy가 null인지 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                - summary.criteriaSubmission.isSubmitted가 false인지 확인
+                - summary.criteriaSubmission.submittedAt이 null인지 확인
+                - summary.criteriaSubmission.submittedBy가 null인지 확인
+        - **2단계: 평가기준 제출**
+            - POST /admin/evaluation-criteria/wbs-evaluation-criteria/submit (평가기준 제출)
+                - evaluationPeriodId, employeeId 전송
+            - **제출 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 true로 변경되었는지 확인
+                    - criteriaSetup.criteriaSubmission.submittedAt이 설정되었는지 확인
+                    - criteriaSetup.criteriaSubmission.submittedBy가 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - summary.criteriaSubmission.isSubmitted가 true로 변경되었는지 확인
+                    - summary.criteriaSubmission.submittedAt이 설정되었는지 확인
+                    - summary.criteriaSubmission.submittedBy가 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status (직원 목록 상태 조회)
+                    - employees[].criteriaSetup.criteriaSubmission.isSubmitted가 true인지 확인
+        - **3단계: 재작성 요청 생성**
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 재작성 요청)
+                - status: revision_requested로 변경
+                - revisionComment: 재작성 요청 코멘트 필수
+            - **제출 상태 초기화 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 false로 변경되었는지 확인
+                    - criteriaSetup.criteriaSubmission.submittedAt이 null로 초기화되었는지 확인
+                    - criteriaSetup.criteriaSubmission.submittedBy가 null로 초기화되었는지 확인
+                    - stepApproval.criteriaStatus가 'revision_requested'인지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - summary.criteriaSubmission.isSubmitted가 false로 변경되었는지 확인
+                    - summary.criteriaSubmission.submittedAt이 null로 초기화되었는지 확인
+                    - summary.criteriaSubmission.submittedBy가 null로 초기화되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status (직원 목록 상태 조회)
+                    - employees[].criteriaSetup.criteriaSubmission.isSubmitted가 false인지 확인
+            - **재작성 요청 생성 검증**
+                - 재작성 요청이 생성되었는지 확인 (GET /admin/revision-requests)
+                - 재작성 요청이 피평가자 + 1차평가자에게 전송되었는지 확인
+        - **4단계: 재제출**
+            - POST /admin/evaluation-criteria/wbs-evaluation-criteria/submit (평가기준 재제출)
+                - evaluationPeriodId, employeeId 전송
+            - **재제출 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 true로 변경되었는지 확인
+                    - criteriaSetup.criteriaSubmission.submittedAt이 새로 설정되었는지 확인
+                    - criteriaSetup.criteriaSubmission.submittedBy가 새로 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - summary.criteriaSubmission.isSubmitted가 true로 변경되었는지 확인
+                    - summary.criteriaSubmission.submittedAt이 새로 설정되었는지 확인
+                    - summary.criteriaSubmission.submittedBy가 새로 설정되었는지 확인
+            - **재작성 요청 자동 완료 검증**
+                - 재작성 요청이 자동으로 완료 처리되었는지 확인 (GET /admin/revision-requests)
+                - 재작성 요청의 isCompleted가 true인지 확인
+        - **5단계: 승인**
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 승인)
+                - status: approved로 변경
+            - **승인 상태 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - stepApproval.criteriaStatus가 'approved'인지 확인
+                    - stepApproval.criteriaApprovedBy가 설정되었는지 확인
+                    - stepApproval.criteriaApprovedAt이 설정되었는지 확인
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 true로 유지되는지 확인
+    - **시나리오 2: 평가기준 미제출 상태에서 승인**
+        - **1단계: 평가기준 미제출 상태 확인**
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - criteriaSetup.criteriaSubmission.isSubmitted가 false인지 확인
+                - criteriaSetup.criteriaSubmission.submittedAt이 null인지 확인
+                - criteriaSetup.criteriaSubmission.submittedBy가 null인지 확인
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                - summary.criteriaSubmission.isSubmitted가 false인지 확인
+                - summary.criteriaSubmission.submittedAt이 null인지 확인
+                - summary.criteriaSubmission.submittedBy가 null인지 확인
+        - **2단계: 평가기준 미제출 상태에서 승인**
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 승인)
+                - status: approved로 변경
+            - **승인 시 제출 상태 자동 변경 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - stepApproval.criteriaStatus가 'approved'인지 확인
+                    - stepApproval.criteriaApprovedBy가 설정되었는지 확인
+                    - stepApproval.criteriaApprovedAt이 설정되었는지 확인
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 true로 자동 변경되었는지 확인
+                    - criteriaSetup.criteriaSubmission.submittedAt이 설정되었는지 확인
+                    - criteriaSetup.criteriaSubmission.submittedBy가 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId}/assigned-data (직원 할당 데이터 조회)
+                    - summary.criteriaSubmission.isSubmitted가 true로 자동 변경되었는지 확인
+                    - summary.criteriaSubmission.submittedAt이 설정되었는지 확인
+                    - summary.criteriaSubmission.submittedBy가 설정되었는지 확인
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/status (직원 목록 상태 조회)
+                    - employees[].criteriaSetup.criteriaSubmission.isSubmitted가 true인지 확인
+                    - employees[].stepApproval.criteriaStatus가 'approved'인지 확인
+        - **3단계: 이미 제출된 상태에서 승인 검증 (idempotent)**
+            - POST /admin/evaluation-criteria/wbs-evaluation-criteria/submit (평가기준 제출)
+                - evaluationPeriodId, employeeId 전송
+            - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 승인)
+                - status: approved로 변경 (이미 approved 상태)
+            - **이미 승인된 상태에서 재승인 검증**
+                - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                    - stepApproval.criteriaStatus가 'approved'로 유지되는지 확인
+                    - criteriaSetup.criteriaSubmission.isSubmitted가 true로 유지되는지 확인
+                    - 에러 없이 처리됨 (idempotent)
+
 - **엣지 케이스 검증** 
     - **재작성 요청 코멘트 누락**
         - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
             - revisionComment 누락: revision_requested 상태인데 revisionComment 누락 시 400 에러
             - revisionComment 빈 문자열: revisionComment가 빈 문자열인 경우 400 에러
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 승인)
+            - revisionComment 누락: revision_requested 상태인데 revisionComment 누락 시 400 에러
+            - revisionComment 빈 문자열: revisionComment가 빈 문자열인 경우 400 에러
     - **존재하지 않는 리소스**
         - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)
+            - 존재하지 않는 평가기간-직원 조합: 존재하지 않는 평가기간-직원 조합으로 요청 시 404 에러
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 승인)
             - 존재하지 않는 평가기간-직원 조합: 존재하지 않는 평가기간-직원 조합으로 요청 시 404 에러
 

@@ -101,6 +101,9 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 'mapping.isExcluded AS mapping_isexcluded',
                 'mapping.excludeReason AS mapping_excludereason',
                 'mapping.excludedAt AS mapping_excludedat',
+                'mapping.isCriteriaSubmitted AS mapping_iscriteriasubmitted',
+                'mapping.criteriaSubmittedAt AS mapping_criteriasubmittedat',
+                'mapping.criteriaSubmittedBy AS mapping_criteriasubmittedby',
                 'mapping.deletedAt AS mapping_deletedat',
                 'period.name AS period_name',
                 'period.status AS period_status',
@@ -335,7 +338,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     hasSecondaryEvaluator,
                 },
                 criteriaSetup: {
-                    status: (0, evaluation_criteria_utils_1.평가기준설정_상태를_계산한다)(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus, stepApproval?.criteriaSettingStatus ?? null),
+                    status: (0, evaluation_criteria_utils_1.평가기준설정_상태를_계산한다)(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus, stepApproval?.criteriaSettingStatus ?? null, result.mapping_iscriteriasubmitted || false),
                     evaluationCriteria: {
                         status: evaluationCriteriaStatus,
                         assignedProjectCount: projectCount,
@@ -349,6 +352,11 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                         status: evaluationLineStatus,
                         hasPrimaryEvaluator,
                         hasSecondaryEvaluator,
+                    },
+                    criteriaSubmission: {
+                        isSubmitted: result.mapping_iscriteriasubmitted || false,
+                        submittedAt: result.mapping_criteriasubmittedat || null,
+                        submittedBy: result.mapping_criteriasubmittedby || null,
                     },
                 },
                 performanceInput: {

@@ -615,6 +615,33 @@ export class SelfEvaluationSummaryDto implements SelfEvaluationSummary {
 }
 
 /**
+ * 평가기준 제출 정보 DTO
+ */
+export class CriteriaSubmissionInfoDto {
+  @ApiProperty({
+    description: '평가기준 제출 여부',
+    example: false,
+  })
+  isSubmitted: boolean;
+
+  @ApiProperty({
+    description: '평가기준 제출 일시',
+    type: 'string',
+    format: 'date-time',
+    example: '2024-03-15T14:30:00.000Z',
+    nullable: true,
+  })
+  submittedAt: Date | null;
+
+  @ApiProperty({
+    description: '평가기준 제출자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+    nullable: true,
+  })
+  submittedBy: string | null;
+}
+
+/**
  * 할당 데이터 요약 DTO
  * Context의 AssignmentSummary 타입과 일치해야 함
  */
@@ -663,6 +690,13 @@ export class AssignmentSummaryDto implements AssignmentSummary {
   })
   @Type(() => SecondaryDownwardEvaluationDto)
   secondaryDownwardEvaluation: SecondaryDownwardEvaluationDto;
+
+  @ApiProperty({
+    description: '평가기준 제출 상태',
+    type: CriteriaSubmissionInfoDto,
+  })
+  @Type(() => CriteriaSubmissionInfoDto)
+  criteriaSubmission: CriteriaSubmissionInfoDto;
 }
 
 /**

@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EvaluatorAssignedEmployeesDataResponseDto = exports.EvaluateeAssignedDataDto = exports.EmployeeAssignedDataResponseDto = exports.AssignedProjectWithWbsDto = exports.AssignmentSummaryDto = exports.SelfEvaluationSummaryDto = exports.SecondaryDownwardEvaluationDto = exports.SecondaryEvaluatorDto = exports.EvaluationScoreDto = exports.ProjectManagerDto = exports.AssignedWbsInfoDto = exports.WbsDownwardEvaluationDto = exports.DeliverableInfoDto = exports.WbsPerformanceDto = exports.WbsEvaluationCriterionDto = exports.EmployeeInfoDto = exports.EvaluationPeriodInfoDto = void 0;
+exports.EvaluatorAssignedEmployeesDataResponseDto = exports.EvaluateeAssignedDataDto = exports.EmployeeAssignedDataResponseDto = exports.AssignedProjectWithWbsDto = exports.AssignmentSummaryDto = exports.CriteriaSubmissionInfoDto = exports.SelfEvaluationSummaryDto = exports.SecondaryDownwardEvaluationDto = exports.SecondaryEvaluatorDto = exports.EvaluationScoreDto = exports.ProjectManagerDto = exports.AssignedWbsInfoDto = exports.WbsDownwardEvaluationDto = exports.DeliverableInfoDto = exports.WbsPerformanceDto = exports.WbsEvaluationCriterionDto = exports.EmployeeInfoDto = exports.EvaluationPeriodInfoDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 class EvaluationPeriodInfoDto {
@@ -727,6 +727,37 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], SelfEvaluationSummaryDto.prototype, "isSubmittedToManager", void 0);
+class CriteriaSubmissionInfoDto {
+    isSubmitted;
+    submittedAt;
+    submittedBy;
+}
+exports.CriteriaSubmissionInfoDto = CriteriaSubmissionInfoDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기준 제출 여부',
+        example: false,
+    }),
+    __metadata("design:type", Boolean)
+], CriteriaSubmissionInfoDto.prototype, "isSubmitted", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기준 제출 일시',
+        type: 'string',
+        format: 'date-time',
+        example: '2024-03-15T14:30:00.000Z',
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], CriteriaSubmissionInfoDto.prototype, "submittedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기준 제출자 ID',
+        example: '123e4567-e89b-12d3-a456-426614174001',
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], CriteriaSubmissionInfoDto.prototype, "submittedBy", void 0);
 class AssignmentSummaryDto {
     totalProjects;
     totalWbs;
@@ -735,6 +766,7 @@ class AssignmentSummaryDto {
     selfEvaluation;
     primaryDownwardEvaluation;
     secondaryDownwardEvaluation;
+    criteriaSubmission;
 }
 exports.AssignmentSummaryDto = AssignmentSummaryDto;
 __decorate([
@@ -789,6 +821,14 @@ __decorate([
     (0, class_transformer_1.Type)(() => SecondaryDownwardEvaluationDto),
     __metadata("design:type", SecondaryDownwardEvaluationDto)
 ], AssignmentSummaryDto.prototype, "secondaryDownwardEvaluation", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기준 제출 상태',
+        type: CriteriaSubmissionInfoDto,
+    }),
+    (0, class_transformer_1.Type)(() => CriteriaSubmissionInfoDto),
+    __metadata("design:type", CriteriaSubmissionInfoDto)
+], AssignmentSummaryDto.prototype, "criteriaSubmission", void 0);
 class AssignedProjectWithWbsDto {
     projectId;
     projectName;

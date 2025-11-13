@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
 import { StepApprovalContextModule } from '@context/step-approval-context/step-approval-context.module';
 import { EvaluationActivityLogContextModule } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.module';
+import { EvaluationCriteriaManagementContextModule } from '@context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { StepApprovalBusinessService } from './step-approval-business.service';
 
 /**
@@ -14,6 +15,7 @@ import { StepApprovalBusinessService } from './step-approval-business.service';
     PerformanceEvaluationContextModule,
     StepApprovalContextModule,
     EvaluationActivityLogContextModule,
+    EvaluationCriteriaManagementContextModule,
   ],
   providers: [StepApprovalBusinessService],
   exports: [StepApprovalBusinessService],

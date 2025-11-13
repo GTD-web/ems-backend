@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WbsItemEvaluationCriteriaResponseDto = exports.WbsEvaluationCriteriaDetailDto = exports.WbsEvaluationCriteriaListResponseDto = exports.WbsEvaluationCriteriaDto = exports.EvaluationPeriodManualSettingsDto = exports.WbsEvaluationCriteriaFilterDto = exports.UpdateWbsEvaluationCriteriaDto = exports.UpsertWbsEvaluationCriteriaBodyDto = exports.CreateWbsEvaluationCriteriaDto = void 0;
+exports.EvaluationCriteriaSubmissionResponseDto = exports.SubmitEvaluationCriteriaDto = exports.WbsItemEvaluationCriteriaResponseDto = exports.WbsEvaluationCriteriaDetailDto = exports.WbsEvaluationCriteriaListResponseDto = exports.WbsEvaluationCriteriaDto = exports.EvaluationPeriodManualSettingsDto = exports.WbsEvaluationCriteriaFilterDto = exports.UpdateWbsEvaluationCriteriaDto = exports.UpsertWbsEvaluationCriteriaBodyDto = exports.CreateWbsEvaluationCriteriaDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class CreateWbsEvaluationCriteriaDto {
@@ -298,4 +298,78 @@ __decorate([
     }),
     __metadata("design:type", Array)
 ], WbsItemEvaluationCriteriaResponseDto.prototype, "criteria", void 0);
+class SubmitEvaluationCriteriaDto {
+    evaluationPeriodId;
+    employeeId;
+}
+exports.SubmitEvaluationCriteriaDto = SubmitEvaluationCriteriaDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기간 ID',
+        example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], SubmitEvaluationCriteriaDto.prototype, "evaluationPeriodId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '직원 ID',
+        example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], SubmitEvaluationCriteriaDto.prototype, "employeeId", void 0);
+class EvaluationCriteriaSubmissionResponseDto {
+    id;
+    evaluationPeriodId;
+    employeeId;
+    isCriteriaSubmitted;
+    criteriaSubmittedAt;
+    criteriaSubmittedBy;
+}
+exports.EvaluationCriteriaSubmissionResponseDto = EvaluationCriteriaSubmissionResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '맵핑 ID',
+        example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7',
+    }),
+    __metadata("design:type", String)
+], EvaluationCriteriaSubmissionResponseDto.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기간 ID',
+        example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+    }),
+    __metadata("design:type", String)
+], EvaluationCriteriaSubmissionResponseDto.prototype, "evaluationPeriodId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '직원 ID',
+        example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+    }),
+    __metadata("design:type", String)
+], EvaluationCriteriaSubmissionResponseDto.prototype, "employeeId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기준 제출 여부',
+        example: true,
+    }),
+    __metadata("design:type", Boolean)
+], EvaluationCriteriaSubmissionResponseDto.prototype, "isCriteriaSubmitted", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '평가기준 제출 일시',
+        example: '2024-01-15T10:30:00.000Z',
+    }),
+    __metadata("design:type", Object)
+], EvaluationCriteriaSubmissionResponseDto.prototype, "criteriaSubmittedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '평가기준 제출 처리자 ID',
+        example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8',
+    }),
+    __metadata("design:type", Object)
+], EvaluationCriteriaSubmissionResponseDto.prototype, "criteriaSubmittedBy", void 0);
 //# sourceMappingURL=wbs-evaluation-criteria.dto.js.map

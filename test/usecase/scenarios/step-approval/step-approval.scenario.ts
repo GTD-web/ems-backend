@@ -5,6 +5,7 @@ import { WbsSelfEvaluationApiClient } from '../api-clients/wbs-self-evaluation.a
 import { DownwardEvaluationApiClient } from '../api-clients/downward-evaluation.api-client';
 import { RevisionRequestApiClient } from '../api-clients/revision-request.api-client';
 import { EvaluationLineApiClient } from '../api-clients/evaluation-line.api-client';
+import { WbsEvaluationCriteriaApiClient } from '../api-clients/wbs-evaluation-criteria.api-client';
 import { EvaluationPeriodScenario } from '../evaluation-period.scenario';
 import { ProjectAssignmentScenario } from '../project-assignment/project-assignment.scenario';
 import { WbsAssignmentScenario } from '../wbs-assignment/wbs-assignment.scenario';
@@ -21,6 +22,7 @@ export class StepApprovalScenario {
   private downwardEvaluationApiClient: DownwardEvaluationApiClient;
   private revisionRequestApiClient: RevisionRequestApiClient;
   private evaluationLineApiClient: EvaluationLineApiClient;
+  private wbsEvaluationCriteriaApiClient: WbsEvaluationCriteriaApiClient;
   private evaluationPeriodScenario: EvaluationPeriodScenario;
   private projectAssignmentScenario: ProjectAssignmentScenario;
   private wbsAssignmentScenario: WbsAssignmentScenario;
@@ -34,6 +36,9 @@ export class StepApprovalScenario {
     );
     this.revisionRequestApiClient = new RevisionRequestApiClient(testSuite);
     this.evaluationLineApiClient = new EvaluationLineApiClient(testSuite);
+    this.wbsEvaluationCriteriaApiClient = new WbsEvaluationCriteriaApiClient(
+      testSuite,
+    );
     this.evaluationPeriodScenario = new EvaluationPeriodScenario(testSuite);
     this.projectAssignmentScenario = new ProjectAssignmentScenario(testSuite);
     this.wbsAssignmentScenario = new WbsAssignmentScenario(testSuite);
@@ -139,6 +144,68 @@ export class StepApprovalScenario {
     revisionComment?: string;
   }) {
     return await this.stepApprovalApiClient.updateCriteriaStepApproval(config);
+  }
+
+  /**
+   * 평가기준을 제출한다
+   */
+  async 평가기준을_제출한다(config: {
+    evaluationPeriodId: string;
+    employeeId: string;
+  }) {
+    return await this.wbsEvaluationCriteriaApiClient.submitEvaluationCriteria(
+      config,
+    );
+  }
+
+  /**
+   * 평가기준 제출을 초기화한다
+   */
+  async 평가기준_제출을_초기화한다(config: {
+    evaluationPeriodId: string;
+    employeeId: string;
+  }) {
+    return await this.wbsEvaluationCriteriaApiClient.resetEvaluationCriteriaSubmission(
+      config,
+    );
+  }
+
+  /**
+   * 평가기준 제출 상태를 대시보드에서 조회한다
+   */
+  async 평가기준_제출상태를_대시보드에서_조회한다(config: {
+    evaluationPeriodId: string;
+    employeeId: string;
+  }) {
+    return await this.dashboardApiClient.getEmployeeEvaluationPeriodStatus({
+      periodId: config.evaluationPeriodId,
+      employeeId: config.employeeId,
+    });
+  }
+
+  /**
+   * 평가기준 제출 상태를 할당 데이터에서 조회한다
+   */
+  async 평가기준_제출상태를_할당데이터에서_조회한다(config: {
+    evaluationPeriodId: string;
+    employeeId: string;
+  }) {
+    return await this.dashboardApiClient.getEmployeeAssignedData({
+      periodId: config.evaluationPeriodId,
+      employeeId: config.employeeId,
+    });
+  }
+
+  /**
+   * 직원 목록 상태를 조회한다
+   */
+  async 직원_목록_상태를_조회한다(config: { evaluationPeriodId: string }) {
+    const response = await this.testSuite
+      .request()
+      .get(`/admin/dashboard/${config.evaluationPeriodId}/employees/status`)
+      .expect(200);
+
+    return response.body;
   }
 
   // ==================== 자기평가 단계 승인 ====================

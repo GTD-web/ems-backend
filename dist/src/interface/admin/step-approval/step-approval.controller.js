@@ -53,13 +53,24 @@ let StepApprovalController = class StepApprovalController {
         });
     }
     async updateCriteriaStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
-        await this.stepApprovalBusinessService.평가기준설정_확인상태를_변경한다({
-            evaluationPeriodId,
-            employeeId,
-            status: dto.status,
-            revisionComment: dto.revisionComment,
-            updatedBy,
-        });
+        if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {
+            if (!dto.revisionComment || dto.revisionComment.trim() === '') {
+                throw new common_1.BadRequestException('재작성 요청 코멘트는 필수입니다.');
+            }
+            await this.stepApprovalBusinessService.평가기준설정_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId, employeeId, dto.revisionComment, updatedBy);
+        }
+        else {
+            if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.APPROVED) {
+                await this.stepApprovalBusinessService.평가기준설정_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+            }
+            await this.stepApprovalBusinessService.평가기준설정_확인상태를_변경한다({
+                evaluationPeriodId,
+                employeeId,
+                status: dto.status,
+                revisionComment: dto.revisionComment,
+                updatedBy,
+            });
+        }
     }
     async updateSelfStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
         if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {

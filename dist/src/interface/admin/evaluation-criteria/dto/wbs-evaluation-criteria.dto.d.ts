@@ -54,3 +54,15 @@ export declare class WbsItemEvaluationCriteriaResponseDto {
     wbsItemId: string;
     criteria: WbsEvaluationCriteriaDto[];
 }
+export declare class SubmitEvaluationCriteriaDto {
+    evaluationPeriodId: string;
+    employeeId: string;
+}
+export declare class EvaluationCriteriaSubmissionResponseDto {
+    id: string;
+    evaluationPeriodId: string;
+    employeeId: string;
+    isCriteriaSubmitted: boolean;
+    criteriaSubmittedAt?: Date | null;
+    criteriaSubmittedBy?: string | null;
+}

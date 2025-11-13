@@ -4,6 +4,8 @@ import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { EntityManager, Repository } from 'typeorm';
 import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-criteria-management.interface';
 import { WbsAssignmentValidationService } from './services/wbs-assignment-validation.service';
+import { EvaluationPeriodEmployeeMappingService } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.service';
+import type { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
 import { type AvailableProjectsResult, type ProjectAssignmentListResult } from './handlers/project-assignment';
 import { type WbsAssignmentDetailResult, type WbsAssignmentListResult } from './handlers/wbs-assignment';
 import { type AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesResult } from './handlers/evaluation-line';
@@ -21,8 +23,9 @@ export declare class EvaluationCriteriaManagementService implements IEvaluationC
     private readonly evaluationLineMappingRepository;
     private readonly evaluationLineRepository;
     private readonly wbsAssignmentValidationService;
+    private readonly evaluationPeriodEmployeeMappingService;
     private readonly logger;
-    constructor(commandBus: CommandBus, queryBus: QueryBus, evaluationLineMappingRepository: Repository<EvaluationLineMapping>, evaluationLineRepository: Repository<EvaluationLine>, wbsAssignmentValidationService: WbsAssignmentValidationService);
+    constructor(commandBus: CommandBus, queryBus: QueryBus, evaluationLineMappingRepository: Repository<EvaluationLineMapping>, evaluationLineRepository: Repository<EvaluationLine>, wbsAssignmentValidationService: WbsAssignmentValidationService, evaluationPeriodEmployeeMappingService: EvaluationPeriodEmployeeMappingService);
     프로젝트를_할당한다(data: CreateEvaluationProjectAssignmentData, assignedBy: string): Promise<EvaluationProjectAssignmentDto>;
     프로젝트_할당을_취소한다(id: string, cancelledBy: string): Promise<void>;
     프로젝트_할당_목록을_조회한다(filter: EvaluationProjectAssignmentFilter): Promise<ProjectAssignmentListResult>;
@@ -229,4 +232,6 @@ export declare class EvaluationCriteriaManagementService implements IEvaluationC
         sortBy?: string;
         sortOrder?: 'ASC' | 'DESC';
     }): Promise<AvailableProjectsResult>;
+    평가기준을_제출한다(evaluationPeriodId: string, employeeId: string, submittedBy: string): Promise<EvaluationPeriodEmployeeMappingDto>;
+    평가기준_제출을_초기화한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<EvaluationPeriodEmployeeMappingDto>;
 }

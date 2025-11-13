@@ -146,6 +146,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'mapping.isExcluded AS mapping_isexcluded',
           'mapping.excludeReason AS mapping_excludereason',
           'mapping.excludedAt AS mapping_excludedat',
+          'mapping.isCriteriaSubmitted AS mapping_iscriteriasubmitted',
+          'mapping.criteriaSubmittedAt AS mapping_criteriasubmittedat',
+          'mapping.criteriaSubmittedBy AS mapping_criteriasubmittedby',
           'mapping.deletedAt AS mapping_deletedat',
           // 평가기간 정보
           'period.name AS period_name',
@@ -576,6 +579,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             wbsCriteriaStatus,
             evaluationLineStatus,
             stepApproval?.criteriaSettingStatus ?? null,
+            result.mapping_iscriteriasubmitted || false,
           ),
           evaluationCriteria: {
             status: evaluationCriteriaStatus,
@@ -590,6 +594,11 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             status: evaluationLineStatus,
             hasPrimaryEvaluator,
             hasSecondaryEvaluator,
+          },
+          criteriaSubmission: {
+            isSubmitted: result.mapping_iscriteriasubmitted || false,
+            submittedAt: result.mapping_criteriasubmittedat || null,
+            submittedBy: result.mapping_criteriasubmittedby || null,
           },
         },
 

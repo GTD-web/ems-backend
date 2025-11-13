@@ -169,6 +169,11 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
             selfEvaluation,
             primaryDownwardEvaluation,
             secondaryDownwardEvaluation,
+            criteriaSubmission: {
+                isSubmitted: mapping.isCriteriaSubmitted || false,
+                submittedAt: mapping.criteriaSubmittedAt || null,
+                submittedBy: mapping.criteriaSubmittedBy || null,
+            },
         };
         return {
             evaluationPeriod: {

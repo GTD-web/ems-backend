@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { DatabaseModule } from '@libs/database/database.module';
 import {
   GetEmployeeEvaluationPeriodStatusHandler,
@@ -32,6 +34,7 @@ import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.type
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
+import { RecipientType } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.types';
 import { ProjectStatus } from '@domain/common/project/project.types';
 
 /**
@@ -77,6 +80,9 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
 
   const systemAdminId = '00000000-0000-0000-0000-000000000001';
 
+  // 테스트 결과 저장용
+  const testResults: any[] = [];
+
   beforeEach(async () => {
     // 모듈 초기화
     module = await Test.createTestingModule({
@@ -116,18 +122,30 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
     evaluationPeriodRepository = dataSource.getRepository(EvaluationPeriod);
     employeeRepository = dataSource.getRepository(Employee);
     departmentRepository = dataSource.getRepository(Department);
-    mappingRepository = dataSource.getRepository(EvaluationPeriodEmployeeMapping);
-    stepApprovalRepository = dataSource.getRepository(EmployeeEvaluationStepApproval);
-    projectAssignmentRepository = dataSource.getRepository(EvaluationProjectAssignment);
+    mappingRepository = dataSource.getRepository(
+      EvaluationPeriodEmployeeMapping,
+    );
+    stepApprovalRepository = dataSource.getRepository(
+      EmployeeEvaluationStepApproval,
+    );
+    projectAssignmentRepository = dataSource.getRepository(
+      EvaluationProjectAssignment,
+    );
     wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
     wbsCriteriaRepository = dataSource.getRepository(WbsEvaluationCriteria);
     evaluationLineRepository = dataSource.getRepository(EvaluationLine);
-    evaluationLineMappingRepository = dataSource.getRepository(EvaluationLineMapping);
+    evaluationLineMappingRepository = dataSource.getRepository(
+      EvaluationLineMapping,
+    );
     downwardEvaluationRepository = dataSource.getRepository(DownwardEvaluation);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
-    revisionRequestRepository = dataSource.getRepository(EvaluationRevisionRequest);
-    revisionRequestRecipientRepository = dataSource.getRepository(EvaluationRevisionRequestRecipient);
+    revisionRequestRepository = dataSource.getRepository(
+      EvaluationRevisionRequest,
+    );
+    revisionRequestRecipientRepository = dataSource.getRepository(
+      EvaluationRevisionRequestRecipient,
+    );
 
     // 데이터베이스 스키마 동기화
     await dataSource.synchronize(true);
@@ -135,7 +153,19 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
     adminId = systemAdminId;
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
+    // 테스트 결과 JSON 파일 저장
+    const outputPath = path.join(
+      __dirname,
+      'get-employee-evaluation-period-status-approval-status-integration-result.json',
+    );
+    const output = {
+      timestamp: new Date().toISOString(),
+      testResults: testResults,
+    };
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
+    console.log(`✅ 테스트 결과가 저장되었습니다: ${outputPath}`);
+
     // 각 테스트 후 정리
     if (dataSource && dataSource.isInitialized) {
       await dataSource.destroy();
@@ -143,6 +173,10 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
     if (module) {
       await module.close();
     }
+  });
+
+  afterEach(async () => {
+    // 각 테스트 후 정리 (데이터베이스는 유지)
   });
 
   /**
@@ -174,9 +208,11 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       finalEvaluationSettingEnabled: true,
       maxSelfEvaluationRate: 120,
       createdBy: systemAdminId,
-    });
+    } as any);
     const savedPeriod = await evaluationPeriodRepository.save(evaluationPeriod);
-    evaluationPeriodId = savedPeriod.id;
+    evaluationPeriodId = Array.isArray(savedPeriod)
+      ? (savedPeriod[0] as EvaluationPeriod).id
+      : (savedPeriod as EvaluationPeriod).id;
 
     // 3. 직원 생성 (피평가자)
     const employee = employeeRepository.create({
@@ -211,7 +247,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluator = await employeeRepository.save(primaryEvaluator);
+    const savedPrimaryEvaluator =
+      await employeeRepository.save(primaryEvaluator);
     primaryEvaluatorId = savedPrimaryEvaluator.id;
 
     // 6. 평가자 생성 (2차 - 1명)
@@ -224,7 +261,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluator1 = await employeeRepository.save(secondaryEvaluator1);
+    const savedSecondaryEvaluator1 =
+      await employeeRepository.save(secondaryEvaluator1);
     secondaryEvaluatorId1 = savedSecondaryEvaluator1.id;
 
     // 7. 평가자 생성 (2차 - 2명)
@@ -237,7 +275,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluator2 = await employeeRepository.save(secondaryEvaluator2);
+    const savedSecondaryEvaluator2 =
+      await employeeRepository.save(secondaryEvaluator2);
     secondaryEvaluatorId2 = savedSecondaryEvaluator2.id;
 
     // 8. 프로젝트 생성
@@ -344,7 +383,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       isAutoAssigned: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryLine = await evaluationLineRepository.save(secondaryLine);
+    const savedSecondaryLine =
+      await evaluationLineRepository.save(secondaryLine);
 
     // 1차 평가자 매핑
     await evaluationLineMappingRepository.save(
@@ -382,10 +422,66 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
     );
   }
 
-  describe('criteriaSetup.status 통합 상태 검증', () => {
-    it('모든 항목이 complete이고 승인 상태가 approved이면 criteriaSetup.status는 approved여야 한다', async () => {
+  describe('criteriaSetup.status 통합 상태 검증 (제출 상태 포함)', () => {
+    it('모든 항목이 complete이고 제출되지 않았으면 criteriaSetup.status는 in_progress여야 한다 (제출 대기)', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
+
+      // stepApproval 생성 (approved여도 제출되지 않았으면 in_progress)
+      await stepApprovalRepository.save(
+        stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          criteriaSettingStatus: StepApprovalStatus.APPROVED,
+          criteriaSettingApprovedBy: adminId,
+          criteriaSettingApprovedAt: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 제출 상태는 false (기본값)
+
+      // When
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result!.criteriaSetup).toBeDefined();
+      expect(result!.criteriaSetup.status).toBe('in_progress'); // 제출되지 않았으므로 in_progress
+
+      // 하위 항목들도 확인
+      expect(result!.criteriaSetup.evaluationCriteria.status).toBe('complete');
+      expect(result!.criteriaSetup.wbsCriteria.status).toBe('complete');
+      expect(result!.criteriaSetup.evaluationLine.status).toBe('complete');
+      expect(result!.criteriaSetup.criteriaSubmission.isSubmitted).toBe(false);
+
+      testResults.push({
+        testName:
+          '모든 항목이 complete이고 제출되지 않았으면 criteriaSetup.status는 in_progress여야 한다 (제출 대기)',
+        result: {
+          criteriaSetup: {
+            status: result!.criteriaSetup.status,
+            criteriaSubmission: result!.criteriaSetup.criteriaSubmission,
+          },
+        },
+      });
+    });
+
+    it('모든 항목이 complete이고 제출되었고 승인 상태가 approved이면 criteriaSetup.status는 approved여야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 평가기준 제출 상태 설정
+      const mapping = await mappingRepository.findOne({
+        where: { id: mappingId },
+      });
+      if (mapping) {
+        mapping.평가기준을_제출한다(systemAdminId);
+        await mappingRepository.save(mapping);
+      }
 
       // stepApproval 생성 (approved)
       await stepApprovalRepository.save(
@@ -414,11 +510,60 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       expect(result!.criteriaSetup.evaluationCriteria.status).toBe('complete');
       expect(result!.criteriaSetup.wbsCriteria.status).toBe('complete');
       expect(result!.criteriaSetup.evaluationLine.status).toBe('complete');
+      expect(result!.criteriaSetup.criteriaSubmission.isSubmitted).toBe(true);
+
+      testResults.push({
+        testName:
+          '모든 항목이 complete이고 제출되었고 승인 상태가 approved이면 criteriaSetup.status는 approved여야 한다',
+        result: {
+          criteriaSetup: {
+            status: result!.criteriaSetup.status,
+            criteriaSubmission: result!.criteriaSetup.criteriaSubmission,
+          },
+        },
+      });
     });
 
-    it('모든 항목이 complete이고 승인 상태가 pending이면 criteriaSetup.status는 pending이어야 한다', async () => {
+    it('모든 항목이 complete이고 제출되지 않았고 승인 상태가 pending이면 criteriaSetup.status는 in_progress여야 한다 (제출 대기)', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
+
+      // stepApproval 생성 (pending)
+      await stepApprovalRepository.save(
+        stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          criteriaSettingStatus: StepApprovalStatus.PENDING,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 제출 상태는 false (기본값)
+
+      // When
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result!.criteriaSetup.status).toBe('in_progress'); // 제출되지 않았으므로 in_progress
+      expect(result!.criteriaSetup.criteriaSubmission.isSubmitted).toBe(false);
+    });
+
+    it('모든 항목이 complete이고 제출되었고 승인 상태가 pending이면 criteriaSetup.status는 pending이어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 평가기준 제출 상태 설정
+      const mapping = await mappingRepository.findOne({
+        where: { id: mappingId },
+      });
+      if (mapping) {
+        mapping.평가기준을_제출한다(systemAdminId);
+        await mappingRepository.save(mapping);
+      }
 
       // stepApproval 생성 (pending)
       await stepApprovalRepository.save(
@@ -439,11 +584,73 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       // Then
       expect(result).toBeDefined();
       expect(result!.criteriaSetup.status).toBe('pending');
+      expect(result!.criteriaSetup.criteriaSubmission.isSubmitted).toBe(true);
+
+      testResults.push({
+        testName:
+          '모든 항목이 complete이고 제출되었고 승인 상태가 pending이면 criteriaSetup.status는 pending이어야 한다',
+        result: {
+          criteriaSetup: {
+            status: result!.criteriaSetup.status,
+            criteriaSubmission: result!.criteriaSetup.criteriaSubmission,
+          },
+        },
+      });
     });
 
-    it('모든 항목이 complete이고 승인 상태가 revision_requested이면 criteriaSetup.status는 revision_requested이어야 한다', async () => {
+    it('모든 항목이 complete이고 승인 상태가 revision_requested이면 criteriaSetup.status는 revision_requested이어야 한다 (제출 여부 무관)', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
+
+      // stepApproval 생성 (revision_requested)
+      await stepApprovalRepository.save(
+        stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          criteriaSettingStatus: StepApprovalStatus.REVISION_REQUESTED,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 제출 상태는 false (기본값) - 재작성 요청은 제출 여부와 무관하게 우선 반환
+
+      // When
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result!.criteriaSetup.status).toBe('revision_requested'); // 제출 여부와 무관하게 revision_requested
+
+      testResults.push({
+        testName:
+          '모든 항목이 complete이고 승인 상태가 revision_requested이면 criteriaSetup.status는 revision_requested이어야 한다 (제출 여부 무관)',
+        result: {
+          criteriaSetup: {
+            status: result!.criteriaSetup.status,
+            criteriaSubmission: result!.criteriaSetup.criteriaSubmission,
+          },
+          stepApproval: {
+            criteriaSettingStatus: result!.stepApproval.criteriaSettingStatus,
+          },
+        },
+      });
+    });
+
+    it('모든 항목이 complete이고 제출되었고 승인 상태가 revision_requested이면 criteriaSetup.status는 revision_requested이어야 한다 (제출 여부 무관)', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 평가기준 제출 상태 설정
+      const mapping = await mappingRepository.findOne({
+        where: { id: mappingId },
+      });
+      if (mapping) {
+        mapping.평가기준을_제출한다(systemAdminId);
+        await mappingRepository.save(mapping);
+      }
 
       // stepApproval 생성 (revision_requested)
       await stepApprovalRepository.save(
@@ -463,7 +670,112 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
 
       // Then
       expect(result).toBeDefined();
-      expect(result!.criteriaSetup.status).toBe('revision_requested');
+      expect(result!.criteriaSetup.status).toBe('revision_requested'); // 제출 여부와 무관하게 revision_requested
+      expect(result!.criteriaSetup.criteriaSubmission.isSubmitted).toBe(true);
+
+      testResults.push({
+        testName:
+          '모든 항목이 complete이고 제출되었고 승인 상태가 revision_requested이면 criteriaSetup.status는 revision_requested이어야 한다 (제출 여부 무관)',
+        result: {
+          criteriaSetup: {
+            status: result!.criteriaSetup.status,
+            criteriaSubmission: result!.criteriaSetup.criteriaSubmission,
+          },
+          stepApproval: {
+            criteriaSettingStatus: result!.stepApproval.criteriaSettingStatus,
+          },
+        },
+      });
+    });
+
+    it('재작성 요청 후 완료 응답을 하면 criteriaSetup.status는 revision_completed이어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 평가기준 제출 상태 설정
+      const mapping = await mappingRepository.findOne({
+        where: { id: mappingId },
+      });
+      if (mapping) {
+        mapping.평가기준을_제출한다(systemAdminId);
+        await mappingRepository.save(mapping);
+      }
+
+      // 재작성 요청 생성
+      const revisionRequest = await revisionRequestRepository.save(
+        revisionRequestRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          step: 'criteria',
+          comment: '재작성 요청',
+          requestedBy: adminId,
+          requestedAt: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      const recipient = await revisionRequestRecipientRepository.save(
+        revisionRequestRecipientRepository.create({
+          revisionRequestId: revisionRequest.id,
+          recipientId: employeeId,
+          recipientType: RecipientType.EVALUATEE,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // stepApproval 생성 (revision_requested)
+      await stepApprovalRepository.save(
+        stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          criteriaSettingStatus: StepApprovalStatus.REVISION_REQUESTED,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 완료 응답 처리
+      if (!Array.isArray(recipient)) {
+        recipient.isCompleted = true;
+        recipient.completedAt = new Date();
+        recipient.responseComment = '재작성 완료';
+        await revisionRequestRecipientRepository.save(recipient);
+      }
+
+      // stepApproval 상태를 revision_completed로 변경
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.평가기준설정_재작성완료상태로_변경한다(systemAdminId);
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // When
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).toBeDefined();
+      expect(result!.criteriaSetup.status).toBe('revision_completed');
+      expect(result!.stepApproval.criteriaSettingStatus).toBe(
+        'revision_completed',
+      );
+
+      testResults.push({
+        testName:
+          '재작성 요청 후 완료 응답을 하면 criteriaSetup.status는 revision_completed이어야 한다',
+        result: {
+          criteriaSetup: {
+            status: result!.criteriaSetup.status,
+            criteriaSubmission: result!.criteriaSetup.criteriaSubmission,
+          },
+          stepApproval: {
+            criteriaSettingStatus: result!.stepApproval.criteriaSettingStatus,
+          },
+        },
+      });
     });
 
     it('하나라도 complete가 아니면 criteriaSetup.status는 in_progress이어야 한다', async () => {
@@ -805,8 +1117,12 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       expect(result).toBeDefined();
       expect(result!.downwardEvaluation.secondary.status).toBe('approved');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('approved');
-      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe('approved');
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'approved',
+      );
+      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe(
+        'approved',
+      );
     });
 
     it('하나라도 revision_requested가 있으면 secondary.status는 revision_requested이어야 한다', async () => {
@@ -891,7 +1207,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
         revisionRequestRecipientRepository.create({
           revisionRequestId: revisionRequest.id,
           recipientId: secondaryEvaluatorId1,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           createdBy: systemAdminId,
         }),
       );
@@ -914,8 +1230,12 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
 
       // Then
       expect(result).toBeDefined();
-      expect(result!.downwardEvaluation.secondary.status).toBe('revision_requested');
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('revision_requested');
+      expect(result!.downwardEvaluation.secondary.status).toBe(
+        'revision_requested',
+      );
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'revision_requested',
+      );
     });
 
     it('모두 complete이고 모두 pending이면 secondary.status는 pending이어야 한다', async () => {
@@ -1099,16 +1419,18 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
         revisionRequestRecipientRepository.create({
           revisionRequestId: revisionRequest.id,
           recipientId: secondaryEvaluatorId1,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           createdBy: systemAdminId,
         }),
       );
 
       // 재작성 완료 처리
-      recipient.isCompleted = true;
-      recipient.completedAt = new Date();
-      recipient.responseComment = '재작성 완료';
-      await revisionRequestRecipientRepository.save(recipient);
+      if (!Array.isArray(recipient)) {
+        recipient.isCompleted = true;
+        recipient.completedAt = new Date();
+        recipient.responseComment = '재작성 완료';
+        await revisionRequestRecipientRepository.save(recipient);
+      }
 
       // When
       const query = new GetEmployeeEvaluationPeriodStatusQuery(
@@ -1119,8 +1441,12 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
 
       // Then
       expect(result).toBeDefined();
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('revision_completed');
-      expect(result!.stepApproval.secondaryEvaluationStatuses[0].isRevisionCompleted).toBe(true);
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'revision_completed',
+      );
+      expect(
+        result!.stepApproval.secondaryEvaluationStatuses[0].isRevisionCompleted,
+      ).toBe(true);
     });
   });
 
@@ -1221,6 +1547,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
         }),
       );
 
+      // 평가기준 제출 상태 설정
+      const mapping = await mappingRepository.findOne({
+        where: { id: mappingId },
+      });
+      if (mapping) {
+        mapping.평가기준을_제출한다(systemAdminId);
+        await mappingRepository.save(mapping);
+      }
+
       // 모든 단계 승인
       await stepApprovalRepository.save(
         stepApprovalRepository.create({
@@ -1248,9 +1583,28 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - Approval Status Integration
       // Then
       expect(result).toBeDefined();
       expect(result!.criteriaSetup.status).toBe('approved');
+      expect(result!.criteriaSetup.criteriaSubmission.isSubmitted).toBe(true);
       expect(result!.downwardEvaluation.primary.status).toBe('approved');
       expect(result!.downwardEvaluation.secondary.status).toBe('approved');
+
+      testResults.push({
+        testName:
+          '모든 단계가 완료되고 승인된 경우 모든 통합 상태가 approved여야 한다',
+        result: {
+          criteriaSetup: {
+            status: result!.criteriaSetup.status,
+            criteriaSubmission: result!.criteriaSetup.criteriaSubmission,
+          },
+          downwardEvaluation: {
+            primary: {
+              status: result!.downwardEvaluation.primary.status,
+            },
+            secondary: {
+              status: result!.downwardEvaluation.secondary.status,
+            },
+          },
+        },
+      });
     });
   });
 });
-

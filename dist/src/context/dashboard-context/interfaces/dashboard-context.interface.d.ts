@@ -66,6 +66,11 @@ export interface EmployeeEvaluationPeriodStatusDto {
             hasPrimaryEvaluator: boolean;
             hasSecondaryEvaluator: boolean;
         };
+        criteriaSubmission: {
+            isSubmitted: boolean;
+            submittedAt?: Date | null;
+            submittedBy?: string | null;
+        };
     };
     performanceInput: {
         status: PerformanceInputStatus;

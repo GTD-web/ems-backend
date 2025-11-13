@@ -7,6 +7,7 @@ import { WbsSelfEvaluationBusinessModule } from './wbs-self-evaluation/wbs-self-
 import { StepApprovalBusinessModule } from './step-approval/step-approval-business.module';
 import { DeliverableBusinessModule } from './deliverable/deliverable-business.module';
 import { RevisionRequestBusinessModule } from './revision-request/revision-request-business.module';
+import { EvaluationCriteriaBusinessModule } from './evaluation-criteria/evaluation-criteria-business.module';
 
 /**
  * 비즈니스 레이어 통합 모듈
@@ -23,6 +24,7 @@ import { RevisionRequestBusinessModule } from './revision-request/revision-reque
     StepApprovalBusinessModule,
     DeliverableBusinessModule,
     RevisionRequestBusinessModule,
+    EvaluationCriteriaBusinessModule,
   ],
   exports: [
     PeerEvaluationBusinessModule,
@@ -33,6 +35,7 @@ import { RevisionRequestBusinessModule } from './revision-request/revision-reque
     StepApprovalBusinessModule,
     DeliverableBusinessModule,
     RevisionRequestBusinessModule,
+    EvaluationCriteriaBusinessModule,
   ],
 })
 export class BusinessModule {}

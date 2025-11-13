@@ -245,4 +245,52 @@ export class WbsEvaluationCriteriaApiClient {
 
     return response.body;
   }
+
+  /**
+   * 평가기준 제출
+   *
+   * @param config.evaluationPeriodId - 평가기간 ID
+   * @param config.employeeId - 직원 ID
+   * @returns 평가기준 제출 응답
+   */
+  async submitEvaluationCriteria(config: {
+    evaluationPeriodId: string;
+    employeeId: string;
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .post('/admin/evaluation-criteria/wbs-evaluation-criteria/submit')
+      .send({
+        evaluationPeriodId: config.evaluationPeriodId,
+        employeeId: config.employeeId,
+      })
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * 평가기준 제출 초기화
+   *
+   * @param config.evaluationPeriodId - 평가기간 ID
+   * @param config.employeeId - 직원 ID
+   * @returns 평가기준 제출 초기화 응답
+   */
+  async resetEvaluationCriteriaSubmission(config: {
+    evaluationPeriodId: string;
+    employeeId: string;
+  }): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .post(
+        '/admin/evaluation-criteria/wbs-evaluation-criteria/reset-submission',
+      )
+      .send({
+        evaluationPeriodId: config.evaluationPeriodId,
+        employeeId: config.employeeId,
+      })
+      .expect(200);
+
+    return response.body;
+  }
 }

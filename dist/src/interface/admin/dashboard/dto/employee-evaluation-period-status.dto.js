@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EmployeeEvaluationPeriodStatusResponseDto = exports.StepApprovalInfoDto = exports.SecondaryEvaluationStatusDto = exports.ExclusionInfoDto = exports.FinalEvaluationInfoDto = exports.PeerEvaluationInfoDto = exports.DownwardEvaluationInfoDto = exports.SecondaryDownwardEvaluationDto = exports.SecondaryEvaluatorDto = exports.PrimaryDownwardEvaluationDto = exports.SelfEvaluationInfoDto = exports.PerformanceInputDto = exports.CriteriaSetupDto = exports.EvaluationLineInfoDto = exports.WbsCriteriaInfoDto = exports.EvaluationCriteriaInfoDto = exports.EvaluatorInfoDto = exports.EmployeeInfoDto = exports.EvaluationPeriodInfoDto = exports.EvaluationPeriodManualSettingsDto = exports.GetEmployeeEvaluationPeriodStatusDto = void 0;
+exports.EmployeeEvaluationPeriodStatusResponseDto = exports.StepApprovalInfoDto = exports.SecondaryEvaluationStatusDto = exports.ExclusionInfoDto = exports.FinalEvaluationInfoDto = exports.PeerEvaluationInfoDto = exports.DownwardEvaluationInfoDto = exports.SecondaryDownwardEvaluationDto = exports.SecondaryEvaluatorDto = exports.PrimaryDownwardEvaluationDto = exports.SelfEvaluationInfoDto = exports.PerformanceInputDto = exports.CriteriaSetupDto = exports.CriteriaSubmissionInfoDto = exports.EvaluationLineInfoDto = exports.WbsCriteriaInfoDto = exports.EvaluationCriteriaInfoDto = exports.EvaluatorInfoDto = exports.EmployeeInfoDto = exports.EvaluationPeriodInfoDto = exports.EvaluationPeriodManualSettingsDto = exports.GetEmployeeEvaluationPeriodStatusDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
@@ -309,11 +309,43 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], EvaluationLineInfoDto.prototype, "hasSecondaryEvaluator", void 0);
+class CriteriaSubmissionInfoDto {
+    isSubmitted;
+    submittedAt;
+    submittedBy;
+}
+exports.CriteriaSubmissionInfoDto = CriteriaSubmissionInfoDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기준 제출 여부',
+        example: false,
+    }),
+    __metadata("design:type", Boolean)
+], CriteriaSubmissionInfoDto.prototype, "isSubmitted", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '평가기준 제출 일시',
+        type: 'string',
+        format: 'date-time',
+        example: '2024-01-15T10:30:00.000Z',
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], CriteriaSubmissionInfoDto.prototype, "submittedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '평가기준 제출 처리자 ID',
+        example: '123e4567-e89b-12d3-a456-426614174003',
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], CriteriaSubmissionInfoDto.prototype, "submittedBy", void 0);
 class CriteriaSetupDto {
     status;
     evaluationCriteria;
     wbsCriteria;
     evaluationLine;
+    criteriaSubmission;
 }
 exports.CriteriaSetupDto = CriteriaSetupDto;
 __decorate([
@@ -345,6 +377,13 @@ __decorate([
     }),
     __metadata("design:type", EvaluationLineInfoDto)
 ], CriteriaSetupDto.prototype, "evaluationLine", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기준 제출 상태',
+        type: () => CriteriaSubmissionInfoDto,
+    }),
+    __metadata("design:type", CriteriaSubmissionInfoDto)
+], CriteriaSetupDto.prototype, "criteriaSubmission", void 0);
 class PerformanceInputDto {
     status;
     totalWbsCount;

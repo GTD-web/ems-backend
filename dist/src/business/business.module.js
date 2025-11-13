@@ -16,6 +16,7 @@ const wbs_self_evaluation_business_module_1 = require("./wbs-self-evaluation/wbs
 const step_approval_business_module_1 = require("./step-approval/step-approval-business.module");
 const deliverable_business_module_1 = require("./deliverable/deliverable-business.module");
 const revision_request_business_module_1 = require("./revision-request/revision-request-business.module");
+const evaluation_criteria_business_module_1 = require("./evaluation-criteria/evaluation-criteria-business.module");
 let BusinessModule = class BusinessModule {
 };
 exports.BusinessModule = BusinessModule;
@@ -30,6 +31,7 @@ exports.BusinessModule = BusinessModule = __decorate([
             step_approval_business_module_1.StepApprovalBusinessModule,
             deliverable_business_module_1.DeliverableBusinessModule,
             revision_request_business_module_1.RevisionRequestBusinessModule,
+            evaluation_criteria_business_module_1.EvaluationCriteriaBusinessModule,
         ],
         exports: [
             peer_evaluation_business_module_1.PeerEvaluationBusinessModule,
@@ -40,6 +42,7 @@ exports.BusinessModule = BusinessModule = __decorate([
             step_approval_business_module_1.StepApprovalBusinessModule,
             deliverable_business_module_1.DeliverableBusinessModule,
             revision_request_business_module_1.RevisionRequestBusinessModule,
+            evaluation_criteria_business_module_1.EvaluationCriteriaBusinessModule,
         ],
     })
 ], BusinessModule);

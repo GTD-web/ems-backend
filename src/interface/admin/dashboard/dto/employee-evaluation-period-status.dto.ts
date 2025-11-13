@@ -253,6 +253,33 @@ export class EvaluationLineInfoDto {
 }
 
 /**
+ * 평가기준 제출 상태 DTO
+ */
+export class CriteriaSubmissionInfoDto {
+  @ApiProperty({
+    description: '평가기준 제출 여부',
+    example: false,
+  })
+  isSubmitted: boolean;
+
+  @ApiPropertyOptional({
+    description: '평가기준 제출 일시',
+    type: 'string',
+    format: 'date-time',
+    example: '2024-01-15T10:30:00.000Z',
+    nullable: true,
+  })
+  submittedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    description: '평가기준 제출 처리자 ID',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+    nullable: true,
+  })
+  submittedBy?: string | null;
+}
+
+/**
  * 평가기준 설정 정보 DTO (평가항목, WBS 평가기준, 평가라인을 통합)
  */
 export class CriteriaSetupDto {
@@ -280,6 +307,12 @@ export class CriteriaSetupDto {
     type: () => EvaluationLineInfoDto,
   })
   evaluationLine: EvaluationLineInfoDto;
+
+  @ApiProperty({
+    description: '평가기준 제출 상태',
+    type: () => CriteriaSubmissionInfoDto,
+  })
+  criteriaSubmission: CriteriaSubmissionInfoDto;
 }
 
 /**

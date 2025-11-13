@@ -12,6 +12,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { EntityManager, IsNull, Repository } from 'typeorm';
 import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-criteria-management.interface';
 import { WbsAssignmentValidationService } from './services/wbs-assignment-validation.service';
+import { EvaluationPeriodEmployeeMappingService } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.service';
+import type { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
 
 // Project Assignment Commands & Queries
 import {
@@ -128,6 +130,7 @@ export class EvaluationCriteriaManagementService
     @InjectRepository(EvaluationLine)
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
     private readonly wbsAssignmentValidationService: WbsAssignmentValidationService,
+    private readonly evaluationPeriodEmployeeMappingService: EvaluationPeriodEmployeeMappingService,
   ) {}
 
   // ============================================================================
@@ -1156,5 +1159,39 @@ export class EvaluationCriteriaManagementService
   ): Promise<AvailableProjectsResult> {
     const query = new GetAvailableProjectsQuery(periodId, options);
     return await this.queryBus.execute(query);
+  }
+
+  // ============================================================================
+  // 평가기준 제출 관리
+  // ============================================================================
+
+  /**
+   * 평가기준을 제출한다
+   */
+  async 평가기준을_제출한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    submittedBy: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    return await this.evaluationPeriodEmployeeMappingService.평가기준을_제출한다(
+      evaluationPeriodId,
+      employeeId,
+      submittedBy,
+    );
+  }
+
+  /**
+   * 평가기준 제출을 초기화한다
+   */
+  async 평가기준_제출을_초기화한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    return await this.evaluationPeriodEmployeeMappingService.평가기준_제출을_초기화한다(
+      evaluationPeriodId,
+      employeeId,
+      updatedBy,
+    );
   }
 }

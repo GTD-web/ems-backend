@@ -1,0 +1,163 @@
+{
+  "timestamp": "2025-11-13T17:12:38.908Z",
+  "testResults": [
+    {
+      "testName": "단계 승인 Enum 목록 조회",
+      "result": {
+        "steps": [
+          "criteria",
+          "self",
+          "primary",
+          "secondary"
+        ],
+        "statuses": [
+          "pending",
+          "approved",
+          "revision_requested",
+          "revision_completed"
+        ],
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 설정 단계 승인 상태 변경: pending → approved",
+      "result": {
+        "employeeId": "c17cbd19-1d76-4059-a3bb-ffc086610620",
+        "initialStatus": "pending",
+        "finalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-13T17:12:35.802Z",
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 설정 단계 승인 상태 변경: approved → revision_requested",
+      "result": {
+        "employeeId": "c9e2c68a-5698-4769-8533-dee1bed0ae8c",
+        "initialStatus": "approved",
+        "finalStatus": "revision_requested",
+        "revisionRequestCount": 2,
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 설정 단계 승인 상태 변경: revision_requested → approved",
+      "result": {
+        "employeeId": "16c56923-0ac5-493f-a30a-6a52a0e1f1ee",
+        "initialStatus": "revision_requested",
+        "finalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-13T17:12:36.421Z",
+        "passed": true
+      }
+    },
+    {
+      "testName": "1단계: 평가기준 제출 전 상태 확인",
+      "result": {
+        "employeeId": "5b3e96ed-6ac8-4aba-bd8b-86ad2fe960ab",
+        "dashboardStatus": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null
+        },
+        "assignedData": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "2단계: 평가기준 제출",
+      "result": {
+        "employeeId": "0dc7b4f3-6289-4a60-aeaf-816cd88771b1",
+        "submitResult": {
+          "isCriteriaSubmitted": true,
+          "criteriaSubmittedAt": "2025-11-13T17:12:37.016Z",
+          "criteriaSubmittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "dashboardStatus": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-13T17:12:37.016Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "3단계: 재작성 요청 생성 및 제출 상태 초기화",
+      "result": {
+        "employeeId": "883538ef-2630-41da-8091-6a8387726d74",
+        "dashboardStatus": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null,
+          "stepApprovalStatus": "revision_requested"
+        },
+        "revisionRequestCount": 2,
+        "passed": true
+      }
+    },
+    {
+      "testName": "4단계: 재제출 및 재작성 요청 자동 완료",
+      "result": {
+        "employeeId": "74f8e750-eda6-4040-af7b-b94dc5da7767",
+        "submitResult": {
+          "isCriteriaSubmitted": true,
+          "criteriaSubmittedAt": "2025-11-13T17:12:37.721Z",
+          "criteriaSubmittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "completedRevisionRequestCount": 2,
+        "passed": true
+      }
+    },
+    {
+      "testName": "5단계: 승인",
+      "result": {
+        "employeeId": "61eaf7f9-3ff7-41b6-be2c-6f306028f586",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-13T17:12:38.060Z",
+        "isSubmitted": true,
+        "passed": true
+      }
+    },
+    {
+      "testName": "1단계: 평가기준 미제출 상태 확인",
+      "result": {
+        "employeeId": "af1ec592-612b-47c8-97d0-ddddae88436e",
+        "dashboardStatus": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "2단계: 평가기준 미제출 상태에서 승인 및 제출 상태 자동 변경",
+      "result": {
+        "employeeId": "b312ec48-44df-4b15-9331-f5cef75c6718",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-13T17:12:38.586Z",
+        "criteriaSubmission": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-13T17:12:38.578Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "3단계: 이미 제출된 상태에서 승인 검증 (idempotent)",
+      "result": {
+        "employeeId": "d466bd77-ca02-4e77-92dc-ddb45953af20",
+        "stepApprovalStatus": "approved",
+        "isSubmitted": true,
+        "passed": true
+      }
+    }
+  ]
+}

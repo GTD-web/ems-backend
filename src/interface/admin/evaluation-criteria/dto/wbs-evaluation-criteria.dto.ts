@@ -265,3 +265,65 @@ export class WbsItemEvaluationCriteriaResponseDto {
   })
   criteria: WbsEvaluationCriteriaDto[];
 }
+
+/**
+ * 평가기준 제출 요청 DTO
+ */
+export class SubmitEvaluationCriteriaDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  @IsString()
+  @IsUUID()
+  evaluationPeriodId: string;
+
+  @ApiProperty({
+    description: '직원 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
+  @IsString()
+  @IsUUID()
+  employeeId: string;
+}
+
+/**
+ * 평가기준 제출 응답 DTO
+ */
+export class EvaluationCriteriaSubmissionResponseDto {
+  @ApiProperty({
+    description: '맵핑 ID',
+    example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
+  })
+  evaluationPeriodId: string;
+
+  @ApiProperty({
+    description: '직원 ID',
+    example: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+  })
+  employeeId: string;
+
+  @ApiProperty({
+    description: '평가기준 제출 여부',
+    example: true,
+  })
+  isCriteriaSubmitted: boolean;
+
+  @ApiPropertyOptional({
+    description: '평가기준 제출 일시',
+    example: '2024-01-15T10:30:00.000Z',
+  })
+  criteriaSubmittedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    description: '평가기준 제출 처리자 ID',
+    example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8',
+  })
+  criteriaSubmittedBy?: string | null;
+}

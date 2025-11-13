@@ -21,5 +21,7 @@ export declare class EvaluationPeriodEmployeeMappingService implements IEvaluati
     private 맵핑을_조회한다;
     평가기간별_모든_평가_수정_가능_상태를_변경한다(evaluationPeriodId: string, isSelfEvaluationEditable: boolean, isPrimaryEvaluationEditable: boolean, isSecondaryEvaluationEditable: boolean, updatedBy: string): Promise<number>;
     private 중복_검사를_수행한다;
+    평가기준을_제출한다(evaluationPeriodId: string, employeeId: string, submittedBy: string): Promise<EvaluationPeriodEmployeeMappingDto>;
+    평가기준_제출을_초기화한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<EvaluationPeriodEmployeeMappingDto>;
     private 유효성을_검사한다;
 }
