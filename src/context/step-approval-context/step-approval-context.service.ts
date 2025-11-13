@@ -335,7 +335,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
   /**
    * 2차평가자들을 조회한다
    */
-  private async 이차평가자들을_조회한다(
+  async 이차평가자들을_조회한다(
     evaluationPeriodId: string,
     employeeId: string,
   ): Promise<string[]> {

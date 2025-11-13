@@ -58,12 +58,14 @@ export class StepApprovalApiClient {
    * @param config.employeeId - 직원 ID
    * @param config.status - 승인 상태 (pending, approved, revision_requested)
    * @param config.revisionComment - 재작성 요청 코멘트 (revision_requested일 때 필수)
+   * @param config.approveSubsequentSteps - 하위 평가 자동 승인 여부 (기본값: false)
    */
   async updateSelfStepApproval(config: {
     evaluationPeriodId: string;
     employeeId: string;
     status: 'pending' | 'approved' | 'revision_requested';
     revisionComment?: string;
+    approveSubsequentSteps?: boolean;
   }): Promise<void> {
     await this.testSuite
       .request()
@@ -73,6 +75,7 @@ export class StepApprovalApiClient {
       .send({
         status: config.status,
         revisionComment: config.revisionComment,
+        approveSubsequentSteps: config.approveSubsequentSteps,
       })
       .expect(200);
   }
@@ -84,12 +87,14 @@ export class StepApprovalApiClient {
    * @param config.employeeId - 직원 ID
    * @param config.status - 승인 상태 (pending, approved, revision_requested)
    * @param config.revisionComment - 재작성 요청 코멘트 (revision_requested일 때 필수)
+   * @param config.approveSubsequentSteps - 하위 평가 자동 승인 여부 (기본값: false)
    */
   async updatePrimaryStepApproval(config: {
     evaluationPeriodId: string;
     employeeId: string;
     status: 'pending' | 'approved' | 'revision_requested';
     revisionComment?: string;
+    approveSubsequentSteps?: boolean;
   }): Promise<void> {
     await this.testSuite
       .request()
@@ -99,6 +104,7 @@ export class StepApprovalApiClient {
       .send({
         status: config.status,
         revisionComment: config.revisionComment,
+        approveSubsequentSteps: config.approveSubsequentSteps,
       })
       .expect(200);
   }
@@ -111,6 +117,7 @@ export class StepApprovalApiClient {
    * @param config.evaluatorId - 평가자 ID
    * @param config.status - 승인 상태 (pending, approved, revision_requested)
    * @param config.revisionComment - 재작성 요청 코멘트 (revision_requested일 때 필수)
+   * @param config.approveSubsequentSteps - 하위 평가 자동 승인 여부 (기본값: false, 2차는 하위 평가 없으므로 효과 없음)
    */
   async updateSecondaryStepApproval(config: {
     evaluationPeriodId: string;
@@ -118,6 +125,7 @@ export class StepApprovalApiClient {
     evaluatorId: string;
     status: 'pending' | 'approved' | 'revision_requested';
     revisionComment?: string;
+    approveSubsequentSteps?: boolean;
   }): Promise<void> {
     await this.testSuite
       .request()
@@ -127,6 +135,7 @@ export class StepApprovalApiClient {
       .send({
         status: config.status,
         revisionComment: config.revisionComment,
+        approveSubsequentSteps: config.approveSubsequentSteps,
       })
       .expect(200);
   }

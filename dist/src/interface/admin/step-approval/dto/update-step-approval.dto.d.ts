@@ -13,4 +13,5 @@ export declare enum StepApprovalStatusEnum {
 export declare class UpdateStepApprovalDto {
     status: StepApprovalStatusEnum;
     revisionComment?: string;
+    approveSubsequentSteps?: boolean;
 }

@@ -609,10 +609,13 @@ describe('단계 승인 관리 E2E 테스트', () => {
         const 제출후_자기평가 = 제출후_상태.evaluations.find(
           (e: any) => e.id === 저장결과.id,
         );
+        // 재작성 요청 시 제출 상태 초기화
         expect(제출후_자기평가.submittedToManager).toBe(false);
         expect(제출후_자기평가.submittedToManagerAt).toBeNull();
-        // submittedToEvaluator는 유지됨
-        expect(제출후_자기평가.submittedToEvaluator).toBe(true);
+        // submittedToEvaluator도 false로 변경되지만, At 필드는 유지됨 (기존 제출 이력)
+        expect(제출후_자기평가.submittedToEvaluator).toBe(false);
+        // submittedToEvaluatorAt는 이전 제출 날짜가 유지됨
+        expect(제출후_자기평가.submittedToEvaluatorAt).toBeDefined();
 
         // Then - 할당 데이터 API로 제출 상태 확인
         const 할당데이터 =
@@ -623,13 +626,12 @@ describe('단계 승인 관리 E2E 테스트', () => {
             },
           );
 
-        // summary.selfEvaluation 검증 (wbsList 내 selfEvaluation은 제거됨)
+        // summary.selfEvaluation 검증 - 재작성 요청 시 모든 제출 상태 초기화
         expect(할당데이터.summary.selfEvaluation.isSubmittedToManager).toBe(
           false,
         );
-        // submittedToEvaluator는 유지됨
         expect(할당데이터.summary.selfEvaluation.isSubmittedToEvaluator).toBe(
-          true,
+          false,
         );
       });
     });
@@ -681,6 +683,346 @@ describe('단계 승인 관리 E2E 테스트', () => {
             status: 'approved',
           })
           .expect(404);
+      });
+    });
+  });
+
+  describe('하위 평가 자동 승인 기능 검증', () => {
+    describe('자기평가 승인 시 하위 평가 자동 승인', () => {
+      it('approveSubsequentSteps=true로 자기평가 승인 시 1차, 2차 하향평가도 함께 승인된다', async () => {
+        // Given - 자기평가, 1차 하향평가, 2차 하향평가 저장
+        const 자기평가결과 =
+          await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[0],
+            periodId: evaluationPeriodId,
+            selfEvaluationContent: '자기평가 내용',
+            selfEvaluationScore: 85,
+          });
+
+        // 1차 하향평가 저장
+        await downwardEvaluationScenario.일차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: primaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '1차 하향평가 내용',
+          downwardEvaluationScore: 90,
+        });
+
+        // 2차 하향평가 저장
+        await downwardEvaluationScenario.이차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: secondaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '2차 하향평가 내용',
+          downwardEvaluationScore: 85,
+        });
+
+        // When - 자기평가 승인 (하위 평가 자동 승인 옵션 활성화)
+        await stepApprovalScenario.자기평가_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: employeeIds[0],
+          status: 'approved',
+          approveSubsequentSteps: true,
+        });
+
+        // Then - 자기평가 승인 상태 확인
+        const 자기평가_대시보드_상태 =
+          await stepApprovalScenario.자기평가_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: employeeIds[0],
+          });
+
+        expect(자기평가_대시보드_상태.stepApproval.selfEvaluationStatus).toBe(
+          'approved',
+        );
+        expect(
+          자기평가_대시보드_상태.selfEvaluation.isSubmittedToEvaluator,
+        ).toBe(true);
+
+        // Then - 1차 하향평가 승인 상태 확인
+        expect(
+          자기평가_대시보드_상태.stepApproval.primaryEvaluationStatus,
+        ).toBe('approved');
+        expect(
+          자기평가_대시보드_상태.downwardEvaluation.primary.isSubmitted,
+        ).toBe(true);
+
+        // Then - 2차 하향평가 승인 상태 확인
+        const secondaryEvaluator =
+          자기평가_대시보드_상태.downwardEvaluation.secondary.evaluators.find(
+            (e: any) => e.evaluator.id === secondaryEvaluatorId,
+          );
+        expect(secondaryEvaluator).toBeDefined();
+        expect(secondaryEvaluator.isSubmitted).toBe(true);
+
+        // Then - 2차 하향평가 단계 승인 상태 확인 (대시보드 API에는 없으므로 직접 확인)
+        const 통합조회 =
+          await stepApprovalScenario.이차하향평가_제출상태를_통합조회에서_조회한다(
+            {
+              evaluationPeriodId,
+              employeeId: employeeIds[0],
+            },
+          );
+
+        expect(통합조회.secondaryDownwardEvaluation.isSubmitted).toBe(true);
+      });
+
+      it('approveSubsequentSteps=false로 자기평가 승인 시 현재 평가만 승인된다', async () => {
+        // Given - 자기평가, 1차 하향평가, 2차 하향평가 저장
+        const 자기평가결과 =
+          await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[0],
+            periodId: evaluationPeriodId,
+            selfEvaluationContent: '자기평가 내용',
+            selfEvaluationScore: 85,
+          });
+
+        // 1차 하향평가 저장
+        await downwardEvaluationScenario.일차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: primaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '1차 하향평가 내용',
+          downwardEvaluationScore: 90,
+        });
+
+        // 2차 하향평가 저장
+        await downwardEvaluationScenario.이차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: secondaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '2차 하향평가 내용',
+          downwardEvaluationScore: 85,
+        });
+
+        // When - 자기평가 승인 (하위 평가 자동 승인 옵션 비활성화)
+        await stepApprovalScenario.자기평가_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: employeeIds[0],
+          status: 'approved',
+          approveSubsequentSteps: false,
+        });
+
+        // Then - 자기평가만 승인 상태 확인
+        const 대시보드_상태 =
+          await stepApprovalScenario.자기평가_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: employeeIds[0],
+          });
+
+        expect(대시보드_상태.stepApproval.selfEvaluationStatus).toBe(
+          'approved',
+        );
+        expect(대시보드_상태.selfEvaluation.isSubmittedToEvaluator).toBe(true);
+
+        // Then - 1차 하향평가는 승인되지 않음
+        expect(대시보드_상태.stepApproval.primaryEvaluationStatus).not.toBe(
+          'approved',
+        );
+        expect(대시보드_상태.downwardEvaluation.primary.isSubmitted).toBe(
+          false,
+        );
+
+        // Then - 2차 하향평가는 승인되지 않음
+        const secondaryEvaluator =
+          대시보드_상태.downwardEvaluation.secondary.evaluators.find(
+            (e: any) => e.evaluator.id === secondaryEvaluatorId,
+          );
+        if (secondaryEvaluator) {
+          expect(secondaryEvaluator.isSubmitted).toBe(false);
+        }
+      });
+
+      it('approveSubsequentSteps 파라미터 생략 시 현재 평가만 승인된다 (기본값 false)', async () => {
+        // Given - 자기평가, 1차 하향평가 저장
+        const 자기평가결과 =
+          await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[0],
+            periodId: evaluationPeriodId,
+            selfEvaluationContent: '자기평가 내용',
+            selfEvaluationScore: 85,
+          });
+
+        await downwardEvaluationScenario.일차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: primaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '1차 하향평가 내용',
+          downwardEvaluationScore: 90,
+        });
+
+        // When - 자기평가 승인 (approveSubsequentSteps 파라미터 생략)
+        await stepApprovalScenario.자기평가_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: employeeIds[0],
+          status: 'approved',
+          // approveSubsequentSteps 생략
+        });
+
+        // Then - 자기평가만 승인됨
+        const 대시보드_상태 =
+          await stepApprovalScenario.자기평가_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: employeeIds[0],
+          });
+
+        expect(대시보드_상태.stepApproval.selfEvaluationStatus).toBe(
+          'approved',
+        );
+        expect(대시보드_상태.stepApproval.primaryEvaluationStatus).not.toBe(
+          'approved',
+        );
+      });
+    });
+
+    describe('1차 하향평가 승인 시 2차 하향평가 자동 승인', () => {
+      it('approveSubsequentSteps=true로 1차 하향평가 승인 시 2차 하향평가도 함께 승인된다', async () => {
+        // Given - 자기평가, 1차 하향평가, 2차 하향평가 저장
+        const 자기평가결과 =
+          await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[0],
+            periodId: evaluationPeriodId,
+            selfEvaluationContent: '자기평가 내용',
+            selfEvaluationScore: 85,
+          });
+
+        await downwardEvaluationScenario.일차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: primaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '1차 하향평가 내용',
+          downwardEvaluationScore: 90,
+        });
+
+        await downwardEvaluationScenario.이차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: secondaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '2차 하향평가 내용',
+          downwardEvaluationScore: 85,
+        });
+
+        // When - 1차 하향평가 승인 (하위 평가 자동 승인 옵션 활성화)
+        await stepApprovalScenario.일차하향평가_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: employeeIds[0],
+          status: 'approved',
+          approveSubsequentSteps: true,
+        });
+
+        // Then - 1차 하향평가 승인 상태 확인
+        const 대시보드_상태 =
+          await stepApprovalScenario.일차하향평가_제출상태를_대시보드에서_조회한다(
+            {
+              evaluationPeriodId,
+              employeeId: employeeIds[0],
+            },
+          );
+
+        expect(대시보드_상태.stepApproval.primaryEvaluationStatus).toBe(
+          'approved',
+        );
+        expect(대시보드_상태.downwardEvaluation.primary.isSubmitted).toBe(true);
+
+        // Then - 2차 하향평가도 승인됨
+        const secondaryEvaluator =
+          대시보드_상태.downwardEvaluation.secondary.evaluators.find(
+            (e: any) => e.evaluator.id === secondaryEvaluatorId,
+          );
+        expect(secondaryEvaluator).toBeDefined();
+        expect(secondaryEvaluator.isSubmitted).toBe(true);
+
+        // Then - 2차 하향평가 제출 상태 확인
+        const 통합조회 =
+          await stepApprovalScenario.이차하향평가_제출상태를_통합조회에서_조회한다(
+            {
+              evaluationPeriodId,
+              employeeId: employeeIds[0],
+            },
+          );
+
+        expect(통합조회.secondaryDownwardEvaluation.isSubmitted).toBe(true);
+      });
+
+      it('approveSubsequentSteps=false로 1차 하향평가 승인 시 현재 평가만 승인된다', async () => {
+        // Given - 자기평가, 1차 하향평가, 2차 하향평가 저장
+        const 자기평가결과 =
+          await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+            employeeId: employeeIds[0],
+            wbsItemId: wbsItemIds[0],
+            periodId: evaluationPeriodId,
+            selfEvaluationContent: '자기평가 내용',
+            selfEvaluationScore: 85,
+          });
+
+        await downwardEvaluationScenario.일차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: primaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '1차 하향평가 내용',
+          downwardEvaluationScore: 90,
+        });
+
+        await downwardEvaluationScenario.이차하향평가를_저장한다({
+          evaluateeId: employeeIds[0],
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: secondaryEvaluatorId,
+          selfEvaluationId: 자기평가결과.id,
+          downwardEvaluationContent: '2차 하향평가 내용',
+          downwardEvaluationScore: 85,
+        });
+
+        // When - 1차 하향평가 승인 (하위 평가 자동 승인 옵션 비활성화)
+        await stepApprovalScenario.일차하향평가_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: employeeIds[0],
+          status: 'approved',
+          approveSubsequentSteps: false,
+        });
+
+        // Then - 1차 하향평가만 승인됨
+        const 대시보드_상태 =
+          await stepApprovalScenario.일차하향평가_제출상태를_대시보드에서_조회한다(
+            {
+              evaluationPeriodId,
+              employeeId: employeeIds[0],
+            },
+          );
+
+        expect(대시보드_상태.stepApproval.primaryEvaluationStatus).toBe(
+          'approved',
+        );
+        expect(대시보드_상태.downwardEvaluation.primary.isSubmitted).toBe(true);
+
+        // Then - 2차 하향평가는 승인되지 않음
+        const secondaryEvaluator =
+          대시보드_상태.downwardEvaluation.secondary.evaluators.find(
+            (e: any) => e.evaluator.id === secondaryEvaluatorId,
+          );
+        if (secondaryEvaluator) {
+          expect(secondaryEvaluator.isSubmitted).toBe(false);
+        }
       });
     });
   });

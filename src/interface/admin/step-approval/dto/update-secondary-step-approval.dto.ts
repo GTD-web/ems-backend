@@ -5,8 +5,10 @@ import {
   IsNotEmpty,
   ValidateIf,
   IsOptional,
+  IsBoolean,
 } from 'class-validator';
 import { StepApprovalStatusEnum } from './update-step-approval.dto';
+import { ToBoolean } from '@interface/decorators';
 
 /**
  * 2차 평가 단계 승인 상태 업데이트 DTO
@@ -32,5 +34,16 @@ export class UpdateSecondaryStepApprovalDto {
   @IsNotEmpty()
   @IsOptional()
   revisionComment?: string;
+
+  @ApiPropertyOptional({
+    description:
+      '하위 평가 자동 승인 여부 (true: 하위 평가도 함께 승인, false: 현재 평가만 승인)',
+    example: false,
+    type: Boolean,
+  })
+  @IsOptional()
+  @ToBoolean(false)
+  @IsBoolean()
+  approveSubsequentSteps?: boolean;
 }
 
