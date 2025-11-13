@@ -1,0 +1,34 @@
+{
+  "timestamp": "2025-11-13T03:53:52.668Z",
+  "testResults": [
+    {
+      "testName": "평가자가 담당하지 않는 피평가자의 평가는 조회되지 않아야 한다",
+      "result": {
+        "evaluatorId": "231447a9-05a1-437b-8498-c5b889033c04",
+        "evaluateeId": "363f988b-7337-4936-8e24-69f0f7b60eee",
+        "submittedCount": 0,
+        "skippedCount": 0,
+        "failedCount": 0
+      }
+    },
+    {
+      "testName": "존재하지 않는 평가기간으로 조회하면 빈 결과를 반환해야 한다",
+      "result": {
+        "periodId": "99999999-9999-9999-9999-999999999999",
+        "submittedCount": 0,
+        "skippedCount": 0,
+        "failedCount": 0
+      }
+    },
+    {
+      "testName": "하향평가가 없는 경우 빈 결과를 반환해야 한다",
+      "result": {
+        "evaluatorId": "25c500b0-b87b-4d47-8d82-655270c350aa",
+        "evaluateeId": "99999999-9999-9999-9999-999999999999",
+        "submittedCount": 0,
+        "skippedCount": 0,
+        "failedCount": 0
+      }
+    }
+  ]
+}

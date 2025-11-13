@@ -30,6 +30,8 @@ import {
   DownwardEvaluationAlreadyCompletedException,
 } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Performance Evaluation Context - Bulk Submit Downward Evaluations 통합 테스트
@@ -72,6 +74,9 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
 
   const systemAdminId = '00000000-0000-0000-0000-000000000001';
   const submittedBy = 'test-user-id';
+
+  // 테스트 결과 저장용
+  const testResults: any[] = [];
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -171,7 +176,6 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.PEER_EVALUATION,
       criteriaSettingEnabled: true,
@@ -588,19 +592,34 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
         DownwardEvaluationType.PRIMARY,
         submittedBy,
       );
+      const result = await bulkSubmitHandler.execute(command);
 
-      // Then - 평가가 없어서 에러 발생
-      await expect(bulkSubmitHandler.execute(command)).rejects.toThrow(
-        DownwardEvaluationNotFoundException,
-      );
+      // Then - 평가가 없어서 빈 결과 반환 (스킵)
+      expect(result).toBeDefined();
+      expect(result.submittedCount).toBe(0);
+      expect(result.skippedCount).toBe(0);
+      expect(result.failedCount).toBe(0);
+      expect(result.submittedIds.length).toBe(0);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '평가자가 담당하지 않는 피평가자의 평가는 조회되지 않아야 한다',
+        result: {
+          evaluatorId: otherEvaluatorId,
+          evaluateeId: employeeId,
+          submittedCount: result.submittedCount,
+          skippedCount: result.skippedCount,
+          failedCount: result.failedCount,
+        },
+      });
     });
 
-    it('존재하지 않는 평가기간으로 조회하면 에러가 발생해야 한다', async () => {
+    it('존재하지 않는 평가기간으로 조회하면 빈 결과를 반환해야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
       const nonExistentPeriodId = '99999999-9999-9999-9999-999999999999';
 
-      // When & Then
+      // When
       const command = new BulkSubmitDownwardEvaluationsCommand(
         evaluatorId,
         employeeId,
@@ -608,9 +627,62 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
         DownwardEvaluationType.PRIMARY,
         submittedBy,
       );
-      await expect(bulkSubmitHandler.execute(command)).rejects.toThrow(
-        DownwardEvaluationNotFoundException,
+      const result = await bulkSubmitHandler.execute(command);
+
+      // Then - 평가가 없어서 빈 결과 반환 (스킵)
+      expect(result).toBeDefined();
+      expect(result.submittedCount).toBe(0);
+      expect(result.skippedCount).toBe(0);
+      expect(result.failedCount).toBe(0);
+      expect(result.submittedIds.length).toBe(0);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '존재하지 않는 평가기간으로 조회하면 빈 결과를 반환해야 한다',
+        result: {
+          periodId: nonExistentPeriodId,
+          submittedCount: result.submittedCount,
+          skippedCount: result.skippedCount,
+          failedCount: result.failedCount,
+        },
+      });
+    });
+
+    it('하향평가가 없는 경우 빈 결과를 반환해야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // When - 존재하지 않는 피평가자로 조회
+      const nonExistentEvaluateeId = '99999999-9999-9999-9999-999999999999';
+      const command = new BulkSubmitDownwardEvaluationsCommand(
+        evaluatorId,
+        nonExistentEvaluateeId,
+        evaluationPeriodId,
+        DownwardEvaluationType.PRIMARY,
+        submittedBy,
       );
+      const result = await bulkSubmitHandler.execute(command);
+
+      // Then - 평가가 없어서 빈 결과 반환 (스킵)
+      expect(result).toBeDefined();
+      expect(result.submittedCount).toBe(0);
+      expect(result.skippedCount).toBe(0);
+      expect(result.failedCount).toBe(0);
+      expect(result.submittedIds.length).toBe(0);
+      expect(result.skippedIds.length).toBe(0);
+      expect(result.failedItems.length).toBe(0);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '하향평가가 없는 경우 빈 결과를 반환해야 한다',
+        result: {
+          evaluatorId,
+          evaluateeId: nonExistentEvaluateeId,
+          submittedCount: result.submittedCount,
+          skippedCount: result.skippedCount,
+          failedCount: result.failedCount,
+        },
+      });
     });
   });
 
@@ -773,6 +845,23 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       expect(evaluation2?.isCompleted).toBe(false);
       expect(evaluation3?.isCompleted).toBe(false);
     });
+  });
+
+  afterAll(() => {
+    // 테스트 결과를 JSON 파일로 저장
+    const outputPath = path.join(
+      __dirname,
+      'bulk-submit-downward-evaluations-test-result.json',
+    );
+    const output = {
+      timestamp: new Date().toISOString(),
+      testResults: testResults,
+    };
+
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
+    console.log(
+      `✅ 테스트 결과가 저장되었습니다: ${outputPath}`,
+    );
   });
 });
 
