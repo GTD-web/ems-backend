@@ -32,7 +32,16 @@ export class BaseFinalEvaluationScenario {
     jobDetailedGrade: string;
     finalComments?: string;
   }): Promise<any> {
-    const result = await this.apiClient.upsertFinalEvaluation(config);
+    const result = await this.apiClient.upsertFinalEvaluation(
+      config.employeeId,
+      config.periodId,
+      {
+        evaluationGrade: config.evaluationGrade,
+        jobGrade: config.jobGrade,
+        jobDetailedGrade: config.jobDetailedGrade,
+        finalComments: config.finalComments,
+      },
+    );
 
     expect(result.id).toBeDefined();
     expect(result.message).toContain('성공적으로 저장되었습니다');

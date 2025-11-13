@@ -1,43 +1,36 @@
 import { BaseE2ETest } from '../../../base-e2e.spec';
 
 /**
- * 최종평가 관리 API 클라이언트
+ * 최종평가 API 클라이언트
  *
- * 최종평가 관련 모든 HTTP 요청을 캡슐화합니다.
+ * 최종평가 관련 HTTP 요청을 캡슐화합니다.
  */
 export class FinalEvaluationApiClient {
   constructor(private readonly testSuite: BaseE2ETest) {}
 
-  // ==================== 최종평가 저장 ====================
-
   /**
-   * 최종평가 저장 (Upsert: 없으면 생성, 있으면 수정)
+   * 최종평가 저장 (Upsert)
    */
-  async upsertFinalEvaluation(data: {
-    employeeId: string;
-    periodId: string;
-    evaluationGrade: string;
-    jobGrade: string;
-    jobDetailedGrade: string;
-    finalComments?: string;
-  }) {
+  async upsertFinalEvaluation(
+    employeeId: string,
+    periodId: string,
+    data: {
+      evaluationGrade: string;
+      jobGrade: string;
+      jobDetailedGrade: string;
+      finalComments?: string;
+    },
+  ) {
     const response = await this.testSuite
       .request()
       .post(
-        `/admin/performance-evaluation/final-evaluations/employee/${data.employeeId}/period/${data.periodId}`,
+        `/admin/performance-evaluation/final-evaluations/employee/${employeeId}/period/${periodId}`,
       )
-      .send({
-        evaluationGrade: data.evaluationGrade,
-        jobGrade: data.jobGrade,
-        jobDetailedGrade: data.jobDetailedGrade,
-        finalComments: data.finalComments,
-      })
+      .send(data)
       .expect(201);
 
     return response.body;
   }
-
-  // ==================== 최종평가 확정 관리 ====================
 
   /**
    * 최종평가 확정
@@ -65,8 +58,6 @@ export class FinalEvaluationApiClient {
     return response.body;
   }
 
-  // ==================== 최종평가 조회 ====================
-
   /**
    * 최종평가 단일 조회
    */
@@ -82,7 +73,7 @@ export class FinalEvaluationApiClient {
   /**
    * 최종평가 목록 조회
    */
-  async getFinalEvaluationList(query: {
+  async getFinalEvaluationList(filters?: {
     employeeId?: string;
     periodId?: string;
     evaluationGrade?: string;
@@ -91,13 +82,16 @@ export class FinalEvaluationApiClient {
     confirmedOnly?: boolean;
     page?: number;
     limit?: number;
-  } = {}) {
-    const response = await this.testSuite
+  }) {
+    let request = this.testSuite
       .request()
-      .get('/admin/performance-evaluation/final-evaluations')
-      .query(query)
-      .expect(200);
+      .get('/admin/performance-evaluation/final-evaluations');
 
+    if (filters) {
+      request = request.query(filters);
+    }
+
+    const response = await request.expect(200);
     return response.body;
   }
 
@@ -118,4 +112,3 @@ export class FinalEvaluationApiClient {
     return response.body;
   }
 }
-
