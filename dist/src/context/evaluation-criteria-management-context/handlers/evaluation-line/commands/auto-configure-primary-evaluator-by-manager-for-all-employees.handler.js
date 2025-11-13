@@ -113,9 +113,20 @@ let AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler = AutoConfigure
                             });
                             continue;
                         }
+                        const managerEmployee = await this.employeeService.findByExternalId(employee.managerId);
+                        if (!managerEmployee) {
+                            skippedCount++;
+                            results.push({
+                                employeeId,
+                                success: true,
+                                message: `관리자(managerId: ${employee.managerId})를 찾을 수 없어 1차 평가자를 구성할 수 없습니다.`,
+                                createdMappings: 0,
+                            });
+                            continue;
+                        }
                         employeeDataMap.set(employeeId, {
                             employeeId,
-                            managerId: employee.managerId,
+                            evaluatorId: managerEmployee.id,
                         });
                     }
                     catch (error) {
@@ -168,7 +179,7 @@ let AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler = AutoConfigure
                     const mapping = mappingRepository.create({
                         evaluationPeriodId: periodId,
                         employeeId,
-                        evaluatorId: employeeData.managerId,
+                        evaluatorId: employeeData.evaluatorId,
                         wbsItemId: undefined,
                         evaluationLineId,
                         createdBy,

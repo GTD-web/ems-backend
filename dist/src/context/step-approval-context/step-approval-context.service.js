@@ -130,7 +130,7 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
                     recipientType: evaluation_revision_request_1.RecipientType.EVALUATEE,
                 });
                 const primaryEvaluator = await this.일차평가자를_조회한다(evaluationPeriodId, employeeId);
-                if (primaryEvaluator) {
+                if (primaryEvaluator && primaryEvaluator !== employeeId) {
                     recipients.push({
                         recipientId: primaryEvaluator,
                         recipientType: evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR,
