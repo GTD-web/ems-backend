@@ -141,12 +141,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
     projectAssignmentRepository = dataSource.getRepository(
       EvaluationProjectAssignment,
     );
-    wbsAssignmentRepository = dataSource.getRepository(
-      EvaluationWbsAssignment,
-    );
-    wbsSelfEvaluationRepository = dataSource.getRepository(
-      WbsSelfEvaluation,
-    );
+    wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
+    wbsSelfEvaluationRepository = dataSource.getRepository(WbsSelfEvaluation);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
     downwardEvaluationRepository = dataSource.getRepository(DownwardEvaluation);
@@ -228,7 +224,6 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.PEER_EVALUATION,
       criteriaSettingEnabled: true,
@@ -263,9 +258,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluator = await employeeRepository.save(
-      primaryEvaluator,
-    );
+    const savedPrimaryEvaluator =
+      await employeeRepository.save(primaryEvaluator);
     primaryEvaluatorId = savedPrimaryEvaluator.id;
 
     // 5. 2차 평가자 직원 생성
@@ -278,9 +272,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluator = await employeeRepository.save(
-      secondaryEvaluator,
-    );
+    const savedSecondaryEvaluator =
+      await employeeRepository.save(secondaryEvaluator);
     secondaryEvaluatorId = savedSecondaryEvaluator.id;
 
     // 6. 평가기간-직원 매핑 생성
@@ -446,9 +439,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       isAutoAssigned: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryLine = await evaluationLineRepository.save(
-      secondaryLine,
-    );
+    const savedSecondaryLine =
+      await evaluationLineRepository.save(secondaryLine);
 
     // 13. 평가라인 매핑 생성 (직원별 고정 담당자 - wbsItemId는 null)
     const primaryMapping = evaluationLineMappingRepository.create({
@@ -474,9 +466,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluation1 = await downwardEvaluationRepository.save(
-      primaryEvaluation1,
-    );
+    const savedPrimaryEvaluation1 =
+      await downwardEvaluationRepository.save(primaryEvaluation1);
     primaryEvaluationId1 = savedPrimaryEvaluation1.id;
 
     const primaryEvaluation2 = downwardEvaluationRepository.create({
@@ -491,9 +482,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluation2 = await downwardEvaluationRepository.save(
-      primaryEvaluation2,
-    );
+    const savedPrimaryEvaluation2 =
+      await downwardEvaluationRepository.save(primaryEvaluation2);
     primaryEvaluationId2 = savedPrimaryEvaluation2.id;
 
     const primaryEvaluation3 = downwardEvaluationRepository.create({
@@ -508,9 +498,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluation3 = await downwardEvaluationRepository.save(
-      primaryEvaluation3,
-    );
+    const savedPrimaryEvaluation3 =
+      await downwardEvaluationRepository.save(primaryEvaluation3);
     primaryEvaluationId3 = savedPrimaryEvaluation3.id;
 
     // 15. 평가라인 매핑 생성 (WBS별 평가자 - wbsItemId 포함)
@@ -557,9 +546,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluation1 = await downwardEvaluationRepository.save(
-      secondaryEvaluation1,
-    );
+    const savedSecondaryEvaluation1 =
+      await downwardEvaluationRepository.save(secondaryEvaluation1);
     secondaryEvaluationId1 = savedSecondaryEvaluation1.id;
 
     const secondaryEvaluation2 = downwardEvaluationRepository.create({
@@ -574,9 +562,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluation2 = await downwardEvaluationRepository.save(
-      secondaryEvaluation2,
-    );
+    const savedSecondaryEvaluation2 =
+      await downwardEvaluationRepository.save(secondaryEvaluation2);
     secondaryEvaluationId2 = savedSecondaryEvaluation2.id;
 
     const secondaryEvaluation3 = downwardEvaluationRepository.create({
@@ -591,9 +578,8 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluation3 = await downwardEvaluationRepository.save(
-      secondaryEvaluation3,
-    );
+    const savedSecondaryEvaluation3 =
+      await downwardEvaluationRepository.save(secondaryEvaluation3);
     secondaryEvaluationId3 = savedSecondaryEvaluation3.id;
   }
 
@@ -695,9 +681,7 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       expect(statusResult?.downwardEvaluation.primary.status).toBe(
         'in_progress',
       );
-      expect(statusResult?.downwardEvaluation.primary.assignedWbsCount).toBe(
-        3,
-      );
+      expect(statusResult?.downwardEvaluation.primary.assignedWbsCount).toBe(3);
       expect(
         statusResult?.downwardEvaluation.primary.completedEvaluationCount,
       ).toBe(1); // 1개만 완료
@@ -759,9 +743,9 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
       // Then
       expect(result).toBeDefined();
       expect(result?.downwardEvaluation.secondary.evaluators.length).toBe(1);
-      expect(
-        result?.downwardEvaluation.secondary.evaluators[0].status,
-      ).toBe('complete');
+      expect(result?.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'complete',
+      );
       expect(
         result?.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
       ).toBe(3);
@@ -816,9 +800,9 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
 
       // 2차 하향평가 상태 확인
       expect(result?.downwardEvaluation.secondary.evaluators.length).toBe(1);
-      expect(
-        result?.downwardEvaluation.secondary.evaluators[0].status,
-      ).toBe('complete');
+      expect(result?.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'complete',
+      );
       expect(
         result?.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
       ).toBe(3);
@@ -1004,6 +988,3 @@ describe('Dashboard Context - Downward Evaluation Bulk Submit Status', () => {
     });
   });
 });
-
-
-

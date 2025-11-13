@@ -77,6 +77,7 @@ export interface EmployeeEvaluationPeriodStatusDto {
         totalMappingCount: number;
         completedMappingCount: number;
         isSubmittedToEvaluator: boolean;
+        isSubmittedToManager: boolean;
         totalScore: number | null;
         grade: string | null;
     };

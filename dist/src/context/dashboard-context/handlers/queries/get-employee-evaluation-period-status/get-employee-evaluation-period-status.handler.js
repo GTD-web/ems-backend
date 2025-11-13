@@ -166,7 +166,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             const evaluationLineStatus = (0, evaluation_line_utils_1.평가라인_상태를_계산한다)(hasPrimaryEvaluator, hasSecondaryEvaluator);
             const { totalWbsCount: perfTotalWbsCount, inputCompletedCount } = await (0, performance_input_utils_1.성과입력_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository);
             const performanceInputStatus = (0, performance_input_utils_1.성과입력_상태를_계산한다)(perfTotalWbsCount, inputCompletedCount);
-            const { totalMappingCount, completedMappingCount, submittedToEvaluatorCount, isSubmittedToEvaluator, totalScore, grade, } = await (0, self_evaluation_utils_1.자기평가_진행_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository);
+            const { totalMappingCount, completedMappingCount, submittedToEvaluatorCount, isSubmittedToEvaluator, isSubmittedToManager, totalScore, grade, } = await (0, self_evaluation_utils_1.자기평가_진행_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository);
             const selfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_상태를_계산한다)(totalMappingCount, completedMappingCount);
             const { primary, secondary } = await (0, downward_evaluation_utils_1.하향평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.evaluationLineRepository, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository, this.employeeRepository);
             const { totalRequestCount, completedRequestCount } = await (0, peer_evaluation_utils_1.동료평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.peerEvaluationRepository);
@@ -361,6 +361,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     totalMappingCount,
                     completedMappingCount,
                     isSubmittedToEvaluator,
+                    isSubmittedToManager,
                     totalScore,
                     grade,
                 },

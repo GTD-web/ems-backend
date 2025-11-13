@@ -1,0 +1,165 @@
+{
+  "timestamp": "2025-11-13T15:53:47.159Z",
+  "testResults": [
+    {
+      "testName": "3-1. 피평가자 → 1차 평가자 제출 후 1차 평가자 → 관리자 제출 (정상 흐름)",
+      "result": {
+        "employeeId": "992515cf-1629-4bcc-8ee9-dc1ae31c0c69",
+        "제출결과": {
+          "id": "41962729-96ed-416d-9766-7538dec4f011",
+          "submittedToManager": true,
+          "submittedToManagerAt": "2025-11-13T15:53:46.032Z",
+          "submittedToEvaluator": true,
+          "submittedToEvaluatorAt": "2025-11-13T15:53:45.915Z"
+        },
+        "제출전후_비교": {
+          "대시보드현황": {
+            "제출전": {
+              "completedMappingCount": 0,
+              "isSubmittedToEvaluator": true,
+              "isSubmittedToManager": false,
+              "status": "in_progress",
+              "totalScore": null
+            },
+            "제출후": {
+              "completedMappingCount": 1,
+              "isSubmittedToEvaluator": true,
+              "isSubmittedToManager": true,
+              "status": "complete",
+              "totalScore": 28,
+              "grade": "C"
+            }
+          },
+          "할당데이터": {
+            "제출전": {
+              "completedSelfEvaluations": 0,
+              "submittedToManagerCount": 0,
+              "isSubmittedToManager": false
+            },
+            "제출후": {
+              "completedSelfEvaluations": 1,
+              "submittedToManagerCount": 1,
+              "isSubmittedToManager": true,
+              "totalScore": 28,
+              "grade": "C"
+            }
+          }
+        },
+        "전체직원현황": {
+          "completedMappingCount": 1,
+          "isSubmittedToEvaluator": true,
+          "isSubmittedToManager": true,
+          "status": "complete",
+          "totalScore": 28,
+          "grade": "C"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "3-2. 피평가자 제출 없이 1차 평가자 → 관리자 제출 (자동 제출 처리)",
+      "result": {
+        "employeeId": "a95fdb73-91d0-431c-a8c9-367b0b4f9e5c",
+        "제출결과": {
+          "id": "ba204517-d7ba-4495-896d-5f1ea6443e75",
+          "submittedToManager": true,
+          "submittedToManagerAt": "2025-11-13T15:53:46.402Z",
+          "submittedToEvaluator": true,
+          "submittedToEvaluatorAt": "2025-11-13T15:53:46.402Z",
+          "자동제출처리": true
+        },
+        "대시보드현황": {
+          "completedMappingCount": 1,
+          "isSubmittedToEvaluator": true,
+          "status": "complete",
+          "totalScore": 28,
+          "grade": "C"
+        },
+        "할당데이터": {
+          "completedSelfEvaluations": 1,
+          "submittedToManagerCount": 1,
+          "isSubmittedToManager": true,
+          "submittedToEvaluatorCount": 1,
+          "isSubmittedToEvaluator": true,
+          "totalScore": 28,
+          "grade": "C"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "3-3. 다중 자기평가 중 일부만 관리자에게 제출 (in_progress 상태)",
+      "result": {
+        "employeeId": "dbdc5c32-985f-4dd6-a1b7-d12cf65aec4d",
+        "저장결과": {
+          "저장1": "fdc87194-1e5c-4201-9474-d97439fe09a1",
+          "저장2": "e20ee7b5-6394-4c66-b19e-023d9ac640be"
+        },
+        "제출결과": {
+          "id": "fdc87194-1e5c-4201-9474-d97439fe09a1",
+          "submittedToManager": true,
+          "submittedToEvaluator": true
+        },
+        "대시보드현황": {
+          "totalMappingCount": 2,
+          "completedMappingCount": 1,
+          "isSubmittedToEvaluator": false,
+          "isSubmittedToManager": false,
+          "status": "in_progress",
+          "totalScore": null
+        },
+        "할당데이터": {
+          "completedSelfEvaluations": 1,
+          "submittedToManagerCount": 1,
+          "isSubmittedToManager": false,
+          "submittedToEvaluatorCount": 1,
+          "isSubmittedToEvaluator": false
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "3-4. 모든 자기평가를 관리자에게 제출 완료 (complete 상태 및 점수/등급 계산)",
+      "result": {
+        "employeeId": "549b243c-30f7-4421-8e8d-ef23f2b2a014",
+        "저장결과": {
+          "저장1": "498dc40e-862b-4369-91c3-323a44f71e2e",
+          "저장2": "4443ba5a-99eb-4a0d-8680-1d83c5583f17",
+          "저장3": "37e343b3-cbb2-4823-85af-d614dec3732d"
+        },
+        "최종제출결과": {
+          "id": "37e343b3-cbb2-4823-85af-d614dec3732d",
+          "submittedToManager": true,
+          "submittedToEvaluator": true
+        },
+        "대시보드현황": {
+          "totalMappingCount": 3,
+          "completedMappingCount": 3,
+          "isSubmittedToEvaluator": true,
+          "isSubmittedToManager": true,
+          "status": "complete",
+          "totalScore": 90,
+          "grade": "S"
+        },
+        "할당데이터": {
+          "completedSelfEvaluations": 3,
+          "submittedToManagerCount": 3,
+          "isSubmittedToManager": true,
+          "submittedToEvaluatorCount": 3,
+          "isSubmittedToEvaluator": true,
+          "totalScore": 90,
+          "grade": "S"
+        },
+        "전체직원현황": {
+          "completedMappingCount": 3,
+          "isSubmittedToEvaluator": true,
+          "isSubmittedToManager": true,
+          "status": "complete",
+          "totalScore": 90,
+          "grade": "S"
+        },
+        "passed": true
+      }
+    }
+  ]
+}

@@ -335,6 +335,12 @@ export class SelfEvaluationInfoDto {
   })
   isSubmittedToEvaluator: boolean;
 
+  @ApiProperty({
+    description: '1차 평가자가 관리자에게 자기평가 제출 완료 여부',
+    example: true,
+  })
+  isSubmittedToManager: boolean;
+
   @ApiPropertyOptional({
     description: '가중치 기반 자기평가 총점 (0-100)',
     example: 85.5,

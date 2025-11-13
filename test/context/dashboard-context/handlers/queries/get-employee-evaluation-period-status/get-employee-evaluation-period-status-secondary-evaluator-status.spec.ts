@@ -35,6 +35,7 @@ import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downwar
 import { ProjectStatus } from '@domain/common/project/project.types';
 import * as fs from 'fs';
 import * as path from 'path';
+import { RecipientType } from '@/domain/sub/evaluation-revision-request';
 
 /**
  * Dashboard Context - 2차 평가자 상태 검증 테스트
@@ -130,17 +131,27 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
     evaluationPeriodRepository = dataSource.getRepository(EvaluationPeriod);
     employeeRepository = dataSource.getRepository(Employee);
     departmentRepository = dataSource.getRepository(Department);
-    mappingRepository = dataSource.getRepository(EvaluationPeriodEmployeeMapping);
-    stepApprovalRepository = dataSource.getRepository(EmployeeEvaluationStepApproval);
-    projectAssignmentRepository = dataSource.getRepository(EvaluationProjectAssignment);
+    mappingRepository = dataSource.getRepository(
+      EvaluationPeriodEmployeeMapping,
+    );
+    stepApprovalRepository = dataSource.getRepository(
+      EmployeeEvaluationStepApproval,
+    );
+    projectAssignmentRepository = dataSource.getRepository(
+      EvaluationProjectAssignment,
+    );
     wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
     wbsCriteriaRepository = dataSource.getRepository(WbsEvaluationCriteria);
     evaluationLineRepository = dataSource.getRepository(EvaluationLine);
-    evaluationLineMappingRepository = dataSource.getRepository(EvaluationLineMapping);
+    evaluationLineMappingRepository = dataSource.getRepository(
+      EvaluationLineMapping,
+    );
     downwardEvaluationRepository = dataSource.getRepository(DownwardEvaluation);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
-    revisionRequestRepository = dataSource.getRepository(EvaluationRevisionRequest);
+    revisionRequestRepository = dataSource.getRepository(
+      EvaluationRevisionRequest,
+    );
     revisionRequestRecipientRepository = dataSource.getRepository(
       EvaluationRevisionRequestRecipient,
     );
@@ -176,8 +187,11 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
   beforeEach(async () => {
     // 각 테스트 전에 데이터 정리
     try {
-      const revisionRequestRecipients = await revisionRequestRecipientRepository.find();
-      await revisionRequestRecipientRepository.remove(revisionRequestRecipients);
+      const revisionRequestRecipients =
+        await revisionRequestRecipientRepository.find();
+      await revisionRequestRecipientRepository.remove(
+        revisionRequestRecipients,
+      );
 
       const revisionRequests = await revisionRequestRepository.find();
       await revisionRequestRepository.remove(revisionRequests);
@@ -303,7 +317,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluator = await employeeRepository.save(primaryEvaluator);
+    const savedPrimaryEvaluator =
+      await employeeRepository.save(primaryEvaluator);
     primaryEvaluatorId = savedPrimaryEvaluator.id;
 
     // 6. 평가자 생성 (2차 - 1명)
@@ -316,7 +331,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluator1 = await employeeRepository.save(secondaryEvaluator1);
+    const savedSecondaryEvaluator1 =
+      await employeeRepository.save(secondaryEvaluator1);
     secondaryEvaluatorId1 = savedSecondaryEvaluator1.id;
 
     // 7. 평가자 생성 (2차 - 2명)
@@ -329,7 +345,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluator2 = await employeeRepository.save(secondaryEvaluator2);
+    const savedSecondaryEvaluator2 =
+      await employeeRepository.save(secondaryEvaluator2);
     secondaryEvaluatorId2 = savedSecondaryEvaluator2.id;
 
     // 8. 프로젝트 생성
@@ -453,7 +470,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       isAutoAssigned: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryLine = await evaluationLineRepository.save(secondaryLine);
+    const savedSecondaryLine =
+      await evaluationLineRepository.save(secondaryLine);
     secondaryLineId = savedSecondaryLine.id;
 
     // 2차 평가자 매핑 (1명)
@@ -491,12 +509,19 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       expect(result).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.status).toBe('none');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(1);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('none');
-      expect(result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount).toBe(0);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].completedEvaluationCount).toBe(
-        0,
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'none',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].isSubmitted).toBe(false);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
+      ).toBe(0);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0]
+          .completedEvaluationCount,
+      ).toBe(0);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].isSubmitted,
+      ).toBe(false);
 
       // 테스트 결과 저장
       testResults.push({
@@ -504,13 +529,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 1: none - 평가할 WBS가 없으면 secondary.status는 none이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
         },
       });
     });
@@ -532,12 +559,19 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       expect(result).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.status).toBe('none');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(1);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('none');
-      expect(result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount).toBe(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].completedEvaluationCount).toBe(
-        0,
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'none',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].isSubmitted).toBe(false);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0]
+          .completedEvaluationCount,
+      ).toBe(0);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].isSubmitted,
+      ).toBe(false);
 
       // 테스트 결과 저장
       testResults.push({
@@ -545,13 +579,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 2: none - 2차 평가자가 있지만 하향평가가 하나도 없으면 secondary.status는 none이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
         },
       });
     });
@@ -589,12 +625,19 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       expect(result).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.status).toBe('in_progress');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(1);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('in_progress');
-      expect(result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount).toBe(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].completedEvaluationCount).toBe(
-        1,
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'in_progress',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].isSubmitted).toBe(false);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0]
+          .completedEvaluationCount,
+      ).toBe(1);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].isSubmitted,
+      ).toBe(false);
 
       // 테스트 결과 저장
       testResults.push({
@@ -602,13 +645,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 3: in_progress - 일부만 완료되었으면 secondary.status는 in_progress이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
         },
       });
     });
@@ -668,12 +713,19 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       expect(result).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.status).toBe('pending');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(1);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('pending');
-      expect(result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount).toBe(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].completedEvaluationCount).toBe(
-        2,
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'pending',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].isSubmitted).toBe(true);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0]
+          .completedEvaluationCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].isSubmitted,
+      ).toBe(true);
       expect(result!.downwardEvaluation.secondary.totalScore).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.grade).not.toBeNull();
 
@@ -683,13 +735,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 4: pending - 모든 평가가 완료되었지만 승인 대기 중이면 secondary.status는 pending이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
           totalScore: result!.downwardEvaluation.secondary.totalScore,
           grade: result!.downwardEvaluation.secondary.grade,
         },
@@ -753,12 +807,19 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       expect(result).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.status).toBe('approved');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(1);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('approved');
-      expect(result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount).toBe(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].completedEvaluationCount).toBe(
-        2,
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'approved',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].isSubmitted).toBe(true);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0]
+          .completedEvaluationCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].isSubmitted,
+      ).toBe(true);
       expect(result!.downwardEvaluation.secondary.totalScore).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.grade).not.toBeNull();
       expect(result!.stepApproval.secondaryEvaluationStatus).toBe('approved');
@@ -771,13 +832,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 5: approved - 모든 평가가 완료되고 승인되었으면 secondary.status는 approved이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
           totalScore: result!.downwardEvaluation.secondary.totalScore,
           grade: result!.downwardEvaluation.secondary.grade,
           stepApprovalStatus: result!.stepApproval.secondaryEvaluationStatus,
@@ -840,7 +903,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
         revisionRequestRecipientRepository.create({
           revisionRequestId: revisionRequest.id,
           recipientId: secondaryEvaluatorId1,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           isCompleted: false,
           createdBy: systemAdminId,
         }),
@@ -855,16 +918,23 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
 
       // Then
       expect(result).not.toBeNull();
-      expect(result!.downwardEvaluation.secondary.status).toBe('revision_requested');
+      expect(result!.downwardEvaluation.secondary.status).toBe(
+        'revision_requested',
+      );
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(1);
       expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
         'revision_requested',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount).toBe(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].completedEvaluationCount).toBe(
-        2,
-      );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].isSubmitted).toBe(true);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0]
+          .completedEvaluationCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].isSubmitted,
+      ).toBe(true);
       expect(result!.downwardEvaluation.secondary.totalScore).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.grade).not.toBeNull();
 
@@ -874,13 +944,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 6: revision_requested - 재작성 요청되었으면 secondary.status는 revision_requested이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
           totalScore: result!.downwardEvaluation.secondary.totalScore,
           grade: result!.downwardEvaluation.secondary.grade,
         },
@@ -940,7 +1012,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
         revisionRequestRecipientRepository.create({
           revisionRequestId: revisionRequest.id,
           recipientId: secondaryEvaluatorId1,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           isCompleted: true,
           createdBy: systemAdminId,
         }),
@@ -955,16 +1027,23 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
 
       // Then
       expect(result).not.toBeNull();
-      expect(result!.downwardEvaluation.secondary.status).toBe('revision_completed');
+      expect(result!.downwardEvaluation.secondary.status).toBe(
+        'revision_completed',
+      );
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(1);
       expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
         'revision_completed',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount).toBe(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].completedEvaluationCount).toBe(
-        2,
-      );
-      expect(result!.downwardEvaluation.secondary.evaluators[0].isSubmitted).toBe(true);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0]
+          .completedEvaluationCount,
+      ).toBe(2);
+      expect(
+        result!.downwardEvaluation.secondary.evaluators[0].isSubmitted,
+      ).toBe(true);
       expect(result!.downwardEvaluation.secondary.totalScore).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.grade).not.toBeNull();
 
@@ -974,13 +1053,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 7: revision_completed - 재작성 완료되었으면 secondary.status는 revision_completed이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
           totalScore: result!.downwardEvaluation.secondary.totalScore,
           grade: result!.downwardEvaluation.secondary.grade,
         },
@@ -1087,8 +1168,12 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       expect(result).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.status).toBe('approved');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('approved');
-      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe('approved');
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'approved',
+      );
+      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe(
+        'approved',
+      );
       expect(result!.downwardEvaluation.secondary.isSubmitted).toBe(true);
       expect(result!.downwardEvaluation.secondary.totalScore).not.toBeNull();
       expect(result!.downwardEvaluation.secondary.grade).not.toBeNull();
@@ -1099,13 +1184,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 8: 여러 평가자 상태 통합 - 모든 평가자가 approved이면 전체 상태는 approved이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
           isSubmitted: result!.downwardEvaluation.secondary.isSubmitted,
           totalScore: result!.downwardEvaluation.secondary.totalScore,
           grade: result!.downwardEvaluation.secondary.grade,
@@ -1202,7 +1289,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       );
 
       // 평가자2에 대한 재작성 요청 없이 approved 상태로 만들기 위해
-      // 별도로 평가자2만 approved 상태로 만들어야 하지만, 
+      // 별도로 평가자2만 approved 상태로 만들어야 하지만,
       // stepApproval의 secondaryEvaluationStatus는 전체 상태이므로
       // 실제로는 각 평가자별로 재작성 요청이 없으면 pending이 됩니다.
       // 따라서 이 테스트는 pending + pending = pending이 됩니다.
@@ -1220,8 +1307,12 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // pending + pending = pending (실제로는 두 평가자 모두 pending)
       expect(result!.downwardEvaluation.secondary.status).toBe('pending');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('pending');
-      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe('pending');
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'pending',
+      );
+      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe(
+        'pending',
+      );
 
       // 테스트 결과 저장
       testResults.push({
@@ -1229,13 +1320,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 9: 여러 평가자 혼합 상태 - pending + pending 혼합이면 전체 상태는 pending이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
         },
       });
     });
@@ -1335,7 +1428,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
         revisionRequestRecipientRepository.create({
           revisionRequestId: revisionRequest.id,
           recipientId: secondaryEvaluatorId1,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           isCompleted: false,
           createdBy: systemAdminId,
         }),
@@ -1362,12 +1455,16 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Then
       expect(result).not.toBeNull();
       // revision_requested가 하나라도 있으면 최우선
-      expect(result!.downwardEvaluation.secondary.status).toBe('revision_requested');
+      expect(result!.downwardEvaluation.secondary.status).toBe(
+        'revision_requested',
+      );
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
       expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
         'revision_requested',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe('approved');
+      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe(
+        'approved',
+      );
 
       // 테스트 결과 저장
       testResults.push({
@@ -1375,13 +1472,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 10: 여러 평가자 혼합 상태 - revision_requested + approved 혼합이면 전체 상태는 revision_requested이어야 한다 (최우선)',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
         },
       });
     });
@@ -1481,7 +1580,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
         revisionRequestRecipientRepository.create({
           revisionRequestId: revisionRequest.id,
           recipientId: secondaryEvaluatorId1,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           isCompleted: true,
           createdBy: systemAdminId,
         }),
@@ -1506,12 +1605,16 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Then
       expect(result).not.toBeNull();
       // revision_completed가 하나라도 있으면 revision_completed
-      expect(result!.downwardEvaluation.secondary.status).toBe('revision_completed');
+      expect(result!.downwardEvaluation.secondary.status).toBe(
+        'revision_completed',
+      );
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
       expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
         'revision_completed',
       );
-      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe('pending');
+      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe(
+        'pending',
+      );
 
       // 테스트 결과 저장
       testResults.push({
@@ -1519,13 +1622,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 11: 여러 평가자 혼합 상태 - revision_completed + pending 혼합이면 전체 상태는 revision_completed이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
         },
       });
     });
@@ -1615,8 +1720,12 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // in_progress가 하나라도 있으면 in_progress
       expect(result!.downwardEvaluation.secondary.status).toBe('in_progress');
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
-      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe('in_progress');
-      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe('pending');
+      expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
+        'in_progress',
+      );
+      expect(result!.downwardEvaluation.secondary.evaluators[1].status).toBe(
+        'pending',
+      );
 
       // 테스트 결과 저장
       testResults.push({
@@ -1624,13 +1733,15 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 12: 여러 평가자 혼합 상태 - in_progress + pending 혼합이면 전체 상태는 in_progress이어야 한다',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
         },
       });
     });
@@ -1730,7 +1841,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
         revisionRequestRecipientRepository.create({
           revisionRequestId: revisionRequest1.id,
           recipientId: secondaryEvaluatorId1,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           isCompleted: false,
           createdBy: systemAdminId,
         }),
@@ -1753,7 +1864,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
         revisionRequestRecipientRepository.create({
           revisionRequestId: revisionRequest2.id,
           recipientId: secondaryEvaluatorId2,
-          recipientType: 'secondary_evaluator',
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
           isCompleted: true,
           createdBy: systemAdminId,
         }),
@@ -1769,7 +1880,9 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Then
       expect(result).not.toBeNull();
       // revision_requested가 하나라도 있으면 최우선
-      expect(result!.downwardEvaluation.secondary.status).toBe('revision_requested');
+      expect(result!.downwardEvaluation.secondary.status).toBe(
+        'revision_requested',
+      );
       expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
       expect(result!.downwardEvaluation.secondary.evaluators[0].status).toBe(
         'revision_requested',
@@ -1784,16 +1897,17 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           '상태 13: 여러 평가자 혼합 상태 - revision_requested + revision_completed 혼합이면 전체 상태는 revision_requested이어야 한다 (최우선)',
         result: {
           status: result!.downwardEvaluation.secondary.status,
-          evaluators: result!.downwardEvaluation.secondary.evaluators.map((e) => ({
-            evaluatorName: e.evaluator.name,
-            status: e.status,
-            assignedWbsCount: e.assignedWbsCount,
-            completedEvaluationCount: e.completedEvaluationCount,
-            isSubmitted: e.isSubmitted,
-          })),
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              status: e.status,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
         },
       });
     });
   });
 });
-

@@ -178,6 +178,8 @@ class SelfEvaluationStatusDto {
     status;
     totalCount;
     completedCount;
+    isSubmittedToEvaluator;
+    isSubmittedToManager;
     totalScore;
     grade;
 }
@@ -204,6 +206,20 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], SelfEvaluationStatusDto.prototype, "completedCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '피평가자가 1차 평가자에게 자기평가 제출 완료 여부',
+        example: true,
+    }),
+    __metadata("design:type", Boolean)
+], SelfEvaluationStatusDto.prototype, "isSubmittedToEvaluator", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '1차 평가자가 관리자에게 자기평가 제출 완료 여부',
+        example: true,
+    }),
+    __metadata("design:type", Boolean)
+], SelfEvaluationStatusDto.prototype, "isSubmittedToManager", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '가중치 기반 자기평가 총점 (0-100)',

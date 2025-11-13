@@ -500,6 +500,9 @@ export class DashboardController {
         status: statusData.selfEvaluation.status,
         totalCount: statusData.selfEvaluation.totalMappingCount,
         completedCount: statusData.selfEvaluation.completedMappingCount,
+        isSubmittedToEvaluator:
+          statusData.selfEvaluation.isSubmittedToEvaluator,
+        isSubmittedToManager: statusData.selfEvaluation.isSubmittedToManager,
         totalScore: statusData.selfEvaluation.totalScore,
         grade: statusData.selfEvaluation.grade,
       },

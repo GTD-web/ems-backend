@@ -271,6 +271,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         completedMappingCount,
         submittedToEvaluatorCount,
         isSubmittedToEvaluator,
+        isSubmittedToManager,
         totalScore,
         grade,
       } = await 자기평가_진행_상태를_조회한다(
@@ -605,6 +606,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           totalMappingCount,
           completedMappingCount,
           isSubmittedToEvaluator,
+          isSubmittedToManager,
           totalScore,
           grade,
         },

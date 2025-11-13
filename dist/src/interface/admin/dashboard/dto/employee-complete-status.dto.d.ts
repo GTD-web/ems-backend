@@ -33,6 +33,8 @@ export declare class SelfEvaluationStatusDto {
     status: 'complete' | 'in_progress' | 'none';
     totalCount: number;
     completedCount: number;
+    isSubmittedToEvaluator: boolean;
+    isSubmittedToManager: boolean;
     totalScore: number | null;
     grade: string | null;
 }

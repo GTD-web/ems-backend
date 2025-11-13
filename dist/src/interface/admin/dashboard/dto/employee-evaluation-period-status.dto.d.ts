@@ -62,6 +62,7 @@ export declare class SelfEvaluationInfoDto {
     totalMappingCount: number;
     completedMappingCount: number;
     isSubmittedToEvaluator: boolean;
+    isSubmittedToManager: boolean;
     totalScore: number | null;
     grade: string | null;
 }
