@@ -18,7 +18,10 @@ import { EmployeeEvaluationPeriodStatusDto } from '../../../interfaces/dashboard
 import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
-import { 평가자들별_2차평가_단계승인_상태를_조회한다 } from './step-approval.utils';
+import {
+  평가자들별_2차평가_단계승인_상태를_조회한다,
+  일차평가_단계승인_상태를_조회한다,
+} from './step-approval.utils';
 
 // 유틸 함수 import
 import {
@@ -325,6 +328,60 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         result.mapping_id,
       );
 
+      // 19-0. 1차 평가자 단계 승인 상태 조회
+      let primaryEvaluationStatus:
+        | 'pending'
+        | 'approved'
+        | 'revision_requested'
+        | 'revision_completed' = 'pending';
+      let primaryApprovedBy: string | null = null;
+      let primaryApprovedAt: Date | null = null;
+
+      if (primary.evaluator?.id) {
+        const primaryStatusInfo = await 일차평가_단계승인_상태를_조회한다(
+          evaluationPeriodId,
+          employeeId,
+          primary.evaluator.id,
+          this.revisionRequestRepository,
+          this.revisionRequestRecipientRepository,
+        );
+
+        // 재작성 요청이 있으면 그 상태를 사용
+        if (primaryStatusInfo.revisionRequestId !== null) {
+          if (primaryStatusInfo.isCompleted) {
+            primaryEvaluationStatus = 'revision_completed';
+          } else {
+            primaryEvaluationStatus = 'revision_requested';
+          }
+        } else {
+          // 재작성 요청이 없으면 stepApproval 상태 확인
+          const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+          if (stepApprovalStatus === 'approved') {
+            primaryEvaluationStatus = 'approved';
+            primaryApprovedBy =
+              stepApproval?.primaryEvaluationApprovedBy ?? null;
+            primaryApprovedAt =
+              stepApproval?.primaryEvaluationApprovedAt ?? null;
+          } else if (stepApprovalStatus === 'revision_completed') {
+            primaryEvaluationStatus = 'revision_completed';
+          } else {
+            primaryEvaluationStatus = 'pending';
+          }
+        }
+      } else {
+        // 1차 평가자가 없으면 stepApproval 상태만 확인
+        const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+        if (stepApprovalStatus === 'approved') {
+          primaryEvaluationStatus = 'approved';
+          primaryApprovedBy = stepApproval?.primaryEvaluationApprovedBy ?? null;
+          primaryApprovedAt = stepApproval?.primaryEvaluationApprovedAt ?? null;
+        } else if (stepApprovalStatus === 'revision_completed') {
+          primaryEvaluationStatus = 'revision_completed';
+        } else {
+          primaryEvaluationStatus = (stepApprovalStatus as any) ?? 'pending';
+        }
+      }
+
       // 19-1. 2차 평가자별 단계 승인 상태 조회
       // evaluator가 존재하는 항목만 필터링
       const validSecondaryEvaluators = secondary.evaluators.filter(
@@ -376,10 +433,16 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               }
             } else {
               // 재작성 요청이 없는 경우, stepApproval 상태 확인
-              if (stepApproval?.secondaryEvaluationStatus === 'approved') {
+              const stepApprovalStatus =
+                stepApproval?.secondaryEvaluationStatus;
+              if (stepApprovalStatus === 'approved') {
                 finalStatus = 'approved';
-                approvedBy = stepApproval.secondaryEvaluationApprovedBy;
-                approvedAt = stepApproval.secondaryEvaluationApprovedAt;
+                approvedBy =
+                  stepApproval?.secondaryEvaluationApprovedBy ?? null;
+                approvedAt =
+                  stepApproval?.secondaryEvaluationApprovedAt ?? null;
+              } else if (stepApprovalStatus === 'revision_completed') {
+                finalStatus = 'revision_completed';
               } else {
                 finalStatus = 'pending';
               }
@@ -552,7 +615,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             evaluator: primary.evaluator,
             status: 하향평가_통합_상태를_계산한다(
               primary.status,
-              stepApproval?.primaryEvaluationStatus ?? 'pending',
+              primaryEvaluationStatus,
             ),
             assignedWbsCount: primary.assignedWbsCount,
             completedEvaluationCount: primary.completedEvaluationCount,
@@ -628,12 +691,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             stepApproval?.selfEvaluationApprovedBy ?? null,
           selfEvaluationApprovedAt:
             stepApproval?.selfEvaluationApprovedAt ?? null,
-          primaryEvaluationStatus:
-            stepApproval?.primaryEvaluationStatus ?? 'pending',
-          primaryEvaluationApprovedBy:
-            stepApproval?.primaryEvaluationApprovedBy ?? null,
-          primaryEvaluationApprovedAt:
-            stepApproval?.primaryEvaluationApprovedAt ?? null,
+          primaryEvaluationStatus: primaryEvaluationStatus,
+          primaryEvaluationApprovedBy: primaryApprovedBy,
+          primaryEvaluationApprovedAt: primaryApprovedAt,
           secondaryEvaluationStatuses:
             secondaryEvaluationStatusesWithEvaluatorInfo,
           secondaryEvaluationStatus: finalSecondaryStatus,

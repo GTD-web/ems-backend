@@ -3,6 +3,8 @@ import { StepApprovalApiClient } from '../api-clients/step-approval.api-client';
 import { DashboardApiClient } from '../api-clients/dashboard.api-client';
 import { WbsSelfEvaluationApiClient } from '../api-clients/wbs-self-evaluation.api-client';
 import { DownwardEvaluationApiClient } from '../api-clients/downward-evaluation.api-client';
+import { RevisionRequestApiClient } from '../api-clients/revision-request.api-client';
+import { EvaluationLineApiClient } from '../api-clients/evaluation-line.api-client';
 import { EvaluationPeriodScenario } from '../evaluation-period.scenario';
 import { ProjectAssignmentScenario } from '../project-assignment/project-assignment.scenario';
 import { WbsAssignmentScenario } from '../wbs-assignment/wbs-assignment.scenario';
@@ -17,6 +19,8 @@ export class StepApprovalScenario {
   private dashboardApiClient: DashboardApiClient;
   private wbsSelfEvaluationApiClient: WbsSelfEvaluationApiClient;
   private downwardEvaluationApiClient: DownwardEvaluationApiClient;
+  private revisionRequestApiClient: RevisionRequestApiClient;
+  private evaluationLineApiClient: EvaluationLineApiClient;
   private evaluationPeriodScenario: EvaluationPeriodScenario;
   private projectAssignmentScenario: ProjectAssignmentScenario;
   private wbsAssignmentScenario: WbsAssignmentScenario;
@@ -28,6 +32,8 @@ export class StepApprovalScenario {
     this.downwardEvaluationApiClient = new DownwardEvaluationApiClient(
       testSuite,
     );
+    this.revisionRequestApiClient = new RevisionRequestApiClient(testSuite);
+    this.evaluationLineApiClient = new EvaluationLineApiClient(testSuite);
     this.evaluationPeriodScenario = new EvaluationPeriodScenario(testSuite);
     this.projectAssignmentScenario = new ProjectAssignmentScenario(testSuite);
     this.wbsAssignmentScenario = new WbsAssignmentScenario(testSuite);
@@ -57,34 +63,51 @@ export class StepApprovalScenario {
     projectId: string;
     wbsItemId: string;
   }> {
-    // 1. 프로젝트 할당
-    await this.projectAssignmentScenario.프로젝트를_할당한다({
-      periodId: config.evaluationPeriodId,
-      employeeId: config.employeeId,
-      projectId: config.projectId,
-    });
+    // 1. 프로젝트 할당 (중복 시 무시)
+    // API 클라이언트를 직접 사용하지 않고 HTTP 요청을 직접 수행하여 409 에러를 처리
+    const projectAssignmentResponse = await this.testSuite
+      .request()
+      .post('/admin/evaluation-criteria/project-assignments')
+      .send({
+        employeeId: config.employeeId,
+        projectId: config.projectId,
+        periodId: config.evaluationPeriodId,
+      });
 
-    // 2. WBS 할당
-    await this.wbsAssignmentScenario.WBS를_할당한다({
-      periodId: config.evaluationPeriodId,
-      employeeId: config.employeeId,
-      wbsItemId: config.wbsItemId,
-      projectId: config.projectId,
-    });
+    // 409 Conflict 에러는 이미 할당되어 있는 경우이므로 무시
+    if (projectAssignmentResponse.status === 409) {
+      // 이미 할당되어 있으므로 무시
+    } else if (projectAssignmentResponse.status !== 201) {
+      // 다른 에러는 throw
+      throw new Error(
+        `프로젝트 할당 생성 실패: ${projectAssignmentResponse.status} - ${JSON.stringify(projectAssignmentResponse.body)}`,
+      );
+    }
+
+    // 2. WBS 할당 (중복 시 무시)
+    try {
+      await this.wbsAssignmentScenario.WBS를_할당한다({
+        periodId: config.evaluationPeriodId,
+        employeeId: config.employeeId,
+        wbsItemId: config.wbsItemId,
+        projectId: config.projectId,
+      });
+    } catch (error: any) {
+      // 409 Conflict 에러는 이미 할당되어 있는 경우이므로 무시
+      if (error?.response?.status !== 409) {
+        throw error;
+      }
+    }
 
     // 3. 1차 평가자 매핑 수동 구성 (직원의 managerId가 없으면 자동 구성되지 않음)
     // WBS 할당 시 평가라인 자동 구성에서 직원의 managerId가 없으면 1차 평가자 매핑이 생성되지 않음
     // 따라서 평가라인 구성 API를 직접 호출하여 1차 평가자 매핑을 생성
     if (config.primaryEvaluatorId) {
-      await this.testSuite
-        .request()
-        .post(
-          `/admin/evaluation-criteria/evaluation-lines/employee/${config.employeeId}/period/${config.evaluationPeriodId}/primary-evaluator`,
-        )
-        .send({
-          evaluatorId: config.primaryEvaluatorId,
-        })
-        .expect(201);
+      await this.evaluationLineApiClient.configurePrimaryEvaluator({
+        employeeId: config.employeeId,
+        periodId: config.evaluationPeriodId,
+        evaluatorId: config.primaryEvaluatorId,
+      });
     }
 
     return {
@@ -328,13 +351,109 @@ export class StepApprovalScenario {
     evaluationPeriodId: string;
     employeeId: string;
   }) {
-    const response = await this.testSuite
-      .request()
-      .get(
-        `/admin/dashboard/${config.evaluationPeriodId}/employees/${config.employeeId}/complete-status`,
-      )
-      .expect(200);
+    return await this.dashboardApiClient.getEmployeeCompleteStatus({
+      periodId: config.evaluationPeriodId,
+      employeeId: config.employeeId,
+    });
+  }
 
-    return response.body;
+  // ==================== 재작성 요청 완료 ====================
+
+  /**
+   * 재작성 완료 응답을 제출한다
+   */
+  async 재작성완료_응답을_제출한다(config: {
+    requestId: string;
+    responseComment: string;
+  }) {
+    await this.revisionRequestApiClient.completeRevisionRequest({
+      requestId: config.requestId,
+      responseComment: config.responseComment,
+    });
+  }
+
+  /**
+   * 재작성 완료 응답을 제출한다 (관리자용 - 평가기간, 직원, 평가자 기반)
+   */
+  async 재작성완료_응답을_제출한다_관리자용(config: {
+    evaluationPeriodId: string;
+    employeeId: string;
+    evaluatorId: string;
+    step: 'criteria' | 'self' | 'primary' | 'secondary';
+    responseComment: string;
+  }) {
+    await this.revisionRequestApiClient.completeRevisionRequestByEvaluator({
+      evaluationPeriodId: config.evaluationPeriodId,
+      employeeId: config.employeeId,
+      evaluatorId: config.evaluatorId,
+      step: config.step,
+      responseComment: config.responseComment,
+    });
+  }
+
+  /**
+   * 재작성 요청 목록을 조회한다
+   */
+  async 재작성요청_목록을_조회한다(config?: {
+    evaluationPeriodId?: string;
+    employeeId?: string;
+    step?: 'criteria' | 'self' | 'primary' | 'secondary';
+    isCompleted?: boolean;
+  }) {
+    return await this.revisionRequestApiClient.getRevisionRequests({
+      evaluationPeriodId: config?.evaluationPeriodId,
+      employeeId: config?.employeeId,
+      step: config?.step,
+      isCompleted: config?.isCompleted,
+    });
+  }
+
+  // ==================== 대시보드 상태 조회 ====================
+
+  /**
+   * 직원 평가기간 현황을 조회한다 (대시보드 상태 검증용)
+   */
+  async 직원_평가기간_현황을_조회한다(config: {
+    evaluationPeriodId: string;
+    employeeId: string;
+  }) {
+    return await this.dashboardApiClient.getEmployeeEvaluationPeriodStatus({
+      periodId: config.evaluationPeriodId,
+      employeeId: config.employeeId,
+    });
+  }
+
+  /**
+   * 2차 평가자 매핑을 구성한다
+   */
+  async 이차평가자_매핑을_구성한다(config: {
+    employeeId: string;
+    evaluationPeriodId: string;
+    evaluatorId: string;
+    wbsItemId?: string;
+  }) {
+    if (config.wbsItemId) {
+      // WBS별 2차 평가자 구성
+      return await this.evaluationLineApiClient.configureSecondaryEvaluator({
+        employeeId: config.employeeId,
+        wbsItemId: config.wbsItemId,
+        periodId: config.evaluationPeriodId,
+        evaluatorId: config.evaluatorId,
+      });
+    } else {
+      // 직원별 2차 평가자 구성 (직원 레벨)
+      // API 클라이언트에 직원별 2차 평가자 구성 메서드가 없으므로 직접 호출
+      const response = await this.testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/evaluation-lines/employee/${config.employeeId}/period/${config.evaluationPeriodId}/secondary-evaluator`,
+        )
+        .send({
+          evaluatorId: config.evaluatorId,
+        })
+        .expect(201);
+
+      return response.body;
+    }
   }
 }

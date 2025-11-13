@@ -13,6 +13,12 @@ function 하향평가_통합_상태를_계산한다(downwardStatus, approvalStat
     if (downwardStatus === 'none') {
         return 'none';
     }
+    if (approvalStatus === 'revision_requested') {
+        return 'revision_requested';
+    }
+    if (approvalStatus === 'revision_completed') {
+        return 'revision_completed';
+    }
     if (downwardStatus === 'in_progress') {
         return 'in_progress';
     }
@@ -22,26 +28,25 @@ function 이차평가_전체_상태를_계산한다(evaluatorStatuses) {
     if (evaluatorStatuses.length === 0 || evaluatorStatuses.every(s => s === 'none')) {
         return 'none';
     }
+    if (evaluatorStatuses.some(s => s === 'revision_requested')) {
+        return 'revision_requested';
+    }
+    if (evaluatorStatuses.some(s => s === 'revision_completed')) {
+        return 'revision_completed';
+    }
     const hasInProgress = evaluatorStatuses.some(s => s === 'in_progress' || s === 'complete');
     if (hasInProgress && evaluatorStatuses.some(s => s === 'none' || s === 'in_progress')) {
         return 'in_progress';
     }
-    const allCompleteOrAbove = evaluatorStatuses.every(s => s === 'complete' || s === 'pending' || s === 'approved' ||
-        s === 'revision_requested' || s === 'revision_completed');
+    const allCompleteOrAbove = evaluatorStatuses.every(s => s === 'complete' || s === 'pending' || s === 'approved');
     if (allCompleteOrAbove) {
-        if (evaluatorStatuses.some(s => s === 'revision_requested')) {
-            return 'revision_requested';
-        }
         if (evaluatorStatuses.every(s => s === 'pending')) {
             return 'pending';
-        }
-        if (evaluatorStatuses.some(s => s === 'revision_completed')) {
-            return 'revision_completed';
         }
         if (evaluatorStatuses.every(s => s === 'approved')) {
             return 'approved';
         }
-        return 'pending';
+        return 'in_progress';
     }
     return 'in_progress';
 }

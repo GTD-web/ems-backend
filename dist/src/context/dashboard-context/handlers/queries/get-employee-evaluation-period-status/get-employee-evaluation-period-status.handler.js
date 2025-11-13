@@ -174,6 +174,50 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             const finalEvaluation = await (0, final_evaluation_utils_1.최종평가를_조회한다)(evaluationPeriodId, employeeId, this.finalEvaluationRepository);
             const finalEvaluationStatus = (0, final_evaluation_utils_1.최종평가_상태를_계산한다)(finalEvaluation);
             const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(result.mapping_id);
+            let primaryEvaluationStatus = 'pending';
+            let primaryApprovedBy = null;
+            let primaryApprovedAt = null;
+            if (primary.evaluator?.id) {
+                const primaryStatusInfo = await (0, step_approval_utils_1.일차평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, primary.evaluator.id, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
+                if (primaryStatusInfo.revisionRequestId !== null) {
+                    if (primaryStatusInfo.isCompleted) {
+                        primaryEvaluationStatus = 'revision_completed';
+                    }
+                    else {
+                        primaryEvaluationStatus = 'revision_requested';
+                    }
+                }
+                else {
+                    const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+                    if (stepApprovalStatus === 'approved') {
+                        primaryEvaluationStatus = 'approved';
+                        primaryApprovedBy =
+                            stepApproval?.primaryEvaluationApprovedBy ?? null;
+                        primaryApprovedAt =
+                            stepApproval?.primaryEvaluationApprovedAt ?? null;
+                    }
+                    else if (stepApprovalStatus === 'revision_completed') {
+                        primaryEvaluationStatus = 'revision_completed';
+                    }
+                    else {
+                        primaryEvaluationStatus = 'pending';
+                    }
+                }
+            }
+            else {
+                const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+                if (stepApprovalStatus === 'approved') {
+                    primaryEvaluationStatus = 'approved';
+                    primaryApprovedBy = stepApproval?.primaryEvaluationApprovedBy ?? null;
+                    primaryApprovedAt = stepApproval?.primaryEvaluationApprovedAt ?? null;
+                }
+                else if (stepApprovalStatus === 'revision_completed') {
+                    primaryEvaluationStatus = 'revision_completed';
+                }
+                else {
+                    primaryEvaluationStatus = stepApprovalStatus ?? 'pending';
+                }
+            }
             const validSecondaryEvaluators = secondary.evaluators.filter((e) => e.evaluator && e.evaluator.id);
             const secondaryEvaluatorIds = validSecondaryEvaluators.map((e) => e.evaluator.id);
             const secondaryEvaluationStatuses = await (0, step_approval_utils_1.평가자들별_2차평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, secondaryEvaluatorIds, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
@@ -198,10 +242,16 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     }
                 }
                 else {
-                    if (stepApproval?.secondaryEvaluationStatus === 'approved') {
+                    const stepApprovalStatus = stepApproval?.secondaryEvaluationStatus;
+                    if (stepApprovalStatus === 'approved') {
                         finalStatus = 'approved';
-                        approvedBy = stepApproval.secondaryEvaluationApprovedBy;
-                        approvedAt = stepApproval.secondaryEvaluationApprovedAt;
+                        approvedBy =
+                            stepApproval?.secondaryEvaluationApprovedBy ?? null;
+                        approvedAt =
+                            stepApproval?.secondaryEvaluationApprovedAt ?? null;
+                    }
+                    else if (stepApprovalStatus === 'revision_completed') {
+                        finalStatus = 'revision_completed';
                     }
                     else {
                         finalStatus = 'pending';
@@ -317,7 +367,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 downwardEvaluation: {
                     primary: {
                         evaluator: primary.evaluator,
-                        status: (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(primary.status, stepApproval?.primaryEvaluationStatus ?? 'pending'),
+                        status: (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(primary.status, primaryEvaluationStatus),
                         assignedWbsCount: primary.assignedWbsCount,
                         completedEvaluationCount: primary.completedEvaluationCount,
                         isSubmitted: primary.isSubmitted,
@@ -364,9 +414,9 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     selfEvaluationStatus: stepApproval?.selfEvaluationStatus ?? 'pending',
                     selfEvaluationApprovedBy: stepApproval?.selfEvaluationApprovedBy ?? null,
                     selfEvaluationApprovedAt: stepApproval?.selfEvaluationApprovedAt ?? null,
-                    primaryEvaluationStatus: stepApproval?.primaryEvaluationStatus ?? 'pending',
-                    primaryEvaluationApprovedBy: stepApproval?.primaryEvaluationApprovedBy ?? null,
-                    primaryEvaluationApprovedAt: stepApproval?.primaryEvaluationApprovedAt ?? null,
+                    primaryEvaluationStatus: primaryEvaluationStatus,
+                    primaryEvaluationApprovedBy: primaryApprovedBy,
+                    primaryEvaluationApprovedAt: primaryApprovedAt,
                     secondaryEvaluationStatuses: secondaryEvaluationStatusesWithEvaluatorInfo,
                     secondaryEvaluationStatus: finalSecondaryStatus,
                     secondaryEvaluationApprovedBy: finalSecondaryStatus === 'approved'

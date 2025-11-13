@@ -201,6 +201,168 @@
                 - 제출 상태가 초기화됨 (submittedToManager, submittedToManagerAt 초기화)
                 - 재작성 요청이 생성됨
 
+- **1차 하향평가 대시보드 상태 검증 (모든 상태)** 
+    - **초기 구성 데이터 생성**
+        - POST /admin/seed-data (시드 데이터 생성)
+        - POST /admin/evaluation-periods (평가기간 생성)
+        - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+        - POST /admin/evaluation-periods/{id}/targets/bulk (평가 대상자 대량 등록)
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+        - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+        - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 매핑 구성)
+    - **상태 1: none - 평가할 WBS가 없으면 primary.status는 none이어야 한다**
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.primary.status가 'none'인지 확인
+            - downwardEvaluation.primary.assignedWbsCount가 0인지 확인
+    - **상태 2: none - 하향평가가 하나도 없으면 primary.status는 none이어야 한다**
+        - WBS 할당은 있지만 하향평가가 없는 상태
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.primary.status가 'none'인지 확인
+            - downwardEvaluation.primary.assignedWbsCount가 0보다 큰지 확인
+            - downwardEvaluation.primary.completedEvaluationCount가 0인지 확인
+    - **상태 3: in_progress - 일부만 완료되었으면 primary.status는 in_progress이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/primary (1차 하향평가 저장 - 일부만)
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.primary.status가 'in_progress'인지 확인
+            - downwardEvaluation.primary.completedEvaluationCount가 assignedWbsCount보다 작은지 확인
+    - **상태 4: pending - 모든 평가가 완료되었지만 승인 대기 중이면 primary.status는 pending이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/primary (1차 하향평가 저장 - 모든 WBS)
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.primary.status가 'pending'인지 확인
+            - downwardEvaluation.primary.completedEvaluationCount가 assignedWbsCount와 같은지 확인
+            - downwardEvaluation.primary.isSubmitted가 true인지 확인
+            - stepApproval.primaryEvaluationStatus가 'pending'인지 확인
+    - **상태 5: approved - 모든 평가가 완료되고 승인되었으면 primary.status는 approved이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/primary (1차 하향평가 저장 - 모든 WBS)
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/primary (1차 하향평가 단계 승인)
+            - status: approved로 변경
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.primary.status가 'approved'인지 확인
+            - stepApproval.primaryEvaluationStatus가 'approved'인지 확인
+            - stepApproval.primaryEvaluationApprovedBy가 설정되었는지 확인
+            - stepApproval.primaryEvaluationApprovedAt이 설정되었는지 확인
+    - **상태 6: revision_requested - 재작성 요청되었으면 primary.status는 revision_requested이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/primary (1차 하향평가 저장 - 모든 WBS)
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/primary (1차 하향평가 단계 재작성 요청)
+            - status: revision_requested로 변경
+            - revisionComment: 재작성 요청 코멘트 필수
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.primary.status가 'revision_requested'인지 확인
+            - stepApproval.primaryEvaluationStatus가 'revision_requested'인지 확인
+            - 재작성 요청이 생성되었는지 확인 (GET /admin/revision-requests)
+    - **상태 7: revision_completed - 재작성 완료되었으면 primary.status는 revision_completed이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/primary (1차 하향평가 저장 - 모든 WBS)
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/primary (1차 하향평가 단계 재작성 요청)
+            - status: revision_requested로 변경
+            - revisionComment: 재작성 요청 코멘트 필수
+        - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
+            - responseComment: 재작성 완료 응답 코멘트
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.primary.status가 'revision_completed'인지 확인
+            - stepApproval.primaryEvaluationStatus가 'revision_completed'인지 확인
+    - **상태 전환: in_progress → pending → approved 순서로 상태가 변경되어야 한다**
+        - 단계별로 상태를 변경하면서 대시보드 상태가 올바르게 반영되는지 검증
+
+- **2차 하향평가 대시보드 상태 검증 (모든 상태)** 
+    - **초기 구성 데이터 생성**
+        - POST /admin/seed-data (시드 데이터 생성)
+        - POST /admin/evaluation-periods (평가기간 생성)
+        - POST /admin/evaluation-periods/{id}/start (평가기간 시작)
+        - POST /admin/evaluation-periods/{id}/targets/bulk (평가 대상자 대량 등록)
+        - POST /admin/evaluation-criteria/project-assignments (프로젝트 할당 생성)
+        - POST /admin/evaluation-criteria/wbs-assignments (WBS 할당 생성)
+        - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/primary-evaluator (1차 평가자 매핑 구성)
+        - POST /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{periodId}/secondary-evaluator (2차 평가자 매핑 구성 - 여러 평가자 가능)
+    - **상태 1: none - 평가할 WBS가 없으면 secondary.status는 none이어야 한다**
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.secondary.status가 'none'인지 확인
+            - downwardEvaluation.secondary.evaluators가 빈 배열이거나 모든 평가자의 assignedWbsCount가 0인지 확인
+    - **상태 2: none - 하향평가가 하나도 없으면 secondary.status는 none이어야 한다**
+        - WBS 할당은 있지만 하향평가가 없는 상태
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.secondary.status가 'none'인지 확인
+            - downwardEvaluation.secondary.evaluators[].assignedWbsCount가 0보다 큰지 확인
+            - downwardEvaluation.secondary.evaluators[].completedEvaluationCount가 0인지 확인
+    - **상태 3: in_progress - 일부만 완료되었으면 secondary.status는 in_progress이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/secondary (2차 하향평가 저장 - 일부만)
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.secondary.status가 'in_progress'인지 확인
+            - downwardEvaluation.secondary.evaluators[].completedEvaluationCount가 assignedWbsCount보다 작은지 확인
+    - **상태 4: pending - 모든 평가가 완료되었지만 승인 대기 중이면 secondary.status는 pending이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/secondary (2차 하향평가 저장 - 모든 WBS, 모든 평가자)
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.secondary.status가 'pending'인지 확인
+            - downwardEvaluation.secondary.evaluators[].completedEvaluationCount가 assignedWbsCount와 같은지 확인
+            - downwardEvaluation.secondary.evaluators[].isSubmitted가 true인지 확인
+            - stepApproval.secondaryEvaluationStatus가 'pending'인지 확인
+    - **상태 5: approved - 모든 평가가 완료되고 승인되었으면 secondary.status는 approved이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/secondary (2차 하향평가 저장 - 모든 WBS, 모든 평가자)
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/secondary/{evaluatorId} (2차 하향평가 단계 승인 - 모든 평가자)
+            - status: approved로 변경
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.secondary.status가 'approved'인지 확인
+            - downwardEvaluation.secondary.evaluators[].status가 'approved'인지 확인 (모든 평가자)
+            - stepApproval.secondaryEvaluationStatus가 'approved'인지 확인
+            - stepApproval.secondaryEvaluationApprovedBy가 설정되었는지 확인
+            - stepApproval.secondaryEvaluationApprovedAt이 설정되었는지 확인
+    - **상태 6: revision_requested - 재작성 요청되었으면 secondary.status는 revision_requested이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/secondary (2차 하향평가 저장 - 모든 WBS)
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/secondary/{evaluatorId} (2차 하향평가 단계 재작성 요청)
+            - status: revision_requested로 변경
+            - revisionComment: 재작성 요청 코멘트 필수
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.secondary.status가 'revision_requested'인지 확인
+            - downwardEvaluation.secondary.evaluators[].status가 'revision_requested'인지 확인 (해당 평가자)
+            - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 status가 'revision_requested'인지 확인
+            - 재작성 요청이 생성되었는지 확인 (GET /admin/revision-requests)
+    - **상태 7: revision_completed - 재작성 완료되었으면 secondary.status는 revision_completed이어야 한다**
+        - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/secondary (2차 하향평가 저장 - 모든 WBS)
+        - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/secondary/{evaluatorId} (2차 하향평가 단계 재작성 요청)
+            - status: revision_requested로 변경
+            - revisionComment: 재작성 요청 코멘트 필수
+        - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
+            - responseComment: 재작성 완료 응답 코멘트
+        - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+            - downwardEvaluation.secondary.status가 'revision_completed'인지 확인 (해당 평가자만 완료한 경우)
+            - downwardEvaluation.secondary.evaluators[].status가 'revision_completed'인지 확인 (해당 평가자)
+            - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 status가 'revision_completed'인지 확인
+    - **상태 8: 여러 평가자일 때 혼합 상태 검증**
+        - **pending + approved 혼합 상태**
+            - 평가자1: pending 상태
+            - 평가자2: approved 상태
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - downwardEvaluation.secondary.status가 'pending'인지 확인 (혼합 상태는 pending 반환)
+                - downwardEvaluation.secondary.evaluators[0].status가 'pending'인지 확인
+                - downwardEvaluation.secondary.evaluators[1].status가 'approved'인지 확인
+        - **revision_requested + approved 혼합 상태**
+            - 평가자1: revision_requested 상태
+            - 평가자2: approved 상태
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - downwardEvaluation.secondary.status가 'revision_requested'인지 확인 (revision_requested가 최우선)
+                - downwardEvaluation.secondary.evaluators[0].status가 'revision_requested'인지 확인
+                - downwardEvaluation.secondary.evaluators[1].status가 'approved'인지 확인
+        - **revision_completed + pending 혼합 상태**
+            - 평가자1: revision_completed 상태
+            - 평가자2: pending 상태
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - downwardEvaluation.secondary.status가 'revision_completed'인지 확인
+                - downwardEvaluation.secondary.evaluators[0].status가 'revision_completed'인지 확인
+                - downwardEvaluation.secondary.evaluators[1].status가 'pending'인지 확인
+        - **revision_requested + revision_completed 혼합 상태**
+            - 평가자1: revision_requested 상태
+            - 평가자2: revision_completed 상태
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - downwardEvaluation.secondary.status가 'revision_requested'인지 확인 (revision_requested가 최우선)
+                - downwardEvaluation.secondary.evaluators[0].status가 'revision_requested'인지 확인
+                - downwardEvaluation.secondary.evaluators[1].status가 'revision_completed'인지 확인
+        - **in_progress + pending 혼합 상태**
+            - 평가자1: in_progress 상태 (일부만 완료)
+            - 평가자2: pending 상태 (모두 완료, 승인 대기)
+            - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
+                - downwardEvaluation.secondary.status가 'in_progress'인지 확인
+                - downwardEvaluation.secondary.evaluators[0].status가 'in_progress'인지 확인
+                - downwardEvaluation.secondary.evaluators[1].status가 'pending'인지 확인
+
 - **엣지 케이스 검증** 
     - **재작성 요청 코멘트 누락**
         - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/self (자기평가 단계 승인)

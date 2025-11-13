@@ -13,4 +13,5 @@ export interface EvaluatorRevisionRequestStatus {
     requestedAt: Date | null;
 }
 export declare function 평가자별_2차평가_단계승인_상태를_조회한다(evaluationPeriodId: string, employeeId: string, evaluatorId: string, revisionRequestRepository: Repository<EvaluationRevisionRequest>, revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>): Promise<EvaluatorRevisionRequestStatus>;
+export declare function 일차평가_단계승인_상태를_조회한다(evaluationPeriodId: string, employeeId: string, evaluatorId: string, revisionRequestRepository: Repository<EvaluationRevisionRequest>, revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>): Promise<EvaluatorRevisionRequestStatus>;
 export declare function 평가자들별_2차평가_단계승인_상태를_조회한다(evaluationPeriodId: string, employeeId: string, evaluatorIds: string[], revisionRequestRepository: Repository<EvaluationRevisionRequest>, revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>): Promise<EvaluatorRevisionRequestStatus[]>;

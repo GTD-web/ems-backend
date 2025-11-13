@@ -1,0 +1,149 @@
+{
+  "timestamp": "2025-11-13T14:24:32.987Z",
+  "testResults": [
+    {
+      "testName": "상태 1: none - 평가할 WBS가 없으면 primary.status는 none이어야 한다",
+      "result": {
+        "employeeId": "a166d6ad-bffb-4e23-af29-b571cb61b9d0",
+        "status": "none",
+        "assignedWbsCount": 0,
+        "expectedStatus": "none",
+        "passed": true
+      }
+    },
+    {
+      "testName": "상태 2: none - 하향평가가 하나도 없으면 primary.status는 none이어야 한다",
+      "result": {
+        "employeeId": "2b6882e4-b573-4e52-ac1f-9b2b080664cb",
+        "status": "none",
+        "assignedWbsCount": 2,
+        "completedEvaluationCount": 0,
+        "expectedStatus": "none",
+        "passed": true
+      }
+    },
+    {
+      "testName": "상태 2-1: in_progress - 하향평가를 작성만 해도(제출 전) primary.status는 in_progress이어야 한다",
+      "result": {
+        "employeeId": "0fa129b6-b909-4d66-ac7f-61c731844857",
+        "status": "in_progress",
+        "assignedWbsCount": 2,
+        "completedEvaluationCount": 0,
+        "expectedStatus": "in_progress",
+        "passed": true,
+        "validation": {
+          "hasAssignedWbs": true,
+          "hasNoCompletedEvaluations": true,
+          "isInProgressWithoutSubmission": true
+        }
+      }
+    },
+    {
+      "testName": "상태 3: in_progress - 일부만 완료되었으면 primary.status는 in_progress이어야 한다",
+      "result": {
+        "employeeId": "b641d484-a0e0-4afe-a830-4ddb9a40f563",
+        "status": "in_progress",
+        "assignedWbsCount": 2,
+        "completedEvaluationCount": 1,
+        "expectedStatus": "in_progress",
+        "passed": true,
+        "validation": {
+          "hasCompletedEvaluations": true,
+          "isPartialCompletion": true
+        }
+      }
+    },
+    {
+      "testName": "상태 4: pending - 모든 평가가 제출되면서 승인상태가 대기중이면 primary.status는 pending이어야 한다",
+      "result": {
+        "employeeId": "c909e008-88cf-4262-a2be-6fb3898e0201",
+        "status": "pending",
+        "assignedWbsCount": 2,
+        "completedEvaluationCount": 2,
+        "isSubmitted": true,
+        "stepApprovalStatus": "pending",
+        "expectedStatus": "pending",
+        "passed": true
+      }
+    },
+    {
+      "testName": "상태 5: approved - 모든 평가가 완료되고 승인되었으면 primary.status는 approved이어야 한다",
+      "result": {
+        "employeeId": "2fbb09af-4df3-410a-9a3e-89c00e2685bf",
+        "status": "approved",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-13T14:24:31.157Z",
+        "expectedStatus": "approved",
+        "passed": true
+      }
+    },
+    {
+      "testName": "상태 6: revision_requested - 재작성 요청되었으면 primary.status는 revision_requested이어야 한다",
+      "result": {
+        "employeeId": "1bf3b5a9-63a0-4cff-a23a-742067b826f7",
+        "status": "revision_requested",
+        "stepApprovalStatus": "revision_requested",
+        "revisionRequestCount": 1,
+        "expectedStatus": "revision_requested",
+        "passed": true
+      }
+    },
+    {
+      "testName": "상태 7: revision_completed - 재작성 완료되었으면 primary.status는 revision_completed이어야 한다",
+      "result": {
+        "employeeId": "0864ec74-dedb-492d-b3e0-af3299f826ac",
+        "status": "revision_completed",
+        "stepApprovalStatus": "revision_completed",
+        "requestId": "9083e99c-98b4-405b-9eba-4fbce0e36bb2",
+        "expectedStatus": "revision_completed",
+        "passed": true
+      }
+    },
+    {
+      "testName": "상태 전환: none → in_progress → pending → approved 순서로 상태가 변경되어야 한다",
+      "result": {
+        "employeeId": "bd95133c-1272-43f1-8db7-f6109dc18876",
+        "statusTransitions": [
+          {
+            "step": "0단계",
+            "status": "none",
+            "actualStatus": "none",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 0,
+            "passed": true
+          },
+          {
+            "step": "1단계",
+            "status": "in_progress",
+            "actualStatus": "in_progress",
+            "completedEvaluationCount": 0,
+            "passed": true
+          },
+          {
+            "step": "2단계",
+            "status": "pending",
+            "actualStatus": "pending",
+            "completedEvaluationCount": 2,
+            "assignedWbsCount": 2,
+            "isSubmitted": true,
+            "stepApprovalStatus": "pending",
+            "passed": true
+          },
+          {
+            "step": "3단계",
+            "status": "approved",
+            "actualStatus": "approved",
+            "stepApprovalStatus": "approved",
+            "approvedBy": "00000000-0000-0000-0000-000000000001",
+            "approvedAt": "2025-11-13T14:24:32.927Z",
+            "passed": true
+          }
+        ],
+        "finalStatus": "approved",
+        "expectedFinalStatus": "approved",
+        "passed": true
+      }
+    }
+  ]
+}
