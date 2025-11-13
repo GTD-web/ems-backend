@@ -174,6 +174,14 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     for (const recipient of recipients) {
       const request = recipient.revisionRequest;
 
+      // revisionRequest가 null인 경우 건너뛰기
+      if (!request) {
+        this.logger.warn(
+          `재작성 요청을 찾을 수 없습니다. - 수신자 ID: ${recipient.recipientId}, 요청 ID: ${recipient.revisionRequestId}`,
+        );
+        continue;
+      }
+
       // 피평가자 정보 조회
       const employee = await this.employeeRepository.findOne({
         where: { id: request.employeeId, deletedAt: null as any },
