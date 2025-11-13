@@ -323,10 +323,6 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
         await this.업데이트비즈니스규칙검증한다(id, updateDto, existingPeriod, manager);
     }
     async 평가기간시작비즈니스규칙검증한다(id, manager) {
-        const activePeriod = await this.현재진행중평가기간조회한다(manager);
-        if (activePeriod && activePeriod.id !== id) {
-            throw new evaluation_period_exceptions_1.EvaluationPeriodBusinessRuleViolationException(`이미 활성화된 평가 기간이 있습니다: ${activePeriod.name}`);
-        }
     }
     async 평가기간삭제비즈니스규칙검증한다(evaluationPeriod) {
         if (evaluationPeriod.활성화된_상태인가()) {
