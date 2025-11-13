@@ -979,9 +979,6 @@ class EmployeeEvaluationPeriodStatusResponseDto {
     evaluationPeriod;
     employee;
     exclusionInfo;
-    evaluationCriteria;
-    wbsCriteria;
-    evaluationLine;
     criteriaSetup;
     performanceInput;
     selfEvaluation;
@@ -1035,27 +1032,6 @@ __decorate([
     }),
     __metadata("design:type", ExclusionInfoDto)
 ], EmployeeEvaluationPeriodStatusResponseDto.prototype, "exclusionInfo", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '평가항목 설정 정보',
-        type: () => EvaluationCriteriaInfoDto,
-    }),
-    __metadata("design:type", EvaluationCriteriaInfoDto)
-], EmployeeEvaluationPeriodStatusResponseDto.prototype, "evaluationCriteria", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'WBS 평가기준 설정 정보',
-        type: () => WbsCriteriaInfoDto,
-    }),
-    __metadata("design:type", WbsCriteriaInfoDto)
-], EmployeeEvaluationPeriodStatusResponseDto.prototype, "wbsCriteria", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '평가라인 지정 정보',
-        type: () => EvaluationLineInfoDto,
-    }),
-    __metadata("design:type", EvaluationLineInfoDto)
-], EmployeeEvaluationPeriodStatusResponseDto.prototype, "evaluationLine", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '평가기준 설정 정보 (평가항목, WBS 평가기준, 평가라인을 통합)',

@@ -34,37 +34,40 @@ let DashboardController = class DashboardController {
         this.employeeSyncService = employeeSyncService;
     }
     async getAllEmployeesEvaluationPeriodStatus(evaluationPeriodId, queryDto) {
-        return await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(evaluationPeriodId, queryDto.includeUnregistered);
+        const results = await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(evaluationPeriodId, queryDto.includeUnregistered);
+        return results.map((result) => {
+            const { evaluationCriteria, wbsCriteria, evaluationLine, ...rest } = result;
+            return rest;
+        });
     }
     async getMyEvaluationTargetsStatus(evaluationPeriodId, evaluatorId) {
         return await this.dashboardService.내가_담당하는_평가대상자_현황을_조회한다(evaluationPeriodId, evaluatorId);
     }
     async getEmployeeEvaluationPeriodStatus(evaluationPeriodId, employeeId) {
-        return await this.dashboardService.직원의_평가기간_현황을_조회한다(evaluationPeriodId, employeeId);
+        const result = await this.dashboardService.직원의_평가기간_현황을_조회한다(evaluationPeriodId, employeeId);
+        if (!result) {
+            return null;
+        }
+        const { evaluationCriteria, wbsCriteria, evaluationLine, ...rest } = result;
+        return rest;
     }
     async getMyAssignedData(evaluationPeriodId, user) {
         const data = await this.dashboardService.사용자_할당_정보를_조회한다(evaluationPeriodId, user.id);
-        return this.하향평가_정보를_제거한다(data);
+        return this.이차_하향평가_정보를_제거한다(data);
     }
     async getEmployeeAssignedData(evaluationPeriodId, employeeId) {
         return await this.dashboardService.사용자_할당_정보를_조회한다(evaluationPeriodId, employeeId);
     }
-    하향평가_정보를_제거한다(data) {
-        const projectsWithoutDownwardEvaluation = data.projects.map((project) => ({
+    이차_하향평가_정보를_제거한다(data) {
+        const projectsWithoutSecondaryDownwardEvaluation = data.projects.map((project) => ({
             ...project,
             wbsList: project.wbsList.map((wbs) => ({
                 ...wbs,
-                primaryDownwardEvaluation: null,
                 secondaryDownwardEvaluation: null,
             })),
         }));
-        const summaryWithoutDownwardEvaluation = {
+        const summaryWithoutSecondaryDownwardEvaluation = {
             ...data.summary,
-            primaryDownwardEvaluation: {
-                totalScore: null,
-                grade: null,
-                isSubmitted: false,
-            },
             secondaryDownwardEvaluation: {
                 totalScore: null,
                 grade: null,
@@ -74,8 +77,8 @@ let DashboardController = class DashboardController {
         };
         return {
             ...data,
-            projects: projectsWithoutDownwardEvaluation,
-            summary: summaryWithoutDownwardEvaluation,
+            projects: projectsWithoutSecondaryDownwardEvaluation,
+            summary: summaryWithoutSecondaryDownwardEvaluation,
         };
     }
     async getEvaluatorAssignedEmployeesData(evaluationPeriodId, evaluatorId, employeeId) {

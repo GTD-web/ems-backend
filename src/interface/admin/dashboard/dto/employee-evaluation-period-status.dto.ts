@@ -861,24 +861,6 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
   exclusionInfo: ExclusionInfoDto;
 
   @ApiProperty({
-    description: '평가항목 설정 정보',
-    type: () => EvaluationCriteriaInfoDto,
-  })
-  evaluationCriteria: EvaluationCriteriaInfoDto;
-
-  @ApiProperty({
-    description: 'WBS 평가기준 설정 정보',
-    type: () => WbsCriteriaInfoDto,
-  })
-  wbsCriteria: WbsCriteriaInfoDto;
-
-  @ApiProperty({
-    description: '평가라인 지정 정보',
-    type: () => EvaluationLineInfoDto,
-  })
-  evaluationLine: EvaluationLineInfoDto;
-
-  @ApiProperty({
     description: '평가기준 설정 정보 (평가항목, WBS 평가기준, 평가라인을 통합)',
     type: () => CriteriaSetupDto,
   })

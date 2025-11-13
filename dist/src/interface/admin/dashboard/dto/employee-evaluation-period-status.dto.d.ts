@@ -147,9 +147,6 @@ export declare class EmployeeEvaluationPeriodStatusResponseDto {
     evaluationPeriod: EvaluationPeriodInfoDto | null;
     employee: EmployeeInfoDto | null;
     exclusionInfo: ExclusionInfoDto;
-    evaluationCriteria: EvaluationCriteriaInfoDto;
-    wbsCriteria: WbsCriteriaInfoDto;
-    evaluationLine: EvaluationLineInfoDto;
     criteriaSetup: CriteriaSetupDto;
     performanceInput: PerformanceInputDto;
     selfEvaluation: SelfEvaluationInfoDto;

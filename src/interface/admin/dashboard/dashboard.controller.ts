@@ -63,10 +63,18 @@ export class DashboardController {
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @Query() queryDto: GetAllEmployeesEvaluationPeriodStatusQueryDto,
   ): Promise<EmployeeEvaluationPeriodStatusResponseDto[]> {
-    return await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(
-      evaluationPeriodId,
-      queryDto.includeUnregistered,
-    );
+    const results =
+      await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(
+        evaluationPeriodId,
+        queryDto.includeUnregistered,
+      );
+
+    // 최상위 레벨의 evaluationCriteria, wbsCriteria, evaluationLine 필드 제거
+    return results.map((result) => {
+      const { evaluationCriteria, wbsCriteria, evaluationLine, ...rest } =
+        result as any;
+      return rest as EmployeeEvaluationPeriodStatusResponseDto;
+    });
   }
 
   /**
@@ -91,15 +99,24 @@ export class DashboardController {
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @ParseUUID('employeeId') employeeId: string,
   ): Promise<EmployeeEvaluationPeriodStatusResponseDto | null> {
-    return await this.dashboardService.직원의_평가기간_현황을_조회한다(
+    const result = await this.dashboardService.직원의_평가기간_현황을_조회한다(
       evaluationPeriodId,
       employeeId,
     );
+
+    if (!result) {
+      return null;
+    }
+
+    // 최상위 레벨의 evaluationCriteria, wbsCriteria, evaluationLine 필드 제거
+    const { evaluationCriteria, wbsCriteria, evaluationLine, ...rest } =
+      result as any;
+    return rest as EmployeeEvaluationPeriodStatusResponseDto;
   }
 
   /**
    * 현재 로그인한 사용자의 할당된 정보를 조회합니다.
-   * 피평가자는 상위 평가자의 하향평가를 볼 수 없습니다.
+   * 피평가자는 2차 평가자의 하향평가를 볼 수 없습니다.
    */
   @GetMyAssignedData()
   async getMyAssignedData(
@@ -111,8 +128,8 @@ export class DashboardController {
       user.id, // JWT에서 추출한 현재 로그인 사용자의 ID
     );
 
-    // 피평가자는 상위 평가자의 하향평가를 볼 수 없음
-    return this.하향평가_정보를_제거한다(data);
+    // 피평가자는 2차 평가자의 하향평가를 볼 수 없음 (1차 하향평가는 제공)
+    return this.이차_하향평가_정보를_제거한다(data);
   }
 
   /**
@@ -130,30 +147,29 @@ export class DashboardController {
   }
 
   /**
-   * 하향평가 정보를 제거합니다.
+   * 2차 하향평가 정보를 제거합니다.
    * 피평가자가 자신의 할당 정보를 조회할 때 사용됩니다.
+   * 1차 하향평가 정보는 유지하고, 2차 하향평가 정보만 제거합니다.
    */
-  private 하향평가_정보를_제거한다(
+  private 이차_하향평가_정보를_제거한다(
     data: EmployeeAssignedDataResponseDto,
   ): EmployeeAssignedDataResponseDto {
-    // 각 프로젝트의 WBS에서 하향평가 정보 제거
-    const projectsWithoutDownwardEvaluation = data.projects.map((project) => ({
-      ...project,
-      wbsList: project.wbsList.map((wbs) => ({
-        ...wbs,
-        primaryDownwardEvaluation: null,
-        secondaryDownwardEvaluation: null,
-      })),
-    }));
+    // 각 프로젝트의 WBS에서 2차 하향평가 정보만 제거 (1차는 유지)
+    const projectsWithoutSecondaryDownwardEvaluation = data.projects.map(
+      (project) => ({
+        ...project,
+        wbsList: project.wbsList.map((wbs) => ({
+          ...wbs,
+          // primaryDownwardEvaluation은 유지
+          secondaryDownwardEvaluation: null,
+        })),
+      }),
+    );
 
-    // summary에서 하향평가 정보 제거
-    const summaryWithoutDownwardEvaluation = {
+    // summary에서 2차 하향평가 정보만 제거 (1차는 유지)
+    const summaryWithoutSecondaryDownwardEvaluation = {
       ...data.summary,
-      primaryDownwardEvaluation: {
-        totalScore: null,
-        grade: null,
-        isSubmitted: false,
-      },
+      // primaryDownwardEvaluation은 유지
       secondaryDownwardEvaluation: {
         totalScore: null,
         grade: null,
@@ -164,8 +180,8 @@ export class DashboardController {
 
     return {
       ...data,
-      projects: projectsWithoutDownwardEvaluation,
-      summary: summaryWithoutDownwardEvaluation,
+      projects: projectsWithoutSecondaryDownwardEvaluation,
+      summary: summaryWithoutSecondaryDownwardEvaluation,
     };
   }
 

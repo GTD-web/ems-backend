@@ -248,7 +248,15 @@ exports.DownwardEvaluationStatusDto = DownwardEvaluationStatusDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '하향평가 통합 상태 (진행 상태 + 승인 상태)',
-        enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+        enum: [
+            'complete',
+            'in_progress',
+            'none',
+            'pending',
+            'approved',
+            'revision_requested',
+            'revision_completed',
+        ],
         example: 'complete',
     }),
     __metadata("design:type", String)
