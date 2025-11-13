@@ -24,6 +24,8 @@ import {
   EvaluationPeriodPhase,
 } from '@domain/core/evaluation-period/evaluation-period.types';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler 통합 테스트
@@ -56,6 +58,9 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
 
   const systemAdminId = '00000000-0000-0000-0000-000000000001';
   const createdBy = 'test-user-id';
+
+  // 테스트 결과 저장용
+  const testResults: any[] = [];
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -105,6 +110,16 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
   });
 
   afterAll(async () => {
+    const outputPath = path.join(
+      __dirname,
+      'auto-configure-primary-evaluator-by-manager-result.json',
+    );
+    const output = {
+      timestamp: new Date().toISOString(),
+      testResults: testResults,
+    };
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
+    console.log(`✅ 테스트 결과가 저장되었습니다: ${outputPath}`);
     await dataSource.destroy();
     await module.close();
   });
@@ -155,7 +170,6 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -173,21 +187,21 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
       email: 'manager@test.com',
       employeeNumber: 'EMP001',
       departmentId: departmentId,
-      externalId: 'EXT001',
+      externalId: 'EXT001', // 외부 시스템 ID
       externalCreatedAt: new Date(),
       externalUpdatedAt: new Date(),
       createdBy: systemAdminId,
     });
     const savedManager = await employeeRepository.save(manager);
-    managerId = savedManager.id;
+    managerId = savedManager.id; // 내부 Employee id (평가자 검증용)
 
-    // 4. 직원 1 생성 (managerId 있음)
+    // 4. 직원 1 생성 (managerId는 외부 시스템 ID로 설정)
     const employee1 = employeeRepository.create({
       name: '직원1',
       email: 'employee1@test.com',
       employeeNumber: 'EMP002',
       departmentId: departmentId,
-      managerId: managerId,
+      managerId: 'EXT001', // 외부 시스템 ID (관리자의 externalId)
       externalId: 'EXT002',
       externalCreatedAt: new Date(),
       externalUpdatedAt: new Date(),
@@ -196,13 +210,13 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
     const savedEmployee1 = await employeeRepository.save(employee1);
     employeeId1 = savedEmployee1.id;
 
-    // 5. 직원 2 생성 (managerId 있음)
+    // 5. 직원 2 생성 (managerId는 외부 시스템 ID로 설정)
     const employee2 = employeeRepository.create({
       name: '직원2',
       email: 'employee2@test.com',
       employeeNumber: 'EMP003',
       departmentId: departmentId,
-      managerId: managerId,
+      managerId: 'EXT001', // 외부 시스템 ID (관리자의 externalId)
       externalId: 'EXT003',
       externalCreatedAt: new Date(),
       externalUpdatedAt: new Date(),
@@ -276,6 +290,20 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
       expect(result.totalCreatedMappings).toBe(0);
       expect(result.results).toHaveLength(0);
       expect(result.message).toContain('등록된 직원이 없습니다');
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '빈 결과를 반환해야 함',
+        result: {
+          evaluationPeriodId,
+          totalEmployees: result.totalEmployees,
+          successCount: result.successCount,
+          skippedCount: result.skippedCount,
+          failedCount: result.failedCount,
+          totalCreatedMappings: result.totalCreatedMappings,
+          message: result.message,
+        },
+      });
     });
   });
 
@@ -341,6 +369,29 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
         (m) => m.employeeId === employeeId2,
       );
       expect(employee2Mapping?.evaluatorId).toBe(managerId);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '모든 직원의 managerId를 기반으로 1차 평가자를 자동 구성해야 함',
+        result: {
+          evaluationPeriodId,
+          totalEmployees: result.totalEmployees,
+          successCount: result.successCount,
+          skippedCount: result.skippedCount,
+          failedCount: result.failedCount,
+          totalCreatedMappings: result.totalCreatedMappings,
+          employeeResults: result.results.map((r) => ({
+            employeeId: r.employeeId,
+            success: r.success,
+            createdMappings: r.createdMappings,
+            message: r.message,
+          })),
+          mappings: primaryMappings.map((m) => ({
+            employeeId: m.employeeId,
+            evaluatorId: m.evaluatorId,
+          })),
+        },
+      });
     });
   });
 
@@ -396,6 +447,23 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
       expect(primaryMappings).toHaveLength(1);
       expect(primaryMappings[0].evaluatorId).toBe(managerId); // 새 평가자로 변경됨
       expect(primaryMappings[0].evaluatorId).not.toBe(oldEvaluatorId); // 기존 평가자가 아님
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '기존 매핑을 삭제하고 새로 생성해야 함',
+        result: {
+          evaluationPeriodId,
+          employeeId: employeeId1,
+          successCount: result.successCount,
+          totalCreatedMappings: result.totalCreatedMappings,
+          oldEvaluatorId,
+          newEvaluatorId: managerId,
+          mapping: {
+            employeeId: primaryMappings[0].employeeId,
+            evaluatorId: primaryMappings[0].evaluatorId,
+          },
+        },
+      });
     });
   });
 
@@ -425,6 +493,25 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
         (r) => r.createdMappings > 0,
       );
       expect(createdResults).toHaveLength(2); // managerId가 있는 직원 2명만 매핑 생성
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '모든 직원에 대해 일괄 처리되어야 함',
+        result: {
+          evaluationPeriodId,
+          totalEmployees: result.totalEmployees,
+          successCount: result.successCount,
+          skippedCount: result.skippedCount,
+          failedCount: result.failedCount,
+          totalCreatedMappings: result.totalCreatedMappings,
+          createdResultsCount: createdResults.length,
+          employeeResults: result.results.map((r) => ({
+            employeeId: r.employeeId,
+            success: r.success,
+            createdMappings: r.createdMappings,
+          })),
+        },
+      });
     });
   });
 
@@ -458,6 +545,106 @@ describe('AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler', () => {
       expect(linesAfter).toHaveLength(1);
       expect(linesAfter[0].evaluatorType).toBe(EvaluatorType.PRIMARY);
       expect(linesAfter[0].order).toBe(1);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '1차 평가 라인을 자동으로 생성해야 함',
+        result: {
+          evaluationPeriodId,
+          successCount: result.successCount,
+          evaluationLineCreated: linesAfter.length > 0,
+          evaluationLine: linesAfter[0]
+            ? {
+                id: linesAfter[0].id,
+                evaluatorType: linesAfter[0].evaluatorType,
+                order: linesAfter[0].order,
+              }
+            : null,
+        },
+      });
+    });
+  });
+
+  describe('managerId로 관리자를 찾을 수 없는 경우', () => {
+    it('해당 직원은 건너뛰고 적절한 메시지를 반환해야 함', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 직원 4 생성 (존재하지 않는 externalId를 managerId로 설정)
+      const employee4 = employeeRepository.create({
+        name: '직원4',
+        email: 'employee4@test.com',
+        employeeNumber: 'EMP005',
+        departmentId: departmentId,
+        managerId: 'NON_EXISTENT_EXT_ID', // 존재하지 않는 externalId
+        externalId: 'EXT005',
+        externalCreatedAt: new Date(),
+        externalUpdatedAt: new Date(),
+        createdBy: systemAdminId,
+      });
+      const savedEmployee4 = await employeeRepository.save(employee4);
+      const employeeId4 = savedEmployee4.id;
+
+      // 평가기간-직원 매핑 생성
+      const mapping4 = mappingRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId4,
+        createdBy: systemAdminId,
+      });
+      await mappingRepository.save(mapping4);
+
+      const command =
+        new AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesCommand(
+          evaluationPeriodId,
+          createdBy,
+        );
+
+      // When
+      const result = await handler.execute(command);
+
+      // Then
+      expect(result.totalEmployees).toBe(4); // 직원 1, 2, 3, 4
+      expect(result.successCount).toBe(2); // managerId가 있고 관리자를 찾은 직원 2명
+      expect(result.skippedCount).toBe(2); // managerId가 없는 직원 1명 + 관리자를 찾을 수 없는 직원 1명
+
+      // 관리자를 찾을 수 없는 직원의 결과 확인
+      const employee4Result = result.results.find(
+        (r) => r.employeeId === employeeId4,
+      );
+      expect(employee4Result?.success).toBe(true);
+      expect(employee4Result?.createdMappings).toBe(0);
+      expect(employee4Result?.message).toContain('관리자');
+      expect(employee4Result?.message).toContain('찾을 수 없어');
+      expect(employee4Result?.message).toContain('NON_EXISTENT_EXT_ID');
+
+      // 실제로 매핑이 생성되지 않았는지 확인
+      const mappings = await evaluationLineMappingRepository.find({
+        where: {
+          evaluationPeriodId,
+          employeeId: employeeId4,
+        },
+      });
+      expect(mappings).toHaveLength(0);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '해당 직원은 건너뛰고 적절한 메시지를 반환해야 함',
+        result: {
+          evaluationPeriodId,
+          employeeId: employeeId4,
+          managerId: 'NON_EXISTENT_EXT_ID',
+          totalEmployees: result.totalEmployees,
+          successCount: result.successCount,
+          skippedCount: result.skippedCount,
+          employeeResult: {
+            employeeId: employee4Result?.employeeId,
+            success: employee4Result?.success,
+            createdMappings: employee4Result?.createdMappings,
+            message: employee4Result?.message,
+          },
+          mappingsCreated: mappings.length,
+        },
+      });
     });
   });
 });
