@@ -46,6 +46,12 @@ export class SSOService implements OnModuleInit {
     @Inject('SSO_SYSTEM_NAME') private readonly injectedSystemName: string,
   ) {
     this.systemName = injectedSystemName;
+    
+    // 설정값 로깅 (민감 정보 제외)
+    this.logger.log(
+      `SSO 클라이언트 초기화 중... baseUrl: ${this.config.baseUrl}, timeoutMs: ${this.config.timeoutMs}, retries: ${this.config.retries}, retryDelay: ${this.config.retryDelay}`,
+    );
+    
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { SSOClient: SDKSSOClientClass } = require('@lumir-company/sso-sdk');
     this.sdkClient = new SDKSSOClientClass({
@@ -58,6 +64,8 @@ export class SSOService implements OnModuleInit {
       retryDelay: this.config.retryDelay,
       enableLogging: this.config.enableLogging,
     });
+    
+    this.logger.log('SSO 클라이언트 인스턴스 생성 완료');
   }
 
   async onModuleInit(): Promise<void> {
@@ -69,14 +77,31 @@ export class SSOService implements OnModuleInit {
    */
   async 초기화한다(): Promise<void> {
     if (this.initialized) {
+      this.logger.debug('SSO 클라이언트가 이미 초기화되어 있습니다.');
       return;
     }
 
     try {
+      this.logger.log(
+        `SSO 클라이언트 초기화 시작... baseUrl: ${this.config.baseUrl}, systemName: ${this.systemName}`,
+      );
+      const startTime = Date.now();
+      
       await this.sdkClient.initialize();
+      
+      const elapsedTime = Date.now() - startTime;
       this.initialized = true;
+      this.logger.log(
+        `SSO 클라이언트 초기화 완료 (소요 시간: ${elapsedTime}ms)`,
+      );
     } catch (error) {
-      this.logger.error('SSO 클라이언트 초기화 실패:', error);
+      this.logger.error(
+        `SSO 클라이언트 초기화 실패: ${error.message}`,
+        error.stack,
+      );
+      this.logger.error(
+        `초기화 실패 상세: code=${error?.code}, status=${error?.status}, baseUrl=${this.config.baseUrl}`,
+      );
       throw error;
     }
   }
@@ -263,12 +288,22 @@ export class SSOService implements OnModuleInit {
   ): Promise<DepartmentHierarchy> {
     this.초기화확인();
     try {
+      this.logger.log(
+        `부서 계층구조 조회 요청 시작... baseUrl: ${this.config.baseUrl}`,
+      );
+      const startTime = Date.now();
+      
       const result = await this.sdkClient.organization.getDepartmentHierarchy({
         rootDepartmentId: params?.rootDepartmentId,
         maxDepth: params?.maxDepth,
         withEmployeeDetail: params?.withEmployeeDetail,
         includeEmptyDepartments: params?.includeEmptyDepartments,
       });
+      
+      const elapsedTime = Date.now() - startTime;
+      this.logger.log(
+        `부서 계층구조 조회 완료 (소요 시간: ${elapsedTime}ms)`,
+      );
 
       // 디버깅: 서버 원본 응답 구조 확인
       if (result.departments && result.departments.length > 0) {
@@ -294,7 +329,20 @@ export class SSOService implements OnModuleInit {
         totalEmployees: result.totalEmployees,
       };
     } catch (error) {
-      this.logger.error('부서 계층구조 조회 실패', error);
+      // 타임아웃 에러인 경우 더 자세한 로그
+      if (error?.code === 'TIMEOUT' || error?.message?.includes('timeout')) {
+        this.logger.error(
+          `부서 계층구조 조회 타임아웃: ${error.message}. 현재 타임아웃 설정: ${this.config.timeoutMs}ms. SSO 서버 응답이 지연되고 있습니다.`,
+        );
+        this.logger.error(
+          `타임아웃 상세 정보: baseUrl=${this.config.baseUrl}, 요청이 SSO 서버에 도달했는지 확인이 필요합니다.`,
+        );
+      } else {
+        this.logger.error('부서 계층구조 조회 실패', error);
+        this.logger.error(
+          `에러 상세: code=${error?.code}, status=${error?.status}, message=${error?.message}, baseUrl=${this.config.baseUrl}`,
+        );
+      }
       throw error;
     }
   }
@@ -510,10 +558,34 @@ export class SSOService implements OnModuleInit {
   async 직원관리자정보를조회한다(): Promise<GetEmployeesManagersResponse> {
     this.초기화확인();
     try {
+      this.logger.log(
+        `직원 관리자 정보 조회 요청 시작... baseUrl: ${this.config.baseUrl}`,
+      );
+      const startTime = Date.now();
+      
       const result = await this.sdkClient.organization.getEmployeesManagers();
+      
+      const elapsedTime = Date.now() - startTime;
+      this.logger.log(
+        `직원 관리자 정보 조회 완료 (소요 시간: ${elapsedTime}ms)`,
+      );
+      
       return result;
     } catch (error) {
-      this.logger.error('직원 관리자 정보 조회 실패', error);
+      // 타임아웃 에러인 경우 더 자세한 로그
+      if (error?.code === 'TIMEOUT' || error?.message?.includes('timeout')) {
+        this.logger.error(
+          `직원 관리자 정보 조회 타임아웃: ${error.message}. 현재 타임아웃 설정: ${this.config.timeoutMs}ms. SSO 서버 응답이 지연되고 있습니다.`,
+        );
+        this.logger.error(
+          `타임아웃 상세 정보: baseUrl=${this.config.baseUrl}, 요청이 SSO 서버에 도달했는지 확인이 필요합니다.`,
+        );
+      } else {
+        this.logger.error('직원 관리자 정보 조회 실패', error);
+        this.logger.error(
+          `에러 상세: code=${error?.code}, status=${error?.status}, message=${error?.message}, baseUrl=${this.config.baseUrl}`,
+        );
+      }
       throw error;
     }
   }

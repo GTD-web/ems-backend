@@ -19,11 +19,13 @@ import { SSOClientConfig } from './interfaces';
             'https://lsso.vercel.app',
           clientId: configService.get<string>('SSO_CLIENT_ID') || '',
           clientSecret: configService.get<string>('SSO_CLIENT_SECRET') || '',
-          timeoutMs: configService.get<number>('SSO_TIMEOUT_MS') || 10000,
-          retries: configService.get<number>('SSO_RETRIES') || 3,
-          retryDelay: configService.get<number>('SSO_RETRY_DELAY') || 200,
+          timeoutMs: configService.get<number>('SSO_TIMEOUT_MS') || 30000,
+          retries: configService.get<number>('SSO_RETRIES') || 2,
+          retryDelay: configService.get<number>('SSO_RETRY_DELAY') || 1000,
           enableLogging:
-            configService.get<string>('SSO_ENABLE_LOGGING') === 'true',
+            configService.get<string>('SSO_ENABLE_LOGGING') === 'true' ||
+            configService.get<string>('NODE_ENV') === 'development' ||
+            !!process.env.VERCEL, // Vercel 환경에서는 로깅 활성화
         };
 
         // 필수 설정 검증

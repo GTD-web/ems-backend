@@ -25,10 +25,12 @@ exports.SSOModule = SSOModule = __decorate([
                             'https://lsso.vercel.app',
                         clientId: configService.get('SSO_CLIENT_ID') || '',
                         clientSecret: configService.get('SSO_CLIENT_SECRET') || '',
-                        timeoutMs: configService.get('SSO_TIMEOUT_MS') || 10000,
-                        retries: configService.get('SSO_RETRIES') || 3,
-                        retryDelay: configService.get('SSO_RETRY_DELAY') || 200,
-                        enableLogging: configService.get('SSO_ENABLE_LOGGING') === 'true',
+                        timeoutMs: configService.get('SSO_TIMEOUT_MS') || 30000,
+                        retries: configService.get('SSO_RETRIES') || 2,
+                        retryDelay: configService.get('SSO_RETRY_DELAY') || 1000,
+                        enableLogging: configService.get('SSO_ENABLE_LOGGING') === 'true' ||
+                            configService.get('NODE_ENV') === 'development' ||
+                            !!process.env.VERCEL,
                     };
                     if (!config.clientId || !config.clientSecret) {
                         throw new Error('SSO_CLIENT_ID와 SSO_CLIENT_SECRET 환경 변수가 필요합니다.');
