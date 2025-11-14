@@ -279,15 +279,30 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
         expect(status.stepApproval.criteriaSettingApprovedBy).toBeDefined();
         expect(status.stepApproval.criteriaSettingApprovedAt).toBeDefined();
 
+        // 대시보드에서 제출 상태 조회
+        const dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
         // 테스트 결과 저장 (성공)
         testResults.push({
           testName,
           result: {
             employeeId: evaluateeId,
             initialStatus: 'pending',
-            finalStatus: status.stepApproval.criteriaSettingStatus,
+            stepApprovalStatus: status.stepApproval.criteriaSettingStatus,
             approvedBy: status.stepApproval.criteriaSettingApprovedBy,
             approvedAt: status.stepApproval.criteriaSettingApprovedAt,
+            criteriaSubmission: {
+              isSubmitted:
+                dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+              submittedAt:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+              submittedBy:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+            },
             passed: true,
           },
         });
@@ -347,14 +362,29 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
           });
         expect(revisionRequests.length).toBeGreaterThan(0);
 
+        // 대시보드에서 제출 상태 조회
+        const dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
         // 테스트 결과 저장 (성공)
         testResults.push({
           testName,
           result: {
             employeeId: evaluateeId,
             initialStatus: 'approved',
-            finalStatus: status.stepApproval.criteriaSettingStatus,
+            stepApprovalStatus: status.stepApproval.criteriaSettingStatus,
             revisionRequestCount: revisionRequests.length,
+            criteriaSubmission: {
+              isSubmitted:
+                dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+              submittedAt:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+              submittedBy:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+            },
             passed: true,
           },
         });
@@ -404,15 +434,30 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
         expect(status.stepApproval.criteriaSettingApprovedBy).toBeDefined();
         expect(status.stepApproval.criteriaSettingApprovedAt).toBeDefined();
 
+        // 대시보드에서 제출 상태 조회
+        const dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
         // 테스트 결과 저장 (성공)
         testResults.push({
           testName,
           result: {
             employeeId: evaluateeId,
             initialStatus: 'revision_requested',
-            finalStatus: status.stepApproval.criteriaSettingStatus,
+            stepApprovalStatus: status.stepApproval.criteriaSettingStatus,
             approvedBy: status.stepApproval.criteriaSettingApprovedBy,
             approvedAt: status.stepApproval.criteriaSettingApprovedAt,
+            criteriaSubmission: {
+              isSubmitted:
+                dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+              submittedAt:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+              submittedBy:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+            },
             passed: true,
           },
         });
@@ -584,6 +629,10 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
         expect(employee).toBeDefined();
         expect(employee.criteriaSetup.criteriaSubmission.isSubmitted).toBe(
           true,
+        );
+        // criteriaSetup.status 검증: 제출 후 pending 또는 approved 상태
+        expect(['pending', 'approved']).toContain(
+          dashboardStatus.criteriaSetup.status,
         );
 
         // 테스트 결과 저장 (성공)
@@ -810,6 +859,11 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
         expect(
           assignedData.summary.criteriaSubmission.submittedBy,
         ).toBeDefined();
+        // criteriaSetup.status 검증: 재제출 후 pending, approved, 또는 revision_completed 상태
+        // (재제출 후에도 재작성 완료 상태가 유지될 수 있음)
+        expect(['pending', 'approved', 'revision_completed']).toContain(
+          dashboardStatus.criteriaSetup.status,
+        );
 
         // 재작성 요청 자동 완료 확인
         const completedRevisionRequests =
@@ -888,6 +942,8 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
         expect(
           dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
         ).toBe(true);
+        // criteriaSetup.status 검증: 승인 후 approved 상태
+        expect(dashboardStatus.criteriaSetup.status).toBe('approved');
 
         // 테스트 결과 저장 (성공)
         testResults.push({
@@ -898,8 +954,15 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
               dashboardStatus.stepApproval.criteriaSettingStatus,
             approvedBy: dashboardStatus.stepApproval.criteriaSettingApprovedBy,
             approvedAt: dashboardStatus.stepApproval.criteriaSettingApprovedAt,
-            isSubmitted:
-              dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+            criteriaSubmission: {
+              isSubmitted:
+                dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+              submittedAt:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+              submittedBy:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+            },
+            criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
             passed: true,
           },
         });
@@ -1060,6 +1123,8 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
           true,
         );
         expect(employee.stepApproval.criteriaSettingStatus).toBe('approved');
+        // criteriaSetup.status 검증: 미제출 상태에서 승인 시 approved 상태로 변경
+        expect(dashboardStatus.criteriaSetup.status).toBe('approved');
 
         // 테스트 결과 저장 (성공)
         testResults.push({
@@ -1128,6 +1193,8 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
         expect(
           dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
         ).toBe(true);
+        // criteriaSetup.status 검증: 이미 제출된 상태에서 승인 시 approved 상태 유지
+        expect(dashboardStatus.criteriaSetup.status).toBe('approved');
 
         // 테스트 결과 저장 (성공)
         testResults.push({
@@ -1136,8 +1203,17 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
             employeeId: evaluateeId,
             stepApprovalStatus:
               dashboardStatus.stepApproval.criteriaSettingStatus,
-            isSubmitted:
-              dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+            approvedBy: dashboardStatus.stepApproval.criteriaSettingApprovedBy,
+            approvedAt: dashboardStatus.stepApproval.criteriaSettingApprovedAt,
+            criteriaSubmission: {
+              isSubmitted:
+                dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+              submittedAt:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+              submittedBy:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+            },
+            criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
             passed: true,
           },
         });
@@ -1186,6 +1262,7 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
         expect(
           dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
         ).toBeDefined();
+        // criteriaSetup.status 검증: 제출 후 pending 또는 approved 상태
         expect(['pending', 'approved']).toContain(
           dashboardStatus.criteriaSetup.status,
         );
@@ -1584,9 +1661,15 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
             criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
             stepApprovalStatus:
               dashboardStatus.stepApproval.criteriaSettingStatus,
+            approvedBy: dashboardStatus.stepApproval.criteriaSettingApprovedBy,
+            approvedAt: dashboardStatus.stepApproval.criteriaSettingApprovedAt,
             criteriaSubmission: {
               isSubmitted:
                 dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+              submittedAt:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
+              submittedBy:
+                dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
             },
             passed: true,
           },
