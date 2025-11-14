@@ -13,7 +13,8 @@ import { AuditLogContextService } from '@context/audit-log-context/audit-log-con
 /**
  * Audit 로그 인터셉터
  *
- * 모든 HTTP 요청과 응답을 audit 로그로 저장합니다.
+ * POST, PUT, PATCH, DELETE 등의 HTTP 요청과 응답을 audit 로그로 저장합니다.
+ * GET 요청은 제외됩니다.
  */
 @Injectable()
 export class AuditLogInterceptor implements NestInterceptor {
@@ -34,6 +35,11 @@ export class AuditLogInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
+
+    // GET 메소드는 audit 로그에서 제외
+    if (request.method === 'GET') {
+      return next.handle();
+    }
 
     // 제외할 경로 확인
     if (this.shouldExclude(request.path)) {
