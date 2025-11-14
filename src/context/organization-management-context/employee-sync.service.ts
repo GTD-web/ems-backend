@@ -306,33 +306,54 @@ export class EmployeeSyncService implements OnModuleInit {
 
       // 2. SSO에서 관리자 정보 조회
       this.logger.log('관리자 정보를 조회합니다...');
-      let managerMap: Map<string, string> = new Map();
+      let managerMap: Map<string, string | null> = new Map();
       try {
         const managersResponse = await this.ssoService.직원관리자정보를조회한다();
         
-        // 각 직원의 소속 부서(depth=0)의 첫 번째 관리자를 managerId로 매핑
+        // 각 직원의 소속 부서부터 상위 부서까지 관리자 라인을 순회하여 관리자 찾기
         for (const empManager of managersResponse.employees) {
+          let foundManagerId: string | null = null;
+          
           // 각 직원의 부서별 관리자 정보 확인
           for (const deptManager of empManager.departments) {
-            // 소속 부서(depth=0)의 관리자 라인에서 첫 번째 관리자 찾기
-            const ownDepartment = deptManager.managerLine.find(
-              (line) => line.depth === 0,
+            // managerLine을 depth 순서대로 정렬 (depth=0부터 시작)
+            const sortedManagerLine = [...deptManager.managerLine].sort(
+              (a, b) => a.depth - b.depth,
             );
             
-            if (ownDepartment && ownDepartment.managers.length > 0) {
-              // 첫 번째 관리자의 employeeId를 managerId로 설정
-              const managerId = ownDepartment.managers[0].employeeId;
-              managerMap.set(empManager.employeeId, managerId);
-              this.logger.debug(
-                `직원 ${empManager.name} (${empManager.employeeNumber})의 관리자: ${managerId}`,
-              );
-              break; // 첫 번째 부서의 관리자를 찾으면 종료
+            // depth=0부터 순회하면서 managers가 있는 첫 번째 항목 찾기
+            for (const managerLine of sortedManagerLine) {
+              if (managerLine.managers && managerLine.managers.length > 0) {
+                // 첫 번째 관리자의 employeeId를 managerId로 설정
+                foundManagerId = managerLine.managers[0].employeeId;
+                this.logger.debug(
+                  `직원 ${empManager.name} (${empManager.employeeNumber})의 관리자: ${foundManagerId} (부서: ${managerLine.departmentName}, depth: ${managerLine.depth})`,
+                );
+                break; // 관리자를 찾으면 종료
+              }
             }
+            
+            // 관리자를 찾았으면 첫 번째 부서에서 종료
+            if (foundManagerId) {
+              break;
+            }
+          }
+          
+          // 관리자를 찾았든 못 찾았든 매핑에 추가 (없으면 null)
+          managerMap.set(empManager.employeeId, foundManagerId);
+          
+          if (!foundManagerId) {
+            this.logger.debug(
+              `직원 ${empManager.name} (${empManager.employeeNumber})의 관리자를 찾을 수 없습니다.`,
+            );
           }
         }
         
+        const managerCount = Array.from(managerMap.values()).filter(
+          (id) => id !== null,
+        ).length;
         this.logger.log(
-          `관리자 정보 ${managerMap.size}개를 조회했습니다. 동기화를 시작합니다...`,
+          `관리자 정보 ${managerCount}개를 조회했습니다. (null: ${managerMap.size - managerCount}개) 동기화를 시작합니다...`,
         );
       } catch (managerError) {
         this.logger.warn(
@@ -345,11 +366,9 @@ export class EmployeeSyncService implements OnModuleInit {
       const employeesToSave: Employee[] = [];
 
       for (const ssoEmp of ssoEmployees) {
-        // 관리자 정보가 있으면 매핑
+        // 관리자 정보 매핑 (있으면 설정, 없으면 null로 명시적 설정)
         const managerId = managerMap.get(ssoEmp.id);
-        if (managerId) {
-          ssoEmp.managerId = managerId;
-        }
+        ssoEmp.managerId = managerId || undefined; // null을 undefined로 변환
 
         const result = await this.직원을_처리한다(
           ssoEmp,

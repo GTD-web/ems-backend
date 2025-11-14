@@ -209,17 +209,27 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             try {
                 const managersResponse = await this.ssoService.직원관리자정보를조회한다();
                 for (const empManager of managersResponse.employees) {
+                    let foundManagerId = null;
                     for (const deptManager of empManager.departments) {
-                        const ownDepartment = deptManager.managerLine.find((line) => line.depth === 0);
-                        if (ownDepartment && ownDepartment.managers.length > 0) {
-                            const managerId = ownDepartment.managers[0].employeeId;
-                            managerMap.set(empManager.employeeId, managerId);
-                            this.logger.debug(`직원 ${empManager.name} (${empManager.employeeNumber})의 관리자: ${managerId}`);
+                        const sortedManagerLine = [...deptManager.managerLine].sort((a, b) => a.depth - b.depth);
+                        for (const managerLine of sortedManagerLine) {
+                            if (managerLine.managers && managerLine.managers.length > 0) {
+                                foundManagerId = managerLine.managers[0].employeeId;
+                                this.logger.debug(`직원 ${empManager.name} (${empManager.employeeNumber})의 관리자: ${foundManagerId} (부서: ${managerLine.departmentName}, depth: ${managerLine.depth})`);
+                                break;
+                            }
+                        }
+                        if (foundManagerId) {
                             break;
                         }
                     }
+                    managerMap.set(empManager.employeeId, foundManagerId);
+                    if (!foundManagerId) {
+                        this.logger.debug(`직원 ${empManager.name} (${empManager.employeeNumber})의 관리자를 찾을 수 없습니다.`);
+                    }
                 }
-                this.logger.log(`관리자 정보 ${managerMap.size}개를 조회했습니다. 동기화를 시작합니다...`);
+                const managerCount = Array.from(managerMap.values()).filter((id) => id !== null).length;
+                this.logger.log(`관리자 정보 ${managerCount}개를 조회했습니다. (null: ${managerMap.size - managerCount}개) 동기화를 시작합니다...`);
             }
             catch (managerError) {
                 this.logger.warn(`관리자 정보 조회 실패 (동기화는 계속 진행): ${managerError.message}`);
@@ -227,9 +237,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             const employeesToSave = [];
             for (const ssoEmp of ssoEmployees) {
                 const managerId = managerMap.get(ssoEmp.id);
-                if (managerId) {
-                    ssoEmp.managerId = managerId;
-                }
+                ssoEmp.managerId = managerId || undefined;
                 const result = await this.직원을_처리한다(ssoEmp, forceSync, syncStartTime);
                 if (result.success && result.employee) {
                     employeesToSave.push(result.employee);
