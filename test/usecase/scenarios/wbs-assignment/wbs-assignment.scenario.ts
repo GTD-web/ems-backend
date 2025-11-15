@@ -70,10 +70,10 @@ export class WbsAssignmentScenario {
 
     // 4. evaluationCriteria 정보 추출
     const evaluationCriteria = {
-      status: 직원상태?.evaluationCriteria?.status || 'unknown',
+      status: 직원상태?.criteriaSetup?.evaluationCriteria?.status || 'unknown',
       assignedProjectCount:
-        직원상태?.evaluationCriteria?.assignedProjectCount || 0,
-      assignedWbsCount: 직원상태?.evaluationCriteria?.assignedWbsCount || 0,
+        직원상태?.criteriaSetup?.evaluationCriteria?.assignedProjectCount || 0,
+      assignedWbsCount: 직원상태?.criteriaSetup?.evaluationCriteria?.assignedWbsCount || 0,
     };
 
     // 5. 할당 데이터에서 WBS 정보 추출

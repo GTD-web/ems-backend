@@ -47,4 +47,3 @@ export class EvaluationActivityLogApiClient {
     return response.body;
   }
 }
-

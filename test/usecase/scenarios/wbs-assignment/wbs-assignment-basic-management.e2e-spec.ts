@@ -209,28 +209,30 @@ describe('WBS 할당 기본 관리 시나리오', () => {
       expect(직원평가기간현황.isEvaluationTarget).toBe(true);
 
       // evaluationCriteria 상태 검증 (개별 조회)
-      expect(직원평가기간현황.evaluationCriteria).toBeDefined();
-      expect(직원평가기간현황.evaluationCriteria.status).toBe('complete');
+      expect(직원평가기간현황.criteriaSetup?.evaluationCriteria).toBeDefined();
+      expect(직원평가기간현황.criteriaSetup?.evaluationCriteria.status).toBe(
+        'complete',
+      );
       expect(
-        직원평가기간현황.evaluationCriteria.assignedProjectCount,
+        직원평가기간현황.criteriaSetup?.evaluationCriteria.assignedProjectCount,
       ).toBeGreaterThan(0);
       expect(
-        직원평가기간현황.evaluationCriteria.assignedWbsCount,
+        직원평가기간현황.criteriaSetup?.evaluationCriteria.assignedWbsCount,
       ).toBeGreaterThan(0);
 
       // 대시보드 전체 조회와 개별 조회의 일관성 검증
-      expect(직원평가기간현황.evaluationCriteria.status).toBe(
+      expect(직원평가기간현황.criteriaSetup?.evaluationCriteria.status).toBe(
         result.evaluationCriteria.status,
       );
-      expect(직원평가기간현황.evaluationCriteria.assignedProjectCount).toBe(
-        result.evaluationCriteria.assignedProjectCount,
-      );
-      expect(직원평가기간현황.evaluationCriteria.assignedWbsCount).toBe(
-        result.evaluationCriteria.assignedWbsCount,
-      );
+      expect(
+        직원평가기간현황.criteriaSetup?.evaluationCriteria.assignedProjectCount,
+      ).toBe(result.evaluationCriteria.assignedProjectCount);
+      expect(
+        직원평가기간현황.criteriaSetup?.evaluationCriteria.assignedWbsCount,
+      ).toBe(result.evaluationCriteria.assignedWbsCount);
 
       console.log(
-        `✅ 개별 직원 평가기간 현황 검증 완료 - 상태: ${직원평가기간현황.evaluationCriteria.status}, 프로젝트 ${직원평가기간현황.evaluationCriteria.assignedProjectCount}개, WBS ${직원평가기간현황.evaluationCriteria.assignedWbsCount}개`,
+        `✅ 개별 직원 평가기간 현황 검증 완료 - 상태: ${직원평가기간현황.criteriaSetup?.evaluationCriteria.status}, 프로젝트 ${직원평가기간현황.criteriaSetup?.evaluationCriteria.assignedProjectCount}개, WBS ${직원평가기간현황.criteriaSetup?.evaluationCriteria.assignedWbsCount}개`,
       );
     });
 
@@ -664,7 +666,7 @@ describe('WBS 할당 기본 관리 시나리오', () => {
 
       console.log(`📊 취소 전 할당 데이터 - WBS 수: ${취소전WBS수}`);
       console.log(
-        `📊 취소 전 대시보드 상태 - assignedWbsCount: ${취소전직원상태?.evaluationCriteria?.assignedWbsCount || 0}`,
+        `📊 취소 전 대시보드 상태 - assignedWbsCount: ${취소전직원상태?.criteriaSetup?.evaluationCriteria?.assignedWbsCount || 0}`,
       );
 
       // 할당 취소
@@ -714,7 +716,7 @@ describe('WBS 할당 기본 관리 시나리오', () => {
 
       console.log(`📊 취소 후 할당 데이터 - WBS 수: ${취소후WBS수}`);
       console.log(
-        `📊 취소 후 대시보드 상태 - assignedWbsCount: ${취소후직원상태?.evaluationCriteria?.assignedWbsCount || 0}`,
+        `📊 취소 후 대시보드 상태 - assignedWbsCount: ${취소후직원상태?.criteriaSetup?.evaluationCriteria?.assignedWbsCount || 0}`,
       );
 
       // 검증: 할당 취소 후 WBS 수가 감소했는지 확인
@@ -729,9 +731,9 @@ describe('WBS 할당 기본 관리 시나리오', () => {
       // 대시보드 상태 검증
       expect(취소후직원상태).toBeDefined();
       expect(
-        취소후직원상태.evaluationCriteria?.assignedWbsCount || 0,
+        취소후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount || 0,
       ).toBeLessThanOrEqual(
-        취소전직원상태.evaluationCriteria?.assignedWbsCount || 0,
+        취소전직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount || 0,
       );
 
       console.log(`✅ WBS 할당 취소 및 검증 완료 - WBS ID: ${wbsItemId}`);
