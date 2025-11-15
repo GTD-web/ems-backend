@@ -25,6 +25,15 @@
         - **재작성 요청 생성 검증**
             - revision_requested 상태로 변경 시 재작성 요청이 자동 생성됨
             - 재작성 요청은 피평가자 + 1차평가자에게 전송됨
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 피평가자로 조회: step='criteria'인 재작성 요청이 생성되었는지 확인
+                - 1차평가자로 조회: step='criteria'인 재작성 요청이 생성되었는지 확인
+                - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                - 재작성 요청의 isCompleted가 false인지 확인
+                - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                - 재작성 요청의 step이 'criteria'인지 확인
+                - 재작성 요청의 employeeId가 올바른지 확인
+                - 재작성 요청의 evaluationPeriodId가 올바른지 확인
         - **재작성 요청 생성 시 제출 상태 초기화 검증**
             - revision_requested 상태로 변경 시 평가기준 제출 상태가 초기화됨
             - isCriteriaSubmitted가 false로 변경됨
@@ -40,6 +49,15 @@
             - revision_requested 상태로 변경 시 자기평가 제출 상태가 초기화됨
             - submittedToManager, submittedToManagerAt이 초기화됨
             - 재작성 요청은 피평가자 + 1차평가자에게 전송됨
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 피평가자로 조회: step='self'인 재작성 요청이 생성되었는지 확인
+                - 1차평가자로 조회: step='self'인 재작성 요청이 생성되었는지 확인
+                - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                - 재작성 요청의 isCompleted가 false인지 확인
+                - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                - 재작성 요청의 step이 'self'인지 확인
+                - 재작성 요청의 employeeId가 올바른지 확인
+                - 재작성 요청의 evaluationPeriodId가 올바른지 확인
         - **승인 시 제출 상태 자동 변경 검증**
             - approved 상태로 변경 시 제출 상태도 자동으로 변경됨
             - submittedToEvaluator가 true로 설정됨 (피평가자 → 1차 평가자 제출)
@@ -67,6 +85,14 @@
             - revision_requested 상태로 변경 시 1차 하향평가 제출 상태가 초기화됨
             - isCompleted, completedAt이 초기화됨
             - 재작성 요청은 1차평가자에게 전송됨
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 1차평가자로 조회: step='primary'인 재작성 요청이 생성되었는지 확인
+                - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                - 재작성 요청의 isCompleted가 false인지 확인
+                - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                - 재작성 요청의 step이 'primary'인지 확인
+                - 재작성 요청의 employeeId가 올바른지 확인
+                - 재작성 요청의 evaluationPeriodId가 올바른지 확인
         - **승인 시 제출 상태 자동 변경 검증**
             - approved 상태로 변경 시 제출 상태도 자동으로 변경됨
             - 해당 피평가자의 모든 1차 하향평가의 isCompleted가 true로 설정됨
@@ -91,6 +117,14 @@
             - revision_requested 상태로 변경 시 해당 평가자의 2차 하향평가 제출 상태가 초기화됨
             - isCompleted, completedAt이 초기화됨
             - 재작성 요청은 지정된 2차평가자에게만 전송됨 (평가자별 부분 처리)
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 해당 2차평가자로 조회: step='secondary'인 재작성 요청이 생성되었는지 확인
+                - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                - 재작성 요청의 isCompleted가 false인지 확인
+                - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                - 재작성 요청의 step이 'secondary'인지 확인
+                - 재작성 요청의 employeeId가 올바른지 확인
+                - 재작성 요청의 evaluationPeriodId가 올바른지 확인
         - **승인 시 제출 상태 자동 변경 검증**
             - approved 상태로 변경 시 제출 상태도 자동으로 변경됨
             - 해당 평가자의 모든 2차 하향평가의 isCompleted가 true로 설정됨
@@ -255,7 +289,11 @@
         - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
             - downwardEvaluation.primary.status가 'revision_requested'인지 확인
             - stepApproval.primaryEvaluationStatus가 'revision_requested'인지 확인
-            - 재작성 요청이 생성되었는지 확인 (GET /admin/revision-requests)
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 1차평가자로 조회: step='primary'인 재작성 요청이 생성되었는지 확인
+                - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                - 재작성 요청의 isCompleted가 false인지 확인
+                - 재작성 요청의 step이 'primary'인지 확인
     - **상태 7: revision_completed - 재작성 완료되었으면 primary.status는 revision_completed이어야 한다**
         - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/primary (1차 하향평가 저장 - 모든 WBS)
         - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/primary (1차 하향평가 단계 재작성 요청)
@@ -320,7 +358,11 @@
             - downwardEvaluation.secondary.status가 'revision_requested'인지 확인
             - downwardEvaluation.secondary.evaluators[].status가 'revision_requested'인지 확인 (해당 평가자)
             - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 status가 'revision_requested'인지 확인
-            - 재작성 요청이 생성되었는지 확인 (GET /admin/revision-requests)
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 해당 2차평가자로 조회: step='secondary'인 재작성 요청이 생성되었는지 확인
+                - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                - 재작성 요청의 isCompleted가 false인지 확인
+                - 재작성 요청의 step이 'secondary'인지 확인
     - **상태 7: revision_completed - 재작성 완료되었으면 secondary.status는 revision_completed이어야 한다**
         - POST /admin/performance-evaluation/downward-evaluations/evaluatee/{evaluateeId}/period/{periodId}/wbs/{wbsId}/secondary (2차 하향평가 저장 - 모든 WBS)
         - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/secondary/{evaluatorId} (2차 하향평가 단계 재작성 요청)
@@ -420,8 +462,15 @@
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/status (직원 목록 상태 조회)
                     - employees[].criteriaSetup.criteriaSubmission.isSubmitted가 false인지 확인
             - **재작성 요청 생성 검증**
-                - 재작성 요청이 생성되었는지 확인 (GET /admin/revision-requests)
-                - 재작성 요청이 피평가자 + 1차평가자에게 전송되었는지 확인
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 피평가자로 조회: step='criteria'인 재작성 요청이 생성되었는지 확인
+                    - 1차평가자로 조회: step='criteria'인 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                    - 재작성 요청의 isCompleted가 false인지 확인
+                    - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                    - 재작성 요청의 step이 'criteria'인지 확인
+                    - 재작성 요청의 employeeId가 올바른지 확인
+                    - 재작성 요청의 evaluationPeriodId가 올바른지 확인
         - **4단계: 재제출**
             - POST /admin/evaluation-criteria/wbs-evaluation-criteria/submit (평가기준 재제출)
                 - evaluationPeriodId, employeeId 전송
@@ -435,8 +484,11 @@
                     - summary.criteriaSubmission.submittedAt이 새로 설정되었는지 확인
                     - summary.criteriaSubmission.submittedBy가 새로 설정되었는지 확인
             - **재작성 요청 자동 완료 검증**
-                - 재작성 요청이 자동으로 완료 처리되었는지 확인 (GET /admin/revision-requests)
-                - 재작성 요청의 isCompleted가 true인지 확인
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 피평가자로 조회: step='criteria'인 재작성 요청의 isCompleted가 true로 변경되었는지 확인
+                    - 1차평가자로 조회: step='criteria'인 재작성 요청의 isCompleted가 true로 변경되었는지 확인
+                    - 재작성 요청의 completedAt이 설정되었는지 확인
+                    - 재작성 요청의 responseComment가 설정되었는지 확인 (자동 완료 시)
         - **5단계: 승인**
             - PATCH /admin/step-approvals/{evaluationPeriodId}/employees/{employeeId}/criteria (평가기준 설정 단계 승인)
                 - status: approved로 변경
@@ -501,19 +553,25 @@
                     - criteriaSetup.status가 'revision_requested'인지 확인
                     - criteriaSetup.criteriaSubmission.isSubmitted가 false로 변경되었는지 확인
                     - stepApproval.criteriaSettingStatus가 'revision_requested'인지 확인
-                - GET /admin/revision-requests (재작성 요청 목록 조회)
-                    - 재작성 요청이 생성되었는지 확인
-                    - 재작성 요청이 피평가자 + 1차평가자에게 전송되었는지 확인
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 피평가자로 조회: step='criteria'인 재작성 요청이 생성되었는지 확인
+                    - 1차평가자로 조회: step='criteria'인 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
                     - 재작성 요청의 isCompleted가 false인지 확인
+                    - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                    - 재작성 요청의 step이 'criteria'인지 확인
         - **3단계: 재작성 완료 응답 제출**
-            - GET /admin/revision-requests (재작성 요청 목록 조회)
-                - 재작성 요청 ID 확인
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 피평가자 또는 1차평가자로 조회하여 재작성 요청 ID 확인
+                - step='criteria' 필터 적용
             - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
                 - responseComment: 재작성 완료 응답 코멘트
             - **재작성 완료 응답 제출 검증**
-                - GET /admin/revision-requests (재작성 요청 목록 조회)
-                    - 재작성 요청의 isCompleted가 true로 변경되었는지 확인
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 피평가자 또는 1차평가자로 조회: step='criteria'인 재작성 요청의 isCompleted가 true로 변경되었는지 확인
+                    - 재작성 요청의 isRead가 true로 변경되었는지 확인 (재작성 완료 응답 제출 시 자동으로 읽음 처리됨)
                     - 재작성 요청의 completedAt이 설정되었는지 확인
+                    - 재작성 요청의 readAt이 설정되었는지 확인 (재작성 완료 응답 제출 시 자동으로 읽음 처리됨)
                     - 재작성 요청의 responseComment가 설정되었는지 확인
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
                     - criteriaSetup.status가 'revision_completed'인지 확인
@@ -556,15 +614,26 @@
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
                     - selfEvaluation.status가 'revision_requested'인지 확인
                     - stepApproval.selfEvaluationStatus가 'revision_requested'인지 확인
-                - GET /admin/revision-requests (재작성 요청 목록 조회)
-                    - 재작성 요청이 생성되었는지 확인
-                    - 재작성 요청이 피평가자 + 1차평가자에게 전송되었는지 확인
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 피평가자로 조회: step='self'인 재작성 요청이 생성되었는지 확인
+                    - 1차평가자로 조회: step='self'인 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                    - 재작성 요청의 isCompleted가 false인지 확인
+                    - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                    - 재작성 요청의 step이 'self'인지 확인
         - **3단계: 재작성 완료 응답 제출**
-            - GET /admin/revision-requests (재작성 요청 목록 조회)
-                - 재작성 요청 ID 확인
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 피평가자 또는 1차평가자로 조회하여 재작성 요청 ID 확인
+                - step='self' 필터 적용
             - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
                 - responseComment: 재작성 완료 응답 코멘트
             - **재작성 완료 응답 제출 검증**
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 피평가자 또는 1차평가자로 조회: step='self'인 재작성 요청의 isCompleted가 true로 변경되었는지 확인
+                    - 재작성 요청의 isRead가 true로 변경되었는지 확인 (재작성 완료 응답 제출 시 자동으로 읽음 처리됨)
+                    - 재작성 요청의 completedAt이 설정되었는지 확인
+                    - 재작성 요청의 readAt이 설정되었는지 확인 (재작성 완료 응답 제출 시 자동으로 읽음 처리됨)
+                    - 재작성 요청의 responseComment가 설정되었는지 확인
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
                     - selfEvaluation.status가 'revision_completed'인지 확인
                     - stepApproval.selfEvaluationStatus가 'revision_completed'인지 확인
@@ -596,15 +665,25 @@
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
                     - downwardEvaluation.primary.status가 'revision_requested'인지 확인
                     - stepApproval.primaryEvaluationStatus가 'revision_requested'인지 확인
-                - GET /admin/revision-requests (재작성 요청 목록 조회)
-                    - 재작성 요청이 생성되었는지 확인
-                    - 재작성 요청이 1차평가자에게 전송되었는지 확인
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 1차평가자로 조회: step='primary'인 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                    - 재작성 요청의 isCompleted가 false인지 확인
+                    - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                    - 재작성 요청의 step이 'primary'인지 확인
         - **3단계: 재작성 완료 응답 제출**
-            - GET /admin/revision-requests (재작성 요청 목록 조회)
-                - 재작성 요청 ID 확인
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 1차평가자로 조회하여 재작성 요청 ID 확인
+                - step='primary' 필터 적용
             - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
                 - responseComment: 재작성 완료 응답 코멘트
             - **재작성 완료 응답 제출 검증**
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 1차평가자로 조회: step='primary'인 재작성 요청의 isCompleted가 true로 변경되었는지 확인
+                    - 재작성 요청의 isRead가 true로 변경되었는지 확인 (재작성 완료 응답 제출 시 자동으로 읽음 처리됨)
+                    - 재작성 요청의 completedAt이 설정되었는지 확인
+                    - 재작성 요청의 readAt이 설정되었는지 확인 (재작성 완료 응답 제출 시 자동으로 읽음 처리됨)
+                    - 재작성 요청의 responseComment가 설정되었는지 확인
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
                     - downwardEvaluation.primary.status가 'revision_completed'인지 확인
                     - stepApproval.primaryEvaluationStatus가 'revision_completed'인지 확인
@@ -638,15 +717,25 @@
                     - downwardEvaluation.secondary.status가 'revision_requested'인지 확인
                     - downwardEvaluation.secondary.evaluators[].status가 'revision_requested'인지 확인 (해당 평가자)
                     - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 status가 'revision_requested'인지 확인
-                - GET /admin/revision-requests (재작성 요청 목록 조회)
-                    - 재작성 요청이 생성되었는지 확인
-                    - 재작성 요청이 지정된 2차평가자에게만 전송되었는지 확인
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 해당 2차평가자로 조회: step='secondary'인 재작성 요청이 생성되었는지 확인
+                    - 재작성 요청의 comment가 revisionComment와 일치하는지 확인
+                    - 재작성 요청의 isCompleted가 false인지 확인
+                    - 재작성 요청의 isRead가 false인지 확인 (초기 상태)
+                    - 재작성 요청의 step이 'secondary'인지 확인
         - **3단계: 재작성 완료 응답 제출**
-            - GET /admin/revision-requests (재작성 요청 목록 조회)
-                - 재작성 요청 ID 확인
+            - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                - 해당 2차평가자로 조회하여 재작성 요청 ID 확인
+                - step='secondary' 필터 적용
             - POST /admin/revision-requests/{requestId}/complete (재작성 완료 응답 제출)
                 - responseComment: 재작성 완료 응답 코멘트
             - **재작성 완료 응답 제출 검증**
+                - GET /admin/revision-requests/me (내 재작성 요청 목록 조회)
+                    - 해당 2차평가자로 조회: step='secondary'인 재작성 요청의 isCompleted가 true로 변경되었는지 확인
+                    - 재작성 요청의 isRead가 true로 변경되었는지 확인 (재작성 완료 응답 제출 시 자동으로 읽음 처리됨)
+                    - 재작성 요청의 completedAt이 설정되었는지 확인
+                    - 재작성 요청의 readAt이 설정되었는지 확인 (재작성 완료 응답 제출 시 자동으로 읽음 처리됨)
+                    - 재작성 요청의 responseComment가 설정되었는지 확인
                 - GET /admin/dashboard/{evaluationPeriodId}/employees/{employeeId} (직원 평가기간 현황 조회)
                     - downwardEvaluation.secondary.evaluators[].status가 'revision_completed'인지 확인 (해당 평가자)
                     - stepApproval.secondaryEvaluationStatuses에서 해당 평가자의 status가 'revision_completed'인지 확인

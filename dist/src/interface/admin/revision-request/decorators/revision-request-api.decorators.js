@@ -118,13 +118,15 @@ function GetMyRevisionRequests() {
     }), (0, swagger_1.ApiQuery)({
         name: 'isRead',
         required: false,
-        description: '읽음 여부',
-        type: 'boolean',
+        description: '읽음 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+        type: String,
+        example: 'false',
     }), (0, swagger_1.ApiQuery)({
         name: 'isCompleted',
         required: false,
-        description: '재작성 완료 여부',
-        type: 'boolean',
+        description: '재작성 완료 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+        type: String,
+        example: 'false',
     }), (0, swagger_1.ApiQuery)({
         name: 'step',
         required: false,

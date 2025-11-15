@@ -305,8 +305,26 @@ function buildAndStage() {
         console.log('   ℹ️  skip-worktree로 설정된 파일이 없습니다.\n');
     }
 
-    // 2. 빌드 실행
-    console.log('2️⃣  프로젝트 빌드 중...');
+    // 2. 기존 dist 폴더 삭제
+    console.log('2️⃣  기존 dist 폴더 삭제 중...');
+    try {
+        if (fs.existsSync(DIST_DIR)) {
+            execSync('rm -rf dist', {
+                stdio: 'pipe',
+                cwd: rootDir,
+                shell: true
+            });
+            console.log('   ✅ dist 폴더 삭제 완료\n');
+        } else {
+            console.log('   ℹ️  dist 폴더가 존재하지 않습니다.\n');
+        }
+    } catch (error) {
+        console.error('   ⚠️  dist 폴더 삭제 실패:', error.message);
+        console.log('   계속 진행합니다...\n');
+    }
+
+    // 3. 빌드 실행
+    console.log('3️⃣  프로젝트 빌드 중...');
     try {
         execSync('npm run build', {
             stdio: 'inherit',
@@ -318,8 +336,8 @@ function buildAndStage() {
         process.exit(1);
     }
 
-    // 3. dist 폴더의 모든 파일을 stage에 추가
-    console.log('3️⃣  dist 폴더 파일들을 Git stage에 추가 중...');
+    // 4. dist 폴더의 모든 파일을 stage에 추가
+    console.log('4️⃣  dist 폴더 파일들을 Git stage에 추가 중...');
     try {
         // 먼저 dist 폴더가 존재하는지 확인
         if (!fs.existsSync(DIST_DIR)) {
@@ -347,8 +365,8 @@ function buildAndStage() {
         process.exit(1);
     }
 
-    // 4. 다시 skip-worktree 설정
-    console.log('4️⃣  dist 폴더 변경사항 무시 설정 중...');
+    // 5. 다시 skip-worktree 설정
+    console.log('5️⃣  dist 폴더 변경사항 무시 설정 중...');
 
     const files = getAllFiles(DIST_DIR);
     if (files.length > 0) {

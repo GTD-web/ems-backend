@@ -1,13 +1,10 @@
 import { BaseE2ETest } from '../../../base-e2e.spec';
-import { StepApprovalApiClient } from '../api-clients/step-approval.api-client';
 import { DashboardApiClient } from '../api-clients/dashboard.api-client';
-import { WbsSelfEvaluationApiClient } from '../api-clients/wbs-self-evaluation.api-client';
 import { DownwardEvaluationApiClient } from '../api-clients/downward-evaluation.api-client';
-import { RevisionRequestApiClient } from '../api-clients/revision-request.api-client';
 import { EvaluationLineApiClient } from '../api-clients/evaluation-line.api-client';
+import { RevisionRequestApiClient } from '../api-clients/revision-request.api-client';
+import { StepApprovalApiClient } from '../api-clients/step-approval.api-client';
 import { WbsEvaluationCriteriaApiClient } from '../api-clients/wbs-evaluation-criteria.api-client';
-import { EvaluationPeriodScenario } from '../evaluation-period.scenario';
-import { ProjectAssignmentScenario } from '../project-assignment/project-assignment.scenario';
 import { WbsAssignmentScenario } from '../wbs-assignment/wbs-assignment.scenario';
 
 /**
@@ -18,19 +15,15 @@ import { WbsAssignmentScenario } from '../wbs-assignment/wbs-assignment.scenario
 export class StepApprovalScenario {
   private stepApprovalApiClient: StepApprovalApiClient;
   private dashboardApiClient: DashboardApiClient;
-  private wbsSelfEvaluationApiClient: WbsSelfEvaluationApiClient;
   private downwardEvaluationApiClient: DownwardEvaluationApiClient;
   private revisionRequestApiClient: RevisionRequestApiClient;
   private evaluationLineApiClient: EvaluationLineApiClient;
   private wbsEvaluationCriteriaApiClient: WbsEvaluationCriteriaApiClient;
-  private evaluationPeriodScenario: EvaluationPeriodScenario;
-  private projectAssignmentScenario: ProjectAssignmentScenario;
   private wbsAssignmentScenario: WbsAssignmentScenario;
 
   constructor(private readonly testSuite: BaseE2ETest) {
     this.stepApprovalApiClient = new StepApprovalApiClient(testSuite);
     this.dashboardApiClient = new DashboardApiClient(testSuite);
-    this.wbsSelfEvaluationApiClient = new WbsSelfEvaluationApiClient(testSuite);
     this.downwardEvaluationApiClient = new DownwardEvaluationApiClient(
       testSuite,
     );
@@ -39,8 +32,6 @@ export class StepApprovalScenario {
     this.wbsEvaluationCriteriaApiClient = new WbsEvaluationCriteriaApiClient(
       testSuite,
     );
-    this.evaluationPeriodScenario = new EvaluationPeriodScenario(testSuite);
-    this.projectAssignmentScenario = new ProjectAssignmentScenario(testSuite);
     this.wbsAssignmentScenario = new WbsAssignmentScenario(testSuite);
   }
 
@@ -459,7 +450,7 @@ export class StepApprovalScenario {
   }
 
   /**
-   * 재작성 요청 목록을 조회한다
+   * 재작성 요청 목록을 조회한다 (관리자용)
    */
   async 재작성요청_목록을_조회한다(config?: {
     evaluationPeriodId?: string;
@@ -471,6 +462,23 @@ export class StepApprovalScenario {
       evaluationPeriodId: config?.evaluationPeriodId,
       employeeId: config?.employeeId,
       step: config?.step,
+      isCompleted: config?.isCompleted,
+    });
+  }
+
+  /**
+   * 내 재작성 요청 목록을 조회한다 (담당자용)
+   */
+  async 내_재작성요청_목록을_조회한다(config?: {
+    evaluationPeriodId?: string;
+    step?: 'criteria' | 'self' | 'primary' | 'secondary';
+    isRead?: boolean;
+    isCompleted?: boolean;
+  }) {
+    return await this.revisionRequestApiClient.getMyRevisionRequests({
+      evaluationPeriodId: config?.evaluationPeriodId,
+      step: config?.step,
+      isRead: config?.isRead,
       isCompleted: config?.isCompleted,
     });
   }
