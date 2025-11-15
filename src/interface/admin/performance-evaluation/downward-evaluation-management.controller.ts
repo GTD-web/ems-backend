@@ -21,7 +21,7 @@ import {
   UpsertSecondaryDownwardEvaluation,
   BulkSubmitDownwardEvaluations,
   BulkResetDownwardEvaluations,
-} from './decorators/downward-evaluation-api.decorators';
+} from '../../common/decorators/performance-evaluation/downward-evaluation-api.decorators';
 import {
   CreatePrimaryDownwardEvaluationBodyDto,
   CreateSecondaryDownwardEvaluationBodyDto,
@@ -30,8 +30,8 @@ import {
   DownwardEvaluationListResponseDto,
   DownwardEvaluationResponseDto,
   SubmitDownwardEvaluationDto,
-} from './dto/downward-evaluation.dto';
-import { BulkSubmitDownwardEvaluationQueryDto } from './dto/bulk-submit-downward-evaluation-query.dto';
+} from '../../common/dto/performance-evaluation/downward-evaluation.dto';
+import { BulkSubmitDownwardEvaluationQueryDto } from '../../common/dto/performance-evaluation/bulk-submit-downward-evaluation-query.dto';
 
 /**
  * 하향평가 관리 컨트롤러

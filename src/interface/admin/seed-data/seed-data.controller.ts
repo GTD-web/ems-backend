@@ -10,15 +10,16 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SeedDataService } from '@context/seed-data-context/seed-data.service';
-import { SeedDataConfigDto, RealDataSeedConfigDto } from './dto';
-import { SeedDataResultDto } from './dto/seed-data-result.dto';
-import { GetSeedDataStatusDto } from './dto/get-seed-data-status.dto';
 import {
-  ApiGenerateSeedData,
-  ApiGenerateSeedDataWithRealData,
-  ApiClearSeedData,
-  ApiGetSeedDataStatus,
-} from './decorators';
+  SeedDataConfigDto,
+  RealDataSeedConfigDto,
+} from '@interface/common/dto/seed-data';
+import { SeedDataResultDto } from '@interface/common/dto/seed-data/seed-data-result.dto';
+import { GetSeedDataStatusDto } from '@interface/common/dto/seed-data/get-seed-data-status.dto';
+import { ApiClearSeedData } from '@interface/common/decorators/seed-data/clear-seed-data.decorator';
+import { ApiGenerateSeedData } from '@interface/common/decorators/seed-data/generate-seed-data.decorator';
+import { ApiGenerateSeedDataWithRealData } from '@interface/common/decorators/seed-data/generate-seed-data-with-real-data.decorator';
+import { ApiGetSeedDataStatus } from '@interface/common/decorators/seed-data/get-seed-data-status.decorator';
 import { SeedScenario } from '@context/seed-data-context/types';
 
 @ApiTags('A-0-1. Seed Data')
@@ -39,10 +40,13 @@ export class SeedDataController {
     // 현재 사용자 정보를 설정에 추가
     const configWithUser = {
       ...config,
-      currentUserId: config.includeCurrentUserAsEvaluator ? req.user?.id : undefined,
+      currentUserId: config.includeCurrentUserAsEvaluator
+        ? req.user?.id
+        : undefined,
     };
 
-    const results = await this.seedDataService.시드_데이터를_생성한다(configWithUser);
+    const results =
+      await this.seedDataService.시드_데이터를_생성한다(configWithUser);
 
     const totalDuration = Date.now() - startTime;
 
@@ -79,7 +83,9 @@ export class SeedDataController {
       stateDistribution: config.stateDistribution, // 상태 분포 설정 전달
       useRealDepartments: true, // 항상 true
       useRealEmployees: true, // 항상 true
-      currentUserId: config.includeCurrentUserAsEvaluator ? req.user?.id : undefined,
+      currentUserId: config.includeCurrentUserAsEvaluator
+        ? req.user?.id
+        : undefined,
     };
 
     // 디버그: 설정 로깅
@@ -91,10 +97,7 @@ export class SeedDataController {
     }
 
     if (config.includeCurrentUserAsEvaluator) {
-      console.log(
-        '[Controller] 현재 사용자를 평가자로 등록:',
-        req.user?.id,
-      );
+      console.log('[Controller] 현재 사용자를 평가자로 등록:', req.user?.id);
     }
 
     const results =

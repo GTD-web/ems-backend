@@ -1,6 +1,6 @@
 import { Controller, Query, Param, Body, ParseUUIDPipe } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CompleteRevisionRequestByEvaluatorQueryDto } from './dto/complete-revision-request-by-evaluator-query.dto';
+import { CompleteRevisionRequestByEvaluatorQueryDto } from '../../common/dto/revision-request/complete-revision-request-by-evaluator-query.dto';
 import { RevisionRequestBusinessService } from '@business/revision-request/revision-request-business.service';
 import { RevisionRequestContextService } from '@context/revision-request-context';
 import {
@@ -10,16 +10,16 @@ import {
   MarkRevisionRequestAsRead,
   CompleteRevisionRequest,
   CompleteRevisionRequestByEvaluator,
-} from './decorators/revision-request-api.decorators';
+} from '../../common/decorators/revision-request/revision-request-api.decorators';
 import {
   RevisionRequestResponseDto,
   UnreadCountResponseDto,
-} from './dto/revision-request-response.dto';
-import { GetRevisionRequestsQueryDto } from './dto/get-revision-requests-query.dto';
-import { CompleteRevisionRequestDto } from './dto/complete-revision-request.dto';
-import { CompleteRevisionRequestByEvaluatorDto } from './dto/complete-revision-request-by-evaluator.dto';
+} from '../../common/dto/revision-request/revision-request-response.dto';
+import { GetRevisionRequestsQueryDto } from '../../common/dto/revision-request/get-revision-requests-query.dto';
+import { CompleteRevisionRequestDto } from '../../common/dto/revision-request/complete-revision-request.dto';
+import { CompleteRevisionRequestByEvaluatorDto } from '../../common/dto/revision-request/complete-revision-request-by-evaluator.dto';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
-import { StepApprovalStatusEnum } from '@interface/admin/step-approval/dto/update-step-approval.dto';
+import { StepApprovalStatusEnum } from '@/interface/common/dto/step-approval/update-step-approval.dto';
 
 /**
  * 재작성 요청 컨트롤러

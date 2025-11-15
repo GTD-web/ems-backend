@@ -15,7 +15,7 @@ import {
   RegisterEvaluationTarget,
   UnregisterAllEvaluationTargets,
   UnregisterEvaluationTarget,
-} from './decorators/evaluation-target-api.decorators';
+} from '../../common/decorators/evaluation-period/evaluation-target-api.decorators';
 import {
   EmployeeEvaluationPeriodsResponseDto,
   EvaluationTargetMappingResponseDto,
@@ -24,7 +24,7 @@ import {
   ExcludeEvaluationTargetDto,
   GetEvaluationTargetsQueryDto,
   RegisterBulkEvaluationTargetsDto,
-} from './dto/evaluation-target.dto';
+} from '../../common/dto/evaluation-period/evaluation-target.dto';
 
 /**
  * 평가 대상 관리 컨트롤러

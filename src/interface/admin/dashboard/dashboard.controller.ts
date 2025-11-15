@@ -1,12 +1,12 @@
 import { Controller, Query, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
+import { DashboardService } from '@context/dashboard-context/dashboard.service';
 import { ParseUUID } from '@interface/common/decorators';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
 import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
-import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from './dto/get-all-employees-evaluation-period-status-query.dto';
+import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from '@interface/common/dto/dashboard/get-all-employees-evaluation-period-status-query.dto';
 import {
   GetEmployeeEvaluationPeriodStatus,
   GetAllEmployeesEvaluationPeriodStatus,
@@ -18,23 +18,21 @@ import {
   GetFinalEvaluationsByEmployee,
   GetAllEmployeesFinalEvaluations,
   GetEmployeeCompleteStatus,
-} from './decorators/dashboard-api.decorators';
-import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/employee-evaluation-period-status.dto';
-import { MyEvaluationTargetStatusResponseDto } from './dto/my-evaluation-targets-status.dto';
-import {
-  EmployeeAssignedDataResponseDto,
-  EvaluatorAssignedEmployeesDataResponseDto,
-} from './dto/employee-assigned-data.dto';
-import { DashboardFinalEvaluationsByPeriodResponseDto } from './dto/final-evaluation-list.dto';
+} from '@interface/common/decorators/dashboard/dashboard-api.decorators';
+import { EmployeeEvaluationPeriodStatusResponseDto } from '@interface/common/dto/dashboard/employee-evaluation-period-status.dto';
+import { MyEvaluationTargetStatusResponseDto } from '@interface/common/dto/dashboard/my-evaluation-targets-status.dto';
+import { EmployeeAssignedDataResponseDto } from '@interface/common/dto/dashboard/employee-assigned-data.dto';
+import { EvaluatorAssignedEmployeesDataResponseDto } from '@interface/common/dto/dashboard/employee-assigned-data.dto';
+import { DashboardFinalEvaluationsByPeriodResponseDto } from '@interface/common/dto/dashboard/final-evaluation-list.dto';
 import {
   EmployeeFinalEvaluationListResponseDto,
   GetEmployeeFinalEvaluationsQueryDto,
-} from './dto/employee-final-evaluation-list.dto';
+} from '@interface/common/dto/dashboard/employee-final-evaluation-list.dto';
 import {
   AllEmployeesFinalEvaluationsResponseDto,
   GetAllEmployeesFinalEvaluationsQueryDto,
-} from './dto/all-employees-final-evaluations.dto';
-import { EmployeeCompleteStatusResponseDto } from './dto/employee-complete-status.dto';
+} from '@interface/common/dto/dashboard/all-employees-final-evaluations.dto';
+import { EmployeeCompleteStatusResponseDto } from '@interface/common/dto/dashboard/employee-complete-status.dto';
 
 /**
  * 관리자용 대시보드 컨트롤러

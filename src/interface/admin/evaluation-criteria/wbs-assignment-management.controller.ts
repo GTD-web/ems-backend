@@ -1,3 +1,5 @@
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import {
   Body,
   Controller,
@@ -9,8 +11,22 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
 import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
-import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import {
+  BulkCreateWbsAssignmentDto,
+  CancelWbsAssignmentByWbsDto,
+  ChangeWbsAssignmentOrderByWbsDto,
+  ChangeWbsAssignmentOrderQueryDto,
+  CreateAndAssignWbsDto,
+  CreateWbsAssignmentDto,
+  EmployeeWbsAssignmentsResponseDto,
+  GetUnassignedWbsItemsDto,
+  ProjectWbsAssignmentsResponseDto,
+  UnassignedWbsItemsResponseDto,
+  UpdateWbsItemTitleDto,
+  WbsAssignmentDetailResponseDto,
+  WbsAssignmentFilterDto,
+  WbsItemAssignmentsResponseDto,
+} from '../../common/dto/evaluation-criteria/wbs-assignment.dto';
 import {
   BulkCreateWbsAssignments,
   CancelWbsAssignment,
@@ -29,23 +45,7 @@ import {
   ResetPeriodWbsAssignments,
   ResetProjectWbsAssignments,
   UpdateWbsItemTitle,
-} from './decorators/wbs-assignment-api.decorators';
-import {
-  BulkCreateWbsAssignmentDto,
-  CancelWbsAssignmentByWbsDto,
-  ChangeWbsAssignmentOrderByWbsDto,
-  ChangeWbsAssignmentOrderQueryDto,
-  CreateAndAssignWbsDto,
-  CreateWbsAssignmentDto,
-  EmployeeWbsAssignmentsResponseDto,
-  GetUnassignedWbsItemsDto,
-  ProjectWbsAssignmentsResponseDto,
-  UnassignedWbsItemsResponseDto,
-  UpdateWbsItemTitleDto,
-  WbsAssignmentDetailResponseDto,
-  WbsAssignmentFilterDto,
-  WbsItemAssignmentsResponseDto,
-} from './dto/wbs-assignment.dto';
+} from '../../common/decorators/evaluation-criteria/wbs-assignment-api.decorators';
 
 /**
  * WBS 할당 관리 컨트롤러

@@ -4,7 +4,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
 import { GetEmployeeAssignedData } from './decorators/dashboard-api.decorators';
 import { EmployeeAssignedDataResponseDto } from './dto/employee-assigned-data.dto';
-import { GetMyAssignedData } from '@/interface/admin/dashboard/decorators/dashboard-api.decorators';
+import { GetMyAssignedData } from '@/interface/common/decorators/dashboard/dashboard-api.decorators';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 
 /**

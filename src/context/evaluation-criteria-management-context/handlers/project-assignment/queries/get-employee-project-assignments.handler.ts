@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { Project } from '@domain/common/project/project.entity';
-import { ProjectInfoDto } from '@interface/admin/evaluation-criteria/dto/project-assignment.dto';
+import { ProjectInfoDto } from '@/interface/common/dto/evaluation-criteria/project-assignment.dto';
 
 /**
  * 직원의 프로젝트 할당 조회 쿼리

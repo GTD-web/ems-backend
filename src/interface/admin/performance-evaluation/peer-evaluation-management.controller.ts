@@ -19,7 +19,7 @@ import {
   RequestPeerEvaluationToMultipleEvaluators,
   SubmitPeerEvaluation,
   UpsertPeerEvaluationAnswers,
-} from './decorators/peer-evaluation-api.decorators';
+} from '../../common/decorators/performance-evaluation/peer-evaluation-api.decorators';
 import {
   AssignedEvaluateeDto,
   BulkPeerEvaluationRequestResponseDto,
@@ -32,7 +32,7 @@ import {
   RequestPeerEvaluationToMultipleEvaluatorsDto,
   UpsertPeerEvaluationAnswersDto,
   UpsertPeerEvaluationAnswersResponseDto,
-} from './dto/peer-evaluation.dto';
+} from '../../common/dto/performance-evaluation/peer-evaluation.dto';
 
 /**
  * 동료평가 관리 컨트롤러

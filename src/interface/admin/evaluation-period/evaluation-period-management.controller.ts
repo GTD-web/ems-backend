@@ -42,7 +42,7 @@ import {
   UpdatePerformanceDeadline,
   UpdateSelfEvaluationDeadline,
   UpdateSelfEvaluationSettingPermission,
-} from './decorators/evaluation-period-api.decorators';
+} from '../../common/decorators/evaluation-period/evaluation-period-api.decorators';
 import {
   ChangeEvaluationPeriodPhaseApiDto,
   CreateEvaluationPeriodApiDto,
@@ -57,7 +57,7 @@ import {
   UpdatePeerEvaluationDeadlineApiDto,
   UpdatePerformanceDeadlineApiDto,
   UpdateSelfEvaluationDeadlineApiDto,
-} from './dto/evaluation-management.dto';
+} from '../../common/dto/evaluation-period/evaluation-management.dto';
 
 /**
  * 관리자용 평가 관리 컨트롤러

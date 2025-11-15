@@ -12,7 +12,7 @@ import type {
 import type {
   ProjectInfoDto,
   EmployeeInfoDto,
-} from '../../../interface/admin/evaluation-criteria/dto/project-assignment.dto';
+} from '../../../interface/common/dto/evaluation-criteria/project-assignment.dto';
 import type {
   CreateEvaluationWbsAssignmentData,
   EvaluationWbsAssignmentDto,
@@ -29,7 +29,7 @@ import type { WbsItemDto } from '../../../domain/common/wbs-item/wbs-item.types'
 import type { ProjectAssignmentListResult } from '../handlers/project-assignment/queries/get-project-assignment-list.handler';
 import type { WbsAssignmentListResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 import type { WbsAssignmentDetailResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
-import { WbsEvaluationCriteriaListResponseDto } from '@/interface/admin/evaluation-criteria/dto/wbs-evaluation-criteria.dto';
+import { WbsEvaluationCriteriaListResponseDto } from '@/interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 
 /**
  * 평가기준관리 서비스 인터페이스 (MVP 버전)

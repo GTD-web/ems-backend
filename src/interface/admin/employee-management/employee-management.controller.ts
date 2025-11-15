@@ -17,12 +17,12 @@ import {
   GetExcludedEmployees,
   IncludeEmployeeInList,
   UpdateEmployeeAccessibility,
-} from './decorators/employee-management-api.decorators';
+} from '../../common/decorators/employee-management/employee-management-api.decorators';
 import {
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
   UpdateEmployeeAccessibilityQueryDto,
-} from './dto/employee-management.dto';
+} from '../../common/dto/employee-management/employee-management.dto';
 
 /**
  * 관리자용 직원 관리 컨트롤러

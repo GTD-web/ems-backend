@@ -1,6 +1,6 @@
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { GetRevisionRequestsQueryDto } from '@interface/admin/revision-request/dto/get-revision-requests-query.dto';
+import { GetRevisionRequestsQueryDto } from '@/interface/common/dto/revision-request/get-revision-requests-query.dto';
 
 /**
  * DTO 변환 테스트

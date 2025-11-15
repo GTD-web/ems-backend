@@ -1,29 +1,29 @@
-import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { EvaluationCriteriaBusinessService } from '@business/evaluation-criteria/evaluation-criteria-business.service';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { Body, Controller, Param, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  EvaluationCriteriaSubmissionResponseDto,
+  SubmitEvaluationCriteriaDto,
+  UpsertWbsEvaluationCriteriaBodyDto,
+  WbsEvaluationCriteriaDetailDto,
+  WbsEvaluationCriteriaDto,
+  WbsEvaluationCriteriaFilterDto,
+  WbsEvaluationCriteriaListResponseDto,
+  WbsItemEvaluationCriteriaResponseDto,
+} from '../../common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 import {
   DeleteWbsEvaluationCriteria,
   DeleteWbsItemEvaluationCriteria,
   GetWbsEvaluationCriteriaDetail,
   GetWbsEvaluationCriteriaList,
   GetWbsItemEvaluationCriteria,
-  UpsertWbsEvaluationCriteria,
-  SubmitEvaluationCriteria,
   ResetEvaluationCriteriaSubmission,
-} from './decorators/wbs-evaluation-criteria-api.decorators';
-import {
-  UpsertWbsEvaluationCriteriaBodyDto,
-  WbsEvaluationCriteriaDto,
-  WbsEvaluationCriteriaDetailDto,
-  WbsEvaluationCriteriaFilterDto,
-  WbsItemEvaluationCriteriaResponseDto,
-  WbsEvaluationCriteriaListResponseDto,
-  SubmitEvaluationCriteriaDto,
-  EvaluationCriteriaSubmissionResponseDto,
-} from './dto/wbs-evaluation-criteria.dto';
-import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+  SubmitEvaluationCriteria,
+  UpsertWbsEvaluationCriteria,
+} from '../../common/decorators/evaluation-criteria/wbs-evaluation-criteria-api.decorators';
 
 /**
  * WBS 평가기준 관리 컨트롤러
