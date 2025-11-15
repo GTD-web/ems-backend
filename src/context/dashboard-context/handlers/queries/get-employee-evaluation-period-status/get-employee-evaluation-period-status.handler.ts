@@ -321,7 +321,14 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       // 재작성 요청이 있으면 그 상태를 사용
       if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
         if (selfEvaluationApprovalStatus.isCompleted) {
-          finalSelfEvaluationStatus = 'revision_completed';
+          // 재작성 완료 후 승인 상태 확인
+          // 재작성 완료 후 승인을 받으면 approved 상태가 되어야 함
+          const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
+          if (stepApprovalStatus === 'approved') {
+            finalSelfEvaluationStatus = 'approved';
+          } else {
+            finalSelfEvaluationStatus = 'revision_completed';
+          }
         } else {
           finalSelfEvaluationStatus = 'revision_requested';
         }
@@ -398,7 +405,18 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         // 재작성 요청이 있으면 그 상태를 사용
         if (primaryStatusInfo.revisionRequestId !== null) {
           if (primaryStatusInfo.isCompleted) {
-            primaryEvaluationStatus = 'revision_completed';
+            // 재작성 완료 후 승인 상태 확인
+            // 재작성 완료 후 승인을 받으면 approved 상태가 되어야 함
+            const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+            if (stepApprovalStatus === 'approved') {
+              primaryEvaluationStatus = 'approved';
+              primaryApprovedBy =
+                stepApproval?.primaryEvaluationApprovedBy ?? null;
+              primaryApprovedAt =
+                stepApproval?.primaryEvaluationApprovedAt ?? null;
+            } else {
+              primaryEvaluationStatus = 'revision_completed';
+            }
           } else {
             primaryEvaluationStatus = 'revision_requested';
           }

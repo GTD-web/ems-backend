@@ -176,7 +176,13 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             let finalSelfEvaluationStatus;
             if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
                 if (selfEvaluationApprovalStatus.isCompleted) {
-                    finalSelfEvaluationStatus = 'revision_completed';
+                    const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
+                    if (stepApprovalStatus === 'approved') {
+                        finalSelfEvaluationStatus = 'approved';
+                    }
+                    else {
+                        finalSelfEvaluationStatus = 'revision_completed';
+                    }
                 }
                 else {
                     finalSelfEvaluationStatus = 'revision_requested';
@@ -206,7 +212,17 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 const primaryStatusInfo = await (0, step_approval_utils_1.일차평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, primary.evaluator.id, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
                 if (primaryStatusInfo.revisionRequestId !== null) {
                     if (primaryStatusInfo.isCompleted) {
-                        primaryEvaluationStatus = 'revision_completed';
+                        const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+                        if (stepApprovalStatus === 'approved') {
+                            primaryEvaluationStatus = 'approved';
+                            primaryApprovedBy =
+                                stepApproval?.primaryEvaluationApprovedBy ?? null;
+                            primaryApprovedAt =
+                                stepApproval?.primaryEvaluationApprovedAt ?? null;
+                        }
+                        else {
+                            primaryEvaluationStatus = 'revision_completed';
+                        }
                     }
                     else {
                         primaryEvaluationStatus = 'revision_requested';

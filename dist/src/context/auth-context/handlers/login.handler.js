@@ -8,10 +8,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var LoginHandler_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LoginHandler = void 0;
 const common_1 = require("@nestjs/common");
+const common_2 = require("@nestjs/common");
 const sso_1 = require("../../../domain/common/sso");
 const employee_service_1 = require("../../../domain/common/employee/employee.service");
 let LoginHandler = LoginHandler_1 = class LoginHandler {
@@ -113,7 +117,7 @@ let LoginHandler = LoginHandler_1 = class LoginHandler {
 exports.LoginHandler = LoginHandler;
 exports.LoginHandler = LoginHandler = LoginHandler_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [sso_1.SSOService,
-        employee_service_1.EmployeeService])
+    __param(0, (0, common_2.Inject)(sso_1.SSOService)),
+    __metadata("design:paramtypes", [Object, employee_service_1.EmployeeService])
 ], LoginHandler);
 //# sourceMappingURL=login.handler.js.map

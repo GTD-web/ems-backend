@@ -18,4 +18,5 @@ __exportStar(require("./sso-client.interface"), exports);
 __exportStar(require("./sso-auth.interface"), exports);
 __exportStar(require("./sso-organization.interface"), exports);
 __exportStar(require("./sso-fcm.interface"), exports);
+__exportStar(require("./sso-service.interface"), exports);
 //# sourceMappingURL=index.js.map

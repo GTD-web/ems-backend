@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var DepartmentSyncService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DepartmentSyncService = void 0;
@@ -16,7 +19,8 @@ const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const department_entity_1 = require("../../domain/common/department/department.entity");
 const department_service_1 = require("../../domain/common/department/department.service");
-const sso_service_1 = require("../../domain/common/sso/sso.service");
+const common_2 = require("@nestjs/common");
+const sso_1 = require("../../domain/common/sso");
 let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncService {
     departmentService;
     configService;
@@ -335,8 +339,8 @@ __decorate([
 ], DepartmentSyncService.prototype, "scheduledSync", null);
 exports.DepartmentSyncService = DepartmentSyncService = DepartmentSyncService_1 = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, common_2.Inject)(sso_1.SSOService)),
     __metadata("design:paramtypes", [department_service_1.DepartmentService,
-        config_1.ConfigService,
-        sso_service_1.SSOService])
+        config_1.ConfigService, Object])
 ], DepartmentSyncService);
 //# sourceMappingURL=department-sync.service.js.map

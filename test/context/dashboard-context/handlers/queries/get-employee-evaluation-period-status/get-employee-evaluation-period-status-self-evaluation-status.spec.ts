@@ -1101,6 +1101,130 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 자기평가 상태 검증'
       });
     });
 
+    it('상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 자기평가 완료 (모든 WBS 평가 완료)
+      await wbsSelfEvaluationRepository.save(
+        wbsSelfEvaluationRepository.create({
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          wbsItemId: wbsItemId1,
+          selfEvaluationContent: '자기평가 내용 1',
+          selfEvaluationScore: 80,
+          evaluationDate: new Date(),
+          submittedToManager: true,
+          assignedBy: systemAdminId,
+          assignedDate: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await wbsSelfEvaluationRepository.save(
+        wbsSelfEvaluationRepository.create({
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          wbsItemId: wbsItemId2,
+          selfEvaluationContent: '자기평가 내용 2',
+          selfEvaluationScore: 85,
+          evaluationDate: new Date(),
+          submittedToManager: true,
+          assignedBy: systemAdminId,
+          assignedDate: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 요청 생성
+      const revisionRequest = await revisionRequestRepository.save(
+        revisionRequestRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          step: 'self',
+          comment: '재작성 필요',
+          requestedBy: adminId,
+          requestedAt: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 요청 수신자 생성 (완료됨)
+      await revisionRequestRecipientRepository.save(
+        revisionRequestRecipientRepository.create({
+          revisionRequestId: revisionRequest.id,
+          recipientId: employeeId,
+          recipientType: RecipientType.EVALUATEE,
+          isCompleted: true,
+          completedAt: new Date(),
+          responseComment: '재작성 완료',
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // stepApproval 생성 (revision_completed 상태)
+      await stepApprovalRepository.save(
+        stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          selfEvaluationStatus: StepApprovalStatus.REVISION_COMPLETED,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 완료 상태 확인
+      let query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      let result = await handler.execute(query);
+
+      expect(result!.selfEvaluation.status).toBe('revision_completed');
+
+      // 재작성 완료 후 승인 처리
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.자기평가_확인한다(adminId);
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // 승인 후 상태 확인
+      query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      result = await handler.execute(query);
+
+      // Then
+      expect(result).not.toBeNull();
+      // 재작성 완료 후 승인을 받으면 approved 상태가 되어야 함
+      expect(result!.selfEvaluation.status).toBe('approved');
+      expect(result!.selfEvaluation.totalMappingCount).toBe(2);
+      expect(result!.selfEvaluation.completedMappingCount).toBe(2);
+      expect(result!.selfEvaluation.totalScore).not.toBeNull();
+      expect(result!.selfEvaluation.grade).not.toBeNull();
+      expect(result!.stepApproval.selfEvaluationStatus).toBe('approved');
+      expect(result!.stepApproval.selfEvaluationApprovedBy).toBe(adminId);
+      expect(result!.stepApproval.selfEvaluationApprovedAt).not.toBeNull();
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName:
+          '상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다',
+        result: {
+          status: result!.selfEvaluation.status,
+          totalMappingCount: result!.selfEvaluation.totalMappingCount,
+          completedMappingCount: result!.selfEvaluation.completedMappingCount,
+          totalScore: result!.selfEvaluation.totalScore,
+          grade: result!.selfEvaluation.grade,
+          stepApprovalStatus: result!.stepApproval.selfEvaluationStatus,
+          approvedBy: result!.stepApproval.selfEvaluationApprovedBy,
+          approvedAt: result!.stepApproval.selfEvaluationApprovedAt,
+        },
+      });
+    });
+
     it('상태 전환: in_progress → complete → pending → approved 순서로 상태가 변경되어야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();

@@ -2,13 +2,12 @@ import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { DepartmentDto } from '../../domain/common/department/department.types';
 import { EmployeeDto } from '../../domain/common/employee/employee.types';
 import { IOrganizationManagementContext, OrganizationChartDto, DepartmentHierarchyDto, DepartmentHierarchyWithEmployeesDto } from './interfaces/organization-management-context.interface';
-import { SSOService } from '../../domain/common/sso/sso.service';
-import type { EmployeeInfo } from '../../domain/common/sso/interfaces';
+import type { ISSOService, EmployeeInfo } from '../../domain/common/sso/interfaces';
 export declare class OrganizationManagementService implements IOrganizationManagementContext {
     private readonly queryBus;
     private readonly commandBus;
     private readonly ssoService;
-    constructor(queryBus: QueryBus, commandBus: CommandBus, ssoService: SSOService);
+    constructor(queryBus: QueryBus, commandBus: CommandBus, ssoService: ISSOService);
     전체부서목록조회(): Promise<DepartmentDto[]>;
     부서정보조회(departmentId: string): Promise<DepartmentDto | null>;
     부서별직원목록조회(departmentId: string): Promise<EmployeeDto[]>;

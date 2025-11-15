@@ -1298,5 +1298,132 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 1차 평가자 상태 검�
         },
       });
     });
+
+    it('상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 1차 하향평가 완료 (모든 WBS 평가 완료)
+      await downwardEvaluationRepository.save(
+        downwardEvaluationRepository.create({
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluatorId: primaryEvaluatorId,
+          evaluationType: DownwardEvaluationType.PRIMARY,
+          wbsId: wbsItemId1,
+          downwardEvaluationContent: '평가 내용 1',
+          downwardEvaluationScore: 80,
+          evaluationDate: new Date(),
+          isCompleted: true,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await downwardEvaluationRepository.save(
+        downwardEvaluationRepository.create({
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluatorId: primaryEvaluatorId,
+          evaluationType: DownwardEvaluationType.PRIMARY,
+          wbsId: wbsItemId2,
+          downwardEvaluationContent: '평가 내용 2',
+          downwardEvaluationScore: 85,
+          evaluationDate: new Date(),
+          isCompleted: true,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 요청 생성
+      const revisionRequest = await revisionRequestRepository.save(
+        revisionRequestRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          step: 'primary',
+          comment: '재작성 필요',
+          requestedBy: adminId,
+          requestedAt: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 요청 수신자 생성 (완료됨)
+      await revisionRequestRecipientRepository.save(
+        revisionRequestRecipientRepository.create({
+          revisionRequestId: revisionRequest.id,
+          recipientId: primaryEvaluatorId,
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
+          isCompleted: true,
+          completedAt: new Date(),
+          responseComment: '재작성 완료',
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // stepApproval 생성 (revision_completed 상태)
+      await stepApprovalRepository.save(
+        stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          primaryEvaluationStatus: StepApprovalStatus.REVISION_COMPLETED,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 완료 상태 확인
+      let query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      let result = await handler.execute(query);
+
+      expect(result!.downwardEvaluation.primary.status).toBe(
+        'revision_completed',
+      );
+
+      // 재작성 완료 후 승인 처리
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.일차평가_확인한다(adminId);
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // 승인 후 상태 확인
+      query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      result = await handler.execute(query);
+
+      // Then
+      expect(result).not.toBeNull();
+      // 재작성 완료 후 승인을 받으면 approved 상태가 되어야 함
+      expect(result!.downwardEvaluation.primary.status).toBe('approved');
+      expect(result!.downwardEvaluation.primary.assignedWbsCount).toBe(2);
+      expect(result!.downwardEvaluation.primary.completedEvaluationCount).toBe(
+        2,
+      );
+      expect(result!.downwardEvaluation.primary.isSubmitted).toBe(true);
+      expect(result!.stepApproval.primaryEvaluationStatus).toBe('approved');
+      expect(result!.stepApproval.primaryEvaluationApprovedBy).toBe(adminId);
+      expect(result!.stepApproval.primaryEvaluationApprovedAt).not.toBeNull();
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName:
+          '상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다',
+        result: {
+          status: result!.downwardEvaluation.primary.status,
+          assignedWbsCount: result!.downwardEvaluation.primary.assignedWbsCount,
+          completedEvaluationCount:
+            result!.downwardEvaluation.primary.completedEvaluationCount,
+          isSubmitted: result!.downwardEvaluation.primary.isSubmitted,
+          stepApprovalStatus: result!.stepApproval.primaryEvaluationStatus,
+          approvedBy: result!.stepApproval.primaryEvaluationApprovedBy,
+          approvedAt: result!.stepApproval.primaryEvaluationApprovedAt,
+        },
+      });
+    });
   });
 });

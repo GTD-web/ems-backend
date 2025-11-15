@@ -8,13 +8,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrganizationManagementService = void 0;
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
 const queries_1 = require("./queries");
 const commands_1 = require("./commands");
-const sso_service_1 = require("../../domain/common/sso/sso.service");
+const common_2 = require("@nestjs/common");
+const sso_1 = require("../../domain/common/sso");
 let OrganizationManagementService = class OrganizationManagementService {
     queryBus;
     commandBus;
@@ -85,8 +89,8 @@ let OrganizationManagementService = class OrganizationManagementService {
 exports.OrganizationManagementService = OrganizationManagementService;
 exports.OrganizationManagementService = OrganizationManagementService = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, common_2.Inject)(sso_1.SSOService)),
     __metadata("design:paramtypes", [cqrs_1.QueryBus,
-        cqrs_1.CommandBus,
-        sso_service_1.SSOService])
+        cqrs_1.CommandBus, Object])
 ], OrganizationManagementService);
 //# sourceMappingURL=organization-management.service.js.map

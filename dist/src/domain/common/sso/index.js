@@ -14,7 +14,12 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SSOService = void 0;
 __exportStar(require("./interfaces"), exports);
-__exportStar(require("./sso.service"), exports);
 __exportStar(require("./sso.module"), exports);
+__exportStar(require("./sso.service.factory"), exports);
+__exportStar(require("./sso.service.impl"), exports);
+__exportStar(require("./sso.service.mock"), exports);
+var sso_module_1 = require("./sso.module");
+Object.defineProperty(exports, "SSOService", { enumerable: true, get: function () { return sso_module_1.SSOService; } });
 //# sourceMappingURL=index.js.map

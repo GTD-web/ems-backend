@@ -8,15 +8,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var EmployeeSyncService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmployeeSyncService = void 0;
+const sso_1 = require("../../domain/common/sso");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const employee_entity_1 = require("../../domain/common/employee/employee.entity");
 const employee_service_1 = require("../../domain/common/employee/employee.service");
-const sso_service_1 = require("../../domain/common/sso/sso.service");
 let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
     employeeService;
     configService;
@@ -68,18 +71,10 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             }
             else {
                 this.logger.log('직원 목록 API(getEmployees)를 사용하여 모든 직원 정보를 조회합니다...');
-                const result = await this.ssoService.sdkClient.organization.getEmployees({
+                employees = await this.ssoService.여러직원원시정보를조회한다({
                     withDetail: true,
                     includeTerminated: false,
                 });
-                const rawEmployees = Array.isArray(result)
-                    ? result
-                    : result?.employees || result?.data || [];
-                if (!Array.isArray(rawEmployees)) {
-                    this.logger.warn('예상치 못한 응답 형식:', JSON.stringify(result).substring(0, 200));
-                    return [];
-                }
-                employees = rawEmployees;
                 this.logger.log(`직원 목록 API에서 ${employees.length}개의 직원 데이터를 조회했습니다.`);
             }
             return employees;
@@ -155,9 +150,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
         const phoneNumber = ssoEmployee.phoneNumber && ssoEmployee.phoneNumber.trim() !== ''
             ? ssoEmployee.phoneNumber
             : undefined;
-        const managerId = ssoEmployee.managerId
-            ? ssoEmployee.managerId
-            : undefined;
+        const managerId = ssoEmployee.managerId ? ssoEmployee.managerId : undefined;
         return {
             employeeNumber: ssoEmployee.employeeNumber,
             name: ssoEmployee.name,
@@ -563,8 +556,8 @@ __decorate([
 ], EmployeeSyncService.prototype, "scheduledSync", null);
 exports.EmployeeSyncService = EmployeeSyncService = EmployeeSyncService_1 = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, common_1.Inject)(sso_1.SSOService)),
     __metadata("design:paramtypes", [employee_service_1.EmployeeService,
-        config_1.ConfigService,
-        sso_service_1.SSOService])
+        config_1.ConfigService, Object])
 ], EmployeeSyncService);
 //# sourceMappingURL=employee-sync.service.js.map

@@ -3,8 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Department } from '../../domain/common/department/department.entity';
 import { DepartmentService } from '../../domain/common/department/department.service';
 import { DepartmentSyncResult } from '../../domain/common/department/department.types';
-import { SSOService } from '@domain/common/sso/sso.service';
-import type { DepartmentInfo } from '@domain/common/sso/interfaces';
+import type { ISSOService, DepartmentInfo } from '@domain/common/sso/interfaces';
 export declare class DepartmentSyncService implements OnModuleInit {
     private readonly departmentService;
     private readonly configService;
@@ -12,7 +11,7 @@ export declare class DepartmentSyncService implements OnModuleInit {
     private readonly logger;
     private readonly syncEnabled;
     private readonly systemUserId;
-    constructor(departmentService: DepartmentService, configService: ConfigService, ssoService: SSOService);
+    constructor(departmentService: DepartmentService, configService: ConfigService, ssoService: ISSOService);
     onModuleInit(): Promise<void>;
     fetchExternalDepartments(): Promise<DepartmentInfo[]>;
     private mapSSODepartmentToDto;
