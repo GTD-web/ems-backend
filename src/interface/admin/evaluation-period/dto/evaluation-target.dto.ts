@@ -1,9 +1,9 @@
+import { ToBooleanStrict } from '@/interface/common/decorators';
 import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+  EvaluationPeriodPhase,
+  EvaluationPeriodStatus,
+} from '@domain/core/evaluation-period/evaluation-period.types';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsArray,
   IsBoolean,
@@ -13,11 +13,6 @@ import {
   IsUUID,
   MaxLength,
 } from 'class-validator';
-import { ToBooleanStrict } from '@interface/decorators';
-import {
-  EvaluationPeriodStatus,
-  EvaluationPeriodPhase,
-} from '../../../../domain/core/evaluation-period/evaluation-period.types';
 
 /**
  * 평가기간 기본 정보 DTO

@@ -1,13 +1,15 @@
 import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { DepartmentDto } from '../../domain/common/department/department.types';
 import { EmployeeDto } from '../../domain/common/employee/employee.types';
+import { EmployeeService } from '../../domain/common/employee/employee.service';
 import { IOrganizationManagementContext, OrganizationChartDto, DepartmentHierarchyDto, DepartmentHierarchyWithEmployeesDto } from './interfaces/organization-management-context.interface';
 import type { ISSOService, EmployeeInfo } from '../../domain/common/sso/interfaces';
 export declare class OrganizationManagementService implements IOrganizationManagementContext {
     private readonly queryBus;
     private readonly commandBus;
     private readonly ssoService;
-    constructor(queryBus: QueryBus, commandBus: CommandBus, ssoService: ISSOService);
+    private readonly employeeService;
+    constructor(queryBus: QueryBus, commandBus: CommandBus, ssoService: ISSOService, employeeService: EmployeeService);
     전체부서목록조회(): Promise<DepartmentDto[]>;
     부서정보조회(departmentId: string): Promise<DepartmentDto | null>;
     부서별직원목록조회(departmentId: string): Promise<EmployeeDto[]>;
@@ -20,10 +22,12 @@ export declare class OrganizationManagementService implements IOrganizationManag
     활성직원목록조회(): Promise<EmployeeDto[]>;
     직원조회제외(employeeId: string, excludeReason: string, excludedBy: string): Promise<EmployeeDto>;
     직원조회포함(employeeId: string, updatedBy: string): Promise<EmployeeDto>;
+    직원접근가능여부변경(employeeId: string, isAccessible: boolean, updatedBy: string): Promise<EmployeeDto>;
     부서하이라키조회(): Promise<DepartmentHierarchyDto[]>;
     부서하이라키_직원포함_조회(): Promise<DepartmentHierarchyWithEmployeesDto[]>;
     SSO에서_직원정보를_조회한다(includeTerminated?: boolean): Promise<EmployeeInfo[]>;
     SSO에서_사번으로_직원을_조회한다(employeeNumber: string): Promise<EmployeeInfo>;
     SSO에서_이메일로_직원을_조회한다(email: string): Promise<EmployeeInfo | null>;
     부서장조회(employeeId: string): Promise<string | null>;
+    사번으로_접근가능한가(employeeNumber: string): Promise<boolean>;
 }

@@ -28,6 +28,7 @@ export declare class Employee extends BaseEntity<EmployeeDto> implements IEmploy
     excludeReason?: string | null;
     excludedBy?: string | null;
     excludedAt?: Date | null;
+    isAccessible: boolean;
     constructor(employeeNumber?: string, name?: string, email?: string, externalId?: string, phoneNumber?: string, dateOfBirth?: Date, gender?: EmployeeGender, hireDate?: Date, managerId?: string, status?: EmployeeStatus, departmentId?: string, departmentName?: string, departmentCode?: string, positionId?: string, rankId?: string, rankName?: string, rankCode?: string, rankLevel?: number, externalCreatedAt?: Date, externalUpdatedAt?: Date);
     DTO로_변환한다(): EmployeeDto;
 }

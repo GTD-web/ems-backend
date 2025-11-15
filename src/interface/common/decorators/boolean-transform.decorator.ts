@@ -120,9 +120,16 @@ export function ToBoolean(defaultValue?: boolean) {
  */
 export function ToBooleanStrict(defaultValue?: boolean, fieldName?: string) {
   return Transform(({ value, key }) => {
-    // undefined나 null은 기본값으로 처리
+    // undefined나 null 처리
+    // defaultValue가 명시적으로 undefined인 경우 (필수 파라미터), 예외 발생하지 않고 그대로 전달
+    // 이렇게 하면 @IsNotEmpty()가 먼저 체크할 수 있음
     if (value === undefined || value === null) {
-      return defaultValue ?? false;
+      // defaultValue가 undefined가 아니면 기본값 반환
+      if (defaultValue !== undefined) {
+        return defaultValue;
+      }
+      // defaultValue가 undefined면 그대로 반환 (필수 파라미터는 @IsNotEmpty()가 체크)
+      return value;
     }
 
     // 이미 boolean인 경우 그대로 반환

@@ -1,22 +1,18 @@
 import {
   applyDecorators,
-  Get,
-  Post,
-  Put,
   Delete,
-  Param,
-  Query,
-  Body,
+  Get,
   HttpCode,
   HttpStatus,
+  Post,
+  Put,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBody,
-  ApiTags,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { UpsertWbsEvaluationCriteriaBodyDto } from '../dto/wbs-evaluation-criteria.dto';
 
@@ -89,50 +85,50 @@ export const GetWbsEvaluationCriteriaList = () =>
         type: 'object',
         properties: {
           criteria: {
-        type: 'array',
+            type: 'array',
             description: 'WBS 평가기준 목록',
-        items: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-            wbsItemId: { type: 'string', format: 'uuid' },
-            criteria: { type: 'string' },
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                wbsItemId: { type: 'string', format: 'uuid' },
+                criteria: { type: 'string' },
                 importance: { type: 'number' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-          },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+              },
             },
           },
           evaluationPeriodSettings: {
             type: 'object',
             description: '평가기간 수동 설정 상태 정보',
             properties: {
-              criteriaSettingEnabled: { 
-                type: 'boolean', 
-                description: '평가 기준 설정 수동 허용 여부' 
+              criteriaSettingEnabled: {
+                type: 'boolean',
+                description: '평가 기준 설정 수동 허용 여부',
               },
-              selfEvaluationSettingEnabled: { 
-                type: 'boolean', 
-                description: '자기 평가 설정 수동 허용 여부' 
+              selfEvaluationSettingEnabled: {
+                type: 'boolean',
+                description: '자기 평가 설정 수동 허용 여부',
               },
-              finalEvaluationSettingEnabled: { 
-                type: 'boolean', 
-                description: '하향/동료평가 설정 수동 허용 여부' 
+              finalEvaluationSettingEnabled: {
+                type: 'boolean',
+                description: '하향/동료평가 설정 수동 허용 여부',
               },
             },
           },
         },
         example: {
           criteria: [
-          {
-            id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
-            wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
-            criteria: '코드 품질 및 성능 최적화',
+            {
+              id: 'f1a2b3c4-d5e6-4f7a-8b9c-0d1e2f3a4b5c',
+              wbsItemId: 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e',
+              criteria: '코드 품질 및 성능 최적화',
               importance: 5,
-            createdAt: '2024-01-15T10:30:00.000Z',
-            updatedAt: '2024-01-15T10:30:00.000Z',
-          },
-        ],
+              createdAt: '2024-01-15T10:30:00.000Z',
+              updatedAt: '2024-01-15T10:30:00.000Z',
+            },
+          ],
           evaluationPeriodSettings: {
             criteriaSettingEnabled: true,
             selfEvaluationSettingEnabled: false,
@@ -677,7 +673,11 @@ export const SubmitEvaluationCriteria = () =>
           evaluationPeriodId: { type: 'string', format: 'uuid' },
           employeeId: { type: 'string', format: 'uuid' },
           isCriteriaSubmitted: { type: 'boolean' },
-          criteriaSubmittedAt: { type: 'string', format: 'date-time', nullable: true },
+          criteriaSubmittedAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+          },
           criteriaSubmittedBy: { type: 'string', nullable: true },
         },
       },
@@ -747,7 +747,11 @@ export const ResetEvaluationCriteriaSubmission = () =>
           evaluationPeriodId: { type: 'string', format: 'uuid' },
           employeeId: { type: 'string', format: 'uuid' },
           isCriteriaSubmitted: { type: 'boolean' },
-          criteriaSubmittedAt: { type: 'string', format: 'date-time', nullable: true },
+          criteriaSubmittedAt: {
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+          },
           criteriaSubmittedBy: { type: 'string', nullable: true },
         },
       },

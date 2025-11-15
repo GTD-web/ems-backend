@@ -39,6 +39,7 @@ let Employee = class Employee extends base_entity_1.BaseEntity {
     excludeReason;
     excludedBy;
     excludedAt;
+    isAccessible;
     constructor(employeeNumber, name, email, externalId, phoneNumber, dateOfBirth, gender, hireDate, managerId, status, departmentId, departmentName, departmentCode, positionId, rankId, rankName, rankCode, rankLevel, externalCreatedAt, externalUpdatedAt) {
         super();
         if (employeeNumber)
@@ -81,6 +82,7 @@ let Employee = class Employee extends base_entity_1.BaseEntity {
         this.externalUpdatedAt = externalUpdatedAt || new Date();
         this.status = status || '재직중';
         this.isExcludedFromList = false;
+        this.isAccessible = false;
     }
     DTO로_변환한다() {
         return {
@@ -117,6 +119,7 @@ let Employee = class Employee extends base_entity_1.BaseEntity {
             excludeReason: this.excludeReason,
             excludedBy: this.excludedBy,
             excludedAt: this.excludedAt,
+            isAccessible: this.isAccessible,
             get isDeleted() {
                 return this.deletedAt !== null && this.deletedAt !== undefined;
             },
@@ -382,6 +385,14 @@ __decorate([
     }),
     __metadata("design:type", Object)
 ], Employee.prototype, "excludedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'boolean',
+        default: false,
+        comment: '시스템 접근 가능 여부 (2중 보안용)',
+    }),
+    __metadata("design:type", Boolean)
+], Employee.prototype, "isAccessible", void 0);
 exports.Employee = Employee = __decorate([
     (0, typeorm_1.Entity)('employee'),
     (0, typeorm_1.Index)(['externalId'], { unique: true }),

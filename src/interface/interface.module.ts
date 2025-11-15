@@ -4,8 +4,9 @@ import { AdminInterfaceModule } from './admin/admin-interface.module';
 import { CommonDomainModule } from '@domain/common/common-domain.module';
 import { AuthContextModule } from '@context/auth-context';
 import { AuditLogContextModule } from '@context/audit-log-context/audit-log-context.module';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { AuditLogInterceptor } from './interceptors/audit-log.interceptor';
+import { OrganizationManagementContextModule } from '@context/organization-management-context';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
 
 /**
  * 인터페이스 모듈
@@ -22,6 +23,7 @@ import { AuditLogInterceptor } from './interceptors/audit-log.interceptor';
     CommonDomainModule, // SSO 서비스 사용을 위한 도메인 모듈
     AuthContextModule, // Auth Context 모듈 (JWT 인증 가드에서 사용)
     AuditLogContextModule, // Audit 로그 컨텍스트 모듈
+    OrganizationManagementContextModule, // 조직 관리 컨텍스트 모듈 (RolesGuard에서 사용)
     AdminInterfaceModule, // 관리자 인터페이스 모듈
     // UserInterfaceModule,   // TODO: 사용자 인터페이스 모듈 (향후 추가)
     // PublicInterfaceModule, // TODO: 공개 인터페이스 모듈 (향후 추가)

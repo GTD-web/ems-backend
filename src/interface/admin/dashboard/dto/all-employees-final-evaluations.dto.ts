@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsDate } from 'class-validator';
-import { OptionalDateToUTC } from '@interface/decorators';
+import { OptionalDateToUTC } from '@interface/common/decorators';
 
 /**
  * 전체 직원별 최종평가 목록 조회 Query DTO
@@ -95,7 +95,6 @@ export class PeriodBasicDto {
     example: '2024-01-01T00:00:00.000Z',
   })
   startDate: Date;
-
 }
 
 /**

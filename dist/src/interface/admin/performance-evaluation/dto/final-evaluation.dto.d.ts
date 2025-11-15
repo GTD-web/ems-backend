@@ -1,4 +1,4 @@
-import { JobGrade, JobDetailedGrade } from '@domain/core/final-evaluation/final-evaluation.types';
+import { JobDetailedGrade, JobGrade } from '@domain/core/final-evaluation/final-evaluation.types';
 export declare class UpsertFinalEvaluationBodyDto {
     evaluationGrade: string;
     jobGrade: JobGrade;

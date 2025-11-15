@@ -13,7 +13,7 @@ exports.UpsertPeerEvaluationAnswersResponseDto = exports.UpsertPeerEvaluationAns
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
-const decorators_1 = require("../../../decorators");
+const decorators_1 = require("../../../common/decorators");
 class RequestPeerEvaluationDto {
     evaluatorId;
     evaluateeId;

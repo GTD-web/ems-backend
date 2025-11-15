@@ -1,0 +1,84 @@
+{
+  "timestamp": "2025-11-15T15:50:37.081Z",
+  "testResults": [
+    {
+      "testName": "접근 가능한 직원은 true를 반환해야 한다",
+      "result": {
+        "success": true,
+        "employeeNumber": "E2023001",
+        "isAccessible": true,
+        "returnedValue": true
+      }
+    },
+    {
+      "testName": "접근 불가능한 직원은 false를 반환해야 한다",
+      "result": {
+        "success": true,
+        "employeeNumber": "E2023002",
+        "isAccessible": false,
+        "returnedValue": false
+      }
+    },
+    {
+      "testName": "존재하지 않는 직원은 false를 반환해야 한다",
+      "result": {
+        "success": true,
+        "employeeNumber": "E9999999",
+        "employeeExists": false,
+        "returnedValue": false
+      }
+    },
+    {
+      "testName": "삭제된 직원은 false를 반환해야 한다",
+      "result": {
+        "success": true,
+        "employeeNumber": "E2023003",
+        "isDeleted": true,
+        "returnedValue": false
+      }
+    },
+    {
+      "testName": "기본값으로 생성된 직원은 접근 불가능해야 한다",
+      "result": {
+        "success": true,
+        "employeeNumber": "E2023004",
+        "defaultIsAccessible": false,
+        "returnedValue": false
+      }
+    },
+    {
+      "testName": "여러 직원 중 접근 가능한 직원만 true를 반환해야 한다",
+      "result": {
+        "success": true,
+        "accessibleEmployee": {
+          "employeeNumber": "E2023005",
+          "isAccessible": true,
+          "returnedValue": true
+        },
+        "inaccessibleEmployee": {
+          "employeeNumber": "E2023006",
+          "isAccessible": false,
+          "returnedValue": false
+        }
+      }
+    },
+    {
+      "testName": "빈 문자열 사번은 false를 반환해야 한다",
+      "result": {
+        "success": true,
+        "employeeNumber": "",
+        "returnedValue": false
+      }
+    },
+    {
+      "testName": "대소문자 구분 없이 사번을 정확히 매칭해야 한다",
+      "result": {
+        "success": true,
+        "employeeNumber": "E2023007",
+        "lowercaseResult": false,
+        "exactCaseResult": true,
+        "note": "데이터베이스 설정에 따라 대소문자 구분이 다를 수 있습니다."
+      }
+    }
+  ]
+}

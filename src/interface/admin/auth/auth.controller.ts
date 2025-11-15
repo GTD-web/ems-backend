@@ -1,8 +1,8 @@
 import { Body, Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from '@context/auth-context/auth.service';
-import { CurrentUser } from '@interface/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '@interface/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { GetMe, Login } from './decorators';
 import { LoginDto, LoginResponseDto, UserInfoDto } from './dto';
 

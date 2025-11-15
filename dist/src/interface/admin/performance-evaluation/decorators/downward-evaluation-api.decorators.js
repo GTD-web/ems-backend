@@ -12,10 +12,10 @@ exports.ResetSecondaryDownwardEvaluation = ResetSecondaryDownwardEvaluation;
 exports.BulkResetDownwardEvaluations = BulkResetDownwardEvaluations;
 exports.GetEvaluatorDownwardEvaluations = GetEvaluatorDownwardEvaluations;
 exports.GetDownwardEvaluationDetail = GetDownwardEvaluationDetail;
+const downward_evaluation_types_1 = require("../../../../domain/core/downward-evaluation/downward-evaluation.types");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const downward_evaluation_dto_1 = require("../dto/downward-evaluation.dto");
-const downward_evaluation_types_1 = require("../../../../domain/core/downward-evaluation/downward-evaluation.types");
 function UpsertPrimaryDownwardEvaluation() {
     return (0, common_1.applyDecorators)((0, common_1.Post)('evaluatee/:evaluateeId/period/:periodId/wbs/:wbsId/primary'), (0, common_1.HttpCode)(common_1.HttpStatus.OK), (0, swagger_1.ApiOperation)({
         summary: '1차 하향평가 저장',

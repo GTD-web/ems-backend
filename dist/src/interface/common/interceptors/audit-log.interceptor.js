@@ -13,7 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuditLogInterceptor = void 0;
 const common_1 = require("@nestjs/common");
 const operators_1 = require("rxjs/operators");
-const audit_log_context_service_1 = require("../../context/audit-log-context/audit-log-context.service");
+const audit_log_context_service_1 = require("../../../context/audit-log-context/audit-log-context.service");
 let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
     auditLogContextService;
     logger = new common_1.Logger(AuditLogInterceptor_1.name);

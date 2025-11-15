@@ -3,7 +3,6 @@ import {
   Get,
   Query,
   Param,
-  UseGuards,
   NotFoundException,
 } from '@nestjs/common';
 import {
@@ -13,9 +12,6 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@interface/guards/jwt-auth.guard';
-import { RolesGuard } from '@interface/guards/roles.guard';
-import { Roles } from '@interface/decorators/roles.decorator';
 import { AuditLogContextService } from '@context/audit-log-context/audit-log-context.service';
 import { GetAuditLogListQueryDto } from './dto/get-audit-log-list-query.dto';
 import {
@@ -26,8 +22,6 @@ import {
 @ApiTags('A-0-5. 관리자 - 감사 로그')
 @ApiBearerAuth('Bearer')
 @Controller('admin/audit-logs')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
 export class AuditLogController {
   constructor(
     private readonly auditLogContextService: AuditLogContextService,

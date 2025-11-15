@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsUUID, IsBoolean, IsEnum } from 'class-validator';
-import { ToBoolean } from '@interface/decorators';
+import { ToBoolean } from '@interface/common/decorators';
 
 /**
  * 재작성 요청 단계 enum
@@ -69,4 +69,3 @@ export class GetRevisionRequestsQueryDto {
   @IsEnum(RevisionRequestStepEnum)
   step?: RevisionRequestStepEnum;
 }
-

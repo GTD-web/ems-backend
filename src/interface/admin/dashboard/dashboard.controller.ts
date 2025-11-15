@@ -1,11 +1,11 @@
 import { Controller, Query, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
-import { ParseUUID } from '../../decorators/parse-uuid.decorator';
-import { CurrentUser } from '../../decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
-import { EvaluationPeriodService } from '../../../domain/core/evaluation-period/evaluation-period.service';
-import { EmployeeSyncService } from '../../../context/organization-management-context/employee-sync.service';
+import { ParseUUID } from '@interface/common/decorators';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from './dto/get-all-employees-evaluation-period-status-query.dto';
 import {
   GetEmployeeEvaluationPeriodStatus,
@@ -45,7 +45,6 @@ import { EmployeeCompleteStatusResponseDto } from './dto/employee-complete-statu
 @ApiTags('A-0-2. 관리자 - 대시보드')
 @ApiBearerAuth('Bearer')
 @Controller('admin/dashboard')
-// @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class DashboardController {
   constructor(
     private readonly dashboardService: DashboardService,

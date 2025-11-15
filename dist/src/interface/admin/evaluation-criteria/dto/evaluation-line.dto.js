@@ -11,8 +11,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BatchConfigureSecondaryEvaluatorResponseDto = exports.BatchSecondaryEvaluatorResultItemDto = exports.BatchConfigureSecondaryEvaluatorDto = exports.BatchSecondaryEvaluatorAssignmentItemDto = exports.BatchConfigurePrimaryEvaluatorResponseDto = exports.BatchPrimaryEvaluatorResultItemDto = exports.BatchConfigurePrimaryEvaluatorDto = exports.BatchPrimaryEvaluatorAssignmentItemDto = exports.PrimaryEvaluatorsByPeriodResponseDto = exports.PrimaryEvaluatorInfoDto = exports.EvaluatorsByPeriodResponseDto = exports.EvaluatorInfoDto = exports.EvaluatorTypeQueryDto = exports.ConfigureEvaluatorResponseDto = exports.ConfigureSecondaryEvaluatorDto = exports.ConfigurePrimaryEvaluatorDto = exports.EmployeeEvaluationSettingsResponseDto = exports.EvaluatorEmployeesResponseDto = exports.EmployeeEvaluationLineMappingsResponseDto = exports.EvaluationLineMappingDto = exports.EvaluationLineDto = exports.ConfigureEmployeeWbsEvaluationLineResponseDto = exports.ConfigureEmployeeWbsEvaluationLineDto = exports.EvaluationLineFilterDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
-const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
+const class_validator_1 = require("class-validator");
 class EvaluationLineFilterDto {
     evaluatorType;
     isRequired;

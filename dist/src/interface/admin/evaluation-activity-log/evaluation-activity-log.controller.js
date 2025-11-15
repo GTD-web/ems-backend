@@ -13,14 +13,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationActivityLogController = void 0;
+const evaluation_activity_log_context_service_1 = require("../../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const jwt_auth_guard_1 = require("../../guards/jwt-auth.guard");
-const roles_guard_1 = require("../../guards/roles.guard");
-const roles_decorator_1 = require("../../decorators/roles.decorator");
-const evaluation_activity_log_context_service_1 = require("../../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
-const get_evaluation_activity_log_list_query_dto_1 = require("./dto/get-evaluation-activity-log-list-query.dto");
 const evaluation_activity_log_response_dto_1 = require("./dto/evaluation-activity-log-response.dto");
+const get_evaluation_activity_log_list_query_dto_1 = require("./dto/get-evaluation-activity-log-list-query.dto");
 let EvaluationActivityLogController = class EvaluationActivityLogController {
     activityLogContextService;
     constructor(activityLogContextService) {
@@ -91,8 +88,6 @@ exports.EvaluationActivityLogController = EvaluationActivityLogController = __de
     (0, swagger_1.ApiTags)('A-0-6. 관리자 - 평가 활동 내역'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/evaluation-activity-logs'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('admin'),
     __metadata("design:paramtypes", [evaluation_activity_log_context_service_1.EvaluationActivityLogContextService])
 ], EvaluationActivityLogController);
 //# sourceMappingURL=evaluation-activity-log.controller.js.map

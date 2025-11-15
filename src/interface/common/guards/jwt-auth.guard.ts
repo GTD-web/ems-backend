@@ -40,6 +40,8 @@ export class JwtAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
     const token = this.extractTokenFromHeader(request);
 
+    console.log('🚀 ~ JwtAuthGuard ~ canActivate ~ token:', token);
+
     if (!token) {
       throw new UnauthorizedException('인증 토큰이 필요합니다.');
     }

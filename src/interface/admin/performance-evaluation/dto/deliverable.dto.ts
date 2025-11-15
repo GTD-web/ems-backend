@@ -1,17 +1,15 @@
+import { DeliverableType } from '@domain/core/deliverable/deliverable.types';
+import { ToBoolean } from '@interface/common/decorators';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsString,
-  IsOptional,
-  IsUUID,
-  IsEnum,
-  IsBoolean,
   ArrayNotEmpty,
   IsArray,
-  ValidateNested,
+  IsBoolean,
+  IsEnum,
+  IsOptional,
+  IsString,
+  IsUUID,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ToBoolean } from '@interface/decorators';
-import { DeliverableType } from '@domain/core/deliverable/deliverable.types';
 
 /**
  * 산출물 생성 DTO

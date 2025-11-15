@@ -97,6 +97,26 @@ export interface IOrganizationManagementContext {
    * @returns 직원 목록을 포함한 부서 하이라키 목록
    */
   부서하이라키_직원포함_조회(): Promise<DepartmentHierarchyWithEmployeesDto[]>;
+
+  /**
+   * 사번으로 직원의 접근 가능 여부를 확인합니다 (2중 보안용)
+   * @param employeeNumber 직원 번호
+   * @returns 접근 가능 여부 (직원이 존재하고 접근 가능한 경우 true)
+   */
+  사번으로_접근가능한가(employeeNumber: string): Promise<boolean>;
+
+  /**
+   * 직원의 접근 가능 여부를 변경합니다
+   * @param employeeId 직원 ID
+   * @param isAccessible 접근 가능 여부
+   * @param updatedBy 변경 설정자
+   * @returns 업데이트된 직원 정보
+   */
+  직원접근가능여부변경(
+    employeeId: string,
+    isAccessible: boolean,
+    updatedBy: string,
+  ): Promise<EmployeeDto>;
 }
 
 /**

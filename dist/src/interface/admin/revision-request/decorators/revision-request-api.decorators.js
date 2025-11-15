@@ -8,10 +8,10 @@ exports.CompleteRevisionRequest = CompleteRevisionRequest;
 exports.CompleteRevisionRequestByEvaluator = CompleteRevisionRequestByEvaluator;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const complete_revision_request_by_evaluator_dto_1 = require("../dto/complete-revision-request-by-evaluator.dto");
+const complete_revision_request_dto_1 = require("../dto/complete-revision-request.dto");
 const get_revision_requests_query_dto_1 = require("../dto/get-revision-requests-query.dto");
 const revision_request_response_dto_1 = require("../dto/revision-request-response.dto");
-const complete_revision_request_dto_1 = require("../dto/complete-revision-request.dto");
-const complete_revision_request_by_evaluator_dto_1 = require("../dto/complete-revision-request-by-evaluator.dto");
 function GetRevisionRequests() {
     return (0, common_1.applyDecorators)((0, common_1.Get)(), (0, swagger_1.ApiOperation)({
         summary: '전체 재작성 요청 목록 조회',

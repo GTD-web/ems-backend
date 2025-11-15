@@ -24,7 +24,7 @@ const update_secondary_step_approval_dto_1 = require("./dto/update-secondary-ste
 const step_approval_api_decorators_1 = require("./decorators/step-approval-api.decorators");
 const step_approval_enums_api_decorators_1 = require("./decorators/step-approval-enums-api.decorators");
 const update_step_approval_dto_2 = require("./dto/update-step-approval.dto");
-const current_user_decorator_1 = require("../../decorators/current-user.decorator");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let StepApprovalController = class StepApprovalController {
     stepApprovalContextService;
     wbsSelfEvaluationBusinessService;

@@ -1,8 +1,4 @@
-import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
   IsNumber,
@@ -15,8 +11,7 @@ import {
   Max,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ToBoolean } from '@interface/decorators';
-import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { ToBoolean } from '@interface/common/decorators';
 
 /**
  * 1차 하향평가 생성 Body DTO (경로 파라미터 제외)

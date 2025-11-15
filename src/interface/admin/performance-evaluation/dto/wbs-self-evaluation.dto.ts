@@ -1,19 +1,13 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
-import {
-  IsString,
   IsNumber,
   IsOptional,
+  IsString,
   IsUUID,
-  Min,
   Max,
-  IsDateString,
+  Min,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
-import type { WbsSelfEvaluationDto } from '../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 
 /**
  * WBS 자기평가 생성 Body DTO (경로 파라미터 제외)

@@ -52,7 +52,10 @@ function ToBoolean(defaultValue) {
 function ToBooleanStrict(defaultValue, fieldName) {
     return (0, class_transformer_1.Transform)(({ value, key }) => {
         if (value === undefined || value === null) {
-            return defaultValue ?? false;
+            if (defaultValue !== undefined) {
+                return defaultValue;
+            }
+            return value;
         }
         if (typeof value === 'boolean') {
             return value;

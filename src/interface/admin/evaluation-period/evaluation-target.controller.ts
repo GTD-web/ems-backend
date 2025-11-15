@@ -1,9 +1,9 @@
 import { Body, Controller, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { EvaluationPeriodManagementContextService } from '../../../context/evaluation-period-management-context/evaluation-period-management.service';
-import { ParseUUID } from '../../decorators/parse-uuid.decorator';
-import { CurrentUser } from '../../decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
+import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
+import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import {
   CheckEvaluationTarget,
   ExcludeEvaluationTarget,

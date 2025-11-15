@@ -1,9 +1,5 @@
-import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
-import { IsString, IsUUID, IsOptional, IsInt, Min, Max } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
 /**
  * WBS 평가기준 생성 DTO

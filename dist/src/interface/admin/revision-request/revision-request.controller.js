@@ -22,7 +22,7 @@ const revision_request_api_decorators_1 = require("./decorators/revision-request
 const get_revision_requests_query_dto_1 = require("./dto/get-revision-requests-query.dto");
 const complete_revision_request_dto_1 = require("./dto/complete-revision-request.dto");
 const complete_revision_request_by_evaluator_dto_1 = require("./dto/complete-revision-request-by-evaluator.dto");
-const current_user_decorator_1 = require("../../decorators/current-user.decorator");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let RevisionRequestController = class RevisionRequestController {
     revisionRequestBusinessService;
     revisionRequestContextService;

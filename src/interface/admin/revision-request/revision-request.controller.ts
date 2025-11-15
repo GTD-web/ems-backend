@@ -1,5 +1,4 @@
 import { Controller, Query, Param, Body, ParseUUIDPipe } from '@nestjs/common';
-import { ParseUUID } from '@interface/decorators';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CompleteRevisionRequestByEvaluatorQueryDto } from './dto/complete-revision-request-by-evaluator-query.dto';
 import { RevisionRequestBusinessService } from '@business/revision-request/revision-request-business.service';
@@ -19,7 +18,7 @@ import {
 import { GetRevisionRequestsQueryDto } from './dto/get-revision-requests-query.dto';
 import { CompleteRevisionRequestDto } from './dto/complete-revision-request.dto';
 import { CompleteRevisionRequestByEvaluatorDto } from './dto/complete-revision-request-by-evaluator.dto';
-import { CurrentUser } from '@interface/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { StepApprovalStatusEnum } from '@interface/admin/step-approval/dto/update-step-approval.dto';
 
 /**

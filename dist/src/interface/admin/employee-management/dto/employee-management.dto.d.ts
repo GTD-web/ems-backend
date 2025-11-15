@@ -3,6 +3,9 @@ export declare class ExcludeEmployeeFromListDto {
 }
 export declare class IncludeEmployeeInListDto {
 }
+export declare class UpdateEmployeeAccessibilityQueryDto {
+    isAccessible: string;
+}
 export declare class GetEmployeesQueryDto {
     includeExcluded?: boolean;
     departmentId?: string;
@@ -24,4 +27,5 @@ export declare class EmployeeResponseDto {
     excludedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
+    isAccessible: boolean;
 }

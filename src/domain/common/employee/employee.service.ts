@@ -406,6 +406,59 @@ export class EmployeeService {
     return employee ? employee.isExcludedFromList : false;
   }
 
+  /**
+   * 사번으로 직원의 접근 가능 여부를 확인한다
+   * @param employeeNumber 직원 번호
+   * @returns 접근 가능 여부 (직원이 존재하고 접근 가능한 경우 true)
+   */
+  async 사번으로_접근가능한가(employeeNumber: string): Promise<boolean> {
+    const employee = await this.employeeRepository.findOne({
+      where: { employeeNumber, deletedAt: IsNull() },
+    });
+
+    return employee ? employee.isAccessible : false;
+  }
+
+  /**
+   * ID로 직원의 접근 가능 여부를 확인한다
+   * @param id 직원 ID
+   * @returns 접근 가능 여부 (직원이 존재하고 접근 가능한 경우 true)
+   */
+  async 접근가능한가(id: string): Promise<boolean> {
+    const employee = await this.employeeRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+
+    return employee ? employee.isAccessible : false;
+  }
+
+  /**
+   * 직원의 접근 가능 여부를 변경한다
+   * @param id 직원 ID
+   * @param isAccessible 접근 가능 여부
+   * @param updatedBy 변경 설정자
+   * @returns 업데이트된 직원 정보
+   */
+  async 접근가능여부변경한다(
+    id: string,
+    isAccessible: boolean,
+    updatedBy: string,
+  ): Promise<EmployeeDto | null> {
+    const employee = await this.employeeRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+
+    if (!employee) {
+      return null;
+    }
+
+    employee.isAccessible = isAccessible;
+    employee.updatedBy = updatedBy;
+
+    const updated = await this.employeeRepository.save(employee);
+    return updated.DTO로_변환한다();
+  }
+
   // ======================================
   // Auth Context를 위한 메서드들
   // ======================================

@@ -14,6 +14,8 @@ export interface IOrganizationManagementContext {
     활성직원목록조회(): Promise<EmployeeDto[]>;
     부서하이라키조회(): Promise<DepartmentHierarchyDto[]>;
     부서하이라키_직원포함_조회(): Promise<DepartmentHierarchyWithEmployeesDto[]>;
+    사번으로_접근가능한가(employeeNumber: string): Promise<boolean>;
+    직원접근가능여부변경(employeeId: string, isAccessible: boolean, updatedBy: string): Promise<EmployeeDto>;
 }
 export interface OrganizationChartDto {
     departments: DepartmentWithEmployeesDto[];

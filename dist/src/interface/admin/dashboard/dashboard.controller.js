@@ -16,8 +16,8 @@ exports.DashboardController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const dashboard_service_1 = require("../../../context/dashboard-context/dashboard.service");
-const parse_uuid_decorator_1 = require("../../decorators/parse-uuid.decorator");
-const current_user_decorator_1 = require("../../decorators/current-user.decorator");
+const decorators_1 = require("../../common/decorators");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const evaluation_period_service_1 = require("../../../domain/core/evaluation-period/evaluation-period.service");
 const employee_sync_service_1 = require("../../../context/organization-management-context/employee-sync.service");
 const get_all_employees_evaluation_period_status_query_dto_1 = require("./dto/get-all-employees-evaluation-period-status-query.dto");
@@ -310,7 +310,7 @@ let DashboardController = class DashboardController {
 exports.DashboardController = DashboardController;
 __decorate([
     (0, dashboard_api_decorators_1.GetAllEmployeesEvaluationPeriodStatus)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, get_all_employees_evaluation_period_status_query_dto_1.GetAllEmployeesEvaluationPeriodStatusQueryDto]),
@@ -318,23 +318,23 @@ __decorate([
 ], DashboardController.prototype, "getAllEmployeesEvaluationPeriodStatus", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetMyEvaluationTargetsStatus)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('evaluatorId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('evaluatorId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getMyEvaluationTargetsStatus", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetEmployeeEvaluationPeriodStatus)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('employeeId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getEmployeeEvaluationPeriodStatus", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetMyAssignedData)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
@@ -342,24 +342,24 @@ __decorate([
 ], DashboardController.prototype, "getMyAssignedData", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetEmployeeAssignedData)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('employeeId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getEmployeeAssignedData", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetEvaluatorAssignedEmployeesData)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('evaluatorId')),
-    __param(2, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('evaluatorId')),
+    __param(2, (0, decorators_1.ParseUUID)('employeeId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getEvaluatorAssignedEmployeesData", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetFinalEvaluationsByPeriod)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -373,7 +373,7 @@ __decorate([
 ], DashboardController.prototype, "getAllEmployeesFinalEvaluations", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetFinalEvaluationsByEmployee)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('employeeId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, employee_final_evaluation_list_dto_1.GetEmployeeFinalEvaluationsQueryDto]),
@@ -381,8 +381,8 @@ __decorate([
 ], DashboardController.prototype, "getFinalEvaluationsByEmployee", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetEmployeeCompleteStatus)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('employeeId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)

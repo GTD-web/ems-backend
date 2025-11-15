@@ -1,27 +1,25 @@
 import {
   applyDecorators,
-  Post,
-  Get,
-  Put,
   Delete,
-  Patch,
+  Get,
   HttpCode,
   HttpStatus,
+  Patch,
+  Post,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBody,
-  ApiTags,
+  ApiResponse,
 } from '@nestjs/swagger';
 import {
-  CreateWbsAssignmentDto,
   BulkCreateWbsAssignmentDto,
   CancelWbsAssignmentByWbsDto,
   ChangeWbsAssignmentOrderByWbsDto,
   CreateAndAssignWbsDto,
+  CreateWbsAssignmentDto,
   UpdateWbsItemTitleDto,
 } from '../dto/wbs-assignment.dto';
 
@@ -209,8 +207,7 @@ export const CancelWbsAssignmentByWbs = () =>
     }),
     ApiResponse({
       status: 400,
-      description:
-        '잘못된 요청 데이터 (UUID 형식 오류, 필수 필드 누락 등)',
+      description: '잘못된 요청 데이터 (UUID 형식 오류, 필수 필드 누락 등)',
     }),
   );
 
@@ -1691,7 +1688,8 @@ export const CreateAndAssignWbs = () =>
     }),
     ApiResponse({
       status: 409,
-      description: '중복된 할당입니다. (동일한 직원-WBS-프로젝트-평가기간 조합)',
+      description:
+        '중복된 할당입니다. (동일한 직원-WBS-프로젝트-평가기간 조합)',
     }),
     ApiResponse({
       status: 422,

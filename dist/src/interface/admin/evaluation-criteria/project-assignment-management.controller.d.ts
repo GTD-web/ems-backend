@@ -1,6 +1,6 @@
-import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { BulkCreateProjectAssignmentDto, ChangeProjectAssignmentOrderQueryDto, CancelProjectAssignmentByProjectDto, ChangeProjectAssignmentOrderByProjectDto, CreateProjectAssignmentDto, EmployeeProjectsResponseDto, GetAvailableProjectsQueryDto, GetUnassignedEmployeesQueryDto, ProjectAssignmentFilterDto, ProjectAssignmentResponseDto, ProjectEmployeesResponseDto, UnassignedEmployeesResponseDto, AvailableProjectsResponseDto } from './dto/project-assignment.dto';
-import type { AuthenticatedUser } from '../../decorators';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 export declare class ProjectAssignmentManagementController {
     private readonly evaluationCriteriaManagementService;
     constructor(evaluationCriteriaManagementService: EvaluationCriteriaManagementService);

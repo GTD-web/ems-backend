@@ -1,4 +1,4 @@
-import { Body, Controller, Query } from '@nestjs/common';
+import { Body, Controller, ParseBoolPipe, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
 import { EmployeeDto } from '../../../domain/common/employee/employee.types';
@@ -6,8 +6,9 @@ import {
   DepartmentHierarchyDto,
   DepartmentHierarchyWithEmployeesDto,
 } from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
-import { ParseId, CurrentUser } from '../../decorators';
-import type { AuthenticatedUser } from '../../decorators';
+import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import {
   ExcludeEmployeeFromList,
   GetAllEmployees,
@@ -15,10 +16,12 @@ import {
   GetDepartmentHierarchyWithEmployees,
   GetExcludedEmployees,
   IncludeEmployeeInList,
+  UpdateEmployeeAccessibility,
 } from './decorators/employee-management-api.decorators';
 import {
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
+  UpdateEmployeeAccessibilityQueryDto,
 } from './dto/employee-management.dto';
 
 /**
@@ -30,7 +33,6 @@ import {
 @ApiTags('A-1. 관리자 - 조직 관리')
 @ApiBearerAuth('Bearer')
 @Controller('admin/employees')
-// @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EmployeeManagementController {
   constructor(
     private readonly organizationManagementService: OrganizationManagementService,
@@ -109,6 +111,22 @@ export class EmployeeManagementController {
   ): Promise<EmployeeDto> {
     return await this.organizationManagementService.직원조회포함(
       employeeId,
+      user.id,
+    );
+  }
+
+  /**
+   * 직원의 접근 가능 여부를 변경합니다.
+   */
+  @UpdateEmployeeAccessibility()
+  async updateEmployeeAccessibility(
+    @ParseId() employeeId: string,
+    @Query('isAccessible', ParseBoolPipe) isAccessible: boolean,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<EmployeeDto> {
+    return await this.organizationManagementService.직원접근가능여부변경(
+      employeeId,
+      isAccessible,
       user.id,
     );
   }

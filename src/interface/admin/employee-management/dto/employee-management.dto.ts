@@ -8,6 +8,7 @@ import {
   IsUUID,
   MaxLength,
 } from 'class-validator';
+import { ToBooleanStrict } from '@interface/common/decorators';
 
 /**
  * 직원 조회 제외 요청 DTO
@@ -30,6 +31,20 @@ export class ExcludeEmployeeFromListDto {
  * 빈 DTO이지만 향후 확장을 위해 유지
  */
 export class IncludeEmployeeInListDto {}
+
+/**
+ * 직원 접근 가능 여부 변경 쿼리 DTO
+ */
+export class UpdateEmployeeAccessibilityQueryDto {
+  @ApiProperty({
+    description: '접근 가능 여부 (가능값: "true", "false", "1", "0")',
+    example: 'true',
+    type: String,
+  })
+  @IsNotEmpty({ message: 'isAccessible 쿼리 파라미터는 필수입니다.' })
+  @ToBooleanStrict(undefined, 'isAccessible')
+  isAccessible!: string;
+}
 
 /**
  * 직원 목록 조회 쿼리 DTO
@@ -161,4 +176,10 @@ export class EmployeeResponseDto {
     example: '2024-01-15T09:30:00.000Z',
   })
   updatedAt!: Date;
+
+  @ApiProperty({
+    description: '시스템 접근 가능 여부 (2중 보안용)',
+    example: true,
+  })
+  isAccessible!: boolean;
 }

@@ -1,7 +1,7 @@
 import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
-import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
-import { EvaluationPeriodService } from '../../../domain/core/evaluation-period/evaluation-period.service';
-import { EmployeeSyncService } from '../../../context/organization-management-context/employee-sync.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from './dto/get-all-employees-evaluation-period-status-query.dto';
 import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/employee-evaluation-period-status.dto';
 import { MyEvaluationTargetStatusResponseDto } from './dto/my-evaluation-targets-status.dto';

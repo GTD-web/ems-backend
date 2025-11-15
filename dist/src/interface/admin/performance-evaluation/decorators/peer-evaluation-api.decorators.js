@@ -804,12 +804,6 @@ function UpsertPeerEvaluationAnswers() {
 - 취소된 동료평가: 취소된 동료평가에 답변 저장 시 404 에러
 - 답변 목록 누락: answers 배열이 비어있거나 누락 시 400 에러
 - 필수 필드 누락: questionId 또는 answer 누락 시 400 에러`,
-    }), (0, swagger_1.ApiParam)({
-        name: 'id',
-        description: '동료평가 ID',
-        type: 'string',
-        format: 'uuid',
-        example: '550e8400-e29b-41d4-a716-446655440000',
     }), (0, swagger_1.ApiBody)({
         type: peer_evaluation_dto_1.UpsertPeerEvaluationAnswersDto,
         description: '답변 저장/업데이트 정보',

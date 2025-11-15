@@ -1,8 +1,7 @@
 import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
-import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import { EvaluationCriteriaBusinessService } from '../../../business/evaluation-criteria/evaluation-criteria-business.service';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { EvaluationCriteriaBusinessService } from '@business/evaluation-criteria/evaluation-criteria-business.service';
 import {
   DeleteWbsEvaluationCriteria,
   DeleteWbsItemEvaluationCriteria,
@@ -23,8 +22,8 @@ import {
   SubmitEvaluationCriteriaDto,
   EvaluationCriteriaSubmissionResponseDto,
 } from './dto/wbs-evaluation-criteria.dto';
-import { CurrentUser } from '../../decorators';
-import type { AuthenticatedUser } from '../../decorators';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 
 /**
  * WBS 평가기준 관리 컨트롤러

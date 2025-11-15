@@ -82,6 +82,8 @@ export interface EmployeeDto {
   excludedBy?: string | null;
   /** 조회 제외 설정 일시 */
   excludedAt?: Date | null;
+  /** 시스템 접근 가능 여부 (2중 보안용) */
+  isAccessible: boolean;
 
   // 조인된 정보 필드들
   /** 직급 이름 */
@@ -212,6 +214,7 @@ export interface UpdateEmployeeDto {
   excludeReason?: string | null;
   excludedBy?: string | null;
   excludedAt?: Date | null;
+  isAccessible?: boolean;
 }
 
 // 직원 동기화 결과

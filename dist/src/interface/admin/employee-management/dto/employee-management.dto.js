@@ -9,10 +9,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EmployeeResponseDto = exports.GetEmployeesQueryDto = exports.IncludeEmployeeInListDto = exports.ExcludeEmployeeFromListDto = void 0;
+exports.EmployeeResponseDto = exports.GetEmployeesQueryDto = exports.UpdateEmployeeAccessibilityQueryDto = exports.IncludeEmployeeInListDto = exports.ExcludeEmployeeFromListDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
+const decorators_1 = require("../../../common/decorators");
 class ExcludeEmployeeFromListDto {
     excludeReason;
 }
@@ -31,6 +32,20 @@ __decorate([
 class IncludeEmployeeInListDto {
 }
 exports.IncludeEmployeeInListDto = IncludeEmployeeInListDto;
+class UpdateEmployeeAccessibilityQueryDto {
+    isAccessible;
+}
+exports.UpdateEmployeeAccessibilityQueryDto = UpdateEmployeeAccessibilityQueryDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '접근 가능 여부 (가능값: "true", "false", "1", "0")',
+        example: 'true',
+        type: String,
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'isAccessible 쿼리 파라미터는 필수입니다.' }),
+    (0, decorators_1.ToBooleanStrict)(undefined, 'isAccessible'),
+    __metadata("design:type", String)
+], UpdateEmployeeAccessibilityQueryDto.prototype, "isAccessible", void 0);
 class GetEmployeesQueryDto {
     includeExcluded;
     departmentId;
@@ -73,6 +88,7 @@ class EmployeeResponseDto {
     excludedAt;
     createdAt;
     updatedAt;
+    isAccessible;
 }
 exports.EmployeeResponseDto = EmployeeResponseDto;
 __decorate([
@@ -195,4 +211,11 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], EmployeeResponseDto.prototype, "updatedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '시스템 접근 가능 여부 (2중 보안용)',
+        example: true,
+    }),
+    __metadata("design:type", Boolean)
+], EmployeeResponseDto.prototype, "isAccessible", void 0);
 //# sourceMappingURL=employee-management.dto.js.map

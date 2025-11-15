@@ -83,15 +83,15 @@ const GetWbsEvaluationCriteriaList = () => (0, common_1.applyDecorators)((0, com
                 properties: {
                     criteriaSettingEnabled: {
                         type: 'boolean',
-                        description: '평가 기준 설정 수동 허용 여부'
+                        description: '평가 기준 설정 수동 허용 여부',
                     },
                     selfEvaluationSettingEnabled: {
                         type: 'boolean',
-                        description: '자기 평가 설정 수동 허용 여부'
+                        description: '자기 평가 설정 수동 허용 여부',
                     },
                     finalEvaluationSettingEnabled: {
                         type: 'boolean',
-                        description: '하향/동료평가 설정 수동 허용 여부'
+                        description: '하향/동료평가 설정 수동 허용 여부',
                     },
                 },
             },
@@ -559,7 +559,11 @@ const SubmitEvaluationCriteria = () => (0, common_1.applyDecorators)((0, common_
             evaluationPeriodId: { type: 'string', format: 'uuid' },
             employeeId: { type: 'string', format: 'uuid' },
             isCriteriaSubmitted: { type: 'boolean' },
-            criteriaSubmittedAt: { type: 'string', format: 'date-time', nullable: true },
+            criteriaSubmittedAt: {
+                type: 'string',
+                format: 'date-time',
+                nullable: true,
+            },
             criteriaSubmittedBy: { type: 'string', nullable: true },
         },
     },
@@ -617,7 +621,11 @@ const ResetEvaluationCriteriaSubmission = () => (0, common_1.applyDecorators)((0
             evaluationPeriodId: { type: 'string', format: 'uuid' },
             employeeId: { type: 'string', format: 'uuid' },
             isCriteriaSubmitted: { type: 'boolean' },
-            criteriaSubmittedAt: { type: 'string', format: 'date-time', nullable: true },
+            criteriaSubmittedAt: {
+                type: 'string',
+                format: 'date-time',
+                nullable: true,
+            },
             criteriaSubmittedBy: { type: 'string', nullable: true },
         },
     },

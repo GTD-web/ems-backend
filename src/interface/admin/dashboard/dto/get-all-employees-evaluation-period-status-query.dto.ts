@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsBoolean } from 'class-validator';
-import { ToBoolean } from '@interface/decorators';
+import { ToBoolean } from '@interface/common/decorators';
 
 /**
  * 평가기간의 모든 직원 현황 조회 쿼리 DTO

@@ -19,7 +19,7 @@ const evaluation_criteria_management_service_1 = require("../../../context/evalu
 const evaluation_criteria_business_service_1 = require("../../../business/evaluation-criteria/evaluation-criteria-business.service");
 const wbs_evaluation_criteria_api_decorators_1 = require("./decorators/wbs-evaluation-criteria-api.decorators");
 const wbs_evaluation_criteria_dto_1 = require("./dto/wbs-evaluation-criteria.dto");
-const decorators_1 = require("../../decorators");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let WbsEvaluationCriteriaManagementController = class WbsEvaluationCriteriaManagementController {
     evaluationCriteriaManagementService;
     evaluationCriteriaBusinessService;
@@ -109,7 +109,7 @@ __decorate([
     (0, wbs_evaluation_criteria_api_decorators_1.UpsertWbsEvaluationCriteria)(),
     __param(0, (0, common_1.Param)('wbsItemId')),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, wbs_evaluation_criteria_dto_1.UpsertWbsEvaluationCriteriaBodyDto, Object]),
     __metadata("design:returntype", Promise)
@@ -117,7 +117,7 @@ __decorate([
 __decorate([
     (0, wbs_evaluation_criteria_api_decorators_1.DeleteWbsEvaluationCriteria)(),
     __param(0, (0, common_1.Param)('id')),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
@@ -125,7 +125,7 @@ __decorate([
 __decorate([
     (0, wbs_evaluation_criteria_api_decorators_1.DeleteWbsItemEvaluationCriteria)(),
     __param(0, (0, common_1.Param)('wbsItemId')),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
@@ -133,7 +133,7 @@ __decorate([
 __decorate([
     (0, wbs_evaluation_criteria_api_decorators_1.SubmitEvaluationCriteria)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [wbs_evaluation_criteria_dto_1.SubmitEvaluationCriteriaDto, Object]),
     __metadata("design:returntype", Promise)
@@ -141,7 +141,7 @@ __decorate([
 __decorate([
     (0, wbs_evaluation_criteria_api_decorators_1.ResetEvaluationCriteriaSubmission)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [wbs_evaluation_criteria_dto_1.SubmitEvaluationCriteriaDto, Object]),
     __metadata("design:returntype", Promise)

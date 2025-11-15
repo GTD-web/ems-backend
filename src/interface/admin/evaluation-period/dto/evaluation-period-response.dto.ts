@@ -3,7 +3,7 @@ import {
   EvaluationPeriodStatus,
   EvaluationPeriodPhase,
   EvaluationPeriodDto,
-} from '../../../../domain/core/evaluation-period/evaluation-period.types';
+} from '@domain/core/evaluation-period/evaluation-period.types';
 
 /**
  * 등급 구간 응답 DTO

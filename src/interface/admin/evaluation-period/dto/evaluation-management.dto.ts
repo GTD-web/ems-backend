@@ -16,7 +16,7 @@ import {
 import {
   DateToUTC,
   OptionalDateToUTC,
-} from '../../../decorators/date-transform.decorator';
+} from '@interface/common/decorators/date-transform.decorator';
 
 /**
  * 페이징 쿼리 DTO
@@ -396,7 +396,14 @@ export class ChangeEvaluationPeriodPhaseApiDto {
   @ApiProperty({
     description: '변경할 단계',
     example: 'performance',
-    enum: ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'],
+    enum: [
+      'waiting',
+      'evaluation-setup',
+      'performance',
+      'self-evaluation',
+      'peer-evaluation',
+      'closure',
+    ],
   })
   @IsString({ message: '단계는 문자열이어야 합니다.' })
   @IsNotEmpty({ message: '단계는 필수 입력 항목입니다.' })

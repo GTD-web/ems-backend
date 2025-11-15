@@ -13,7 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.JwtAuthGuard = void 0;
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
-const auth_context_1 = require("../../context/auth-context");
+const auth_context_1 = require("../../../context/auth-context");
 const decorators_1 = require("../decorators");
 let JwtAuthGuard = JwtAuthGuard_1 = class JwtAuthGuard {
     authService;
@@ -33,6 +33,7 @@ let JwtAuthGuard = JwtAuthGuard_1 = class JwtAuthGuard {
         }
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
+        console.log('🚀 ~ JwtAuthGuard ~ canActivate ~ token:', token);
         if (!token) {
             throw new common_1.UnauthorizedException('인증 토큰이 필요합니다.');
         }

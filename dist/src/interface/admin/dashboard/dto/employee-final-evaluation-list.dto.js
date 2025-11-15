@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmployeeFinalEvaluationListResponseDto = exports.FinalEvaluationItemDto = exports.EvaluationPeriodInfoDto = exports.EmployeeBasicInfoDto = exports.GetEmployeeFinalEvaluationsQueryDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
-const decorators_1 = require("../../../decorators");
+const decorators_1 = require("../../../common/decorators");
 class GetEmployeeFinalEvaluationsQueryDto {
     startDate;
     endDate;

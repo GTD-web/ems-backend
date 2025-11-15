@@ -1,27 +1,14 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Param,
-  UseGuards,
-  ParseUUIDPipe,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '@interface/guards/jwt-auth.guard';
-import { RolesGuard } from '@interface/guards/roles.guard';
-import { Roles } from '@interface/decorators/roles.decorator';
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
-import { GetEvaluationActivityLogListQueryDto } from './dto/get-evaluation-activity-log-list-query.dto';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import {
-  EvaluationActivityLogResponseDto,
-  EvaluationActivityLogListResponseDto,
-} from './dto/evaluation-activity-log-response.dto';
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { EvaluationActivityLogListResponseDto } from './dto/evaluation-activity-log-response.dto';
+import { GetEvaluationActivityLogListQueryDto } from './dto/get-evaluation-activity-log-list-query.dto';
 
 /**
  * 평가 활동 내역 관리 컨트롤러
@@ -30,8 +17,6 @@ import {
 @ApiTags('A-0-6. 관리자 - 평가 활동 내역')
 @ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-activity-logs')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
 export class EvaluationActivityLogController {
   constructor(
     private readonly activityLogContextService: EvaluationActivityLogContextService,

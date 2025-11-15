@@ -13,7 +13,7 @@ exports.ApiResponseDto = exports.ChangeEvaluationPeriodPhaseApiDto = exports.Upd
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
-const date_transform_decorator_1 = require("../../../decorators/date-transform.decorator");
+const date_transform_decorator_1 = require("../../../common/decorators/date-transform.decorator");
 class PaginationQueryDto {
     page = 1;
     limit = 10;
@@ -436,7 +436,14 @@ __decorate([
     (0, swagger_1.ApiProperty)({
         description: '변경할 단계',
         example: 'performance',
-        enum: ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'],
+        enum: [
+            'waiting',
+            'evaluation-setup',
+            'performance',
+            'self-evaluation',
+            'peer-evaluation',
+            'closure',
+        ],
     }),
     (0, class_validator_1.IsString)({ message: '단계는 문자열이어야 합니다.' }),
     (0, class_validator_1.IsNotEmpty)({ message: '단계는 필수 입력 항목입니다.' }),

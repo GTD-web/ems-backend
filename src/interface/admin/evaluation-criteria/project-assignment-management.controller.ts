@@ -1,8 +1,7 @@
 import { Body, Controller, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
-import { ParseId } from '../../decorators/parse-uuid.decorator';
-import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import {
   BulkCreateProjectAssignments,
   CancelProjectAssignment,
@@ -33,8 +32,8 @@ import {
   UnassignedEmployeesResponseDto,
   AvailableProjectsResponseDto,
 } from './dto/project-assignment.dto';
-import { CurrentUser } from '../../decorators';
-import type { AuthenticatedUser } from '../../decorators';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 
 /**
  * 프로젝트 할당 관리 컨트롤러

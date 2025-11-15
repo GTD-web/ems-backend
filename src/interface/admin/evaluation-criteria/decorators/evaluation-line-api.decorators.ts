@@ -1,19 +1,18 @@
-import { applyDecorators, Get, Post, Param } from '@nestjs/common';
+import { applyDecorators, Get, Post } from '@nestjs/common';
 import {
+  ApiBody,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBody,
-  ApiTags,
+  ApiResponse,
 } from '@nestjs/swagger';
 import {
-  ConfigurePrimaryEvaluatorDto,
-  ConfigureSecondaryEvaluatorDto,
   BatchConfigurePrimaryEvaluatorDto,
   BatchConfigurePrimaryEvaluatorResponseDto,
   BatchConfigureSecondaryEvaluatorDto,
   BatchConfigureSecondaryEvaluatorResponseDto,
+  ConfigurePrimaryEvaluatorDto,
+  ConfigureSecondaryEvaluatorDto,
 } from '../dto/evaluation-line.dto';
 
 /**

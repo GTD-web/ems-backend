@@ -1,22 +1,18 @@
 import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
+  JobDetailedGrade,
+  JobGrade,
+} from '@domain/core/final-evaluation/final-evaluation.types';
+import { ToBoolean } from '@interface/common/decorators';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
-  IsString,
-  IsEnum,
-  IsOptional,
   IsBoolean,
+  IsEnum,
   IsNumber,
+  IsOptional,
+  IsString,
   Min,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { ToBoolean } from '@interface/decorators';
-import {
-  JobGrade,
-  JobDetailedGrade,
-} from '@domain/core/final-evaluation/final-evaluation.types';
 
 /**
  * 최종평가 저장 Body DTO (Upsert)

@@ -25,7 +25,7 @@ import {
   StepTypeEnum,
   StepApprovalStatusEnum,
 } from './dto/update-step-approval.dto';
-import { CurrentUser } from '@interface/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 
 /**
  * 단계 승인 컨트롤러

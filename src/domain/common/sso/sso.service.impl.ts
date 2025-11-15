@@ -405,22 +405,6 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
       const elapsedTime = Date.now() - startTime;
       this.logger.log(`부서 계층구조 조회 완료 (소요 시간: ${elapsedTime}ms)`);
 
-      // 디버깅: 서버 원본 응답 구조 확인
-      if (result.departments && result.departments.length > 0) {
-        this.logger.debug(
-          `서버 응답: 총 부서 수=${result.totalDepartments}, 루트 부서 수=${result.departments.length}`,
-        );
-        const firstDept = result.departments[0];
-        this.logger.debug(
-          `첫 번째 부서: children 배열 존재=${!!firstDept.children}, children 길이=${firstDept.children?.length || 0}`,
-        );
-        if (firstDept.children && firstDept.children.length > 0) {
-          this.logger.debug(
-            `첫 번째 부서의 자식 부서 예시: ${JSON.stringify(firstDept.children[0])}`,
-          );
-        }
-      }
-
       const hierarchy = {
         departments: result.departments.map((dept) =>
           this.mapToDepartmentNode(dept),

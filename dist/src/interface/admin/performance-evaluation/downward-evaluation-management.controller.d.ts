@@ -1,5 +1,5 @@
-import type { AuthenticatedUser } from '@interface/decorators';
-import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
 import { CreatePrimaryDownwardEvaluationBodyDto, CreateSecondaryDownwardEvaluationBodyDto, DownwardEvaluationDetailResponseDto, DownwardEvaluationFilterDto, DownwardEvaluationListResponseDto, DownwardEvaluationResponseDto, SubmitDownwardEvaluationDto } from './dto/downward-evaluation.dto';
 import { BulkSubmitDownwardEvaluationQueryDto } from './dto/bulk-submit-downward-evaluation-query.dto';

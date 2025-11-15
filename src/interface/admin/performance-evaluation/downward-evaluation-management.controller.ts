@@ -1,12 +1,13 @@
-import type { AuthenticatedUser } from '@interface/decorators';
-import { CurrentUser, ParseUUID } from '@interface/decorators';
-import { Body, Controller, Query, BadRequestException } from '@nestjs/common';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
+import { Body, Controller, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   GetDownwardEvaluationDetailQuery,
   GetDownwardEvaluationListQuery,
-} from '../../../context/performance-evaluation-context/handlers/downward-evaluation';
-import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
+} from '@context/performance-evaluation-context/handlers/downward-evaluation';
+import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
 import {
   GetDownwardEvaluationDetail,

@@ -1,8 +1,8 @@
 import { Body, Controller, Param, Query, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import { CurrentUser } from '../../decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import {
   ConfigurePrimaryEvaluator,
   ConfigureSecondaryEvaluator,
