@@ -7,6 +7,7 @@ import { AuditLogContextModule } from '@context/audit-log-context/audit-log-cont
 import { OrganizationManagementContextModule } from '@context/organization-management-context';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
+import { UserInterfaceModule } from './user/user-interface.module';
 
 /**
  * 인터페이스 모듈
@@ -25,7 +26,7 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     AuditLogContextModule, // Audit 로그 컨텍스트 모듈
     OrganizationManagementContextModule, // 조직 관리 컨텍스트 모듈 (RolesGuard에서 사용)
     AdminInterfaceModule, // 관리자 인터페이스 모듈
-    // UserInterfaceModule,   // TODO: 사용자 인터페이스 모듈 (향후 추가)
+    UserInterfaceModule, // 사용자 인터페이스 모듈
     // PublicInterfaceModule, // TODO: 공개 인터페이스 모듈 (향후 추가)
   ],
   controllers: [],
