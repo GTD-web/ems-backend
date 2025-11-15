@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-11-15T08:01:40.168Z",
+  "timestamp": "2025-11-15T08:37:25.647Z",
   "testResults": [
     {
       "testName": "상태 1: none - 평가할 WBS가 없으면 primary.status는 none이어야 한다",
       "result": {
-        "employeeId": "dda4966a-f7be-49ab-b9de-e5c4a0c3ac39",
+        "employeeId": "4861ccf5-b808-4bbc-82a2-527589c29151",
         "status": "none",
         "assignedWbsCount": 0,
         "expectedStatus": "none",
@@ -14,7 +14,7 @@
     {
       "testName": "상태 2: none - 하향평가가 하나도 없으면 primary.status는 none이어야 한다",
       "result": {
-        "employeeId": "7c52d332-6767-4940-b80e-feedd8fd5890",
+        "employeeId": "2c5c3bf6-6a66-475a-8aae-74d1412e8d11",
         "status": "none",
         "assignedWbsCount": 2,
         "completedEvaluationCount": 0,
@@ -25,7 +25,7 @@
     {
       "testName": "상태 2-1: in_progress - 하향평가를 작성만 해도(제출 전) primary.status는 in_progress이어야 한다",
       "result": {
-        "employeeId": "b83d2496-8ac9-4e3a-9e51-dd92c01ff35e",
+        "employeeId": "8c223fcc-efe4-4f3d-ad55-c08f17377d6e",
         "status": "in_progress",
         "assignedWbsCount": 2,
         "completedEvaluationCount": 0,
@@ -41,7 +41,7 @@
     {
       "testName": "상태 3: in_progress - 일부만 완료되었으면 primary.status는 in_progress이어야 한다",
       "result": {
-        "employeeId": "f97efcf0-95c6-4e32-96b8-be88f3d2fa93",
+        "employeeId": "ded7cb4f-1a0f-4927-9cc2-a772ebbb0478",
         "status": "in_progress",
         "assignedWbsCount": 2,
         "completedEvaluationCount": 1,
@@ -56,7 +56,7 @@
     {
       "testName": "상태 4: pending - 모든 평가가 제출되면서 승인상태가 대기중이면 primary.status는 pending이어야 한다",
       "result": {
-        "employeeId": "b79fc1a7-dcb3-4b4b-849e-828c0974da6f",
+        "employeeId": "b2018aae-498b-4f2c-a402-857dcd9f16c6",
         "status": "pending",
         "assignedWbsCount": 2,
         "completedEvaluationCount": 2,
@@ -69,11 +69,11 @@
     {
       "testName": "상태 5: approved - 모든 평가가 완료되고 승인되었으면 primary.status는 approved이어야 한다",
       "result": {
-        "employeeId": "0d66a909-8330-42b2-8507-dcb56108127e",
+        "employeeId": "fe228c2d-2936-4b14-82c1-d3de1d2484e0",
         "status": "approved",
         "stepApprovalStatus": "approved",
         "approvedBy": "00000000-0000-0000-0000-000000000001",
-        "approvedAt": "2025-11-15T08:01:38.258Z",
+        "approvedAt": "2025-11-15T08:37:23.593Z",
         "expectedStatus": "approved",
         "passed": true
       }
@@ -81,7 +81,7 @@
     {
       "testName": "상태 6: revision_requested - 재작성 요청되었으면 primary.status는 revision_requested이어야 한다",
       "result": {
-        "employeeId": "136995d0-49c7-44ae-b4ce-bd73ba6294aa",
+        "employeeId": "053c5797-2da3-4777-8c6e-cb4d284229a6",
         "status": "revision_requested",
         "stepApprovalStatus": "revision_requested",
         "revisionRequestCount": 1,
@@ -92,10 +92,10 @@
     {
       "testName": "상태 7: revision_completed - 재작성 완료되었으면 primary.status는 revision_completed이어야 한다",
       "result": {
-        "employeeId": "5cf54db0-e4ff-4fb6-a65d-b6a83155a944",
+        "employeeId": "1d547eef-da1a-47ed-975d-9a7396771aa7",
         "status": "revision_completed",
         "stepApprovalStatus": "revision_completed",
-        "requestId": "1bf5d7ab-37b8-4031-9dc8-8809a52bba20",
+        "requestId": "e75b03df-9c37-42af-92b9-050157171670",
         "expectedStatus": "revision_completed",
         "passed": true
       }
@@ -103,7 +103,7 @@
     {
       "testName": "상태 전환: none → in_progress → pending → approved 순서로 상태가 변경되어야 한다",
       "result": {
-        "employeeId": "1dcaefb9-0855-4f0b-9648-0b231de1d2f4",
+        "employeeId": "33b5f40f-629c-494e-87b0-d88cff1176fd",
         "statusTransitions": [
           {
             "step": "0단계",
@@ -136,7 +136,7 @@
             "actualStatus": "approved",
             "stepApprovalStatus": "approved",
             "approvedBy": "00000000-0000-0000-0000-000000000001",
-            "approvedAt": "2025-11-15T08:01:40.102Z",
+            "approvedAt": "2025-11-15T08:37:25.579Z",
             "passed": true
           }
         ],

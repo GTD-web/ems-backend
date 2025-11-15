@@ -117,7 +117,8 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
   });
 
   describe('GET 요청 감사로그 자동 저장', () => {
-    it('대시보드 직원 현황 조회 API 호출 시 감사로그가 자동으로 저장된다', async () => {
+    it.skip('대시보드 직원 현황 조회 API 호출 시 감사로그가 자동으로 저장된다', async () => {
+      // GET 요청은 감사로그에서 제외되므로 스킵
       // When
       const result =
         await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
@@ -133,7 +134,8 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
       expect(result.auditLog.responseStatusCode).toBe(200);
     });
 
-    it('대시보드 할당 데이터 조회 API 호출 시 감사로그가 자동으로 저장된다', async () => {
+    it.skip('대시보드 할당 데이터 조회 API 호출 시 감사로그가 자동으로 저장된다', async () => {
+      // GET 요청은 감사로그에서 제외되므로 스킵
       // When
       const result =
         await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
@@ -149,7 +151,8 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
       expect(result.auditLog.responseStatusCode).toBe(200);
     });
 
-    it('대시보드 전체 직원 현황 조회 API 호출 시 감사로그가 자동으로 저장된다', async () => {
+    it.skip('대시보드 전체 직원 현황 조회 API 호출 시 감사로그가 자동으로 저장된다', async () => {
+      // GET 요청은 감사로그에서 제외되므로 스킵
       // When
       const result =
         await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
@@ -165,7 +168,8 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
       expect(result.auditLog.responseStatusCode).toBe(200);
     });
 
-    it('감사로그 목록 조회 API 호출 시 쿼리 파라미터가 올바르게 저장된다', async () => {
+    it.skip('감사로그 목록 조회 API 호출 시 쿼리 파라미터가 올바르게 저장된다', async () => {
+      // GET 요청은 감사로그에서 제외되므로 스킵
       // When
       const result =
         await auditLogScenario.API요청을_전송하고_감사로그를_검증한다({
@@ -325,7 +329,8 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
   });
 
   describe('에러 응답 감사로그 자동 저장', () => {
-    it('존재하지 않는 리소스 조회 시 에러 응답도 감사로그에 저장된다', async () => {
+    it.skip('존재하지 않는 리소스 조회 시 에러 응답도 감사로그에 저장된다', async () => {
+      // GET 요청은 감사로그에서 제외되므로 스킵
       // When - 잘못된 UUID 형식으로 조회 (ParseUUID 데코레이터가 400 에러 반환)
       // 00000000-0000-0000-0000-000000000999는 유효한 UUID 형식이 아니므로 ParseUUID 데코레이터가 BadRequestException을 던짐
       const result =
@@ -366,17 +371,14 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
 
   describe('감사로그 조회 기능', () => {
     it('감사로그 목록을 조회할 수 있다', async () => {
-      // Given - 여러 API 요청 전송
-      await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
-        periodId: evaluationPeriodId,
+      // Given - POST 요청으로 감사로그 생성
+      await auditLogScenario.WBS자기평가API를_호출하고_감사로그를_검증한다({
         employeeId: employeeIds[0],
-        apiType: 'employee-status',
-      });
-
-      await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
+        wbsItemId: wbsItemIds[0],
         periodId: evaluationPeriodId,
-        employeeId: employeeIds[0],
-        apiType: 'assigned-data',
+        selfEvaluationContent: '자기평가 내용입니다.',
+        selfEvaluationScore: 85,
+        performanceResult: '성과 결과입니다.',
       });
 
       // When
@@ -395,11 +397,14 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
     });
 
     it('사용자 ID로 감사로그를 필터링할 수 있다', async () => {
-      // Given - API 요청 전송
-      await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
-        periodId: evaluationPeriodId,
+      // Given - POST 요청으로 감사로그 생성
+      await auditLogScenario.WBS자기평가API를_호출하고_감사로그를_검증한다({
         employeeId: employeeIds[0],
-        apiType: 'employee-status',
+        wbsItemId: wbsItemIds[0],
+        periodId: evaluationPeriodId,
+        selfEvaluationContent: '자기평가 내용입니다.',
+        selfEvaluationScore: 85,
+        performanceResult: '성과 결과입니다.',
       });
 
       // When
@@ -449,12 +454,15 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
     });
 
     it('감사로그 상세 정보를 조회할 수 있다', async () => {
-      // Given - API 요청 전송
+      // Given - POST 요청으로 감사로그 생성
       const result =
-        await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
-          periodId: evaluationPeriodId,
+        await auditLogScenario.WBS자기평가API를_호출하고_감사로그를_검증한다({
           employeeId: employeeIds[0],
-          apiType: 'employee-status',
+          wbsItemId: wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          selfEvaluationContent: '자기평가 내용입니다.',
+          selfEvaluationScore: 85,
+          performanceResult: '성과 결과입니다.',
         });
 
       // When
@@ -465,7 +473,7 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
       // Then
       expect(detail).toBeDefined();
       expect(detail.id).toBe(result.auditLog.id);
-      expect(detail.requestMethod).toBe('GET');
+      expect(detail.requestMethod).toBe('POST');
       expect(detail.requestUrl).toBeDefined();
       expect(detail.responseStatusCode).toBe(200);
       expect(detail.requestId).toBeDefined();
@@ -478,19 +486,25 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
 
   describe('감사로그 메타데이터 검증', () => {
     it('요청 ID가 자동으로 생성된다', async () => {
-      // When
+      // When - POST 요청으로 감사로그 생성
       const result1 =
-        await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
-          periodId: evaluationPeriodId,
+        await auditLogScenario.WBS자기평가API를_호출하고_감사로그를_검증한다({
           employeeId: employeeIds[0],
-          apiType: 'employee-status',
+          wbsItemId: wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          selfEvaluationContent: '자기평가 내용 1',
+          selfEvaluationScore: 85,
+          performanceResult: '성과 결과 1',
         });
 
       const result2 =
-        await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
-          periodId: evaluationPeriodId,
+        await auditLogScenario.WBS자기평가API를_호출하고_감사로그를_검증한다({
           employeeId: employeeIds[0],
-          apiType: 'assigned-data',
+          wbsItemId: wbsItemIds[1] || wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          selfEvaluationContent: '자기평가 내용 2',
+          selfEvaluationScore: 90,
+          performanceResult: '성과 결과 2',
         });
 
       // Then
@@ -500,12 +514,15 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
     });
 
     it('요청 시간과 지속 시간이 올바르게 기록된다', async () => {
-      // When
+      // When - POST 요청으로 감사로그 생성
       const result =
-        await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
-          periodId: evaluationPeriodId,
+        await auditLogScenario.WBS자기평가API를_호출하고_감사로그를_검증한다({
           employeeId: employeeIds[0],
-          apiType: 'employee-status',
+          wbsItemId: wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          selfEvaluationContent: '자기평가 내용입니다.',
+          selfEvaluationScore: 85,
+          performanceResult: '성과 결과입니다.',
         });
 
       // Then
@@ -520,12 +537,15 @@ describe('감사로그 자동 저장 E2E 테스트', () => {
     });
 
     it('IP 주소가 올바르게 기록된다', async () => {
-      // When
+      // When - POST 요청으로 감사로그 생성
       const result =
-        await auditLogScenario.대시보드API를_호출하고_감사로그를_검증한다({
-          periodId: evaluationPeriodId,
+        await auditLogScenario.WBS자기평가API를_호출하고_감사로그를_검증한다({
           employeeId: employeeIds[0],
-          apiType: 'employee-status',
+          wbsItemId: wbsItemIds[0],
+          periodId: evaluationPeriodId,
+          selfEvaluationContent: '자기평가 내용입니다.',
+          selfEvaluationScore: 85,
+          performanceResult: '성과 결과입니다.',
         });
 
       // Then

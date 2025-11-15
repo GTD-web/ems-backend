@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-11-15T08:01:44.109Z",
+  "timestamp": "2025-11-15T08:37:28.149Z",
   "testResults": [
     {
       "testName": "상태 1: none - 평가할 WBS가 없으면 secondary.status는 none이어야 한다",
       "result": {
-        "employeeId": "49332f80-3c16-4319-916e-d890721f0895",
+        "employeeId": "dfc3e7ce-e64a-4b23-b216-a4be2139e322",
         "secondaryStatus": "none",
         "evaluators": [],
         "expectedStatus": "none",
@@ -14,18 +14,18 @@
     {
       "testName": "상태 2: none - 하향평가가 하나도 없으면 secondary.status는 none이어야 한다",
       "result": {
-        "employeeId": "d1f682cd-dd0e-43a5-b445-04f2797b058f",
+        "employeeId": "298e5722-bb5d-4d30-ad7e-9f4c70b2874e",
         "secondaryStatus": "none",
         "evaluators": [
           {
-            "evaluatorId": "78954006-4eef-4270-8e4d-87a5959153bf",
+            "evaluatorId": "f91b08da-0ecc-4ecc-9aeb-495f5d2a2d88",
             "status": "none",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "3f9957da-5762-4763-9f60-7bc66bffe7c0",
+            "evaluatorId": "ca4af22c-7b88-486a-b423-bbe53dbe683c",
             "status": "none",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
@@ -39,18 +39,18 @@
     {
       "testName": "상태 3: in_progress - 일부만 완료되었으면 secondary.status는 in_progress이어야 한다",
       "result": {
-        "employeeId": "10cf222a-9ac0-465c-9cda-7d435ea9dde1",
+        "employeeId": "a66e73de-a2a8-4208-91f7-14b5db809e24",
         "secondaryStatus": "in_progress",
         "evaluators": [
           {
-            "evaluatorId": "0756a82e-272b-484a-b51a-61697870dc7d",
+            "evaluatorId": "06b3fc42-e6d7-4ae8-96ef-9f8eadefdd27",
             "status": "in_progress",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 1,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "46415b7c-4a0c-4288-a89f-01f144c1385d",
+            "evaluatorId": "3796760a-548e-4730-9a13-9b6266fd93bd",
             "status": "none",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
@@ -64,18 +64,18 @@
     {
       "testName": "상태 4: pending - 모든 평가가 완료되었지만 승인 대기 중이면 secondary.status는 pending이어야 한다",
       "result": {
-        "employeeId": "72422160-cac3-496a-8852-b8610f0c26da",
+        "employeeId": "b8a9f929-48bd-4a59-ac83-e5d1e1e3c0d1",
         "secondaryStatus": "pending",
         "evaluators": [
           {
-            "evaluatorId": "ad10b80d-a6ba-4097-89be-837e2fea6d5f",
+            "evaluatorId": "8ae8fdc3-8d4f-419c-a0ff-37e23c5e7816",
             "status": "pending",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
             "isSubmitted": true
           },
           {
-            "evaluatorId": "dc92d541-d049-4028-a16b-cf12a64933a1",
+            "evaluatorId": "f3f922d4-7381-4ba7-be7e-802afd0381a7",
             "status": "pending",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
@@ -90,18 +90,18 @@
     {
       "testName": "상태 5: approved - 모든 평가가 완료되고 승인되었으면 secondary.status는 approved이어야 한다",
       "result": {
-        "employeeId": "9d7b5536-f505-4cfa-bd49-12efd2469968",
+        "employeeId": "17649653-5335-43b5-a8c1-46f210a38a5c",
         "secondaryStatus": "approved",
         "evaluators": [
           {
-            "evaluatorId": "ccaac63f-045f-4840-8af6-530ba5044a19",
+            "evaluatorId": "73e09756-546d-435e-85ea-bdc8c6384739",
             "status": "approved",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
             "isSubmitted": true
           },
           {
-            "evaluatorId": "6f2f2804-d309-4545-9dbe-5cfe8a2d636f",
+            "evaluatorId": "511e3691-a1e0-46b4-9f7c-27c47ed34373",
             "status": "approved",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
@@ -110,7 +110,7 @@
         ],
         "stepApprovalStatus": "approved",
         "approvedBy": "00000000-0000-0000-0000-000000000001",
-        "approvedAt": "2025-11-15T08:01:38.451Z",
+        "approvedAt": "2025-11-15T08:37:22.864Z",
         "expectedStatus": "approved",
         "passed": true
       }
@@ -118,18 +118,18 @@
     {
       "testName": "상태 6: revision_requested - 재작성 요청되었으면 secondary.status는 revision_requested이어야 한다",
       "result": {
-        "employeeId": "49f51bac-452e-4006-97a2-6eb1768e17d0",
+        "employeeId": "95b39194-f7d5-4252-b421-d0093a68ed88",
         "secondaryStatus": "revision_requested",
         "evaluators": [
           {
-            "evaluatorId": "713fb547-dacc-4b90-bd8b-0fd174da66e0",
+            "evaluatorId": "b1600d7a-5d5b-4b69-af52-39f40436df72",
             "status": "revision_requested",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "1202e2d9-b9b6-4987-94a5-53ceafd1d5f7",
+            "evaluatorId": "75286a7a-080a-4a7b-a0fb-dc88b64b3fe0",
             "status": "none",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
@@ -145,18 +145,18 @@
     {
       "testName": "상태 7: revision_completed - 재작성 완료되었으면 secondary.status는 revision_completed이어야 한다",
       "result": {
-        "employeeId": "47935289-7d4f-409c-b6ee-850a432458e0",
+        "employeeId": "8a868026-2960-4932-a8be-42bf35c3aa3e",
         "secondaryStatus": "revision_completed",
         "evaluators": [
           {
-            "evaluatorId": "148879eb-ab05-444a-9d28-412d042c0ed8",
+            "evaluatorId": "b57cd5f8-9d96-454e-83c6-cd32525b3cef",
             "status": "revision_completed",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "cb5846f2-ad95-4af7-8dc5-08723f2f69e2",
+            "evaluatorId": "3cb9c71d-8445-4794-93ea-e0cf69c8dcc0",
             "status": "revision_completed",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
@@ -164,7 +164,7 @@
           }
         ],
         "stepApprovalStatus": "revision_completed",
-        "requestId": "38143324-151c-403d-b8cb-3e1f5df4f8f3",
+        "requestId": "f9b2527d-bfc5-4173-8200-c391a3d3d05b",
         "expectedStatus": "revision_completed",
         "passed": true
       }
@@ -172,18 +172,18 @@
     {
       "testName": "pending + approved 혼합 상태",
       "result": {
-        "employeeId": "212435cf-1db0-4a64-b726-bc5b4bc977a9",
+        "employeeId": "191c3d66-731d-4945-84af-89f28c252e78",
         "secondaryStatus": "approved",
         "evaluators": [
           {
-            "evaluatorId": "bfaef8a5-8ba4-40eb-ad11-b6f7041fba77",
+            "evaluatorId": "b4474e1c-4675-4e81-9574-1b4db275e65d",
             "status": "approved",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
             "isSubmitted": true
           },
           {
-            "evaluatorId": "9ef94221-b991-4cfa-bc19-d338d5adb0f2",
+            "evaluatorId": "b7edf4e8-9c64-45bd-8898-76170fe89f7b",
             "status": "approved",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
@@ -197,18 +197,18 @@
     {
       "testName": "revision_requested + approved 혼합 상태",
       "result": {
-        "employeeId": "40aa0409-5f73-49ae-adc3-9b38875f7034",
+        "employeeId": "d9366a22-eebc-4da1-8ecc-29af1d17ca23",
         "secondaryStatus": "revision_requested",
         "evaluators": [
           {
-            "evaluatorId": "d085ea3e-becc-459e-bc89-d2f61aa534a3",
+            "evaluatorId": "c2710e77-de8b-42b5-8a88-9ae3ab36a938",
             "status": "revision_requested",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "1868c0f5-6278-456e-bb04-c5da4d393537",
+            "evaluatorId": "2cd82fe8-b256-4453-bb69-98c10fe921fc",
             "status": "approved",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
@@ -222,18 +222,18 @@
     {
       "testName": "revision_completed + pending 혼합 상태",
       "result": {
-        "employeeId": "f0199c69-dbff-46a8-ac1f-4ae5a6b3a091",
+        "employeeId": "ab6ed4cf-12f8-4f04-95f0-9f9d40435ba5",
         "secondaryStatus": "revision_completed",
         "evaluators": [
           {
-            "evaluatorId": "f89f82c6-db40-41f0-aa3d-f6952efff0aa",
+            "evaluatorId": "0ead5f26-1add-48ce-b936-60585f02b6e1",
             "status": "revision_completed",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "2e2c3ced-2d05-400f-a18b-c190600af051",
+            "evaluatorId": "37ec47d7-75ff-4033-8206-51f717f62163",
             "status": "revision_completed",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
@@ -247,18 +247,18 @@
     {
       "testName": "revision_requested + revision_completed 혼합 상태",
       "result": {
-        "employeeId": "604ae3a1-e7f7-476c-83d5-0cf217d32879",
+        "employeeId": "9be9cbf9-c97e-4c82-b83a-0594f8e27d5c",
         "secondaryStatus": "revision_requested",
         "evaluators": [
           {
-            "evaluatorId": "a5a11bc2-4f88-4f23-aa62-821191c89f11",
+            "evaluatorId": "5ae42d3f-c519-427d-94cc-d892db0dee19",
             "status": "revision_requested",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "aec7cbb5-8a12-406c-a5bc-64c17a02e4fe",
+            "evaluatorId": "9cf9c8dd-c3bf-42f9-b447-5e9f8148fe76",
             "status": "revision_completed",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
@@ -272,18 +272,18 @@
     {
       "testName": "in_progress + pending 혼합 상태",
       "result": {
-        "employeeId": "a4af0f19-98a5-48ce-b3ad-f8e66c3ba494",
+        "employeeId": "8b0cb037-92d0-4980-aa64-5933ca743d0f",
         "secondaryStatus": "in_progress",
         "evaluators": [
           {
-            "evaluatorId": "d84912ac-2b8c-4846-b820-2e431cd90065",
+            "evaluatorId": "4a300fcd-02bc-461c-a01f-f499c1474567",
             "status": "in_progress",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "df8c3e6b-19f5-45cd-bf46-d424856d1556",
+            "evaluatorId": "c2d5157a-e6ed-4bd7-9248-b8df6733f0f6",
             "status": "pending",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
@@ -297,18 +297,18 @@
     {
       "testName": "approved + none 혼합 상태",
       "result": {
-        "employeeId": "c0c2ab51-bd82-4c0b-86e6-d1819324b5fd",
+        "employeeId": "a909353a-1f3a-4aa9-bba9-d17b625aba31",
         "secondaryStatus": "in_progress",
         "evaluators": [
           {
-            "evaluatorId": "9def5383-f70a-4dc1-aa9f-f870d805f950",
+            "evaluatorId": "9956fdb0-2a49-49d1-9638-b59e27200acf",
             "status": "none",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
-            "evaluatorId": "0d6d158d-514c-44c0-ac88-356ef4208bd6",
+            "evaluatorId": "6fe14911-a73c-4f03-a2a0-1a292a5152ef",
             "status": "approved",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
