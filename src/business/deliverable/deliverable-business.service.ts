@@ -3,6 +3,7 @@ import { PerformanceEvaluationService } from '@context/performance-evaluation-co
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { EvaluationWbsAssignmentService } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
 import { DeliverableService } from '@domain/core/deliverable/deliverable.service';
+import { DeliverableNotFoundException } from '@domain/core/deliverable/deliverable.exceptions';
 import type { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 import type { DeliverableType } from '@domain/core/deliverable/deliverable.types';
 
@@ -102,7 +103,7 @@ export class DeliverableBusinessService {
     // 1. 기존 산출물 조회
     const existingDeliverable = await this.deliverableService.조회한다(data.id);
     if (!existingDeliverable) {
-      throw new Error(`산출물을 찾을 수 없습니다. (id: ${data.id})`);
+      throw new DeliverableNotFoundException(data.id);
     }
 
     // 2. 산출물 수정
@@ -156,7 +157,7 @@ export class DeliverableBusinessService {
     // 1. 기존 산출물 조회
     const existingDeliverable = await this.deliverableService.조회한다(id);
     if (!existingDeliverable) {
-      throw new Error(`산출물을 찾을 수 없습니다. (id: ${id})`);
+      throw new DeliverableNotFoundException(id);
     }
 
     // 2. 산출물 삭제

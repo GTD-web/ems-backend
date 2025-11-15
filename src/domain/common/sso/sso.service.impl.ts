@@ -96,7 +96,6 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
    */
   async 초기화한다(): Promise<void> {
     if (this.initialized) {
-      this.logger.debug('SSO 클라이언트가 이미 초기화되어 있습니다.');
       return;
     }
 

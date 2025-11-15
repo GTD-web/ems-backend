@@ -5,7 +5,11 @@ import { DepartmentModule } from '@domain/common/department/department.module';
 import { DepartmentService } from '@domain/common/department/department.service';
 import type { DepartmentSyncResult } from '@domain/common/department/department.types';
 import { SSOModule } from '@domain/common/sso/sso.module';
-import { SSOService } from '@domain/common/sso/sso.service';
+import { SSOService } from '@domain/common/sso';
+import type {
+  ISSOService,
+  DepartmentInfo,
+} from '@domain/common/sso/interfaces';
 import { DatabaseModule } from '@libs/database/database.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -21,7 +25,7 @@ import { DataSource, Repository } from 'typeorm';
 describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => {
   let service: DepartmentSyncService;
   let departmentService: DepartmentService;
-  let ssoService: SSOService;
+  let ssoService: ISSOService;
   let dataSource: DataSource;
   let module: TestingModule;
 
@@ -45,7 +49,7 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
 
     service = module.get<DepartmentSyncService>(DepartmentSyncService);
     departmentService = module.get<DepartmentService>(DepartmentService);
-    ssoService = module.get<SSOService>(SSOService);
+    ssoService = module.get<ISSOService>(SSOService);
     dataSource = module.get<DataSource>(DataSource);
 
     // Repository 초기화
@@ -59,12 +63,15 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
       // 명시적으로 초기화 호출
       await ssoService.초기화한다();
       console.log('✅ SSO 서비스 초기화 완료');
-      
+
       // 초기화 확인을 위한 테스트 호출
       await ssoService.부서계층구조를조회한다({});
       console.log('✅ SSO 서비스 연결 확인 완료');
     } catch (error) {
-      console.warn('⚠️ SSO 서비스 초기화/연결 실패 (테스트는 계속 진행):', error.message);
+      console.warn(
+        '⚠️ SSO 서비스 초기화/연결 실패 (테스트는 계속 진행):',
+        error.message,
+      );
     }
   });
 
@@ -117,58 +124,100 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
       console.log(`  - 총 부서 수: ${hierarchy.totalDepartments}`);
       console.log(`  - 총 직원 수: ${hierarchy.totalEmployees}`);
       console.log(`  - 루트 부서 수: ${hierarchy.departments.length}`);
-      
+
       // 실제 서버 응답 구조 확인 - SSO SDK에서 직접 조회
       console.log('\n🔍 SSO SDK 원본 응답 구조 확인:');
       try {
         // SSO SDK 클라이언트에 직접 접근하여 원본 응답 확인
-        const sdkResult = await (ssoService as any).sdkClient.organization.getDepartmentHierarchy({
+        const sdkResult = await (
+          ssoService as any
+        ).sdkClient.organization.getDepartmentHierarchy({
           includeEmptyDepartments: true,
           withEmployeeDetail: false,
         });
 
-        console.log(`  - SDK 원본 응답 totalDepartments: ${sdkResult.totalDepartments}`);
-        console.log(`  - SDK 원본 응답 departments 배열 길이: ${sdkResult.departments?.length || 0}`);
-        console.log(`\n  💡 참고: totalDepartments는 시스템 전체 부서 수일 수 있으며,`);
-        console.log(`     현재 반환된 계층 구조에 포함된 부서 수와 다를 수 있습니다.`);
-        
+        console.log(
+          `  - SDK 원본 응답 totalDepartments: ${sdkResult.totalDepartments}`,
+        );
+        console.log(
+          `  - SDK 원본 응답 departments 배열 길이: ${sdkResult.departments?.length || 0}`,
+        );
+        console.log(
+          `\n  💡 참고: totalDepartments는 시스템 전체 부서 수일 수 있으며,`,
+        );
+        console.log(
+          `     현재 반환된 계층 구조에 포함된 부서 수와 다를 수 있습니다.`,
+        );
+
         if (sdkResult.departments && sdkResult.departments.length > 0) {
           const firstDept = sdkResult.departments[0];
           console.log(`\n  📦 SDK 원본 첫 번째 부서 구조:`);
           console.log(`     - 부서명: ${firstDept.departmentName}`);
-          console.log(`     - childDepartments 속성 존재: ${!!firstDept.childDepartments}`);
-          console.log(`     - childDepartments 타입: ${Array.isArray(firstDept.childDepartments) ? 'Array' : typeof firstDept.childDepartments}`);
-          console.log(`     - childDepartments 길이: ${firstDept.childDepartments?.length || 0}`);
-          console.log(`     - childDepartmentCount: ${firstDept.childDepartmentCount || 0}`);
+          console.log(
+            `     - childDepartments 속성 존재: ${!!firstDept.childDepartments}`,
+          );
+          console.log(
+            `     - childDepartments 타입: ${Array.isArray(firstDept.childDepartments) ? 'Array' : typeof firstDept.childDepartments}`,
+          );
+          console.log(
+            `     - childDepartments 길이: ${firstDept.childDepartments?.length || 0}`,
+          );
+          console.log(
+            `     - childDepartmentCount: ${firstDept.childDepartmentCount || 0}`,
+          );
           console.log(`     - children 속성 존재: ${!!firstDept.children}`);
-          console.log(`     - children 타입: ${Array.isArray(firstDept.children) ? 'Array' : typeof firstDept.children}`);
-          console.log(`     - children 길이: ${firstDept.children?.length || 0}`);
-          
+          console.log(
+            `     - children 타입: ${Array.isArray(firstDept.children) ? 'Array' : typeof firstDept.children}`,
+          );
+          console.log(
+            `     - children 길이: ${firstDept.children?.length || 0}`,
+          );
+
           // childDepartments가 있으면 첫 번째 자식 확인
-          if (firstDept.childDepartments && firstDept.childDepartments.length > 0) {
-            console.log(`\n     ✅ childDepartments 배열 존재 (${firstDept.childDepartments.length}개)`);
-            console.log(`     - 첫 번째 자식 부서: ${JSON.stringify(firstDept.childDepartments[0], null, 2)}`);
+          if (
+            firstDept.childDepartments &&
+            firstDept.childDepartments.length > 0
+          ) {
+            console.log(
+              `\n     ✅ childDepartments 배열 존재 (${firstDept.childDepartments.length}개)`,
+            );
+            console.log(
+              `     - 첫 번째 자식 부서: ${JSON.stringify(firstDept.childDepartments[0], null, 2)}`,
+            );
           } else {
-            console.log(`     - ⚠️ childDepartments 배열이 비어있거나 존재하지 않습니다`);
+            console.log(
+              `     - ⚠️ childDepartments 배열이 비어있거나 존재하지 않습니다`,
+            );
           }
-          
+
           // 모든 키 확인
-          console.log(`\n     - 부서 객체의 모든 키: ${Object.keys(firstDept).join(', ')}`);
-          
+          console.log(
+            `\n     - 부서 객체의 모든 키: ${Object.keys(firstDept).join(', ')}`,
+          );
+
           // childDepartmentCount와 childDepartments 길이 비교
           if (firstDept.childDepartmentCount && firstDept.childDepartments) {
             console.log(`\n     📊 자식 부서 수 비교:`);
-            console.log(`       - childDepartmentCount: ${firstDept.childDepartmentCount}`);
-            console.log(`       - childDepartments 배열 길이: ${firstDept.childDepartments.length}`);
-            if (firstDept.childDepartmentCount !== firstDept.childDepartments.length) {
-              console.log(`       ⚠️ 경고: childDepartmentCount와 childDepartments 배열 길이가 일치하지 않습니다!`);
+            console.log(
+              `       - childDepartmentCount: ${firstDept.childDepartmentCount}`,
+            );
+            console.log(
+              `       - childDepartments 배열 길이: ${firstDept.childDepartments.length}`,
+            );
+            if (
+              firstDept.childDepartmentCount !==
+              firstDept.childDepartments.length
+            ) {
+              console.log(
+                `       ⚠️ 경고: childDepartmentCount와 childDepartments 배열 길이가 일치하지 않습니다!`,
+              );
             }
           }
         }
       } catch (error) {
         console.log(`  ⚠️ SDK 원본 응답 확인 실패: ${error.message}`);
       }
-      
+
       // 매핑된 결과 구조 확인
       console.log('\n🔍 매핑된 첫 번째 루트 부서 상세 구조:');
       if (hierarchy.departments.length > 0) {
@@ -176,23 +225,31 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
         console.log(`  - 부서명: ${firstDept.departmentName}`);
         console.log(`  - 부서 코드: ${firstDept.departmentCode}`);
         console.log(`  - ID: ${firstDept.id}`);
-        console.log(`  - 상위 부서 ID: ${firstDept.parentDepartmentId || '없음'}`);
+        console.log(
+          `  - 상위 부서 ID: ${firstDept.parentDepartmentId || '없음'}`,
+        );
         console.log(`  - 자식 부서 수: ${firstDept.children?.length || 0}`);
         console.log(`  - 직원 수: ${firstDept.employeeCount || 0}`);
         console.log(`  - 깊이: ${firstDept.depth || 0}`);
-        
+
         // children 배열의 실제 구조 확인
         if (firstDept.children && firstDept.children.length > 0) {
           console.log(`\n  📦 자식 부서 목록 (처음 5개):`);
           firstDept.children.slice(0, 5).forEach((child: any, idx: number) => {
-            console.log(`    ${idx + 1}. ${child.departmentName} (${child.departmentCode})`);
-            console.log(`       - 자식 부서 수: ${child.children?.length || 0}`);
+            console.log(
+              `    ${idx + 1}. ${child.departmentName} (${child.departmentCode})`,
+            );
+            console.log(
+              `       - 자식 부서 수: ${child.children?.length || 0}`,
+            );
           });
         } else {
-          console.log(`  ⚠️ 자식 부서가 없습니다 (children 배열이 비어있거나 undefined)`);
+          console.log(
+            `  ⚠️ 자식 부서가 없습니다 (children 배열이 비어있거나 undefined)`,
+          );
         }
       }
-      
+
       // 모든 부서를 재귀적으로 카운트
       const countAllDepartments = (nodes: any[]): number => {
         let count = nodes.length;
@@ -203,22 +260,28 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
         }
         return count;
       };
-      
+
       const actualCount = countAllDepartments(hierarchy.departments);
       console.log(`\n📈 재귀적으로 카운트한 실제 부서 수: ${actualCount}`);
-      console.log(`📊 서버에서 반환한 총 부서 수: ${hierarchy.totalDepartments}`);
-      
+      console.log(
+        `📊 서버에서 반환한 총 부서 수: ${hierarchy.totalDepartments}`,
+      );
+
       if (actualCount !== hierarchy.totalDepartments) {
-        console.log(`\n⚠️ 경고: 재귀적으로 카운트한 부서 수(${actualCount})와 서버에서 반환한 총 부서 수(${hierarchy.totalDepartments})가 일치하지 않습니다!`);
+        console.log(
+          `\n⚠️ 경고: 재귀적으로 카운트한 부서 수(${actualCount})와 서버에서 반환한 총 부서 수(${hierarchy.totalDepartments})가 일치하지 않습니다!`,
+        );
         console.log(`  → children 배열이 제대로 매핑되지 않았을 수 있습니다.`);
       }
-      
+
       // 계층 구조 상세 출력
       const printDepartmentTree = (nodes: any[], depth: number = 0): void => {
         for (const node of nodes) {
           const indent = '  '.repeat(depth);
           const childrenCount = node.children?.length || 0;
-          console.log(`${indent}├─ ${node.departmentName} (${node.departmentCode}) [${node.id}] (자식: ${childrenCount}개)`);
+          console.log(
+            `${indent}├─ ${node.departmentName} (${node.departmentCode}) [${node.id}] (자식: ${childrenCount}개)`,
+          );
           if (node.children && node.children.length > 0) {
             printDepartmentTree(node.children, depth + 1);
           }
@@ -233,12 +296,18 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
         includeEmptyDepartments: true,
       });
 
-      console.log(`\n📋 평면 목록으로 변환된 부서 수: ${flatDepartments.length}`);
+      console.log(
+        `\n📋 평면 목록으로 변환된 부서 수: ${flatDepartments.length}`,
+      );
       console.log('\n📝 평면 목록 (처음 10개):');
       flatDepartments.slice(0, 10).forEach((dept, idx) => {
-        console.log(`  ${idx + 1}. ${dept.departmentName} (${dept.departmentCode})`);
+        console.log(
+          `  ${idx + 1}. ${dept.departmentName} (${dept.departmentCode})`,
+        );
         console.log(`     - ID: ${dept.id}`);
-        console.log(`     - 상위 부서 ID: ${dept.parentDepartmentId || '없음 (루트)'}`);
+        console.log(
+          `     - 상위 부서 ID: ${dept.parentDepartmentId || '없음 (루트)'}`,
+        );
       });
 
       expect(hierarchy).toBeDefined();
@@ -277,7 +346,7 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
 
       // Then
       expect(result).toBeDefined();
-      
+
       // 동기화 결과 상세 로그 출력
       console.log('\n📊 부서 동기화 결과:');
       console.log(`  - 성공 여부: ${result.success}`);
@@ -294,7 +363,7 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
           console.log(`    ... 외 ${result.errors.length - 5}개 에러`);
         }
       }
-      
+
       expect(result.success).toBe(true);
       expect(result.totalProcessed).toBeGreaterThan(0);
       expect(result.created + result.updated).toBeGreaterThanOrEqual(0);
@@ -305,10 +374,10 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
       console.log(`  - 총 부서 수: ${statsAfter.totalDepartments}`);
       console.log(`  - 루트 부서 수: ${statsAfter.rootDepartments}`);
       console.log(`  - 하위 부서 수: ${statsAfter.subDepartments}`);
-      
+
       expect(statsAfter.totalDepartments).toBeGreaterThan(0);
       expect(statsAfter.totalDepartments).toBe(result.created + result.updated);
-      
+
       // 실제 DB에서 저장된 부서 수 확인
       const dbDepartments = await departmentRepository.find();
       console.log(`  - 실제 DB 저장된 부서 수: ${dbDepartments.length}`);
@@ -366,8 +435,9 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
       };
 
       // DepartmentSyncService를 직접 생성하여 테스트
-      const departmentService = module.get<DepartmentService>(DepartmentService);
-      const ssoService = module.get<SSOService>(SSOService);
+      const departmentService =
+        module.get<DepartmentService>(DepartmentService);
+      const ssoService = module.get<ISSOService>(SSOService);
 
       const disabledService = new DepartmentSyncService(
         departmentService,
@@ -390,7 +460,9 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
       // Given
       // SSO 서비스를 모킹하여 에러 발생 시뮬레이션
       const mockSSOService = {
-        모든부서정보를조회한다: jest.fn().mockRejectedValue(new Error('SSO API 오류')),
+        모든부서정보를조회한다: jest
+          .fn()
+          .mockRejectedValue(new Error('SSO API 오류')),
       };
 
       const errorModule = await Test.createTestingModule({
@@ -511,9 +583,9 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
       );
 
       // When & Then
-      await expect(
-        timeoutService.fetchExternalDepartments(),
-      ).rejects.toThrow('SSO 부서 데이터 조회가 타임아웃되었습니다');
+      await expect(timeoutService.fetchExternalDepartments()).rejects.toThrow(
+        'SSO 부서 데이터 조회가 타임아웃되었습니다',
+      );
 
       await timeoutModule.close();
     });
@@ -564,7 +636,9 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
       // Then
       expect(departments).toBeDefined();
       expect(Array.isArray(departments)).toBe(true);
-      expect(departments.length).toBeGreaterThanOrEqual(departmentsBefore.length);
+      expect(departments.length).toBeGreaterThanOrEqual(
+        departmentsBefore.length,
+      );
     }, 60000);
 
     it('ID로 부서를 조회할 수 있어야 한다', async () => {
@@ -723,7 +797,9 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
 
       // 각 DB 부서에 대해 SSO 데이터와 비교
       dbDepartments.forEach((dbDepartment) => {
-        const ssoDepartment = ssoDepartmentMap.get(dbDepartment.externalId);
+        const ssoDepartment: DepartmentInfo | undefined = ssoDepartmentMap.get(
+          dbDepartment.externalId,
+        );
 
         if (ssoDepartment) {
           // 기본 정보 검증
@@ -782,7 +858,9 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
         console.log(`  - 부서 코드: ${department.code}`);
         console.log(`  - 순서: ${department.order}`);
         console.log(`  - 외부 ID: ${department.externalId}`);
-        console.log(`  - 상위 부서 ID: ${department.parentDepartmentId || '없음 (루트 부서)'}`);
+        console.log(
+          `  - 상위 부서 ID: ${department.parentDepartmentId || '없음 (루트 부서)'}`,
+        );
         console.log(`  - 매니저 ID: ${department.managerId || '없음'}`);
         console.log(`  - 마지막 동기화: ${department.lastSyncAt}`);
         console.log(`  - 생성일: ${department.createdAt}`);
@@ -804,7 +882,9 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
         expect(department.createdAt.getTime()).toBeLessThanOrEqual(
           department.updatedAt.getTime(),
         );
-        expect(department.lastSyncAt?.getTime()).toBeLessThanOrEqual(Date.now());
+        expect(department.lastSyncAt?.getTime()).toBeLessThanOrEqual(
+          Date.now(),
+        );
 
         // 동기화 메타데이터 검증
         expect(department.createdBy).toBe('SYSTEM_SYNC');
@@ -960,4 +1040,3 @@ describe('DepartmentSyncService - SSO 부서 동기화 통합 테스트', () => 
     }, 60000);
   });
 });
-

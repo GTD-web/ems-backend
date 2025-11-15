@@ -427,7 +427,7 @@ describe('WBS 자기평가 기본 관리 시나리오', () => {
 
       expect(개별직원현황.selfEvaluation.completedMappingCount).toBe(1);
       expect(개별직원현황.selfEvaluation.isSubmittedToEvaluator).toBe(true);
-      expect(개별직원현황.selfEvaluation.status).toBe('complete'); // 전체가 1개이므로 complete
+      expect(개별직원현황.selfEvaluation.status).toBe('pending'); // 모든 자기평가가 관리자에게 제출되었지만 승인 상태가 pending이므로 pending
 
       const 할당데이터 =
         await wbsSelfEvaluationScenario.직원_할당_데이터를_조회한다({

@@ -11,6 +11,7 @@ import { EvaluationLineApiClient } from '../api-clients/evaluation-line.api-clie
 import { WbsEvaluationCriteriaApiClient } from '../api-clients/wbs-evaluation-criteria.api-client';
 import { WbsSelfEvaluationApiClient } from '../api-clients/wbs-self-evaluation.api-client';
 import { StepApprovalApiClient } from '../api-clients/step-approval.api-client';
+import { RevisionRequestApiClient } from '../api-clients/revision-request.api-client';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -30,6 +31,7 @@ describe('평가 활동 내역 검증 시나리오', () => {
   let wbsEvaluationCriteriaApiClient: WbsEvaluationCriteriaApiClient;
   let wbsSelfEvaluationApiClient: WbsSelfEvaluationApiClient;
   let stepApprovalApiClient: StepApprovalApiClient;
+  let revisionRequestApiClient: RevisionRequestApiClient;
 
   let evaluationPeriodId: string;
   let employeeIds: string[];
@@ -97,6 +99,7 @@ describe('평가 활동 내역 검증 시나리오', () => {
     );
     wbsSelfEvaluationApiClient = new WbsSelfEvaluationApiClient(testSuite);
     stepApprovalApiClient = new StepApprovalApiClient(testSuite);
+    revisionRequestApiClient = new RevisionRequestApiClient(testSuite);
   });
 
   afterAll(async () => {
@@ -825,30 +828,70 @@ describe('평가 활동 내역 검증 시나리오', () => {
         revisionComment: '재작성 요청',
       });
 
-      // 재작성 요청 ID 조회 (실제 구현에 따라 조정 필요)
-      revisionRequestId = 'mock-request-id'; // TODO: 실제 재작성 요청 ID 조회
+      // 재작성 요청 ID 조회
+      // 피평가자에게 전송된 재작성 요청 조회 (내 재작성 요청 목록 사용)
+      const requests = await revisionRequestApiClient.getMyRevisionRequests({
+        evaluationPeriodId,
+        step: 'criteria',
+        isCompleted: false,
+      });
+
+      if (requests.length === 0) {
+        throw new Error('재작성 요청을 찾을 수 없습니다.');
+      }
+
+      // 첫 번째 재작성 요청의 ID 사용
+      revisionRequestId = requests[0].requestId;
     });
 
-    it.skip('재작성 완료 응답 제출 시 활동 내역이 생성된다', async () => {
-      // When: 재작성 완료 응답 제출
-      await testSuite
-        .request()
-        .post(`/admin/revision-requests/${revisionRequestId}/complete`)
-        .send({
-          responseComment: '재작성 완료 응답',
-        })
-        .expect(200);
+    it('재작성 완료 응답 제출 시 활동 내역이 생성된다', async () => {
+      let error: any;
+      const testName = '재작성 완료 응답 제출 시 활동 내역이 생성된다';
 
-      // Then: 활동 내역 검증
-      await activityLogScenario.재작성완료_활동내역을_검증한다({
-        periodId: evaluationPeriodId,
-        employeeId: evaluateeId,
-        performedBy: evaluateeId,
-        step: 'criteria',
-        requestId: revisionRequestId,
-        responseComment: '재작성 완료 응답',
-        allCompleted: true,
-      });
+      try {
+        // When: 재작성 완료 응답 제출
+        await revisionRequestApiClient.completeRevisionRequest({
+          requestId: revisionRequestId,
+          responseComment: '재작성 완료 응답',
+        });
+
+        // Then: 활동 내역 검증
+        await activityLogScenario.재작성완료_활동내역을_검증한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+          performedBy: evaluateeId,
+          step: 'criteria',
+          requestId: revisionRequestId,
+          responseComment: '재작성 완료 응답',
+          allCompleted: true,
+        });
+
+        // 테스트 결과 저장 (성공)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            periodId: evaluationPeriodId,
+            activityType: 'revision_request',
+            activityAction: 'completed',
+            requestId: revisionRequestId,
+            passed: true,
+          },
+        });
+      } catch (e) {
+        error = e;
+        // 테스트 결과 저장 (실패)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            periodId: evaluationPeriodId,
+            passed: false,
+            error: extractErrorMessage(error),
+          },
+        });
+        throw e;
+      }
     });
   });
 

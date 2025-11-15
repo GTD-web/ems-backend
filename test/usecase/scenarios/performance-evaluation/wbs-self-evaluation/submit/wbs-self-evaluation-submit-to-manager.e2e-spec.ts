@@ -258,8 +258,8 @@ describe('WBS 자기평가 제출 시나리오 - 1차 평가자 → 관리자 �
         expect(제출후_대시보드현황.selfEvaluation.isSubmittedToManager).toBe(
           true,
         ); // 단일 자기평가인 경우
-        // 단일 자기평가인 경우 complete 상태
-        expect(제출후_대시보드현황.selfEvaluation.status).toBe('complete');
+        // 모든 자기평가가 관리자에게 제출되었지만 승인 상태가 pending이므로 pending
+        expect(제출후_대시보드현황.selfEvaluation.status).toBe('pending');
         expect(제출후_대시보드현황.selfEvaluation.totalScore).not.toBeNull();
         expect(제출후_대시보드현황.selfEvaluation.grade).not.toBeNull();
 
@@ -300,7 +300,7 @@ describe('WBS 자기평가 제출 시나리오 - 1차 평가자 → 관리자 �
         expect(직원정보.selfEvaluation.completedMappingCount).toBe(1);
         expect(직원정보.selfEvaluation.isSubmittedToEvaluator).toBe(true);
         expect(직원정보.selfEvaluation.isSubmittedToManager).toBe(true);
-        expect(직원정보.selfEvaluation.status).toBe('complete');
+        expect(직원정보.selfEvaluation.status).toBe('pending'); // 모든 자기평가가 관리자에게 제출되었지만 승인 상태가 pending이므로 pending
         expect(직원정보.selfEvaluation.totalScore).not.toBeNull();
         expect(직원정보.selfEvaluation.grade).not.toBeNull();
 
@@ -463,7 +463,7 @@ describe('WBS 자기평가 제출 시나리오 - 1차 평가자 → 관리자 �
         expect(제출후_대시보드현황.selfEvaluation.isSubmittedToManager).toBe(
           true,
         );
-        expect(제출후_대시보드현황.selfEvaluation.status).toBe('complete');
+        expect(제출후_대시보드현황.selfEvaluation.status).toBe('pending'); // 모든 자기평가가 관리자에게 제출되었지만 승인 상태가 pending이므로 pending
         expect(제출후_대시보드현황.selfEvaluation.totalScore).not.toBeNull();
         expect(제출후_대시보드현황.selfEvaluation.grade).not.toBeNull();
 
@@ -504,7 +504,7 @@ describe('WBS 자기평가 제출 시나리오 - 1차 평가자 → 관리자 �
         expect(직원정보.selfEvaluation.completedMappingCount).toBe(1);
         expect(직원정보.selfEvaluation.isSubmittedToEvaluator).toBe(true);
         expect(직원정보.selfEvaluation.isSubmittedToManager).toBe(true);
-        expect(직원정보.selfEvaluation.status).toBe('complete');
+        expect(직원정보.selfEvaluation.status).toBe('pending'); // 모든 자기평가가 관리자에게 제출되었지만 승인 상태가 pending이므로 pending
         expect(직원정보.selfEvaluation.totalScore).not.toBeNull();
         expect(직원정보.selfEvaluation.grade).not.toBeNull();
 
@@ -814,7 +814,7 @@ describe('WBS 자기평가 제출 시나리오 - 1차 평가자 → 관리자 �
         expect(제출후_대시보드현황.selfEvaluation.isSubmittedToManager).toBe(
           true,
         );
-        expect(제출후_대시보드현황.selfEvaluation.status).toBe('complete');
+        expect(제출후_대시보드현황.selfEvaluation.status).toBe('pending'); // 모든 자기평가가 관리자에게 제출되었지만 승인 상태가 pending이므로 pending
         expect(제출후_대시보드현황.selfEvaluation.totalScore).not.toBeNull();
         expect(제출후_대시보드현황.selfEvaluation.grade).not.toBeNull();
 
@@ -855,7 +855,7 @@ describe('WBS 자기평가 제출 시나리오 - 1차 평가자 → 관리자 �
         expect(직원정보.selfEvaluation.completedMappingCount).toBe(3);
         expect(직원정보.selfEvaluation.isSubmittedToEvaluator).toBe(true);
         expect(직원정보.selfEvaluation.isSubmittedToManager).toBe(true);
-        expect(직원정보.selfEvaluation.status).toBe('complete');
+        expect(직원정보.selfEvaluation.status).toBe('pending'); // 모든 자기평가가 관리자에게 제출되었지만 승인 상태가 pending이므로 pending
         expect(직원정보.selfEvaluation.totalScore).not.toBeNull();
         expect(직원정보.selfEvaluation.grade).not.toBeNull();
 

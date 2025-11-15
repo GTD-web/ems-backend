@@ -194,7 +194,7 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
       });
 
       expect(periodDetail.criteriaSettingEnabled).toBe(false); // 수동 설정 보존
-      expect(periodDetail.selfEvaluationSettingEnabled).toBe(true); // 기본값 적용
+      expect(periodDetail.selfEvaluationSettingEnabled).toBe(false); // 기본값 적용 (false)
 
       // Step 4: peer-evaluation 단계로 전이 (기본값 적용 확인)
       await scenario.평가기간_단계를_변경한다(periodId, 'peer-evaluation');
@@ -209,8 +209,8 @@ describe('평가기간 하이브리드 수동 설정 관리', () => {
       });
 
       expect(periodDetail.criteriaSettingEnabled).toBe(false); // 수동 설정 보존
-      expect(periodDetail.selfEvaluationSettingEnabled).toBe(false); // 기본값 적용
-      expect(periodDetail.finalEvaluationSettingEnabled).toBe(true); // 기본값 적용
+      expect(periodDetail.selfEvaluationSettingEnabled).toBe(false); // 기본값 적용 (false)
+      expect(periodDetail.finalEvaluationSettingEnabled).toBe(false); // 기본값 적용 (false)
 
       // Step 5: closure 단계로 전이 (기본값 적용 확인)
       await scenario.평가기간_단계를_변경한다(periodId, 'closure');

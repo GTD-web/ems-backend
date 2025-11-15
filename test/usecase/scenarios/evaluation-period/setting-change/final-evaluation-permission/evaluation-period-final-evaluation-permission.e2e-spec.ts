@@ -7,7 +7,7 @@ import { DashboardApiClient } from '../../../api-clients/dashboard.api-client';
 
 /**
  * 평가기간 최종 평가 설정 수동허용 E2E 테스트
- * 
+ *
  * 시나리오:
  * - 평가기간 생성 (POST /admin/evaluation-periods)
  * - 평가기간 시작 (POST /admin/evaluation-periods/{id}/start)
@@ -61,7 +61,7 @@ describe('평가기간 최종 평가 설정 수동허용 E2E 테스트', () => {
         console.log('평가기간 삭제 중 오류 (이미 삭제됨):', error.message);
       }
     }
-    
+
     await seedDataScenario.시드_데이터를_삭제한다();
     await testSuite.closeApp();
   });
@@ -90,21 +90,23 @@ describe('평가기간 최종 평가 설정 수동허용 E2E 테스트', () => {
       };
 
       const result = await apiClient.createEvaluationPeriod(createData);
-      
+
       expect(result.id).toBeDefined();
       expect(result.name).toBe(createData.name);
       expect(result.status).toBe('waiting');
       expect(result.currentPhase).toBe('waiting');
 
       evaluationPeriodId = result.id;
-      console.log(`✅ 최종 평가 설정 테스트용 평가기간 생성 완료: ${result.name} (${result.id})`);
+      console.log(
+        `✅ 최종 평가 설정 테스트용 평가기간 생성 완료: ${result.name} (${result.id})`,
+      );
     });
 
     it('평가기간을 시작한다', async () => {
       const result = await apiClient.startEvaluationPeriod(evaluationPeriodId);
-      
+
       expect(result.success).toBe(true);
-      
+
       console.log('✅ 평가기간 시작 완료');
     });
 
@@ -113,7 +115,10 @@ describe('평가기간 최종 평가 설정 수동허용 E2E 테스트', () => {
         allowManualSetting: true,
       };
 
-      const result = await apiClient.updateFinalEvaluationPermission(evaluationPeriodId, updateData);
+      const result = await apiClient.updateFinalEvaluationPermission(
+        evaluationPeriodId,
+        updateData,
+      );
 
       expect(result.id).toBe(evaluationPeriodId);
       expect(result.finalEvaluationSettingEnabled).toBe(true);
@@ -122,34 +127,64 @@ describe('평가기간 최종 평가 설정 수동허용 E2E 테스트', () => {
     });
 
     it('대시보드에서 평가기간 직원 현황을 조회한다', async () => {
-      const result = await dashboardApiClient.getEmployeesStatus(evaluationPeriodId);
-      
+      const result =
+        await dashboardApiClient.getEmployeesStatus(evaluationPeriodId);
+
       expect(Array.isArray(result)).toBe(true);
       expect(result.length).toBeGreaterThan(0);
-      
+
       // 첫 번째 직원의 평가기간 정보 확인
       const firstEmployee = result[0];
       expect(firstEmployee.evaluationPeriod).toBeDefined();
       expect(firstEmployee.evaluationPeriod.id).toBe(evaluationPeriodId);
-      expect(firstEmployee.evaluationPeriod.name).toBe('최종 평가 설정 테스트용 평가기간');
+      expect(firstEmployee.evaluationPeriod.name).toBe(
+        '최종 평가 설정 테스트용 평가기간',
+      );
       expect(firstEmployee.evaluationPeriod.status).toBe('in-progress');
-      expect(firstEmployee.evaluationPeriod.currentPhase).toBe('evaluation-setup');
-      
+      expect(firstEmployee.evaluationPeriod.currentPhase).toBe(
+        'evaluation-setup',
+      );
+
       // currentPhase가 EvaluationPeriodPhase enum 값인지 확인
-      const validPhases = ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'];
-      expect(validPhases).toContain(firstEmployee.evaluationPeriod.currentPhase);
-      
+      const validPhases = [
+        'waiting',
+        'evaluation-setup',
+        'performance',
+        'self-evaluation',
+        'peer-evaluation',
+        'closure',
+      ];
+      expect(validPhases).toContain(
+        firstEmployee.evaluationPeriod.currentPhase,
+      );
+
       // README.md 요구사항: evaluationPeriod.manualSettings.finalEvaluationSettingEnabled 확인 (true)
+      // criteriaSettingEnabled는 평가기간 시작 시 기본값(false)으로 설정되며, 수동으로 변경하지 않았으므로 false
       expect(firstEmployee.evaluationPeriod.manualSettings).toBeDefined();
-      expect(firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled).toBe(true);
-      expect(firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled).toBe(false);
-      expect(firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled).toBe(true);
-      
-      console.log(`✅ 대시보드 직원 현황 조회 완료: ${result.length}명, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}`);
-      console.log(`   - criteriaSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled} (기대값: true)`);
-      console.log(`   - selfEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled} (기대값: false)`);
-      console.log(`   - finalEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled} (기대값: true)`);
+      expect(
+        firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled,
+      ).toBe(false);
+      expect(
+        firstEmployee.evaluationPeriod.manualSettings
+          .selfEvaluationSettingEnabled,
+      ).toBe(false);
+      expect(
+        firstEmployee.evaluationPeriod.manualSettings
+          .finalEvaluationSettingEnabled,
+      ).toBe(true);
+
+      console.log(
+        `✅ 대시보드 직원 현황 조회 완료: ${result.length}명, currentPhase: ${firstEmployee.evaluationPeriod.currentPhase}`,
+      );
+      console.log(
+        `   - criteriaSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.criteriaSettingEnabled} (기대값: false)`,
+      );
+      console.log(
+        `   - selfEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.selfEvaluationSettingEnabled} (기대값: false)`,
+      );
+      console.log(
+        `   - finalEvaluationSettingEnabled: ${firstEmployee.evaluationPeriod.manualSettings.finalEvaluationSettingEnabled} (기대값: true)`,
+      );
     });
   });
-
 });

@@ -1,4 +1,162 @@
 {
-  "timestamp": "2025-11-15T09:42:01.618Z",
-  "testResults": []
+  "timestamp": "2025-11-15T13:14:21.088Z",
+  "testResults": [
+    {
+      "testName": "자기평가 관리자 제출 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "9a4c97e6-87e0-4cf9-b380-c2c09e3eae5e",
+        "periodId": "712e0186-2564-499e-b23d-b6f7517bf37b",
+        "activityType": "wbs_self_evaluation",
+        "activityAction": "submitted",
+        "passed": true
+      }
+    },
+    {
+      "testName": "자기평가 1차 평가자 제출 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "e3f6fdee-1c78-4511-8a73-651d071867a8",
+        "periodId": "b5a824ef-d67c-4db5-ab99-d61cc68e2c0b",
+        "activityType": "wbs_self_evaluation",
+        "activityAction": "submitted",
+        "passed": true
+      }
+    },
+    {
+      "testName": "자기평가 1차 평가자 제출 취소 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "32a64656-bdec-4b32-ad39-1df75954e499",
+        "periodId": "91eef699-aeda-4766-8862-ac3bc798de11",
+        "activityType": "wbs_self_evaluation",
+        "activityAction": "cancelled",
+        "passed": true
+      }
+    },
+    {
+      "testName": "하향평가 일괄 제출 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "5d82166b-170d-4d5b-aa4b-8d1f2f6b9223",
+        "periodId": "4d2494c1-7e67-4e01-9fe1-2c0ee434fd4e",
+        "activityType": "downward_evaluation",
+        "activityAction": "submitted",
+        "evaluationType": "primary",
+        "submittedCount": 1,
+        "passed": true
+      }
+    },
+    {
+      "testName": "산출물 생성 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "b9ca4442-146f-4865-82bb-ecb866ddc52d",
+        "periodId": "be433517-30d6-48eb-804b-98122151028b",
+        "activityType": "deliverable",
+        "activityAction": "created",
+        "relatedEntityId": "5efedbe3-883d-4ef7-a005-bd5dc2ed976c",
+        "passed": true
+      }
+    },
+    {
+      "testName": "산출물 수정 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "2a829c68-4897-432d-ac2e-fb30d4065767",
+        "periodId": "6b1dcf97-8675-41c0-a3a8-8527101be47a",
+        "activityType": "deliverable",
+        "activityAction": "updated",
+        "relatedEntityId": "c8f236c4-3084-4853-b10b-109f5d223b38",
+        "passed": true
+      }
+    },
+    {
+      "testName": "산출물 삭제 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "0968edd3-3f49-43b9-abd0-ae849984a760",
+        "periodId": "ead11ef9-4edd-4bff-b8bf-d77ad5a7baef",
+        "activityType": "deliverable",
+        "activityAction": "deleted",
+        "relatedEntityId": "0b8a0257-ce26-4116-bd36-30df0288980f",
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 설정 승인 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "d80712ae-5019-4970-b17d-042553f9b3db",
+        "periodId": "560ecd57-bf7b-4862-a73c-1baa81f894c6",
+        "step": "criteria",
+        "action": "approved",
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 설정 재작성 요청 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "4d625c22-66e1-4718-aa94-ec4bad6b09db",
+        "periodId": "6f7909de-4765-4dad-b666-ef45caf15416",
+        "step": "criteria",
+        "action": "revision_requested",
+        "revisionComment": "재작성 요청 코멘트",
+        "passed": true
+      }
+    },
+    {
+      "testName": "재작성 완료 응답 제출 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "fd49b808-3575-4820-8717-ab3c7fc1ed44",
+        "periodId": "98b78904-083d-4010-aae1-1c21de9149b0",
+        "activityType": "revision_request",
+        "activityAction": "completed",
+        "requestId": "01509a7d-266d-46be-a3f6-a6ed27045640",
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 제출 시 활동 내역이 생성된다",
+      "result": {
+        "employeeId": "4c7c5dc7-d9c7-4df5-a05b-b1b29446527f",
+        "periodId": "676f1084-90c9-4e45-8c10-afd8b6aa6364",
+        "performedBy": "4c7c5dc7-d9c7-4df5-a05b-b1b29446527f",
+        "passed": true
+      }
+    },
+    {
+      "testName": "활동 유형별 필터링이 정상 작동한다",
+      "result": {
+        "employeeId": "399680d4-19fc-4aa6-aff9-092187de48f6",
+        "periodId": "289be01a-0e10-43fa-87ce-a2e42366d0af",
+        "passed": true
+      }
+    },
+    {
+      "testName": "날짜 범위 필터링이 정상 작동한다",
+      "result": {
+        "employeeId": "9a6a6966-0c01-4181-bff9-b7afab6281c3",
+        "periodId": "47e76a87-9335-4b62-bdd0-6b9ab067e573",
+        "passed": true
+      }
+    },
+    {
+      "testName": "페이지네이션이 정상 작동한다",
+      "result": {
+        "employeeId": "cdf65006-f6e3-427c-aaf4-80be953f215f",
+        "periodId": "9354a9f9-2d21-443d-a227-cf4a6e77e65e",
+        "passed": true
+      }
+    },
+    {
+      "testName": "활동 내역이 최신순으로 정렬된다",
+      "result": {
+        "employeeId": "257ef735-8601-47e4-9233-a5fbf8028c49",
+        "periodId": "5d2f564c-ed7f-44f3-ad2a-5aed600b806a",
+        "passed": true
+      }
+    },
+    {
+      "testName": "전체 평가 프로세스에서 활동 내역이 올바르게 생성된다",
+      "result": {
+        "employeeId": "923b92db-1553-41a7-83e2-f8dacafde20a",
+        "periodId": "a8ecee66-6094-4909-b0a2-3337a828ea02",
+        "totalActivities": 3,
+        "passed": true
+      }
+    }
+  ]
 }
