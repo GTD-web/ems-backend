@@ -13,24 +13,24 @@ export declare class EvaluatorInfoDto {
     rankName?: string;
 }
 export declare class EvaluationLineWithEvaluatorsDto {
-    status: 'complete' | 'in_progress' | 'none';
+    status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
     hasPrimaryEvaluator: boolean;
     hasSecondaryEvaluator: boolean;
     primaryEvaluator?: EvaluatorInfoDto | null;
     secondaryEvaluators: EvaluatorInfoDto[];
 }
 export declare class WbsCriteriaStatusDto {
-    status: 'complete' | 'in_progress' | 'none';
+    status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
     totalWbsCount: number;
     wbsWithCriteriaCount: number;
 }
 export declare class PerformanceStatusDto {
-    status: 'complete' | 'in_progress' | 'none';
+    status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
     totalWbsCount: number;
     completedCount: number;
 }
 export declare class SelfEvaluationStatusDto {
-    status: 'complete' | 'in_progress' | 'none';
+    status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
     totalCount: number;
     completedCount: number;
     isSubmittedToEvaluator: boolean;

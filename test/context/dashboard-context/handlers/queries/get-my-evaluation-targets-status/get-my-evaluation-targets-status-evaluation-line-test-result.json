@@ -1,11 +1,11 @@
 {
-  "timestamp": "2025-11-12T23:54:26.101Z",
+  "timestamp": "2025-11-15T08:01:07.283Z",
   "testResults": [
     {
       "testName": "PRIMARY와 SECONDARY 평가자가 모두 지정되지 않은 경우 evaluationLineStatus가 none이어야 한다",
       "result": {
-        "evaluationPeriodId": "a31dfd0c-8e2f-4363-98c5-0640fa9822b5",
-        "employeeId": "ff2c42f6-d638-403a-adc2-ca975e49e8a7",
+        "evaluationPeriodId": "27a716bc-7d5f-4764-b0cb-485c6ebf850d",
+        "employeeId": "56159da5-5858-4156-97bc-4ce392982af2",
         "evaluationLineStatus": "none",
         "hasPrimaryEvaluator": false,
         "hasSecondaryEvaluator": false
@@ -14,8 +14,8 @@
     {
       "testName": "PRIMARY 평가자만 지정된 경우 evaluationLineStatus가 in_progress이어야 한다",
       "result": {
-        "evaluationPeriodId": "f05e6f49-a1e1-4bc1-b94d-a3caa3dccd14",
-        "employeeId": "c55782d8-3939-4d3b-8869-671b5c0614b8",
+        "evaluationPeriodId": "7003e2cc-7734-41aa-9615-37fe4d1ee2e2",
+        "employeeId": "7f84f072-c2fe-430f-af41-48f83a524506",
         "evaluationLineStatus": "in_progress",
         "hasPrimaryEvaluator": true,
         "hasSecondaryEvaluator": false
@@ -24,8 +24,8 @@
     {
       "testName": "SECONDARY 평가자만 지정된 경우 evaluationLineStatus가 in_progress이어야 한다",
       "result": {
-        "evaluationPeriodId": "87d00065-2f64-4e68-9605-18b42728dcf8",
-        "employeeId": "7a123b24-28bd-4fb3-999b-7b415b04b29d",
+        "evaluationPeriodId": "1727b332-6cc0-4db1-b7ee-2084c5014d9c",
+        "employeeId": "65da92a3-f36f-4114-b08c-bf632ee0dea4",
         "evaluationLineStatus": "in_progress",
         "hasPrimaryEvaluator": false,
         "hasSecondaryEvaluator": true
@@ -34,8 +34,8 @@
     {
       "testName": "PRIMARY와 SECONDARY 평가자가 모두 지정된 경우 evaluationLineStatus가 complete이어야 한다",
       "result": {
-        "evaluationPeriodId": "80a78854-bf55-4a85-8992-71980aa68a49",
-        "employeeId": "5f2cf0fd-69ac-48b3-9f8c-08aa396b4819",
+        "evaluationPeriodId": "8eecaf10-cab8-43d4-ad98-da5e0e73140c",
+        "employeeId": "c8df2a82-5a42-4e3b-9399-de00cdd104d5",
         "evaluationLineStatus": "complete",
         "hasPrimaryEvaluator": true,
         "hasSecondaryEvaluator": true
@@ -44,22 +44,22 @@
     {
       "testName": "여러 피평가자의 평가라인 구성 상태가 올바르게 구분되어야 한다",
       "result": {
-        "evaluationPeriodId": "36c760ad-d2e7-4194-86f4-4ff85d867a67",
+        "evaluationPeriodId": "3d871a7b-9c19-4e41-b079-5df8cc220e55",
         "employees": [
           {
-            "employeeId": "59917ab4-dd64-4eb0-bdc2-402366bf2d50",
+            "employeeId": "41f52c1a-da3e-4d94-aec5-df10c524fc07",
             "evaluationLineStatus": "none"
           },
           {
-            "employeeId": "3c66b0a3-1fd4-4600-9aaf-16d70732ecb3",
+            "employeeId": "004bfebc-5f14-49a7-90c4-a60064d8a09b",
             "evaluationLineStatus": "in_progress"
           },
           {
-            "employeeId": "5a06fcf6-6f5c-47ea-b9d0-376a687ea567",
+            "employeeId": "0d7f84c9-7be6-49a5-a8d5-6e0b6844ac99",
             "evaluationLineStatus": "in_progress"
           },
           {
-            "employeeId": "112cbb45-cbb1-4a25-9be9-0333c9f95e75",
+            "employeeId": "687d384d-5fc2-448e-895c-0ef542091c83",
             "evaluationLineStatus": "complete"
           }
         ]

@@ -1,41 +1,4 @@
 {
-  "timestamp": "2025-11-13T16:39:02.927Z",
-  "testResults": [
-    {
-      "testName": "평가기준 미제출 상태 - summary.criteriaSubmission 필드가 올바르게 반환되어야 한다",
-      "result": {
-        "summary": {
-          "criteriaSubmission": {
-            "isSubmitted": false,
-            "submittedAt": null,
-            "submittedBy": null
-          }
-        }
-      }
-    },
-    {
-      "testName": "평가기준 제출 상태 - summary.criteriaSubmission 필드가 올바르게 반환되어야 한다",
-      "result": {
-        "summary": {
-          "criteriaSubmission": {
-            "isSubmitted": true,
-            "submittedAt": "2025-11-13T16:39:02.779Z",
-            "submittedBy": "test-submitter-id"
-          }
-        }
-      }
-    },
-    {
-      "testName": "평가기준 제출 후 초기화 - summary.criteriaSubmission 필드가 올바르게 반환되어야 한다",
-      "result": {
-        "summary": {
-          "criteriaSubmission": {
-            "isSubmitted": false,
-            "submittedAt": null,
-            "submittedBy": null
-          }
-        }
-      }
-    }
-  ]
+  "timestamp": "2025-11-15T08:02:14.184Z",
+  "testResults": []
 }

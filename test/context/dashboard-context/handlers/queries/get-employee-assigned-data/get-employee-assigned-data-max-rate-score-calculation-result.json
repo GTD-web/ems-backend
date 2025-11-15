@@ -1,25 +1,25 @@
 {
-  "timestamp": "2025-11-13T09:01:50.161Z",
+  "timestamp": "2025-11-15T08:01:08.426Z",
   "testResults": [
     {
       "testName": "maxSelfEvaluationRate(120)를 최대값으로 사용하여 점수가 계산되어야 한다",
       "result": {
-        "evaluationPeriodId": "1a6a6cdf-b56d-4c94-83bd-d58d7e93b548",
-        "employeeId": "2e3f2a38-a991-4b02-9b61-cf760a53d44b",
+        "evaluationPeriodId": "55ce38e2-d77e-4e82-8eaa-d78254d1297a",
+        "employeeId": "eec61d13-a0ac-46cd-a486-58823ecee79f",
         "maxSelfEvaluationRate": 120,
         "wbsScores": [
           {
-            "wbsItemId": "82ffdc9e-eb6e-4a1b-bf02-f3b9d44106d1",
+            "wbsItemId": "9b1f7812-4452-4118-917d-175908748667",
             "weight": 30,
             "score": 100
           },
           {
-            "wbsItemId": "2a335f04-c6df-4e4d-982e-27f2254a4250",
+            "wbsItemId": "42b9ab9b-a22b-49b5-b46c-e0547cbe991f",
             "weight": 40,
             "score": 120
           },
           {
-            "wbsItemId": "a26d28fe-fc86-4609-afde-7b08c08f25af",
+            "wbsItemId": "f806364a-3dfb-4ed1-a6a5-f7930eeb340b",
             "weight": 30,
             "score": 90
           }
@@ -32,22 +32,22 @@
     {
       "testName": "모든 WBS가 최대값(120)일 때 총점이 120점이 되어야 한다",
       "result": {
-        "evaluationPeriodId": "ae0fa098-0f2b-4310-988c-9db32d0aa9b8",
-        "employeeId": "e8ff7001-10f5-4b91-9e31-186da8614a36",
+        "evaluationPeriodId": "7e36df72-c5c3-4104-8e2f-b3dfaaeb3d8b",
+        "employeeId": "797239cf-d92e-4343-8098-e9ccabb26256",
         "maxSelfEvaluationRate": 120,
         "wbsScores": [
           {
-            "wbsItemId": "98198241-e405-40bf-bd0c-c76e98c7d92c",
+            "wbsItemId": "b1cae3f3-9c57-4464-a7c9-7e9f9d2364b2",
             "weight": 30,
             "score": 120
           },
           {
-            "wbsItemId": "172cb7c8-2d88-4090-9072-16bfe88c35f7",
+            "wbsItemId": "b3348ba4-f0b0-4b43-b795-707ac3c89096",
             "weight": 40,
             "score": 120
           },
           {
-            "wbsItemId": "05411f9e-32ef-4b38-b1b4-a6d7b9541ffd",
+            "wbsItemId": "1ab62193-39e1-489f-b947-df1362af74c2",
             "weight": 30,
             "score": 120
           }
@@ -60,23 +60,23 @@
     {
       "testName": "1차 하향평가 점수가 maxSelfEvaluationRate를 최대값으로 사용하여 계산되어야 한다",
       "result": {
-        "evaluationPeriodId": "1676d75d-3d82-425b-969d-f6cfda2c8a3f",
-        "employeeId": "e9372e64-1881-4346-a3ac-476beef9bf31",
-        "evaluatorId": "8866b0da-5fe6-4526-8e9a-271b0cf1564a",
+        "evaluationPeriodId": "b5147f6a-1dda-4d0b-9fe4-44b76e5f7763",
+        "employeeId": "e2f769a4-4457-428c-aeb6-0f6848e9f19d",
+        "evaluatorId": "504b0c0c-a603-4932-9aae-db9b703902fb",
         "maxSelfEvaluationRate": 120,
         "wbsScores": [
           {
-            "wbsItemId": "6ffdd226-52ac-410d-96bb-dd9f6e91741b",
+            "wbsItemId": "8878806c-3258-42d7-b4b7-fe3c351f3f72",
             "weight": 30,
             "score": 100
           },
           {
-            "wbsItemId": "46a28c70-0201-4a5d-83d4-a7523592f943",
+            "wbsItemId": "d7042bb2-9693-4438-bc9d-b1336f5fcb3d",
             "weight": 40,
             "score": 120
           },
           {
-            "wbsItemId": "68c46499-a448-4add-b20f-5a24097d1b66",
+            "wbsItemId": "f293e91f-8571-483d-ada0-0ea0d6cee2b0",
             "weight": 30,
             "score": 90
           }
@@ -90,45 +90,45 @@
     {
       "testName": "여러 2차 평가자가 있을 때 평균 점수로 계산되어야 한다",
       "result": {
-        "evaluationPeriodId": "5d23ac6a-0fc0-4e22-835d-fcc08610001e",
-        "employeeId": "a321dfc3-b90a-4892-8ac2-946fcff976d7",
+        "evaluationPeriodId": "b879db41-44f4-4fd0-a73a-4e41b0bb0985",
+        "employeeId": "e9e1d0ce-31d4-47fb-8468-9b3e33459731",
         "maxSelfEvaluationRate": 120,
         "evaluators": [
           {
-            "evaluatorId": "72d0e2ac-f5e0-4a76-8cc1-d0c3268da29d",
+            "evaluatorId": "8b107611-7ce0-4e86-a463-d3c6b4c3ed40",
             "wbsScores": [
               {
-                "wbsItemId": "3fae913b-a0fe-467e-84ca-df2ed7a6e055",
+                "wbsItemId": "d95a55bf-5a7c-4d9b-928a-fbefcd7c5a89",
                 "score": 100
               },
               {
-                "wbsItemId": "79152ffb-e330-424c-a37b-4dc36455f97d",
+                "wbsItemId": "433bdb75-613d-4ca5-ba75-282141fb1ff5",
                 "score": 110
               }
             ]
           },
           {
-            "evaluatorId": "eab3e652-84a5-4c9d-a40a-3bc5327ae56d",
+            "evaluatorId": "bdc44fb2-a41d-4a90-a9fb-b7e00ab45c0c",
             "wbsScores": [
               {
-                "wbsItemId": "79152ffb-e330-424c-a37b-4dc36455f97d",
+                "wbsItemId": "433bdb75-613d-4ca5-ba75-282141fb1ff5",
                 "score": 120
               },
               {
-                "wbsItemId": "73218dfa-56b8-400a-9bc3-7ead4364e4b8",
+                "wbsItemId": "48bca8be-3beb-4af3-b8a8-4b4ae1e998b8",
                 "score": 90
               }
             ]
           },
           {
-            "evaluatorId": "a50415ad-c050-4aa9-a30e-fd511ec4a248",
+            "evaluatorId": "c885988d-6df5-4457-a4f9-be351ddecab2",
             "wbsScores": [
               {
-                "wbsItemId": "3fae913b-a0fe-467e-84ca-df2ed7a6e055",
+                "wbsItemId": "d95a55bf-5a7c-4d9b-928a-fbefcd7c5a89",
                 "score": 110
               },
               {
-                "wbsItemId": "73218dfa-56b8-400a-9bc3-7ead4364e4b8",
+                "wbsItemId": "48bca8be-3beb-4af3-b8a8-4b4ae1e998b8",
                 "score": 100
               }
             ]
@@ -136,17 +136,17 @@
         ],
         "wbsAverageScores": [
           {
-            "wbsItemId": "3fae913b-a0fe-467e-84ca-df2ed7a6e055",
+            "wbsItemId": "d95a55bf-5a7c-4d9b-928a-fbefcd7c5a89",
             "weight": 30,
             "averageScore": 105
           },
           {
-            "wbsItemId": "79152ffb-e330-424c-a37b-4dc36455f97d",
+            "wbsItemId": "433bdb75-613d-4ca5-ba75-282141fb1ff5",
             "weight": 40,
             "averageScore": 115
           },
           {
-            "wbsItemId": "73218dfa-56b8-400a-9bc3-7ead4364e4b8",
+            "wbsItemId": "48bca8be-3beb-4af3-b8a8-4b4ae1e998b8",
             "weight": 30,
             "averageScore": 95
           }
@@ -160,18 +160,18 @@
     {
       "testName": "여러 2차 평가자가 모두 최대값(120)을 줄 때 총점이 120점이 되어야 한다",
       "result": {
-        "evaluationPeriodId": "139b8b26-2fb9-4488-a1f1-d4744673d4f8",
-        "employeeId": "736b8c67-e079-47b5-b0da-0a9849575b9a",
+        "evaluationPeriodId": "8dd49577-7ca6-49ba-ac22-c7ed0aa546ce",
+        "employeeId": "beaf1938-c680-4565-a73c-e0e0ef8d6d7c",
         "maxSelfEvaluationRate": 120,
         "evaluators": [
           {
-            "evaluatorId": "803676bc-daca-4bc3-80d9-d1ba7dbd609e"
+            "evaluatorId": "94706a4a-2f23-4754-81a6-e0ed4903dce2"
           },
           {
-            "evaluatorId": "806194b1-372b-4f51-a538-bce19d6199cb"
+            "evaluatorId": "924c0457-7b24-4f71-ac6e-013a12e3f093"
           },
           {
-            "evaluatorId": "f5c13e91-1f83-4f8d-8e48-cbcef46cc0d2"
+            "evaluatorId": "34e79098-3c16-4b8b-ba0e-c07791ed4d38"
           }
         ],
         "allScores": 120,
@@ -184,45 +184,45 @@
     {
       "testName": "2차 평가자들이 서로 다른 점수를 줄 때 평균으로 계산되어야 한다",
       "result": {
-        "evaluationPeriodId": "8264ad83-3c53-4d0f-924b-5a71194c2d19",
-        "employeeId": "a9e2e0df-660b-4637-9d1e-68733aa67627",
+        "evaluationPeriodId": "f828d528-a72f-4acd-a6d8-90befe1786e7",
+        "employeeId": "5147c797-7eb1-4938-96f3-4401098df7ee",
         "maxSelfEvaluationRate": 120,
         "evaluators": [
           {
-            "evaluatorId": "97076cd2-263e-418a-93f3-080927473516",
+            "evaluatorId": "816d4bed-ebd2-4325-97ea-8ffcd53dd6dd",
             "wbsScores": [
               {
-                "wbsItemId": "96e0268e-1347-4666-a03c-c60431e941aa",
+                "wbsItemId": "235a31c6-c8d0-43f8-835c-35f25a0fafe0",
                 "score": 80
               },
               {
-                "wbsItemId": "6023acba-2f16-41a5-8483-96a061b84955",
+                "wbsItemId": "ef6e64f3-e35b-44d4-a23a-eaacb7c86b90",
                 "score": 110
               }
             ]
           },
           {
-            "evaluatorId": "32c22d44-6bf8-4067-ae94-89ac38842267",
+            "evaluatorId": "2342867f-0f6c-4797-ac63-9211a823b2d3",
             "wbsScores": [
               {
-                "wbsItemId": "6023acba-2f16-41a5-8483-96a061b84955",
+                "wbsItemId": "ef6e64f3-e35b-44d4-a23a-eaacb7c86b90",
                 "score": 100
               },
               {
-                "wbsItemId": "b5736f73-071a-4acb-bf3c-5ac44d5ea8b9",
+                "wbsItemId": "56958bd5-abc6-417e-942f-773c1f205a49",
                 "score": 90
               }
             ]
           },
           {
-            "evaluatorId": "d4bb0a7d-d1f4-409f-ae00-99032ca1d498",
+            "evaluatorId": "364b7a23-9fd7-47e0-9d51-4bbe4bc6bfe6",
             "wbsScores": [
               {
-                "wbsItemId": "96e0268e-1347-4666-a03c-c60431e941aa",
+                "wbsItemId": "235a31c6-c8d0-43f8-835c-35f25a0fafe0",
                 "score": 100
               },
               {
-                "wbsItemId": "b5736f73-071a-4acb-bf3c-5ac44d5ea8b9",
+                "wbsItemId": "56958bd5-abc6-417e-942f-773c1f205a49",
                 "score": 110
               }
             ]
@@ -230,17 +230,17 @@
         ],
         "wbsAverageScores": [
           {
-            "wbsItemId": "96e0268e-1347-4666-a03c-c60431e941aa",
+            "wbsItemId": "235a31c6-c8d0-43f8-835c-35f25a0fafe0",
             "weight": 30,
             "averageScore": 90
           },
           {
-            "wbsItemId": "6023acba-2f16-41a5-8483-96a061b84955",
+            "wbsItemId": "ef6e64f3-e35b-44d4-a23a-eaacb7c86b90",
             "weight": 40,
             "averageScore": 105
           },
           {
-            "wbsItemId": "b5736f73-071a-4acb-bf3c-5ac44d5ea8b9",
+            "wbsItemId": "56958bd5-abc6-417e-942f-773c1f205a49",
             "weight": 30,
             "averageScore": 100
           }

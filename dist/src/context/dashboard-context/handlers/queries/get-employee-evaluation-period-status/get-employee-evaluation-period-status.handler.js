@@ -169,14 +169,36 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             const evaluationLineStatus = (0, evaluation_line_utils_1.평가라인_상태를_계산한다)(hasPrimaryEvaluator, hasSecondaryEvaluator);
             const { totalWbsCount: perfTotalWbsCount, inputCompletedCount } = await (0, performance_input_utils_1.성과입력_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository);
             const performanceInputStatus = (0, performance_input_utils_1.성과입력_상태를_계산한다)(perfTotalWbsCount, inputCompletedCount);
+            const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(result.mapping_id);
             const { totalMappingCount, completedMappingCount, submittedToEvaluatorCount, isSubmittedToEvaluator, isSubmittedToManager, totalScore, grade, } = await (0, self_evaluation_utils_1.자기평가_진행_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository);
             const selfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_상태를_계산한다)(totalMappingCount, completedMappingCount);
+            const selfEvaluationApprovalStatus = await (0, step_approval_utils_1.자기평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
+            let finalSelfEvaluationStatus;
+            if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
+                if (selfEvaluationApprovalStatus.isCompleted) {
+                    finalSelfEvaluationStatus = 'revision_completed';
+                }
+                else {
+                    finalSelfEvaluationStatus = 'revision_requested';
+                }
+            }
+            else {
+                const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
+                if (stepApprovalStatus === 'approved') {
+                    finalSelfEvaluationStatus = 'approved';
+                }
+                else if (stepApprovalStatus === 'revision_completed') {
+                    finalSelfEvaluationStatus = 'revision_completed';
+                }
+                else {
+                    finalSelfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_통합_상태를_계산한다)(selfEvaluationStatus, stepApprovalStatus ?? 'pending');
+                }
+            }
             const { primary, secondary } = await (0, downward_evaluation_utils_1.하향평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.evaluationLineRepository, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository, this.employeeRepository);
             const { totalRequestCount, completedRequestCount } = await (0, peer_evaluation_utils_1.동료평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.peerEvaluationRepository);
             const peerEvaluationStatus = (0, peer_evaluation_utils_1.동료평가_상태를_계산한다)(totalRequestCount, completedRequestCount);
             const finalEvaluation = await (0, final_evaluation_utils_1.최종평가를_조회한다)(evaluationPeriodId, employeeId, this.finalEvaluationRepository);
             const finalEvaluationStatus = (0, final_evaluation_utils_1.최종평가_상태를_계산한다)(finalEvaluation);
-            const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(result.mapping_id);
             let primaryEvaluationStatus = 'pending';
             let primaryApprovedBy = null;
             let primaryApprovedAt = null;
@@ -365,7 +387,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     inputCompletedCount,
                 },
                 selfEvaluation: {
-                    status: selfEvaluationStatus,
+                    status: finalSelfEvaluationStatus,
                     totalMappingCount,
                     completedMappingCount,
                     isSubmittedToEvaluator,

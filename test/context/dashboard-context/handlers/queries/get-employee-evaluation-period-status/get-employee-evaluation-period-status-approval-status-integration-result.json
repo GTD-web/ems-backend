@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-11-13T17:21:37.426Z",
+  "timestamp": "2025-11-15T08:02:08.385Z",
   "testResults": [
     {
       "testName": "모든 항목이 complete이고 제출되지 않았으면 criteriaSetup.status는 in_progress여야 한다 (제출 대기)",
@@ -21,7 +21,7 @@
           "status": "approved",
           "criteriaSubmission": {
             "isSubmitted": true,
-            "submittedAt": "2025-11-13T17:21:32.777Z",
+            "submittedAt": "2025-11-15T08:01:51.161Z",
             "submittedBy": "00000000-0000-0000-0000-000000000001"
           }
         }
@@ -34,7 +34,7 @@
           "status": "pending",
           "criteriaSubmission": {
             "isSubmitted": true,
-            "submittedAt": "2025-11-13T17:21:34.121Z",
+            "submittedAt": "2025-11-15T08:01:53.136Z",
             "submittedBy": "00000000-0000-0000-0000-000000000001"
           }
         }
@@ -63,7 +63,7 @@
           "status": "revision_requested",
           "criteriaSubmission": {
             "isSubmitted": true,
-            "submittedAt": "2025-11-13T17:21:35.415Z",
+            "submittedAt": "2025-11-15T08:01:55.332Z",
             "submittedBy": "00000000-0000-0000-0000-000000000001"
           }
         },
@@ -79,12 +79,33 @@
           "status": "revision_completed",
           "criteriaSubmission": {
             "isSubmitted": true,
-            "submittedAt": "2025-11-13T17:21:36.062Z",
+            "submittedAt": "2025-11-15T08:01:56.327Z",
             "submittedBy": "00000000-0000-0000-0000-000000000001"
           }
         },
         "stepApproval": {
           "criteriaSettingStatus": "revision_completed"
+        }
+      }
+    },
+    {
+      "testName": "모든 단계가 완료되고 승인된 경우 모든 통합 상태가 approved여야 한다",
+      "result": {
+        "criteriaSetup": {
+          "status": "approved",
+          "criteriaSubmission": {
+            "isSubmitted": true,
+            "submittedAt": "2025-11-15T08:02:08.304Z",
+            "submittedBy": "00000000-0000-0000-0000-000000000001"
+          }
+        },
+        "downwardEvaluation": {
+          "primary": {
+            "status": "approved"
+          },
+          "secondary": {
+            "status": "approved"
+          }
         }
       }
     }

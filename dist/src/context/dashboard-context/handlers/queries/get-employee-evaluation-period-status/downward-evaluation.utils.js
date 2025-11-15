@@ -10,14 +10,14 @@ const evaluation_line_types_1 = require("../../../../../domain/core/evaluation-l
 const downward_evaluation_types_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.types");
 const downward_evaluation_score_utils_1 = require("./downward-evaluation-score.utils");
 function 하향평가_통합_상태를_계산한다(downwardStatus, approvalStatus) {
-    if (downwardStatus === 'none') {
-        return 'none';
-    }
     if (approvalStatus === 'revision_requested') {
         return 'revision_requested';
     }
     if (approvalStatus === 'revision_completed') {
         return 'revision_completed';
+    }
+    if (downwardStatus === 'none') {
+        return 'none';
     }
     if (downwardStatus === 'in_progress') {
         return 'in_progress';
@@ -25,25 +25,27 @@ function 하향평가_통합_상태를_계산한다(downwardStatus, approvalStat
     return approvalStatus;
 }
 function 이차평가_전체_상태를_계산한다(evaluatorStatuses) {
-    if (evaluatorStatuses.length === 0 || evaluatorStatuses.every(s => s === 'none')) {
+    if (evaluatorStatuses.length === 0 ||
+        evaluatorStatuses.every((s) => s === 'none')) {
         return 'none';
     }
-    if (evaluatorStatuses.some(s => s === 'revision_requested')) {
+    if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
         return 'revision_requested';
     }
-    if (evaluatorStatuses.some(s => s === 'revision_completed')) {
+    if (evaluatorStatuses.some((s) => s === 'revision_completed')) {
         return 'revision_completed';
     }
-    const hasInProgress = evaluatorStatuses.some(s => s === 'in_progress' || s === 'complete');
-    if (hasInProgress && evaluatorStatuses.some(s => s === 'none' || s === 'in_progress')) {
+    const hasInProgress = evaluatorStatuses.some((s) => s === 'in_progress' || s === 'complete');
+    if (hasInProgress &&
+        evaluatorStatuses.some((s) => s === 'none' || s === 'in_progress')) {
         return 'in_progress';
     }
-    const allCompleteOrAbove = evaluatorStatuses.every(s => s === 'complete' || s === 'pending' || s === 'approved');
+    const allCompleteOrAbove = evaluatorStatuses.every((s) => s === 'complete' || s === 'pending' || s === 'approved');
     if (allCompleteOrAbove) {
-        if (evaluatorStatuses.every(s => s === 'pending')) {
+        if (evaluatorStatuses.every((s) => s === 'pending')) {
             return 'pending';
         }
-        if (evaluatorStatuses.every(s => s === 'approved')) {
+        if (evaluatorStatuses.every((s) => s === 'approved')) {
             return 'approved';
         }
         return 'in_progress';
@@ -61,7 +63,9 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
     if (primaryLine) {
         const primaryMappings = await evaluationLineMappingRepository
             .createQueryBuilder('mapping')
-            .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+            .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+        })
             .andWhere('mapping.employeeId = :employeeId', { employeeId })
             .andWhere('mapping.evaluationLineId = :lineId', {
             lineId: primaryLine.id,
@@ -111,7 +115,9 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
     if (secondaryLine) {
         const secondaryMappings = await evaluationLineMappingRepository
             .createQueryBuilder('mapping')
-            .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+            .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+        })
             .andWhere('mapping.employeeId = :employeeId', { employeeId })
             .andWhere('mapping.evaluationLineId = :lineId', {
             lineId: secondaryLine.id,

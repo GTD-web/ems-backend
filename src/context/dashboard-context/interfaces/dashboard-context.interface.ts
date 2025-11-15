@@ -217,8 +217,13 @@ export interface EmployeeEvaluationPeriodStatusDto {
 
   /** 자기평가 진행 정보 */
   selfEvaluation: {
-    /** 자기평가 진행 상태 */
-    status: SelfEvaluationStatus;
+    /** 자기평가 진행 상태 (재작성 요청 상태 포함) */
+    status:
+      | SelfEvaluationStatus
+      | 'pending'
+      | 'approved'
+      | 'revision_requested'
+      | 'revision_completed';
     /** 전체 WBS 자기평가 매핑 수 */
     totalMappingCount: number;
     /** 완료된 WBS 자기평가 수 */

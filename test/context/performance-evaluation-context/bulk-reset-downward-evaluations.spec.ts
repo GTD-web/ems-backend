@@ -176,7 +176,6 @@ describe('Performance Evaluation Context - Bulk Reset Downward Evaluations', () 
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.PEER_EVALUATION,
       criteriaSettingEnabled: true,
@@ -208,9 +207,8 @@ describe('Performance Evaluation Context - Bulk Reset Downward Evaluations', () 
       status: '재직중',
       createdBy: 'system',
     });
-    const savedPrimaryEvaluator = await employeeRepository.save(
-      primaryEvaluator,
-    );
+    const savedPrimaryEvaluator =
+      await employeeRepository.save(primaryEvaluator);
     primaryEvaluatorId = savedPrimaryEvaluator.id;
 
     const secondaryEvaluator1 = employeeRepository.create({
@@ -221,9 +219,8 @@ describe('Performance Evaluation Context - Bulk Reset Downward Evaluations', () 
       status: '재직중',
       createdBy: 'system',
     });
-    const savedSecondaryEvaluator1 = await employeeRepository.save(
-      secondaryEvaluator1,
-    );
+    const savedSecondaryEvaluator1 =
+      await employeeRepository.save(secondaryEvaluator1);
     secondaryEvaluatorId1 = savedSecondaryEvaluator1.id;
 
     const secondaryEvaluator2 = employeeRepository.create({
@@ -234,9 +231,8 @@ describe('Performance Evaluation Context - Bulk Reset Downward Evaluations', () 
       status: '재직중',
       createdBy: 'system',
     });
-    const savedSecondaryEvaluator2 = await employeeRepository.save(
-      secondaryEvaluator2,
-    );
+    const savedSecondaryEvaluator2 =
+      await employeeRepository.save(secondaryEvaluator2);
     secondaryEvaluatorId2 = savedSecondaryEvaluator2.id;
 
     // 프로젝트 생성
@@ -335,9 +331,8 @@ describe('Performance Evaluation Context - Bulk Reset Downward Evaluations', () 
       isAutoAssigned: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryLine = await evaluationLineRepository.save(
-      secondaryLine,
-    );
+    const savedSecondaryLine =
+      await evaluationLineRepository.save(secondaryLine);
 
     // 평가라인 매핑 생성
     await evaluationLineMappingRepository.save({
@@ -713,4 +708,3 @@ describe('Performance Evaluation Context - Bulk Reset Downward Evaluations', () 
     });
   });
 });
-

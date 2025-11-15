@@ -115,9 +115,10 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
     handler = module.get<GetMyEvaluationTargetsStatusHandler>(
       GetMyEvaluationTargetsStatusHandler,
     );
-    submitToEvaluatorHandler = module.get<SubmitWbsSelfEvaluationToEvaluatorHandler>(
-      SubmitWbsSelfEvaluationToEvaluatorHandler,
-    );
+    submitToEvaluatorHandler =
+      module.get<SubmitWbsSelfEvaluationToEvaluatorHandler>(
+        SubmitWbsSelfEvaluationToEvaluatorHandler,
+      );
     submitToManagerHandler = module.get<SubmitWbsSelfEvaluationHandler>(
       SubmitWbsSelfEvaluationHandler,
     );
@@ -135,12 +136,8 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
     projectAssignmentRepository = dataSource.getRepository(
       EvaluationProjectAssignment,
     );
-    wbsAssignmentRepository = dataSource.getRepository(
-      EvaluationWbsAssignment,
-    );
-    wbsSelfEvaluationRepository = dataSource.getRepository(
-      WbsSelfEvaluation,
-    );
+    wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
+    wbsSelfEvaluationRepository = dataSource.getRepository(WbsSelfEvaluation);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
 
@@ -214,7 +211,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -269,9 +265,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
     const mapping1 = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId1,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
     });
     const savedMapping1 = await mappingRepository.save(mapping1);
@@ -280,9 +273,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
     const mapping2 = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId2,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
     });
     const savedMapping2 = await mappingRepository.save(mapping2);
@@ -440,9 +430,8 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       selfEvaluationScore: 100,
       createdBy: systemAdminId,
     });
-    const savedEvaluation1_1 = await wbsSelfEvaluationRepository.save(
-      evaluation1_1,
-    );
+    const savedEvaluation1_1 =
+      await wbsSelfEvaluationRepository.save(evaluation1_1);
 
     const evaluation1_2 = wbsSelfEvaluationRepository.create({
       periodId: evaluationPeriodId,
@@ -456,9 +445,8 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       selfEvaluationScore: 110,
       createdBy: systemAdminId,
     });
-    const savedEvaluation1_2 = await wbsSelfEvaluationRepository.save(
-      evaluation1_2,
-    );
+    const savedEvaluation1_2 =
+      await wbsSelfEvaluationRepository.save(evaluation1_2);
     evaluationId1 = savedEvaluation1_1.id;
     evaluationId2 = savedEvaluation1_2.id;
 
@@ -519,7 +507,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target1?.selfEvaluation.status).toBe('none');
       expect(target1?.selfEvaluation.totalMappingCount).toBe(0);
       expect(target1?.selfEvaluation.completedMappingCount).toBe(0);
-      expect(target1?.selfEvaluation.isEditable).toBeDefined();
       expect(target1?.selfEvaluation.totalSelfEvaluations).toBe(0);
       expect(target1?.selfEvaluation.submittedToEvaluatorCount).toBe(0);
       expect(target1?.selfEvaluation.isSubmittedToEvaluator).toBe(false);
@@ -556,7 +543,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target1?.selfEvaluation.status).toBe('in_progress');
       expect(target1?.selfEvaluation.totalMappingCount).toBe(2);
       expect(target1?.selfEvaluation.completedMappingCount).toBe(0);
-      expect(target1?.selfEvaluation.isEditable).toBeDefined();
       expect(target1?.selfEvaluation.totalSelfEvaluations).toBe(2);
       expect(target1?.selfEvaluation.submittedToEvaluatorCount).toBe(0);
       expect(target1?.selfEvaluation.isSubmittedToEvaluator).toBe(false);
@@ -599,7 +585,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target1?.selfEvaluation.status).toBe('in_progress');
       expect(target1?.selfEvaluation.totalMappingCount).toBe(2);
       expect(target1?.selfEvaluation.completedMappingCount).toBe(0);
-      expect(target1?.selfEvaluation.isEditable).toBeDefined();
       expect(target1?.selfEvaluation.totalSelfEvaluations).toBe(2);
       expect(target1?.selfEvaluation.submittedToEvaluatorCount).toBe(1);
       expect(target1?.selfEvaluation.isSubmittedToEvaluator).toBe(false); // 모두 제출되지 않음
@@ -648,7 +633,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target1?.selfEvaluation.status).toBe('in_progress'); // 관리자에게 제출 안했으므로 완료 아님
       expect(target1?.selfEvaluation.totalMappingCount).toBe(2);
       expect(target1?.selfEvaluation.completedMappingCount).toBe(0); // 관리자에게 제출 안했으므로 완료 아님
-      expect(target1?.selfEvaluation.isEditable).toBeDefined();
       expect(target1?.selfEvaluation.totalSelfEvaluations).toBe(2);
       expect(target1?.selfEvaluation.submittedToEvaluatorCount).toBe(2);
       expect(target1?.selfEvaluation.isSubmittedToEvaluator).toBe(true); // 모두 제출됨
@@ -715,7 +699,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target1?.selfEvaluation.status).toBe('in_progress');
       expect(target1?.selfEvaluation.totalMappingCount).toBe(2);
       expect(target1?.selfEvaluation.completedMappingCount).toBe(0);
-      expect(target1?.selfEvaluation.isEditable).toBeDefined();
       expect(target1?.selfEvaluation.totalSelfEvaluations).toBe(2);
       expect(target1?.selfEvaluation.submittedToEvaluatorCount).toBe(2);
       expect(target1?.selfEvaluation.isSubmittedToEvaluator).toBe(true);
@@ -729,7 +712,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target2?.selfEvaluation.status).toBe('in_progress');
       expect(target2?.selfEvaluation.totalMappingCount).toBe(2);
       expect(target2?.selfEvaluation.completedMappingCount).toBe(0);
-      expect(target2?.selfEvaluation.isEditable).toBeDefined();
       expect(target2?.selfEvaluation.totalSelfEvaluations).toBe(2);
       expect(target2?.selfEvaluation.submittedToEvaluatorCount).toBe(1);
       expect(target2?.selfEvaluation.isSubmittedToEvaluator).toBe(false);
@@ -783,7 +765,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target1?.selfEvaluation.status).toBe('complete'); // 관리자에게 모두 제출되었으므로 완료
       expect(target1?.selfEvaluation.totalMappingCount).toBe(2);
       expect(target1?.selfEvaluation.completedMappingCount).toBe(2); // 관리자에게 모두 제출되었으므로 완료
-      expect(target1?.selfEvaluation.isEditable).toBeDefined();
       expect(target1?.selfEvaluation.totalSelfEvaluations).toBe(2);
       expect(target1?.selfEvaluation.submittedToEvaluatorCount).toBe(2);
       expect(target1?.selfEvaluation.isSubmittedToEvaluator).toBe(true);
@@ -797,7 +778,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target2?.selfEvaluation.status).toBe('in_progress');
       expect(target2?.selfEvaluation.totalMappingCount).toBe(2);
       expect(target2?.selfEvaluation.completedMappingCount).toBe(0);
-      expect(target2?.selfEvaluation.isEditable).toBeDefined();
       expect(target2?.selfEvaluation.totalSelfEvaluations).toBe(2);
       expect(target2?.selfEvaluation.submittedToEvaluatorCount).toBe(0);
       expect(target2?.selfEvaluation.isSubmittedToEvaluator).toBe(false);
@@ -845,7 +825,6 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
       expect(target1?.selfEvaluation.status).toBe('in_progress'); // 일부만 제출되었으므로 진행중
       expect(target1?.selfEvaluation.totalMappingCount).toBe(2);
       expect(target1?.selfEvaluation.completedMappingCount).toBe(1); // 일부만 제출되었으므로 1개 완료
-      expect(target1?.selfEvaluation.isEditable).toBeDefined();
       expect(target1?.selfEvaluation.totalSelfEvaluations).toBe(2);
       expect(target1?.selfEvaluation.submittedToEvaluatorCount).toBe(2);
       expect(target1?.selfEvaluation.isSubmittedToEvaluator).toBe(true);
@@ -856,4 +835,3 @@ describe('Dashboard Context - Self Evaluation Submission Status (My Evaluation T
     });
   });
 });
-

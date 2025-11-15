@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.자기평가_진행_상태를_조회한다 = 자기평가_진행_상태를_조회한다;
 exports.자기평가_상태를_계산한다 = 자기평가_상태를_계산한다;
+exports.자기평가_통합_상태를_계산한다 = 자기평가_통합_상태를_계산한다;
 exports.가중치_기반_자기평가_점수를_계산한다 = 가중치_기반_자기평가_점수를_계산한다;
 exports.자기평가_등급을_조회한다 = 자기평가_등급을_조회한다;
 const common_1 = require("@nestjs/common");
@@ -63,6 +64,21 @@ function 자기평가_상태를_계산한다(totalMappingCount, completedMapping
     else {
         return 'in_progress';
     }
+}
+function 자기평가_통합_상태를_계산한다(selfEvaluationStatus, approvalStatus) {
+    if (approvalStatus === 'revision_requested') {
+        return 'revision_requested';
+    }
+    if (approvalStatus === 'revision_completed') {
+        return 'revision_completed';
+    }
+    if (selfEvaluationStatus === 'none') {
+        return 'none';
+    }
+    if (selfEvaluationStatus === 'in_progress') {
+        return 'in_progress';
+    }
+    return approvalStatus;
 }
 async function 가중치_기반_자기평가_점수를_계산한다(evaluationPeriodId, employeeId, wbsSelfEvaluationRepository, wbsAssignmentRepository, periodRepository) {
     try {

@@ -1,11 +1,11 @@
 {
-  "timestamp": "2025-11-12T23:38:12.164Z",
+  "timestamp": "2025-11-15T08:01:09.191Z",
   "testResults": [
     {
       "testName": "정상적으로 직원 할당 정보를 조회할 수 있어야 한다",
       "result": {
-        "evaluationPeriodId": "04cfb7f6-76ee-49b3-b8f4-40cadaf82dea",
-        "employeeId": "ba852886-42e9-43e3-8be2-8c39f1792eed",
+        "evaluationPeriodId": "a4f21a54-9401-4439-84f1-930ee8a85bd8",
+        "employeeId": "2df4c1e1-1f93-4f80-b472-51cc66c30b44",
         "employeeName": "김피평가",
         "totalProjects": 1,
         "totalWbs": 1
@@ -14,8 +14,8 @@
     {
       "testName": "평가 대상에서 제외된 직원일 경우 ExcludedEvaluationTargetAccessException을 던져야 한다",
       "result": {
-        "evaluationPeriodId": "c593f64c-5c5f-4661-9af0-e941db446d2e",
-        "employeeId": "0d29e7b5-73df-4514-be9e-3b12cd91fcf5",
+        "evaluationPeriodId": "f7a5d013-5279-4242-ae22-75be7a585d81",
+        "employeeId": "4a1318d2-5bdd-4dde-a1e3-14eaf30f4929",
         "isExcluded": true,
         "excludeReason": "테스트 제외 사유",
         "exceptionThrown": "ExcludedEvaluationTargetAccessException",
@@ -25,18 +25,18 @@
     {
       "testName": "여러 프로젝트와 WBS가 할당된 경우 모두 반환되어야 한다",
       "result": {
-        "evaluationPeriodId": "c887a57c-0c9b-4ee7-86ac-3564af609cf2",
-        "employeeId": "03fc38cc-bce5-4019-8fcc-f8b0563bdae0",
+        "evaluationPeriodId": "436a2e48-6f4e-43db-8731-ff97172da020",
+        "employeeId": "675da480-99d4-48c8-b2f7-8bec63fe18b6",
         "totalProjects": 2,
         "totalWbs": 3,
         "projects": [
           {
-            "projectId": "2cebefca-5999-4c54-9ac1-c0ab56f0b5f8",
+            "projectId": "dc8d4d2b-4132-4c24-8a5f-ff458fc8f277",
             "projectName": "테스트 프로젝트 2",
             "wbsCount": 1
           },
           {
-            "projectId": "1e00d791-f5a1-4d9a-a93b-ad512ba6dba3",
+            "projectId": "daad731b-1d6b-48ae-8c1a-9d30483fabe7",
             "projectName": "테스트 프로젝트",
             "wbsCount": 2
           }

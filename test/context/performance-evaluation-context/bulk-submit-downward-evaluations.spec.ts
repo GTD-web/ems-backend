@@ -1,37 +1,33 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource, Repository, IsNull } from 'typeorm';
-import { DatabaseModule } from '@libs/database/database.module';
 import {
-  BulkSubmitDownwardEvaluationsHandler,
   BulkSubmitDownwardEvaluationsCommand,
+  BulkSubmitDownwardEvaluationsHandler,
 } from '@context/performance-evaluation-context/handlers/downward-evaluation/command/bulk-submit-downward-evaluations.handler';
 import {
   SubmitDownwardEvaluationCommand,
   SubmitDownwardEvaluationHandler,
 } from '@context/performance-evaluation-context/handlers/downward-evaluation/command/submit-downward-evaluation.handler';
-import { DownwardEvaluationModule } from '@domain/core/downward-evaluation/downward-evaluation.module';
-import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
-import { WbsSelfEvaluationModule } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.module';
-import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
-import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
-import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
-import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
 import { Project } from '@domain/common/project/project.entity';
-import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
-import {
-  EvaluationPeriodStatus,
-  EvaluationPeriodPhase,
-} from '@domain/core/evaluation-period/evaluation-period.types';
 import { ProjectStatus } from '@domain/common/project/project.types';
-import {
-  DownwardEvaluationNotFoundException,
-  DownwardEvaluationAlreadyCompletedException,
-} from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
+import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
+import { DownwardEvaluationModule } from '@domain/core/downward-evaluation/downward-evaluation.module';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
+import {
+  EvaluationPeriodPhase,
+  EvaluationPeriodStatus,
+} from '@domain/core/evaluation-period/evaluation-period.types';
+import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { WbsSelfEvaluationModule } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.module';
+import { DatabaseModule } from '@libs/database/database.module';
+import { Test, TestingModule } from '@nestjs/testing';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
+import { DataSource, IsNull, Repository } from 'typeorm';
 
 /**
  * Performance Evaluation Context - Bulk Submit Downward Evaluations 통합 테스트
@@ -267,9 +263,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       selfEvaluationScore: 100,
       createdBy: systemAdminId,
     });
-    const savedSelfEvaluation1 = await wbsSelfEvaluationRepository.save(
-      selfEvaluation1,
-    );
+    const savedSelfEvaluation1 =
+      await wbsSelfEvaluationRepository.save(selfEvaluation1);
     selfEvaluationId1 = savedSelfEvaluation1.id;
 
     const selfEvaluation2 = wbsSelfEvaluationRepository.create({
@@ -284,9 +279,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       selfEvaluationScore: 110,
       createdBy: systemAdminId,
     });
-    const savedSelfEvaluation2 = await wbsSelfEvaluationRepository.save(
-      selfEvaluation2,
-    );
+    const savedSelfEvaluation2 =
+      await wbsSelfEvaluationRepository.save(selfEvaluation2);
     selfEvaluationId2 = savedSelfEvaluation2.id;
 
     const selfEvaluation3 = wbsSelfEvaluationRepository.create({
@@ -301,9 +295,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       selfEvaluationScore: 105,
       createdBy: systemAdminId,
     });
-    const savedSelfEvaluation3 = await wbsSelfEvaluationRepository.save(
-      selfEvaluation3,
-    );
+    const savedSelfEvaluation3 =
+      await wbsSelfEvaluationRepository.save(selfEvaluation3);
     selfEvaluationId3 = savedSelfEvaluation3.id;
 
     // 8. 1차 하향평가 생성
@@ -320,9 +313,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluation1 = await downwardEvaluationRepository.save(
-      primaryEvaluation1,
-    );
+    const savedPrimaryEvaluation1 =
+      await downwardEvaluationRepository.save(primaryEvaluation1);
     primaryEvaluationId1 = savedPrimaryEvaluation1.id;
 
     const primaryEvaluation2 = downwardEvaluationRepository.create({
@@ -338,9 +330,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluation2 = await downwardEvaluationRepository.save(
-      primaryEvaluation2,
-    );
+    const savedPrimaryEvaluation2 =
+      await downwardEvaluationRepository.save(primaryEvaluation2);
     primaryEvaluationId2 = savedPrimaryEvaluation2.id;
 
     const primaryEvaluation3 = downwardEvaluationRepository.create({
@@ -356,9 +347,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluation3 = await downwardEvaluationRepository.save(
-      primaryEvaluation3,
-    );
+    const savedPrimaryEvaluation3 =
+      await downwardEvaluationRepository.save(primaryEvaluation3);
     primaryEvaluationId3 = savedPrimaryEvaluation3.id;
 
     // 9. 2차 하향평가 생성
@@ -375,9 +365,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluation1 = await downwardEvaluationRepository.save(
-      secondaryEvaluation1,
-    );
+    const savedSecondaryEvaluation1 =
+      await downwardEvaluationRepository.save(secondaryEvaluation1);
     secondaryEvaluationId1 = savedSecondaryEvaluation1.id;
 
     const secondaryEvaluation2 = downwardEvaluationRepository.create({
@@ -393,9 +382,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluation2 = await downwardEvaluationRepository.save(
-      secondaryEvaluation2,
-    );
+    const savedSecondaryEvaluation2 =
+      await downwardEvaluationRepository.save(secondaryEvaluation2);
     secondaryEvaluationId2 = savedSecondaryEvaluation2.id;
 
     const secondaryEvaluation3 = downwardEvaluationRepository.create({
@@ -411,9 +399,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluation3 = await downwardEvaluationRepository.save(
-      secondaryEvaluation3,
-    );
+    const savedSecondaryEvaluation3 =
+      await downwardEvaluationRepository.save(secondaryEvaluation3);
     secondaryEvaluationId3 = savedSecondaryEvaluation3.id;
   }
 
@@ -603,7 +590,8 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
 
       // 테스트 결과 저장
       testResults.push({
-        testName: '평가자가 담당하지 않는 피평가자의 평가는 조회되지 않아야 한다',
+        testName:
+          '평가자가 담당하지 않는 피평가자의 평가는 조회되지 않아야 한다',
         result: {
           evaluatorId: otherEvaluatorId,
           evaluateeId: employeeId,
@@ -827,8 +815,16 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
       expect(result.failedCount).toBe(2); // 2번, 3번은 실패
       expect(result.failedItems.length).toBe(2);
       expect(result.submittedIds).toContain(secondaryEvaluationId1);
-      expect(result.failedItems.some((item) => item.evaluationId === secondaryEvaluationId2)).toBe(true);
-      expect(result.failedItems.some((item) => item.evaluationId === secondaryEvaluationId3)).toBe(true);
+      expect(
+        result.failedItems.some(
+          (item) => item.evaluationId === secondaryEvaluationId2,
+        ),
+      ).toBe(true);
+      expect(
+        result.failedItems.some(
+          (item) => item.evaluationId === secondaryEvaluationId3,
+        ),
+      ).toBe(true);
 
       // 1번만 완료 상태 확인
       const evaluation1 = await downwardEvaluationRepository.findOne({
@@ -859,11 +855,6 @@ describe('Performance Evaluation Context - Bulk Submit Downward Evaluations', ()
     };
 
     fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
-    console.log(
-      `✅ 테스트 결과가 저장되었습니다: ${outputPath}`,
-    );
+    console.log(`✅ 테스트 결과가 저장되었습니다: ${outputPath}`);
   });
 });
-
-
-

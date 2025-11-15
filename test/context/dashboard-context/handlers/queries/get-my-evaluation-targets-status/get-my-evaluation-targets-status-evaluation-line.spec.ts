@@ -108,9 +108,7 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
     projectAssignmentRepository = dataSource.getRepository(
       EvaluationProjectAssignment,
     );
-    wbsAssignmentRepository = dataSource.getRepository(
-      EvaluationWbsAssignment,
-    );
+    wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
 
@@ -232,9 +230,8 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluator = await employeeRepository.save(
-      primaryEvaluator,
-    );
+    const savedPrimaryEvaluator =
+      await employeeRepository.save(primaryEvaluator);
     primaryEvaluatorId = savedPrimaryEvaluator.id;
 
     // 5. SECONDARY 평가자 생성
@@ -247,9 +244,8 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
       status: '재직중',
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluator = await employeeRepository.save(
-      secondaryEvaluator,
-    );
+    const savedSecondaryEvaluator =
+      await employeeRepository.save(secondaryEvaluator);
     secondaryEvaluatorId = savedSecondaryEvaluator.id;
 
     // 6. 피평가자 생성
@@ -432,7 +428,7 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
         evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId1,
         evaluatorId: evaluatorId, // 조회 대상 평가자 (PRIMARY/SECONDARY 평가자가 아님)
-        wbsItemId: wbsItem?.id || null, // wbsItemId를 설정하여 PRIMARY 평가자로 인식되지 않도록 함
+        wbsItemId: wbsItem?.id || undefined, // wbsItemId를 설정하여 PRIMARY 평가자로 인식되지 않도록 함
         createdBy: systemAdminId,
       });
       await lineMappingRepository.save(lineMapping1);
@@ -478,7 +474,7 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
         evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId2,
         evaluatorId: primaryEvaluatorId,
-        wbsItemId: null, // PRIMARY 평가자는 직원별 고정 담당자
+        wbsItemId: undefined, // PRIMARY 평가자는 직원별 고정 담당자
         createdBy: systemAdminId,
       });
       await lineMappingRepository.save(primaryLineMapping);
@@ -583,7 +579,7 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
         evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId4,
         evaluatorId: primaryEvaluatorId,
-        wbsItemId: null, // PRIMARY 평가자는 직원별 고정 담당자
+        wbsItemId: undefined, // PRIMARY 평가자는 직원별 고정 담당자
         createdBy: systemAdminId,
       });
       await lineMappingRepository.save(primaryLineMapping);
@@ -652,7 +648,7 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
         evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId1,
         evaluatorId: evaluatorId, // 조회 대상 평가자 (PRIMARY/SECONDARY 평가자가 아님)
-        wbsItemId: wbsItem?.id || null, // wbsItemId를 설정하여 PRIMARY 평가자로 인식되지 않도록 함
+        wbsItemId: wbsItem?.id || undefined, // wbsItemId를 설정하여 PRIMARY 평가자로 인식되지 않도록 함
         createdBy: systemAdminId,
       });
       await lineMappingRepository.save(lineMapping1);
@@ -663,7 +659,7 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
         evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId2,
         evaluatorId: primaryEvaluatorId,
-        wbsItemId: null,
+        wbsItemId: undefined,
         createdBy: systemAdminId,
       });
       await lineMappingRepository.save(primaryLineMapping2);
@@ -700,7 +696,7 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
         evaluationPeriodId: evaluationPeriodId,
         employeeId: employeeId4,
         evaluatorId: primaryEvaluatorId,
-        wbsItemId: null,
+        wbsItemId: undefined,
         createdBy: systemAdminId,
       });
       await lineMappingRepository.save(primaryLineMapping4);
@@ -777,4 +773,3 @@ describe('Dashboard Context - Evaluation Line Configuration Status (My Evaluatio
     });
   });
 });
-

@@ -78,7 +78,7 @@ export interface EmployeeEvaluationPeriodStatusDto {
         inputCompletedCount: number;
     };
     selfEvaluation: {
-        status: SelfEvaluationStatus;
+        status: SelfEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
         totalMappingCount: number;
         completedMappingCount: number;
         isSubmittedToEvaluator: boolean;

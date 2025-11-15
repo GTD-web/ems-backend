@@ -125,6 +125,56 @@ export function 자기평가_상태를_계산한다(
 }
 
 /**
+ * 자기평가 통합 상태를 계산한다
+ * - 자기평가 진행 상태와 승인 상태를 통합하여 계산
+ *
+ * 계산 로직:
+ * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
+ *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
+ *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
+ * 2. 자기평가 진행 상태가 none이면 → none
+ * 3. 자기평가 진행 상태가 in_progress이면 → in_progress
+ * 4. 자기평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
+ * 5. 자기평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
+ */
+export function 자기평가_통합_상태를_계산한다(
+  selfEvaluationStatus: SelfEvaluationStatus,
+  approvalStatus:
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed',
+):
+  | SelfEvaluationStatus
+  | 'pending'
+  | 'approved'
+  | 'revision_requested'
+  | 'revision_completed' {
+  // 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환
+  // none이나 in_progress 상태에서도 재작성 요청이 있을 수 있음
+  if (approvalStatus === 'revision_requested') {
+    return 'revision_requested';
+  }
+  if (approvalStatus === 'revision_completed') {
+    return 'revision_completed';
+  }
+
+  // 2. 자기평가 진행 상태가 none이면 → none
+  if (selfEvaluationStatus === 'none') {
+    return 'none';
+  }
+
+  // 3. 자기평가 진행 상태가 in_progress이면 → in_progress
+  if (selfEvaluationStatus === 'in_progress') {
+    return 'in_progress';
+  }
+
+  // 4. 자기평가 진행 상태가 complete이면 승인 상태 반환 (pending, approved 등)
+  // selfEvaluationStatus === 'complete'
+  return approvalStatus;
+}
+
+/**
  * 가중치 기반 자기평가 점수를 계산한다
  * 계산식: Σ(WBS 가중치 × 자기평가 점수)
  * 최대 점수: 평가기간의 maxSelfEvaluationRate

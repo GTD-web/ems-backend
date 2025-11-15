@@ -16,31 +16,41 @@ import {
 /**
  * 하향평가 통합 상태를 계산한다
  * - 하향평가 진행 상태와 승인 상태를 통합하여 계산
- * 
+ *
  * 계산 로직:
- * 1. 하향평가 진행 상태가 none이면 → none
- * 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환:
- *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관)
- *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관)
+ * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
+ *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
+ *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
+ * 2. 하향평가 진행 상태가 none이면 → none
  * 3. 하향평가 진행 상태가 in_progress이면 → in_progress
  * 4. 하향평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
  * 5. 하향평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
  */
 export function 하향평가_통합_상태를_계산한다(
   downwardStatus: DownwardEvaluationStatus,
-  approvalStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed',
-): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed' {
-  // 1. 하향평가 진행 상태가 none이면 → none
-  if (downwardStatus === 'none') {
-    return 'none';
-  }
-
-  // 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환
+  approvalStatus:
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed',
+):
+  | DownwardEvaluationStatus
+  | 'pending'
+  | 'approved'
+  | 'revision_requested'
+  | 'revision_completed' {
+  // 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환
+  // none이나 in_progress 상태에서도 재작성 요청이 있을 수 있음
   if (approvalStatus === 'revision_requested') {
     return 'revision_requested';
   }
   if (approvalStatus === 'revision_completed') {
     return 'revision_completed';
+  }
+
+  // 2. 하향평가 진행 상태가 none이면 → none
+  if (downwardStatus === 'none') {
+    return 'none';
   }
 
   // 3. 하향평가 진행 상태가 in_progress이면 → in_progress
@@ -56,7 +66,7 @@ export function 하향평가_통합_상태를_계산한다(
 /**
  * 2차 평가 전체 상태를 계산한다
  * - 여러 평가자의 상태를 통합하여 전체 상태를 계산
- * 
+ *
  * 계산 로직:
  * 1. 평가자가 없거나 모두 none인 경우 → none
  * 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환:
@@ -69,41 +79,60 @@ export function 하향평가_통합_상태를_계산한다(
  *    - 혼합 상태 (pending + approved 등) → in_progress (진행중)
  */
 export function 이차평가_전체_상태를_계산한다(
-  evaluatorStatuses: Array<DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed'>,
-): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed' {
+  evaluatorStatuses: Array<
+    | DownwardEvaluationStatus
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed'
+  >,
+):
+  | DownwardEvaluationStatus
+  | 'pending'
+  | 'approved'
+  | 'revision_requested'
+  | 'revision_completed' {
   // 1. 평가자가 없거나 모두 none인 경우
-  if (evaluatorStatuses.length === 0 || evaluatorStatuses.every(s => s === 'none')) {
+  if (
+    evaluatorStatuses.length === 0 ||
+    evaluatorStatuses.every((s) => s === 'none')
+  ) {
     return 'none';
   }
 
   // 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환
   // revision_requested가 하나라도 있으면 최우선 (제출 여부 무관)
-  if (evaluatorStatuses.some(s => s === 'revision_requested')) {
+  if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
     return 'revision_requested';
   }
   // revision_completed가 하나라도 있으면 (제출 여부 무관)
-  if (evaluatorStatuses.some(s => s === 'revision_completed')) {
+  if (evaluatorStatuses.some((s) => s === 'revision_completed')) {
     return 'revision_completed';
   }
 
   // 3. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
-  const hasInProgress = evaluatorStatuses.some(s => s === 'in_progress' || s === 'complete');
-  if (hasInProgress && evaluatorStatuses.some(s => s === 'none' || s === 'in_progress')) {
+  const hasInProgress = evaluatorStatuses.some(
+    (s) => s === 'in_progress' || s === 'complete',
+  );
+  if (
+    hasInProgress &&
+    evaluatorStatuses.some((s) => s === 'none' || s === 'in_progress')
+  ) {
     return 'in_progress';
   }
 
   // 4. 모두 complete 이상인 경우 (none, in_progress 없음)
-  const allCompleteOrAbove = evaluatorStatuses.every(s => 
-    s === 'complete' || s === 'pending' || s === 'approved'
+  const allCompleteOrAbove = evaluatorStatuses.every(
+    (s) => s === 'complete' || s === 'pending' || s === 'approved',
   );
 
   if (allCompleteOrAbove) {
     // 모두 pending인 경우
-    if (evaluatorStatuses.every(s => s === 'pending')) {
+    if (evaluatorStatuses.every((s) => s === 'pending')) {
       return 'pending';
     }
     // 모두 approved인 경우
-    if (evaluatorStatuses.every(s => s === 'approved')) {
+    if (evaluatorStatuses.every((s) => s === 'approved')) {
       return 'approved';
     }
     // 혼합 상태 (pending + approved 등) → in_progress 반환 (진행중)
@@ -179,7 +208,9 @@ export async function 하향평가_상태를_조회한다(
   if (primaryLine) {
     const primaryMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.evaluationLineId = :lineId', {
         lineId: primaryLine.id,
@@ -197,9 +228,10 @@ export async function 하향평가_상태를_조회한다(
     ];
     primaryEvaluators.push(...uniqueEvaluatorIds);
   }
-  
+
   // 대표 평가자 ID (첫 번째 평가자, 하위 호환성 유지)
-  const primaryEvaluatorId = primaryEvaluators.length > 0 ? primaryEvaluators[0] : null;
+  const primaryEvaluatorId =
+    primaryEvaluators.length > 0 ? primaryEvaluators[0] : null;
 
   // 3. PRIMARY 평가자의 하향평가 상태 조회
   const primaryStatus = await 평가자별_하향평가_상태를_조회한다(
@@ -259,7 +291,9 @@ export async function 하향평가_상태를_조회한다(
   if (secondaryLine) {
     const secondaryMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.evaluationLineId = :lineId', {
         lineId: secondaryLine.id,

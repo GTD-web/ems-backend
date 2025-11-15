@@ -1,102 +1,92 @@
 {
-  "timestamp": "2025-11-13T15:53:47.159Z",
+  "timestamp": "2025-11-15T08:02:20.023Z",
   "testResults": [
     {
       "testName": "3-1. 피평가자 → 1차 평가자 제출 후 1차 평가자 → 관리자 제출 (정상 흐름)",
       "result": {
-        "employeeId": "992515cf-1629-4bcc-8ee9-dc1ae31c0c69",
         "제출결과": {
-          "id": "41962729-96ed-416d-9766-7538dec4f011",
-          "submittedToManager": true,
-          "submittedToManagerAt": "2025-11-13T15:53:46.032Z",
+          "id": "bef9517f-96f9-45ba-bca5-1b758ffdd7e7",
+          "periodId": "ff0780b7-91a6-4c64-b41b-33f638a2273e",
+          "employeeId": "32ef8823-7e38-41e4-9ace-bf8744e7aeb7",
+          "wbsItemId": "0ea996ae-f0fd-4273-9841-97cf78f91a19",
+          "assignedBy": "00000000-0000-0000-0000-000000000001",
+          "assignedDate": "2025-11-15T08:02:18.153Z",
           "submittedToEvaluator": true,
-          "submittedToEvaluatorAt": "2025-11-13T15:53:45.915Z"
+          "submittedToEvaluatorAt": "2025-11-15T08:02:18.169Z",
+          "submittedToManager": true,
+          "submittedToManagerAt": "2025-11-15T08:02:18.337Z",
+          "evaluationDate": "2025-11-15T08:02:18.153Z",
+          "performanceResult": "성과 결과",
+          "selfEvaluationContent": "자기평가 내용",
+          "selfEvaluationScore": 85,
+          "createdBy": "00000000-0000-0000-0000-000000000001",
+          "updatedBy": "00000000-0000-0000-0000-000000000001",
+          "createdAt": "2025-11-15T08:02:18.153Z",
+          "updatedAt": "2025-11-15T08:02:18.339Z",
+          "deletedAt": null,
+          "version": 3
         },
-        "제출전후_비교": {
-          "대시보드현황": {
-            "제출전": {
-              "completedMappingCount": 0,
-              "isSubmittedToEvaluator": true,
-              "isSubmittedToManager": false,
-              "status": "in_progress",
-              "totalScore": null
-            },
-            "제출후": {
-              "completedMappingCount": 1,
-              "isSubmittedToEvaluator": true,
-              "isSubmittedToManager": true,
-              "status": "complete",
-              "totalScore": 28,
-              "grade": "C"
-            }
-          },
-          "할당데이터": {
-            "제출전": {
-              "completedSelfEvaluations": 0,
-              "submittedToManagerCount": 0,
-              "isSubmittedToManager": false
-            },
-            "제출후": {
-              "completedSelfEvaluations": 1,
-              "submittedToManagerCount": 1,
-              "isSubmittedToManager": true,
-              "totalScore": 28,
-              "grade": "C"
-            }
-          }
-        },
-        "전체직원현황": {
+        "제출후_대시보드현황": {
+          "status": "pending",
+          "totalMappingCount": 1,
           "completedMappingCount": 1,
           "isSubmittedToEvaluator": true,
           "isSubmittedToManager": true,
-          "status": "complete",
           "totalScore": 28,
           "grade": "C"
         },
-        "passed": true
+        "passed": false,
+        "error": "expect(received).toBe(expected) // Object.is equality\n\nExpected: \"complete\"\nReceived: \"pending\""
       }
     },
     {
       "testName": "3-2. 피평가자 제출 없이 1차 평가자 → 관리자 제출 (자동 제출 처리)",
       "result": {
-        "employeeId": "a95fdb73-91d0-431c-a8c9-367b0b4f9e5c",
         "제출결과": {
-          "id": "ba204517-d7ba-4495-896d-5f1ea6443e75",
-          "submittedToManager": true,
-          "submittedToManagerAt": "2025-11-13T15:53:46.402Z",
+          "id": "d14344c7-0a7a-435e-8286-e7d762dbe8a1",
+          "periodId": "5e415f99-bc2d-4327-b8d0-3a5c4777379f",
+          "employeeId": "60af398f-bfae-45eb-9dfb-a526e494ae37",
+          "wbsItemId": "7edb6797-97de-4000-bf0a-7013bfc61164",
+          "assignedBy": "00000000-0000-0000-0000-000000000001",
+          "assignedDate": "2025-11-15T08:02:18.787Z",
           "submittedToEvaluator": true,
-          "submittedToEvaluatorAt": "2025-11-13T15:53:46.402Z",
-          "자동제출처리": true
+          "submittedToEvaluatorAt": "2025-11-15T08:02:18.847Z",
+          "submittedToManager": true,
+          "submittedToManagerAt": "2025-11-15T08:02:18.847Z",
+          "evaluationDate": "2025-11-15T08:02:18.787Z",
+          "performanceResult": "성과 결과",
+          "selfEvaluationContent": "자기평가 내용",
+          "selfEvaluationScore": 85,
+          "createdBy": "00000000-0000-0000-0000-000000000001",
+          "updatedBy": "00000000-0000-0000-0000-000000000001",
+          "createdAt": "2025-11-15T08:02:18.787Z",
+          "updatedAt": "2025-11-15T08:02:18.848Z",
+          "deletedAt": null,
+          "version": 2
         },
-        "대시보드현황": {
+        "제출후_대시보드현황": {
+          "status": "pending",
+          "totalMappingCount": 1,
           "completedMappingCount": 1,
           "isSubmittedToEvaluator": true,
-          "status": "complete",
-          "totalScore": 28,
-          "grade": "C"
-        },
-        "할당데이터": {
-          "completedSelfEvaluations": 1,
-          "submittedToManagerCount": 1,
           "isSubmittedToManager": true,
-          "submittedToEvaluatorCount": 1,
-          "isSubmittedToEvaluator": true,
           "totalScore": 28,
           "grade": "C"
         },
-        "passed": true
+        "passed": false,
+        "error": "expect(received).toBe(expected) // Object.is equality\n\nExpected: \"complete\"\nReceived: \"pending\""
       }
     },
     {
       "testName": "3-3. 다중 자기평가 중 일부만 관리자에게 제출 (in_progress 상태)",
       "result": {
-        "employeeId": "dbdc5c32-985f-4dd6-a1b7-d12cf65aec4d",
+        "employeeId": "67143883-5f7e-4c79-a65a-276d6734d686",
         "저장결과": {
-          "저장1": "fdc87194-1e5c-4201-9474-d97439fe09a1",
-          "저장2": "e20ee7b5-6394-4c66-b19e-023d9ac640be"
+          "저장1": "6dbd8b91-8ada-462e-af4d-06a3f64ce6f2",
+          "저장2": "30845e7c-4bec-4705-bd7b-5276b1012f4d"
         },
         "제출결과": {
-          "id": "fdc87194-1e5c-4201-9474-d97439fe09a1",
+          "id": "6dbd8b91-8ada-462e-af4d-06a3f64ce6f2",
           "submittedToManager": true,
           "submittedToEvaluator": true
         },
@@ -121,44 +111,39 @@
     {
       "testName": "3-4. 모든 자기평가를 관리자에게 제출 완료 (complete 상태 및 점수/등급 계산)",
       "result": {
-        "employeeId": "549b243c-30f7-4421-8e8d-ef23f2b2a014",
-        "저장결과": {
-          "저장1": "498dc40e-862b-4369-91c3-323a44f71e2e",
-          "저장2": "4443ba5a-99eb-4a0d-8680-1d83c5583f17",
-          "저장3": "37e343b3-cbb2-4823-85af-d614dec3732d"
-        },
         "최종제출결과": {
-          "id": "37e343b3-cbb2-4823-85af-d614dec3732d",
+          "id": "b196758d-bdd4-4c97-a13f-e99368b49e4c",
+          "periodId": "18bf2f3d-75c7-4ff1-9fa9-47e2df76b02c",
+          "employeeId": "05c8272d-8bc5-43e9-9d4e-3f1cbfe4bcc7",
+          "wbsItemId": "c1309c7a-06aa-4d93-a3bf-646932eaa022",
+          "assignedBy": "00000000-0000-0000-0000-000000000001",
+          "assignedDate": "2025-11-15T08:02:19.858Z",
+          "submittedToEvaluator": true,
+          "submittedToEvaluatorAt": "2025-11-15T08:02:19.905Z",
           "submittedToManager": true,
-          "submittedToEvaluator": true
+          "submittedToManagerAt": "2025-11-15T08:02:19.964Z",
+          "evaluationDate": "2025-11-15T08:02:19.858Z",
+          "performanceResult": "성과 결과 3",
+          "selfEvaluationContent": "자기평가 내용 3",
+          "selfEvaluationScore": 95,
+          "createdBy": "00000000-0000-0000-0000-000000000001",
+          "updatedBy": "00000000-0000-0000-0000-000000000001",
+          "createdAt": "2025-11-15T08:02:19.858Z",
+          "updatedAt": "2025-11-15T08:02:19.966Z",
+          "deletedAt": null,
+          "version": 3
         },
-        "대시보드현황": {
+        "제출후_대시보드현황": {
+          "status": "pending",
           "totalMappingCount": 3,
           "completedMappingCount": 3,
           "isSubmittedToEvaluator": true,
           "isSubmittedToManager": true,
-          "status": "complete",
           "totalScore": 90,
           "grade": "S"
         },
-        "할당데이터": {
-          "completedSelfEvaluations": 3,
-          "submittedToManagerCount": 3,
-          "isSubmittedToManager": true,
-          "submittedToEvaluatorCount": 3,
-          "isSubmittedToEvaluator": true,
-          "totalScore": 90,
-          "grade": "S"
-        },
-        "전체직원현황": {
-          "completedMappingCount": 3,
-          "isSubmittedToEvaluator": true,
-          "isSubmittedToManager": true,
-          "status": "complete",
-          "totalScore": 90,
-          "grade": "S"
-        },
-        "passed": true
+        "passed": false,
+        "error": "expect(received).toBe(expected) // Object.is equality\n\nExpected: \"complete\"\nReceived: \"pending\""
       }
     }
   ]

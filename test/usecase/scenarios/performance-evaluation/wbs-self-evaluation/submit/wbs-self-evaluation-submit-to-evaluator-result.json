@@ -1,12 +1,12 @@
 {
-  "timestamp": "2025-11-13T15:53:28.235Z",
+  "timestamp": "2025-11-15T08:02:18.836Z",
   "testResults": [
     {
       "testName": "1-1. 자기평가 작성 및 저장 후 대시보드 상태 검증",
       "result": {
-        "employeeId": "413032db-2255-4161-849b-3024c8e611ec",
+        "employeeId": "3cce99d1-fdf9-44ae-b038-97cbc5a35982",
         "저장결과": {
-          "id": "d223c43c-416c-4ed8-80dd-cf1a4d98516e",
+          "id": "00a91940-7edc-4b4a-ac42-2f3b59c0ea4b",
           "submittedToEvaluator": false,
           "submittedToManager": false
         },
@@ -35,11 +35,11 @@
     {
       "testName": "1-2. 피평가자 → 1차 평가자 제출 후 대시보드 상태 검증 (단일 자기평가)",
       "result": {
-        "employeeId": "04c84a2e-b305-41e9-b89d-4699a5e23055",
+        "employeeId": "04ee580a-7f05-4730-b6dc-434f3ab64400",
         "제출결과": {
-          "id": "07441da9-9c61-4c88-989b-77923c9f93e2",
+          "id": "b269c7c6-74cf-4bc0-8092-d14d093329a0",
           "submittedToEvaluator": true,
-          "submittedToEvaluatorAt": "2025-11-13T15:53:27.466Z",
+          "submittedToEvaluatorAt": "2025-11-15T08:02:17.590Z",
           "submittedToManager": false
         },
         "제출전후_비교": {
@@ -79,13 +79,13 @@
     {
       "testName": "1-3. 피평가자 → 1차 평가자 제출 후 대시보드 상태 검증 (다중 자기평가)",
       "result": {
-        "employeeId": "07f69f9e-ef57-44fe-ab44-4053007d380e",
+        "employeeId": "d8f9167d-3373-4ee4-9cbc-e7d5e22b8edd",
         "저장결과": {
-          "저장1": "36f5eef8-576e-4160-aa83-15e454046318",
-          "저장2": "2081f4e1-2523-47a8-8ebb-58df63e6f641"
+          "저장1": "cf7452b4-ff19-4934-9eee-d282e57d2be8",
+          "저장2": "b0752a0b-489a-4e2d-aae1-785692bacb00"
         },
         "제출결과": {
-          "id": "36f5eef8-576e-4160-aa83-15e454046318",
+          "id": "cf7452b4-ff19-4934-9eee-d282e57d2be8",
           "submittedToEvaluator": true
         },
         "대시보드현황": {
@@ -109,11 +109,11 @@
     {
       "testName": "1-4. 피평가자 → 1차 평가자 제출 취소 (원복) 후 대시보드 상태 검증",
       "result": {
-        "employeeId": "1d36c844-fba7-456a-8e35-0ea69fcf0370",
+        "employeeId": "74618fe9-bd73-485b-ba4c-e45dbc7d399a",
         "취소결과": {
-          "id": "68481283-3297-4526-bf6c-6f5b68cb04f6",
+          "id": "234ff4f0-1a0d-4c92-8509-aa8ae212af24",
           "submittedToEvaluator": false,
-          "submittedToEvaluatorAt": "2025-11-13T15:53:28.105Z",
+          "submittedToEvaluatorAt": "2025-11-15T08:02:18.634Z",
           "submittedToManager": false
         },
         "취소전후_비교": {
