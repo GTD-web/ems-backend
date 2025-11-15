@@ -14,8 +14,9 @@ import {
   CreateDepartmentDto,
   UpdateDepartmentDto,
 } from '../../domain/common/department/department.types';
-import { SSOService } from '@domain/common/sso/sso.service';
-import type { DepartmentInfo } from '@domain/common/sso/interfaces';
+import { Inject } from '@nestjs/common';
+import { SSOService } from '@domain/common/sso';
+import type { ISSOService, DepartmentInfo } from '@domain/common/sso/interfaces';
 
 /**
  * 부서 동기화 서비스
@@ -32,7 +33,7 @@ export class DepartmentSyncService implements OnModuleInit {
   constructor(
     private readonly departmentService: DepartmentService,
     private readonly configService: ConfigService,
-    private readonly ssoService: SSOService,
+    @Inject(SSOService) private readonly ssoService: ISSOService,
   ) {
     this.syncEnabled = this.configService.get<boolean>(
       'DEPARTMENT_SYNC_ENABLED',

@@ -1,11 +1,18 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { SSOService } from './sso.service';
-import { SSOClientConfig } from './interfaces';
+import { SSOServiceFactory } from './sso.service.factory';
+import { SSOClientConfig, ISSOService } from './interfaces';
+
+/**
+ * SSO 서비스 토큰
+ * 하위 호환성을 위해 기존 SSOService 이름을 토큰으로 사용
+ */
+export const SSOService = Symbol('SSOService');
 
 /**
  * SSO 모듈
  * SSO SDK를 NestJS에 통합하여 제공한다
+ * 팩토리 패턴을 사용하여 환경에 따라 실제 서비스 또는 Mock 서비스를 제공한다
  */
 @Module({
   imports: [ConfigModule],
@@ -28,8 +35,12 @@ import { SSOClientConfig } from './interfaces';
             !!process.env.VERCEL, // Vercel 환경에서는 로깅 활성화
         };
 
-        // 필수 설정 검증
-        if (!config.clientId || !config.clientSecret) {
+        // 필수 설정 검증 (Mock 서비스 사용 시에는 검증 건너뛰기)
+        const useMockService =
+          configService.get<string>('SSO_USE_MOCK') === 'true' ||
+          configService.get<string>('NODE_ENV') === 'test';
+
+        if (!useMockService && (!config.clientId || !config.clientSecret)) {
           throw new Error(
             'SSO_CLIENT_ID와 SSO_CLIENT_SECRET 환경 변수가 필요합니다.',
           );
@@ -46,8 +57,22 @@ import { SSOClientConfig } from './interfaces';
       },
       inject: [ConfigService],
     },
-    SSOService,
+    SSOServiceFactory,
+    {
+      // 기존 SSOService를 팩토리에서 생성한 서비스로 제공 (하위 호환성)
+      provide: SSOService,
+      useFactory: (factory: SSOServiceFactory): ISSOService => {
+        return factory.create();
+      },
+      inject: [SSOServiceFactory],
+    },
   ],
-  exports: ['SSO_CONFIG', 'SSO_SYSTEM_NAME', SSOService],
+  exports: ['SSO_CONFIG', 'SSO_SYSTEM_NAME', SSOService, SSOServiceFactory],
 })
-export class SSOModule {}
+export class SSOModule implements OnModuleInit {
+  constructor(private readonly factory: SSOServiceFactory) {}
+
+  async onModuleInit(): Promise<void> {
+    await this.factory.initialize();
+  }
+}

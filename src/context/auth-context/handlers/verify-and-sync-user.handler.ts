@@ -1,5 +1,11 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  Inject,
+} from '@nestjs/common';
 import { SSOService } from '@domain/common/sso';
+import type { ISSOService } from '@domain/common/sso/interfaces';
 import { EmployeeService } from '@domain/common/employee/employee.service';
 import {
   VerifyAndSyncUserCommand,
@@ -19,7 +25,7 @@ export class VerifyAndSyncUserHandler {
   private readonly logger = new Logger(VerifyAndSyncUserHandler.name);
 
   constructor(
-    private readonly ssoService: SSOService,
+    @Inject(SSOService) private readonly ssoService: ISSOService,
     private readonly employeeService: EmployeeService,
   ) {}
 

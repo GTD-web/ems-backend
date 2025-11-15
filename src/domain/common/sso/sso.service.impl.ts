@@ -16,8 +16,8 @@ import {
   FCMTokenInfo,
   GetDepartmentHierarchyParams,
   GetEmployeeParams,
-  GetEmployeesParams,
   GetEmployeesManagersResponse,
+  GetEmployeesParams,
   GetFCMTokenParams,
   GetMultipleFCMTokensParams,
   LoginResult,
@@ -28,30 +28,49 @@ import {
   UnsubscribeFCMParams,
   UnsubscribeFCMResult,
   VerifyTokenResult,
+  ISSOService,
 } from './interfaces';
+import { JsonStorageUtil } from './utils/json-storage.util';
 
 /**
- * SSO 서비스
+ * SSO 서비스 구현체
  * SSO SDK를 직접 사용하여 비즈니스 로직에서 사용하기 쉽게 한다
+ * 실제 외부 연동을 수행하고 응답을 JSON 파일로 저장한다
  */
 @Injectable()
-export class SSOService implements OnModuleInit {
-  private readonly logger = new Logger(SSOService.name);
+export class SSOServiceImpl implements ISSOService, OnModuleInit {
+  private readonly logger = new Logger(SSOServiceImpl.name);
   private readonly sdkClient: any; // SDK 클라이언트 타입
   private readonly systemName: string;
   private initialized = false;
+  private readonly enableJsonStorage: boolean;
 
   constructor(
     @Inject('SSO_CONFIG') private readonly config: any,
     @Inject('SSO_SYSTEM_NAME') private readonly injectedSystemName: string,
+    @Inject('SSO_ENABLE_JSON_STORAGE')
+    private readonly injectedEnableJsonStorage?: boolean,
   ) {
     this.systemName = injectedSystemName;
-    
+
+    // 서버리스 환경 감지
+    const isServerless =
+      !!process.env.VERCEL ||
+      !!process.env.AWS_LAMBDA_FUNCTION_NAME ||
+      !!process.env.GOOGLE_CLOUD_FUNCTION ||
+      !!process.env.AZURE_FUNCTIONS_ENVIRONMENT;
+
+    // 서버리스 환경이 아닐 때만 JSON 저장 활성화
+    this.enableJsonStorage =
+      !isServerless &&
+      (injectedEnableJsonStorage ??
+        process.env.SSO_ENABLE_JSON_STORAGE === 'true');
+
     // 설정값 로깅 (민감 정보 제외)
     this.logger.log(
-      `SSO 클라이언트 초기화 중... baseUrl: ${this.config.baseUrl}, timeoutMs: ${this.config.timeoutMs}, retries: ${this.config.retries}, retryDelay: ${this.config.retryDelay}`,
+      `SSO 클라이언트 초기화 중... baseUrl: ${this.config.baseUrl}, timeoutMs: ${this.config.timeoutMs}, retries: ${this.config.retries}, retryDelay: ${this.config.retryDelay}, JSON 저장: ${this.enableJsonStorage}`,
     );
-    
+
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { SSOClient: SDKSSOClientClass } = require('@lumir-company/sso-sdk');
     this.sdkClient = new SDKSSOClientClass({
@@ -64,7 +83,7 @@ export class SSOService implements OnModuleInit {
       retryDelay: this.config.retryDelay,
       enableLogging: this.config.enableLogging,
     });
-    
+
     this.logger.log('SSO 클라이언트 인스턴스 생성 완료');
   }
 
@@ -86,9 +105,9 @@ export class SSOService implements OnModuleInit {
         `SSO 클라이언트 초기화 시작... baseUrl: ${this.config.baseUrl}, systemName: ${this.systemName}`,
       );
       const startTime = Date.now();
-      
+
       await this.sdkClient.initialize();
-      
+
       const elapsedTime = Date.now() - startTime;
       this.initialized = true;
       this.logger.log(
@@ -114,6 +133,15 @@ export class SSOService implements OnModuleInit {
     }
   }
 
+  /**
+   * 응답 데이터를 JSON 파일로 저장한다 (활성화된 경우)
+   */
+  private 저장한다(methodName: string, params: any, data: any): void {
+    if (this.enableJsonStorage) {
+      JsonStorageUtil.saveResponse(methodName, params, data);
+    }
+  }
+
   // ========== 인증 관련 메서드 ==========
 
   /**
@@ -135,6 +163,9 @@ export class SSOService implements OnModuleInit {
     this.logger.log(`로그인 결과: ${JSON.stringify(result)}`);
     // 시스템 역할 검증
     this.시스템역할을검증한다(result);
+
+    // JSON 저장
+    this.저장한다('로그인한다', { email }, result);
 
     return result;
   }
@@ -191,6 +222,9 @@ export class SSOService implements OnModuleInit {
       throw new UnauthorizedException('유효하지 않은 토큰입니다.');
     }
 
+    // JSON 저장
+    this.저장한다('토큰을검증한다', { accessToken: '***' }, result);
+
     return result;
   }
 
@@ -199,7 +233,12 @@ export class SSOService implements OnModuleInit {
    */
   async 토큰을갱신한다(refreshToken: string): Promise<RefreshTokenResult> {
     this.초기화확인();
-    return this.sdkClient.sso.refreshToken(refreshToken);
+    const result = await this.sdkClient.sso.refreshToken(refreshToken);
+
+    // JSON 저장
+    this.저장한다('토큰을갱신한다', { refreshToken: '***' }, result);
+
+    return result;
   }
 
   /**
@@ -211,7 +250,16 @@ export class SSOService implements OnModuleInit {
     email: string,
   ): Promise<CheckPasswordResult> {
     this.초기화확인();
-    return this.sdkClient.sso.checkPassword(accessToken, password, email);
+    const result = await this.sdkClient.sso.checkPassword(
+      accessToken,
+      password,
+      email,
+    );
+
+    // JSON 저장
+    this.저장한다('비밀번호를확인한다', { accessToken: '***', email }, result);
+
+    return result;
   }
 
   /**
@@ -222,7 +270,15 @@ export class SSOService implements OnModuleInit {
     newPassword: string,
   ): Promise<ChangePasswordResult> {
     this.초기화확인();
-    return this.sdkClient.sso.changePassword(accessToken, newPassword);
+    const result = await this.sdkClient.sso.changePassword(
+      accessToken,
+      newPassword,
+    );
+
+    // JSON 저장
+    this.저장한다('비밀번호를변경한다', { accessToken: '***' }, result);
+
+    return result;
   }
 
   // ========== 조직 정보 조회 메서드 ==========
@@ -239,7 +295,12 @@ export class SSOService implements OnModuleInit {
         withDetail: params.withDetail,
       });
 
-      return this.mapToEmployeeInfo(result);
+      const employeeInfo = this.mapToEmployeeInfo(result);
+
+      // JSON 저장
+      this.저장한다('직원정보를조회한다', params, employeeInfo);
+
+      return employeeInfo;
     } catch (error) {
       this.logger.error('직원 정보 조회 실패', error);
       throw error;
@@ -273,9 +334,51 @@ export class SSOService implements OnModuleInit {
         return [];
       }
 
-      return employees.map((emp) => this.mapToEmployeeInfo(emp));
+      const employeeInfos = employees.map((emp) => this.mapToEmployeeInfo(emp));
+
+      // JSON 저장
+      this.저장한다('여러직원정보를조회한다', params, employeeInfos);
+
+      return employeeInfos;
     } catch (error) {
       this.logger.error('여러 직원 정보 조회 실패', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 여러 직원의 원시 정보를 조회한다 (동기화용)
+   * EmployeeInfo로 변환하지 않고 SSO 원시 데이터를 그대로 반환
+   */
+  async 여러직원원시정보를조회한다(params: GetEmployeesParams): Promise<any[]> {
+    this.초기화확인();
+    try {
+      const result = await this.sdkClient.organization.getEmployees({
+        identifiers: params.identifiers,
+        withDetail: params.withDetail,
+        includeTerminated: params.includeTerminated,
+      });
+
+      // SDK 응답이 배열인지 확인
+      const employees = Array.isArray(result)
+        ? result
+        : result?.employees || result?.data || [];
+
+      if (!Array.isArray(employees)) {
+        this.logger.warn(
+          '예상치 못한 응답 형식:',
+          JSON.stringify(result).substring(0, 200),
+        );
+        return [];
+      }
+
+      // 원시 데이터를 그대로 반환 (변환하지 않음)
+      // JSON 저장
+      this.저장한다('여러직원원시정보를조회한다', params, employees);
+
+      return employees;
+    } catch (error) {
+      this.logger.error('여러 직원 원시 정보 조회 실패', error);
       throw error;
     }
   }
@@ -292,18 +395,16 @@ export class SSOService implements OnModuleInit {
         `부서 계층구조 조회 요청 시작... baseUrl: ${this.config.baseUrl}`,
       );
       const startTime = Date.now();
-      
+
       const result = await this.sdkClient.organization.getDepartmentHierarchy({
         rootDepartmentId: params?.rootDepartmentId,
         maxDepth: params?.maxDepth,
         withEmployeeDetail: params?.withEmployeeDetail,
         includeEmptyDepartments: params?.includeEmptyDepartments,
       });
-      
+
       const elapsedTime = Date.now() - startTime;
-      this.logger.log(
-        `부서 계층구조 조회 완료 (소요 시간: ${elapsedTime}ms)`,
-      );
+      this.logger.log(`부서 계층구조 조회 완료 (소요 시간: ${elapsedTime}ms)`);
 
       // 디버깅: 서버 원본 응답 구조 확인
       if (result.departments && result.departments.length > 0) {
@@ -321,13 +422,18 @@ export class SSOService implements OnModuleInit {
         }
       }
 
-      return {
+      const hierarchy = {
         departments: result.departments.map((dept) =>
           this.mapToDepartmentNode(dept),
         ),
         totalDepartments: result.totalDepartments,
         totalEmployees: result.totalEmployees,
       };
+
+      // JSON 저장
+      this.저장한다('부서계층구조를조회한다', params || {}, hierarchy);
+
+      return hierarchy;
     } catch (error) {
       // 타임아웃 에러인 경우 더 자세한 로그
       if (error?.code === 'TIMEOUT' || error?.message?.includes('timeout')) {
@@ -363,12 +469,17 @@ export class SSOService implements OnModuleInit {
         deviceType: params.deviceType,
       });
 
-      return {
+      const subscribeResult = {
         success: true,
         fcmToken: result.fcmToken,
         employeeNumber: result.employeeNumber,
         deviceType: result.deviceType,
       };
+
+      // JSON 저장
+      this.저장한다('FCM토큰을구독한다', params, subscribeResult);
+
+      return subscribeResult;
     } catch (error) {
       this.logger.error('FCM 토큰 구독 실패', error);
       throw error;
@@ -387,11 +498,16 @@ export class SSOService implements OnModuleInit {
         employeeNumber: params.employeeNumber,
       });
 
-      return {
+      const unsubscribeResult = {
         success: result.success || true,
         deletedCount: result.deletedCount || 0,
         message: result.message,
       };
+
+      // JSON 저장
+      this.저장한다('FCM토큰을구독해지한다', params, unsubscribeResult);
+
+      return unsubscribeResult;
     } catch (error) {
       this.logger.error('FCM 토큰 구독 해지 실패', error);
       throw error;
@@ -408,7 +524,7 @@ export class SSOService implements OnModuleInit {
         employeeNumber: params.employeeNumber,
       });
 
-      return {
+      const tokenInfo = {
         employeeNumber: result.employeeNumber,
         tokens: result.tokens.map((token) => ({
           fcmToken: token.fcmToken,
@@ -416,6 +532,11 @@ export class SSOService implements OnModuleInit {
           createdAt: new Date(token.createdAt),
         })),
       };
+
+      // JSON 저장
+      this.저장한다('FCM토큰을조회한다', params, tokenInfo);
+
+      return tokenInfo;
     } catch (error) {
       this.logger.error('FCM 토큰 조회 실패', error);
       throw error;
@@ -434,7 +555,7 @@ export class SSOService implements OnModuleInit {
         employeeNumbers: params.employeeNumbers,
       });
 
-      return {
+      const tokensInfo = {
         totalEmployees: result.totalEmployees,
         totalTokens: result.totalTokens,
         byEmployee: result.byEmployee.map((emp) => ({
@@ -451,6 +572,11 @@ export class SSOService implements OnModuleInit {
           createdAt: new Date(token.createdAt),
         })),
       };
+
+      // JSON 저장
+      this.저장한다('여러직원의FCM토큰을조회한다', params, tokensInfo);
+
+      return tokensInfo;
     } catch (error) {
       this.logger.error('여러 직원의 FCM 토큰 조회 실패', error);
       throw error;
@@ -513,6 +639,9 @@ export class SSOService implements OnModuleInit {
 
     flattenDepartments(hierarchy.departments);
 
+    // JSON 저장
+    this.저장한다('모든부서정보를조회한다', params || {}, departments);
+
     return departments;
   }
 
@@ -548,6 +677,9 @@ export class SSOService implements OnModuleInit {
 
     flattenEmployees(hierarchy.departments);
 
+    // JSON 저장
+    this.저장한다('모든직원정보를조회한다', params || {}, employees);
+
     return employees;
   }
 
@@ -562,14 +694,17 @@ export class SSOService implements OnModuleInit {
         `직원 관리자 정보 조회 요청 시작... baseUrl: ${this.config.baseUrl}`,
       );
       const startTime = Date.now();
-      
+
       const result = await this.sdkClient.organization.getEmployeesManagers();
-      
+
       const elapsedTime = Date.now() - startTime;
       this.logger.log(
         `직원 관리자 정보 조회 완료 (소요 시간: ${elapsedTime}ms)`,
       );
-      
+
+      // JSON 저장
+      this.저장한다('직원관리자정보를조회한다', {}, result);
+
       return result;
     } catch (error) {
       // 타임아웃 에러인 경우 더 자세한 로그

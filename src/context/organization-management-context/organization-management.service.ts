@@ -27,8 +27,12 @@ import {
   ExcludeEmployeeFromListCommand,
   IncludeEmployeeInListCommand,
 } from './commands';
-import { SSOService } from '../../domain/common/sso/sso.service';
-import type { EmployeeInfo } from '../../domain/common/sso/interfaces';
+import { Inject } from '@nestjs/common';
+import { SSOService } from '../../domain/common/sso';
+import type {
+  ISSOService,
+  EmployeeInfo,
+} from '../../domain/common/sso/interfaces';
 
 /**
  * 조직 관리 서비스
@@ -44,7 +48,7 @@ export class OrganizationManagementService
   constructor(
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
-    private readonly ssoService: SSOService,
+    @Inject(SSOService) private readonly ssoService: ISSOService,
   ) {}
 
   /**
@@ -207,6 +211,8 @@ export class OrganizationManagementService
    * 직원의 부서장을 조회합니다
    */
   async 부서장조회(employeeId: string): Promise<string | null> {
-    return await this.queryBus.execute(new FindDepartmentManagerQuery(employeeId));
+    return await this.queryBus.execute(
+      new FindDepartmentManagerQuery(employeeId),
+    );
   }
 }

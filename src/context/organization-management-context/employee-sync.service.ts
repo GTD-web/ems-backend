@@ -1,8 +1,11 @@
+import { SSOService } from '@domain/common/sso';
+import type { ISSOService } from '@domain/common/sso/interfaces';
 import {
-  Injectable,
-  Logger,
   HttpException,
   HttpStatus,
+  Inject,
+  Injectable,
+  Logger,
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -10,12 +13,10 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { Employee } from '../../domain/common/employee/employee.entity';
 import { EmployeeService } from '../../domain/common/employee/employee.service';
 import {
-  EmployeeSyncResult,
   CreateEmployeeDto,
+  EmployeeSyncResult,
   UpdateEmployeeDto,
 } from '../../domain/common/employee/employee.types';
-import { SSOService } from '@domain/common/sso/sso.service';
-import type { EmployeeInfo } from '@domain/common/sso/interfaces';
 
 /**
  * 직원 동기화 서비스
@@ -32,7 +33,7 @@ export class EmployeeSyncService implements OnModuleInit {
   constructor(
     private readonly employeeService: EmployeeService,
     private readonly configService: ConfigService,
-    private readonly ssoService: SSOService,
+    @Inject(SSOService) private readonly ssoService: ISSOService,
   ) {
     this.syncEnabled = this.configService.get<boolean>(
       'EMPLOYEE_SYNC_ENABLED',
@@ -109,29 +110,12 @@ export class EmployeeSyncService implements OnModuleInit {
           '직원 목록 API(getEmployees)를 사용하여 모든 직원 정보를 조회합니다...',
         );
 
-        // 원시 데이터를 직접 받기 위해 SDK 클라이언트에서 직접 호출
-        const result = await (
-          this.ssoService as any
-        ).sdkClient.organization.getEmployees({
+        // 원시 데이터를 조회하기 위해 SSO 서비스의 원시 정보 조회 메서드 사용
+        employees = await this.ssoService.여러직원원시정보를조회한다({
           withDetail: true,
           includeTerminated: false, // 퇴사자 제외
         });
 
-        // SDK 응답이 배열인지 확인
-        const rawEmployees = Array.isArray(result)
-          ? result
-          : result?.employees || result?.data || [];
-
-        if (!Array.isArray(rawEmployees)) {
-          this.logger.warn(
-            '예상치 못한 응답 형식:',
-            JSON.stringify(result).substring(0, 200),
-          );
-          return [];
-        }
-
-        // 원시 데이터를 그대로 반환 (EmployeeInfo로 변환하지 않음)
-        employees = rawEmployees;
         this.logger.log(
           `직원 목록 API에서 ${employees.length}개의 직원 데이터를 조회했습니다.`,
         );
@@ -234,9 +218,7 @@ export class EmployeeSyncService implements OnModuleInit {
         : undefined;
 
     // managerId 처리: getEmployeesManagers에서 매핑된 값 사용
-    const managerId = ssoEmployee.managerId
-      ? ssoEmployee.managerId
-      : undefined;
+    const managerId = ssoEmployee.managerId ? ssoEmployee.managerId : undefined;
 
     return {
       employeeNumber: ssoEmployee.employeeNumber,
@@ -308,19 +290,20 @@ export class EmployeeSyncService implements OnModuleInit {
       this.logger.log('관리자 정보를 조회합니다...');
       let managerMap: Map<string, string | null> = new Map();
       try {
-        const managersResponse = await this.ssoService.직원관리자정보를조회한다();
-        
+        const managersResponse =
+          await this.ssoService.직원관리자정보를조회한다();
+
         // 각 직원의 소속 부서부터 상위 부서까지 관리자 라인을 순회하여 관리자 찾기
         for (const empManager of managersResponse.employees) {
           let foundManagerId: string | null = null;
-          
+
           // 각 직원의 부서별 관리자 정보 확인
           for (const deptManager of empManager.departments) {
             // managerLine을 depth 순서대로 정렬 (depth=0부터 시작)
             const sortedManagerLine = [...deptManager.managerLine].sort(
               (a, b) => a.depth - b.depth,
             );
-            
+
             // depth=0부터 순회하면서 managers가 있는 첫 번째 항목 찾기
             for (const managerLine of sortedManagerLine) {
               if (managerLine.managers && managerLine.managers.length > 0) {
@@ -332,23 +315,23 @@ export class EmployeeSyncService implements OnModuleInit {
                 break; // 관리자를 찾으면 종료
               }
             }
-            
+
             // 관리자를 찾았으면 첫 번째 부서에서 종료
             if (foundManagerId) {
               break;
             }
           }
-          
+
           // 관리자를 찾았든 못 찾았든 매핑에 추가 (없으면 null)
           managerMap.set(empManager.employeeId, foundManagerId);
-          
+
           if (!foundManagerId) {
             this.logger.debug(
               `직원 ${empManager.name} (${empManager.employeeNumber})의 관리자를 찾을 수 없습니다.`,
             );
           }
         }
-        
+
         const managerCount = Array.from(managerMap.values()).filter(
           (id) => id !== null,
         ).length;
