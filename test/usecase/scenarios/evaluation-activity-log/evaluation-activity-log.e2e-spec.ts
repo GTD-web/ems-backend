@@ -978,6 +978,66 @@ describe('평가 활동 내역 검증 시나리오', () => {
       });
     });
 
+    it('평가기간과 피평가자 ID만으로 조회 시 활동 내역이 반환된다', async () => {
+      let error: any;
+      const testName =
+        '평가기간과 피평가자 ID만으로 조회 시 활동 내역이 반환된다';
+
+      try {
+        // Given: 활동 내역이 생성된 상태 (beforeEach에서 이미 생성됨)
+
+        // When: 필터 없이 평가기간과 피평가자 ID만으로 조회
+        const result = await activityLogScenario.활동_내역을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        // Then: 활동 내역이 반환되어야 함
+        expect(result).toBeDefined();
+        expect(result.items).toBeDefined();
+        expect(Array.isArray(result.items)).toBe(true);
+        expect(result.items.length).toBeGreaterThan(0);
+        expect(result.total).toBeGreaterThan(0);
+        expect(result.page).toBe(1);
+        expect(result.limit).toBe(20); // 기본값
+
+        // 모든 항목이 올바른 periodId와 employeeId를 가지고 있는지 확인
+        result.items.forEach((item) => {
+          expect(item.periodId).toBe(evaluationPeriodId);
+          expect(item.employeeId).toBe(evaluateeId);
+          expect(item.id).toBeDefined();
+          expect(item.activityType).toBeDefined();
+          expect(item.activityAction).toBeDefined();
+          expect(item.activityDate).toBeDefined();
+        });
+
+        // 테스트 결과 저장 (성공)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            periodId: evaluationPeriodId,
+            totalItems: result.items.length,
+            total: result.total,
+            passed: true,
+          },
+        });
+      } catch (e) {
+        error = e;
+        // 테스트 결과 저장 (실패)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            periodId: evaluationPeriodId,
+            passed: false,
+            error: extractErrorMessage(error),
+          },
+        });
+        throw e;
+      }
+    });
+
     it('활동 유형별 필터링이 정상 작동한다', async () => {
       let error: any;
       const testName = '활동 유형별 필터링이 정상 작동한다';

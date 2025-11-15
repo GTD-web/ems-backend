@@ -66,7 +66,8 @@ export class EvaluationActivityLogService {
     const queryBuilder = this.activityLogRepository
       .createQueryBuilder('log')
       .where('log.periodId = :periodId', { periodId: params.periodId })
-      .andWhere('log.employeeId = :employeeId', { employeeId: params.employeeId });
+      .andWhere('log.employeeId = :employeeId', { employeeId: params.employeeId })
+      .andWhere('log.deletedAt IS NULL');
 
     if (params.activityType) {
       queryBuilder.andWhere('log.activityType = :activityType', {
