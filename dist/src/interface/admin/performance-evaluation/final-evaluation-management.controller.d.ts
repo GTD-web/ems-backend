@@ -1,6 +1,6 @@
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { FinalEvaluationDetailDto, FinalEvaluationFilterDto, FinalEvaluationListResponseDto, FinalEvaluationResponseDto, UpsertFinalEvaluationBodyDto } from './dto/final-evaluation.dto';
+import { FinalEvaluationDetailDto, FinalEvaluationFilterDto, FinalEvaluationListResponseDto, FinalEvaluationResponseDto, UpsertFinalEvaluationBodyDto } from '@interface/common/dto/performance-evaluation/final-evaluation.dto';
 export declare class FinalEvaluationManagementController {
     private readonly performanceEvaluationService;
     constructor(performanceEvaluationService: PerformanceEvaluationService);

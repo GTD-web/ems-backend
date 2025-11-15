@@ -15,13 +15,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RevisionRequestController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const complete_revision_request_by_evaluator_query_dto_1 = require("./dto/complete-revision-request-by-evaluator-query.dto");
+const complete_revision_request_by_evaluator_query_dto_1 = require("../../common/dto/revision-request/complete-revision-request-by-evaluator-query.dto");
 const revision_request_business_service_1 = require("../../../business/revision-request/revision-request-business.service");
 const revision_request_context_1 = require("../../../context/revision-request-context");
-const revision_request_api_decorators_1 = require("./decorators/revision-request-api.decorators");
-const get_revision_requests_query_dto_1 = require("./dto/get-revision-requests-query.dto");
-const complete_revision_request_dto_1 = require("./dto/complete-revision-request.dto");
-const complete_revision_request_by_evaluator_dto_1 = require("./dto/complete-revision-request-by-evaluator.dto");
+const revision_request_api_decorators_1 = require("../../common/decorators/revision-request/revision-request-api.decorators");
+const get_revision_requests_query_dto_1 = require("../../common/dto/revision-request/get-revision-requests-query.dto");
+const complete_revision_request_dto_1 = require("../../common/dto/revision-request/complete-revision-request.dto");
+const complete_revision_request_by_evaluator_dto_1 = require("../../common/dto/revision-request/complete-revision-request-by-evaluator.dto");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let RevisionRequestController = class RevisionRequestController {
     revisionRequestBusinessService;

@@ -8,7 +8,7 @@ import { GetFinalEvaluationByEmployeePeriodQuery, GetFinalEvaluationListQuery, G
 import { type BulkDeliverableData } from './handlers/deliverable/command';
 import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 import { DeliverableType } from '@domain/core/deliverable/deliverable.types';
-import { EmployeeSelfEvaluationsResponseDto, WbsSelfEvaluationBasicDto, WbsSelfEvaluationResponseDto } from '@interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
+import { EmployeeSelfEvaluationsResponseDto, WbsSelfEvaluationBasicDto, WbsSelfEvaluationResponseDto } from '@/interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import { IPerformanceEvaluationService } from './interfaces/performance-evaluation.interface';
 export declare class PerformanceEvaluationService implements IPerformanceEvaluationService {

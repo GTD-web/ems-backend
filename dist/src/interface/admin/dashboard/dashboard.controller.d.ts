@@ -1,15 +1,16 @@
-import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
+import { DashboardService } from '@context/dashboard-context/dashboard.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
 import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
-import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from './dto/get-all-employees-evaluation-period-status-query.dto';
-import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/employee-evaluation-period-status.dto';
-import { MyEvaluationTargetStatusResponseDto } from './dto/my-evaluation-targets-status.dto';
-import { EmployeeAssignedDataResponseDto, EvaluatorAssignedEmployeesDataResponseDto } from './dto/employee-assigned-data.dto';
-import { DashboardFinalEvaluationsByPeriodResponseDto } from './dto/final-evaluation-list.dto';
-import { EmployeeFinalEvaluationListResponseDto, GetEmployeeFinalEvaluationsQueryDto } from './dto/employee-final-evaluation-list.dto';
-import { AllEmployeesFinalEvaluationsResponseDto, GetAllEmployeesFinalEvaluationsQueryDto } from './dto/all-employees-final-evaluations.dto';
-import { EmployeeCompleteStatusResponseDto } from './dto/employee-complete-status.dto';
+import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from '@interface/common/dto/dashboard/get-all-employees-evaluation-period-status-query.dto';
+import { EmployeeEvaluationPeriodStatusResponseDto } from '@interface/common/dto/dashboard/employee-evaluation-period-status.dto';
+import { MyEvaluationTargetStatusResponseDto } from '@interface/common/dto/dashboard/my-evaluation-targets-status.dto';
+import { EmployeeAssignedDataResponseDto } from '@interface/common/dto/dashboard/employee-assigned-data.dto';
+import { EvaluatorAssignedEmployeesDataResponseDto } from '@interface/common/dto/dashboard/employee-assigned-data.dto';
+import { DashboardFinalEvaluationsByPeriodResponseDto } from '@interface/common/dto/dashboard/final-evaluation-list.dto';
+import { EmployeeFinalEvaluationListResponseDto, GetEmployeeFinalEvaluationsQueryDto } from '@interface/common/dto/dashboard/employee-final-evaluation-list.dto';
+import { AllEmployeesFinalEvaluationsResponseDto, GetAllEmployeesFinalEvaluationsQueryDto } from '@interface/common/dto/dashboard/all-employees-final-evaluations.dto';
+import { EmployeeCompleteStatusResponseDto } from '@interface/common/dto/dashboard/employee-complete-status.dto';
 export declare class DashboardController {
     private readonly dashboardService;
     private readonly evaluationPeriodService;

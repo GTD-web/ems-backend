@@ -1,8 +1,8 @@
-import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
-import { EmployeeDto } from '../../../domain/common/employee/employee.types';
-import { DepartmentHierarchyDto, DepartmentHierarchyWithEmployeesDto } from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
+import { DepartmentHierarchyDto, DepartmentHierarchyWithEmployeesDto } from '@context/organization-management-context/interfaces/organization-management-context.interface';
+import { OrganizationManagementService } from '@context/organization-management-context/organization-management.service';
+import { EmployeeDto } from '@domain/common/employee/employee.types';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { ExcludeEmployeeFromListDto, GetEmployeesQueryDto } from './dto/employee-management.dto';
+import { ExcludeEmployeeFromListDto, GetEmployeesQueryDto } from '@interface/common/dto/employee-management/employee-management.dto';
 export declare class EmployeeManagementController {
     private readonly organizationManagementService;
     constructor(organizationManagementService: OrganizationManagementService);

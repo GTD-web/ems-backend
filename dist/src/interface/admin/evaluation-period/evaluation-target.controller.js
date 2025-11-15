@@ -18,8 +18,8 @@ const swagger_1 = require("@nestjs/swagger");
 const evaluation_period_management_service_1 = require("../../../context/evaluation-period-management-context/evaluation-period-management.service");
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
-const evaluation_target_api_decorators_1 = require("./decorators/evaluation-target-api.decorators");
-const evaluation_target_dto_1 = require("./dto/evaluation-target.dto");
+const evaluation_target_api_decorators_1 = require("../../common/decorators/evaluation-period/evaluation-target-api.decorators");
+const evaluation_target_dto_1 = require("../../common/dto/evaluation-period/evaluation-target.dto");
 let EvaluationTargetController = class EvaluationTargetController {
     evaluationPeriodManagementService;
     constructor(evaluationPeriodManagementService) {

@@ -1,7 +1,7 @@
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
 import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { AssignedEvaluateeDto, BulkPeerEvaluationRequestResponseDto, GetEvaluatorAssignedEvaluateesQueryDto, PeerEvaluationFilterDto, PeerEvaluationListResponseDto, PeerEvaluationResponseDto, RequestMultiplePeerEvaluationsDto, RequestPeerEvaluationDto, RequestPeerEvaluationToMultipleEvaluatorsDto, UpsertPeerEvaluationAnswersDto, UpsertPeerEvaluationAnswersResponseDto } from './dto/peer-evaluation.dto';
+import { AssignedEvaluateeDto, BulkPeerEvaluationRequestResponseDto, GetEvaluatorAssignedEvaluateesQueryDto, PeerEvaluationFilterDto, PeerEvaluationListResponseDto, PeerEvaluationResponseDto, RequestMultiplePeerEvaluationsDto, RequestPeerEvaluationDto, RequestPeerEvaluationToMultipleEvaluatorsDto, UpsertPeerEvaluationAnswersDto, UpsertPeerEvaluationAnswersResponseDto } from '@interface/common/dto/performance-evaluation/peer-evaluation.dto';
 export declare class PeerEvaluationManagementController {
     private readonly peerEvaluationBusinessService;
     constructor(peerEvaluationBusinessService: PeerEvaluationBusinessService);

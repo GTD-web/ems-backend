@@ -1,6 +1,6 @@
 import { DeliverableBusinessService } from '@business/deliverable/deliverable-business.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { BulkCreateDeliverablesDto, BulkCreateResultDto, BulkDeleteDeliverablesDto, BulkDeleteResultDto, CreateDeliverableDto, DeliverableListResponseDto, DeliverableResponseDto, GetDeliverablesQueryDto, UpdateDeliverableDto } from './dto/deliverable.dto';
+import { BulkCreateDeliverablesDto, BulkCreateResultDto, BulkDeleteDeliverablesDto, BulkDeleteResultDto, CreateDeliverableDto, DeliverableListResponseDto, DeliverableResponseDto, GetDeliverablesQueryDto, UpdateDeliverableDto } from '@interface/common/dto/performance-evaluation/deliverable.dto';
 export declare class DeliverableManagementController {
     private readonly deliverableBusinessService;
     constructor(deliverableBusinessService: DeliverableBusinessService);

@@ -2,7 +2,7 @@ import { EvaluationPeriodManagementContextService } from '@context/evaluation-pe
 import { EvaluationPeriodBusinessService } from '@business/evaluation-period/evaluation-period-business.service';
 import type { EvaluationPeriodDto } from '../../../domain/core/evaluation-period/evaluation-period.types';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { ChangeEvaluationPeriodPhaseApiDto, CreateEvaluationPeriodApiDto, ManualPermissionSettingDto, PaginationQueryDto, UpdateEvaluationPeriodBasicApiDto, UpdateEvaluationPeriodScheduleApiDto, UpdateEvaluationPeriodStartDateApiDto, UpdateEvaluationSetupDeadlineApiDto, UpdateGradeRangesApiDto, UpdateManualSettingPermissionsApiDto, UpdatePeerEvaluationDeadlineApiDto, UpdatePerformanceDeadlineApiDto, UpdateSelfEvaluationDeadlineApiDto } from './dto/evaluation-management.dto';
+import { ChangeEvaluationPeriodPhaseApiDto, CreateEvaluationPeriodApiDto, ManualPermissionSettingDto, PaginationQueryDto, UpdateEvaluationPeriodBasicApiDto, UpdateEvaluationPeriodScheduleApiDto, UpdateEvaluationPeriodStartDateApiDto, UpdateEvaluationSetupDeadlineApiDto, UpdateGradeRangesApiDto, UpdateManualSettingPermissionsApiDto, UpdatePeerEvaluationDeadlineApiDto, UpdatePerformanceDeadlineApiDto, UpdateSelfEvaluationDeadlineApiDto } from '@interface/common/dto/evaluation-period/evaluation-management.dto';
 export declare class EvaluationPeriodManagementController {
     private readonly evaluationPeriodBusinessService;
     private readonly evaluationPeriodManagementService;

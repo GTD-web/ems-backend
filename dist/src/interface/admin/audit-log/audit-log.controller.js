@@ -16,8 +16,9 @@ exports.AuditLogController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const audit_log_context_service_1 = require("../../../context/audit-log-context/audit-log-context.service");
-const get_audit_log_list_query_dto_1 = require("./dto/get-audit-log-list-query.dto");
-const audit_log_response_dto_1 = require("./dto/audit-log-response.dto");
+const audit_log_response_dto_1 = require("../../common/dto/audit-log/audit-log-response.dto");
+const get_audit_log_list_query_dto_1 = require("../../common/dto/audit-log/get-audit-log-list-query.dto");
+const audit_log_response_dto_2 = require("../../common/dto/audit-log/audit-log-response.dto");
 let AuditLogController = class AuditLogController {
     auditLogContextService;
     constructor(auditLogContextService) {
@@ -119,7 +120,7 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'Audit 로그 상세 조회 성공',
-        type: audit_log_response_dto_1.AuditLogResponseDto,
+        type: audit_log_response_dto_2.AuditLogResponseDto,
     }),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),

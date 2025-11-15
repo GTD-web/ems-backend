@@ -30,7 +30,7 @@ export const SSOService = Symbol('SSOService');
           retries: configService.get<number>('SSO_RETRIES') || 2,
           retryDelay: configService.get<number>('SSO_RETRY_DELAY') || 1000,
           enableLogging:
-            configService.get<string>('SSO_ENABLE_LOGGING') === 'true' ||
+            configService.get<string>('SSO_ENABLE_LOGGING') === 'false' ||
             configService.get<string>('NODE_ENV') === 'development' ||
             !!process.env.VERCEL, // Vercel 환경에서는 로깅 활성화
         };

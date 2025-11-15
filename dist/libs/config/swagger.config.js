@@ -15,7 +15,11 @@ function setupSwagger(app, options) {
         in: 'header',
     }, 'Bearer')
         .build();
-    const document = swagger_1.SwaggerModule.createDocument(app, config);
+    const document = swagger_1.SwaggerModule.createDocument(app, config, options.includeModules
+        ? {
+            include: options.includeModules,
+        }
+        : undefined);
     swagger_1.SwaggerModule.setup(options.path, app, document, {
         swaggerOptions: {
             persistAuthorization: true,

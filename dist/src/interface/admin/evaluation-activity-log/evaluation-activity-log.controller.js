@@ -16,8 +16,8 @@ exports.EvaluationActivityLogController = void 0;
 const evaluation_activity_log_context_service_1 = require("../../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const evaluation_activity_log_response_dto_1 = require("./dto/evaluation-activity-log-response.dto");
-const get_evaluation_activity_log_list_query_dto_1 = require("./dto/get-evaluation-activity-log-list-query.dto");
+const evaluation_activity_log_response_dto_1 = require("../../common/dto/evaluation-activity-log/evaluation-activity-log-response.dto");
+const get_evaluation_activity_log_list_query_dto_1 = require("../../common/dto/evaluation-activity-log/get-evaluation-activity-log-list-query.dto");
 let EvaluationActivityLogController = class EvaluationActivityLogController {
     activityLogContextService;
     constructor(activityLogContextService) {

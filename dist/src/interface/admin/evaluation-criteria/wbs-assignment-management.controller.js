@@ -13,12 +13,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WbsAssignmentManagementController = void 0;
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const wbs_assignment_business_service_1 = require("../../../business/wbs-assignment/wbs-assignment-business.service");
-const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
-const wbs_assignment_api_decorators_1 = require("./decorators/wbs-assignment-api.decorators");
-const wbs_assignment_dto_1 = require("./dto/wbs-assignment.dto");
+const wbs_assignment_dto_1 = require("../../common/dto/evaluation-criteria/wbs-assignment.dto");
+const wbs_assignment_api_decorators_1 = require("../../common/decorators/evaluation-criteria/wbs-assignment-api.decorators");
 let WbsAssignmentManagementController = class WbsAssignmentManagementController {
     wbsAssignmentBusinessService;
     constructor(wbsAssignmentBusinessService) {

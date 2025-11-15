@@ -13,13 +13,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmployeeManagementController = void 0;
+const organization_management_service_1 = require("../../../context/organization-management-context/organization-management.service");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const organization_management_service_1 = require("../../../context/organization-management-context/organization-management.service");
-const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
-const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
-const employee_management_api_decorators_1 = require("./decorators/employee-management-api.decorators");
-const employee_management_dto_1 = require("./dto/employee-management.dto");
+const employee_management_api_decorators_1 = require("../../common/decorators/employee-management/employee-management-api.decorators");
+const employee_management_dto_1 = require("../../common/dto/employee-management/employee-management.dto");
 let EmployeeManagementController = class EmployeeManagementController {
     organizationManagementService;
     constructor(organizationManagementService) {

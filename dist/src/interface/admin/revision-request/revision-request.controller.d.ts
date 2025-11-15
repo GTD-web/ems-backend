@@ -1,10 +1,10 @@
-import { CompleteRevisionRequestByEvaluatorQueryDto } from './dto/complete-revision-request-by-evaluator-query.dto';
+import { CompleteRevisionRequestByEvaluatorQueryDto } from '@interface/common/dto/revision-request/complete-revision-request-by-evaluator-query.dto';
 import { RevisionRequestBusinessService } from '@business/revision-request/revision-request-business.service';
 import { RevisionRequestContextService } from '@context/revision-request-context';
-import { RevisionRequestResponseDto, UnreadCountResponseDto } from './dto/revision-request-response.dto';
-import { GetRevisionRequestsQueryDto } from './dto/get-revision-requests-query.dto';
-import { CompleteRevisionRequestDto } from './dto/complete-revision-request.dto';
-import { CompleteRevisionRequestByEvaluatorDto } from './dto/complete-revision-request-by-evaluator.dto';
+import { RevisionRequestResponseDto, UnreadCountResponseDto } from '@interface/common/dto/revision-request/revision-request-response.dto';
+import { GetRevisionRequestsQueryDto } from '@interface/common/dto/revision-request/get-revision-requests-query.dto';
+import { CompleteRevisionRequestDto } from '@interface/common/dto/revision-request/complete-revision-request.dto';
+import { CompleteRevisionRequestByEvaluatorDto } from '@interface/common/dto/revision-request/complete-revision-request-by-evaluator.dto';
 export declare class RevisionRequestController {
     private readonly revisionRequestBusinessService;
     private readonly revisionRequestContextService;
