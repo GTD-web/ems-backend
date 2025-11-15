@@ -2,7 +2,7 @@ import { BaseE2ETest } from '../../../base-e2e.spec';
 import { StepApprovalScenario } from './step-approval.scenario';
 import { SeedDataScenario } from '../seed-data.scenario';
 import { WbsSelfEvaluationScenario } from '../performance-evaluation/wbs-self-evaluation/wbs-self-evaluation.scenario';
-import { DownwardEvaluationScenario } from '../downward-evaluation/downward-evaluation.scenario';
+import { DownwardEvaluationScenario } from '../performance-evaluation/downward-evaluation/downward-evaluation.scenario';
 import { EvaluationTargetScenario } from '../evaluation-target.scenario';
 import { EvaluationPeriodScenario } from '../evaluation-period.scenario';
 import * as fs from 'fs';
@@ -1224,6 +1224,354 @@ describe('단계 승인 관리 E2E 테스트', () => {
             status: 'approved',
           })
           .expect(404);
+      });
+    });
+  });
+
+  describe('하향평가 일괄 제출 시 재작성 요청 완료 처리 검증', () => {
+    describe('1차 하향평가 일괄 제출 시 재작성 요청 완료 처리', () => {
+      it('1차 하향평가 일괄 제출 시 재작성 요청이 자동으로 완료 처리된다', async () => {
+        const testName =
+          '1차 하향평가 일괄 제출 시 재작성 요청이 자동으로 완료 처리된다';
+        let error: any = null;
+
+        try {
+          // Given - 자기평가 저장 (하향평가를 위한 선행 조건)
+          const 자기평가결과 =
+            await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+              employeeId: employeeIds[0],
+              wbsItemId: wbsItemIds[0],
+              periodId: evaluationPeriodId,
+              selfEvaluationContent: '자기평가 내용',
+              selfEvaluationScore: 85,
+            });
+
+          // Given - 1차 하향평가 저장 (제출하지 않음)
+          await downwardEvaluationScenario.일차하향평가를_저장한다({
+            evaluateeId: employeeIds[0],
+            periodId: evaluationPeriodId,
+            wbsId: wbsItemIds[0],
+            evaluatorId: primaryEvaluatorId,
+            selfEvaluationId: 자기평가결과.id,
+            downwardEvaluationContent: '1차 하향평가 내용',
+            downwardEvaluationScore: 90,
+          });
+
+          // Given - 1차 하향평가 단계 재작성 요청 생성
+          await stepApprovalScenario.일차하향평가_단계승인_상태를_변경한다({
+            evaluationPeriodId,
+            employeeId: employeeIds[0],
+            status: 'revision_requested',
+            revisionComment: '1차 하향평가 재작성 필요',
+          });
+
+          // Given - 재작성 요청 생성 검증
+          // 1차 평가자로 현재 사용자 설정
+          const 일차평가자 = await testSuite
+            .getRepository('Employee')
+            .findOne({ where: { id: primaryEvaluatorId } });
+
+          if (!일차평가자) {
+            throw new Error('1차 평가자를 찾을 수 없습니다.');
+          }
+
+          testSuite.setCurrentUser({
+            id: 일차평가자.id,
+            email: 일차평가자.email || 'test@example.com',
+            name: 일차평가자.name,
+            employeeNumber: 일차평가자.employeeNumber,
+          });
+
+          const 재작성요청목록_제출전 =
+            await stepApprovalScenario.내_재작성요청_목록을_조회한다({
+              evaluationPeriodId,
+              step: 'primary',
+            });
+
+          const 재작성요청_제출전 = 재작성요청목록_제출전.find(
+            (req: any) =>
+              req.employee.id === employeeIds[0] &&
+              req.step === 'primary' &&
+              req.evaluationPeriod.id === evaluationPeriodId,
+          );
+
+          expect(재작성요청_제출전).toBeDefined();
+          expect(재작성요청_제출전.isCompleted).toBe(false);
+
+          // When - 1차 하향평가 일괄 제출
+          const 일괄제출결과 =
+            await downwardEvaluationScenario.피평가자의_모든_하향평가를_일괄_제출한다(
+              {
+                evaluateeId: employeeIds[0],
+                periodId: evaluationPeriodId,
+                evaluatorId: primaryEvaluatorId,
+                evaluationType: 'primary',
+              },
+            );
+
+          expect(일괄제출결과.submittedCount).toBeGreaterThanOrEqual(0);
+
+          // Then - 재작성 요청 자동 완료 검증
+          // 1차 평가자로 현재 사용자 재설정 (일괄 제출 후에도 평가자로 조회)
+          testSuite.setCurrentUser({
+            id: 일차평가자.id,
+            email: 일차평가자.email || 'test@example.com',
+            name: 일차평가자.name,
+            employeeNumber: 일차평가자.employeeNumber,
+          });
+
+          const 재작성요청목록_제출후 =
+            await stepApprovalScenario.내_재작성요청_목록을_조회한다({
+              evaluationPeriodId,
+              step: 'primary',
+            });
+
+          const 재작성요청_제출후 = 재작성요청목록_제출후.find(
+            (req: any) =>
+              req.employee.id === employeeIds[0] &&
+              req.step === 'primary' &&
+              req.evaluationPeriod.id === evaluationPeriodId,
+          );
+
+          expect(재작성요청_제출후).toBeDefined();
+          expect(재작성요청_제출후.isCompleted).toBe(true);
+          expect(재작성요청_제출후.completedAt).toBeDefined();
+          expect(재작성요청_제출후.responseComment).toBeDefined();
+          expect(재작성요청_제출후.responseComment).toContain(
+            '1차 하향평가 일괄 제출로 인한 재작성 완료 처리',
+          );
+
+          // Then - 대시보드 상태 검증
+          const 대시보드_상태 =
+            await stepApprovalScenario.일차하향평가_제출상태를_대시보드에서_조회한다(
+              {
+                evaluationPeriodId,
+                employeeId: employeeIds[0],
+              },
+            );
+
+          expect(
+            대시보드_상태.downwardEvaluation.primary.status ===
+              'revision_completed' ||
+              대시보드_상태.downwardEvaluation.primary.status === 'pending',
+          ).toBe(true);
+          expect(
+            대시보드_상태.stepApproval.primaryEvaluationStatus ===
+              'revision_completed' ||
+              대시보드_상태.stepApproval.primaryEvaluationStatus === 'pending',
+          ).toBe(true);
+
+          // 테스트 결과 저장
+          testResults.push({
+            testName,
+            result: {
+              employeeId: employeeIds[0],
+              evaluatorId: primaryEvaluatorId,
+              beforeBulkSubmit: {
+                isCompleted: 재작성요청_제출전.isCompleted,
+              },
+              afterBulkSubmit: {
+                isCompleted: 재작성요청_제출후.isCompleted,
+                completedAt: 재작성요청_제출후.completedAt,
+                responseComment: 재작성요청_제출후.responseComment,
+                dashboardStatus:
+                  대시보드_상태.downwardEvaluation.primary.status,
+                stepApprovalStatus:
+                  대시보드_상태.stepApproval.primaryEvaluationStatus,
+              },
+              bulkSubmitResult: 일괄제출결과,
+              passed: true,
+            },
+          });
+        } catch (e) {
+          error = e;
+          testResults.push({
+            testName,
+            result: {
+              error: extractErrorMessage(e),
+              passed: false,
+            },
+          });
+          throw e;
+        }
+      });
+    });
+
+    describe('2차 하향평가 일괄 제출 시 재작성 요청 완료 처리', () => {
+      it('2차 하향평가 일괄 제출 시 재작성 요청이 자동으로 완료 처리된다', async () => {
+        const testName =
+          '2차 하향평가 일괄 제출 시 재작성 요청이 자동으로 완료 처리된다';
+        let error: any = null;
+
+        try {
+          // Given - 자기평가 저장 (하향평가를 위한 선행 조건)
+          const 자기평가결과 =
+            await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+              employeeId: employeeIds[0],
+              wbsItemId: wbsItemIds[0],
+              periodId: evaluationPeriodId,
+              selfEvaluationContent: '자기평가 내용',
+              selfEvaluationScore: 85,
+            });
+
+          // Given - 2차 하향평가 저장 (제출하지 않음)
+          await downwardEvaluationScenario.이차하향평가를_저장한다({
+            evaluateeId: employeeIds[0],
+            periodId: evaluationPeriodId,
+            wbsId: wbsItemIds[0],
+            evaluatorId: secondaryEvaluatorId,
+            selfEvaluationId: 자기평가결과.id,
+            downwardEvaluationContent: '2차 하향평가 내용',
+            downwardEvaluationScore: 85,
+          });
+
+          // Given - 2차 하향평가 단계 재작성 요청 생성
+          await stepApprovalScenario.이차하향평가_단계승인_상태를_변경한다({
+            evaluationPeriodId,
+            employeeId: employeeIds[0],
+            evaluatorId: secondaryEvaluatorId,
+            status: 'revision_requested',
+            revisionComment: '2차 하향평가 재작성 필요',
+          });
+
+          // Given - 재작성 요청 생성 검증
+          // 2차 평가자로 현재 사용자 설정
+          const 이차평가자 = await testSuite
+            .getRepository('Employee')
+            .findOne({ where: { id: secondaryEvaluatorId } });
+
+          if (!이차평가자) {
+            throw new Error('2차 평가자를 찾을 수 없습니다.');
+          }
+
+          testSuite.setCurrentUser({
+            id: 이차평가자.id,
+            email: 이차평가자.email || 'test@example.com',
+            name: 이차평가자.name,
+            employeeNumber: 이차평가자.employeeNumber,
+          });
+
+          const 재작성요청목록_제출전 =
+            await stepApprovalScenario.내_재작성요청_목록을_조회한다({
+              evaluationPeriodId,
+              step: 'secondary',
+            });
+
+          const 재작성요청_제출전 = 재작성요청목록_제출전.find(
+            (req: any) =>
+              req.employee.id === employeeIds[0] &&
+              req.step === 'secondary' &&
+              req.evaluationPeriod.id === evaluationPeriodId,
+          );
+
+          expect(재작성요청_제출전).toBeDefined();
+          expect(재작성요청_제출전.isCompleted).toBe(false);
+
+          // When - 2차 하향평가 일괄 제출
+          const 일괄제출결과 =
+            await downwardEvaluationScenario.피평가자의_모든_하향평가를_일괄_제출한다(
+              {
+                evaluateeId: employeeIds[0],
+                periodId: evaluationPeriodId,
+                evaluatorId: secondaryEvaluatorId,
+                evaluationType: 'secondary',
+              },
+            );
+
+          expect(일괄제출결과.submittedCount).toBeGreaterThanOrEqual(0);
+
+          // Then - 재작성 요청 자동 완료 검증
+          // 2차 평가자로 현재 사용자 재설정 (일괄 제출 후에도 평가자로 조회)
+          testSuite.setCurrentUser({
+            id: 이차평가자.id,
+            email: 이차평가자.email || 'test@example.com',
+            name: 이차평가자.name,
+            employeeNumber: 이차평가자.employeeNumber,
+          });
+
+          const 재작성요청목록_제출후 =
+            await stepApprovalScenario.내_재작성요청_목록을_조회한다({
+              evaluationPeriodId,
+              step: 'secondary',
+            });
+
+          const 재작성요청_제출후 = 재작성요청목록_제출후.find(
+            (req: any) =>
+              req.employee.id === employeeIds[0] &&
+              req.step === 'secondary' &&
+              req.evaluationPeriod.id === evaluationPeriodId,
+          );
+
+          expect(재작성요청_제출후).toBeDefined();
+          expect(재작성요청_제출후.isCompleted).toBe(true);
+          expect(재작성요청_제출후.completedAt).toBeDefined();
+          expect(재작성요청_제출후.responseComment).toBeDefined();
+          expect(재작성요청_제출후.responseComment).toContain(
+            '2차 하향평가 일괄 제출로 인한 재작성 완료 처리',
+          );
+
+          // Then - 대시보드 상태 검증
+          const 대시보드_상태 =
+            await stepApprovalScenario.이차하향평가_제출상태를_대시보드에서_조회한다(
+              {
+                evaluationPeriodId,
+                employeeId: employeeIds[0],
+              },
+            );
+
+          const secondaryEvaluatorStatus =
+            대시보드_상태.downwardEvaluation.secondary.evaluators.find(
+              (e: any) => e.evaluator?.id === secondaryEvaluatorId,
+            );
+
+          expect(secondaryEvaluatorStatus).toBeDefined();
+          expect(
+            secondaryEvaluatorStatus.status === 'revision_completed' ||
+              secondaryEvaluatorStatus.status === 'pending',
+          ).toBe(true);
+
+          const stepApprovalStatus =
+            대시보드_상태.stepApproval.secondaryEvaluationStatuses.find(
+              (s: any) => s.evaluatorId === secondaryEvaluatorId,
+            );
+
+          expect(stepApprovalStatus).toBeDefined();
+          expect(
+            stepApprovalStatus.status === 'revision_completed' ||
+              stepApprovalStatus.status === 'pending',
+          ).toBe(true);
+
+          // 테스트 결과 저장
+          testResults.push({
+            testName,
+            result: {
+              employeeId: employeeIds[0],
+              evaluatorId: secondaryEvaluatorId,
+              beforeBulkSubmit: {
+                isCompleted: 재작성요청_제출전.isCompleted,
+              },
+              afterBulkSubmit: {
+                isCompleted: 재작성요청_제출후.isCompleted,
+                completedAt: 재작성요청_제출후.completedAt,
+                responseComment: 재작성요청_제출후.responseComment,
+                dashboardStatus: secondaryEvaluatorStatus.status,
+                stepApprovalStatus: stepApprovalStatus.status,
+              },
+              bulkSubmitResult: 일괄제출결과,
+              passed: true,
+            },
+          });
+        } catch (e) {
+          error = e;
+          testResults.push({
+            testName,
+            result: {
+              error: extractErrorMessage(e),
+              passed: false,
+            },
+          });
+          throw e;
+        }
       });
     });
   });

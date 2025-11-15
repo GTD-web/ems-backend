@@ -1299,6 +1299,139 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 1차 평가자 상태 검�
       });
     });
 
+    it('상태 전환: revision_requested → revision_completed (재작성 요청에서 응답 완료 시)', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 1차 하향평가 완료 (모든 WBS 평가 완료)
+      await downwardEvaluationRepository.save(
+        downwardEvaluationRepository.create({
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluatorId: primaryEvaluatorId,
+          evaluationType: DownwardEvaluationType.PRIMARY,
+          wbsId: wbsItemId1,
+          downwardEvaluationContent: '평가 내용 1',
+          downwardEvaluationScore: 80,
+          evaluationDate: new Date(),
+          isCompleted: true,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await downwardEvaluationRepository.save(
+        downwardEvaluationRepository.create({
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluatorId: primaryEvaluatorId,
+          evaluationType: DownwardEvaluationType.PRIMARY,
+          wbsId: wbsItemId2,
+          downwardEvaluationContent: '평가 내용 2',
+          downwardEvaluationScore: 85,
+          evaluationDate: new Date(),
+          isCompleted: true,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // stepApproval 생성 (revision_requested 상태)
+      await stepApprovalRepository.save(
+        stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          primaryEvaluationStatus: StepApprovalStatus.REVISION_REQUESTED,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 요청 생성
+      const revisionRequest = await revisionRequestRepository.save(
+        revisionRequestRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          step: 'primary',
+          comment: '재작성 필요',
+          requestedBy: adminId,
+          requestedAt: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 재작성 요청 수신자 생성 (아직 완료되지 않음)
+      const recipient = await revisionRequestRecipientRepository.save(
+        revisionRequestRecipientRepository.create({
+          revisionRequestId: revisionRequest.id,
+          recipientId: primaryEvaluatorId,
+          recipientType: RecipientType.PRIMARY_EVALUATOR,
+          isCompleted: false,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // Step 1: revision_requested 상태 확인
+      let query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      let result = await handler.execute(query);
+
+      expect(result!.downwardEvaluation.primary.status).toBe(
+        'revision_requested',
+      );
+      expect(result!.stepApproval.primaryEvaluationStatus).toBe(
+        'revision_requested',
+      );
+
+      // Step 2: 재작성 요청에 응답 완료
+      recipient.재작성완료_응답한다('재작성 완료 응답');
+      await revisionRequestRecipientRepository.save(recipient);
+
+      // stepApproval 상태도 revision_completed로 변경
+      const stepApproval = await stepApprovalRepository.findOne({
+        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      });
+      if (stepApproval) {
+        stepApproval.일차평가_재작성완료상태로_변경한다(adminId);
+        await stepApprovalRepository.save(stepApproval);
+      }
+
+      // Step 3: revision_completed 상태 확인
+      query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      result = await handler.execute(query);
+
+      // Then
+      expect(result).not.toBeNull();
+      // 재작성 요청에 응답 완료하면 revision_completed 상태가 되어야 함
+      expect(result!.downwardEvaluation.primary.status).toBe(
+        'revision_completed',
+      );
+      expect(result!.downwardEvaluation.primary.assignedWbsCount).toBe(2);
+      expect(result!.downwardEvaluation.primary.completedEvaluationCount).toBe(
+        2,
+      );
+      expect(result!.downwardEvaluation.primary.isSubmitted).toBe(true);
+      expect(result!.stepApproval.primaryEvaluationStatus).toBe(
+        'revision_completed',
+      );
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName:
+          '상태 전환: revision_requested → revision_completed (재작성 요청에서 응답 완료 시)',
+        result: {
+          statusBefore: 'revision_requested',
+          statusAfter: result!.downwardEvaluation.primary.status,
+          assignedWbsCount: result!.downwardEvaluation.primary.assignedWbsCount,
+          completedEvaluationCount:
+            result!.downwardEvaluation.primary.completedEvaluationCount,
+          isSubmitted: result!.downwardEvaluation.primary.isSubmitted,
+          stepApprovalStatus: result!.stepApproval.primaryEvaluationStatus,
+        },
+      });
+    });
+
     it('상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
@@ -1411,8 +1544,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 1차 평가자 상태 검�
 
       // 테스트 결과 저장
       testResults.push({
-        testName:
-          '상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다',
+        testName: '상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다',
         result: {
           status: result!.downwardEvaluation.primary.status,
           assignedWbsCount: result!.downwardEvaluation.primary.assignedWbsCount,

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-11-15T12:19:34.542Z",
+  "timestamp": "2025-11-15T12:32:21.607Z",
   "testResults": [
     {
       "testName": "상태 1: none - 평가할 WBS가 없으면 primary.status는 none이어야 한다",
@@ -50,7 +50,7 @@
         "grade": "B",
         "stepApprovalStatus": "approved",
         "approvedBy": "00000000-0000-0000-0000-000000000001",
-        "approvedAt": "2025-11-15T12:19:33.593Z"
+        "approvedAt": "2025-11-15T12:32:20.572Z"
       }
     },
     {
@@ -93,7 +93,7 @@
         "grade": "B",
         "stepApprovalStatus": "approved",
         "approvedBy": "00000000-0000-0000-0000-000000000001",
-        "approvedAt": "2025-11-15T12:19:34.021Z"
+        "approvedAt": "2025-11-15T12:32:20.977Z"
       }
     },
     {
@@ -127,6 +127,17 @@
       }
     },
     {
+      "testName": "상태 전환: revision_requested → revision_completed (재작성 요청에서 응답 완료 시)",
+      "result": {
+        "statusBefore": "revision_requested",
+        "statusAfter": "revision_completed",
+        "assignedWbsCount": 2,
+        "completedEvaluationCount": 2,
+        "isSubmitted": true,
+        "stepApprovalStatus": "revision_completed"
+      }
+    },
+    {
       "testName": "상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다",
       "result": {
         "status": "approved",
@@ -135,7 +146,7 @@
         "isSubmitted": true,
         "stepApprovalStatus": "approved",
         "approvedBy": "00000000-0000-0000-0000-000000000001",
-        "approvedAt": "2025-11-15T12:19:34.519Z"
+        "approvedAt": "2025-11-15T12:32:21.583Z"
       }
     }
   ]

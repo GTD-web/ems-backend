@@ -372,7 +372,9 @@ export class DownwardEvaluationBusinessService {
   }
 
   /**
-   * 피평가자의 모든 하향평가를 일괄 제출한다 (활동 내역 기록 포함)
+   * 피평가자의 모든 하향평가를 일괄 제출한다 (재작성 요청 완료 처리 및 활동 내역 기록 포함)
+   * 특정 평가자의 특정 피평가자에 대한 모든 하향평가를 일괄 제출하고,
+   * 해당 평가기간에 발생한 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
    */
   async 피평가자의_모든_하향평가를_일괄_제출한다(
     evaluatorId: string,
@@ -405,7 +407,41 @@ export class DownwardEvaluationBusinessService {
         submittedBy,
       );
 
-    // 2. 활동 내역 기록
+    // 2. 해당 평가기간에 발생한 하향평가에 대한 재작성 요청 자동 완료 처리
+    try {
+      const step =
+        evaluationType === DownwardEvaluationType.PRIMARY
+          ? 'primary'
+          : 'secondary';
+      const recipientType =
+        evaluationType === DownwardEvaluationType.PRIMARY
+          ? RecipientType.PRIMARY_EVALUATOR
+          : RecipientType.SECONDARY_EVALUATOR;
+      const responseComment =
+        evaluationType === DownwardEvaluationType.PRIMARY
+          ? '1차 하향평가 일괄 제출로 인한 재작성 완료 처리'
+          : '2차 하향평가 일괄 제출로 인한 재작성 완료 처리';
+
+      await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
+        periodId,
+        evaluateeId,
+        step,
+        evaluatorId,
+        recipientType,
+        responseComment,
+      );
+    } catch (error) {
+      // 재작성 요청 완료 처리 실패 시에도 하향평가 제출은 정상 처리
+      this.logger.warn('재작성 요청 완료 처리 실패', {
+        evaluatorId,
+        evaluateeId,
+        periodId,
+        evaluationType,
+        error: error.message,
+      });
+    }
+
+    // 3. 활동 내역 기록
     try {
       const evaluationTypeText =
         evaluationType === DownwardEvaluationType.PRIMARY
