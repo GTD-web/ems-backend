@@ -66,7 +66,6 @@ let GetFinalEvaluationsByEmployeeHandler = class GetFinalEvaluationsByEmployeeHa
             'period.id AS period_id',
             'period.name AS period_name',
             'period.startDate AS period_start_date',
-            'period.endDate AS period_end_date',
         ])
             .leftJoin(employee_entity_1.Employee, 'employee', 'employee.id::UUID = "finalEvaluation"."employeeId"::UUID AND employee.deletedAt IS NULL')
             .leftJoin(evaluation_period_entity_1.EvaluationPeriod, 'period', 'period.id::UUID = "finalEvaluation"."periodId"::UUID AND period.deletedAt IS NULL')
@@ -91,7 +90,6 @@ let GetFinalEvaluationsByEmployeeHandler = class GetFinalEvaluationsByEmployeeHa
             periodId: row.period_id,
             periodName: row.period_name,
             periodStartDate: row.period_start_date,
-            periodEndDate: row.period_end_date,
             evaluationGrade: row.evaluation_grade,
             jobGrade: row.job_grade,
             jobDetailedGrade: row.job_detailed_grade,

@@ -65,7 +65,6 @@ let GetFinalEvaluationByEmployeePeriodHandler = GetFinalEvaluationByEmployeePeri
             'period.id AS period_id',
             'period.name AS period_name',
             'period.startDate AS period_startdate',
-            'period.endDate AS period_enddate',
             'period.status AS period_status',
         ])
             .leftJoin(employee_entity_1.Employee, 'employee', 'employee.id::UUID = evaluation."employeeId"::UUID AND employee.deletedAt IS NULL')
@@ -93,7 +92,6 @@ let GetFinalEvaluationByEmployeePeriodHandler = GetFinalEvaluationByEmployeePeri
                 id: result.period_id,
                 name: result.period_name,
                 startDate: result.period_startdate,
-                endDate: result.period_enddate,
                 status: result.period_status,
             },
             evaluationGrade: result.evaluation_evaluationgrade,

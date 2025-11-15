@@ -206,7 +206,7 @@ export class EvaluationPeriodValidationService {
       );
     }
 
-    // endDate는 시스템에서 자동으로 관리되므로 필수 검증에서 제외
+    // endDate는 제거되었으므로 검증 불필요
   }
 
   /**
@@ -350,7 +350,6 @@ export class EvaluationPeriodValidationService {
     existingPeriod: any,
   ): void {
     const newStartDate = updateDto.startDate || existingPeriod.startDate;
-    const existingEndDate = existingPeriod.endDate;
 
     // 평가설정 단계 마감일 검증
     if (updateDto.evaluationSetupDeadline) {
@@ -411,7 +410,6 @@ export class EvaluationPeriodValidationService {
   /**
    * 단계별 날짜 순서를 검증한다
    * 순서: startDate < evaluationSetupDeadline < performanceDeadline < selfEvaluationDeadline < peerEvaluationDeadline
-   * (endDate는 시스템에서 자동으로 peerEvaluationDeadline과 동일하게 설정됨)
    */
   private 단계별날짜순서검증한다(
     startDate: Date,
@@ -451,8 +449,6 @@ export class EvaluationPeriodValidationService {
         name: '하향/동료평가 단계 마감일',
       });
     }
-
-    // endDate는 시스템에서 자동으로 peerEvaluationDeadline과 동일하게 설정되므로 별도 검증 불필요
 
     // 순서 검증: 각 단계가 이전 단계보다 늦어야 함
     for (let i = 1; i < dateSteps.length; i++) {
@@ -579,7 +575,7 @@ export class EvaluationPeriodValidationService {
     await this.이름중복검증한다(createDto.name, undefined, manager);
     await this.기간겹침검증한다(
       createDto.startDate,
-      createDto.endDate,
+      createDto.peerEvaluationDeadline,
       undefined,
       manager,
     );
@@ -616,22 +612,7 @@ export class EvaluationPeriodValidationService {
     }
   }
 
-  /**
-   * 평가 기간 생성 비즈니스 규칙을 검증한다
-   */
-  async 평가기간생성비즈니스규칙검증한다(
-    createDto: CreateEvaluationPeriodDto,
-    manager?: EntityManager,
-  ): Promise<void> {
-    // 도메인 비즈니스 규칙 검증 (Domain Service 레벨)
-    await this.이름중복검증한다(createDto.name, undefined, manager);
-    await this.기간겹침검증한다(
-      createDto.startDate,
-      createDto.peerEvaluationDeadline,
-      undefined,
-      manager,
-    );
-  }
+
 
   /**
    * 평가 기간 업데이트 비즈니스 규칙을 검증한다
@@ -710,13 +691,14 @@ export class EvaluationPeriodValidationService {
     id: string,
     manager?: EntityManager,
   ): Promise<void> {
-    // 이미 활성 평가 기간이 있는지 확인
-    const activePeriod = await this.현재진행중평가기간조회한다(manager);
-    if (activePeriod && activePeriod.id !== id) {
-      throw new EvaluationPeriodBusinessRuleViolationException(
-        `이미 활성화된 평가 기간이 있습니다: ${activePeriod.name}`,
-      );
-    }
+    // TODO: 여러 평가기간 동시 시작 정책 검증 주석처리 (임시)
+    // // 이미 활성 평가 기간이 있는지 확인
+    // const activePeriod = await this.현재진행중평가기간조회한다(manager);
+    // if (activePeriod && activePeriod.id !== id) {
+    //   throw new EvaluationPeriodBusinessRuleViolationException(
+    //     `이미 활성화된 평가 기간이 있습니다: ${activePeriod.name}`,
+    //   );
+    // }
   }
 
   /**
@@ -775,10 +757,11 @@ export class EvaluationPeriodValidationService {
 
   /**
    * 기간 겹침을 검증한다
+   * peerEvaluationDeadline을 기준으로 검증합니다.
    */
   private async 기간겹침검증한다(
     startDate: Date,
-    endDate?: Date,
+    peerEvaluationDeadline?: Date,
     excludeId?: string,
     manager?: EntityManager,
   ): Promise<void> {
@@ -791,8 +774,8 @@ export class EvaluationPeriodValidationService {
     const queryBuilder = repository
       .createQueryBuilder('period')
       .where(
-        '(period.startDate <= :endDate AND (period.endDate >= :startDate OR period.peerEvaluationDeadline >= :startDate))',
-        { startDate, endDate },
+        '(period.startDate <= :peerEvaluationDeadline AND period.peerEvaluationDeadline >= :startDate)',
+        { startDate, peerEvaluationDeadline },
       );
 
     if (excludeId) {
@@ -803,7 +786,7 @@ export class EvaluationPeriodValidationService {
     if (conflictingPeriod) {
       throw new EvaluationPeriodOverlapException(
         startDate,
-        endDate || new Date(),
+        peerEvaluationDeadline || new Date(),
         conflictingPeriod.id,
       );
     }
@@ -826,7 +809,6 @@ export class EvaluationPeriodValidationService {
       where: {
         status: EvaluationPeriodStatus.IN_PROGRESS,
         startDate: LessThanOrEqual(now),
-        endDate: MoreThanOrEqual(now),
       },
       order: { startDate: 'DESC' },
     });

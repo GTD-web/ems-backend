@@ -30,6 +30,7 @@ const evaluation_period_entity_1 = require("../../../../domain/core/evaluation-p
 const evaluation_line_types_1 = require("../../../../domain/core/evaluation-line/evaluation-line.types");
 const downward_evaluation_score_utils_1 = require("../queries/get-employee-evaluation-period-status/downward-evaluation-score.utils");
 const self_evaluation_utils_1 = require("../queries/get-employee-evaluation-period-status/self-evaluation.utils");
+const evaluation_line_utils_1 = require("../queries/get-employee-evaluation-period-status/evaluation-line.utils");
 class GetMyEvaluationTargetsStatusQuery {
     evaluationPeriodId;
     evaluatorId;
@@ -152,8 +153,8 @@ let GetMyEvaluationTargetsStatusHandler = GetMyEvaluationTargetsStatusHandler_1 
                         wbsWithCriteriaCount = distinctWbsIdsWithCriteria.length;
                     }
                     const wbsCriteriaStatus = this.WBS평가기준_상태를_계산한다(wbsCount, wbsWithCriteriaCount);
-                    const { hasPrimaryEvaluator, hasSecondaryEvaluator } = await this.평가라인_지정_여부를_확인한다(evaluationPeriodId, employeeId);
-                    const evaluationLineStatus = this.평가라인_상태를_계산한다(hasPrimaryEvaluator, hasSecondaryEvaluator);
+                    const { hasPrimaryEvaluator, hasSecondaryEvaluator } = await (0, evaluation_line_utils_1.평가라인_지정_여부를_확인한다)(evaluationPeriodId, employeeId, this.lineRepository, this.lineMappingRepository);
+                    const evaluationLineStatus = (0, evaluation_line_utils_1.평가라인_상태를_계산한다)(hasPrimaryEvaluator, hasSecondaryEvaluator);
                     const { totalWbsCount: perfTotalWbsCount, inputCompletedCount } = await this.성과입력_상태를_조회한다(evaluationPeriodId, employeeId);
                     const performanceInputStatus = this.성과입력_상태를_계산한다(perfTotalWbsCount, inputCompletedCount);
                     const selfEvaluationStatus = await (0, self_evaluation_utils_1.자기평가_진행_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
@@ -243,7 +244,7 @@ let GetMyEvaluationTargetsStatusHandler = GetMyEvaluationTargetsStatusHandler_1 
             let grade = null;
             if (assignedWbsCount > 0 &&
                 completedEvaluationCount === assignedWbsCount) {
-                totalScore = await (0, downward_evaluation_score_utils_1.가중치_기반_1차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, evaluatorId, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
+                totalScore = await (0, downward_evaluation_score_utils_1.가중치_기반_1차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, [evaluatorId], this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.evaluationPeriodRepository);
                 if (totalScore !== null) {
                     grade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, totalScore, this.evaluationPeriodRepository);
                 }
@@ -352,56 +353,6 @@ let GetMyEvaluationTargetsStatusHandler = GetMyEvaluationTargetsStatusHandler_1 
         }
         else {
             return 'in_progress';
-        }
-    }
-    async 평가라인_지정_여부를_확인한다(evaluationPeriodId, employeeId) {
-        const primaryLine = await this.lineRepository.findOne({
-            where: {
-                evaluatorType: evaluation_line_types_1.EvaluatorType.PRIMARY,
-                deletedAt: (0, typeorm_2.IsNull)(),
-            },
-        });
-        const secondaryLine = await this.lineRepository.findOne({
-            where: {
-                evaluatorType: evaluation_line_types_1.EvaluatorType.SECONDARY,
-                deletedAt: (0, typeorm_2.IsNull)(),
-            },
-        });
-        let hasPrimaryEvaluator = false;
-        let hasSecondaryEvaluator = false;
-        if (primaryLine) {
-            const primaryMapping = await this.lineMappingRepository.findOne({
-                where: {
-                    evaluationPeriodId: evaluationPeriodId,
-                    employeeId: employeeId,
-                    evaluationLineId: primaryLine.id,
-                    deletedAt: (0, typeorm_2.IsNull)(),
-                },
-            });
-            hasPrimaryEvaluator = !!primaryMapping;
-        }
-        if (secondaryLine) {
-            const secondaryMapping = await this.lineMappingRepository.findOne({
-                where: {
-                    evaluationPeriodId: evaluationPeriodId,
-                    employeeId: employeeId,
-                    evaluationLineId: secondaryLine.id,
-                    deletedAt: (0, typeorm_2.IsNull)(),
-                },
-            });
-            hasSecondaryEvaluator = !!secondaryMapping;
-        }
-        return { hasPrimaryEvaluator, hasSecondaryEvaluator };
-    }
-    평가라인_상태를_계산한다(hasPrimaryEvaluator, hasSecondaryEvaluator) {
-        if (hasPrimaryEvaluator && hasSecondaryEvaluator) {
-            return 'complete';
-        }
-        else if (hasPrimaryEvaluator || hasSecondaryEvaluator) {
-            return 'in_progress';
-        }
-        else {
-            return 'none';
         }
     }
 };

@@ -1,6 +1,6 @@
-import type { AuthenticatedUser } from '@interface/decorators';
 import { DeliverableBusinessService } from '@business/deliverable/deliverable-business.service';
-import { CreateDeliverableDto, UpdateDeliverableDto, BulkCreateDeliverablesDto, BulkDeleteDeliverablesDto, DeliverableResponseDto, DeliverableListResponseDto, BulkCreateResultDto, BulkDeleteResultDto, GetDeliverablesQueryDto } from './dto/deliverable.dto';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { BulkCreateDeliverablesDto, BulkCreateResultDto, BulkDeleteDeliverablesDto, BulkDeleteResultDto, CreateDeliverableDto, DeliverableListResponseDto, DeliverableResponseDto, GetDeliverablesQueryDto, UpdateDeliverableDto } from './dto/deliverable.dto';
 export declare class DeliverableManagementController {
     private readonly deliverableBusinessService;
     constructor(deliverableBusinessService: DeliverableBusinessService);

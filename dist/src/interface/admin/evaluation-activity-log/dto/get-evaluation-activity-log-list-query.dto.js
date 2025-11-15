@@ -40,8 +40,8 @@ __decorate([
 ], GetEvaluationActivityLogListQueryDto.prototype, "activityType", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: '활동 시작일',
-        example: '2024-01-01T00:00:00Z',
+        description: '활동 시작일 (ISO 8601 형식, 예: 2024-01-01T00:00:00Z). 입력하지 않으면 전체 기간 조회',
+        required: false,
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),
@@ -49,8 +49,8 @@ __decorate([
 ], GetEvaluationActivityLogListQueryDto.prototype, "startDate", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: '활동 종료일',
-        example: '2024-01-31T23:59:59Z',
+        description: '활동 종료일 (ISO 8601 형식, 예: 2024-01-31T23:59:59Z). 입력하지 않으면 전체 기간 조회',
+        required: false,
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDateString)(),

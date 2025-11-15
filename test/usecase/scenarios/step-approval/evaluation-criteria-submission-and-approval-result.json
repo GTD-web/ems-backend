@@ -1,0 +1,260 @@
+{
+  "timestamp": "2025-11-15T09:42:26.555Z",
+  "testResults": [
+    {
+      "testName": "단계 승인 Enum 목록 조회",
+      "result": {
+        "steps": [
+          "criteria",
+          "self",
+          "primary",
+          "secondary"
+        ],
+        "statuses": [
+          "pending",
+          "approved",
+          "revision_requested",
+          "revision_completed"
+        ],
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 설정 단계 승인 상태 변경: pending → approved",
+      "result": {
+        "employeeId": "3338d9bd-262f-44fc-a755-1699e81e32af",
+        "initialStatus": "pending",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-15T09:42:19.125Z",
+        "criteriaSubmission": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-15T09:42:19.105Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 설정 단계 승인 상태 변경: approved → revision_requested",
+      "result": {
+        "employeeId": "f7763ce7-882a-41bb-af71-db58795a45f3",
+        "initialStatus": "approved",
+        "stepApprovalStatus": "revision_requested",
+        "revisionRequestCount": 2,
+        "criteriaSubmission": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "평가기준 설정 단계 승인 상태 변경: revision_requested → approved",
+      "result": {
+        "employeeId": "b541cf7e-00ae-4daf-9e04-e91618d2ddb5",
+        "initialStatus": "revision_requested",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-15T09:42:20.420Z",
+        "criteriaSubmission": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-15T09:42:20.411Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "1단계: 평가기준 제출 전 상태 확인",
+      "result": {
+        "employeeId": "e951096d-a9d0-4fb3-9da3-59305512b708",
+        "dashboardStatus": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null
+        },
+        "assignedData": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "2단계: 평가기준 제출",
+      "result": {
+        "employeeId": "eb67197c-6faa-48a9-a376-b2046cefbdc0",
+        "submitResult": {
+          "isCriteriaSubmitted": true,
+          "criteriaSubmittedAt": "2025-11-15T09:42:21.511Z",
+          "criteriaSubmittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "dashboardStatus": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-15T09:42:21.511Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "3단계: 재작성 요청 생성 및 제출 상태 초기화",
+      "result": {
+        "employeeId": "4783fd0b-65b1-4be1-8829-5e81f548ae9d",
+        "dashboardStatus": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null,
+          "stepApprovalStatus": "revision_requested"
+        },
+        "revisionRequestCount": 2,
+        "passed": true
+      }
+    },
+    {
+      "testName": "4단계: 재제출 및 재작성 요청 자동 완료",
+      "result": {
+        "employeeId": "68ab76bc-40db-4661-85b3-0f163ab0cbbd",
+        "submitResult": {
+          "isCriteriaSubmitted": true,
+          "criteriaSubmittedAt": "2025-11-15T09:42:22.595Z",
+          "criteriaSubmittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "completedRevisionRequestCount": 2,
+        "passed": true
+      }
+    },
+    {
+      "testName": "5단계: 승인",
+      "result": {
+        "employeeId": "01a4f8d5-940d-42f0-a27f-3c67c6def606",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-15T09:42:23.095Z",
+        "criteriaSubmission": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-15T09:42:23.067Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "criteriaSetupStatus": "approved",
+        "passed": true
+      }
+    },
+    {
+      "testName": "1단계: 평가기준 미제출 상태 확인",
+      "result": {
+        "employeeId": "d5c9e395-11e4-4638-8592-99360006589e",
+        "dashboardStatus": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "2단계: 평가기준 미제출 상태에서 승인 및 제출 상태 자동 변경",
+      "result": {
+        "employeeId": "2c68b89f-a02b-4fcc-892b-9690a37823fe",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-15T09:42:23.902Z",
+        "criteriaSubmission": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-15T09:42:23.892Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "3단계: 이미 제출된 상태에서 승인 검증 (idempotent)",
+      "result": {
+        "employeeId": "55c7566c-5838-4d47-80aa-010f6d01a280",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-15T09:42:24.330Z",
+        "criteriaSubmission": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-15T09:42:24.310Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "criteriaSetupStatus": "approved",
+        "passed": true
+      }
+    },
+    {
+      "testName": "1단계: 평가기준 제출",
+      "result": {
+        "employeeId": "143a6aae-5634-46fe-9d2f-5a7c7b0ec9bb",
+        "submitResult": {
+          "isCriteriaSubmitted": true,
+          "criteriaSubmittedAt": "2025-11-15T09:42:24.670Z",
+          "criteriaSubmittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "criteriaSetupStatus": "pending",
+        "passed": true
+      }
+    },
+    {
+      "testName": "2단계: 재작성 요청 생성",
+      "result": {
+        "employeeId": "4ead345e-9a50-4d04-aac9-2fe86158061b",
+        "criteriaSetupStatus": "revision_requested",
+        "criteriaSubmission": {
+          "isSubmitted": false,
+          "submittedAt": null,
+          "submittedBy": null
+        },
+        "revisionRequestCount": 2,
+        "passed": true
+      }
+    },
+    {
+      "testName": "3단계: 재작성 완료 응답 제출",
+      "result": {
+        "employeeId": "4c1a45b7-d6bf-4f7c-9888-e588bd46c7df",
+        "criteriaSetupStatus": "revision_completed",
+        "stepApprovalStatus": "revision_completed",
+        "revisionRequest": {
+          "id": "71875bea-6cae-43a7-b69d-c0d69eadb9a1",
+          "isCompleted": true,
+          "completedAt": "2025-11-15T09:42:25.476Z",
+          "responseComment": "연계된 수신자의 재작성 완료로 인한 자동 완료 처리"
+        },
+        "passed": true
+      }
+    },
+    {
+      "testName": "4단계: 재작성 완료 후 재제출",
+      "result": {
+        "employeeId": "7494dc58-cb72-49d7-a59a-5a9405dcdd1e",
+        "submitResult": {
+          "isCriteriaSubmitted": true,
+          "criteriaSubmittedAt": "2025-11-15T09:42:26.004Z"
+        },
+        "criteriaSetupStatus": "revision_completed",
+        "passed": true
+      }
+    },
+    {
+      "testName": "5단계: 최종 승인",
+      "result": {
+        "employeeId": "f58dcfee-4672-48fa-a89f-17909730baf4",
+        "criteriaSetupStatus": "approved",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-15T09:42:26.522Z",
+        "criteriaSubmission": {
+          "isSubmitted": true,
+          "submittedAt": "2025-11-15T09:42:26.504Z",
+          "submittedBy": "00000000-0000-0000-0000-000000000001"
+        },
+        "passed": true
+      }
+    }
+  ]
+}

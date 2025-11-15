@@ -1,5 +1,5 @@
 import { AuthService } from '@context/auth-context/auth.service';
-import type { AuthenticatedUser } from '@interface/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { LoginDto, LoginResponseDto, UserInfoDto } from './dto';
 export declare class AuthController {
     private readonly authService;

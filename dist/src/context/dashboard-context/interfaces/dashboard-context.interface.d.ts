@@ -66,6 +66,11 @@ export interface EmployeeEvaluationPeriodStatusDto {
             hasPrimaryEvaluator: boolean;
             hasSecondaryEvaluator: boolean;
         };
+        criteriaSubmission: {
+            isSubmitted: boolean;
+            submittedAt?: Date | null;
+            submittedBy?: string | null;
+        };
     };
     performanceInput: {
         status: PerformanceInputStatus;
@@ -73,10 +78,11 @@ export interface EmployeeEvaluationPeriodStatusDto {
         inputCompletedCount: number;
     };
     selfEvaluation: {
-        status: SelfEvaluationStatus;
+        status: SelfEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
         totalMappingCount: number;
         completedMappingCount: number;
         isSubmittedToEvaluator: boolean;
+        isSubmittedToManager: boolean;
         totalScore: number | null;
         grade: string | null;
     };

@@ -63,8 +63,8 @@ export class ProjectAssignmentScenario {
 
     // 4. evaluationCriteria 정보 추출
     const evaluationCriteria = {
-      status: 직원상태?.evaluationCriteria?.status || 'unknown',
-      assignedProjectCount: 직원상태?.evaluationCriteria?.assignedProjectCount || 0,
+      status: 직원상태?.criteriaSetup?.evaluationCriteria?.status || 'unknown',
+      assignedProjectCount: 직원상태?.criteriaSetup?.evaluationCriteria?.assignedProjectCount || 0,
     };
 
     // 5. 할당 데이터에서 프로젝트 정보 추출

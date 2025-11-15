@@ -41,10 +41,7 @@ describe('AuditLogContext', () => {
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [
-        DatabaseModule,
-        TypeOrmModule.forFeature([AuditLog]),
-      ],
+      imports: [DatabaseModule, TypeOrmModule.forFeature([AuditLog])],
       providers: [
         AuditLogService,
         CreateAuditLogHandler,

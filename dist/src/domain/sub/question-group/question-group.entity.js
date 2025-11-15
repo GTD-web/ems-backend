@@ -70,8 +70,7 @@ __decorate([
     (0, typeorm_1.Column)({
         type: 'varchar',
         length: 200,
-        unique: true,
-        comment: '그룹명',
+        comment: '그룹명 (삭제되지 않은 레코드에 한해 중복 불가)',
     }),
     __metadata("design:type", String)
 ], QuestionGroup.prototype, "name", void 0);
@@ -93,7 +92,6 @@ __decorate([
 ], QuestionGroup.prototype, "isDeletable", void 0);
 exports.QuestionGroup = QuestionGroup = __decorate([
     (0, typeorm_1.Entity)('question_group'),
-    (0, typeorm_1.Index)(['name'], { unique: true }),
     (0, typeorm_1.Index)(['isDefault']),
     __metadata("design:paramtypes", [Object])
 ], QuestionGroup);

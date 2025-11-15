@@ -15,9 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuditLogController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const jwt_auth_guard_1 = require("../../guards/jwt-auth.guard");
-const roles_guard_1 = require("../../guards/roles.guard");
-const roles_decorator_1 = require("../../decorators/roles.decorator");
 const audit_log_context_service_1 = require("../../../context/audit-log-context/audit-log-context.service");
 const get_audit_log_list_query_dto_1 = require("./dto/get-audit-log-list-query.dto");
 const audit_log_response_dto_1 = require("./dto/audit-log-response.dto");
@@ -133,8 +130,6 @@ exports.AuditLogController = AuditLogController = __decorate([
     (0, swagger_1.ApiTags)('A-0-5. 관리자 - 감사 로그'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/audit-logs'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)('admin'),
     __metadata("design:paramtypes", [audit_log_context_service_1.AuditLogContextService])
 ], AuditLogController);
 //# sourceMappingURL=audit-log.controller.js.map

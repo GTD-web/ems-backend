@@ -212,6 +212,13 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
   })
   excludedAt?: Date | null;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+    comment: '시스템 접근 가능 여부 (2중 보안용)',
+  })
+  isAccessible: boolean;
+
   constructor(
     employeeNumber?: string,
     name?: string,
@@ -258,6 +265,7 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
     this.externalUpdatedAt = externalUpdatedAt || new Date();
     this.status = status || '재직중';
     this.isExcludedFromList = false; // 기본값: 조회 제외 안 함
+    this.isAccessible = false; // 기본값: 접근 불가능 (2중 보안)
   }
 
   /**
@@ -301,6 +309,7 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
       excludeReason: this.excludeReason,
       excludedBy: this.excludedBy,
       excludedAt: this.excludedAt,
+      isAccessible: this.isAccessible,
 
       // 계산된 필드들
       get isDeleted() {

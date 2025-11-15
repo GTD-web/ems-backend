@@ -1,19 +1,14 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
-import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsOptional,
   IsString,
   IsUUID,
-  IsOptional,
-  IsEnum,
-  IsBoolean,
-  IsNumber,
-  IsArray,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 
 /**
  * 평가라인 필터 DTO

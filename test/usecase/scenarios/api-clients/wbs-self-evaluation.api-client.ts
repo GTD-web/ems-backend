@@ -162,7 +162,7 @@ export class WbsSelfEvaluationApiClient {
     const response = await this.testSuite
       .request()
       .patch(
-        `/admin/performance-evaluation/wbs-self-evaluations/employee/${data.employeeId}/period/${data.periodId}/reset-all-to-evaluator`,
+        `/admin/performance-evaluation/wbs-self-evaluations/employee/${data.employeeId}/period/${data.periodId}/reset-to-evaluator`,
       )
       .expect(200);
 

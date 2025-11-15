@@ -43,6 +43,8 @@ const revision_request_context_module_1 = require("../../context/revision-reques
 const audit_log_context_module_1 = require("../../context/audit-log-context/audit-log-context.module");
 const audit_log_controller_1 = require("./audit-log/audit-log.controller");
 const evaluation_activity_log_controller_1 = require("./evaluation-activity-log/evaluation-activity-log.controller");
+const core_1 = require("@nestjs/core");
+const guards_1 = require("../common/guards");
 let AdminInterfaceModule = class AdminInterfaceModule {
 };
 exports.AdminInterfaceModule = AdminInterfaceModule;
@@ -87,7 +89,18 @@ exports.AdminInterfaceModule = AdminInterfaceModule = __decorate([
             audit_log_controller_1.AuditLogController,
             evaluation_activity_log_controller_1.EvaluationActivityLogController,
         ],
-        providers: [],
+        providers: [
+            {
+                provide: guards_1.ROLES_GUARD_OPTIONS,
+                useValue: {
+                    rolesRequiringAccessibilityCheck: ['admin'],
+                },
+            },
+            {
+                provide: core_1.APP_GUARD,
+                useClass: guards_1.RolesGuard,
+            },
+        ],
         exports: [],
     })
 ], AdminInterfaceModule);

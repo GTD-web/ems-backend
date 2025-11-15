@@ -70,6 +70,10 @@ export class AuditLogScenario {
     expectedUserEmail?: string;
     expectedEmployeeNumber?: string;
   }) {
+    // 요청 전 시간 기록 (요청 전에 기록해야 함)
+    const beforeRequestTime = new Date();
+    beforeRequestTime.setSeconds(beforeRequestTime.getSeconds() - 2);
+
     // API 요청 전송
     let response: any;
     const request = this.testSuite.request();
@@ -97,39 +101,64 @@ export class AuditLogScenario {
         break;
     }
 
-    // 감사로그 조회 (최신 항목) - 시간 기반으로 정렬된 최신 항목 찾기
-    // 요청 전 시간 기록
-    const beforeRequestTime = new Date();
-    beforeRequestTime.setSeconds(beforeRequestTime.getSeconds() - 1);
-
-    // 잠시 대기 (감사로그 저장 완료 대기)
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // 감사로그 조회 (최신 항목)
-    const auditLogs = await this.감사로그목록을_조회한다({
-      page: 1,
-      limit: 20,
-      requestMethod: config.expectedRequestMethod || config.method,
-    });
-
-    // 요청 후 생성된 감사로그 찾기
+    // 요청 후 생성된 감사로그 찾기 (재시도 로직)
     const urlWithoutQuery = config.url.split('?')[0];
-    const latestAuditLog = auditLogs.items.find(
-      (log: any) =>
-        new Date(log.requestStartTime).getTime() >=
-        beforeRequestTime.getTime() &&
-        log.requestUrl.includes(urlWithoutQuery),
-    );
+    const expectedMethod = config.expectedRequestMethod || config.method;
+    let latestAuditLog: any = null;
+    const maxRetries = 5;
+    const retryDelay = 200; // 200ms
 
-    if (!latestAuditLog) {
-      // 디버깅을 위한 로그
+    for (let i = 0; i < maxRetries; i++) {
+      // 잠시 대기 (감사로그 저장 완료 대기)
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+
+      // 감사로그 조회 (최신 항목)
+      const auditLogs = await this.감사로그목록을_조회한다({
+        page: 1,
+        limit: 50, // 더 많은 항목 조회
+        requestMethod: expectedMethod,
+      });
+
+      // 요청 후 생성된 감사로그 찾기
+      latestAuditLog = auditLogs.items.find(
+        (log: any) => {
+          const logTime = new Date(log.requestStartTime).getTime();
+          const beforeTime = beforeRequestTime.getTime();
+          const urlMatch = log.requestUrl.includes(urlWithoutQuery);
+          const methodMatch = log.requestMethod === expectedMethod;
+          const statusMatch = config.expectedStatusCode
+            ? log.responseStatusCode === config.expectedStatusCode
+            : true;
+
+          return (
+            logTime >= beforeTime && urlMatch && methodMatch && statusMatch
+          );
+        },
+      );
+
+      if (latestAuditLog) {
+        break; // 감사로그를 찾았으면 루프 종료
+      }
+
+      // 마지막 시도가 아니면 계속
+      if (i < maxRetries - 1) {
+        continue;
+      }
+
+      // 마지막 시도에서도 찾지 못한 경우 디버깅 정보 출력
       console.log('감사로그를 찾을 수 없습니다.');
       console.log('요청 URL:', config.url);
+      console.log('URL (쿼리 제외):', urlWithoutQuery);
+      console.log('요청 메서드:', expectedMethod);
       console.log('요청 전 시간:', beforeRequestTime);
-      console.log('조회된 감사로그:', auditLogs.items.map((log: any) => ({
+      console.log('예상 상태 코드:', config.expectedStatusCode);
+      console.log('조회된 감사로그 수:', auditLogs.items.length);
+      console.log('조회된 감사로그:', auditLogs.items.slice(0, 10).map((log: any) => ({
         url: log.requestUrl,
         method: log.requestMethod,
+        statusCode: log.responseStatusCode,
         time: log.requestStartTime,
+        timeDiff: new Date(log.requestStartTime).getTime() - beforeRequestTime.getTime(),
       })));
     }
 
@@ -326,36 +355,60 @@ export class AuditLogScenario {
       }
     }
 
-    // 잠시 대기 (감사로그 저장 완료 대기)
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // 감사로그 조회 (최신 항목)
-    const auditLogs = await this.감사로그목록을_조회한다({
-      page: 1,
-      limit: 20,
-      requestMethod: config.method,
-    });
-
-    // 요청 후 생성된 감사로그 찾기
+    // 요청 후 생성된 감사로그 찾기 (재시도 로직)
     const urlWithoutQuery = config.url.split('?')[0];
-    const latestAuditLog = auditLogs.items.find(
-      (log: any) =>
-        new Date(log.requestStartTime).getTime() >=
-        beforeRequestTime.getTime() &&
-        log.requestUrl.includes(urlWithoutQuery) &&
-        log.responseStatusCode === config.expectedStatusCode,
-    );
+    let latestAuditLog: any = null;
+    const maxRetries = 5;
+    const retryDelay = 200; // 200ms
 
-    if (!latestAuditLog) {
-      // 디버깅을 위한 로그
+    for (let i = 0; i < maxRetries; i++) {
+      // 잠시 대기 (감사로그 저장 완료 대기)
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+
+      // 감사로그 조회 (최신 항목)
+      const auditLogs = await this.감사로그목록을_조회한다({
+        page: 1,
+        limit: 50, // 더 많은 항목 조회
+        requestMethod: config.method,
+        responseStatusCode: config.expectedStatusCode,
+      });
+
+      // 요청 후 생성된 감사로그 찾기
+      latestAuditLog = auditLogs.items.find(
+        (log: any) => {
+          const logTime = new Date(log.requestStartTime).getTime();
+          const beforeTime = beforeRequestTime.getTime();
+          const urlMatch = log.requestUrl.includes(urlWithoutQuery);
+          const methodMatch = log.requestMethod === config.method;
+          const statusMatch = log.responseStatusCode === config.expectedStatusCode;
+
+          return logTime >= beforeTime && urlMatch && methodMatch && statusMatch;
+        },
+      );
+
+      if (latestAuditLog) {
+        break; // 감사로그를 찾았으면 루프 종료
+      }
+
+      // 마지막 시도가 아니면 계속
+      if (i < maxRetries - 1) {
+        continue;
+      }
+
+      // 마지막 시도에서도 찾지 못한 경우 디버깅 정보 출력
       console.log('에러 응답 감사로그를 찾을 수 없습니다.');
       console.log('요청 URL:', config.url);
+      console.log('URL (쿼리 제외):', urlWithoutQuery);
+      console.log('요청 메서드:', config.method);
       console.log('예상 상태 코드:', config.expectedStatusCode);
-      console.log('조회된 감사로그:', auditLogs.items.map((log: any) => ({
+      console.log('요청 전 시간:', beforeRequestTime);
+      console.log('조회된 감사로그 수:', auditLogs.items.length);
+      console.log('조회된 감사로그:', auditLogs.items.slice(0, 10).map((log: any) => ({
         url: log.requestUrl,
         method: log.requestMethod,
         statusCode: log.responseStatusCode,
         time: log.requestStartTime,
+        timeDiff: new Date(log.requestStartTime).getTime() - beforeRequestTime.getTime(),
       })));
     }
 

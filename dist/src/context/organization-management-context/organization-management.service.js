@@ -8,21 +8,28 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrganizationManagementService = void 0;
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
+const employee_service_1 = require("../../domain/common/employee/employee.service");
 const queries_1 = require("./queries");
 const commands_1 = require("./commands");
-const sso_service_1 = require("../../domain/common/sso/sso.service");
+const common_2 = require("@nestjs/common");
+const sso_1 = require("../../domain/common/sso");
 let OrganizationManagementService = class OrganizationManagementService {
     queryBus;
     commandBus;
     ssoService;
-    constructor(queryBus, commandBus, ssoService) {
+    employeeService;
+    constructor(queryBus, commandBus, ssoService, employeeService) {
         this.queryBus = queryBus;
         this.commandBus = commandBus;
         this.ssoService = ssoService;
+        this.employeeService = employeeService;
     }
     async 전체부서목록조회() {
         return await this.queryBus.execute(new queries_1.GetAllDepartmentsQuery());
@@ -36,8 +43,8 @@ let OrganizationManagementService = class OrganizationManagementService {
     async 조직도조회() {
         return await this.queryBus.execute(new queries_1.GetOrganizationChartQuery());
     }
-    async 전체직원목록조회(includeExcluded = false) {
-        return await this.queryBus.execute(new queries_1.GetAllEmployeesQuery(includeExcluded));
+    async 전체직원목록조회(includeExcluded = false, departmentId) {
+        return await this.queryBus.execute(new queries_1.GetAllEmployeesQuery(includeExcluded, departmentId));
     }
     async 상급자조회(employeeId) {
         return await this.queryBus.execute(new queries_1.GetManagerQuery(employeeId));
@@ -60,6 +67,9 @@ let OrganizationManagementService = class OrganizationManagementService {
     async 직원조회포함(employeeId, updatedBy) {
         return await this.commandBus.execute(new commands_1.IncludeEmployeeInListCommand(employeeId, updatedBy));
     }
+    async 직원접근가능여부변경(employeeId, isAccessible, updatedBy) {
+        return await this.commandBus.execute(new commands_1.UpdateEmployeeAccessibilityCommand(employeeId, isAccessible, updatedBy));
+    }
     async 부서하이라키조회() {
         return await this.queryBus.execute(new queries_1.GetDepartmentHierarchyQuery());
     }
@@ -81,12 +91,15 @@ let OrganizationManagementService = class OrganizationManagementService {
     async 부서장조회(employeeId) {
         return await this.queryBus.execute(new queries_1.FindDepartmentManagerQuery(employeeId));
     }
+    async 사번으로_접근가능한가(employeeNumber) {
+        return await this.employeeService.사번으로_접근가능한가(employeeNumber);
+    }
 };
 exports.OrganizationManagementService = OrganizationManagementService;
 exports.OrganizationManagementService = OrganizationManagementService = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, common_2.Inject)(sso_1.SSOService)),
     __metadata("design:paramtypes", [cqrs_1.QueryBus,
-        cqrs_1.CommandBus,
-        sso_service_1.SSOService])
+        cqrs_1.CommandBus, Object, employee_service_1.EmployeeService])
 ], OrganizationManagementService);
 //# sourceMappingURL=organization-management.service.js.map

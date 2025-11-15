@@ -1,0 +1,317 @@
+{
+  "timestamp": "2025-11-15T13:15:11.817Z",
+  "testResults": [
+    {
+      "testName": "상태 1: none - 평가할 WBS가 없으면 secondary.status는 none이어야 한다",
+      "result": {
+        "status": "none",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "none",
+            "assignedWbsCount": 0,
+            "completedEvaluationCount": 0,
+            "isSubmitted": false
+          }
+        ]
+      }
+    },
+    {
+      "testName": "상태 2: none - 2차 평가자가 있지만 하향평가가 하나도 없으면 secondary.status는 none이어야 한다",
+      "result": {
+        "status": "none",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "none",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 0,
+            "isSubmitted": false
+          }
+        ]
+      }
+    },
+    {
+      "testName": "상태 3: in_progress - 일부만 완료되었으면 secondary.status는 in_progress이어야 한다",
+      "result": {
+        "status": "in_progress",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "in_progress",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 1,
+            "isSubmitted": false
+          }
+        ]
+      }
+    },
+    {
+      "testName": "상태 4: pending - 모든 평가가 완료되었지만 승인 대기 중이면 secondary.status는 pending이어야 한다",
+      "result": {
+        "status": "pending",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "pending",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ],
+        "totalScore": 82.5,
+        "grade": "B"
+      }
+    },
+    {
+      "testName": "상태 5: approved - 모든 평가가 완료되고 승인되었으면 secondary.status는 approved이어야 한다",
+      "result": {
+        "status": "approved",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "approved",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ],
+        "totalScore": 82.5,
+        "grade": "B",
+        "stepApprovalStatus": "approved",
+        "approvedBy": "00000000-0000-0000-0000-000000000001",
+        "approvedAt": "2025-11-15T13:15:10.168Z"
+      }
+    },
+    {
+      "testName": "상태 6: revision_requested - 재작성 요청되었으면 secondary.status는 revision_requested이어야 한다",
+      "result": {
+        "status": "revision_requested",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "revision_requested",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ],
+        "totalScore": 82.5,
+        "grade": "B"
+      }
+    },
+    {
+      "testName": "상태 7: revision_completed - 재작성 완료되었으면 secondary.status는 revision_completed이어야 한다",
+      "result": {
+        "status": "revision_completed",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "revision_completed",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ],
+        "totalScore": 82.5,
+        "grade": "B"
+      }
+    },
+    {
+      "testName": "상태 8: 여러 평가자 상태 통합 - 모든 평가자가 approved이면 전체 상태는 approved이어야 한다",
+      "result": {
+        "status": "approved",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "approved",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "status": "approved",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ],
+        "isSubmitted": true,
+        "totalScore": 87.5,
+        "grade": "B"
+      }
+    },
+    {
+      "testName": "상태 9: 여러 평가자 혼합 상태 - pending + pending 혼합이면 전체 상태는 pending이어야 한다",
+      "result": {
+        "status": "pending",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "pending",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "status": "pending",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ]
+      }
+    },
+    {
+      "testName": "상태 10: 여러 평가자 혼합 상태 - revision_requested + approved 혼합이면 전체 상태는 revision_requested이어야 한다 (최우선)",
+      "result": {
+        "status": "revision_requested",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "revision_requested",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "status": "approved",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ]
+      }
+    },
+    {
+      "testName": "상태 11: 여러 평가자 혼합 상태 - revision_completed + pending 혼합이면 전체 상태는 revision_completed이어야 한다",
+      "result": {
+        "status": "revision_completed",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "revision_completed",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "status": "pending",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ]
+      }
+    },
+    {
+      "testName": "상태 12: 여러 평가자 혼합 상태 - in_progress + pending 혼합이면 전체 상태는 in_progress이어야 한다",
+      "result": {
+        "status": "in_progress",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "in_progress",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 1,
+            "isSubmitted": false
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "status": "pending",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 2,
+            "isSubmitted": true
+          }
+        ]
+      }
+    },
+    {
+      "testName": "상태 13: 여러 평가자 혼합 상태 - revision_requested + revision_completed 혼합이면 전체 상태는 revision_requested이어야 한다 (최우선)",
+      "result": {
+        "status": "revision_requested",
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "status": "revision_requested",
+            "assignedWbsCount": 0,
+            "completedEvaluationCount": 2,
+            "isSubmitted": false
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "status": "revision_completed",
+            "assignedWbsCount": 0,
+            "completedEvaluationCount": 2,
+            "isSubmitted": false
+          }
+        ]
+      }
+    },
+    {
+      "testName": "각 2차 평가자에게 할당된 WBS 수량이 정확하게 계산되어야 한다",
+      "result": {
+        "totalWbsCount": 4,
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "evaluatorId": "01c3e6ef-d274-4db1-9291-0358b0be47c4",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 0,
+            "isSubmitted": false
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "evaluatorId": "c640b3ee-ade7-4ea0-b867-3e4f86e97cfa",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 0,
+            "isSubmitted": false
+          }
+        ]
+      }
+    },
+    {
+      "testName": "2차 평가자에게 할당된 WBS가 없으면 assignedWbsCount는 0이어야 한다",
+      "result": {
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "evaluatorId": "ceb0e52e-bb1e-4e7b-a99f-eefa9b75afe8",
+            "assignedWbsCount": 1,
+            "status": "none"
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "evaluatorId": "2b3b6172-8739-4f28-b768-bcccdf3809d1",
+            "assignedWbsCount": 0,
+            "status": "none"
+          }
+        ]
+      }
+    },
+    {
+      "testName": "여러 2차 평가자가 같은 WBS를 평가하는 경우 각자의 assignedWbsCount가 정확해야 한다",
+      "result": {
+        "totalWbsCount": 2,
+        "evaluators": [
+          {
+            "evaluatorName": "2차평가자1",
+            "evaluatorId": "763e2e78-2377-4df9-9379-c027b7ba3320",
+            "assignedWbsCount": 2,
+            "completedEvaluationCount": 0
+          },
+          {
+            "evaluatorName": "2차평가자2",
+            "evaluatorId": "3b100e58-af63-40cd-83d1-fa817ac06d23",
+            "assignedWbsCount": 1,
+            "completedEvaluationCount": 0
+          }
+        ]
+      }
+    }
+  ]
+}

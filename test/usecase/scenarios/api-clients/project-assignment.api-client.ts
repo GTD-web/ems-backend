@@ -430,5 +430,4 @@ export class ProjectAssignmentApiClient {
 
     return response.body;
   }
-
 }

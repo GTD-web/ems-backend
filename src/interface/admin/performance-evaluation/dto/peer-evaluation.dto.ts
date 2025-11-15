@@ -18,7 +18,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ToBoolean } from '@interface/decorators';
+import { ToBoolean } from '@interface/common/decorators';
 
 /**
  * 동료평가 요청(할당) DTO
@@ -510,7 +510,6 @@ export class PeerEvaluationBasicDto {
   updatedAt: Date;
 }
 
-
 /**
  * 직원 정보 DTO
  */
@@ -898,7 +897,6 @@ export class PeerEvaluationDetailResponseDto {
     type: EmployeeInfoDto,
   })
   mappedBy?: EmployeeInfoDto | null;
-
 
   @ApiProperty({
     description: '평가질문 목록',

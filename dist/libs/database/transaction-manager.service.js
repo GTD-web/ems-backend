@@ -52,7 +52,15 @@ let TransactionManagerService = TransactionManagerService_1 = class TransactionM
     constructor(dataSource) {
         this.dataSource = dataSource;
     }
+    isHttpException(error) {
+        return ((error.response && error.status) ||
+            (typeof error.statusCode === 'number' && error.statusCode >= 400 && error.statusCode < 600) ||
+            (error.name && error.name.includes('Exception') && typeof error.getStatus === 'function'));
+    }
     handleDatabaseError(error, context) {
+        if (this.isHttpException(error)) {
+            throw error;
+        }
         this.logger.error(`데이터베이스 에러 발생 [${context || 'Unknown'}]:`, {
             message: error.message,
             code: error.code,
@@ -62,9 +70,6 @@ let TransactionManagerService = TransactionManagerService_1 = class TransactionM
             column: error.column,
             stack: error.stack,
         });
-        if (error.response && error.status) {
-            throw error;
-        }
         if (error.code && typeof error.code === 'string') {
             if (error.code.startsWith('DUPLICATE_')) {
                 const ConflictException = require('@nestjs/common').ConflictException;
@@ -120,9 +125,7 @@ let TransactionManagerService = TransactionManagerService_1 = class TransactionM
                 return await operation();
             }
             catch (error) {
-                if (error.name &&
-                    error.name.includes('Exception') &&
-                    typeof error.statusCode === 'number') {
+                if (this.isHttpException(error)) {
                     throw error;
                 }
                 const dbError = this.handleDatabaseError(error, context);
@@ -150,9 +153,7 @@ let TransactionManagerService = TransactionManagerService_1 = class TransactionM
             }
             catch (error) {
                 await queryRunner.rollbackTransaction();
-                if (error.name &&
-                    error.name.includes('Exception') &&
-                    typeof error.statusCode === 'number') {
+                if (this.isHttpException(error)) {
                     throw error;
                 }
                 throw this.handleDatabaseError(error, '단일 트랜잭션');
@@ -297,9 +298,7 @@ let TransactionManagerService = TransactionManagerService_1 = class TransactionM
             return await operation();
         }
         catch (error) {
-            if (error.name &&
-                error.name.includes('Exception') &&
-                typeof error.statusCode === 'number') {
+            if (this.isHttpException(error)) {
                 throw error;
             }
             const dbError = error instanceof DatabaseException

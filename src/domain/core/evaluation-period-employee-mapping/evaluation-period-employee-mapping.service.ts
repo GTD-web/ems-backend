@@ -550,6 +550,94 @@ export class EvaluationPeriodEmployeeMappingService
   }
 
   /**
+   * 평가기준을 제출한다
+   */
+  async 평가기준을_제출한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    submittedBy: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    this.logger.log(
+      `평가기준 제출 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+    );
+
+    const mapping = await this.맵핑을_조회한다(evaluationPeriodId, employeeId);
+    if (!mapping) {
+      throw new EvaluationPeriodEmployeeMappingNotFoundException(
+        `평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+    }
+
+    if (mapping.평가기준이_제출되었는가()) {
+      this.logger.warn(
+        `이미 제출된 평가기준 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+      // 이미 제출된 경우에도 성공으로 처리 (멱등성 보장)
+      return mapping.DTO로_변환한다();
+    }
+
+    try {
+      mapping.평가기준을_제출한다(submittedBy);
+      const saved = await this.repository.save(mapping);
+
+      this.logger.log(
+        `평가기준 제출 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+      return saved.DTO로_변환한다();
+    } catch (error) {
+      this.logger.error(
+        `평가기준 제출 실패 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 평가기준 제출을 초기화한다
+   */
+  async 평가기준_제출을_초기화한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    this.logger.log(
+      `평가기준 제출 초기화 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+    );
+
+    const mapping = await this.맵핑을_조회한다(evaluationPeriodId, employeeId);
+    if (!mapping) {
+      throw new EvaluationPeriodEmployeeMappingNotFoundException(
+        `평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+    }
+
+    if (!mapping.평가기준이_제출되었는가()) {
+      this.logger.warn(
+        `제출되지 않은 평가기준 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+      // 제출되지 않은 경우에도 성공으로 처리 (멱등성 보장)
+      return mapping.DTO로_변환한다();
+    }
+
+    try {
+      mapping.평가기준_제출을_초기화한다(updatedBy);
+      const saved = await this.repository.save(mapping);
+
+      this.logger.log(
+        `평가기준 제출 초기화 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+      return saved.DTO로_변환한다();
+    } catch (error) {
+      this.logger.error(
+        `평가기준 제출 초기화 실패 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
    * 유효성을 검사한다
    */
   private 유효성을_검사한다(

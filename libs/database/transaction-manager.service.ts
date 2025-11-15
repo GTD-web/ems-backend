@@ -73,9 +73,30 @@ export class TransactionManagerService {
   ) {}
 
   /**
+   * HTTP 예외(비즈니스 예외)인지 확인한다
+   * 
+   * @param error 확인할 에러 객체
+   * @returns HTTP 예외인 경우 true
+   */
+  private isHttpException(error: any): boolean {
+    return (
+      (error.response && error.status) ||
+      (typeof error.statusCode === 'number' && error.statusCode >= 400 && error.statusCode < 600) ||
+      (error.name && error.name.includes('Exception') && typeof error.getStatus === 'function')
+    );
+  }
+
+  /**
    * 데이터베이스 에러를 분석하고 적절한 예외로 변환한다
    */
   private handleDatabaseError(error: any, context?: string): DatabaseException {
+    // NestJS HTTP 예외들은 그대로 다시 던짐 (DatabaseException으로 래핑하지 않음)
+    // 로깅하기 전에 먼저 체크하여 비즈니스 예외를 데이터베이스 에러로 로깅하지 않도록 함
+    if (this.isHttpException(error)) {
+      throw error; // BadRequestException, UnprocessableEntityException 등
+    }
+
+    // 실제 데이터베이스 에러만 로깅
     this.logger.error(`데이터베이스 에러 발생 [${context || 'Unknown'}]:`, {
       message: error.message,
       code: error.code,
@@ -85,11 +106,6 @@ export class TransactionManagerService {
       column: error.column,
       stack: error.stack,
     });
-
-    // NestJS HTTP 예외들은 그대로 다시 던짐 (DatabaseException으로 래핑하지 않음)
-    if (error.response && error.status) {
-      throw error; // BadRequestException, UnprocessableEntityException 등
-    }
 
     // 도메인 예외들을 HTTP 예외로 변환
     if (error.code && typeof error.code === 'string') {
@@ -238,12 +254,8 @@ export class TransactionManagerService {
       try {
         return await operation();
       } catch (error) {
-        // 도메인 예외인 경우 그대로 전파 (재시도하지 않음)
-        if (
-          error.name &&
-          error.name.includes('Exception') &&
-          typeof error.statusCode === 'number'
-        ) {
+        // HTTP 예외(비즈니스 예외)인 경우 그대로 전파 (재시도하지 않음)
+        if (this.isHttpException(error)) {
           throw error;
         }
 
@@ -294,12 +306,8 @@ export class TransactionManagerService {
         } catch (error) {
           await queryRunner.rollbackTransaction();
 
-          // 도메인 예외인 경우 그대로 전파
-          if (
-            error.name &&
-            error.name.includes('Exception') &&
-            typeof error.statusCode === 'number'
-          ) {
+          // HTTP 예외(비즈니스 예외)인 경우 그대로 전파
+          if (this.isHttpException(error)) {
             throw error;
           }
 
@@ -615,12 +623,8 @@ export class TransactionManagerService {
     try {
       return await operation();
     } catch (error) {
-      // 도메인 예외인 경우 그대로 전파 (변환하지 않음)
-      if (
-        error.name &&
-        error.name.includes('Exception') &&
-        typeof error.statusCode === 'number'
-      ) {
+      // HTTP 예외(비즈니스 예외)인 경우 그대로 전파 (변환하지 않음)
+      if (this.isHttpException(error)) {
         throw error;
       }
 

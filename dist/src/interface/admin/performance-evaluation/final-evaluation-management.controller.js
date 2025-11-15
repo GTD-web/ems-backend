@@ -13,13 +13,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FinalEvaluationManagementController = void 0;
+const performance_evaluation_service_1 = require("../../../context/performance-evaluation-context/performance-evaluation.service");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const performance_evaluation_service_1 = require("../../../context/performance-evaluation-context/performance-evaluation.service");
-const decorators_1 = require("../../decorators");
+const final_evaluation_1 = require("../../../context/performance-evaluation-context/handlers/final-evaluation");
 const final_evaluation_api_decorators_1 = require("./decorators/final-evaluation-api.decorators");
 const final_evaluation_dto_1 = require("./dto/final-evaluation.dto");
-const final_evaluation_1 = require("../../../context/performance-evaluation-context/handlers/final-evaluation");
 let FinalEvaluationManagementController = class FinalEvaluationManagementController {
     performanceEvaluationService;
     constructor(performanceEvaluationService) {
@@ -61,33 +62,33 @@ let FinalEvaluationManagementController = class FinalEvaluationManagementControl
 exports.FinalEvaluationManagementController = FinalEvaluationManagementController;
 __decorate([
     (0, final_evaluation_api_decorators_1.UpsertFinalEvaluation)(),
-    __param(0, (0, decorators_1.ParseUUID)('employeeId')),
-    __param(1, (0, decorators_1.ParseUUID)('periodId')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('periodId')),
     __param(2, (0, common_1.Body)()),
-    __param(3, (0, decorators_1.CurrentUser)()),
+    __param(3, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, final_evaluation_dto_1.UpsertFinalEvaluationBodyDto, Object]),
     __metadata("design:returntype", Promise)
 ], FinalEvaluationManagementController.prototype, "upsertFinalEvaluation", null);
 __decorate([
     (0, final_evaluation_api_decorators_1.ConfirmFinalEvaluation)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], FinalEvaluationManagementController.prototype, "confirmFinalEvaluation", null);
 __decorate([
     (0, final_evaluation_api_decorators_1.CancelConfirmationFinalEvaluation)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], FinalEvaluationManagementController.prototype, "cancelConfirmationFinalEvaluation", null);
 __decorate([
     (0, final_evaluation_api_decorators_1.GetFinalEvaluation)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -101,8 +102,8 @@ __decorate([
 ], FinalEvaluationManagementController.prototype, "getFinalEvaluationList", null);
 __decorate([
     (0, final_evaluation_api_decorators_1.GetFinalEvaluationByEmployeePeriod)(),
-    __param(0, (0, decorators_1.ParseUUID)('employeeId')),
-    __param(1, (0, decorators_1.ParseUUID)('periodId')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('periodId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)

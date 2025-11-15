@@ -37,6 +37,15 @@ export interface EvaluationPeriodEmployeeMappingDto {
   /** 제외 처리 일시 */
   excludedAt?: Date | null;
 
+  /** 평가기준 제출 여부 */
+  isCriteriaSubmitted: boolean;
+
+  /** 평가기준 제출 일시 */
+  criteriaSubmittedAt?: Date | null;
+
+  /** 평가기준 제출 처리자 ID */
+  criteriaSubmittedBy?: string | null;
+
   /** 생성자 ID */
   createdBy: string;
 

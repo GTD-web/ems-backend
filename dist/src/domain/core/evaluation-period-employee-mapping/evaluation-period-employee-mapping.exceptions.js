@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.NotExcludedEvaluationTargetException = exports.AlreadyExcludedEvaluationTargetException = exports.EvaluationTargetExclusionException = exports.EvaluationPeriodEmployeeMappingValidationException = exports.EvaluationPeriodEmployeeMappingDuplicateException = exports.EvaluationPeriodEmployeeMappingNotFoundException = exports.EvaluationPeriodEmployeeMappingDomainException = void 0;
+exports.ExcludedEvaluationTargetAccessException = exports.NotExcludedEvaluationTargetException = exports.AlreadyExcludedEvaluationTargetException = exports.EvaluationTargetExclusionException = exports.EvaluationPeriodEmployeeMappingValidationException = exports.EvaluationPeriodEmployeeMappingDuplicateException = exports.EvaluationPeriodEmployeeMappingNotFoundException = exports.EvaluationPeriodEmployeeMappingDomainException = void 0;
 class EvaluationPeriodEmployeeMappingDomainException extends Error {
     code;
     statusCode;
@@ -56,4 +56,11 @@ class NotExcludedEvaluationTargetException extends EvaluationPeriodEmployeeMappi
     }
 }
 exports.NotExcludedEvaluationTargetException = NotExcludedEvaluationTargetException;
+class ExcludedEvaluationTargetAccessException extends EvaluationPeriodEmployeeMappingDomainException {
+    constructor(evaluationPeriodId, employeeId) {
+        super(`평가 대상에서 제외된 직원은 할당 정보를 조회할 수 없습니다: 평가기간 ${evaluationPeriodId}, 직원 ${employeeId}`, 'EXCLUDED_EVALUATION_TARGET_ACCESS_DENIED', 400, { evaluationPeriodId, employeeId });
+        this.name = 'ExcludedEvaluationTargetAccessException';
+    }
+}
+exports.ExcludedEvaluationTargetAccessException = ExcludedEvaluationTargetAccessException;
 //# sourceMappingURL=evaluation-period-employee-mapping.exceptions.js.map

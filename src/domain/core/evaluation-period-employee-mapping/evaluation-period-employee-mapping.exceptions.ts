@@ -92,3 +92,16 @@ export class NotExcludedEvaluationTargetException extends EvaluationPeriodEmploy
     this.name = 'NotExcludedEvaluationTargetException';
   }
 }
+
+// 제외된 평가 대상 조회 시도 예외
+export class ExcludedEvaluationTargetAccessException extends EvaluationPeriodEmployeeMappingDomainException {
+  constructor(evaluationPeriodId: string, employeeId: string) {
+    super(
+      `평가 대상에서 제외된 직원은 할당 정보를 조회할 수 없습니다: 평가기간 ${evaluationPeriodId}, 직원 ${employeeId}`,
+      'EXCLUDED_EVALUATION_TARGET_ACCESS_DENIED',
+      400,
+      { evaluationPeriodId, employeeId },
+    );
+    this.name = 'ExcludedEvaluationTargetAccessException';
+  }
+}

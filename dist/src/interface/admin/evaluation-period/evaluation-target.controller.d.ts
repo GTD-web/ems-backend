@@ -1,5 +1,5 @@
-import { EvaluationPeriodManagementContextService } from '../../../context/evaluation-period-management-context/evaluation-period-management.service';
-import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
+import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { EmployeeEvaluationPeriodsResponseDto, EvaluationTargetMappingResponseDto, EvaluationTargetStatusResponseDto, EvaluationTargetsResponseDto, ExcludeEvaluationTargetDto, GetEvaluationTargetsQueryDto, RegisterBulkEvaluationTargetsDto } from './dto/evaluation-target.dto';
 export declare class EvaluationTargetController {
     private readonly evaluationPeriodManagementService;

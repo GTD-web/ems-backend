@@ -1,35 +1,35 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource, Repository, IsNull } from 'typeorm';
-import { DatabaseModule } from '@libs/database/database.module';
 import {
-  ResetDownwardEvaluationHandler,
   ResetDownwardEvaluationCommand,
+  ResetDownwardEvaluationHandler,
 } from '@context/performance-evaluation-context/handlers/downward-evaluation/command/reset-downward-evaluation.handler';
-import { DownwardEvaluationModule } from '@domain/core/downward-evaluation/downward-evaluation.module';
-import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
-import { WbsSelfEvaluationModule } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.module';
-import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
-import { Employee } from '@domain/common/employee/employee.entity';
-import { Department } from '@domain/common/department/department.entity';
-import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
-import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
-import { Project } from '@domain/common/project/project.entity';
-import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
-import {
-  EvaluationPeriodStatus,
-  EvaluationPeriodPhase,
-} from '@domain/core/evaluation-period/evaluation-period.types';
-import { ProjectStatus } from '@domain/common/project/project.types';
-import {
-  DownwardEvaluationNotFoundException,
-  DownwardEvaluationNotCompletedException,
-} from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
-import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import {
   SubmitDownwardEvaluationCommand,
   SubmitDownwardEvaluationHandler,
 } from '@context/performance-evaluation-context/handlers/downward-evaluation/command/submit-downward-evaluation.handler';
+import { Department } from '@domain/common/department/department.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
+import { Project } from '@domain/common/project/project.entity';
+import { ProjectStatus } from '@domain/common/project/project.types';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
+import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
+import {
+  DownwardEvaluationNotCompletedException,
+  DownwardEvaluationNotFoundException,
+} from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
+import { DownwardEvaluationModule } from '@domain/core/downward-evaluation/downward-evaluation.module';
+import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
+import {
+  EvaluationPeriodPhase,
+  EvaluationPeriodStatus,
+} from '@domain/core/evaluation-period/evaluation-period.types';
+import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { WbsSelfEvaluationModule } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.module';
+import { DatabaseModule } from '@libs/database/database.module';
+import { Test, TestingModule } from '@nestjs/testing';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 /**
  * Performance Evaluation Context - Reset Downward Evaluation 통합 테스트
@@ -163,7 +163,6 @@ describe('Performance Evaluation Context - Reset Downward Evaluation', () => {
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.PEER_EVALUATION,
       criteriaSettingEnabled: true,
@@ -235,9 +234,8 @@ describe('Performance Evaluation Context - Reset Downward Evaluation', () => {
       selfEvaluationScore: 100,
       createdBy: systemAdminId,
     });
-    const savedSelfEvaluation = await wbsSelfEvaluationRepository.save(
-      selfEvaluation,
-    );
+    const savedSelfEvaluation =
+      await wbsSelfEvaluationRepository.save(selfEvaluation);
     selfEvaluationId = savedSelfEvaluation.id;
 
     // 8. 1차 하향평가 생성
@@ -254,9 +252,8 @@ describe('Performance Evaluation Context - Reset Downward Evaluation', () => {
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedPrimaryEvaluation = await downwardEvaluationRepository.save(
-      primaryEvaluation,
-    );
+    const savedPrimaryEvaluation =
+      await downwardEvaluationRepository.save(primaryEvaluation);
     primaryEvaluationId = savedPrimaryEvaluation.id;
 
     // 9. 2차 하향평가 생성
@@ -273,9 +270,8 @@ describe('Performance Evaluation Context - Reset Downward Evaluation', () => {
       isCompleted: false,
       createdBy: systemAdminId,
     });
-    const savedSecondaryEvaluation = await downwardEvaluationRepository.save(
-      secondaryEvaluation,
-    );
+    const savedSecondaryEvaluation =
+      await downwardEvaluationRepository.save(secondaryEvaluation);
     secondaryEvaluationId = savedSecondaryEvaluation.id;
   }
 
@@ -418,6 +414,4 @@ describe('Performance Evaluation Context - Reset Downward Evaluation', () => {
       expect(reSubmittedEvaluation?.isCompleted).toBe(true);
     });
   });
-
 });
-

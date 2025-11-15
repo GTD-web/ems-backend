@@ -1,4 +1,4 @@
-import { JobGrade, JobDetailedGrade } from '@domain/core/final-evaluation/final-evaluation.types';
+import { JobDetailedGrade, JobGrade } from '@domain/core/final-evaluation/final-evaluation.types';
 export declare class UpsertFinalEvaluationBodyDto {
     evaluationGrade: string;
     jobGrade: JobGrade;
@@ -54,7 +54,6 @@ export declare class PeriodBasicInfoDto {
     id: string;
     name: string;
     startDate: Date;
-    endDate: Date;
     status: string;
 }
 export declare class FinalEvaluationDetailDto {

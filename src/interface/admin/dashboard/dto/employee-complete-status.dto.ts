@@ -59,7 +59,14 @@ export class EvaluationLineWithEvaluatorsDto {
     enum: ['complete', 'in_progress', 'none'],
     example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none';
+  status:
+    | 'complete'
+    | 'in_progress'
+    | 'none'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: 'PRIMARY 라인 평가자 지정 여부',
@@ -98,7 +105,14 @@ export class WbsCriteriaStatusDto {
     enum: ['complete', 'in_progress', 'none'],
     example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none';
+  status:
+    | 'complete'
+    | 'in_progress'
+    | 'none'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: '전체 WBS 수',
@@ -122,7 +136,14 @@ export class PerformanceStatusDto {
     enum: ['complete', 'in_progress', 'none'],
     example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none';
+  status:
+    | 'complete'
+    | 'in_progress'
+    | 'none'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: '전체 WBS 수',
@@ -146,7 +167,14 @@ export class SelfEvaluationStatusDto {
     enum: ['complete', 'in_progress', 'none'],
     example: 'in_progress',
   })
-  status: 'complete' | 'in_progress' | 'none';
+  status:
+    | 'complete'
+    | 'in_progress'
+    | 'none'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: '전체 WBS 자기평가 수',
@@ -159,6 +187,18 @@ export class SelfEvaluationStatusDto {
     example: 3,
   })
   completedCount: number;
+
+  @ApiProperty({
+    description: '피평가자가 1차 평가자에게 자기평가 제출 완료 여부',
+    example: true,
+  })
+  isSubmittedToEvaluator: boolean;
+
+  @ApiProperty({
+    description: '1차 평가자가 관리자에게 자기평가 제출 완료 여부',
+    example: true,
+  })
+  isSubmittedToManager: boolean;
 
   @ApiPropertyOptional({
     description: '가중치 기반 자기평가 총점 (0-100)',
@@ -181,10 +221,25 @@ export class SelfEvaluationStatusDto {
 export class DownwardEvaluationStatusDto {
   @ApiProperty({
     description: '하향평가 통합 상태 (진행 상태 + 승인 상태)',
-    enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    enum: [
+      'complete',
+      'in_progress',
+      'none',
+      'pending',
+      'approved',
+      'revision_requested',
+      'revision_completed',
+    ],
     example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+  status:
+    | 'complete'
+    | 'in_progress'
+    | 'none'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: '평가 대상 WBS 수',

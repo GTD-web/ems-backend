@@ -27,7 +27,7 @@ let DownwardEvaluationService = DownwardEvaluationService_1 = class DownwardEval
     }
     async 생성한다(createData) {
         this.logger.log(`하향평가 생성 시작 - 피평가자: ${createData.employeeId}, 평가자: ${createData.evaluatorId}, 유형: ${createData.evaluationType}`);
-        await this.중복_검사를_수행한다(createData.employeeId, createData.evaluatorId, createData.periodId, createData.evaluationType);
+        await this.중복_검사를_수행한다(createData.employeeId, createData.evaluatorId, createData.periodId, createData.evaluationType, createData.wbsId);
         this.유효성을_검사한다(createData);
         try {
             const downwardEvaluation = new downward_evaluation_entity_1.DownwardEvaluation(createData);
@@ -245,14 +245,18 @@ let DownwardEvaluationService = DownwardEvaluationService_1 = class DownwardEval
             throw error;
         }
     }
-    async 중복_검사를_수행한다(employeeId, evaluatorId, periodId, evaluationType) {
+    async 중복_검사를_수행한다(employeeId, evaluatorId, periodId, evaluationType, wbsId) {
+        const whereCondition = {
+            employeeId,
+            evaluatorId,
+            periodId,
+            evaluationType,
+        };
+        if (wbsId) {
+            whereCondition.wbsId = wbsId;
+        }
         const existing = await this.downwardEvaluationRepository.findOne({
-            where: {
-                employeeId,
-                evaluatorId,
-                periodId,
-                evaluationType,
-            },
+            where: whereCondition,
         });
         if (existing) {
             throw new downward_evaluation_exceptions_1.DownwardEvaluationDuplicateException(employeeId, evaluatorId, periodId);

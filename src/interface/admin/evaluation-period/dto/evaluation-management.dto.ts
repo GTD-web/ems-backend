@@ -16,7 +16,7 @@ import {
 import {
   DateToUTC,
   OptionalDateToUTC,
-} from '../../../decorators/date-transform.decorator';
+} from '@interface/common/decorators/date-transform.decorator';
 
 /**
  * 페이징 쿼리 DTO
@@ -103,7 +103,7 @@ export class CreateGradeRangeApiDto {
   })
   @IsNumber({}, { message: '최소 범위는 숫자여야 합니다.' })
   @Min(0, { message: '최소 범위는 0 이상이어야 합니다.' })
-  @Max(100, { message: '최소 범위는 100 이하여야 합니다.' })
+  @Max(1000, { message: '최소 범위는 1000 이하여야 합니다.' })
   minRange: number;
 
   @ApiProperty({
@@ -112,7 +112,7 @@ export class CreateGradeRangeApiDto {
   })
   @IsNumber({}, { message: '최대 범위는 숫자여야 합니다.' })
   @Min(0, { message: '최대 범위는 0 이상이어야 합니다.' })
-  @Max(100, { message: '최대 범위는 100 이하여야 합니다.' })
+  @Max(1000, { message: '최대 범위는 1000 이하여야 합니다.' })
   maxRange: number;
 }
 
@@ -396,7 +396,14 @@ export class ChangeEvaluationPeriodPhaseApiDto {
   @ApiProperty({
     description: '변경할 단계',
     example: 'performance',
-    enum: ['waiting', 'evaluation-setup', 'performance', 'self-evaluation', 'peer-evaluation', 'closure'],
+    enum: [
+      'waiting',
+      'evaluation-setup',
+      'performance',
+      'self-evaluation',
+      'peer-evaluation',
+      'closure',
+    ],
   })
   @IsString({ message: '단계는 문자열이어야 합니다.' })
   @IsNotEmpty({ message: '단계는 필수 입력 항목입니다.' })

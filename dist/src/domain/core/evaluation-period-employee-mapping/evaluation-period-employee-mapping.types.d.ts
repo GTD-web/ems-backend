@@ -11,6 +11,9 @@ export interface EvaluationPeriodEmployeeMappingDto {
     excludeReason?: string | null;
     excludedBy?: string | null;
     excludedAt?: Date | null;
+    isCriteriaSubmitted: boolean;
+    criteriaSubmittedAt?: Date | null;
+    criteriaSubmittedBy?: string | null;
     createdBy: string;
     updatedBy: string;
     createdAt: Date;

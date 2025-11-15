@@ -1,36 +1,36 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { DataSource, Repository, IsNull } from 'typeorm';
-import { DatabaseModule } from '@libs/database/database.module';
 import {
-  SubmitWbsSelfEvaluationToEvaluatorHandler,
-  SubmitWbsSelfEvaluationToEvaluatorCommand,
-} from '@context/performance-evaluation-context/handlers/self-evaluation/commands/submit-wbs-self-evaluation-to-evaluator.handler';
-import {
-  SubmitAllWbsSelfEvaluationsToEvaluatorHandler,
   SubmitAllWbsSelfEvaluationsToEvaluatorCommand,
+  SubmitAllWbsSelfEvaluationsToEvaluatorHandler,
 } from '@context/performance-evaluation-context/handlers/self-evaluation/commands/submit-all-wbs-self-evaluations-to-evaluator.handler';
 import {
-  SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler,
+  SubmitWbsSelfEvaluationToEvaluatorCommand,
+  SubmitWbsSelfEvaluationToEvaluatorHandler,
+} from '@context/performance-evaluation-context/handlers/self-evaluation/commands/submit-wbs-self-evaluation-to-evaluator.handler';
+import {
   SubmitWbsSelfEvaluationsToEvaluatorByProjectCommand,
+  SubmitWbsSelfEvaluationsToEvaluatorByProjectHandler,
 } from '@context/performance-evaluation-context/handlers/self-evaluation/commands/submit-wbs-self-evaluations-to-evaluator-by-project.handler';
-import { WbsSelfEvaluationModule } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.module';
-import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
-import { EvaluationWbsAssignmentModule } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
-import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
-import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
+import { Project } from '@domain/common/project/project.entity';
+import { ProjectStatus } from '@domain/common/project/project.types';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { EvaluationPeriodModule } from '@domain/core/evaluation-period/evaluation-period.module';
+import {
+  EvaluationPeriodPhase,
+  EvaluationPeriodStatus,
+} from '@domain/core/evaluation-period/evaluation-period.types';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationWbsAssignmentModule } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
-import { Project } from '@domain/common/project/project.entity';
-import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
-import {
-  EvaluationPeriodStatus,
-  EvaluationPeriodPhase,
-} from '@domain/core/evaluation-period/evaluation-period.types';
-import { ProjectStatus } from '@domain/common/project/project.types';
+import { WbsSelfEvaluationModule } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.module';
+import { DatabaseModule } from '@libs/database/database.module';
+import { Test, TestingModule } from '@nestjs/testing';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 
 /**
  * Performance Evaluation Context - Self Evaluation Submit to Evaluator 통합 테스트
@@ -189,7 +189,6 @@ describe('Performance Evaluation Context - Self Evaluation Submit to Evaluator',
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,

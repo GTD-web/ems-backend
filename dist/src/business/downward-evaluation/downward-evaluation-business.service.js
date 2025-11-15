@@ -126,6 +126,27 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
         });
         const result = await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, evaluateeId, periodId, evaluationType, submittedBy);
         try {
+            const step = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
+                ? 'primary'
+                : 'secondary';
+            const recipientType = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
+                ? evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR
+                : evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR;
+            const responseComment = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
+                ? '1차 하향평가 일괄 제출로 인한 재작성 완료 처리'
+                : '2차 하향평가 일괄 제출로 인한 재작성 완료 처리';
+            await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(periodId, evaluateeId, step, evaluatorId, recipientType, responseComment);
+        }
+        catch (error) {
+            this.logger.warn('재작성 요청 완료 처리 실패', {
+                evaluatorId,
+                evaluateeId,
+                periodId,
+                evaluationType,
+                error: error.message,
+            });
+        }
+        try {
             const evaluationTypeText = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
                 ? '1차 하향평가'
                 : '2차 하향평가';

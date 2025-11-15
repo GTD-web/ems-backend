@@ -46,11 +46,17 @@ export declare class EvaluationLineInfoDto {
     hasPrimaryEvaluator: boolean;
     hasSecondaryEvaluator: boolean;
 }
+export declare class CriteriaSubmissionInfoDto {
+    isSubmitted: boolean;
+    submittedAt?: Date | null;
+    submittedBy?: string | null;
+}
 export declare class CriteriaSetupDto {
     status: 'none' | 'in_progress' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
     evaluationCriteria: EvaluationCriteriaInfoDto;
     wbsCriteria: WbsCriteriaInfoDto;
     evaluationLine: EvaluationLineInfoDto;
+    criteriaSubmission: CriteriaSubmissionInfoDto;
 }
 export declare class PerformanceInputDto {
     status: 'complete' | 'in_progress' | 'none';
@@ -62,6 +68,7 @@ export declare class SelfEvaluationInfoDto {
     totalMappingCount: number;
     completedMappingCount: number;
     isSubmittedToEvaluator: boolean;
+    isSubmittedToManager: boolean;
     totalScore: number | null;
     grade: string | null;
 }
@@ -146,9 +153,6 @@ export declare class EmployeeEvaluationPeriodStatusResponseDto {
     evaluationPeriod: EvaluationPeriodInfoDto | null;
     employee: EmployeeInfoDto | null;
     exclusionInfo: ExclusionInfoDto;
-    evaluationCriteria: EvaluationCriteriaInfoDto;
-    wbsCriteria: WbsCriteriaInfoDto;
-    evaluationLine: EvaluationLineInfoDto;
     criteriaSetup: CriteriaSetupDto;
     performanceInput: PerformanceInputDto;
     selfEvaluation: SelfEvaluationInfoDto;

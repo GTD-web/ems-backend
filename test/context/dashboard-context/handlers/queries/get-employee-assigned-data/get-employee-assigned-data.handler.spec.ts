@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
+import { ExcludedEvaluationTargetAccessException } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.exceptions';
+import * as fs from 'fs';
+import * as path from 'path';
 import { DatabaseModule } from '@libs/database/database.module';
 import { GetEmployeeAssignedDataHandler } from '@context/dashboard-context/handlers/queries/get-employee-assigned-data/get-employee-assigned-data.handler';
 import { GetEmployeeAssignedDataQuery } from '@context/dashboard-context/handlers/queries/get-employee-assigned-data/get-employee-assigned-data.handler';
@@ -22,6 +26,9 @@ import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/eval
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
+import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 
 /**
  * 사용자 할당 정보 조회 핸들러 유닛 테스트
@@ -57,9 +64,30 @@ describe('GetEmployeeAssignedDataHandler', () => {
 
   const systemAdminId = '00000000-0000-0000-0000-000000000001';
 
+  // 테스트 결과 저장용
+  const testResults: any[] = [];
+
   beforeAll(async () => {
     module = await Test.createTestingModule({
-      imports: [DatabaseModule],
+      imports: [
+        DatabaseModule,
+        TypeOrmModule.forFeature([
+          EvaluationPeriod,
+          Employee,
+          Department,
+          EvaluationPeriodEmployeeMapping,
+          EvaluationProjectAssignment,
+          EvaluationWbsAssignment,
+          Project,
+          WbsItem,
+          WbsEvaluationCriteria,
+          WbsSelfEvaluation,
+          DownwardEvaluation,
+          EvaluationLine,
+          EvaluationLineMapping,
+          Deliverable,
+        ]),
+      ],
       providers: [GetEmployeeAssignedDataHandler],
     }).compile();
 
@@ -99,16 +127,20 @@ describe('GetEmployeeAssignedDataHandler', () => {
 
   beforeEach(async () => {
     // 각 테스트 전에 데이터 정리
-    await evaluationLineMappingRepository.delete({});
-    await evaluationLineRepository.delete({});
-    await wbsAssignmentRepository.delete({});
-    await projectAssignmentRepository.delete({});
-    await mappingRepository.delete({});
-    await evaluationPeriodRepository.delete({});
-    await employeeRepository.delete({});
-    await projectRepository.delete({});
-    await wbsItemRepository.delete({});
-    await departmentRepository.delete({});
+    await evaluationLineMappingRepository.clear();
+    await evaluationLineRepository.clear();
+    await dataSource.getRepository(DownwardEvaluation).clear();
+    await dataSource.getRepository(WbsSelfEvaluation).clear();
+    await dataSource.getRepository(WbsEvaluationCriteria).clear();
+    await wbsAssignmentRepository.clear();
+    await projectAssignmentRepository.clear();
+    await mappingRepository.clear();
+    await evaluationPeriodRepository.clear();
+    await employeeRepository.clear();
+    await projectRepository.clear();
+    await wbsItemRepository.clear();
+    await departmentRepository.clear();
+    await dataSource.getRepository(Deliverable).clear();
   });
 
   /**
@@ -132,7 +164,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -140,16 +171,17 @@ describe('GetEmployeeAssignedDataHandler', () => {
       finalEvaluationSettingEnabled: true,
       maxSelfEvaluationRate: 120,
       createdBy: systemAdminId,
-    });
+    } as any);
     const savedPeriod =
       await evaluationPeriodRepository.save(evaluationPeriod);
-    evaluationPeriodId = savedPeriod.id;
+    evaluationPeriodId = (savedPeriod as unknown as EvaluationPeriod).id;
 
     // 3. 피평가자 직원 생성
     const employee = employeeRepository.create({
       name: '김피평가',
       employeeNumber: 'EMP001',
       email: 'employee@test.com',
+      externalId: 'EXT001',
       departmentId: departmentId,
       status: '재직중',
       createdBy: systemAdminId,
@@ -162,6 +194,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
       name: '이평가자',
       employeeNumber: 'EMP002',
       email: 'evaluator@test.com',
+      externalId: 'EXT002',
       departmentId: departmentId,
       status: '재직중',
       createdBy: systemAdminId,
@@ -173,11 +206,8 @@ describe('GetEmployeeAssignedDataHandler', () => {
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
-    });
+    } as any);
     await mappingRepository.save(mapping);
 
     // 6. 프로젝트 생성
@@ -239,12 +269,13 @@ describe('GetEmployeeAssignedDataHandler', () => {
 
     // 11. 평가라인 매핑 생성 (1차 평가자)
     const evaluationLineMapping = evaluationLineMappingRepository.create({
+      evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
       evaluatorId: evaluatorId,
       evaluationLineId: primaryEvaluationLineId,
       wbsItemId: undefined, // 직원별 고정 담당자
       createdBy: systemAdminId,
-    });
+    } as any);
     await evaluationLineMappingRepository.save(evaluationLineMapping);
   }
 
@@ -287,10 +318,17 @@ describe('GetEmployeeAssignedDataHandler', () => {
       expect(result.summary.totalProjects).toBe(1);
       expect(result.summary.totalWbs).toBe(1);
 
-      // EditableStatus 검증
-      expect(result.editableStatus.isSelfEvaluationEditable).toBe(true);
-      expect(result.editableStatus.isPrimaryEvaluationEditable).toBe(true);
-      expect(result.editableStatus.isSecondaryEvaluationEditable).toBe(true);
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '정상적으로 직원 할당 정보를 조회할 수 있어야 한다',
+        result: {
+          evaluationPeriodId,
+          employeeId,
+          employeeName: result.employee.name,
+          totalProjects: result.summary.totalProjects,
+          totalWbs: result.summary.totalWbs,
+        },
+      });
     });
 
     it('primaryDownwardEvaluation이 정상적으로 반환되어야 한다', async () => {
@@ -314,7 +352,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
       expect(wbs.primaryDownwardEvaluation).toHaveProperty('evaluatorId');
       expect(wbs.primaryDownwardEvaluation).toHaveProperty('evaluatorName');
       expect(wbs.primaryDownwardEvaluation).toHaveProperty('isCompleted');
-      expect(wbs.primaryDownwardEvaluation).toHaveProperty('isEditable');
 
       // evaluatorId 검증
       expect(wbs.primaryDownwardEvaluation!.evaluatorId).toBe(evaluatorId);
@@ -331,10 +368,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
         'boolean',
       );
       expect(wbs.primaryDownwardEvaluation!.isCompleted).toBe(false);
-
-      // isEditable 검증
-      expect(typeof wbs.primaryDownwardEvaluation!.isEditable).toBe('boolean');
-      expect(wbs.primaryDownwardEvaluation!.isEditable).toBe(true);
 
       // JSON 출력
       const jsonOutput = JSON.stringify(
@@ -441,6 +474,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
         name: '박다른직원',
         employeeNumber: 'EMP003',
         email: 'other@test.com',
+        externalId: 'EXT003',
         departmentId: departmentId,
         status: '재직중',
         createdBy: systemAdminId,
@@ -461,6 +495,54 @@ describe('GetEmployeeAssignedDataHandler', () => {
       );
     });
 
+    it('평가 대상에서 제외된 직원일 경우 ExcludedEvaluationTargetAccessException을 던져야 한다', async () => {
+      // Given
+      await 테스트데이터를_생성한다();
+
+      // 매핑을 제외 상태로 변경
+      const mapping = await mappingRepository.findOne({
+        where: {
+          evaluationPeriodId,
+          employeeId,
+        },
+      });
+      expect(mapping).toBeDefined();
+
+      if (mapping) {
+        mapping.isExcluded = true;
+        mapping.excludeReason = '테스트 제외 사유';
+        mapping.excludedBy = systemAdminId;
+        mapping.excludedAt = new Date();
+        await mappingRepository.save(mapping);
+      }
+
+      const query = new GetEmployeeAssignedDataQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+
+      // When & Then
+      await expect(handler.execute(query)).rejects.toThrow(
+        ExcludedEvaluationTargetAccessException,
+      );
+      await expect(handler.execute(query)).rejects.toThrow(
+        '평가 대상에서 제외된 직원은 할당 정보를 조회할 수 없습니다',
+      );
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '평가 대상에서 제외된 직원일 경우 ExcludedEvaluationTargetAccessException을 던져야 한다',
+        result: {
+          evaluationPeriodId,
+          employeeId,
+          isExcluded: true,
+          excludeReason: mapping?.excludeReason || '테스트 제외 사유',
+          exceptionThrown: 'ExcludedEvaluationTargetAccessException',
+          exceptionMessage: '평가 대상에서 제외된 직원은 할당 정보를 조회할 수 없습니다',
+        },
+      });
+    });
+
     it('프로젝트가 할당되지 않은 직원도 빈 배열로 반환되어야 한다', async () => {
       // Given
       // 평가기간, 직원, 매핑만 생성 (프로젝트 할당 없음)
@@ -478,7 +560,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
         name: '2024년 하반기 평가',
         description: '프로젝트 없는 테스트',
         startDate: new Date('2024-07-01'),
-        endDate: new Date('2024-12-31'),
         status: EvaluationPeriodStatus.IN_PROGRESS,
         currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
         criteriaSettingEnabled: true,
@@ -486,7 +567,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
         finalEvaluationSettingEnabled: true,
         maxSelfEvaluationRate: 120,
         createdBy: systemAdminId,
-      });
+      } as any);
       const savedPeriod =
         await evaluationPeriodRepository.save(evaluationPeriod);
 
@@ -494,6 +575,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
         name: '이프로젝트없음',
         employeeNumber: 'EMP004',
         email: 'noproject@test.com',
+        externalId: 'EXT004',
         departmentId: savedDepartment.id,
         status: '재직중',
         createdBy: systemAdminId,
@@ -501,17 +583,14 @@ describe('GetEmployeeAssignedDataHandler', () => {
       const savedEmployee = await employeeRepository.save(employee);
 
       const mapping = mappingRepository.create({
-        evaluationPeriodId: savedPeriod.id,
+        evaluationPeriodId: (savedPeriod as unknown as EvaluationPeriod).id,
         employeeId: savedEmployee.id,
-        isSelfEvaluationEditable: true,
-        isPrimaryEvaluationEditable: true,
-        isSecondaryEvaluationEditable: true,
         createdBy: systemAdminId,
-      });
+      } as any);
       await mappingRepository.save(mapping);
 
       const query = new GetEmployeeAssignedDataQuery(
-        savedPeriod.id,
+        (savedPeriod as unknown as EvaluationPeriod).id,
         savedEmployee.id,
       );
 
@@ -619,7 +698,40 @@ describe('GetEmployeeAssignedDataHandler', () => {
       );
       expect(secondProjectResult).toBeDefined();
       expect(secondProjectResult!.wbsList.length).toBe(1);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '여러 프로젝트와 WBS가 할당된 경우 모두 반환되어야 한다',
+        result: {
+          evaluationPeriodId,
+          employeeId,
+          totalProjects: result.summary.totalProjects,
+          totalWbs: result.summary.totalWbs,
+          projects: result.projects.map((p) => ({
+            projectId: p.projectId,
+            projectName: p.projectName,
+            wbsCount: p.wbsList.length,
+          })),
+        },
+      });
     });
+  });
+
+  afterAll(() => {
+    // 테스트 결과를 JSON 파일로 저장
+    const outputPath = path.join(
+      __dirname,
+      'get-employee-assigned-data-test-result.json',
+    );
+    const output = {
+      timestamp: new Date().toISOString(),
+      testResults: testResults,
+    };
+
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
+    console.log(
+      `✅ 테스트 결과가 저장되었습니다: ${outputPath}`,
+    );
   });
 });
 

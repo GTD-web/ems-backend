@@ -150,7 +150,6 @@ describe('최종평가 관리 E2E 테스트', () => {
       expect(상세조회결과.period.id).toBeDefined();
       expect(상세조회결과.period.name).toBeDefined();
       expect(상세조회결과.period.startDate).toBeDefined();
-      expect(상세조회결과.period.endDate).toBeDefined();
       expect(상세조회결과.period.status).toBeDefined();
       expect(상세조회결과.evaluationGrade).toBe('A');
       expect(상세조회결과.jobGrade).toBe('T2');

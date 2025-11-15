@@ -9,8 +9,8 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
 import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
-import type { AuthenticatedUser } from '../../decorators';
-import { CurrentUser } from '../../decorators';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import {
   BulkCreateWbsAssignments,
   CancelWbsAssignment,

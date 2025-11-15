@@ -4,7 +4,7 @@ exports.Login = Login;
 exports.GetMe = GetMe;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const decorators_1 = require("../../../decorators");
+const decorators_1 = require("../../../common/decorators");
 const dto_1 = require("../dto");
 function Login() {
     return (0, common_1.applyDecorators)((0, decorators_1.Public)(), (0, common_1.Post)('login'), (0, common_1.HttpCode)(common_1.HttpStatus.OK), (0, swagger_1.ApiOperation)({

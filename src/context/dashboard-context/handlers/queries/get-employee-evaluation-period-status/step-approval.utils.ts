@@ -28,9 +28,9 @@ export interface EvaluatorRevisionRequestStatus {
 
 /**
  * 평가자별 2차 평가 단계 승인 상태를 조회한다
- * 
+ *
  * 재작성 요청 테이블에서 평가자별 상태를 조회하여 반환합니다.
- * 
+ *
  * @param evaluationPeriodId 평가기간 ID
  * @param employeeId 직원 ID
  * @param evaluatorId 평가자 ID
@@ -101,8 +101,82 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
 }
 
 /**
+ * 1차 평가 단계 승인 상태를 조회한다
+ *
+ * 재작성 요청 테이블에서 1차 평가자 상태를 조회하여 반환합니다.
+ *
+ * @param evaluationPeriodId 평가기간 ID
+ * @param employeeId 직원 ID
+ * @param evaluatorId 평가자 ID
+ * @param revisionRequestRepository 재작성 요청 Repository
+ * @param revisionRequestRecipientRepository 재작성 요청 수신자 Repository
+ * @returns 재작성 요청 상태 정보
+ */
+export async function 일차평가_단계승인_상태를_조회한다(
+  evaluationPeriodId: string,
+  employeeId: string,
+  evaluatorId: string,
+  revisionRequestRepository: Repository<EvaluationRevisionRequest>,
+  revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>,
+): Promise<EvaluatorRevisionRequestStatus> {
+  // 1. 해당 평가자에게 전송된 재작성 요청 조회
+  // - 평가기간 ID, 직원 ID, 단계('primary'), 수신자 ID로 조회
+  const recipient = await revisionRequestRecipientRepository
+    .createQueryBuilder('recipient')
+    .leftJoinAndSelect('recipient.revisionRequest', 'request')
+    .where('request.evaluationPeriodId = :evaluationPeriodId', {
+      evaluationPeriodId,
+    })
+    .andWhere('request.employeeId = :employeeId', { employeeId })
+    .andWhere('request.step = :step', { step: 'primary' })
+    .andWhere('recipient.recipientId = :evaluatorId', { evaluatorId })
+    .andWhere('recipient.recipientType = :recipientType', {
+      recipientType: RecipientType.PRIMARY_EVALUATOR,
+    })
+    .andWhere('recipient.deletedAt IS NULL')
+    .andWhere('request.deletedAt IS NULL')
+    .orderBy('request.requestedAt', 'DESC')
+    .getOne();
+
+  // 재작성 요청이 없으면 기본 상태 반환
+  if (!recipient || !recipient.revisionRequest) {
+    return {
+      evaluatorId,
+      status: 'pending' as StepApprovalStatus,
+      revisionRequestId: null,
+      revisionComment: null,
+      isCompleted: false,
+      completedAt: null,
+      responseComment: null,
+      requestedAt: null,
+    };
+  }
+
+  const request = recipient.revisionRequest;
+
+  // 2. 재작성 완료 여부에 따라 상태 결정
+  let status: StepApprovalStatus;
+  if (recipient.isCompleted) {
+    status = 'revision_completed' as StepApprovalStatus;
+  } else {
+    status = 'revision_requested' as StepApprovalStatus;
+  }
+
+  return {
+    evaluatorId,
+    status,
+    revisionRequestId: request.id,
+    revisionComment: request.comment,
+    isCompleted: recipient.isCompleted,
+    completedAt: recipient.completedAt,
+    responseComment: recipient.responseComment,
+    requestedAt: request.requestedAt,
+  };
+}
+
+/**
  * 여러 평가자별 2차 평가 단계 승인 상태를 조회한다
- * 
+ *
  * @param evaluationPeriodId 평가기간 ID
  * @param employeeId 직원 ID
  * @param evaluatorIds 평가자 ID 목록
@@ -137,3 +211,81 @@ export async function 평가자들별_2차평가_단계승인_상태를_조회�
   return statuses;
 }
 
+/**
+ * 자기평가 단계 승인 상태를 조회한다
+ *
+ * 재작성 요청 테이블에서 자기평가 단계 상태를 조회하여 반환합니다.
+ * 자기평가의 경우 피평가자 본인이 수신자가 됩니다.
+ *
+ * @param evaluationPeriodId 평가기간 ID
+ * @param employeeId 직원 ID (피평가자)
+ * @param revisionRequestRepository 재작성 요청 Repository
+ * @param revisionRequestRecipientRepository 재작성 요청 수신자 Repository
+ * @returns 재작성 요청 상태 정보
+ */
+export async function 자기평가_단계승인_상태를_조회한다(
+  evaluationPeriodId: string,
+  employeeId: string,
+  revisionRequestRepository: Repository<EvaluationRevisionRequest>,
+  revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>,
+): Promise<{
+  status: StepApprovalStatus;
+  revisionRequestId: string | null;
+  revisionComment: string | null;
+  isCompleted: boolean;
+  completedAt: Date | null;
+  responseComment: string | null;
+  requestedAt: Date | null;
+}> {
+  // 1. 해당 직원(피평가자)에게 전송된 재작성 요청 조회
+  // - 평가기간 ID, 직원 ID, 단계('self'), 수신자 ID로 조회
+  const recipient = await revisionRequestRecipientRepository
+    .createQueryBuilder('recipient')
+    .leftJoinAndSelect('recipient.revisionRequest', 'request')
+    .where('request.evaluationPeriodId = :evaluationPeriodId', {
+      evaluationPeriodId,
+    })
+    .andWhere('request.employeeId = :employeeId', { employeeId })
+    .andWhere('request.step = :step', { step: 'self' })
+    .andWhere('recipient.recipientId = :employeeId', { employeeId })
+    .andWhere('recipient.recipientType = :recipientType', {
+      recipientType: RecipientType.EVALUATEE,
+    })
+    .andWhere('recipient.deletedAt IS NULL')
+    .andWhere('request.deletedAt IS NULL')
+    .orderBy('request.requestedAt', 'DESC')
+    .getOne();
+
+  // 재작성 요청이 없으면 기본 상태 반환
+  if (!recipient || !recipient.revisionRequest) {
+    return {
+      status: 'pending' as StepApprovalStatus,
+      revisionRequestId: null,
+      revisionComment: null,
+      isCompleted: false,
+      completedAt: null,
+      responseComment: null,
+      requestedAt: null,
+    };
+  }
+
+  const request = recipient.revisionRequest;
+
+  // 2. 재작성 완료 여부에 따라 상태 결정
+  let status: StepApprovalStatus;
+  if (recipient.isCompleted) {
+    status = 'revision_completed' as StepApprovalStatus;
+  } else {
+    status = 'revision_requested' as StepApprovalStatus;
+  }
+
+  return {
+    status,
+    revisionRequestId: request.id,
+    revisionComment: request.comment,
+    isCompleted: recipient.isCompleted,
+    completedAt: recipient.completedAt,
+    responseComment: recipient.responseComment,
+    requestedAt: request.requestedAt,
+  };
+}

@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmployeeFinalEvaluationListResponseDto = exports.FinalEvaluationItemDto = exports.EvaluationPeriodInfoDto = exports.EmployeeBasicInfoDto = exports.GetEmployeeFinalEvaluationsQueryDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
-const decorators_1 = require("../../../decorators");
+const decorators_1 = require("../../../common/decorators");
 class GetEmployeeFinalEvaluationsQueryDto {
     startDate;
     endDate;
@@ -99,7 +99,6 @@ class EvaluationPeriodInfoDto {
     id;
     name;
     startDate;
-    endDate;
 }
 exports.EvaluationPeriodInfoDto = EvaluationPeriodInfoDto;
 __decorate([
@@ -125,16 +124,6 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], EvaluationPeriodInfoDto.prototype, "startDate", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '평가기간 종료일',
-        type: 'string',
-        format: 'date-time',
-        example: '2024-06-30T23:59:59.999Z',
-        nullable: true,
-    }),
-    __metadata("design:type", Object)
-], EvaluationPeriodInfoDto.prototype, "endDate", void 0);
 class FinalEvaluationItemDto {
     id;
     period;

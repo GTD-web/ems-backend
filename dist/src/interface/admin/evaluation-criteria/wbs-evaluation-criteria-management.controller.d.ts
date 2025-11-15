@@ -1,9 +1,11 @@
-import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import { UpsertWbsEvaluationCriteriaBodyDto, WbsEvaluationCriteriaDto, WbsEvaluationCriteriaDetailDto, WbsEvaluationCriteriaFilterDto, WbsItemEvaluationCriteriaResponseDto, WbsEvaluationCriteriaListResponseDto } from './dto/wbs-evaluation-criteria.dto';
-import type { AuthenticatedUser } from '../../decorators';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { EvaluationCriteriaBusinessService } from '@business/evaluation-criteria/evaluation-criteria-business.service';
+import { UpsertWbsEvaluationCriteriaBodyDto, WbsEvaluationCriteriaDto, WbsEvaluationCriteriaDetailDto, WbsEvaluationCriteriaFilterDto, WbsItemEvaluationCriteriaResponseDto, WbsEvaluationCriteriaListResponseDto, SubmitEvaluationCriteriaDto, EvaluationCriteriaSubmissionResponseDto } from './dto/wbs-evaluation-criteria.dto';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 export declare class WbsEvaluationCriteriaManagementController {
     private readonly evaluationCriteriaManagementService;
-    constructor(evaluationCriteriaManagementService: EvaluationCriteriaManagementService);
+    private readonly evaluationCriteriaBusinessService;
+    constructor(evaluationCriteriaManagementService: EvaluationCriteriaManagementService, evaluationCriteriaBusinessService: EvaluationCriteriaBusinessService);
     getWbsEvaluationCriteriaList(filter: WbsEvaluationCriteriaFilterDto): Promise<WbsEvaluationCriteriaListResponseDto>;
     getWbsEvaluationCriteriaDetail(id: string): Promise<WbsEvaluationCriteriaDetailDto | null>;
     getWbsItemEvaluationCriteria(wbsItemId: string): Promise<WbsItemEvaluationCriteriaResponseDto>;
@@ -14,4 +16,6 @@ export declare class WbsEvaluationCriteriaManagementController {
     deleteWbsItemEvaluationCriteria(wbsItemId: string, user: AuthenticatedUser): Promise<{
         success: boolean;
     }>;
+    submitEvaluationCriteria(dto: SubmitEvaluationCriteriaDto, user: AuthenticatedUser): Promise<EvaluationCriteriaSubmissionResponseDto>;
+    resetEvaluationCriteriaSubmission(dto: SubmitEvaluationCriteriaDto, user: AuthenticatedUser): Promise<EvaluationCriteriaSubmissionResponseDto>;
 }

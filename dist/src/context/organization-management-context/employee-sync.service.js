@@ -8,15 +8,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var EmployeeSyncService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EmployeeSyncService = void 0;
+const sso_1 = require("../../domain/common/sso");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const employee_entity_1 = require("../../domain/common/employee/employee.entity");
 const employee_service_1 = require("../../domain/common/employee/employee.service");
-const sso_service_1 = require("../../domain/common/sso/sso.service");
 let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
     employeeService;
     configService;
@@ -68,18 +71,10 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             }
             else {
                 this.logger.log('직원 목록 API(getEmployees)를 사용하여 모든 직원 정보를 조회합니다...');
-                const result = await this.ssoService.sdkClient.organization.getEmployees({
+                employees = await this.ssoService.여러직원원시정보를조회한다({
                     withDetail: true,
                     includeTerminated: false,
                 });
-                const rawEmployees = Array.isArray(result)
-                    ? result
-                    : result?.employees || result?.data || [];
-                if (!Array.isArray(rawEmployees)) {
-                    this.logger.warn('예상치 못한 응답 형식:', JSON.stringify(result).substring(0, 200));
-                    return [];
-                }
-                employees = rawEmployees;
                 this.logger.log(`직원 목록 API에서 ${employees.length}개의 직원 데이터를 조회했습니다.`);
             }
             return employees;
@@ -155,6 +150,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
         const phoneNumber = ssoEmployee.phoneNumber && ssoEmployee.phoneNumber.trim() !== ''
             ? ssoEmployee.phoneNumber
             : undefined;
+        const managerId = ssoEmployee.managerId ? ssoEmployee.managerId : undefined;
         return {
             employeeNumber: ssoEmployee.employeeNumber,
             name: ssoEmployee.name,
@@ -163,7 +159,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             dateOfBirth: dateOfBirth,
             gender: gender,
             hireDate: hireDate,
-            managerId: undefined,
+            managerId: managerId,
             status: status,
             departmentId: departmentId,
             departmentName: departmentName,
@@ -200,9 +196,37 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             this.logger.log('직원 데이터 동기화를 시작합니다...');
             const ssoEmployees = await this.fetchExternalEmployees(useHierarchyAPI);
             totalProcessed = ssoEmployees.length;
-            this.logger.log(`SSO에서 ${totalProcessed}개의 직원 데이터를 조회했습니다. 동기화를 시작합니다...`);
+            this.logger.log(`SSO에서 ${totalProcessed}개의 직원 데이터를 조회했습니다.`);
+            this.logger.log('관리자 정보를 조회합니다...');
+            let managerMap = new Map();
+            try {
+                const managersResponse = await this.ssoService.직원관리자정보를조회한다();
+                for (const empManager of managersResponse.employees) {
+                    let foundManagerId = null;
+                    for (const deptManager of empManager.departments) {
+                        const sortedManagerLine = [...deptManager.managerLine].sort((a, b) => a.depth - b.depth);
+                        for (const managerLine of sortedManagerLine) {
+                            if (managerLine.managers && managerLine.managers.length > 0) {
+                                foundManagerId = managerLine.managers[0].employeeId;
+                                break;
+                            }
+                        }
+                        if (foundManagerId) {
+                            break;
+                        }
+                    }
+                    managerMap.set(empManager.employeeId, foundManagerId);
+                }
+                const managerCount = Array.from(managerMap.values()).filter((id) => id !== null).length;
+                this.logger.log(`관리자 정보 ${managerCount}개를 조회했습니다. (null: ${managerMap.size - managerCount}개) 동기화를 시작합니다...`);
+            }
+            catch (managerError) {
+                this.logger.warn(`관리자 정보 조회 실패 (동기화는 계속 진행): ${managerError.message}`);
+            }
             const employeesToSave = [];
             for (const ssoEmp of ssoEmployees) {
+                const managerId = managerMap.get(ssoEmp.id);
+                ssoEmp.managerId = managerId || undefined;
                 const result = await this.직원을_처리한다(ssoEmp, forceSync, syncStartTime);
                 if (result.success && result.employee) {
                     employeesToSave.push(result.employee);
@@ -350,6 +374,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         name: mappedData.name,
                         email: mappedData.email,
                         phoneNumber: mappedData.phoneNumber,
+                        managerId: mappedData.managerId,
                         status: mappedData.status,
                         departmentId: mappedData.departmentId,
                         departmentName: mappedData.departmentName,
@@ -387,14 +412,12 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
         const hasRankData = mappedData.rankId || mappedData.rankName;
         const missingRankData = !existingEmployee.rankId && !existingEmployee.rankName;
         if (hasRankData && missingRankData) {
-            this.logger.debug(`직원 ${existingEmployee.name}의 직급 정보가 없어 강제 업데이트합니다.`);
             return true;
         }
         if (hasRankData &&
             (existingEmployee.rankId !== mappedData.rankId ||
                 existingEmployee.rankName !== mappedData.rankName ||
                 existingEmployee.rankLevel !== mappedData.rankLevel)) {
-            this.logger.debug(`직원 ${existingEmployee.name}의 직급 정보가 변경되어 업데이트합니다.`);
             return true;
         }
         const hasDepartmentData = mappedData.departmentId ||
@@ -402,14 +425,12 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             mappedData.departmentCode;
         const missingDepartmentData = !existingEmployee.departmentName && !existingEmployee.departmentCode;
         if (hasDepartmentData && missingDepartmentData) {
-            this.logger.debug(`직원 ${existingEmployee.name}의 부서 정보가 없어 강제 업데이트합니다.`);
             return true;
         }
         if (hasDepartmentData &&
             (existingEmployee.departmentId !== mappedData.departmentId ||
                 existingEmployee.departmentName !== mappedData.departmentName ||
                 existingEmployee.departmentCode !== mappedData.departmentCode)) {
-            this.logger.debug(`직원 ${existingEmployee.name}의 부서 정보가 변경되어 업데이트합니다.`);
             return true;
         }
         return false;
@@ -527,8 +548,8 @@ __decorate([
 ], EmployeeSyncService.prototype, "scheduledSync", null);
 exports.EmployeeSyncService = EmployeeSyncService = EmployeeSyncService_1 = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, common_1.Inject)(sso_1.SSOService)),
     __metadata("design:paramtypes", [employee_service_1.EmployeeService,
-        config_1.ConfigService,
-        sso_service_1.SSOService])
+        config_1.ConfigService, Object])
 ], EmployeeSyncService);
 //# sourceMappingURL=employee-sync.service.js.map

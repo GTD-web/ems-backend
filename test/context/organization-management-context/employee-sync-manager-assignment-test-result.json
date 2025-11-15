@@ -1,0 +1,698 @@
+{
+  "timestamp": "2025-11-15T09:12:17.224Z",
+  "testResults": [
+    {
+      "testName": "동기화 후 DB에 managerId가 제대로 저장되었는지 확인해야 한다",
+      "result": {
+        "syncResult": {
+          "success": true,
+          "totalProcessed": 80,
+          "created": 80,
+          "updated": 0
+        },
+        "managersApi": {
+          "success": true,
+          "totalEmployees": 80,
+          "employeesWithManagerInfo": 80
+        },
+        "dbStatistics": {
+          "totalEmployees": 80,
+          "employeesWithManagerId": 80,
+          "employeesWithoutManagerId": 0
+        },
+        "mappingStatistics": {
+          "totalMapped": 80,
+          "matched": 80,
+          "missing": 0,
+          "mismatched": 0
+        },
+        "employeesWithManagerDetails": [
+          {
+            "name": "강남규",
+            "employeeNumber": "17007",
+            "managerId": "2482b91a-8507-4cfa-9553-856e7db8d020"
+          },
+          {
+            "name": "고영훈",
+            "employeeNumber": "22002",
+            "managerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240"
+          },
+          {
+            "name": "구석현",
+            "employeeNumber": "24020",
+            "managerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240"
+          },
+          {
+            "name": "권혁규",
+            "employeeNumber": "25010",
+            "managerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b"
+          },
+          {
+            "name": "김경민",
+            "employeeNumber": "23028",
+            "managerId": "8131a1ae-9c84-41cb-979e-77353731c61c"
+          },
+          {
+            "name": "김규현",
+            "employeeNumber": "24016",
+            "managerId": "839e6f06-8d44-43a1-948c-095253c4cf8c"
+          },
+          {
+            "name": "김기용",
+            "employeeNumber": "24004",
+            "managerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8"
+          },
+          {
+            "name": "김기표",
+            "employeeNumber": "23025",
+            "managerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3"
+          },
+          {
+            "name": "김대형",
+            "employeeNumber": "25021",
+            "managerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240"
+          },
+          {
+            "name": "김도형",
+            "employeeNumber": "25032",
+            "managerId": "2482b91a-8507-4cfa-9553-856e7db8d020"
+          }
+        ],
+        "managerMappingDetails": [
+          {
+            "employeeId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "employeeName": "남명용",
+            "employeeNumber": "1",
+            "foundManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "루미르 주식회사"
+          },
+          {
+            "employeeId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "employeeName": "강남규",
+            "employeeNumber": "17007",
+            "foundManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "전자1파트"
+          },
+          {
+            "employeeId": "cb098a2a-c036-4292-b518-5161121e9aaa",
+            "employeeName": "우무현",
+            "employeeNumber": "18011",
+            "foundManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "foundAtDepth": 2,
+            "foundAtDepartment": "루미르 주식회사"
+          },
+          {
+            "employeeId": "19de44dc-52b7-4ed8-8baf-747800000403",
+            "employeeName": "조수형",
+            "employeeNumber": "19003",
+            "foundManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "전자1파트"
+          },
+          {
+            "employeeId": "f95f4f38-d265-45e0-aaf5-0c8fb2248c90",
+            "employeeName": "이봉은",
+            "employeeNumber": "20028",
+            "foundManagerId": "f95f4f38-d265-45e0-aaf5-0c8fb2248c90",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "경영지원본부"
+          },
+          {
+            "employeeId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "employeeName": "전영미",
+            "employeeNumber": "20029",
+            "foundManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "경영지원실"
+          },
+          {
+            "employeeId": "7f88af6c-b1cc-4f4c-8940-b8a8709fd0c6",
+            "employeeName": "정양희",
+            "employeeNumber": "20035",
+            "foundManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "전자1파트"
+          },
+          {
+            "employeeId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "employeeName": "정성훈",
+            "employeeNumber": "21008",
+            "foundManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "ES파트"
+          },
+          {
+            "employeeId": "248557f3-6321-4a82-a68e-9d7b646e6a97",
+            "employeeName": "이준",
+            "employeeNumber": "21013",
+            "foundManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "ES파트"
+          },
+          {
+            "employeeId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "employeeName": "고영훈",
+            "employeeNumber": "22002",
+            "foundManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "기구파트"
+          },
+          {
+            "employeeId": "0fdea4d4-2cd2-4264-a87b-3f2ca9d271b3",
+            "employeeName": "김동현",
+            "employeeNumber": "22005",
+            "foundManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "제조파트"
+          },
+          {
+            "employeeId": "a12a1c7d-6dea-4cac-a442-5740ac6246c1",
+            "employeeName": "모현민",
+            "employeeNumber": "22007",
+            "foundManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "foundAtDepth": 1,
+            "foundAtDepartment": "루미르 주식회사"
+          },
+          {
+            "employeeId": "4aa9b76f-3fcf-4289-86d0-1b5449230359",
+            "employeeName": "박태연",
+            "employeeNumber": "22008",
+            "foundManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "경영지원실"
+          },
+          {
+            "employeeId": "e70dc570-c9a9-4554-a461-57f56bc70684",
+            "employeeName": "우은진",
+            "employeeNumber": "22020",
+            "foundManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "경영지원실"
+          },
+          {
+            "employeeId": "3cc1b02c-4cb4-43b8-a3a9-eb5fa0b780dc",
+            "employeeName": "정석화",
+            "employeeNumber": "22025",
+            "foundManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "foundAtDepth": 2,
+            "foundAtDepartment": "루미르 주식회사"
+          },
+          {
+            "employeeId": "861651a6-1787-4b1d-8905-027343c5783b",
+            "employeeName": "김일진",
+            "employeeNumber": "22035",
+            "foundManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "ES파트"
+          },
+          {
+            "employeeId": "eeb558d8-a655-4d46-afeb-b0602e07c0a6",
+            "employeeName": "채민수",
+            "employeeNumber": "22037",
+            "foundManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "제조파트"
+          },
+          {
+            "employeeId": "65a22e5f-4038-4582-85bf-8a231838a5aa",
+            "employeeName": "서상준",
+            "employeeNumber": "22038",
+            "foundManagerId": "65a22e5f-4038-4582-85bf-8a231838a5aa",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "전자2파트"
+          },
+          {
+            "employeeId": "60cdf02a-873e-43ad-ac20-c2a4d5d16717",
+            "employeeName": "이서연",
+            "employeeNumber": "22042",
+            "foundManagerId": "cdd8725d-4431-4166-b6c2-d21f75b77b54",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "사업개발실"
+          },
+          {
+            "employeeId": "566b333d-95df-4788-926a-7d45ebc397ef",
+            "employeeName": "김민영",
+            "employeeNumber": "23006",
+            "foundManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "foundAtDepth": 0,
+            "foundAtDepartment": "경영지원실"
+          }
+        ],
+        "comparisonDetails": [
+          {
+            "employeeId": "0d906885-0e68-4e55-a58a-4fcdb778cbca",
+            "employeeName": "강남규",
+            "employeeNumber": "17007",
+            "externalId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "expectedManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "actualManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "status": "matched"
+          },
+          {
+            "employeeId": "4a528cde-ce5c-4ef4-9d86-ec5ddc6bc70a",
+            "employeeName": "고영훈",
+            "employeeNumber": "22002",
+            "externalId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "expectedManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "actualManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "status": "matched"
+          },
+          {
+            "employeeId": "5d79f8cb-aa25-4ce5-92d2-76407130933e",
+            "employeeName": "구석현",
+            "employeeNumber": "24020",
+            "externalId": "15b28a0c-bef4-4a2c-a785-ab56cbce4906",
+            "expectedManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "actualManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "status": "matched"
+          },
+          {
+            "employeeId": "ee3fae1e-0e7a-481f-9525-1037dad1731d",
+            "employeeName": "권혁규",
+            "employeeNumber": "25010",
+            "externalId": "dc82ca15-6794-4c1c-9f7a-c37d26d8940f",
+            "expectedManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "actualManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "status": "matched"
+          },
+          {
+            "employeeId": "122b65f5-181b-4fca-8133-14f4af487831",
+            "employeeName": "김경민",
+            "employeeNumber": "23028",
+            "externalId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "expectedManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "actualManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "a1e63408-08ac-46b0-be31-2280a6603d51",
+            "employeeName": "김규현",
+            "employeeNumber": "24016",
+            "externalId": "839e6f06-8d44-43a1-948c-095253c4cf8c",
+            "expectedManagerId": "839e6f06-8d44-43a1-948c-095253c4cf8c",
+            "actualManagerId": "839e6f06-8d44-43a1-948c-095253c4cf8c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "32d1a048-59c1-4d83-8fbd-889df5165abe",
+            "employeeName": "김기용",
+            "employeeNumber": "24004",
+            "externalId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "expectedManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "actualManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "status": "matched"
+          },
+          {
+            "employeeId": "8ee1085c-d5a7-4496-95fd-583216d41573",
+            "employeeName": "김기표",
+            "employeeNumber": "23025",
+            "externalId": "a9fd40e1-8438-4c77-b66a-10900df1effd",
+            "expectedManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "actualManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "status": "matched"
+          },
+          {
+            "employeeId": "b02293c7-f59d-4e30-aa1d-0e3f1c3da8c9",
+            "employeeName": "김대형",
+            "employeeNumber": "25021",
+            "externalId": "50fe20d4-256f-46d4-964c-10aaf0253b1b",
+            "expectedManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "actualManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "status": "matched"
+          },
+          {
+            "employeeId": "2f54e272-8032-4b74-93fa-79181bc3d849",
+            "employeeName": "김도형",
+            "employeeNumber": "25032",
+            "externalId": "cab78b53-5d36-4ade-b411-e748be5ca358",
+            "expectedManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "actualManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "status": "matched"
+          },
+          {
+            "employeeId": "dd57fecd-074f-4a9c-873b-5244d5ac1a7e",
+            "employeeName": "김동현",
+            "employeeNumber": "22005",
+            "externalId": "0fdea4d4-2cd2-4264-a87b-3f2ca9d271b3",
+            "expectedManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "actualManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "status": "matched"
+          },
+          {
+            "employeeId": "70395aee-2734-4c0e-b64f-9da6482b047c",
+            "employeeName": "김동현1",
+            "employeeNumber": "23035",
+            "externalId": "c98978b7-0b4e-4176-9bc6-1ee253dd3a39",
+            "expectedManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "actualManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "status": "matched"
+          },
+          {
+            "employeeId": "c8cb866c-e37d-49ad-ae1f-26f77424f4df",
+            "employeeName": "김민영",
+            "employeeNumber": "23006",
+            "externalId": "566b333d-95df-4788-926a-7d45ebc397ef",
+            "expectedManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "actualManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "status": "matched"
+          },
+          {
+            "employeeId": "2d3adf6a-33b1-4dfd-acdc-506960077cdb",
+            "employeeName": "김민찬",
+            "employeeNumber": "23032",
+            "externalId": "410d115b-6147-4403-8067-51c386bcbbda",
+            "expectedManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "actualManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "status": "matched"
+          },
+          {
+            "employeeId": "0c3b52b9-7b96-49b7-98ce-188e17ae4e24",
+            "employeeName": "김민찬1",
+            "employeeNumber": "25041",
+            "externalId": "7d24c628-4c6b-4d4d-a112-ccf7e6a5c3b1",
+            "expectedManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "actualManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "status": "matched"
+          },
+          {
+            "employeeId": "b986566f-5b51-4bc0-9fef-5d1192df6345",
+            "employeeName": "김민호",
+            "employeeNumber": "25022",
+            "externalId": "49d96c48-8a92-4d85-9d03-f4d1f4320760",
+            "expectedManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "actualManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "status": "matched"
+          },
+          {
+            "employeeId": "34eef7a8-f1d2-47f5-91b9-3864eb5d9fcb",
+            "employeeName": "김유상",
+            "employeeNumber": "25018",
+            "externalId": "7b5d9c72-8047-46a4-8d61-52af874e50fa",
+            "expectedManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "actualManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "status": "matched"
+          },
+          {
+            "employeeId": "01bb835b-34fe-49eb-a3fb-29b0f237ab10",
+            "employeeName": "김은정",
+            "employeeNumber": "23036",
+            "externalId": "d42ce167-4434-4a51-9462-85790f35cde3",
+            "expectedManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "actualManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "4e4a8a24-d5a0-42b2-b008-44b558b12c7d",
+            "employeeName": "김익환",
+            "employeeNumber": "24038",
+            "externalId": "abf01f96-2cb6-4281-b8ca-b5bab74847d3",
+            "expectedManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "actualManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "92320aad-b816-41c1-be9a-60924d73bf2c",
+            "employeeName": "김일진",
+            "employeeNumber": "22035",
+            "externalId": "861651a6-1787-4b1d-8905-027343c5783b",
+            "expectedManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "actualManagerId": "ee073d97-64f4-48aa-bcd2-7da7baf799f3",
+            "status": "matched"
+          },
+          {
+            "employeeId": "405488f8-1fc6-458b-89dd-b46bae467086",
+            "employeeName": "김자승",
+            "employeeNumber": "25030",
+            "externalId": "2761f92e-628e-4714-a70b-e042c5dd89cb",
+            "expectedManagerId": "65a22e5f-4038-4582-85bf-8a231838a5aa",
+            "actualManagerId": "65a22e5f-4038-4582-85bf-8a231838a5aa",
+            "status": "matched"
+          },
+          {
+            "employeeId": "ce3b65fb-a0b8-42d6-a890-572c22edfa60",
+            "employeeName": "김종식",
+            "employeeNumber": "23027",
+            "externalId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "expectedManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "actualManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "status": "matched"
+          },
+          {
+            "employeeId": "478d6b2e-9fb1-458b-b5f4-fa9dfc718004",
+            "employeeName": "김형중",
+            "employeeNumber": "25015",
+            "externalId": "3cc508d7-5db2-4293-a03a-78d82536a4a6",
+            "expectedManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "actualManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "status": "matched"
+          },
+          {
+            "employeeId": "ba547b11-1b20-48cd-88cd-67d3b59467b9",
+            "employeeName": "김형진",
+            "employeeNumber": "25039",
+            "externalId": "b389867c-2c2f-4343-a758-3eecda1e910b",
+            "expectedManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "actualManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "status": "matched"
+          },
+          {
+            "employeeId": "01380368-f4e3-408b-bca2-8328a752a768",
+            "employeeName": "남명용",
+            "employeeNumber": "1",
+            "externalId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "expectedManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "actualManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "status": "matched"
+          },
+          {
+            "employeeId": "80aa9f09-2387-45df-8a96-7a4c2f5205da",
+            "employeeName": "남명조",
+            "employeeNumber": "24042",
+            "externalId": "a58d25c7-ffd3-4fda-bd1e-30195ccafaf8",
+            "expectedManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "actualManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "status": "matched"
+          },
+          {
+            "employeeId": "1b769a18-3c9c-4d0e-bb79-9a063ec2c54c",
+            "employeeName": "남정수",
+            "employeeNumber": "25044",
+            "externalId": "56eb8a3d-7389-44bd-85f2-d68dd481dd69",
+            "expectedManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "actualManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "status": "matched"
+          },
+          {
+            "employeeId": "101f9d8d-3e08-4c20-bf5c-173b36aa67b2",
+            "employeeName": "담현규",
+            "employeeNumber": "25005",
+            "externalId": "49039548-da15-4218-ba80-21ee6be74021",
+            "expectedManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "actualManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "ee2d9c78-105a-4a7d-b5e4-3a5270b26226",
+            "employeeName": "모현민",
+            "employeeNumber": "22007",
+            "externalId": "a12a1c7d-6dea-4cac-a442-5740ac6246c1",
+            "expectedManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "actualManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "status": "matched"
+          },
+          {
+            "employeeId": "4d856b47-6ca7-495b-a012-b81a34bb6d5b",
+            "employeeName": "민정호",
+            "employeeNumber": "24026",
+            "externalId": "2f0ecd69-1b07-4d33-8f49-b71ef9048d87",
+            "expectedManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "actualManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "status": "matched"
+          },
+          {
+            "employeeId": "e97bfdee-20d9-4500-b2bc-ab1a4e73a663",
+            "employeeName": "박동조",
+            "employeeNumber": "23045",
+            "externalId": "be4b1171-710f-4adb-87b6-d994d6075aab",
+            "expectedManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "actualManagerId": "2675eec9-fd68-4cdd-b403-10fa5a6ea240",
+            "status": "matched"
+          },
+          {
+            "employeeId": "8c79959b-9933-4e16-9e96-bcd2760288a7",
+            "employeeName": "박승현",
+            "employeeNumber": "24044",
+            "externalId": "217433b4-ec8a-4a2b-a7c8-101529033c79",
+            "expectedManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "actualManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "status": "matched"
+          },
+          {
+            "employeeId": "cd865d7c-2c3f-46a2-82d1-c149055d1fef",
+            "employeeName": "박일수",
+            "employeeNumber": "24031",
+            "externalId": "5befb5cd-9671-4a7b-8138-4f092c18e06c",
+            "expectedManagerId": "5befb5cd-9671-4a7b-8138-4f092c18e06c",
+            "actualManagerId": "5befb5cd-9671-4a7b-8138-4f092c18e06c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "08b50f82-b6b6-4a4f-86d2-d41abf5b7669",
+            "employeeName": "박태연",
+            "employeeNumber": "22008",
+            "externalId": "4aa9b76f-3fcf-4289-86d0-1b5449230359",
+            "expectedManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "actualManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "status": "matched"
+          },
+          {
+            "employeeId": "265f1f9d-7147-48d1-a9ec-c9cc39815257",
+            "employeeName": "박헌남",
+            "employeeNumber": "25049",
+            "externalId": "3e7136b6-7d88-440b-9caa-cf12f0b22a33",
+            "expectedManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "actualManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "status": "matched"
+          },
+          {
+            "employeeId": "72153c5a-aeff-4cdf-93df-b986c2fe363d",
+            "employeeName": "서상준",
+            "employeeNumber": "22038",
+            "externalId": "65a22e5f-4038-4582-85bf-8a231838a5aa",
+            "expectedManagerId": "65a22e5f-4038-4582-85bf-8a231838a5aa",
+            "actualManagerId": "65a22e5f-4038-4582-85bf-8a231838a5aa",
+            "status": "matched"
+          },
+          {
+            "employeeId": "edb19900-f229-45d3-b19d-1877affb94df",
+            "employeeName": "서유민1",
+            "employeeNumber": "24010",
+            "externalId": "24f37362-c305-4fe4-9d31-61750bb6cc96",
+            "expectedManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "actualManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "status": "matched"
+          },
+          {
+            "employeeId": "61623114-0473-4eb3-9a47-b52cf6870440",
+            "employeeName": "신승규",
+            "employeeNumber": "25003",
+            "externalId": "235c9d5b-72da-4b82-b595-ed8dd59aa9e0",
+            "expectedManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "actualManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "511b21c9-fdcc-4fd6-b044-47223cb0e3d5",
+            "employeeName": "아메드",
+            "employeeNumber": "25034",
+            "externalId": "9e383fb3-7a75-4cf6-a8b6-b6556bd83206",
+            "expectedManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "actualManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "status": "matched"
+          },
+          {
+            "employeeId": "278d2d39-b849-4df1-b2ab-8c098c5e804d",
+            "employeeName": "안광헌",
+            "employeeNumber": "25001",
+            "externalId": "5bc948c3-269d-4788-a261-2a7633956c7c",
+            "expectedManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "actualManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "status": "matched"
+          },
+          {
+            "employeeId": "7cde61c4-f9e1-4cc0-969d-d70fa4a6bbd2",
+            "employeeName": "우무현",
+            "employeeNumber": "18011",
+            "externalId": "cb098a2a-c036-4292-b518-5161121e9aaa",
+            "expectedManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "actualManagerId": "ff463c9b-69ba-4df4-9126-997b1a13aa3b",
+            "status": "matched"
+          },
+          {
+            "employeeId": "ba7fd16f-9184-45f6-87a7-27fe113acea2",
+            "employeeName": "우은진",
+            "employeeNumber": "22020",
+            "externalId": "e70dc570-c9a9-4554-a461-57f56bc70684",
+            "expectedManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "actualManagerId": "aaa6baad-4ebf-45a4-acf6-df2a60e82ec5",
+            "status": "matched"
+          },
+          {
+            "employeeId": "374e950c-fd1f-437c-8516-f470737940be",
+            "employeeName": "우창욱",
+            "employeeNumber": "23047",
+            "externalId": "02b1d831-f278-4393-86ec-9db01248a1ec",
+            "expectedManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "actualManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "status": "matched"
+          },
+          {
+            "employeeId": "6fb8b7ab-88ca-4346-889c-63d0b87b4bea",
+            "employeeName": "원동주",
+            "employeeNumber": "24035",
+            "externalId": "f77a343e-c281-42c9-ad58-8cc82d017f39",
+            "expectedManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "actualManagerId": "ddaafd82-1a39-49c7-adb5-ade3212549c8",
+            "status": "matched"
+          },
+          {
+            "employeeId": "b2abf779-97d1-4784-bfc0-bc8d6d20d0db",
+            "employeeName": "유경준",
+            "employeeNumber": "25007",
+            "externalId": "b567183e-e842-4ce3-927f-b62d0a5685a1",
+            "expectedManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "actualManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "964e2ac1-4989-418d-bee1-9a539169dbd5",
+            "employeeName": "유승훈",
+            "employeeNumber": "25040",
+            "externalId": "dbfbb104-6560-4557-8079-7845a82ffe14",
+            "expectedManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "actualManagerId": "604a5c05-e0c0-495f-97bc-b86046db4342",
+            "status": "matched"
+          },
+          {
+            "employeeId": "4651ec3b-b3ab-4006-a3e2-13ea69a2168f",
+            "employeeName": "응웬반탕",
+            "employeeNumber": "25042",
+            "externalId": "32431053-dd7a-4685-9d2f-36bb6c6e59b9",
+            "expectedManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "actualManagerId": "8131a1ae-9c84-41cb-979e-77353731c61c",
+            "status": "matched"
+          },
+          {
+            "employeeId": "2e37648d-3c34-4005-9f92-dc8acf371c1e",
+            "employeeName": "이민수",
+            "employeeNumber": "25029",
+            "externalId": "5ea9f6f9-fa00-4937-95cb-281c1c966885",
+            "expectedManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "actualManagerId": "2482b91a-8507-4cfa-9553-856e7db8d020",
+            "status": "matched"
+          },
+          {
+            "employeeId": "24d6d309-56f8-4330-9ff8-2ccd56c5ca24",
+            "employeeName": "이봉은",
+            "employeeNumber": "20028",
+            "externalId": "f95f4f38-d265-45e0-aaf5-0c8fb2248c90",
+            "expectedManagerId": "f95f4f38-d265-45e0-aaf5-0c8fb2248c90",
+            "actualManagerId": "f95f4f38-d265-45e0-aaf5-0c8fb2248c90",
+            "status": "matched"
+          },
+          {
+            "employeeId": "c64498e7-e487-453b-8dc6-c6dcbb067c01",
+            "employeeName": "이서연",
+            "employeeNumber": "22042",
+            "externalId": "60cdf02a-873e-43ad-ac20-c2a4d5d16717",
+            "expectedManagerId": "cdd8725d-4431-4166-b6c2-d21f75b77b54",
+            "actualManagerId": "cdd8725d-4431-4166-b6c2-d21f75b77b54",
+            "status": "matched"
+          }
+        ]
+      }
+    }
+  ]
+}

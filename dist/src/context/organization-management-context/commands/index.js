@@ -17,10 +17,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.COMMAND_HANDLERS = void 0;
 __exportStar(require("./exclude-employee-from-list.handler"), exports);
 __exportStar(require("./include-employee-in-list.handler"), exports);
+__exportStar(require("./update-employee-accessibility.handler"), exports);
 const exclude_employee_from_list_handler_1 = require("./exclude-employee-from-list.handler");
 const include_employee_in_list_handler_1 = require("./include-employee-in-list.handler");
+const update_employee_accessibility_handler_1 = require("./update-employee-accessibility.handler");
 exports.COMMAND_HANDLERS = [
     exclude_employee_from_list_handler_1.ExcludeEmployeeFromListHandler,
     include_employee_in_list_handler_1.IncludeEmployeeInListHandler,
+    update_employee_accessibility_handler_1.UpdateEmployeeAccessibilityHandler,
 ];
 //# sourceMappingURL=index.js.map

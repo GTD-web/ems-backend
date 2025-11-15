@@ -107,6 +107,10 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
         const result = [];
         for (const recipient of recipients) {
             const request = recipient.revisionRequest;
+            if (!request) {
+                this.logger.warn(`재작성 요청을 찾을 수 없습니다. - 수신자 ID: ${recipient.recipientId}, 요청 ID: ${recipient.revisionRequestId}`);
+                continue;
+            }
             const employee = await this.employeeRepository.findOne({
                 where: { id: request.employeeId, deletedAt: null },
             });
@@ -175,18 +179,38 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
         if (!recipient.특정수신자의_요청인가(recipientId)) {
             throw new common_1.ForbiddenException(`해당 재작성 요청에 접근할 권한이 없습니다. (요청 ID: ${requestId})`);
         }
+        if (!recipient.isRead) {
+            recipient.읽음처리한다();
+        }
         recipient.재작성완료_응답한다(responseComment);
         await this.revisionRequestService.수신자를_저장한다(recipient);
         if (request.step === 'criteria' || request.step === 'self') {
-            if (request.recipients && request.recipients.length > 0) {
-                for (const otherRecipient of request.recipients) {
-                    if (!otherRecipient.deletedAt &&
-                        !otherRecipient.isCompleted &&
-                        otherRecipient.recipientId !== recipientId) {
-                        this.logger.log(`같은 재작성 요청의 다른 수신자도 함께 완료 처리 - 요청 ID: ${requestId}, 수신자 ID: ${otherRecipient.recipientId}`);
-                        otherRecipient.재작성완료_응답한다(`연계된 수신자의 재작성 완료로 인한 자동 완료 처리`);
-                        await this.revisionRequestService.수신자를_저장한다(otherRecipient);
+            const currentRecipientType = recipient.recipientType;
+            const otherRecipientType = currentRecipientType === evaluation_revision_request_1.RecipientType.EVALUATEE
+                ? evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR
+                : evaluation_revision_request_1.RecipientType.EVALUATEE;
+            const otherRequests = await this.revisionRequestService.필터로_조회한다({
+                evaluationPeriodId: request.evaluationPeriodId,
+                employeeId: request.employeeId,
+                step: request.step,
+            });
+            for (const otherRequest of otherRequests) {
+                if (otherRequest.id === requestId) {
+                    continue;
+                }
+                if (!otherRequest.recipients || otherRequest.recipients.length === 0) {
+                    continue;
+                }
+                const otherRecipient = otherRequest.recipients.find((r) => !r.deletedAt &&
+                    r.recipientType === otherRecipientType &&
+                    !r.isCompleted);
+                if (otherRecipient) {
+                    this.logger.log(`다른 수신자에게 보낸 재작성 요청도 함께 완료 처리 - 요청 ID: ${otherRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`);
+                    if (!otherRecipient.isRead) {
+                        otherRecipient.읽음처리한다();
                     }
+                    otherRecipient.재작성완료_응답한다(`연계된 수신자의 재작성 완료로 인한 자동 완료 처리`);
+                    await this.revisionRequestService.수신자를_저장한다(otherRecipient);
                 }
             }
         }
@@ -238,18 +262,33 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
         if (!targetRequest || !targetRecipient) {
             throw new common_1.NotFoundException(`재작성 요청 수신자를 찾을 수 없습니다. (평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 평가자: ${evaluatorId}, 단계: ${step})`);
         }
+        if (!targetRecipient.isRead) {
+            targetRecipient.읽음처리한다();
+        }
         targetRecipient.재작성완료_응답한다(responseComment);
         await this.revisionRequestService.수신자를_저장한다(targetRecipient);
         if (targetRequest.step === 'criteria' || targetRequest.step === 'self') {
-            if (targetRequest.recipients && targetRequest.recipients.length > 0) {
-                for (const otherRecipient of targetRequest.recipients) {
-                    if (!otherRecipient.deletedAt &&
-                        !otherRecipient.isCompleted &&
-                        otherRecipient.recipientId !== evaluatorId) {
-                        this.logger.log(`같은 재작성 요청의 다른 수신자도 함께 완료 처리 - 요청 ID: ${targetRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`);
-                        otherRecipient.재작성완료_응답한다(`연계된 수신자의 재작성 완료로 인한 자동 완료 처리`);
-                        await this.revisionRequestService.수신자를_저장한다(otherRecipient);
+            const currentRecipientType = targetRecipient.recipientType;
+            const otherRecipientType = currentRecipientType === evaluation_revision_request_1.RecipientType.EVALUATEE
+                ? evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR
+                : evaluation_revision_request_1.RecipientType.EVALUATEE;
+            for (const otherRequest of requests) {
+                if (otherRequest.id === targetRequest.id) {
+                    continue;
+                }
+                if (!otherRequest.recipients || otherRequest.recipients.length === 0) {
+                    continue;
+                }
+                const otherRecipient = otherRequest.recipients.find((r) => !r.deletedAt &&
+                    r.recipientType === otherRecipientType &&
+                    !r.isCompleted);
+                if (otherRecipient) {
+                    this.logger.log(`다른 수신자에게 보낸 재작성 요청도 함께 완료 처리 - 요청 ID: ${otherRequest.id}, 수신자 ID: ${otherRecipient.recipientId}`);
+                    if (!otherRecipient.isRead) {
+                        otherRecipient.읽음처리한다();
                     }
+                    otherRecipient.재작성완료_응답한다(`연계된 수신자의 재작성 완료로 인한 자동 완료 처리`);
+                    await this.revisionRequestService.수신자를_저장한다(otherRecipient);
                 }
             }
         }
@@ -296,6 +335,26 @@ let RevisionRequestContextService = RevisionRequestContextService_1 = class Revi
                 }
                 catch (error) {
                     this.logger.error(`제출자에게 요청된 재작성 요청 완료 처리 실패 - 요청 ID: ${request.id}, 수신자 ID: ${recipientId}`, error);
+                }
+            }
+        }
+        if ((step === 'criteria' || step === 'self') &&
+            recipientType === evaluation_revision_request_1.RecipientType.EVALUATEE) {
+            for (const request of revisionRequests) {
+                if (!request.recipients || request.recipients.length === 0) {
+                    continue;
+                }
+                const primaryEvaluatorRecipient = request.recipients.find((r) => !r.deletedAt &&
+                    r.recipientType === evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR &&
+                    !r.isCompleted);
+                if (primaryEvaluatorRecipient) {
+                    try {
+                        await this.재작성완료_응답을_제출한다(request.id, primaryEvaluatorRecipient.recipientId, responseComment);
+                        this.logger.log(`1차평가자에게 요청된 재작성 요청 완료 처리 성공 - 요청 ID: ${request.id}, 수신자 ID: ${primaryEvaluatorRecipient.recipientId}`);
+                    }
+                    catch (error) {
+                        this.logger.error(`1차평가자에게 요청된 재작성 요청 완료 처리 실패 - 요청 ID: ${request.id}, 수신자 ID: ${primaryEvaluatorRecipient.recipientId}`, error);
+                    }
                 }
             }
         }

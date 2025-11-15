@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.평가항목_상태를_계산한다 = 평가항목_상태를_계산한다;
 exports.WBS평가기준_상태를_계산한다 = WBS평가기준_상태를_계산한다;
+exports.평가기준설정_진행_상태를_계산한다 = 평가기준설정_진행_상태를_계산한다;
 exports.평가기준설정_상태를_계산한다 = 평가기준설정_상태를_계산한다;
 function 평가항목_상태를_계산한다(projectCount, wbsCount) {
     const hasProject = projectCount > 0;
@@ -30,7 +31,7 @@ function WBS평가기준_상태를_계산한다(totalWbsCount, wbsWithCriteriaCo
         return 'in_progress';
     }
 }
-function 평가기준설정_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus, approvalStatus) {
+function 평가기준설정_진행_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus) {
     if (evaluationCriteriaStatus === 'none' &&
         wbsCriteriaStatus === 'none' &&
         evaluationLineStatus === 'none') {
@@ -40,11 +41,27 @@ function 평가기준설정_상태를_계산한다(evaluationCriteriaStatus, wbs
         wbsCriteriaStatus === 'complete' &&
         evaluationLineStatus === 'complete';
     if (allComplete) {
-        if (!approvalStatus) {
-            return 'pending';
-        }
-        return approvalStatus;
+        return 'complete';
     }
     return 'in_progress';
+}
+function 평가기준설정_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus, approvalStatus, isSubmitted) {
+    const progressStatus = 평가기준설정_진행_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus);
+    if (progressStatus === 'none') {
+        return 'none';
+    }
+    if (approvalStatus === 'revision_requested') {
+        return 'revision_requested';
+    }
+    if (approvalStatus === 'revision_completed') {
+        return 'revision_completed';
+    }
+    if (progressStatus === 'in_progress') {
+        return 'in_progress';
+    }
+    if (!isSubmitted) {
+        return 'in_progress';
+    }
+    return approvalStatus ?? 'pending';
 }
 //# sourceMappingURL=evaluation-criteria.utils.js.map

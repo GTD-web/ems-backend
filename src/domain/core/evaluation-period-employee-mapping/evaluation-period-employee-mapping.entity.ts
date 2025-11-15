@@ -62,6 +62,27 @@ export class EvaluationPeriodEmployeeMapping
   })
   excludedAt?: Date | null;
 
+  @Column({
+    type: 'boolean',
+    default: false,
+    comment: '평가기준 제출 여부',
+  })
+  isCriteriaSubmitted: boolean;
+
+  @Column({
+    type: 'timestamp with time zone',
+    nullable: true,
+    comment: '평가기준 제출 일시',
+  })
+  criteriaSubmittedAt?: Date | null;
+
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+    comment: '평가기준 제출 처리자 ID',
+  })
+  criteriaSubmittedBy?: string | null;
 
   constructor(data?: CreateEvaluationPeriodEmployeeMappingData) {
     super();
@@ -72,6 +93,9 @@ export class EvaluationPeriodEmployeeMapping
       this.excludeReason = null;
       this.excludedBy = null;
       this.excludedAt = null;
+      this.isCriteriaSubmitted = false;
+      this.criteriaSubmittedAt = null;
+      this.criteriaSubmittedBy = null;
 
       // 감사 정보 설정
       this.메타데이터를_업데이트한다(data.createdBy);
@@ -142,6 +166,32 @@ export class EvaluationPeriodEmployeeMapping
     this.메타데이터를_업데이트한다(updatedBy);
   }
 
+  /**
+   * 평가기준을 제출한다
+   */
+  평가기준을_제출한다(submittedBy: string): void {
+    this.isCriteriaSubmitted = true;
+    this.criteriaSubmittedAt = new Date();
+    this.criteriaSubmittedBy = submittedBy;
+    this.메타데이터를_업데이트한다(submittedBy);
+  }
+
+  /**
+   * 평가기준 제출을 초기화한다
+   */
+  평가기준_제출을_초기화한다(updatedBy: string): void {
+    this.isCriteriaSubmitted = false;
+    this.criteriaSubmittedAt = null;
+    this.criteriaSubmittedBy = null;
+    this.메타데이터를_업데이트한다(updatedBy);
+  }
+
+  /**
+   * 평가기준이 제출되었는지 확인한다
+   */
+  평가기준이_제출되었는가(): boolean {
+    return this.isCriteriaSubmitted;
+  }
 
   /**
    * 맵핑을 삭제한다 (소프트 삭제)
@@ -162,6 +212,9 @@ export class EvaluationPeriodEmployeeMapping
       excludeReason: this.excludeReason,
       excludedBy: this.excludedBy,
       excludedAt: this.excludedAt,
+      isCriteriaSubmitted: this.isCriteriaSubmitted,
+      criteriaSubmittedAt: this.criteriaSubmittedAt,
+      criteriaSubmittedBy: this.criteriaSubmittedBy,
       createdBy: this.createdBy!,
       updatedBy: this.updatedBy!,
       createdAt: this.createdAt,

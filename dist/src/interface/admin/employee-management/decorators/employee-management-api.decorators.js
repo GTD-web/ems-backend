@@ -6,10 +6,11 @@ exports.GetDepartmentHierarchyWithEmployees = GetDepartmentHierarchyWithEmployee
 exports.GetExcludedEmployees = GetExcludedEmployees;
 exports.ExcludeEmployeeFromList = ExcludeEmployeeFromList;
 exports.IncludeEmployeeInList = IncludeEmployeeInList;
+exports.UpdateEmployeeAccessibility = UpdateEmployeeAccessibility;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const employee_management_dto_1 = require("../dto/employee-management.dto");
 const department_hierarchy_response_dto_1 = require("../dto/department-hierarchy-response.dto");
+const employee_management_dto_1 = require("../dto/employee-management.dto");
 function GetAllEmployees() {
     return (0, common_1.applyDecorators)((0, common_1.Get)(''), (0, swagger_1.ApiOperation)({
         summary: '전체 직원 목록 조회',
@@ -206,6 +207,51 @@ function IncludeEmployeeInList() {
     }), (0, swagger_1.ApiResponse)({
         status: 400,
         description: '잘못된 UUID 형식',
+    }), (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: '직원을 찾을 수 없습니다.',
+    }), (0, swagger_1.ApiResponse)({ status: 500, description: '서버 내부 오류' }));
+}
+function UpdateEmployeeAccessibility() {
+    return (0, common_1.applyDecorators)((0, common_1.Patch)(':id/accessibility'), (0, common_1.HttpCode)(common_1.HttpStatus.OK), (0, swagger_1.ApiOperation)({
+        summary: '직원의 접근 가능 여부 변경',
+        description: `**중요**: 직원의 시스템 접근 가능 여부를 변경합니다. 이는 2중 보안을 위한 설정입니다.
+
+**동작 방식:**
+- 직원의 isAccessible 필드를 변경
+- SSO에서 역할을 받았더라도 이 시스템에서 접근 가능 여부를 별도로 관리
+- admin 역할을 가진 사용자도 isAccessible=false이면 접근 불가
+- 변경 후 즉시 적용됨
+- 처리자 정보는 JWT 토큰의 인증된 사용자에서 자동으로 추출
+
+**테스트 케이스:**
+- 접근 가능으로 변경: isAccessible=false인 직원을 true로 변경 (200)
+- 접근 불가로 변경: isAccessible=true인 직원을 false로 변경 (200)
+- 접근 가능 여부 반영 확인: 변경 후 응답에 isAccessible 필드가 변경된 값으로 반환됨
+- 이미 같은 값으로 변경: 이미 해당 상태인 직원도 정상 처리 (200)
+- 멱등성 보장: 동일한 값으로 여러 번 요청해도 에러 없이 정상 동작
+- 존재하지 않는 직원 ID: 유효한 UUID이지만 존재하지 않는 ID로 요청 시 404 에러
+- 잘못된 UUID 형식: 잘못된 UUID 형식의 직원 ID로 요청 시 400 에러
+- isAccessible 쿼리 파라미터 누락: isAccessible 쿼리 파라미터가 없을 때 400 에러
+- 잘못된 값: isAccessible이 "true", "false", "1", "0" 외의 값일 때 400 에러
+- 응답 데이터 검증: 변경된 isAccessible 값이 응답에 포함됨`,
+    }), (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: '직원 ID (UUID 형식)',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    }), (0, swagger_1.ApiQuery)({
+        name: 'isAccessible',
+        required: true,
+        description: '접근 가능 여부 (가능값: "true", "false", "1", "0")',
+        type: String,
+        example: 'true',
+    }), (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: '직원의 접근 가능 여부가 변경되었습니다.',
+        type: employee_management_dto_1.EmployeeResponseDto,
+    }), (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: '잘못된 요청 데이터 (isAccessible 쿼리 파라미터 누락, 잘못된 값 또는 잘못된 UUID 형식)',
     }), (0, swagger_1.ApiResponse)({
         status: 404,
         description: '직원을 찾을 수 없습니다.',

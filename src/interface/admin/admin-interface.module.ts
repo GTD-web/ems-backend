@@ -34,6 +34,8 @@ import { RevisionRequestContextModule } from '../../context/revision-request-con
 import { AuditLogContextModule } from '../../context/audit-log-context/audit-log-context.module';
 import { AuditLogController } from './audit-log/audit-log.controller';
 import { EvaluationActivityLogController } from './evaluation-activity-log/evaluation-activity-log.controller';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
 
 /**
  * 관리자 인터페이스 모듈
@@ -81,7 +83,20 @@ import { EvaluationActivityLogController } from './evaluation-activity-log/evalu
     AuditLogController, // Audit 로그 컨트롤러
     EvaluationActivityLogController, // 평가 활동 내역 컨트롤러
   ],
-  providers: [],
+  providers: [
+    {
+      provide: ROLES_GUARD_OPTIONS,
+      useValue: {
+        // admin 역할에 대해서만 접근 가능 여부 확인 수행
+        // user, evaluator 역할은 접근 가능 여부 확인 없이 허용
+        rolesRequiringAccessibilityCheck: ['admin'],
+      },
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
   exports: [],
 })
 export class AdminInterfaceModule {}

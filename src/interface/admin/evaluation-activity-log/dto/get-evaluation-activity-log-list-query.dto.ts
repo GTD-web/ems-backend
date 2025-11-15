@@ -1,5 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsDateString, IsInt, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsInt,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 /**
@@ -23,16 +29,18 @@ export class GetEvaluationActivityLogListQueryDto {
   activityType?: string;
 
   @ApiPropertyOptional({
-    description: '활동 시작일',
-    example: '2024-01-01T00:00:00Z',
+    description:
+      '활동 시작일 (ISO 8601 형식, 예: 2024-01-01T00:00:00Z). 입력하지 않으면 전체 기간 조회',
+    required: false,
   })
   @IsOptional()
   @IsDateString()
   startDate?: string;
 
   @ApiPropertyOptional({
-    description: '활동 종료일',
-    example: '2024-01-31T23:59:59Z',
+    description:
+      '활동 종료일 (ISO 8601 형식, 예: 2024-01-31T23:59:59Z). 입력하지 않으면 전체 기간 조회',
+    required: false,
   })
   @IsOptional()
   @IsDateString()
@@ -60,4 +68,3 @@ export class GetEvaluationActivityLogListQueryDto {
   @Min(1)
   limit?: number;
 }
-

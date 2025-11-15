@@ -13,7 +13,6 @@ import { EmptyGroupNameException } from './question-group.exceptions';
  * 하나의 질문은 여러 그룹에 속할 수 있습니다. (QuestionGroupMapping 사용)
  */
 @Entity('question_group')
-@Index(['name'], { unique: true })
 @Index(['isDefault'])
 export class QuestionGroup
   extends BaseEntity<QuestionGroupDto>
@@ -22,8 +21,7 @@ export class QuestionGroup
   @Column({
     type: 'varchar',
     length: 200,
-    unique: true,
-    comment: '그룹명',
+    comment: '그룹명 (삭제되지 않은 레코드에 한해 중복 불가)',
   })
   name: string;
 

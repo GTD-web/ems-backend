@@ -168,7 +168,6 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
     }
     세부일정업데이트검증한다(updateDto, existingPeriod) {
         const newStartDate = updateDto.startDate || existingPeriod.startDate;
-        const existingEndDate = existingPeriod.endDate;
         if (updateDto.evaluationSetupDeadline) {
             if (updateDto.evaluationSetupDeadline <= newStartDate) {
                 throw new evaluation_period_exceptions_1.InvalidEvaluationPeriodDateRangeException('평가설정 단계 마감일은 평가 기간 시작일 이후여야 합니다.');
@@ -281,7 +280,7 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
     }
     async 생성비즈니스규칙검증한다(createDto, manager) {
         await this.이름중복검증한다(createDto.name, undefined, manager);
-        await this.기간겹침검증한다(createDto.startDate, createDto.endDate, undefined, manager);
+        await this.기간겹침검증한다(createDto.startDate, createDto.peerEvaluationDeadline, undefined, manager);
     }
     async 업데이트비즈니스규칙검증한다(id, updateDto, existingPeriod, manager) {
         if (existingPeriod.status === evaluation_period_types_1.EvaluationPeriodStatus.COMPLETED) {
@@ -295,10 +294,6 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
                 throw new evaluation_period_exceptions_1.EvaluationPeriodBusinessRuleViolationException('이미 시작된 평가 기간의 시작일은 수정할 수 없습니다.');
             }
         }
-    }
-    async 평가기간생성비즈니스규칙검증한다(createDto, manager) {
-        await this.이름중복검증한다(createDto.name, undefined, manager);
-        await this.기간겹침검증한다(createDto.startDate, createDto.peerEvaluationDeadline, undefined, manager);
     }
     async 평가기간업데이트비즈니스규칙검증한다(id, updateDto, manager) {
         const repository = this.transactionManager.getRepository(evaluation_period_entity_1.EvaluationPeriod, this.evaluationPeriodRepository, manager);
@@ -328,10 +323,6 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
         await this.업데이트비즈니스규칙검증한다(id, updateDto, existingPeriod, manager);
     }
     async 평가기간시작비즈니스규칙검증한다(id, manager) {
-        const activePeriod = await this.현재진행중평가기간조회한다(manager);
-        if (activePeriod && activePeriod.id !== id) {
-            throw new evaluation_period_exceptions_1.EvaluationPeriodBusinessRuleViolationException(`이미 활성화된 평가 기간이 있습니다: ${activePeriod.name}`);
-        }
     }
     async 평가기간삭제비즈니스규칙검증한다(evaluationPeriod) {
         if (evaluationPeriod.활성화된_상태인가()) {
@@ -356,17 +347,17 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
             throw new evaluation_period_exceptions_1.EvaluationPeriodNameDuplicateException(name);
         }
     }
-    async 기간겹침검증한다(startDate, endDate, excludeId, manager) {
+    async 기간겹침검증한다(startDate, peerEvaluationDeadline, excludeId, manager) {
         const repository = this.transactionManager.getRepository(evaluation_period_entity_1.EvaluationPeriod, this.evaluationPeriodRepository, manager);
         const queryBuilder = repository
             .createQueryBuilder('period')
-            .where('(period.startDate <= :endDate AND (period.endDate >= :startDate OR period.peerEvaluationDeadline >= :startDate))', { startDate, endDate });
+            .where('(period.startDate <= :peerEvaluationDeadline AND period.peerEvaluationDeadline >= :startDate)', { startDate, peerEvaluationDeadline });
         if (excludeId) {
             queryBuilder.andWhere('period.id != :excludeId', { excludeId });
         }
         const conflictingPeriod = await queryBuilder.getOne();
         if (conflictingPeriod) {
-            throw new evaluation_period_exceptions_1.EvaluationPeriodOverlapException(startDate, endDate || new Date(), conflictingPeriod.id);
+            throw new evaluation_period_exceptions_1.EvaluationPeriodOverlapException(startDate, peerEvaluationDeadline || new Date(), conflictingPeriod.id);
         }
     }
     async 현재진행중평가기간조회한다(manager) {
@@ -376,7 +367,6 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
             where: {
                 status: evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
                 startDate: (0, typeorm_2.LessThanOrEqual)(now),
-                endDate: (0, typeorm_2.MoreThanOrEqual)(now),
             },
             order: { startDate: 'DESC' },
         });

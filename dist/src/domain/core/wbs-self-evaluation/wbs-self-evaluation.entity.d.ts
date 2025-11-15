@@ -22,6 +22,7 @@ export declare class WbsSelfEvaluation extends BaseEntity<WbsSelfEvaluationDto> 
     피평가자가_1차평가자에게_제출한다(): void;
     일차평가자가_관리자에게_제출한다(): void;
     피평가자_제출을_취소한다(): void;
+    피평가자_제출을_완전히_초기화한다(): void;
     일차평가자_제출을_취소한다(): void;
     일차평가자_제출을_완전히_초기화한다(): void;
     피평가자가_1차평가자에게_제출했는가(): boolean;

@@ -67,14 +67,6 @@ export class PeriodInfoDto {
   })
   startDate: Date;
 
-  @ApiPropertyOptional({
-    description: '평가기간 종료일',
-    type: 'string',
-    format: 'date-time',
-    example: '2024-06-30T23:59:59.999Z',
-    nullable: true,
-  })
-  endDate: Date | null;
 }
 
 /**

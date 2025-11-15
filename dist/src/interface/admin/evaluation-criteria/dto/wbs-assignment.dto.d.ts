@@ -1,5 +1,5 @@
-import { OrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 import { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
+import { OrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 export declare class CancelWbsAssignmentByWbsDto {
     employeeId: string;
     projectId: string;

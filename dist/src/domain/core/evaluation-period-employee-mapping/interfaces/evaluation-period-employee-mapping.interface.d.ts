@@ -6,6 +6,9 @@ export interface IEvaluationPeriodEmployeeMapping {
     readonly excludeReason?: string | null;
     readonly excludedBy?: string | null;
     readonly excludedAt?: Date | null;
+    readonly isCriteriaSubmitted: boolean;
+    readonly criteriaSubmittedAt?: Date | null;
+    readonly criteriaSubmittedBy?: string | null;
     readonly createdBy?: string;
     readonly updatedBy?: string;
     readonly createdAt: Date;

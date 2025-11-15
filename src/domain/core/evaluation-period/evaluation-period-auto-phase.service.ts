@@ -258,4 +258,107 @@ export class EvaluationPeriodAutoPhaseService {
     this.logger.log(`총 ${transitionedCount}개의 평가기간이 단계 전이되었습니다.`);
     return transitionedCount;
   }
+
+  /**
+   * 일정 수정 후 상태와 단계를 자동으로 조정합니다.
+   * 
+   * - 시작일이 현재 시간보다 이전이고 상태가 WAITING이면 IN_PROGRESS로 변경
+   * - 현재 단계에 맞게 마감일을 확인하고 필요시 다음 단계로 전이
+   * 
+   * @param periodId 평가기간 ID
+   * @param changedBy 변경자 ID
+   * @returns 조정된 평가기간 정보
+   */
+  async adjustStatusAndPhaseAfterScheduleUpdate(
+    periodId: string,
+    changedBy: string,
+  ): Promise<EvaluationPeriod | null> {
+    this.logger.log(
+      `평가기간 ${periodId} 일정 수정 후 상태/단계 자동 조정을 시작합니다...`,
+    );
+
+    try {
+      const period = await this.evaluationPeriodRepository.findOne({
+        where: { id: periodId },
+      });
+
+      if (!period) {
+        this.logger.warn(`평가기간 ${periodId}를 찾을 수 없습니다.`);
+        return null;
+      }
+
+      const now = new Date();
+      let statusChanged = false;
+
+      // 1. 상태 자동 조정: 시작일이 지났고 상태가 WAITING이면 IN_PROGRESS로 변경
+      if (
+        period.status === EvaluationPeriodStatus.WAITING &&
+        period.startDate &&
+        now >= period.startDate
+      ) {
+        this.logger.log(
+          `평가기간 ${periodId} 시작일 도달로 인한 상태 변경: WAITING → IN_PROGRESS`,
+        );
+        await this.evaluationPeriodService.시작한다(periodId, changedBy);
+        statusChanged = true;
+      }
+
+      // 2. 업데이트된 평가기간 정보 다시 조회
+      const updatedPeriod = await this.evaluationPeriodRepository.findOne({
+        where: { id: periodId },
+      });
+
+      if (!updatedPeriod) {
+        return null;
+      }
+
+      // 3. 상태가 IN_PROGRESS인 경우 단계 자동 전이 확인 (여러 단계 전이 가능)
+      if (updatedPeriod.status === EvaluationPeriodStatus.IN_PROGRESS) {
+        // 현재 단계가 없으면 EVALUATION_SETUP으로 설정
+        if (!updatedPeriod.currentPhase) {
+          this.logger.log(
+            `평가기간 ${periodId} 단계가 설정되지 않아 EVALUATION_SETUP으로 설정합니다.`,
+          );
+          await this.evaluationPeriodService.단계_변경한다(
+            periodId,
+            EvaluationPeriodPhase.EVALUATION_SETUP,
+            changedBy,
+          );
+        }
+
+        // 여러 단계를 한 번에 전이할 수 있도록 반복적으로 확인
+        let maxIterations = 10; // 무한 루프 방지
+        let hasTransitioned = true;
+
+        while (hasTransitioned && maxIterations > 0) {
+          const currentPeriod = await this.evaluationPeriodRepository.findOne({
+            where: { id: periodId },
+          });
+
+          if (!currentPeriod || !currentPeriod.currentPhase) {
+            break;
+          }
+
+          hasTransitioned = await this.checkAndTransitionPhase(
+            currentPeriod,
+            now,
+          );
+          maxIterations--;
+        }
+
+        // 최종 업데이트된 정보 반환
+        return await this.evaluationPeriodRepository.findOne({
+          where: { id: periodId },
+        });
+      }
+
+      return updatedPeriod;
+    } catch (error) {
+      this.logger.error(
+        `평가기간 ${periodId} 일정 수정 후 상태/단계 자동 조정 실패:`,
+        error,
+      );
+      throw error;
+    }
+  }
 }

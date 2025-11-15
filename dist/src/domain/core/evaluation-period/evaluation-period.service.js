@@ -103,7 +103,6 @@ let EvaluationPeriodService = EvaluationPeriodService_1 = class EvaluationPeriod
                 where: {
                     status: evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
                     startDate: (0, typeorm_2.LessThanOrEqual)(now),
-                    endDate: (0, typeorm_2.MoreThanOrEqual)(now),
                 },
                 order: { startDate: 'DESC' },
             });
@@ -129,11 +128,6 @@ let EvaluationPeriodService = EvaluationPeriodService_1 = class EvaluationPeriod
                     startDateFrom: filter.startDateFrom,
                 });
             }
-            if (filter.endDateTo) {
-                queryBuilder.andWhere('period.endDate <= :endDateTo', {
-                    endDateTo: filter.endDateTo,
-                });
-            }
             if (filter.activeOnly) {
                 queryBuilder.andWhere('period.status = :activeStatus', {
                     activeStatus: evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
@@ -155,7 +149,6 @@ let EvaluationPeriodService = EvaluationPeriodService_1 = class EvaluationPeriod
     async 생성한다(createDto, createdBy, manager) {
         return this.executeSafeDomainOperation(async () => {
             const entityManager = manager || this.dataSource.manager;
-            await this.validationService.평가기간생성비즈니스규칙검증한다(createDto, entityManager);
             const evaluationPeriod = new evaluation_period_entity_1.EvaluationPeriod();
             Object.assign(evaluationPeriod, {
                 ...createDto,

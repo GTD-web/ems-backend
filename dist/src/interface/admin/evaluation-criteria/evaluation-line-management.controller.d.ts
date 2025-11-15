@@ -1,5 +1,5 @@
-import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { ConfigureEvaluatorResponseDto, ConfigurePrimaryEvaluatorDto, ConfigureSecondaryEvaluatorDto, EmployeeEvaluationSettingsResponseDto, EvaluatorEmployeesResponseDto, EvaluatorsByPeriodResponseDto, EvaluatorTypeQueryDto, BatchConfigurePrimaryEvaluatorDto, BatchConfigurePrimaryEvaluatorResponseDto, BatchConfigureSecondaryEvaluatorDto, BatchConfigureSecondaryEvaluatorResponseDto } from './dto/evaluation-line.dto';
 export declare class EvaluationLineManagementController {
     private readonly evaluationCriteriaManagementService;

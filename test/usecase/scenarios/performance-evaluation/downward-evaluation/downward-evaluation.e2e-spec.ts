@@ -1,3 +1,4 @@
+import { IsNull } from 'typeorm';
 import { BaseE2ETest } from '../../../../base-e2e.spec';
 import { DownwardEvaluationScenario } from './downward-evaluation.scenario';
 import { SeedDataScenario } from '../../seed-data.scenario';
@@ -108,7 +109,7 @@ describe('하향평가 시나리오', () => {
       projectId: projectIds[0],
     });
 
-    // WBS 할당 (평가라인 매핑 자동 생성)
+    // 여러 개의 WBS 할당 (같은 직원에게 여러 WBS 할당 테스트)
     await wbsAssignmentScenario.WBS를_할당한다({
       periodId: evaluationPeriodId,
       employeeId: evaluateeId,
@@ -116,7 +117,21 @@ describe('하향평가 시나리오', () => {
       projectId: projectIds[0],
     });
 
-    // 평가라인 매핑 명시적 생성 (1차 평가자)
+    await wbsAssignmentScenario.WBS를_할당한다({
+      periodId: evaluationPeriodId,
+      employeeId: evaluateeId,
+      wbsItemId: wbsItemIds[1],
+      projectId: projectIds[0],
+    });
+
+    await wbsAssignmentScenario.WBS를_할당한다({
+      periodId: evaluationPeriodId,
+      employeeId: evaluateeId,
+      wbsItemId: wbsItemIds[2],
+      projectId: projectIds[0],
+    });
+
+    // 평가라인 매핑 명시적 생성 (1차 평가자) - 직원 레벨
     await testSuite
       .request()
       .post(
@@ -127,18 +142,20 @@ describe('하향평가 시나리오', () => {
       })
       .expect(201);
 
-    // 평가라인 매핑 명시적 생성 (2차 평가자)
-    await testSuite
-      .request()
-      .post(
-        `/admin/evaluation-criteria/evaluation-lines/employee/${evaluateeId}/wbs/${wbsItemIds[0]}/period/${evaluationPeriodId}/secondary-evaluator`,
-      )
-      .send({
-        evaluatorId: secondaryEvaluatorId,
-      })
-      .expect(201);
+    // 평가라인 매핑 명시적 생성 (2차 평가자) - 각 WBS별
+    for (let i = 0; i < 3; i++) {
+      await testSuite
+        .request()
+        .post(
+          `/admin/evaluation-criteria/evaluation-lines/employee/${evaluateeId}/wbs/${wbsItemIds[i]}/period/${evaluationPeriodId}/secondary-evaluator`,
+        )
+        .send({
+          evaluatorId: secondaryEvaluatorId,
+        })
+        .expect(201);
+    }
 
-    // 선행 조건: 자기평가 작성 및 제출
+    // 선행 조건: 각 WBS에 대한 자기평가 작성 및 제출
     const 자기평가결과 =
       await downwardEvaluationScenario.하향평가를_위한_자기평가_완료({
         employeeId: evaluateeId,
@@ -150,6 +167,25 @@ describe('하향평가 시나리오', () => {
       });
 
     selfEvaluationId = 자기평가결과.selfEvaluationId;
+
+    // 추가 WBS에 대한 자기평가도 작성
+    await downwardEvaluationScenario.하향평가를_위한_자기평가_완료({
+      employeeId: evaluateeId,
+      wbsItemId: wbsItemIds[1],
+      periodId: evaluationPeriodId,
+      selfEvaluationContent: '자기평가 내용입니다 (WBS 2).',
+      selfEvaluationScore: 90,
+      performanceResult: '성과 결과입니다 (WBS 2).',
+    });
+
+    await downwardEvaluationScenario.하향평가를_위한_자기평가_완료({
+      employeeId: evaluateeId,
+      wbsItemId: wbsItemIds[2],
+      periodId: evaluationPeriodId,
+      selfEvaluationContent: '자기평가 내용입니다 (WBS 3).',
+      selfEvaluationScore: 95,
+      performanceResult: '성과 결과입니다 (WBS 3).',
+    });
   });
 
   describe('시나리오 1: 1차 하향평가 저장 및 제출', () => {
@@ -260,15 +296,33 @@ describe('하향평가 시나리오', () => {
 
     describe('1-2. 1차 하향평가 제출', () => {
       it('1차 하향평가를 제출하고 대시보드 API를 검증한다', async () => {
-        // Given - 1차 하향평가 저장
+        // Given - 3개의 WBS에 대해 1차 하향평가 저장
         await downwardEvaluationScenario.일차하향평가를_저장한다({
           evaluateeId,
           periodId: evaluationPeriodId,
           wbsId: wbsItemIds[0],
           evaluatorId: primaryEvaluatorId,
           selfEvaluationId,
-          downwardEvaluationContent: '1차 하향평가 내용입니다.',
+          downwardEvaluationContent: '1차 하향평가 내용입니다 (WBS 1).',
           downwardEvaluationScore: 85,
+        });
+
+        await downwardEvaluationScenario.일차하향평가를_저장한다({
+          evaluateeId,
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[1],
+          evaluatorId: primaryEvaluatorId,
+          downwardEvaluationContent: '1차 하향평가 내용입니다 (WBS 2).',
+          downwardEvaluationScore: 90,
+        });
+
+        await downwardEvaluationScenario.일차하향평가를_저장한다({
+          evaluateeId,
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[2],
+          evaluatorId: primaryEvaluatorId,
+          downwardEvaluationContent: '1차 하향평가 내용입니다 (WBS 3).',
+          downwardEvaluationScore: 95,
         });
 
         // 제출 전 상태 확인
@@ -294,15 +348,30 @@ describe('하향평가 시나리오', () => {
           false,
         );
         expect(제출전완료수).toBe(0);
+        expect(제출전할당수).toBe(3); // 3개의 WBS 할당됨
 
         const 제출전wbsItem = 제출전할당데이터.projects[0]?.wbsList?.[0];
         expect(제출전wbsItem.primaryDownwardEvaluation.isCompleted).toBe(false);
 
-        // When - 1차 하향평가 제출
+        // When - 3개의 WBS에 대해 1차 하향평가 제출
         await downwardEvaluationScenario.일차하향평가를_제출한다({
           evaluateeId,
           periodId: evaluationPeriodId,
           wbsId: wbsItemIds[0],
+          evaluatorId: primaryEvaluatorId,
+        });
+
+        await downwardEvaluationScenario.일차하향평가를_제출한다({
+          evaluateeId,
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[1],
+          evaluatorId: primaryEvaluatorId,
+        });
+
+        await downwardEvaluationScenario.일차하향평가를_제출한다({
+          evaluateeId,
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[2],
           evaluatorId: primaryEvaluatorId,
         });
 
@@ -317,7 +386,7 @@ describe('하향평가 시나리오', () => {
         expect(개별직원현황.downwardEvaluation.primary.isSubmitted).toBe(true); // false → true
         expect(
           개별직원현황.downwardEvaluation.primary.completedEvaluationCount,
-        ).toBe(제출전완료수 + 1); // 1 증가
+        ).toBe(제출전완료수 + 3); // 3개의 WBS 제출로 3 증가
         // 모든 하향평가 제출 완료 시: 'complete' (승인 상태에 따라 'pending', 'approved' 등으로 변경 가능)
         // 일부만 제출된 경우: 'in_progress'
         expect(['in_progress', 'complete', 'pending', 'approved']).toContain(
@@ -382,28 +451,60 @@ describe('하향평가 시나리오', () => {
         expect(직원정보.downwardEvaluation.primary.isSubmitted).toBe(true);
         expect(
           직원정보.downwardEvaluation.primary.completedEvaluationCount,
-        ).toBe(1);
+        ).toBe(3); // 3개의 WBS 모두 제출
       });
     });
   });
 
   describe('시나리오 2: 1차 하향평가 초기화 (원복)', () => {
     it('1차 하향평가를 초기화하고 대시보드 API를 검증한다', async () => {
-      // Given - 1차 하향평가 저장 및 제출
+      // Given - 3개의 WBS에 대해 1차 하향평가 저장 및 제출
       await downwardEvaluationScenario.일차하향평가를_저장한다({
         evaluateeId,
         periodId: evaluationPeriodId,
         wbsId: wbsItemIds[0],
         evaluatorId: primaryEvaluatorId,
         selfEvaluationId,
-        downwardEvaluationContent: '1차 하향평가 내용입니다.',
+        downwardEvaluationContent: '1차 하향평가 내용입니다 (WBS 1).',
         downwardEvaluationScore: 85,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: primaryEvaluatorId,
+        downwardEvaluationContent: '1차 하향평가 내용입니다 (WBS 2).',
+        downwardEvaluationScore: 90,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: primaryEvaluatorId,
+        downwardEvaluationContent: '1차 하향평가 내용입니다 (WBS 3).',
+        downwardEvaluationScore: 95,
       });
 
       await downwardEvaluationScenario.일차하향평가를_제출한다({
         evaluateeId,
         periodId: evaluationPeriodId,
         wbsId: wbsItemIds[0],
+        evaluatorId: primaryEvaluatorId,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: primaryEvaluatorId,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
         evaluatorId: primaryEvaluatorId,
       });
 
@@ -427,7 +528,7 @@ describe('하향평가 시나리오', () => {
       expect(초기화전개별직원현황.downwardEvaluation.primary.isSubmitted).toBe(
         true,
       );
-      expect(초기화전완료수).toBeGreaterThan(0);
+      expect(초기화전완료수).toBe(3); // 3개 모두 제출됨
 
       const 초기화전wbsItem = 초기화전할당데이터.projects[0]?.wbsList?.[0];
       expect(초기화전wbsItem.primaryDownwardEvaluation.isCompleted).toBe(true);
@@ -488,7 +589,7 @@ describe('하향평가 시나리오', () => {
       );
       expect(직원정보.downwardEvaluation.primary.isSubmitted).toBe(false);
       expect(직원정보.downwardEvaluation.primary.completedEvaluationCount).toBe(
-        0,
+        2, // 3개 중 1개 초기화했으므로 2개 남음
       );
       expect(직원정보.downwardEvaluation.primary.status).toBe('in_progress');
     });
@@ -691,21 +792,53 @@ describe('하향평가 시나리오', () => {
 
   describe('시나리오 4: 2차 하향평가 초기화 (원복)', () => {
     it('2차 하향평가를 초기화하고 대시보드 API를 검증한다', async () => {
-      // Given - 2차 하향평가 저장 및 제출
+      // Given - 3개의 WBS에 대해 2차 하향평가 저장 및 제출
       await downwardEvaluationScenario.이차하향평가를_저장한다({
         evaluateeId,
         periodId: evaluationPeriodId,
         wbsId: wbsItemIds[0],
         evaluatorId: secondaryEvaluatorId,
         selfEvaluationId,
-        downwardEvaluationContent: '2차 하향평가 내용입니다.',
+        downwardEvaluationContent: '2차 하향평가 내용입니다 (WBS 1).',
         downwardEvaluationScore: 90,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: secondaryEvaluatorId,
+        downwardEvaluationContent: '2차 하향평가 내용입니다 (WBS 2).',
+        downwardEvaluationScore: 85,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: secondaryEvaluatorId,
+        downwardEvaluationContent: '2차 하향평가 내용입니다 (WBS 3).',
+        downwardEvaluationScore: 95,
       });
 
       await downwardEvaluationScenario.이차하향평가를_제출한다({
         evaluateeId,
         periodId: evaluationPeriodId,
         wbsId: wbsItemIds[0],
+        evaluatorId: secondaryEvaluatorId,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: secondaryEvaluatorId,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
         evaluatorId: secondaryEvaluatorId,
       });
 
@@ -729,7 +862,7 @@ describe('하향평가 시나리오', () => {
 
       if (초기화전평가자정보) {
         expect(초기화전평가자정보.isSubmitted).toBe(true);
-        expect(초기화전평가자정보.completedEvaluationCount).toBeGreaterThan(0);
+        expect(초기화전평가자정보.completedEvaluationCount).toBe(3); // 3개 모두 제출됨
       }
 
       const 초기화전wbsItem = 초기화전할당데이터.projects[0]?.wbsList?.[0];
@@ -760,8 +893,8 @@ describe('하향평가 시나리오', () => {
       if (평가자정보 && 초기화전평가자정보) {
         expect(초기화전평가자정보.isSubmitted).toBe(true); // 초기화 전
         expect(평가자정보.isSubmitted).toBe(false); // 초기화 후: true → false
-        expect(초기화전평가자정보.completedEvaluationCount).toBeGreaterThan(0); // 초기화 전
-        expect(평가자정보.completedEvaluationCount).toBe(0); // 초기화 후: 감소
+        expect(초기화전평가자정보.completedEvaluationCount).toBe(3); // 초기화 전: 3개 제출
+        expect(평가자정보.completedEvaluationCount).toBe(2); // 초기화 후: 1개 초기화로 2개 남음
       }
 
       expect(
@@ -795,8 +928,496 @@ describe('하향평가 시나리오', () => {
     });
   });
 
-  describe('시나리오 5: 하향평가 일괄 제출 및 초기화', () => {
-    describe('5-1. 피평가자의 모든 하향평가 일괄 제출', () => {
+  describe('시나리오 5: 2차 평가자 교체 후 점수 반영 검증', () => {
+    it('2차 평가자를 교체하면 이전 평가자의 점수는 제외되고 새 평가자의 점수만 반영되어야 한다', async () => {
+      // Given - 첫 번째 2차 평가자가 3개의 WBS에 대해 평가 및 제출
+      const 첫번째평가자 = secondaryEvaluatorId;
+      const 두번째평가자 = employeeIds[3]; // 다른 직원으로 교체
+
+      // 3개의 WBS에 대해 모두 저장 및 제출 (각 WBS별 다른 점수)
+      await downwardEvaluationScenario.이차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 첫번째평가자,
+        selfEvaluationId,
+        downwardEvaluationContent: '첫 번째 2차 평가자의 평가입니다 (WBS 1).',
+        downwardEvaluationScore: 100,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: 첫번째평가자,
+        downwardEvaluationContent: '첫 번째 2차 평가자의 평가입니다 (WBS 2).',
+        downwardEvaluationScore: 96,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: 첫번째평가자,
+        downwardEvaluationContent: '첫 번째 2차 평가자의 평가입니다 (WBS 3).',
+        downwardEvaluationScore: 90,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 첫번째평가자,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: 첫번째평가자,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: 첫번째평가자,
+      });
+
+      // 첫 번째 평가 후 점수 확인
+      const 첫번째평가후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 첫번째평가후점수 =
+        첫번째평가후현황.downwardEvaluation.secondary.totalScore;
+
+      // 가중치가 동일하다고 가정하면: 평균 (100 + 96 + 90) / 3 = 95.33 (정규화하지 않음)
+      expect(첫번째평가후점수).toBeCloseTo(95.33, 1);
+
+      console.log('✅ 첫 번째 2차 평가자 (WBS별 다른 점수) 평가 후:', {
+        평가자ID: 첫번째평가자.substring(0, 8),
+        'WBS별 입력점수': 'WBS1:100, WBS2:96, WBS3:90',
+        평균점수: 95.33,
+        계산된점수: 첫번째평가후점수,
+        계산식: '(100+96+90)/3 = 95.33 (정규화하지 않음)',
+      });
+
+      // When - 2차 평가자를 교체 (데이터베이스에서 직접 평가라인 매핑 수정)
+      console.log('\n🔄 2차 평가자 교체 시작...');
+
+      // 평가라인 매핑 테이블에서 evaluatorId 변경 - 3개의 WBS 모두 변경
+      const EvaluationLineMapping = testSuite.getRepository(
+        'EvaluationLineMapping',
+      );
+
+      // 3개의 WBS 각각에 대해 평가자 교체
+      for (let i = 0; i < 3; i++) {
+        const 기존매핑 = await EvaluationLineMapping.findOne({
+          where: {
+            employeeId: evaluateeId,
+            wbsItemId: wbsItemIds[i],
+            evaluationPeriodId: evaluationPeriodId,
+            evaluatorId: 첫번째평가자,
+            deletedAt: null,
+          },
+        });
+
+        expect(기존매핑).toBeDefined();
+        console.log(
+          `   기존 매핑 조회 완료 (WBS ${i + 1}):`,
+          기존매핑?.id.substring(0, 8),
+        );
+
+        // 평가자 ID 변경
+        await EvaluationLineMapping.update(
+          { id: 기존매핑?.id },
+          { evaluatorId: 두번째평가자 },
+        );
+      }
+
+      console.log('✅ 평가자 교체 완료 (3개 WBS 모두):', {
+        이전평가자: 첫번째평가자.substring(0, 8),
+        새평가자: 두번째평가자.substring(0, 8),
+      });
+
+      // 교체 직후 대시보드 확인 (이전 평가자의 평가가 제외되어야 함)
+      const 교체직후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 교체직후점수 = 교체직후현황.downwardEvaluation.secondary.totalScore;
+
+      // 교체 후 새 평가자가 아직 평가를 제출하지 않았으므로 점수가 null이어야 함
+      expect(교체직후점수).toBeNull();
+      console.log('✅ 교체 직후 점수:', 교체직후점수, '(새 평가자 미제출)');
+
+      // Then - 새로운 2차 평가자가 3개의 WBS에 대해 평가 및 제출 (각 WBS별 다른 점수)
+      console.log('\n📝 새로운 2차 평가자 (WBS별 다른 점수) 평가 시작...');
+
+      await downwardEvaluationScenario.이차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 두번째평가자,
+        selfEvaluationId,
+        downwardEvaluationContent: '두 번째 2차 평가자의 평가입니다 (WBS 1).',
+        downwardEvaluationScore: 70,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: 두번째평가자,
+        downwardEvaluationContent: '두 번째 2차 평가자의 평가입니다 (WBS 2).',
+        downwardEvaluationScore: 66,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: 두번째평가자,
+        downwardEvaluationContent: '두 번째 2차 평가자의 평가입니다 (WBS 3).',
+        downwardEvaluationScore: 60,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 두번째평가자,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: 두번째평가자,
+      });
+
+      await downwardEvaluationScenario.이차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: 두번째평가자,
+      });
+
+      // 새 평가자의 평가 제출 후 점수 확인
+      const 교체후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 교체후점수 = 교체후현황.downwardEvaluation.secondary.totalScore;
+
+      // 가중치가 동일하다고 가정하면: 평균 (70 + 66 + 60) / 3 = 65.33 (정규화하지 않음)
+      // 이전 평가자의 점수 (95.33 평균)가 포함되지 않아야 함
+      expect(교체후점수).toBeCloseTo(65.33, 1);
+
+      // 이전 평가자의 점수가 포함되면 평균 (95.33 + 65.33) / 2 = 80.33
+      // 이 값이 아니어야 함을 확인
+      expect(교체후점수).not.toBeCloseTo(80.33, 1);
+      expect(교체후점수).not.toBeCloseTo(95.33, 1); // 첫 번째 평가자 점수도 아님
+
+      console.log('✅ 새로운 2차 평가자 (WBS별 다른 점수) 평가 후:', {
+        평가자ID: 두번째평가자.substring(0, 8),
+        'WBS별 입력점수': 'WBS1:70, WBS2:66, WBS3:60',
+        평균점수: 65.33,
+        계산된점수: 교체후점수,
+        계산식: '(70+66+60)/3 = 65.33 (정규화하지 않음)',
+      });
+
+      // 할당 데이터에서도 확인
+      const 할당데이터 =
+        await downwardEvaluationScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const wbsItem = 할당데이터.projects[0]?.wbsList?.[0];
+      expect(wbsItem.secondaryDownwardEvaluation).toBeDefined();
+      expect(wbsItem.secondaryDownwardEvaluation.score).toBe(70);
+      expect(wbsItem.secondaryDownwardEvaluation.evaluatorId).toBe(
+        두번째평가자,
+      );
+
+      // summary에서도 확인
+      const summaryScore =
+        할당데이터.summary.secondaryDownwardEvaluation.totalScore;
+      expect(summaryScore).toBeCloseTo(65.33, 1);
+      expect(summaryScore).not.toBeCloseTo(80.33, 1); // 두 평가자의 평균이 아님
+      expect(summaryScore).not.toBeCloseTo(95.33, 1); // 첫 번째 평가자 점수가 아님
+
+      console.log('\n✅ 2차 평가자 교체 시나리오 검증 완료!');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📊 점수 변화 요약:');
+      console.log(
+        `   1️⃣  첫 번째 평가자 (WBS1:100, WBS2:96, WBS3:90 평균:95.33) → 계산된 점수: ${첫번째평가후점수}`,
+      );
+      console.log(`   🔄 평가자 교체 → 점수: ${교체직후점수} (미제출)`);
+      console.log(
+        `   2️⃣  두 번째 평가자 (WBS1:70, WBS2:66, WBS3:60 평균:65.33)  → 계산된 점수: ${교체후점수}`,
+      );
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✨ 검증 결과:');
+      console.log('   ✅ 이전 평가자 점수(평균 95.33) 제외됨');
+      console.log('   ✅ 새 평가자 점수(평균 65.33)만 반영됨');
+      console.log('   ✅ 두 평가자의 평균이 아닌 현재 평가자 점수만 계산됨');
+      console.log(
+        `   ✅ 잘못된 평균 계산(80.33)이 아닌 올바른 점수(${교체후점수}) 반영됨`,
+      );
+    });
+  });
+
+  describe('시나리오 5-2: 1차 평가자 교체 후 점수 반영 검증', () => {
+    it('1차 평가자를 교체하면 이전 평가자의 점수는 제외되고 새 평가자의 점수만 반영되어야 한다', async () => {
+      // Given - 첫 번째 1차 평가자가 3개의 WBS에 대해 평가 및 제출
+      const 첫번째평가자 = primaryEvaluatorId;
+      const 두번째평가자 = employeeIds[3]; // 다른 직원으로 교체
+
+      // 3개의 WBS에 대해 모두 저장 및 제출 (각 WBS별 다른 점수)
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 첫번째평가자,
+        selfEvaluationId,
+        downwardEvaluationContent: '첫 번째 1차 평가자의 평가입니다 (WBS 1).',
+        downwardEvaluationScore: 90,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: 첫번째평가자,
+        downwardEvaluationContent: '첫 번째 1차 평가자의 평가입니다 (WBS 2).',
+        downwardEvaluationScore: 86,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: 첫번째평가자,
+        downwardEvaluationContent: '첫 번째 1차 평가자의 평가입니다 (WBS 3).',
+        downwardEvaluationScore: 80,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 첫번째평가자,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: 첫번째평가자,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: 첫번째평가자,
+      });
+
+      // 첫 번째 평가 후 점수 확인
+      const 첫번째평가후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 첫번째평가후점수 =
+        첫번째평가후현황.downwardEvaluation.primary.totalScore;
+
+      // 가중치가 동일하다고 가정하면: 평균 (90 + 86 + 80) / 3 = 85.33 (정규화하지 않음)
+      expect(첫번째평가후점수).toBeCloseTo(85.33, 1);
+
+      console.log('✅ 첫 번째 1차 평가자 (WBS별 다른 점수) 평가 후:', {
+        평가자ID: 첫번째평가자.substring(0, 8),
+        'WBS별 입력점수': 'WBS1:90, WBS2:86, WBS3:80',
+        평균점수: 85.33,
+        계산된점수: 첫번째평가후점수,
+        계산식: '(90+86+80)/3 = 85.33 (정규화하지 않음)',
+      });
+
+      // When - 1차 평가자를 교체 (데이터베이스에서 직접 평가라인 매핑 수정)
+      console.log('\n🔄 1차 평가자 교체 시작...');
+
+      // 평가라인 매핑 테이블에서 evaluatorId 변경
+      const EvaluationLineMapping = testSuite.getRepository(
+        'EvaluationLineMapping',
+      );
+
+      const 기존매핑 = await EvaluationLineMapping.findOne({
+        where: {
+          employeeId: evaluateeId,
+          wbsItemId: IsNull(), // 1차 평가자는 wbsItemId가 null
+          evaluationPeriodId: evaluationPeriodId,
+          evaluatorId: 첫번째평가자,
+          deletedAt: IsNull(),
+        },
+      });
+
+      expect(기존매핑).toBeDefined();
+      console.log('   기존 매핑 조회 완료:', 기존매핑?.id.substring(0, 8));
+
+      // 평가자 ID 변경
+      await EvaluationLineMapping.update(
+        { id: 기존매핑?.id },
+        { evaluatorId: 두번째평가자 },
+      );
+
+      console.log('✅ 평가자 교체 완료:', {
+        이전평가자: 첫번째평가자.substring(0, 8),
+        새평가자: 두번째평가자.substring(0, 8),
+      });
+
+      // 교체 직후 대시보드 확인 (이전 평가자의 평가가 제외되어야 함)
+      const 교체직후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 교체직후점수 = 교체직후현황.downwardEvaluation.primary.totalScore;
+
+      // 교체 후 새 평가자가 아직 평가를 제출하지 않았으므로 점수가 null이어야 함
+      expect(교체직후점수).toBeNull();
+      console.log('✅ 교체 직후 점수:', 교체직후점수, '(새 평가자 미제출)');
+
+      // Then - 새로운 1차 평가자가 3개의 WBS에 대해 평가 및 제출 (각 WBS별 다른 점수)
+      console.log('\n📝 새로운 1차 평가자 (WBS별 다른 점수) 평가 시작...');
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 두번째평가자,
+        selfEvaluationId,
+        downwardEvaluationContent: '두 번째 1차 평가자의 평가입니다 (WBS 1).',
+        downwardEvaluationScore: 60,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: 두번째평가자,
+        downwardEvaluationContent: '두 번째 1차 평가자의 평가입니다 (WBS 2).',
+        downwardEvaluationScore: 56,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_저장한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: 두번째평가자,
+        downwardEvaluationContent: '두 번째 1차 평가자의 평가입니다 (WBS 3).',
+        downwardEvaluationScore: 50,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[0],
+        evaluatorId: 두번째평가자,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[1],
+        evaluatorId: 두번째평가자,
+      });
+
+      await downwardEvaluationScenario.일차하향평가를_제출한다({
+        evaluateeId,
+        periodId: evaluationPeriodId,
+        wbsId: wbsItemIds[2],
+        evaluatorId: 두번째평가자,
+      });
+
+      // 새 평가자의 평가 제출 후 점수 확인
+      const 교체후현황 =
+        await downwardEvaluationScenario.직원의_평가기간_현황을_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const 교체후점수 = 교체후현황.downwardEvaluation.primary.totalScore;
+
+      // 가중치가 동일하다고 가정하면: 평균 (60 + 56 + 50) / 3 = 55.33 (정규화하지 않음)
+      // 이전 평가자의 점수 (85.33 평균)가 포함되지 않아야 함
+      expect(교체후점수).toBeCloseTo(55.33, 1);
+
+      // 이전 평가자의 점수가 포함되면 평균 (85.33 + 55.33) / 2 = 70.33
+      // 이 값이 아니어야 함을 확인
+      expect(교체후점수).not.toBeCloseTo(70.33, 1);
+      expect(교체후점수).not.toBeCloseTo(85.33, 1); // 첫 번째 평가자 점수도 아님
+
+      console.log('✅ 새로운 1차 평가자 (WBS별 다른 점수) 평가 후:', {
+        평가자ID: 두번째평가자.substring(0, 8),
+        'WBS별 입력점수': 'WBS1:60, WBS2:56, WBS3:50',
+        평균점수: 55.33,
+        계산된점수: 교체후점수,
+        계산식: '(60+56+50)/3 = 55.33 (정규화하지 않음)',
+      });
+
+      // 할당 데이터에서도 확인
+      const 할당데이터 =
+        await downwardEvaluationScenario.직원_할당_데이터를_조회한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+      const wbsItem = 할당데이터.projects[0]?.wbsList?.[0];
+      expect(wbsItem.primaryDownwardEvaluation).toBeDefined();
+      expect(wbsItem.primaryDownwardEvaluation.score).toBe(60);
+      expect(wbsItem.primaryDownwardEvaluation.evaluatorId).toBe(두번째평가자);
+
+      // summary에서도 확인
+      const summaryScore =
+        할당데이터.summary.primaryDownwardEvaluation.totalScore;
+      expect(summaryScore).toBeCloseTo(55.33, 1);
+      expect(summaryScore).not.toBeCloseTo(70.33, 1); // 두 평가자의 평균이 아님
+      expect(summaryScore).not.toBeCloseTo(85.33, 1); // 첫 번째 평가자 점수가 아님
+
+      console.log('\n✅ 1차 평가자 교체 시나리오 검증 완료!');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📊 점수 변화 요약:');
+      console.log(
+        `   1️⃣  첫 번째 평가자 (WBS1:90, WBS2:86, WBS3:80 평균:85.33) → 계산된 점수: ${첫번째평가후점수}`,
+      );
+      console.log(`   🔄 평가자 교체 → 점수: ${교체직후점수} (미제출)`);
+      console.log(
+        `   2️⃣  두 번째 평가자 (WBS1:60, WBS2:56, WBS3:50 평균:55.33)  → 계산된 점수: ${교체후점수}`,
+      );
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✨ 검증 결과:');
+      console.log('   ✅ 이전 평가자 점수(평균 85.33) 제외됨');
+      console.log('   ✅ 새 평가자 점수(평균 55.33)만 반영됨');
+      console.log('   ✅ 두 평가자의 평균이 아닌 현재 평가자 점수만 계산됨');
+      console.log(
+        `   ✅ 잘못된 평균 계산(70.33)이 아닌 올바른 점수(${교체후점수}) 반영됨`,
+      );
+    });
+  });
+
+  describe('시나리오 6: 하향평가 일괄 제출 및 초기화', () => {
+    describe('6-1. 피평가자의 모든 하향평가 일괄 제출', () => {
       it('피평가자의 모든 하향평가를 일괄 제출하고 대시보드 API를 검증한다', async () => {
         // Given - 여러 하향평가 저장
         await downwardEvaluationScenario.일차하향평가를_저장한다({
@@ -843,7 +1464,7 @@ describe('하향평가 시나리오', () => {
       });
     });
 
-    describe('5-2. 피평가자의 모든 하향평가 일괄 초기화', () => {
+    describe('6-2. 피평가자의 모든 하향평가 일괄 초기화', () => {
       it('피평가자의 모든 하향평가를 일괄 초기화하고 대시보드 API를 검증한다', async () => {
         // Given - 하향평가 저장 및 제출
         await downwardEvaluationScenario.일차하향평가를_저장한다({

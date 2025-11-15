@@ -1,0 +1,255 @@
+{
+  "timestamp": "2025-11-15T08:01:08.426Z",
+  "testResults": [
+    {
+      "testName": "maxSelfEvaluationRate(120)를 최대값으로 사용하여 점수가 계산되어야 한다",
+      "result": {
+        "evaluationPeriodId": "55ce38e2-d77e-4e82-8eaa-d78254d1297a",
+        "employeeId": "eec61d13-a0ac-46cd-a486-58823ecee79f",
+        "maxSelfEvaluationRate": 120,
+        "wbsScores": [
+          {
+            "wbsItemId": "9b1f7812-4452-4118-917d-175908748667",
+            "weight": 30,
+            "score": 100
+          },
+          {
+            "wbsItemId": "42b9ab9b-a22b-49b5-b46c-e0547cbe991f",
+            "weight": 40,
+            "score": 120
+          },
+          {
+            "wbsItemId": "f806364a-3dfb-4ed1-a6a5-f7930eeb340b",
+            "weight": 30,
+            "score": 90
+          }
+        ],
+        "calculatedTotalScore": 105,
+        "expectedTotalScore": 105,
+        "grade": "A+"
+      }
+    },
+    {
+      "testName": "모든 WBS가 최대값(120)일 때 총점이 120점이 되어야 한다",
+      "result": {
+        "evaluationPeriodId": "7e36df72-c5c3-4104-8e2f-b3dfaaeb3d8b",
+        "employeeId": "797239cf-d92e-4343-8098-e9ccabb26256",
+        "maxSelfEvaluationRate": 120,
+        "wbsScores": [
+          {
+            "wbsItemId": "b1cae3f3-9c57-4464-a7c9-7e9f9d2364b2",
+            "weight": 30,
+            "score": 120
+          },
+          {
+            "wbsItemId": "b3348ba4-f0b0-4b43-b795-707ac3c89096",
+            "weight": 40,
+            "score": 120
+          },
+          {
+            "wbsItemId": "1ab62193-39e1-489f-b947-df1362af74c2",
+            "weight": 30,
+            "score": 120
+          }
+        ],
+        "calculatedTotalScore": 120,
+        "expectedTotalScore": 120,
+        "grade": "S+"
+      }
+    },
+    {
+      "testName": "1차 하향평가 점수가 maxSelfEvaluationRate를 최대값으로 사용하여 계산되어야 한다",
+      "result": {
+        "evaluationPeriodId": "b5147f6a-1dda-4d0b-9fe4-44b76e5f7763",
+        "employeeId": "e2f769a4-4457-428c-aeb6-0f6848e9f19d",
+        "evaluatorId": "504b0c0c-a603-4932-9aae-db9b703902fb",
+        "maxSelfEvaluationRate": 120,
+        "wbsScores": [
+          {
+            "wbsItemId": "8878806c-3258-42d7-b4b7-fe3c351f3f72",
+            "weight": 30,
+            "score": 100
+          },
+          {
+            "wbsItemId": "d7042bb2-9693-4438-bc9d-b1336f5fcb3d",
+            "weight": 40,
+            "score": 120
+          },
+          {
+            "wbsItemId": "f293e91f-8571-483d-ada0-0ea0d6cee2b0",
+            "weight": 30,
+            "score": 90
+          }
+        ],
+        "calculatedTotalScore": 105,
+        "expectedTotalScore": 105,
+        "grade": "A+",
+        "isSubmitted": true
+      }
+    },
+    {
+      "testName": "여러 2차 평가자가 있을 때 평균 점수로 계산되어야 한다",
+      "result": {
+        "evaluationPeriodId": "b879db41-44f4-4fd0-a73a-4e41b0bb0985",
+        "employeeId": "e9e1d0ce-31d4-47fb-8468-9b3e33459731",
+        "maxSelfEvaluationRate": 120,
+        "evaluators": [
+          {
+            "evaluatorId": "8b107611-7ce0-4e86-a463-d3c6b4c3ed40",
+            "wbsScores": [
+              {
+                "wbsItemId": "d95a55bf-5a7c-4d9b-928a-fbefcd7c5a89",
+                "score": 100
+              },
+              {
+                "wbsItemId": "433bdb75-613d-4ca5-ba75-282141fb1ff5",
+                "score": 110
+              }
+            ]
+          },
+          {
+            "evaluatorId": "bdc44fb2-a41d-4a90-a9fb-b7e00ab45c0c",
+            "wbsScores": [
+              {
+                "wbsItemId": "433bdb75-613d-4ca5-ba75-282141fb1ff5",
+                "score": 120
+              },
+              {
+                "wbsItemId": "48bca8be-3beb-4af3-b8a8-4b4ae1e998b8",
+                "score": 90
+              }
+            ]
+          },
+          {
+            "evaluatorId": "c885988d-6df5-4457-a4f9-be351ddecab2",
+            "wbsScores": [
+              {
+                "wbsItemId": "d95a55bf-5a7c-4d9b-928a-fbefcd7c5a89",
+                "score": 110
+              },
+              {
+                "wbsItemId": "48bca8be-3beb-4af3-b8a8-4b4ae1e998b8",
+                "score": 100
+              }
+            ]
+          }
+        ],
+        "wbsAverageScores": [
+          {
+            "wbsItemId": "d95a55bf-5a7c-4d9b-928a-fbefcd7c5a89",
+            "weight": 30,
+            "averageScore": 105
+          },
+          {
+            "wbsItemId": "433bdb75-613d-4ca5-ba75-282141fb1ff5",
+            "weight": 40,
+            "averageScore": 115
+          },
+          {
+            "wbsItemId": "48bca8be-3beb-4af3-b8a8-4b4ae1e998b8",
+            "weight": 30,
+            "averageScore": 95
+          }
+        ],
+        "calculatedTotalScore": 106,
+        "expectedTotalScore": 106,
+        "grade": "A+",
+        "isSubmitted": true
+      }
+    },
+    {
+      "testName": "여러 2차 평가자가 모두 최대값(120)을 줄 때 총점이 120점이 되어야 한다",
+      "result": {
+        "evaluationPeriodId": "8dd49577-7ca6-49ba-ac22-c7ed0aa546ce",
+        "employeeId": "beaf1938-c680-4565-a73c-e0e0ef8d6d7c",
+        "maxSelfEvaluationRate": 120,
+        "evaluators": [
+          {
+            "evaluatorId": "94706a4a-2f23-4754-81a6-e0ed4903dce2"
+          },
+          {
+            "evaluatorId": "924c0457-7b24-4f71-ac6e-013a12e3f093"
+          },
+          {
+            "evaluatorId": "34e79098-3c16-4b8b-ba0e-c07791ed4d38"
+          }
+        ],
+        "allScores": 120,
+        "calculatedTotalScore": 120,
+        "expectedTotalScore": 120,
+        "grade": "S+",
+        "isSubmitted": true
+      }
+    },
+    {
+      "testName": "2차 평가자들이 서로 다른 점수를 줄 때 평균으로 계산되어야 한다",
+      "result": {
+        "evaluationPeriodId": "f828d528-a72f-4acd-a6d8-90befe1786e7",
+        "employeeId": "5147c797-7eb1-4938-96f3-4401098df7ee",
+        "maxSelfEvaluationRate": 120,
+        "evaluators": [
+          {
+            "evaluatorId": "816d4bed-ebd2-4325-97ea-8ffcd53dd6dd",
+            "wbsScores": [
+              {
+                "wbsItemId": "235a31c6-c8d0-43f8-835c-35f25a0fafe0",
+                "score": 80
+              },
+              {
+                "wbsItemId": "ef6e64f3-e35b-44d4-a23a-eaacb7c86b90",
+                "score": 110
+              }
+            ]
+          },
+          {
+            "evaluatorId": "2342867f-0f6c-4797-ac63-9211a823b2d3",
+            "wbsScores": [
+              {
+                "wbsItemId": "ef6e64f3-e35b-44d4-a23a-eaacb7c86b90",
+                "score": 100
+              },
+              {
+                "wbsItemId": "56958bd5-abc6-417e-942f-773c1f205a49",
+                "score": 90
+              }
+            ]
+          },
+          {
+            "evaluatorId": "364b7a23-9fd7-47e0-9d51-4bbe4bc6bfe6",
+            "wbsScores": [
+              {
+                "wbsItemId": "235a31c6-c8d0-43f8-835c-35f25a0fafe0",
+                "score": 100
+              },
+              {
+                "wbsItemId": "56958bd5-abc6-417e-942f-773c1f205a49",
+                "score": 110
+              }
+            ]
+          }
+        ],
+        "wbsAverageScores": [
+          {
+            "wbsItemId": "235a31c6-c8d0-43f8-835c-35f25a0fafe0",
+            "weight": 30,
+            "averageScore": 90
+          },
+          {
+            "wbsItemId": "ef6e64f3-e35b-44d4-a23a-eaacb7c86b90",
+            "weight": 40,
+            "averageScore": 105
+          },
+          {
+            "wbsItemId": "56958bd5-abc6-417e-942f-773c1f205a49",
+            "weight": 30,
+            "averageScore": 100
+          }
+        ],
+        "calculatedTotalScore": 99,
+        "expectedTotalScore": 99,
+        "grade": "A",
+        "isSubmitted": true
+      }
+    }
+  ]
+}

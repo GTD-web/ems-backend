@@ -26,12 +26,14 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
     revisionRequestService;
     mappingRepository;
     evaluationLineMappingRepository;
+    dataSource;
     logger = new common_1.Logger(StepApprovalContextService_1.name);
-    constructor(stepApprovalService, revisionRequestService, mappingRepository, evaluationLineMappingRepository) {
+    constructor(stepApprovalService, revisionRequestService, mappingRepository, evaluationLineMappingRepository, dataSource) {
         this.stepApprovalService = stepApprovalService;
         this.revisionRequestService = revisionRequestService;
         this.mappingRepository = mappingRepository;
         this.evaluationLineMappingRepository = evaluationLineMappingRepository;
+        this.dataSource = dataSource;
     }
     async 단계별_확인상태를_변경한다(request) {
         this.logger.log(`단계별 확인 상태 변경 시작 - 평가기간: ${request.evaluationPeriodId}, 직원: ${request.employeeId}, 단계: ${request.step}, 상태: ${request.status}`);
@@ -69,16 +71,54 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
         if (recipients.length === 0) {
             throw new common_1.NotFoundException(`재작성 요청 수신자를 찾을 수 없습니다. 평가라인 설정을 확인해주세요. (직원 ID: ${employeeId}, 단계: ${step})`);
         }
-        await this.revisionRequestService.생성한다({
-            evaluationPeriodId,
-            employeeId,
-            step,
-            comment,
-            requestedBy,
-            recipients,
-            createdBy: requestedBy,
-        });
-        this.logger.log(`재작성 요청 생성 완료 - 직원: ${employeeId}, 단계: ${step}, 수신자 수: ${recipients.length}`);
+        for (const recipient of recipients) {
+            await this.dataSource.transaction(async (manager) => {
+                const existingRequests = await manager
+                    .createQueryBuilder(evaluation_revision_request_1.EvaluationRevisionRequest, 'request')
+                    .where('request.evaluationPeriodId = :evaluationPeriodId', {
+                    evaluationPeriodId,
+                })
+                    .andWhere('request.employeeId = :employeeId', { employeeId })
+                    .andWhere('request.step = :step', { step })
+                    .andWhere('request.deletedAt IS NULL')
+                    .setLock('pessimistic_write')
+                    .getMany();
+                let existingRequestForRecipient = null;
+                for (const request of existingRequests) {
+                    const requestRecipients = await manager
+                        .createQueryBuilder(evaluation_revision_request_1.EvaluationRevisionRequestRecipient, 'recipient')
+                        .where('recipient.revisionRequestId = :requestId', {
+                        requestId: request.id,
+                    })
+                        .andWhere('recipient.deletedAt IS NULL')
+                        .getMany();
+                    const matchingRecipient = requestRecipients.find((r) => r.recipientId === recipient.recipientId &&
+                        r.recipientType === recipient.recipientType &&
+                        !r.isCompleted);
+                    if (matchingRecipient) {
+                        existingRequestForRecipient = request;
+                        break;
+                    }
+                }
+                if (existingRequestForRecipient) {
+                    this.logger.log(`기존 미완료 재작성 요청 삭제 (수신자별) - 요청 ID: ${existingRequestForRecipient.id}, 수신자: ${recipient.recipientId}`);
+                    existingRequestForRecipient.deletedAt = new Date();
+                    existingRequestForRecipient.메타데이터를_업데이트한다(requestedBy);
+                    await manager.save(evaluation_revision_request_1.EvaluationRevisionRequest, existingRequestForRecipient);
+                }
+                const newRequest = new evaluation_revision_request_1.EvaluationRevisionRequest({
+                    evaluationPeriodId,
+                    employeeId,
+                    step,
+                    comment,
+                    requestedBy,
+                    recipients: [recipient],
+                    createdBy: requestedBy,
+                });
+                await manager.save(evaluation_revision_request_1.EvaluationRevisionRequest, newRequest);
+            });
+        }
+        this.logger.log(`재작성 요청 생성 완료 - 직원: ${employeeId}, 단계: ${step}`);
     }
     async 재작성요청_수신자를_조회한다(evaluationPeriodId, employeeId, step) {
         const recipients = [];
@@ -90,7 +130,7 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
                     recipientType: evaluation_revision_request_1.RecipientType.EVALUATEE,
                 });
                 const primaryEvaluator = await this.일차평가자를_조회한다(evaluationPeriodId, employeeId);
-                if (primaryEvaluator) {
+                if (primaryEvaluator && primaryEvaluator !== employeeId) {
                     recipients.push({
                         recipientId: primaryEvaluator,
                         recipientType: evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR,
@@ -255,20 +295,58 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
     }
     async 재작성요청을_평가자별로_생성한다(evaluationPeriodId, employeeId, evaluatorId, comment, requestedBy) {
         this.logger.log(`재작성 요청 생성 시작 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`);
-        const recipients = [
-            {
-                recipientId: evaluatorId,
-                recipientType: evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR,
-            },
-        ];
-        await this.revisionRequestService.생성한다({
-            evaluationPeriodId,
-            employeeId,
-            step: 'secondary',
-            comment,
-            requestedBy,
-            recipients,
-            createdBy: requestedBy,
+        await this.dataSource.transaction(async (manager) => {
+            const existingRequests = await manager
+                .createQueryBuilder(evaluation_revision_request_1.EvaluationRevisionRequest, 'request')
+                .where('request.evaluationPeriodId = :evaluationPeriodId', {
+                evaluationPeriodId,
+            })
+                .andWhere('request.employeeId = :employeeId', { employeeId })
+                .andWhere('request.step = :step', { step: 'secondary' })
+                .andWhere('request.deletedAt IS NULL')
+                .setLock('pessimistic_write')
+                .getMany();
+            for (const request of existingRequests) {
+                request.recipients = await manager
+                    .createQueryBuilder(evaluation_revision_request_1.EvaluationRevisionRequestRecipient, 'recipient')
+                    .where('recipient.revisionRequestId = :requestId', {
+                    requestId: request.id,
+                })
+                    .andWhere('recipient.deletedAt IS NULL')
+                    .getMany();
+            }
+            for (const existingRequest of existingRequests) {
+                if (!existingRequest.recipients ||
+                    existingRequest.recipients.length === 0) {
+                    continue;
+                }
+                const recipient = existingRequest.recipients.find((r) => !r.deletedAt &&
+                    r.recipientId === evaluatorId &&
+                    r.recipientType === evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR);
+                if (recipient && !recipient.isCompleted) {
+                    this.logger.log(`기존 미완료 재작성 요청 삭제 (평가자별) - 요청 ID: ${existingRequest.id}, 평가자: ${evaluatorId}`);
+                    existingRequest.deletedAt = new Date();
+                    existingRequest.메타데이터를_업데이트한다(requestedBy);
+                    await manager.save(evaluation_revision_request_1.EvaluationRevisionRequest, existingRequest);
+                    break;
+                }
+            }
+            const recipients = [
+                {
+                    recipientId: evaluatorId,
+                    recipientType: evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR,
+                },
+            ];
+            const newRequest = new evaluation_revision_request_1.EvaluationRevisionRequest({
+                evaluationPeriodId,
+                employeeId,
+                step: 'secondary',
+                comment,
+                requestedBy,
+                recipients,
+                createdBy: requestedBy,
+            });
+            await manager.save(evaluation_revision_request_1.EvaluationRevisionRequest, newRequest);
         });
         this.logger.log(`재작성 요청 생성 완료 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`);
     }
@@ -278,9 +356,11 @@ exports.StepApprovalContextService = StepApprovalContextService = StepApprovalCo
     (0, common_1.Injectable)(),
     __param(2, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
     __param(3, (0, typeorm_1.InjectRepository)(evaluation_line_mapping_entity_1.EvaluationLineMapping)),
+    __param(4, (0, typeorm_1.InjectDataSource)()),
     __metadata("design:paramtypes", [employee_evaluation_step_approval_1.EmployeeEvaluationStepApprovalService,
         evaluation_revision_request_1.EvaluationRevisionRequestService,
         typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        typeorm_2.DataSource])
 ], StepApprovalContextService);
 //# sourceMappingURL=step-approval-context.service.js.map

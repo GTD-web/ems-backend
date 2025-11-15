@@ -24,6 +24,12 @@ export interface ISSOOrganizationService {
   부서계층구조를조회한다(
     params?: GetDepartmentHierarchyParams,
   ): Promise<DepartmentHierarchy>;
+
+  /**
+   * 전체 직원의 관리자 정보를 조회한다
+   * @returns 직원별 관리자 정보
+   */
+  직원관리자정보를조회한다(): Promise<GetEmployeesManagersResponse>;
 }
 
 /**
@@ -128,4 +134,56 @@ export interface DepartmentNode {
   employeeCount: number;
   employees: EmployeeInfo[];
   children: DepartmentNode[];
+}
+
+/**
+ * 직원 관리자 정보 응답
+ */
+export interface GetEmployeesManagersResponse {
+  employees: EmployeeManagers[];
+  total: number;
+}
+
+/**
+ * 직원별 관리자 정보
+ */
+export interface EmployeeManagers {
+  employeeId: string;
+  name: string;
+  employeeNumber: string;
+  departments: EmployeeDepartmentManagers[];
+}
+
+/**
+ * 부서별 관리자 정보
+ */
+export interface EmployeeDepartmentManagers {
+  departmentId: string;
+  departmentName: string;
+  managerLine: DepartmentManager[];
+}
+
+/**
+ * 부서 관리자 라인 정보
+ */
+export interface DepartmentManager {
+  departmentId: string;
+  departmentName: string;
+  departmentCode: string;
+  type: string;
+  parentDepartmentId?: string;
+  depth: number;
+  managers: ManagerInfo[];
+}
+
+/**
+ * 관리자 정보
+ */
+export interface ManagerInfo {
+  employeeId: string;
+  name: string;
+  employeeNumber: string;
+  email: string;
+  positionId: string;
+  positionTitle: string;
 }

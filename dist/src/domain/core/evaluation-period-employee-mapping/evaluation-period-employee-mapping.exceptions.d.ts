@@ -22,3 +22,6 @@ export declare class AlreadyExcludedEvaluationTargetException extends Evaluation
 export declare class NotExcludedEvaluationTargetException extends EvaluationPeriodEmployeeMappingDomainException {
     constructor(evaluationPeriodId: string, employeeId: string);
 }
+export declare class ExcludedEvaluationTargetAccessException extends EvaluationPeriodEmployeeMappingDomainException {
+    constructor(evaluationPeriodId: string, employeeId: string);
+}

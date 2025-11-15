@@ -1,4 +1,4 @@
-import { Body, Controller, Query } from '@nestjs/common';
+import { Body, Controller, ParseBoolPipe, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
 import { EmployeeDto } from '../../../domain/common/employee/employee.types';
@@ -6,8 +6,9 @@ import {
   DepartmentHierarchyDto,
   DepartmentHierarchyWithEmployeesDto,
 } from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
-import { ParseId, CurrentUser } from '../../decorators';
-import type { AuthenticatedUser } from '../../decorators';
+import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import {
   ExcludeEmployeeFromList,
   GetAllEmployees,
@@ -15,10 +16,12 @@ import {
   GetDepartmentHierarchyWithEmployees,
   GetExcludedEmployees,
   IncludeEmployeeInList,
+  UpdateEmployeeAccessibility,
 } from './decorators/employee-management-api.decorators';
 import {
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
+  UpdateEmployeeAccessibilityQueryDto,
 } from './dto/employee-management.dto';
 
 /**
@@ -30,7 +33,6 @@ import {
 @ApiTags('A-1. 관리자 - 조직 관리')
 @ApiBearerAuth('Bearer')
 @Controller('admin/employees')
-// @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EmployeeManagementController {
   constructor(
     private readonly organizationManagementService: OrganizationManagementService,
@@ -63,14 +65,11 @@ export class EmployeeManagementController {
   async getAllEmployees(
     @Query() query: GetEmployeesQueryDto,
   ): Promise<EmployeeDto[]> {
-    // includeExcluded 옵션에 따라 제외된 직원 포함 여부 결정
-    if (query.includeExcluded) {
-      // 제외된 직원 포함하여 전체 조회
-      return await this.organizationManagementService.전체직원목록조회();
-    } else {
-      // 기본적으로 제외되지 않은 직원만 조회
-      return await this.organizationManagementService.전체직원목록조회();
-    }
+    // departmentId와 includeExcluded 옵션을 전달하여 조회
+    return await this.organizationManagementService.전체직원목록조회(
+      query.includeExcluded || false,
+      query.departmentId,
+    );
   }
 
   /**
@@ -112,6 +111,22 @@ export class EmployeeManagementController {
   ): Promise<EmployeeDto> {
     return await this.organizationManagementService.직원조회포함(
       employeeId,
+      user.id,
+    );
+  }
+
+  /**
+   * 직원의 접근 가능 여부를 변경합니다.
+   */
+  @UpdateEmployeeAccessibility()
+  async updateEmployeeAccessibility(
+    @ParseId() employeeId: string,
+    @Query('isAccessible', ParseBoolPipe) isAccessible: boolean,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<EmployeeDto> {
+    return await this.organizationManagementService.직원접근가능여부변경(
+      employeeId,
+      isAccessible,
       user.id,
     );
   }

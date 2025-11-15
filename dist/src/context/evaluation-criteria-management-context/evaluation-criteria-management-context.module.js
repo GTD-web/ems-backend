@@ -32,6 +32,7 @@ const evaluation_line_1 = require("./handlers/evaluation-line");
 const wbs_evaluation_criteria_1 = require("./handlers/wbs-evaluation-criteria");
 const wbs_item_1 = require("./handlers/wbs-item");
 const evaluation_period_module_1 = require("../../domain/core/evaluation-period/evaluation-period.module");
+const evaluation_period_employee_mapping_module_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.module");
 const evaluation_wbs_assignment_entity_1 = require("../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity");
 const wbs_evaluation_criteria_entity_1 = require("../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity");
 const wbs_item_module_1 = require("../../domain/common/wbs-item/wbs-item.module");
@@ -63,6 +64,7 @@ exports.EvaluationCriteriaManagementContextModule = EvaluationCriteriaManagement
             project_module_1.ProjectModule,
             employee_module_1.EmployeeModule,
             evaluation_period_module_1.EvaluationPeriodModule,
+            evaluation_period_employee_mapping_module_1.EvaluationPeriodEmployeeMappingModule,
             wbs_item_module_1.WbsItemModule,
         ],
         providers: [

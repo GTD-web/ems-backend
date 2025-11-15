@@ -2,7 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { SSOService } from '../src/domain/common/sso/sso.service';
+import { SSOService } from '../src/domain/common/sso';
+import type { ISSOService } from '../src/domain/common/sso/interfaces';
 import { AuthService } from '../src/context/auth-context/auth.service';
 import request from 'supertest';
 
@@ -178,11 +179,13 @@ export class BaseE2ETest {
       })
       .overrideProvider(SSOService)
       .useValue({
+        초기화한다: jest.fn().mockResolvedValue(undefined),
         로그인한다: jest.fn(),
         토큰을검증한다: jest.fn(),
         토큰을갱신한다: jest.fn(),
+        비밀번호를확인한다: jest.fn(),
+        비밀번호를변경한다: jest.fn(),
         직원정보를조회한다: jest.fn(),
-        직원목록을조회한다: jest.fn(),
         여러직원정보를조회한다: jest.fn().mockResolvedValue([
           {
             id: 'emp-001',
@@ -209,8 +212,35 @@ export class BaseE2ETest {
             status: '재직중',
           },
         ]),
-        부서정보를조회한다: jest.fn(),
-        부서목록을조회한다: jest.fn().mockResolvedValue([
+        여러직원원시정보를조회한다: jest.fn().mockResolvedValue([
+          {
+            id: 'emp-001',
+            employeeNumber: 'EMP001',
+            name: '김철수',
+            email: 'kim@company.com',
+            departmentId: 'dept-001',
+            status: '재직중',
+          },
+          {
+            id: 'emp-002',
+            employeeNumber: 'EMP002',
+            name: '이영희',
+            email: 'lee@company.com',
+            departmentId: 'dept-001',
+            status: '재직중',
+          },
+          {
+            id: 'emp-003',
+            employeeNumber: 'EMP003',
+            name: '박민수',
+            email: 'park@company.com',
+            departmentId: 'dept-002',
+            status: '재직중',
+          },
+        ]),
+        부서계층구조를조회한다: jest.fn(),
+        직원관리자정보를조회한다: jest.fn(),
+        모든부서정보를조회한다: jest.fn().mockResolvedValue([
           {
             id: 'dept-001',
             name: '개발팀',
@@ -224,10 +254,39 @@ export class BaseE2ETest {
             parentDepartmentId: null,
           },
         ]),
-        부서트리를조회한다: jest.fn(),
-        FCM토큰을등록한다: jest.fn(),
-        FCM알림을전송한다: jest.fn(),
-      })
+        모든직원정보를조회한다: jest.fn().mockResolvedValue([
+          {
+            id: 'emp-001',
+            employeeNumber: 'EMP001',
+            name: '김철수',
+            email: 'kim@company.com',
+            departmentId: 'dept-001',
+            status: '재직중',
+          },
+          {
+            id: 'emp-002',
+            employeeNumber: 'EMP002',
+            name: '이영희',
+            email: 'lee@company.com',
+            departmentId: 'dept-001',
+            status: '재직중',
+          },
+          {
+            id: 'emp-003',
+            employeeNumber: 'EMP003',
+            name: '박민수',
+            email: 'park@company.com',
+            departmentId: 'dept-002',
+            status: '재직중',
+          },
+        ]),
+        사번으로직원을조회한다: jest.fn(),
+        이메일로직원을조회한다: jest.fn(),
+        FCM토큰을구독한다: jest.fn(),
+        FCM토큰을구독해지한다: jest.fn(),
+        FCM토큰을조회한다: jest.fn(),
+        여러직원의FCM토큰을조회한다: jest.fn(),
+      } as ISSOService)
       .compile();
 
     this.app = moduleFixture.createNestApplication();

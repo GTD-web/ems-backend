@@ -166,6 +166,59 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
         this.logger.log(`총 ${transitionedCount}개의 평가기간이 단계 전이되었습니다.`);
         return transitionedCount;
     }
+    async adjustStatusAndPhaseAfterScheduleUpdate(periodId, changedBy) {
+        this.logger.log(`평가기간 ${periodId} 일정 수정 후 상태/단계 자동 조정을 시작합니다...`);
+        try {
+            const period = await this.evaluationPeriodRepository.findOne({
+                where: { id: periodId },
+            });
+            if (!period) {
+                this.logger.warn(`평가기간 ${periodId}를 찾을 수 없습니다.`);
+                return null;
+            }
+            const now = new Date();
+            let statusChanged = false;
+            if (period.status === evaluation_period_types_1.EvaluationPeriodStatus.WAITING &&
+                period.startDate &&
+                now >= period.startDate) {
+                this.logger.log(`평가기간 ${periodId} 시작일 도달로 인한 상태 변경: WAITING → IN_PROGRESS`);
+                await this.evaluationPeriodService.시작한다(periodId, changedBy);
+                statusChanged = true;
+            }
+            const updatedPeriod = await this.evaluationPeriodRepository.findOne({
+                where: { id: periodId },
+            });
+            if (!updatedPeriod) {
+                return null;
+            }
+            if (updatedPeriod.status === evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS) {
+                if (!updatedPeriod.currentPhase) {
+                    this.logger.log(`평가기간 ${periodId} 단계가 설정되지 않아 EVALUATION_SETUP으로 설정합니다.`);
+                    await this.evaluationPeriodService.단계_변경한다(periodId, evaluation_period_types_1.EvaluationPeriodPhase.EVALUATION_SETUP, changedBy);
+                }
+                let maxIterations = 10;
+                let hasTransitioned = true;
+                while (hasTransitioned && maxIterations > 0) {
+                    const currentPeriod = await this.evaluationPeriodRepository.findOne({
+                        where: { id: periodId },
+                    });
+                    if (!currentPeriod || !currentPeriod.currentPhase) {
+                        break;
+                    }
+                    hasTransitioned = await this.checkAndTransitionPhase(currentPeriod, now);
+                    maxIterations--;
+                }
+                return await this.evaluationPeriodRepository.findOne({
+                    where: { id: periodId },
+                });
+            }
+            return updatedPeriod;
+        }
+        catch (error) {
+            this.logger.error(`평가기간 ${periodId} 일정 수정 후 상태/단계 자동 조정 실패:`, error);
+            throw error;
+        }
+    }
 };
 exports.EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService;
 __decorate([

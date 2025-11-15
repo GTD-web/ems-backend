@@ -1,4 +1,4 @@
-import { EvaluationPeriodStatus, EvaluationPeriodPhase, EvaluationPeriodDto } from '../../../../domain/core/evaluation-period/evaluation-period.types';
+import { EvaluationPeriodStatus, EvaluationPeriodPhase, EvaluationPeriodDto } from '@domain/core/evaluation-period/evaluation-period.types';
 export declare class GradeRangeResponseDto {
     grade: string;
     minRange: number;
@@ -8,7 +8,6 @@ export declare class EvaluationPeriodResponseDto implements EvaluationPeriodDto 
     id: string;
     name: string;
     startDate: Date;
-    endDate: Date;
     description?: string;
     status: EvaluationPeriodStatus;
     currentPhase?: EvaluationPeriodPhase;

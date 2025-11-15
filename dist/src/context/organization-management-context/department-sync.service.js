@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var DepartmentSyncService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DepartmentSyncService = void 0;
@@ -16,7 +19,8 @@ const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const department_entity_1 = require("../../domain/common/department/department.entity");
 const department_service_1 = require("../../domain/common/department/department.service");
-const sso_service_1 = require("../../domain/common/sso/sso.service");
+const common_2 = require("@nestjs/common");
+const sso_1 = require("../../domain/common/sso");
 let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncService {
     departmentService;
     configService;
@@ -65,6 +69,10 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
             return departments;
         }
         catch (error) {
+            if (error?.code === 'TIMEOUT' || error?.message?.includes('timeout')) {
+                this.logger.error(`SSO 부서 API 조회 타임아웃: ${error.message}. SSO 서버 응답이 지연되고 있습니다.`);
+                throw new common_1.HttpException('SSO 부서 데이터 조회가 타임아웃되었습니다. 잠시 후 다시 시도해주세요.', common_1.HttpStatus.REQUEST_TIMEOUT);
+            }
             this.logger.error('SSO 부서 API 조회 실패:', error.message);
             throw new common_1.HttpException('SSO 부서 데이터 조회에 실패했습니다.', common_1.HttpStatus.SERVICE_UNAVAILABLE);
         }
@@ -239,8 +247,16 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
             return result;
         }
         catch (error) {
-            const errorMsg = `부서 동기화 실패: ${error.message}`;
-            this.logger.error(errorMsg);
+            let errorMsg;
+            if (error?.code === 'TIMEOUT' || error?.message?.includes('timeout')) {
+                errorMsg = `부서 동기화 타임아웃: SSO 서버 응답이 지연되어 동기화를 완료할 수 없습니다. (${error.message})`;
+                this.logger.warn(errorMsg +
+                    ' 스케줄된 다음 동기화에서 재시도됩니다. SSO_TIMEOUT_MS 환경 변수를 늘려보세요.');
+            }
+            else {
+                errorMsg = `부서 동기화 실패: ${error.message}`;
+                this.logger.error(errorMsg);
+            }
             return {
                 success: false,
                 totalProcessed,
@@ -323,8 +339,8 @@ __decorate([
 ], DepartmentSyncService.prototype, "scheduledSync", null);
 exports.DepartmentSyncService = DepartmentSyncService = DepartmentSyncService_1 = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, common_2.Inject)(sso_1.SSOService)),
     __metadata("design:paramtypes", [department_service_1.DepartmentService,
-        config_1.ConfigService,
-        sso_service_1.SSOService])
+        config_1.ConfigService, Object])
 ], DepartmentSyncService);
 //# sourceMappingURL=department-sync.service.js.map

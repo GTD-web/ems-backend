@@ -133,7 +133,6 @@ export class GetEmployeeEvaluationPeriodsHandler
               id: period?.id || evaluationPeriodId,
               name: period?.name || '알 수 없음',
               startDate: period?.startDate || new Date(),
-              endDate: period?.endDate || null,
               status: period?.status || EvaluationPeriodStatus.WAITING,
               currentPhase: period?.currentPhase || null,
             },

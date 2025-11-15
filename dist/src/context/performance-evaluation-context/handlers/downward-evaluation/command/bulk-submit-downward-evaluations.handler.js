@@ -20,7 +20,6 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const downward_evaluation_entity_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.entity");
 const downward_evaluation_service_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.service");
-const downward_evaluation_exceptions_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.exceptions");
 const transaction_manager_service_1 = require("../../../../../../libs/database/transaction-manager.service");
 class BulkSubmitDownwardEvaluationsCommand {
     evaluatorId;
@@ -66,7 +65,15 @@ let BulkSubmitDownwardEvaluationsHandler = BulkSubmitDownwardEvaluationsHandler_
                 },
             });
             if (evaluations.length === 0) {
-                throw new downward_evaluation_exceptions_1.DownwardEvaluationNotFoundException(`하향평가를 찾을 수 없습니다. (evaluatorId: ${evaluatorId}, evaluateeId: ${evaluateeId}, periodId: ${periodId}, evaluationType: ${evaluationType})`);
+                this.logger.debug(`하향평가가 없어 제출을 건너뜀 - 평가자: ${evaluatorId}, 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가유형: ${evaluationType}`);
+                return {
+                    submittedCount: 0,
+                    skippedCount: 0,
+                    failedCount: 0,
+                    submittedIds: [],
+                    skippedIds: [],
+                    failedItems: [],
+                };
             }
             const submittedIds = [];
             const skippedIds = [];

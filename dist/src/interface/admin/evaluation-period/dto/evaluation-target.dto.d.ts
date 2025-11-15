@@ -1,4 +1,4 @@
-import { EvaluationPeriodStatus, EvaluationPeriodPhase } from '../../../../domain/core/evaluation-period/evaluation-period.types';
+import { EvaluationPeriodPhase, EvaluationPeriodStatus } from '@domain/core/evaluation-period/evaluation-period.types';
 export declare class EvaluationPeriodBasicInfoDto {
     id: string;
     name: string;

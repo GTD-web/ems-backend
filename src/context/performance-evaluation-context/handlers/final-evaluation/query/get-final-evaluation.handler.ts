@@ -59,7 +59,6 @@ export class GetFinalEvaluationHandler
         'period.id AS period_id',
         'period.name AS period_name',
         'period.startDate AS period_startdate',
-        'period.endDate AS period_enddate',
         'period.status AS period_status',
       ])
       .leftJoin(
@@ -94,7 +93,6 @@ export class GetFinalEvaluationHandler
         id: result.period_id,
         name: result.period_name,
         startDate: result.period_startdate,
-        endDate: result.period_enddate,
         status: result.period_status,
       },
       evaluationGrade: result.evaluation_evaluationgrade,

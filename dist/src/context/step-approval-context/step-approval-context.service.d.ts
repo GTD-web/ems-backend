@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
 import { EvaluationRevisionRequestService } from '@domain/sub/evaluation-revision-request';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
@@ -9,8 +9,9 @@ export declare class StepApprovalContextService implements IStepApprovalContext 
     private readonly revisionRequestService;
     private readonly mappingRepository;
     private readonly evaluationLineMappingRepository;
+    private readonly dataSource;
     private readonly logger;
-    constructor(stepApprovalService: EmployeeEvaluationStepApprovalService, revisionRequestService: EvaluationRevisionRequestService, mappingRepository: Repository<EvaluationPeriodEmployeeMapping>, evaluationLineMappingRepository: Repository<EvaluationLineMapping>);
+    constructor(stepApprovalService: EmployeeEvaluationStepApprovalService, revisionRequestService: EvaluationRevisionRequestService, mappingRepository: Repository<EvaluationPeriodEmployeeMapping>, evaluationLineMappingRepository: Repository<EvaluationLineMapping>, dataSource: DataSource);
     단계별_확인상태를_변경한다(request: UpdateStepApprovalRequest): Promise<void>;
     private 재작성요청을_생성한다;
     private 재작성요청_수신자를_조회한다;

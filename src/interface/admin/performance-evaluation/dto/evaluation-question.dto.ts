@@ -1,17 +1,12 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
-import {
-  IsString,
+  IsInt,
   IsNotEmpty,
   IsOptional,
-  IsNumber,
+  IsString,
   IsUUID,
-  Min,
   Max,
-  IsInt,
+  Min,
 } from 'class-validator';
 
 // ==================== 질문 그룹 관련 DTO ====================

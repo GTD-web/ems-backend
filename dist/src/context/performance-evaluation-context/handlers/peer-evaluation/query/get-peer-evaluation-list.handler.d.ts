@@ -19,7 +19,6 @@ export interface PeerEvaluationDetailResult {
         id: string;
         name: string;
         startDate: Date;
-        endDate: Date;
         status: string;
     } | null;
     evaluator: {

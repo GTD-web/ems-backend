@@ -1,0 +1,133 @@
+{
+  "timestamp": "2025-11-13T08:31:49.560Z",
+  "testResults": [
+    {
+      "testName": "빈 결과를 반환해야 함",
+      "result": {
+        "evaluationPeriodId": "3691fa8c-4f71-4a64-90d8-728f85fbf273",
+        "totalEmployees": 0,
+        "successCount": 0,
+        "skippedCount": 0,
+        "failedCount": 0,
+        "totalCreatedMappings": 0,
+        "message": "평가기간에 등록된 직원이 없습니다."
+      }
+    },
+    {
+      "testName": "모든 직원의 managerId를 기반으로 1차 평가자를 자동 구성해야 함",
+      "result": {
+        "evaluationPeriodId": "6b0e2b97-c136-4c7d-ae71-f0b27b55c132",
+        "totalEmployees": 3,
+        "successCount": 2,
+        "skippedCount": 1,
+        "failedCount": 0,
+        "totalCreatedMappings": 2,
+        "employeeResults": [
+          {
+            "employeeId": "033a1004-2586-4b8f-90b3-849cde034d3a",
+            "success": true,
+            "createdMappings": 0,
+            "message": "직원의 관리자가 설정되지 않아 1차 평가자를 구성할 수 없습니다."
+          },
+          {
+            "employeeId": "86a5f295-2d98-4192-b94e-a989ea1a268a",
+            "success": true,
+            "createdMappings": 1,
+            "message": "직원 86a5f295-2d98-4192-b94e-a989ea1a268a의 1차 평가자(관리자) 자동 구성이 완료되었습니다."
+          },
+          {
+            "employeeId": "ec91b7dd-11f8-4b20-9f9c-f0c2e3c2f1a4",
+            "success": true,
+            "createdMappings": 1,
+            "message": "직원 ec91b7dd-11f8-4b20-9f9c-f0c2e3c2f1a4의 1차 평가자(관리자) 자동 구성이 완료되었습니다."
+          }
+        ],
+        "mappings": [
+          {
+            "employeeId": "86a5f295-2d98-4192-b94e-a989ea1a268a",
+            "evaluatorId": "735990b6-92ad-4005-b518-d3f99a11c0d4"
+          },
+          {
+            "employeeId": "ec91b7dd-11f8-4b20-9f9c-f0c2e3c2f1a4",
+            "evaluatorId": "735990b6-92ad-4005-b518-d3f99a11c0d4"
+          }
+        ]
+      }
+    },
+    {
+      "testName": "기존 매핑을 삭제하고 새로 생성해야 함",
+      "result": {
+        "evaluationPeriodId": "1d4e19f3-3ea5-485f-bd13-28222a93b5ca",
+        "employeeId": "3649f702-a669-4e8e-990f-44a965147749",
+        "successCount": 2,
+        "totalCreatedMappings": 2,
+        "oldEvaluatorId": "00000000-0000-0000-0000-000000000999",
+        "newEvaluatorId": "2144e4ce-6a2e-4923-84fd-c2be8fb7a93f",
+        "mapping": {
+          "employeeId": "3649f702-a669-4e8e-990f-44a965147749",
+          "evaluatorId": "2144e4ce-6a2e-4923-84fd-c2be8fb7a93f"
+        }
+      }
+    },
+    {
+      "testName": "모든 직원에 대해 일괄 처리되어야 함",
+      "result": {
+        "evaluationPeriodId": "1503bac2-09ba-48a5-9943-095ef0ec3682",
+        "totalEmployees": 3,
+        "successCount": 2,
+        "skippedCount": 1,
+        "failedCount": 0,
+        "totalCreatedMappings": 2,
+        "createdResultsCount": 2,
+        "employeeResults": [
+          {
+            "employeeId": "b0068f72-6c23-4b08-98bc-441919615682",
+            "success": true,
+            "createdMappings": 0
+          },
+          {
+            "employeeId": "371266df-aa3f-43a5-94a0-06688b732552",
+            "success": true,
+            "createdMappings": 1
+          },
+          {
+            "employeeId": "5968985c-928b-4756-a5f0-21aebf88301b",
+            "success": true,
+            "createdMappings": 1
+          }
+        ]
+      }
+    },
+    {
+      "testName": "1차 평가 라인을 자동으로 생성해야 함",
+      "result": {
+        "evaluationPeriodId": "159ee49e-a38c-4008-983b-7e6de9bea7a9",
+        "successCount": 2,
+        "evaluationLineCreated": true,
+        "evaluationLine": {
+          "id": "fbd983c7-7b7d-47b6-bbb6-601954ceb5fc",
+          "evaluatorType": "primary",
+          "order": 1
+        }
+      }
+    },
+    {
+      "testName": "해당 직원은 건너뛰고 적절한 메시지를 반환해야 함",
+      "result": {
+        "evaluationPeriodId": "9d10de0c-e0c7-4e26-8c3b-678743d24cba",
+        "employeeId": "18614014-624e-4300-8233-85be5e448917",
+        "managerId": "NON_EXISTENT_EXT_ID",
+        "totalEmployees": 4,
+        "successCount": 2,
+        "skippedCount": 2,
+        "employeeResult": {
+          "employeeId": "18614014-624e-4300-8233-85be5e448917",
+          "success": true,
+          "createdMappings": 0,
+          "message": "관리자(managerId: NON_EXISTENT_EXT_ID)를 찾을 수 없어 1차 평가자를 구성할 수 없습니다."
+        },
+        "mappingsCreated": 0
+      }
+    }
+  ]
+}

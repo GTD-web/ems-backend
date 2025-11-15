@@ -55,6 +55,7 @@ export interface CreateWbsSelfEvaluationData {
 export interface UpdateWbsSelfEvaluationData {
     assignedBy?: string;
     submittedToEvaluator?: boolean;
+    resetSubmittedToEvaluatorAt?: boolean;
     submittedToManager?: boolean;
     resetSubmittedToManagerAt?: boolean;
     performanceResult?: string;

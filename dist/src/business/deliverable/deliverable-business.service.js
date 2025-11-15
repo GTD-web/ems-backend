@@ -16,6 +16,7 @@ const performance_evaluation_service_1 = require("../../context/performance-eval
 const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
 const evaluation_wbs_assignment_service_1 = require("../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service");
 const deliverable_service_1 = require("../../domain/core/deliverable/deliverable.service");
+const deliverable_exceptions_1 = require("../../domain/core/deliverable/deliverable.exceptions");
 let DeliverableBusinessService = DeliverableBusinessService_1 = class DeliverableBusinessService {
     performanceEvaluationService;
     activityLogContextService;
@@ -68,7 +69,7 @@ let DeliverableBusinessService = DeliverableBusinessService_1 = class Deliverabl
         this.logger.log('산출물 수정 시작', { id: data.id });
         const existingDeliverable = await this.deliverableService.조회한다(data.id);
         if (!existingDeliverable) {
-            throw new Error(`산출물을 찾을 수 없습니다. (id: ${data.id})`);
+            throw new deliverable_exceptions_1.DeliverableNotFoundException(data.id);
         }
         const deliverable = await this.performanceEvaluationService.산출물을_수정한다(data);
         try {
@@ -108,7 +109,7 @@ let DeliverableBusinessService = DeliverableBusinessService_1 = class Deliverabl
         this.logger.log('산출물 삭제 시작', { id });
         const existingDeliverable = await this.deliverableService.조회한다(id);
         if (!existingDeliverable) {
-            throw new Error(`산출물을 찾을 수 없습니다. (id: ${id})`);
+            throw new deliverable_exceptions_1.DeliverableNotFoundException(id);
         }
         await this.performanceEvaluationService.산출물을_삭제한다(id, deletedBy);
         try {

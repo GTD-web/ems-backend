@@ -13,11 +13,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PeerEvaluationManagementController = void 0;
+const peer_evaluation_business_service_1 = require("../../../business/peer-evaluation/peer-evaluation-business.service");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const uuid_1 = require("uuid");
-const peer_evaluation_business_service_1 = require("../../../business/peer-evaluation/peer-evaluation-business.service");
-const decorators_1 = require("../../decorators");
 const peer_evaluation_api_decorators_1 = require("./decorators/peer-evaluation-api.decorators");
 const peer_evaluation_dto_1 = require("./dto/peer-evaluation.dto");
 let PeerEvaluationManagementController = class PeerEvaluationManagementController {
@@ -25,8 +25,8 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
     constructor(peerEvaluationBusinessService) {
         this.peerEvaluationBusinessService = peerEvaluationBusinessService;
     }
-    async requestPeerEvaluation(dto) {
-        const requestedBy = dto.requestedBy || (0, uuid_1.v4)();
+    async requestPeerEvaluation(dto, user) {
+        const requestedBy = user.id;
         const evaluationId = await this.peerEvaluationBusinessService.동료평가를_요청한다({
             evaluatorId: dto.evaluatorId,
             evaluateeId: dto.evaluateeId,
@@ -40,8 +40,8 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
             message: '동료평가가 성공적으로 요청되었습니다.',
         };
     }
-    async requestPeerEvaluationToMultipleEvaluators(dto) {
-        const requestedBy = dto.requestedBy || (0, uuid_1.v4)();
+    async requestPeerEvaluationToMultipleEvaluators(dto, user) {
+        const requestedBy = user.id;
         const result = await this.peerEvaluationBusinessService.여러_평가자에게_동료평가를_요청한다({
             evaluatorIds: dto.evaluatorIds,
             evaluateeId: dto.evaluateeId,
@@ -60,8 +60,8 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
             count: result.summary.success,
         };
     }
-    async requestMultiplePeerEvaluations(dto) {
-        const requestedBy = dto.requestedBy || (0, uuid_1.v4)();
+    async requestMultiplePeerEvaluations(dto, user) {
+        const requestedBy = user.id;
         const result = await this.peerEvaluationBusinessService.여러_피평가자에_대한_동료평가를_요청한다({
             evaluatorId: dto.evaluatorId,
             evaluateeIds: dto.evaluateeIds,
@@ -139,15 +139,15 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
             includeCompleted: query.includeCompleted,
         });
     }
-    async cancelPeerEvaluation(id) {
-        const cancelledBy = (0, uuid_1.v4)();
+    async cancelPeerEvaluation(id, user) {
+        const cancelledBy = user.id;
         await this.peerEvaluationBusinessService.동료평가_요청을_취소한다({
             evaluationId: id,
             cancelledBy,
         });
     }
-    async cancelPeerEvaluationsByPeriod(evaluateeId, periodId) {
-        const cancelledBy = (0, uuid_1.v4)();
+    async cancelPeerEvaluationsByPeriod(evaluateeId, periodId, user) {
+        const cancelledBy = user.id;
         const result = await this.peerEvaluationBusinessService.피평가자의_동료평가_요청을_일괄_취소한다({
             evaluateeId,
             periodId,
@@ -158,7 +158,7 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
             cancelledCount: result.cancelledCount,
         };
     }
-    async upsertPeerEvaluationAnswers(id, dto, user) {
+    async upsertPeerEvaluationAnswers(dto, user) {
         const answeredBy = user.id;
         const result = await this.peerEvaluationBusinessService.동료평가_답변을_저장한다({
             peerEvaluationId: dto.peerEvaluationId,
@@ -179,28 +179,31 @@ exports.PeerEvaluationManagementController = PeerEvaluationManagementController;
 __decorate([
     (0, peer_evaluation_api_decorators_1.RequestPeerEvaluation)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestPeerEvaluationDto]),
+    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestPeerEvaluationDto, Object]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "requestPeerEvaluation", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.RequestPeerEvaluationToMultipleEvaluators)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestPeerEvaluationToMultipleEvaluatorsDto]),
+    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestPeerEvaluationToMultipleEvaluatorsDto, Object]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "requestPeerEvaluationToMultipleEvaluators", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.RequestMultiplePeerEvaluations)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestMultiplePeerEvaluationsDto]),
+    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestMultiplePeerEvaluationsDto, Object]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "requestMultiplePeerEvaluations", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.SubmitPeerEvaluation)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
@@ -214,7 +217,7 @@ __decorate([
 ], PeerEvaluationManagementController.prototype, "getPeerEvaluations", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.GetEvaluatorPeerEvaluations)(),
-    __param(0, (0, decorators_1.ParseUUID)('evaluatorId')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluatorId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, peer_evaluation_dto_1.PeerEvaluationFilterDto]),
@@ -222,7 +225,7 @@ __decorate([
 ], PeerEvaluationManagementController.prototype, "getEvaluatorPeerEvaluations", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.GetEvaluateePeerEvaluations)(),
-    __param(0, (0, decorators_1.ParseUUID)('evaluateeId')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluateeId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, peer_evaluation_dto_1.PeerEvaluationFilterDto]),
@@ -237,14 +240,14 @@ __decorate([
 ], PeerEvaluationManagementController.prototype, "getAllPeerEvaluations", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.GetPeerEvaluationDetail)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "getPeerEvaluationDetail", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.GetEvaluatorAssignedEvaluatees)(),
-    __param(0, (0, decorators_1.ParseUUID)('evaluatorId')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluatorId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, peer_evaluation_dto_1.GetEvaluatorAssignedEvaluateesQueryDto]),
@@ -253,25 +256,26 @@ __decorate([
 __decorate([
     (0, peer_evaluation_api_decorators_1.CancelPeerEvaluation)(),
     __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "cancelPeerEvaluation", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.CancelPeerEvaluationsByPeriod)(),
-    __param(0, (0, decorators_1.ParseUUID)('evaluateeId')),
-    __param(1, (0, decorators_1.ParseUUID)('periodId')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluateeId')),
+    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('periodId')),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "cancelPeerEvaluationsByPeriod", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.UpsertPeerEvaluationAnswers)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
-    __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, peer_evaluation_dto_1.UpsertPeerEvaluationAnswersDto, Object]),
+    __metadata("design:paramtypes", [peer_evaluation_dto_1.UpsertPeerEvaluationAnswersDto, Object]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "upsertPeerEvaluationAnswers", null);
 exports.PeerEvaluationManagementController = PeerEvaluationManagementController = __decorate([

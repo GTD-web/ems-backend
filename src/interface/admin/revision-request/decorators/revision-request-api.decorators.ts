@@ -1,22 +1,21 @@
 import { applyDecorators, Get, Patch } from '@nestjs/common';
 import {
-  ApiOperation,
-  ApiOkResponse,
-  ApiNotFoundResponse,
   ApiBadRequestResponse,
+  ApiBody,
   ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
   ApiParam,
   ApiQuery,
-  ApiBody,
 } from '@nestjs/swagger';
+import { CompleteRevisionRequestByEvaluatorDto } from '../dto/complete-revision-request-by-evaluator.dto';
+import { CompleteRevisionRequestDto } from '../dto/complete-revision-request.dto';
 import { RevisionRequestStepEnum } from '../dto/get-revision-requests-query.dto';
-import { CompleteRevisionRequestByEvaluatorQueryDto } from '../dto/complete-revision-request-by-evaluator-query.dto';
 import {
   RevisionRequestResponseDto,
   UnreadCountResponseDto,
 } from '../dto/revision-request-response.dto';
-import { CompleteRevisionRequestDto } from '../dto/complete-revision-request.dto';
-import { CompleteRevisionRequestByEvaluatorDto } from '../dto/complete-revision-request-by-evaluator.dto';
 
 /**
  * 전체 재작성 요청 목록 조회 API 데코레이터 (관리자용)
@@ -80,14 +79,16 @@ export function GetRevisionRequests() {
     ApiQuery({
       name: 'isRead',
       required: false,
-      description: '읽음 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+      description:
+        '읽음 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
       type: String,
       example: 'false',
     }),
     ApiQuery({
       name: 'isCompleted',
       required: false,
-      description: '재작성 완료 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+      description:
+        '재작성 완료 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
       type: String,
       example: 'false',
     }),
@@ -145,14 +146,18 @@ export function GetMyRevisionRequests() {
     ApiQuery({
       name: 'isRead',
       required: false,
-      description: '읽음 여부',
-      type: 'boolean',
+      description:
+        '읽음 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+      type: String,
+      example: 'false',
     }),
     ApiQuery({
       name: 'isCompleted',
       required: false,
-      description: '재작성 완료 여부',
-      type: 'boolean',
+      description:
+        '재작성 완료 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
+      type: String,
+      example: 'false',
     }),
     ApiQuery({
       name: 'step',
@@ -298,7 +303,6 @@ export function CompleteRevisionRequest() {
   );
 }
 
-
 /**
  * 평가기간, 직원, 평가자 기반 재작성 완료 응답 제출 API 데코레이터 (관리자용)
  */
@@ -369,7 +373,8 @@ export function CompleteRevisionRequestByEvaluator() {
       description: '재작성 요청을 찾을 수 없음',
     }),
     ApiBadRequestResponse({
-      description: '잘못된 요청 (예: 이미 완료된 요청, 응답 코멘트 누락, 잘못된 UUID 형식)',
+      description:
+        '잘못된 요청 (예: 이미 완료된 요청, 응답 코멘트 누락, 잘못된 UUID 형식)',
     }),
   );
 }

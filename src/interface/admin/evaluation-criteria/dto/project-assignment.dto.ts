@@ -1,23 +1,18 @@
+import { OrderDirection } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
-import {
+  ArrayMinSize,
+  IsArray,
+  IsEnum,
+  IsIn,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
-  IsArray,
-  IsDateString,
-  IsEnum,
-  IsNotEmpty,
-  ValidateNested,
-  ArrayMinSize,
   Min,
-  IsIn,
+  ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
-import { OrderDirection } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 
 /**
  * 프로젝트 할당 생성 DTO
@@ -683,7 +678,8 @@ export class GetAvailableProjectsQueryDto {
   })
   @IsOptional()
   @IsIn(['name', 'projectCode', 'startDate', 'endDate', 'managerName'], {
-    message: '정렬 기준은 name, projectCode, startDate, endDate, managerName 중 하나여야 합니다.',
+    message:
+      '정렬 기준은 name, projectCode, startDate, endDate, managerName 중 하나여야 합니다.',
   })
   sortBy?: string = 'name';
 

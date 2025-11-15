@@ -1,21 +1,17 @@
-import {
-  ApiHideProperty,
-  ApiProperty,
-  ApiPropertyOptional,
-} from '@nestjs/swagger';
-import {
-  IsString,
-  IsOptional,
-  IsUUID,
-  IsNumber,
-  IsEnum,
-  IsArray,
-  ValidateNested,
-  IsNotEmpty,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { OrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 import { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
+import { OrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 
 /**
  * WBS ID 기반 할당 취소 Body DTO
@@ -551,15 +547,15 @@ export class ChangeWbsAssignmentOrderBodyDto {
  * WBS 생성하면서 할당 DTO
  */
 export class CreateAndAssignWbsDto {
-  @ApiProperty({ 
-    description: 'WBS 제목', 
+  @ApiProperty({
+    description: 'WBS 제목',
     example: 'API 개발',
   })
   @IsString()
   @IsNotEmpty()
   title: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '프로젝트 ID',
     example: 'c3d4e5f6-a7b8-4c9d-0e1f-2a3b4c5d6e7f',
   })
@@ -567,7 +563,7 @@ export class CreateAndAssignWbsDto {
   @IsNotEmpty()
   projectId: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '직원 ID',
     example: 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d',
   })
@@ -575,7 +571,7 @@ export class CreateAndAssignWbsDto {
   @IsNotEmpty()
   employeeId: string;
 
-  @ApiProperty({ 
+  @ApiProperty({
     description: '평가기간 ID',
     example: 'd4e5f6a7-b8c9-4d0e-1f2a-3b4c5d6e7f8a',
   })
@@ -588,8 +584,8 @@ export class CreateAndAssignWbsDto {
  * WBS 항목 이름 수정 DTO
  */
 export class UpdateWbsItemTitleDto {
-  @ApiProperty({ 
-    description: '새로운 WBS 제목', 
+  @ApiProperty({
+    description: '새로운 WBS 제목',
     example: '수정된 API 개발',
   })
   @IsString()

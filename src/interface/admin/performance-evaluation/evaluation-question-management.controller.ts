@@ -1,43 +1,43 @@
-import { Body, Controller, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
-import { CurrentUser } from '@interface/decorators';
-import type { AuthenticatedUser } from '@interface/decorators';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { Body, Controller, Param, ParseUUIDPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  CreateQuestionGroup,
-  UpdateQuestionGroup,
-  DeleteQuestionGroup,
-  GetQuestionGroup,
-  GetQuestionGroups,
-  GetDefaultQuestionGroup,
+  AddMultipleQuestionsToGroup,
+  AddQuestionToGroup,
+  CopyEvaluationQuestion,
   CreateEvaluationQuestion,
-  UpdateEvaluationQuestion,
+  CreateQuestionGroup,
   DeleteEvaluationQuestion,
+  DeleteQuestionGroup,
+  GetDefaultQuestionGroup,
   GetEvaluationQuestion,
   GetEvaluationQuestions,
-  CopyEvaluationQuestion,
-  AddQuestionToGroup,
-  AddMultipleQuestionsToGroup,
-  ReorderGroupQuestions,
-  RemoveQuestionFromGroup,
-  MoveQuestionUp,
-  MoveQuestionDown,
   GetGroupQuestions,
+  GetQuestionGroup,
+  GetQuestionGroups,
   GetQuestionGroupsByQuestion,
+  MoveQuestionDown,
+  MoveQuestionUp,
+  RemoveQuestionFromGroup,
+  ReorderGroupQuestions,
+  UpdateEvaluationQuestion,
+  UpdateQuestionGroup,
 } from './decorators/evaluation-question-api.decorators';
 import {
-  CreateQuestionGroupDto,
-  UpdateQuestionGroupDto,
-  QuestionGroupResponseDto,
-  CreateEvaluationQuestionDto,
-  UpdateEvaluationQuestionDto,
-  EvaluationQuestionResponseDto,
-  AddQuestionToGroupDto,
   AddMultipleQuestionsToGroupDto,
-  ReorderGroupQuestionsDto,
-  QuestionGroupMappingResponseDto,
-  SuccessResponseDto,
+  AddQuestionToGroupDto,
   BatchSuccessResponseDto,
+  CreateEvaluationQuestionDto,
+  CreateQuestionGroupDto,
+  EvaluationQuestionResponseDto,
+  QuestionGroupMappingResponseDto,
+  QuestionGroupResponseDto,
+  ReorderGroupQuestionsDto,
+  SuccessResponseDto,
+  UpdateEvaluationQuestionDto,
+  UpdateQuestionGroupDto,
 } from './dto/evaluation-question.dto';
 
 /**

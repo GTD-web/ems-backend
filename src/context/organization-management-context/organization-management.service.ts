@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { QueryBus, CommandBus } from '@nestjs/cqrs';
 import { DepartmentDto } from '../../domain/common/department/department.types';
 import { EmployeeDto } from '../../domain/common/employee/employee.types';
+import { EmployeeService } from '../../domain/common/employee/employee.service';
 import {
   IOrganizationManagementContext,
   OrganizationChartDto,
@@ -26,9 +27,14 @@ import {
 import {
   ExcludeEmployeeFromListCommand,
   IncludeEmployeeInListCommand,
+  UpdateEmployeeAccessibilityCommand,
 } from './commands';
-import { SSOService } from '../../domain/common/sso/sso.service';
-import type { EmployeeInfo } from '../../domain/common/sso/interfaces';
+import { Inject } from '@nestjs/common';
+import { SSOService } from '../../domain/common/sso';
+import type {
+  ISSOService,
+  EmployeeInfo,
+} from '../../domain/common/sso/interfaces';
 
 /**
  * 조직 관리 서비스
@@ -44,7 +50,8 @@ export class OrganizationManagementService
   constructor(
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
-    private readonly ssoService: SSOService,
+    @Inject(SSOService) private readonly ssoService: ISSOService,
+    private readonly employeeService: EmployeeService,
   ) {}
 
   /**
@@ -82,9 +89,10 @@ export class OrganizationManagementService
    */
   async 전체직원목록조회(
     includeExcluded: boolean = false,
+    departmentId?: string,
   ): Promise<EmployeeDto[]> {
     return await this.queryBus.execute(
-      new GetAllEmployeesQuery(includeExcluded),
+      new GetAllEmployeesQuery(includeExcluded, departmentId),
     );
   }
 
@@ -153,6 +161,23 @@ export class OrganizationManagementService
   }
 
   /**
+   * 직원의 접근 가능 여부를 변경합니다
+   */
+  async 직원접근가능여부변경(
+    employeeId: string,
+    isAccessible: boolean,
+    updatedBy: string,
+  ): Promise<EmployeeDto> {
+    return await this.commandBus.execute(
+      new UpdateEmployeeAccessibilityCommand(
+        employeeId,
+        isAccessible,
+        updatedBy,
+      ),
+    );
+  }
+
+  /**
    * 부서 하이라키 구조를 조회합니다
    */
   async 부서하이라키조회(): Promise<DepartmentHierarchyDto[]> {
@@ -206,6 +231,17 @@ export class OrganizationManagementService
    * 직원의 부서장을 조회합니다
    */
   async 부서장조회(employeeId: string): Promise<string | null> {
-    return await this.queryBus.execute(new FindDepartmentManagerQuery(employeeId));
+    return await this.queryBus.execute(
+      new FindDepartmentManagerQuery(employeeId),
+    );
+  }
+
+  /**
+   * 사번으로 직원의 접근 가능 여부를 확인합니다 (2중 보안용)
+   * @param employeeNumber 직원 번호
+   * @returns 접근 가능 여부 (직원이 존재하고 접근 가능한 경우 true)
+   */
+  async 사번으로_접근가능한가(employeeNumber: string): Promise<boolean> {
+    return await this.employeeService.사번으로_접근가능한가(employeeNumber);
   }
 }

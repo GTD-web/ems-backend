@@ -15,8 +15,10 @@ const common_1 = require("@nestjs/common");
 const employee_service_1 = require("../../../domain/common/employee/employee.service");
 class GetAllEmployeesQuery {
     includeExcluded;
-    constructor(includeExcluded = false) {
+    departmentId;
+    constructor(includeExcluded = false, departmentId) {
         this.includeExcluded = includeExcluded;
+        this.departmentId = departmentId;
     }
 }
 exports.GetAllEmployeesQuery = GetAllEmployeesQuery;
@@ -26,6 +28,12 @@ let GetAllEmployeesQueryHandler = class GetAllEmployeesQueryHandler {
         this.employeeService = employeeService;
     }
     async execute(query) {
+        if (query.departmentId) {
+            return await this.employeeService.필터_조회한다({
+                departmentId: query.departmentId,
+                includeExcluded: query.includeExcluded,
+            });
+        }
         const employees = await this.employeeService.findAll(query.includeExcluded);
         return employees.map((emp) => emp.DTO로_변환한다());
     }

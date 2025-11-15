@@ -1,0 +1,105 @@
+{
+  "timestamp": "2025-11-15T06:13:06.831Z",
+  "testResults": [
+    {
+      "testName": "isCompleted=false로 필터링 시 false인 항목만 반환되어야 한다",
+      "result": {
+        "recipientId": "f4e423f3-7b23-4d45-81f7-7bd10fbbb598",
+        "filter": {
+          "isCompleted": false
+        },
+        "resultCount": 2,
+        "expectedCount": 2,
+        "allItemsHaveIsCompletedFalse": true,
+        "completedRequestExcluded": true,
+        "passed": true
+      }
+    },
+    {
+      "testName": "isCompleted=true로 필터링 시 true인 항목만 반환되어야 한다",
+      "result": {
+        "recipientId": "135fbc0e-a401-4853-a15d-ba30d949f942",
+        "filter": {
+          "isCompleted": true
+        },
+        "resultCount": 2,
+        "expectedCount": 2,
+        "allItemsHaveIsCompletedTrue": true,
+        "incompleteRequestExcluded": true,
+        "passed": true
+      }
+    },
+    {
+      "testName": "isRead=false로 필터링 시 false인 항목만 반환되어야 한다",
+      "result": {
+        "recipientId": "121e2269-3acf-4edd-8074-131e63304f5c",
+        "filter": {
+          "isRead": false
+        },
+        "resultCount": 2,
+        "expectedCount": 2,
+        "allItemsHaveIsReadFalse": true,
+        "readRequestExcluded": true,
+        "passed": true
+      }
+    },
+    {
+      "testName": "isRead=true로 필터링 시 true인 항목만 반환되어야 한다",
+      "result": {
+        "recipientId": "89aa3f18-efed-41b7-9978-4ed916d4a84e",
+        "filter": {
+          "isRead": true
+        },
+        "resultCount": 2,
+        "expectedCount": 2,
+        "allItemsHaveIsReadTrue": true,
+        "unreadRequestExcluded": true,
+        "passed": true
+      }
+    },
+    {
+      "testName": "isRead=false와 isCompleted=false를 함께 사용 시 두 조건 모두 만족하는 항목만 반환되어야 한다",
+      "result": {
+        "recipientId": "9be4c4a9-fe69-4490-8879-035d0b1ce1ac",
+        "filter": {
+          "isRead": false,
+          "isCompleted": false
+        },
+        "resultCount": 2,
+        "expectedCount": 2,
+        "allItemsHaveIsReadFalse": true,
+        "allItemsHaveIsCompletedFalse": true,
+        "filteredRequestsExcluded": true,
+        "passed": true
+      }
+    },
+    {
+      "testName": "전체 조회에서 isCompleted=false로 필터링 시 false인 항목만 반환되어야 한다",
+      "result": {
+        "filter": {
+          "isCompleted": false
+        },
+        "resultCount": 2,
+        "expectedCount": 2,
+        "allItemsHaveIsCompletedFalse": true,
+        "completedRequestExcluded": true,
+        "passed": true
+      }
+    },
+    {
+      "testName": "전체 조회에서 isRead=false와 isCompleted=false를 함께 사용 시 두 조건 모두 만족하는 항목만 반환되어야 한다",
+      "result": {
+        "filter": {
+          "isRead": false,
+          "isCompleted": false
+        },
+        "resultCount": 1,
+        "expectedCount": 1,
+        "allItemsHaveIsReadFalse": true,
+        "allItemsHaveIsCompletedFalse": true,
+        "filteredRequestsExcluded": true,
+        "passed": true
+      }
+    }
+  ]
+}

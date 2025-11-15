@@ -33,6 +33,4 @@ export declare class GetMyEvaluationTargetsStatusHandler implements IQueryHandle
     private 성과입력_상태를_계산한다;
     private 평가항목_상태를_계산한다;
     private WBS평가기준_상태를_계산한다;
-    private 평가라인_지정_여부를_확인한다;
-    private 평가라인_상태를_계산한다;
 }

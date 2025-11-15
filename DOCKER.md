@@ -28,12 +28,14 @@ VERSION=0.0.1
 NODE_ENV=production
 PORT=4000
 
-# 데이터베이스 설정
-DB_HOST=postgres
-DB_PORT=5432
-DB_USERNAME=lumir_admin
-DB_PASSWORD=lumir_password_2024
-DB_DATABASE=lumir_evaluation_management
+# 데이터베이스 설정 (개별 환경 변수 사용 - 권장)
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_USERNAME=lumir_admin
+DATABASE_PASSWORD=lumir_password_2024
+DATABASE_NAME=lumir_evaluation_management
+# 또는 DATABASE_URL 사용 (하위 호환성)
+# DATABASE_URL=postgresql://lumir_admin:lumir_password_2024@postgres:5432/lumir_evaluation_management
 
 # SSO 설정 (필수)
 SSO_BASE_URL=https://lsso.vercel.app
@@ -189,11 +191,19 @@ package.json에 다음 Docker 관련 스크립트가 추가되어 있습니다:
 ### 애플리케이션 환경 변수
 
 - `NODE_ENV`: 실행 환경 (production/development)
-- `DB_HOST`: 데이터베이스 호스트
-- `DB_PORT`: 데이터베이스 포트
-- `DB_USERNAME`: 데이터베이스 사용자명
-- `DB_PASSWORD`: 데이터베이스 비밀번호
-- `DB_DATABASE`: 데이터베이스 이름
+
+**데이터베이스 연결 (개별 환경 변수 사용 - 권장):**
+- `DATABASE_HOST`: 데이터베이스 호스트 (예: localhost, postgres)
+- `DATABASE_PORT`: 데이터베이스 포트 (기본값: 5432)
+- `DATABASE_USERNAME`: 데이터베이스 사용자명
+- `DATABASE_PASSWORD`: 데이터베이스 비밀번호
+- `DATABASE_NAME`: 데이터베이스 이름
+- `DATABASE_SSL`: SSL 사용 여부 (true/false, 기본값: false)
+
+**또는 DATABASE_URL 사용 (하위 호환성):**
+- `DATABASE_URL`: PostgreSQL 연결 URL (예: postgresql://user:password@host:port/database)
+
+**참고:** `DATABASE_URL`과 개별 환경 변수를 동시에 설정하면 `DATABASE_URL`이 우선됩니다.
 
 ## 트러블슈팅
 

@@ -34,6 +34,7 @@ export interface EmployeeDto {
     excludeReason?: string | null;
     excludedBy?: string | null;
     excludedAt?: Date | null;
+    isAccessible: boolean;
     positionName?: string;
     managerName?: string;
     readonly isDeleted: boolean;
@@ -137,6 +138,7 @@ export interface UpdateEmployeeDto {
     excludeReason?: string | null;
     excludedBy?: string | null;
     excludedAt?: Date | null;
+    isAccessible?: boolean;
 }
 export interface EmployeeSyncResult {
     success: boolean;

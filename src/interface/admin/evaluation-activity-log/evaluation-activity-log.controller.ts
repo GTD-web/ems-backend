@@ -1,27 +1,14 @@
-import {
-  Controller,
-  Get,
-  Query,
-  Param,
-  UseGuards,
-  ParseUUIDPipe,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
-import { JwtAuthGuard } from '@interface/guards/jwt-auth.guard';
-import { RolesGuard } from '@interface/guards/roles.guard';
-import { Roles } from '@interface/decorators/roles.decorator';
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
-import { GetEvaluationActivityLogListQueryDto } from './dto/get-evaluation-activity-log-list-query.dto';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import {
-  EvaluationActivityLogResponseDto,
-  EvaluationActivityLogListResponseDto,
-} from './dto/evaluation-activity-log-response.dto';
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { EvaluationActivityLogListResponseDto } from './dto/evaluation-activity-log-response.dto';
+import { GetEvaluationActivityLogListQueryDto } from './dto/get-evaluation-activity-log-list-query.dto';
 
 /**
  * 평가 활동 내역 관리 컨트롤러
@@ -30,8 +17,6 @@ import {
 @ApiTags('A-0-6. 관리자 - 평가 활동 내역')
 @ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-activity-logs')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('admin')
 export class EvaluationActivityLogController {
   constructor(
     private readonly activityLogContextService: EvaluationActivityLogContextService,
@@ -76,16 +61,27 @@ export class EvaluationActivityLogController {
     @Param('employeeId', ParseUUIDPipe) employeeId: string,
     @Query() query: GetEvaluationActivityLogListQueryDto,
   ): Promise<EvaluationActivityLogListResponseDto> {
+    // Swagger UI가 example 값을 자동으로 채워넣을 수 있으므로,
+    // 빈 문자열이나 특정 기본값을 undefined로 처리
+    const startDateValue =
+      query.startDate && query.startDate.trim() !== ''
+        ? query.startDate
+        : undefined;
+    const endDateValue =
+      query.endDate && query.endDate.trim() !== '' ? query.endDate : undefined;
+
     const result =
-      await this.activityLogContextService.평가기간_피평가자_활동내역을_조회한다({
-        periodId,
-        employeeId,
-        activityType: query.activityType,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
-        page: query.page || 1,
-        limit: query.limit || 20,
-      });
+      await this.activityLogContextService.평가기간_피평가자_활동내역을_조회한다(
+        {
+          periodId,
+          employeeId,
+          activityType: query.activityType,
+          startDate: startDateValue ? new Date(startDateValue) : undefined,
+          endDate: endDateValue ? new Date(endDateValue) : undefined,
+          page: query.page || 1,
+          limit: query.limit || 20,
+        },
+      );
 
     return {
       items: result.items,
@@ -95,4 +91,3 @@ export class EvaluationActivityLogController {
     };
   }
 }
-

@@ -218,7 +218,10 @@ export class EvaluationLineMappingValidationService {
 
     let queryBuilder = repository
       .createQueryBuilder('mapping')
-      .where('mapping.employeeId = :employeeId', {
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId: createData.evaluationPeriodId,
+      })
+      .andWhere('mapping.employeeId = :employeeId', {
         employeeId: createData.employeeId,
       })
       .andWhere('mapping.evaluatorId = :evaluatorId', {

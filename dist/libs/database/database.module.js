@@ -21,50 +21,39 @@ exports.DatabaseModule = DatabaseModule = __decorate([
             typeorm_1.TypeOrmModule.forRootAsync({
                 imports: [config_1.ConfigModule],
                 useFactory: (configService) => {
-                    const databaseUrl = configService.get('DATABASE_URL');
                     const nodeEnv = configService.get('NODE_ENV', 'development');
                     const isTest = nodeEnv === 'test';
                     const isDevelopment = nodeEnv === 'development';
-                    if (!databaseUrl) {
-                        throw new Error('DATABASE_URL environment variable is required');
-                    }
+                    const isServerless = !!process.env.VERCEL;
+                    const host = configService.get('DATABASE_HOST');
+                    const port = configService.get('DATABASE_PORT', 5432);
+                    const username = configService.get('DATABASE_USERNAME');
+                    const password = configService.get('DATABASE_PASSWORD', '');
+                    const database = configService.get('DATABASE_NAME');
                     const needsSSL = configService.get('DATABASE_SSL', 'false') === 'true';
-                    const urlPattern = /^(postgresql|postgres):\/\/([^:@]+)(?::([^@]+))?@([^:/]+)(?::(\d+))?\/([^?]+)(?:\?(.+))?$/;
-                    const match = databaseUrl.match(urlPattern);
-                    if (match) {
-                        const [, , username, password, host, port, database] = match;
-                        return {
-                            type: 'postgres',
-                            host,
-                            port: port ? parseInt(port, 10) : 5432,
-                            username,
-                            password: password || '',
-                            database: database.split('?')[0],
-                            autoLoadEntities: true,
-                            dropSchema: isTest,
-                            synchronize: configService.get('DB_SYNCHRONIZE', isDevelopment || isTest),
-                            logging: configService.get('DB_LOGGING', isDevelopment && !isTest),
-                            ssl: needsSSL ? { rejectUnauthorized: false } : false,
-                            extra: {
-                                max: 10,
-                                connectionTimeoutMillis: 60000,
-                                idleTimeoutMillis: 30000,
-                                ...(needsSSL && { ssl: { rejectUnauthorized: false } }),
-                            },
-                        };
+                    if (!host || !username || !database) {
+                        throw new Error('데이터베이스 연결 정보가 누락되었습니다. ' +
+                            'DATABASE_HOST, DATABASE_USERNAME, DATABASE_NAME 환경 변수를 설정해주세요.');
                     }
                     return {
                         type: 'postgres',
-                        url: databaseUrl,
+                        host,
+                        port,
+                        username,
+                        password,
+                        database,
                         autoLoadEntities: true,
                         dropSchema: isTest,
                         synchronize: configService.get('DB_SYNCHRONIZE', isDevelopment || isTest),
                         logging: configService.get('DB_LOGGING', isDevelopment && !isTest),
                         ssl: needsSSL ? { rejectUnauthorized: false } : false,
                         extra: {
-                            max: 10,
-                            connectionTimeoutMillis: 60000,
-                            idleTimeoutMillis: 30000,
+                            max: configService.get('DATABASE_POOL_MAX', isServerless ? 2 : 10),
+                            connectionTimeoutMillis: configService.get('DATABASE_CONNECTION_TIMEOUT', isServerless ? 5000 : 10000),
+                            idleTimeoutMillis: configService.get('DATABASE_IDLE_TIMEOUT', isServerless ? 10000 : 20000),
+                            statement_timeout: configService.get('DATABASE_STATEMENT_TIMEOUT', isServerless ? 20000 : 30000),
+                            keepAlive: !isServerless,
+                            ...(!isServerless && { keepAliveInitialDelayMillis: 10000 }),
                             ...(needsSSL && { ssl: { rejectUnauthorized: false } }),
                         },
                     };

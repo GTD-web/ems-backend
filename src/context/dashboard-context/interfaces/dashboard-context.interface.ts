@@ -194,6 +194,15 @@ export interface EmployeeEvaluationPeriodStatusDto {
       /** SECONDARY 라인 평가자 지정 여부 */
       hasSecondaryEvaluator: boolean;
     };
+    /** 평가기준 제출 상태 */
+    criteriaSubmission: {
+      /** 평가기준 제출 여부 */
+      isSubmitted: boolean;
+      /** 평가기준 제출 일시 */
+      submittedAt?: Date | null;
+      /** 평가기준 제출 처리자 ID */
+      submittedBy?: string | null;
+    };
   };
 
   /** 성과 입력 정보 */
@@ -208,14 +217,21 @@ export interface EmployeeEvaluationPeriodStatusDto {
 
   /** 자기평가 진행 정보 */
   selfEvaluation: {
-    /** 자기평가 진행 상태 */
-    status: SelfEvaluationStatus;
+    /** 자기평가 진행 상태 (재작성 요청 상태 포함) */
+    status:
+      | SelfEvaluationStatus
+      | 'pending'
+      | 'approved'
+      | 'revision_requested'
+      | 'revision_completed';
     /** 전체 WBS 자기평가 매핑 수 */
     totalMappingCount: number;
     /** 완료된 WBS 자기평가 수 */
     completedMappingCount: number;
     /** 피평가자가 1차 평가자에게 자기평가 제출 완료 여부 */
     isSubmittedToEvaluator: boolean;
+    /** 1차 평가자가 관리자에게 자기평가 제출 완료 여부 */
+    isSubmittedToManager: boolean;
     /** 가중치 기반 자기평가 총점 (0-100) */
     totalScore: number | null;
     /** 평가기간 등급 기준에 따른 자기평가 등급 (예: S+, A-, B 등) */

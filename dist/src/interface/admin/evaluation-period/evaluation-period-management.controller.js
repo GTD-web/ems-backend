@@ -18,7 +18,8 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const evaluation_period_management_service_1 = require("../../../context/evaluation-period-management-context/evaluation-period-management.service");
 const evaluation_period_business_service_1 = require("../../../business/evaluation-period/evaluation-period-business.service");
-const decorators_1 = require("../../decorators");
+const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const evaluation_period_api_decorators_1 = require("./decorators/evaluation-period-api.decorators");
 const evaluation_management_dto_1 = require("./dto/evaluation-management.dto");
 let EvaluationPeriodManagementController = EvaluationPeriodManagementController_1 = class EvaluationPeriodManagementController {
@@ -198,7 +199,7 @@ __decorate([
 ], EvaluationPeriodManagementController.prototype, "getEvaluationPeriods", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.GetEvaluationPeriodDetail)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -206,148 +207,148 @@ __decorate([
 __decorate([
     (0, evaluation_period_api_decorators_1.CreateEvaluationPeriod)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [evaluation_management_dto_1.CreateEvaluationPeriodApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "createEvaluationPeriod", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.StartEvaluationPeriod)(),
-    __param(0, (0, decorators_1.ParseId)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "startEvaluationPeriod", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.CompleteEvaluationPeriod)(),
-    __param(0, (0, decorators_1.ParseId)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "completeEvaluationPeriod", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateEvaluationPeriodBasicInfo)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdateEvaluationPeriodBasicApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateEvaluationPeriodBasicInfo", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateEvaluationPeriodSchedule)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdateEvaluationPeriodScheduleApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateEvaluationPeriodSchedule", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateEvaluationPeriodStartDate)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdateEvaluationPeriodStartDateApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateEvaluationPeriodStartDate", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateEvaluationSetupDeadline)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdateEvaluationSetupDeadlineApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateEvaluationSetupDeadline", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdatePerformanceDeadline)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdatePerformanceDeadlineApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updatePerformanceDeadline", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateSelfEvaluationDeadline)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdateSelfEvaluationDeadlineApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateSelfEvaluationDeadline", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdatePeerEvaluationDeadline)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdatePeerEvaluationDeadlineApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updatePeerEvaluationDeadline", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateEvaluationPeriodGradeRanges)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdateGradeRangesApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateEvaluationPeriodGradeRanges", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateCriteriaSettingPermission)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.ManualPermissionSettingDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateCriteriaSettingPermission", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateSelfEvaluationSettingPermission)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.ManualPermissionSettingDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateSelfEvaluationSettingPermission", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateFinalEvaluationSettingPermission)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.ManualPermissionSettingDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateFinalEvaluationSettingPermission", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.UpdateManualSettingPermissions)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.UpdateManualSettingPermissionsApiDto, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "updateManualSettingPermissions", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.DeleteEvaluationPeriod)(),
-    __param(0, (0, decorators_1.ParseId)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "deleteEvaluationPeriod", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.ChangeEvaluationPeriodPhase)(),
-    __param(0, (0, decorators_1.ParseId)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_management_dto_1.ChangeEvaluationPeriodPhaseApiDto, Object]),
     __metadata("design:returntype", Promise)

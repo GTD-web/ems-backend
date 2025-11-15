@@ -16,8 +16,8 @@ exports.DashboardController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const dashboard_service_1 = require("../../../context/dashboard-context/dashboard.service");
-const parse_uuid_decorator_1 = require("../../decorators/parse-uuid.decorator");
-const current_user_decorator_1 = require("../../decorators/current-user.decorator");
+const decorators_1 = require("../../common/decorators");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const evaluation_period_service_1 = require("../../../domain/core/evaluation-period/evaluation-period.service");
 const employee_sync_service_1 = require("../../../context/organization-management-context/employee-sync.service");
 const get_all_employees_evaluation_period_status_query_dto_1 = require("./dto/get-all-employees-evaluation-period-status-query.dto");
@@ -34,37 +34,40 @@ let DashboardController = class DashboardController {
         this.employeeSyncService = employeeSyncService;
     }
     async getAllEmployeesEvaluationPeriodStatus(evaluationPeriodId, queryDto) {
-        return await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(evaluationPeriodId, queryDto.includeUnregistered);
+        const results = await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(evaluationPeriodId, queryDto.includeUnregistered);
+        return results.map((result) => {
+            const { evaluationCriteria, wbsCriteria, evaluationLine, ...rest } = result;
+            return rest;
+        });
     }
     async getMyEvaluationTargetsStatus(evaluationPeriodId, evaluatorId) {
         return await this.dashboardService.내가_담당하는_평가대상자_현황을_조회한다(evaluationPeriodId, evaluatorId);
     }
     async getEmployeeEvaluationPeriodStatus(evaluationPeriodId, employeeId) {
-        return await this.dashboardService.직원의_평가기간_현황을_조회한다(evaluationPeriodId, employeeId);
+        const result = await this.dashboardService.직원의_평가기간_현황을_조회한다(evaluationPeriodId, employeeId);
+        if (!result) {
+            return null;
+        }
+        const { evaluationCriteria, wbsCriteria, evaluationLine, ...rest } = result;
+        return rest;
     }
     async getMyAssignedData(evaluationPeriodId, user) {
         const data = await this.dashboardService.사용자_할당_정보를_조회한다(evaluationPeriodId, user.id);
-        return this.하향평가_정보를_제거한다(data);
+        return this.이차_하향평가_정보를_제거한다(data);
     }
     async getEmployeeAssignedData(evaluationPeriodId, employeeId) {
         return await this.dashboardService.사용자_할당_정보를_조회한다(evaluationPeriodId, employeeId);
     }
-    하향평가_정보를_제거한다(data) {
-        const projectsWithoutDownwardEvaluation = data.projects.map((project) => ({
+    이차_하향평가_정보를_제거한다(data) {
+        const projectsWithoutSecondaryDownwardEvaluation = data.projects.map((project) => ({
             ...project,
             wbsList: project.wbsList.map((wbs) => ({
                 ...wbs,
-                primaryDownwardEvaluation: null,
                 secondaryDownwardEvaluation: null,
             })),
         }));
-        const summaryWithoutDownwardEvaluation = {
+        const summaryWithoutSecondaryDownwardEvaluation = {
             ...data.summary,
-            primaryDownwardEvaluation: {
-                totalScore: null,
-                grade: null,
-                isSubmitted: false,
-            },
             secondaryDownwardEvaluation: {
                 totalScore: null,
                 grade: null,
@@ -74,8 +77,8 @@ let DashboardController = class DashboardController {
         };
         return {
             ...data,
-            projects: projectsWithoutDownwardEvaluation,
-            summary: summaryWithoutDownwardEvaluation,
+            projects: projectsWithoutSecondaryDownwardEvaluation,
+            summary: summaryWithoutSecondaryDownwardEvaluation,
         };
     }
     async getEvaluatorAssignedEmployeesData(evaluationPeriodId, evaluatorId, employeeId) {
@@ -93,7 +96,6 @@ let DashboardController = class DashboardController {
                     id: period.id,
                     name: period.name,
                     startDate: period.startDate,
-                    endDate: period.endDate ?? null,
                 },
                 evaluations: [],
             };
@@ -103,7 +105,6 @@ let DashboardController = class DashboardController {
             id: firstResult.periodId,
             name: firstResult.periodName,
             startDate: firstResult.periodStartDate,
-            endDate: firstResult.periodEndDate,
         };
         const evaluations = results.map((result) => ({
             employee: {
@@ -141,7 +142,6 @@ let DashboardController = class DashboardController {
                     id: result.periodId,
                     name: result.periodName,
                     startDate: result.periodStartDate,
-                    endDate: result.periodEndDate,
                 });
             }
         }
@@ -224,7 +224,6 @@ let DashboardController = class DashboardController {
                 id: result.periodId,
                 name: result.periodName,
                 startDate: result.periodStartDate,
-                endDate: result.periodEndDate,
             },
             evaluationGrade: result.evaluationGrade,
             jobGrade: result.jobGrade,
@@ -275,6 +274,8 @@ let DashboardController = class DashboardController {
                 status: statusData.selfEvaluation.status,
                 totalCount: statusData.selfEvaluation.totalMappingCount,
                 completedCount: statusData.selfEvaluation.completedMappingCount,
+                isSubmittedToEvaluator: statusData.selfEvaluation.isSubmittedToEvaluator,
+                isSubmittedToManager: statusData.selfEvaluation.isSubmittedToManager,
                 totalScore: statusData.selfEvaluation.totalScore,
                 grade: statusData.selfEvaluation.grade,
             },
@@ -309,7 +310,7 @@ let DashboardController = class DashboardController {
 exports.DashboardController = DashboardController;
 __decorate([
     (0, dashboard_api_decorators_1.GetAllEmployeesEvaluationPeriodStatus)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, get_all_employees_evaluation_period_status_query_dto_1.GetAllEmployeesEvaluationPeriodStatusQueryDto]),
@@ -317,23 +318,23 @@ __decorate([
 ], DashboardController.prototype, "getAllEmployeesEvaluationPeriodStatus", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetMyEvaluationTargetsStatus)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('evaluatorId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('evaluatorId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getMyEvaluationTargetsStatus", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetEmployeeEvaluationPeriodStatus)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('employeeId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getEmployeeEvaluationPeriodStatus", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetMyAssignedData)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
     __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
@@ -341,24 +342,24 @@ __decorate([
 ], DashboardController.prototype, "getMyAssignedData", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetEmployeeAssignedData)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('employeeId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getEmployeeAssignedData", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetEvaluatorAssignedEmployeesData)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('evaluatorId')),
-    __param(2, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('evaluatorId')),
+    __param(2, (0, decorators_1.ParseUUID)('employeeId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
     __metadata("design:returntype", Promise)
 ], DashboardController.prototype, "getEvaluatorAssignedEmployeesData", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetFinalEvaluationsByPeriod)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
@@ -372,7 +373,7 @@ __decorate([
 ], DashboardController.prototype, "getAllEmployeesFinalEvaluations", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetFinalEvaluationsByEmployee)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('employeeId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, employee_final_evaluation_list_dto_1.GetEmployeeFinalEvaluationsQueryDto]),
@@ -380,8 +381,8 @@ __decorate([
 ], DashboardController.prototype, "getFinalEvaluationsByEmployee", null);
 __decorate([
     (0, dashboard_api_decorators_1.GetEmployeeCompleteStatus)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
+    __param(0, (0, decorators_1.ParseUUID)('evaluationPeriodId')),
+    __param(1, (0, decorators_1.ParseUUID)('employeeId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", Promise)

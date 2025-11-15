@@ -1,17 +1,19 @@
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import {
+  ForbiddenException,
   Injectable,
   Logger,
-  ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull, EntityManager } from 'typeorm';
+import { EntityManager, IsNull, Repository } from 'typeorm';
 import { IEvaluationCriteriaManagementService } from './interfaces/evaluation-criteria-management.interface';
-import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
-import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
-import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import { WbsAssignmentValidationService } from './services/wbs-assignment-validation.service';
+import { EvaluationPeriodEmployeeMappingService } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.service';
+import type { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
 
 // Project Assignment Commands & Queries
 import {
@@ -19,14 +21,14 @@ import {
   CancelProjectAssignmentCommand,
   ChangeProjectAssignmentOrderCommand,
   CreateProjectAssignmentCommand,
+  GetAvailableProjectsQuery,
   GetEmployeeProjectAssignmentsQuery,
   GetProjectAssignedEmployeesQuery,
   GetProjectAssignmentDetailQuery,
   GetProjectAssignmentListQuery,
   GetUnassignedEmployeesQuery,
-  GetAvailableProjectsQuery,
-  type ProjectAssignmentListResult,
   type AvailableProjectsResult,
+  type ProjectAssignmentListResult,
 } from './handlers/project-assignment';
 
 // WBS Assignment Commands & Queries
@@ -44,50 +46,43 @@ import {
   ResetEmployeeWbsAssignmentsCommand,
   ResetPeriodWbsAssignmentsCommand,
   ResetProjectWbsAssignmentsCommand,
-  type WbsAssignmentListResult,
   type WbsAssignmentDetailResult,
+  type WbsAssignmentListResult,
 } from './handlers/wbs-assignment';
 
 // WBS Evaluation Criteria Commands & Queries
 import {
   CreateWbsEvaluationCriteriaCommand,
-  UpdateWbsEvaluationCriteriaCommand,
   DeleteWbsEvaluationCriteriaCommand,
   DeleteWbsItemEvaluationCriteriaCommand,
-  GetWbsEvaluationCriteriaListQuery,
   GetWbsEvaluationCriteriaDetailQuery,
+  GetWbsEvaluationCriteriaListQuery,
   GetWbsItemEvaluationCriteriaQuery,
+  UpdateWbsEvaluationCriteriaCommand,
 } from './handlers/wbs-evaluation-criteria';
 
 // WBS Item Commands & Queries
 import {
   CreateWbsItemCommand,
-  UpdateWbsItemCommand,
   GetWbsItemsByProjectQuery,
-  type CreateWbsItemResult,
-  type UpdateWbsItemResult,
-  type GetWbsItemsByProjectResult,
+  UpdateWbsItemCommand,
 } from './handlers/wbs-item';
 
 // Evaluation Line Commands & Queries
 import {
+  AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesCommand,
   ConfigureEmployeeWbsEvaluationLineCommand,
   ConfigurePrimaryEvaluatorCommand,
   ConfigureSecondaryEvaluatorCommand,
   GetEmployeeEvaluationSettingsQuery,
   GetEvaluatorEmployeesQuery,
   GetEvaluatorsByPeriodQuery,
+  type AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesResult,
 } from './handlers/evaluation-line';
 
-import {
-  ProjectInfoDto,
-  EmployeeInfoDto,
-} from '@interface/admin/evaluation-criteria/dto/project-assignment.dto';
+import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
+import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
 import type { EvaluationLineMappingDto } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
-import type {
-  EvaluationLineDto,
-  EvaluationLineFilter,
-} from '@domain/core/evaluation-line/evaluation-line.types';
 import type {
   CreateEvaluationProjectAssignmentData,
   EvaluationProjectAssignmentDto,
@@ -98,7 +93,6 @@ import type {
   CreateEvaluationWbsAssignmentData,
   EvaluationWbsAssignmentDto,
   EvaluationWbsAssignmentFilter,
-  UpdateEvaluationWbsAssignmentData,
   OrderDirection as WbsOrderDirection,
 } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 import type {
@@ -107,9 +101,11 @@ import type {
   WbsEvaluationCriteriaDto,
   WbsEvaluationCriteriaFilter,
 } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
+import {
+  EmployeeInfoDto,
+  ProjectInfoDto,
+} from '@interface/admin/evaluation-criteria/dto/project-assignment.dto';
 import type { WbsEvaluationCriteriaListResponseDto } from '@interface/admin/evaluation-criteria/dto/wbs-evaluation-criteria.dto';
-import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
-import { WbsItemStatus } from '@domain/common/wbs-item/wbs-item.types';
 
 /**
  * 평가기준관리 서비스 (MVP 버전)
@@ -134,6 +130,7 @@ export class EvaluationCriteriaManagementService
     @InjectRepository(EvaluationLine)
     private readonly evaluationLineRepository: Repository<EvaluationLine>,
     private readonly wbsAssignmentValidationService: WbsAssignmentValidationService,
+    private readonly evaluationPeriodEmployeeMappingService: EvaluationPeriodEmployeeMappingService,
   ) {}
 
   // ============================================================================
@@ -533,6 +530,23 @@ export class EvaluationCriteriaManagementService
       evaluatorId,
       createdBy,
     );
+    return await this.commandBus.execute(command);
+  }
+
+  /**
+   * 평가기간의 모든 직원에 대해 managerId 기반으로 1차 평가자를 자동 구성한다
+   * 평가기간에 등록된 모든 직원의 관리자를 1차 평가자로 자동 설정합니다.
+   * 기존 1차 평가라인 매핑이 있으면 업데이트하고, 없으면 새로 생성합니다.
+   */
+  async 평가기간의_모든_직원에_대해_managerId로_1차_평가자를_자동_구성한다(
+    periodId: string,
+    createdBy: string,
+  ): Promise<AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesResult> {
+    const command =
+      new AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesCommand(
+        periodId,
+        createdBy,
+      );
     return await this.commandBus.execute(command);
   }
 
@@ -1145,5 +1159,39 @@ export class EvaluationCriteriaManagementService
   ): Promise<AvailableProjectsResult> {
     const query = new GetAvailableProjectsQuery(periodId, options);
     return await this.queryBus.execute(query);
+  }
+
+  // ============================================================================
+  // 평가기준 제출 관리
+  // ============================================================================
+
+  /**
+   * 평가기준을 제출한다
+   */
+  async 평가기준을_제출한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    submittedBy: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    return await this.evaluationPeriodEmployeeMappingService.평가기준을_제출한다(
+      evaluationPeriodId,
+      employeeId,
+      submittedBy,
+    );
+  }
+
+  /**
+   * 평가기준 제출을 초기화한다
+   */
+  async 평가기준_제출을_초기화한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    return await this.evaluationPeriodEmployeeMappingService.평가기준_제출을_초기화한다(
+      evaluationPeriodId,
+      employeeId,
+      updatedBy,
+    );
   }
 }

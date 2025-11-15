@@ -103,6 +103,11 @@ export declare class SelfEvaluationSummaryDto implements SelfEvaluationSummary {
     isSubmittedToEvaluator: boolean;
     isSubmittedToManager: boolean;
 }
+export declare class CriteriaSubmissionInfoDto {
+    isSubmitted: boolean;
+    submittedAt: Date | null;
+    submittedBy: string | null;
+}
 export declare class AssignmentSummaryDto implements AssignmentSummary {
     totalProjects: number;
     totalWbs: number;
@@ -111,6 +116,7 @@ export declare class AssignmentSummaryDto implements AssignmentSummary {
     selfEvaluation: SelfEvaluationSummaryDto;
     primaryDownwardEvaluation: EvaluationScoreDto;
     secondaryDownwardEvaluation: SecondaryDownwardEvaluationDto;
+    criteriaSubmission: CriteriaSubmissionInfoDto;
 }
 export declare class AssignedProjectWithWbsDto implements AssignedProjectWithWbs {
     projectId: string;

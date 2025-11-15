@@ -89,7 +89,8 @@ export async function calculatePrimaryDownwardEvaluationScore(
   let primaryDownwardGrade: string | null = null;
 
   // 1차 평가자 조회 (직원별 고정 담당자, wbsItemId IS NULL)
-  const primaryEvaluatorMapping = await evaluationLineMappingRepository
+  // 평가자 교체를 고려하여 현재 매핑된 모든 평가자 조회
+  const primaryEvaluatorMappings = await evaluationLineMappingRepository
     .createQueryBuilder('mapping')
     .leftJoin(
       EvaluationLine,
@@ -105,10 +106,16 @@ export async function calculatePrimaryDownwardEvaluationScore(
       evaluatorType: EvaluatorType.PRIMARY,
     })
     .andWhere('mapping.deletedAt IS NULL')
-    .getOne();
+    .getMany();
 
-  if (primaryEvaluatorMapping) {
-    const primaryEvaluatorId = primaryEvaluatorMapping.evaluatorId;
+  if (primaryEvaluatorMappings && primaryEvaluatorMappings.length > 0) {
+    // 중복된 evaluatorId 제거
+    const primaryEvaluatorIds = [
+      ...new Set(
+        primaryEvaluatorMappings.map((m) => m.evaluatorId).filter((id) => !!id),
+      ),
+    ];
+    const primaryEvaluatorId = primaryEvaluatorIds[0]; // 대표 평가자 (하위 호환성)
 
     // 1차 평가자는 직원별 고정 담당자이므로, 할당된 WBS 목록은 WBS 할당 테이블에서 조회
     const primaryAssignedWbs = await wbsAssignmentRepository
@@ -157,7 +164,7 @@ export async function calculatePrimaryDownwardEvaluationScore(
       primaryDownwardScore = await 가중치_기반_1차_하향평가_점수를_계산한다(
         evaluationPeriodId,
         employeeId,
-        primaryEvaluatorId,
+        primaryEvaluatorIds, // 현재 평가라인에 있는 모든 평가자
         downwardEvaluationRepository,
         wbsAssignmentRepository,
         evaluationPeriodRepository,

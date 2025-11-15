@@ -10,11 +10,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FinalEvaluationListResponseDto = exports.FinalEvaluationListItemDto = exports.FinalEvaluationDetailDto = exports.PeriodBasicInfoDto = exports.EmployeeBasicInfoDto = exports.FinalEvaluationBasicDto = exports.FinalEvaluationResponseDto = exports.FinalEvaluationFilterDto = exports.CancelConfirmationBodyDto = exports.ConfirmFinalEvaluationBodyDto = exports.UpdateFinalEvaluationBodyDto = exports.UpsertFinalEvaluationBodyDto = void 0;
-const swagger_1 = require("@nestjs/swagger");
-const class_validator_1 = require("class-validator");
-const class_transformer_1 = require("class-transformer");
-const decorators_1 = require("../../../decorators");
 const final_evaluation_types_1 = require("../../../../domain/core/final-evaluation/final-evaluation.types");
+const decorators_1 = require("../../../common/decorators");
+const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
+const class_validator_1 = require("class-validator");
 class UpsertFinalEvaluationBodyDto {
     evaluationGrade;
     jobGrade;
@@ -365,7 +365,6 @@ class PeriodBasicInfoDto {
     id;
     name;
     startDate;
-    endDate;
     status;
 }
 exports.PeriodBasicInfoDto = PeriodBasicInfoDto;
@@ -390,13 +389,6 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], PeriodBasicInfoDto.prototype, "startDate", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '종료일',
-        example: '2024-06-30T23:59:59Z',
-    }),
-    __metadata("design:type", Date)
-], PeriodBasicInfoDto.prototype, "endDate", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '상태',

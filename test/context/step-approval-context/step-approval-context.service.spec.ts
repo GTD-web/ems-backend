@@ -21,6 +21,8 @@ import {
 } from '@domain/core/evaluation-period/evaluation-period.types';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * StepApprovalContextService 유닛 테스트
@@ -53,6 +55,9 @@ describe('StepApprovalContextService', () => {
   let adminId: string;
 
   const systemAdminId = '00000000-0000-0000-0000-000000000001';
+
+  // 테스트 결과 저장용
+  const testResults: any[] = [];
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -108,6 +113,21 @@ describe('StepApprovalContextService', () => {
   });
 
   afterAll(async () => {
+    // 테스트 결과를 JSON 파일로 저장
+    const outputPath = path.join(
+      __dirname,
+      'step-approval-context-revision-request-result.json',
+    );
+    const output = {
+      timestamp: new Date().toISOString(),
+      testResults: testResults,
+    };
+
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
+    console.log(
+      `✅ 테스트 결과가 저장되었습니다: ${outputPath}`,
+    );
+
     await dataSource.destroy();
     await module.close();
   });
@@ -168,7 +188,6 @@ describe('StepApprovalContextService', () => {
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -225,9 +244,7 @@ describe('StepApprovalContextService', () => {
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
+      isExcluded: false,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);
@@ -277,6 +294,132 @@ describe('StepApprovalContextService', () => {
     await evaluationLineMappingRepository.save(secondaryLineMapping);
 
     // 9. 단계 승인 엔티티 생성
+    const stepApproval = stepApprovalRepository.create({
+      evaluationPeriodEmployeeMappingId: mappingId,
+      criteriaSettingStatus: StepApprovalStatus.PENDING,
+      selfEvaluationStatus: StepApprovalStatus.PENDING,
+      primaryEvaluationStatus: StepApprovalStatus.PENDING,
+      secondaryEvaluationStatus: StepApprovalStatus.PENDING,
+      createdBy: systemAdminId,
+    });
+    await stepApprovalRepository.save(stepApproval);
+  }
+
+  /**
+   * 평가자와 피평가자가 같은 경우의 테스트 데이터 생성 헬퍼 함수
+   */
+  async function 테스트데이터를_생성한다_평가자와피평가자같은경우(): Promise<void> {
+    // 1. 부서 생성
+    const department = departmentRepository.create({
+      name: '개발팀',
+      code: 'DEV001',
+      externalId: 'DEPT001',
+      externalCreatedAt: new Date(),
+      externalUpdatedAt: new Date(),
+      createdBy: systemAdminId,
+    });
+    const savedDepartment = await departmentRepository.save(department);
+    departmentId = savedDepartment.id;
+
+    // 2. 평가기간 생성
+    const evaluationPeriod = evaluationPeriodRepository.create({
+      name: '2024년 상반기 평가',
+      description: '테스트용 평가기간',
+      startDate: new Date('2024-01-01'),
+      status: EvaluationPeriodStatus.IN_PROGRESS,
+      currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
+      criteriaSettingEnabled: true,
+      selfEvaluationSettingEnabled: true,
+      finalEvaluationSettingEnabled: true,
+      maxSelfEvaluationRate: 120,
+      createdBy: systemAdminId,
+    });
+    const savedPeriod = await evaluationPeriodRepository.save(evaluationPeriod);
+    evaluationPeriodId = savedPeriod.id;
+
+    // 3. 피평가자 직원 생성 (이 직원이 1차평가자이기도 함)
+    const employee = employeeRepository.create({
+      name: '김피평가',
+      employeeNumber: 'EMP001',
+      email: 'employee@test.com',
+      externalId: 'EXT001',
+      departmentId: departmentId,
+      status: '재직중',
+      createdBy: systemAdminId,
+    });
+    const savedEmployee = await employeeRepository.save(employee);
+    employeeId = savedEmployee.id;
+    // 평가자와 피평가자가 같으므로 primaryEvaluatorId도 같은 값으로 설정
+    primaryEvaluatorId = employeeId;
+
+    // 4. 2차 평가자 직원 생성 (테스트 완전성을 위해)
+    const secondaryEvaluator = employeeRepository.create({
+      name: '박이차평가자',
+      employeeNumber: 'EMP003',
+      email: 'secondary@test.com',
+      externalId: 'EXT003',
+      departmentId: departmentId,
+      status: '재직중',
+      createdBy: systemAdminId,
+    });
+    const savedSecondaryEvaluator =
+      await employeeRepository.save(secondaryEvaluator);
+    secondaryEvaluatorId = savedSecondaryEvaluator.id;
+
+    // 5. 평가기간-직원 매핑 생성
+    const mapping = mappingRepository.create({
+      evaluationPeriodId: evaluationPeriodId,
+      employeeId: employeeId,
+      isExcluded: false,
+      createdBy: systemAdminId,
+    });
+    const savedMapping = await mappingRepository.save(mapping);
+    mappingId = savedMapping.id;
+
+    // 6. 평가라인 생성 (1차, 2차)
+    const primaryLine = evaluationLineRepository.create({
+      evaluatorType: EvaluatorType.PRIMARY,
+      order: 1,
+      isRequired: true,
+      isAutoAssigned: false,
+      version: 1,
+      createdBy: systemAdminId,
+    });
+    const savedPrimaryLine = await evaluationLineRepository.save(primaryLine);
+
+    const secondaryLine = evaluationLineRepository.create({
+      evaluatorType: EvaluatorType.SECONDARY,
+      order: 2,
+      isRequired: false,
+      isAutoAssigned: false,
+      version: 1,
+      createdBy: systemAdminId,
+    });
+    const savedSecondaryLine =
+      await evaluationLineRepository.save(secondaryLine);
+
+    // 7. 평가라인 매핑 생성 (1차평가자가 피평가자와 같음)
+    const primaryLineMapping = evaluationLineMappingRepository.create({
+      evaluationPeriodId: evaluationPeriodId,
+      employeeId: employeeId,
+      evaluatorId: primaryEvaluatorId, // 피평가자와 같은 ID
+      evaluationLineId: savedPrimaryLine.id,
+      version: 1,
+      createdBy: systemAdminId,
+    });
+    await evaluationLineMappingRepository.save(primaryLineMapping);
+
+    const secondaryLineMapping = evaluationLineMappingRepository.create({
+      evaluationPeriodId: evaluationPeriodId,
+      employeeId: employeeId,
+      evaluatorId: secondaryEvaluatorId,
+      evaluationLineId: savedSecondaryLine.id,
+      version: 1,
+      createdBy: systemAdminId,
+    });
+    await evaluationLineMappingRepository.save(secondaryLineMapping);
+
+    // 8. 단계 승인 엔티티 생성
     const stepApproval = stepApprovalRepository.create({
       evaluationPeriodEmployeeMappingId: mappingId,
       criteriaSettingStatus: StepApprovalStatus.PENDING,
@@ -368,24 +511,43 @@ describe('StepApprovalContextService', () => {
         StepApprovalStatus.REVISION_REQUESTED,
       );
 
-      // Then - 재작성 요청 생성 확인
+      // Then - 재작성 요청 생성 확인 (각 수신자별로 별도 요청 생성)
       const revisionRequests = await revisionRequestRepository.find({
         relations: ['recipients'],
+        where: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'criteria',
+        },
       });
-      expect(revisionRequests.length).toBe(1);
-      expect(revisionRequests[0].evaluationPeriodId).toBe(evaluationPeriodId);
-      expect(revisionRequests[0].employeeId).toBe(employeeId);
-      expect(revisionRequests[0].step).toBe('criteria');
-      expect(revisionRequests[0].comment).toBe(revisionComment);
-      expect(revisionRequests[0].requestedBy).toBe(adminId);
+      expect(revisionRequests.length).toBe(2); // 피평가자용 1개, 1차평가자용 1개
 
-      // Then - 수신자 확인 (평가기준: 피평가자 + 1차 평가자)
-      const recipients = revisionRequests[0].recipients;
-      expect(recipients.length).toBe(2);
+      // 각 요청의 속성 확인
+      revisionRequests.forEach((request) => {
+        expect(request.evaluationPeriodId).toBe(evaluationPeriodId);
+        expect(request.employeeId).toBe(employeeId);
+        expect(request.step).toBe('criteria');
+        expect(request.comment).toBe(revisionComment);
+        expect(request.requestedBy).toBe(adminId);
+        expect(request.recipients.length).toBe(1); // 각 요청은 1개의 수신자만 가짐
+      });
 
-      const recipientIds = recipients.map((r) => r.recipientId);
+      // 수신자 확인 (피평가자용 요청과 1차평가자용 요청이 각각 생성되어야 함)
+      const recipientIds = revisionRequests.flatMap((r) =>
+        r.recipients.map((recipient) => recipient.recipientId),
+      );
       expect(recipientIds).toContain(employeeId);
       expect(recipientIds).toContain(primaryEvaluatorId);
+
+      // 각 수신자별로 별도 요청이 생성되었는지 확인
+      const employeeRequest = revisionRequests.find(
+        (r) => r.recipients[0]?.recipientId === employeeId,
+      );
+      const primaryEvaluatorRequest = revisionRequests.find(
+        (r) => r.recipients[0]?.recipientId === primaryEvaluatorId,
+      );
+      expect(employeeRequest).toBeDefined();
+      expect(primaryEvaluatorRequest).toBeDefined();
     });
 
     it('자기평가를 재작성 요청 상태로 변경하면 피평가자와 1차평가자에게 요청이 전송되어야 한다', async () => {
@@ -403,18 +565,168 @@ describe('StepApprovalContextService', () => {
         updatedBy: adminId,
       });
 
-      // Then
+      // Then - 재작성 요청 생성 확인 (각 수신자별로 별도 요청 생성)
       const revisionRequests = await revisionRequestRepository.find({
         relations: ['recipients'],
+        where: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'self',
+        },
       });
-      expect(revisionRequests.length).toBe(1);
+      expect(revisionRequests.length).toBe(2); // 피평가자용 1개, 1차평가자용 1개
 
-      const recipients = revisionRequests[0].recipients;
-      expect(recipients.length).toBe(2);
+      // 각 요청의 속성 확인
+      revisionRequests.forEach((request) => {
+        expect(request.evaluationPeriodId).toBe(evaluationPeriodId);
+        expect(request.employeeId).toBe(employeeId);
+        expect(request.step).toBe('self');
+        expect(request.comment).toBe(revisionComment);
+        expect(request.requestedBy).toBe(adminId);
+        expect(request.recipients.length).toBe(1); // 각 요청은 1개의 수신자만 가짐
+      });
 
-      const recipientIds = recipients.map((r) => r.recipientId);
+      // 수신자 확인 (피평가자용 요청과 1차평가자용 요청이 각각 생성되어야 함)
+      const recipientIds = revisionRequests.flatMap((r) =>
+        r.recipients.map((recipient) => recipient.recipientId),
+      );
       expect(recipientIds).toContain(employeeId); // 피평가자
       expect(recipientIds).toContain(primaryEvaluatorId); // 1차 평가자
+
+      // 각 수신자별로 별도 요청이 생성되었는지 확인
+      const employeeRequest = revisionRequests.find(
+        (r) => r.recipients[0]?.recipientId === employeeId,
+      );
+      const primaryEvaluatorRequest = revisionRequests.find(
+        (r) => r.recipients[0]?.recipientId === primaryEvaluatorId,
+      );
+      expect(employeeRequest).toBeDefined();
+      expect(primaryEvaluatorRequest).toBeDefined();
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '평가기준 설정을 재작성 요청 상태로 변경하면 재작성 요청이 생성되어야 한다',
+        result: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'criteria',
+          status: StepApprovalStatus.REVISION_REQUESTED,
+          revisionRequestCount: revisionRequests.length,
+          recipientIds: recipientIds,
+          employeeRequestId: employeeRequest?.id,
+          primaryEvaluatorRequestId: primaryEvaluatorRequest?.id,
+        },
+      });
+    });
+
+    it('평가기준 설정 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다', async () => {
+      // Given - 평가자와 피평가자가 같은 경우의 테스트 데이터 생성
+      await 테스트데이터를_생성한다_평가자와피평가자같은경우();
+      const revisionComment = '평가기준을 다시 작성해주세요.';
+
+      // When
+      await service.단계별_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        step: 'criteria',
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment,
+        updatedBy: adminId,
+      });
+
+      // Then - 재작성 요청이 1개만 생성되어야 함 (중복 방지)
+      const revisionRequests = await revisionRequestRepository.find({
+        relations: ['recipients'],
+        where: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'criteria',
+        },
+      });
+      expect(revisionRequests.length).toBe(1); // 피평가자와 평가자가 같으므로 1개만 생성
+
+      // 요청의 속성 확인
+      const request = revisionRequests[0];
+      expect(request.evaluationPeriodId).toBe(evaluationPeriodId);
+      expect(request.employeeId).toBe(employeeId);
+      expect(request.step).toBe('criteria');
+      expect(request.comment).toBe(revisionComment);
+      expect(request.requestedBy).toBe(adminId);
+      expect(request.recipients.length).toBe(1);
+
+      // 수신자가 피평가자(employeeId)인지 확인
+      expect(request.recipients[0].recipientId).toBe(employeeId);
+      expect(request.recipients[0].recipientType).toBe('evaluatee');
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '평가기준 설정 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다',
+        result: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'criteria',
+          status: StepApprovalStatus.REVISION_REQUESTED,
+          revisionRequestCount: revisionRequests.length,
+          recipientId: request.recipients[0].recipientId,
+          recipientType: request.recipients[0].recipientType,
+          isSamePerson: true,
+        },
+      });
+    });
+
+    it('자기평가 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다', async () => {
+      // Given - 평가자와 피평가자가 같은 경우의 테스트 데이터 생성
+      await 테스트데이터를_생성한다_평가자와피평가자같은경우();
+      const revisionComment = '자기평가를 수정해주세요.';
+
+      // When
+      await service.단계별_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        step: 'self',
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment,
+        updatedBy: adminId,
+      });
+
+      // Then - 재작성 요청이 1개만 생성되어야 함 (중복 방지)
+      const revisionRequests = await revisionRequestRepository.find({
+        relations: ['recipients'],
+        where: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'self',
+        },
+      });
+      expect(revisionRequests.length).toBe(1); // 피평가자와 평가자가 같으므로 1개만 생성
+
+      // 요청의 속성 확인
+      const request = revisionRequests[0];
+      expect(request.evaluationPeriodId).toBe(evaluationPeriodId);
+      expect(request.employeeId).toBe(employeeId);
+      expect(request.step).toBe('self');
+      expect(request.comment).toBe(revisionComment);
+      expect(request.requestedBy).toBe(adminId);
+      expect(request.recipients.length).toBe(1);
+
+      // 수신자가 피평가자(employeeId)인지 확인
+      expect(request.recipients[0].recipientId).toBe(employeeId);
+      expect(request.recipients[0].recipientType).toBe('evaluatee');
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '자기평가 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다',
+        result: {
+          evaluationPeriodId,
+          employeeId,
+          step: 'self',
+          status: StepApprovalStatus.REVISION_REQUESTED,
+          revisionRequestCount: revisionRequests.length,
+          recipientId: request.recipients[0].recipientId,
+          recipientType: request.recipients[0].recipientType,
+          isSamePerson: true,
+        },
+      });
     });
 
     it('1차평가를 재작성 요청 상태로 변경하면 1차평가자에게만 요청이 전송되어야 한다', async () => {
@@ -598,8 +910,7 @@ describe('StepApprovalContextService', () => {
     it('존재하지 않는 평가자 ID를 전달하면 예외가 발생해야 한다', async () => {
       // Given
       await 테스트데이터를_생성한다();
-      const nonExistentEvaluatorId =
-        '123e4567-e89b-12d3-a456-426614174999';
+      const nonExistentEvaluatorId = '123e4567-e89b-12d3-a456-426614174999';
 
       // When & Then
       await expect(

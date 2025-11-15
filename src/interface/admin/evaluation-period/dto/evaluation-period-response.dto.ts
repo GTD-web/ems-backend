@@ -3,7 +3,7 @@ import {
   EvaluationPeriodStatus,
   EvaluationPeriodPhase,
   EvaluationPeriodDto,
-} from '../../../../domain/core/evaluation-period/evaluation-period.types';
+} from '@domain/core/evaluation-period/evaluation-period.types';
 
 /**
  * 등급 구간 응답 DTO
@@ -53,12 +53,6 @@ export class EvaluationPeriodResponseDto implements EvaluationPeriodDto {
     example: '2024-01-01T00:00:00.000Z',
   })
   startDate: Date;
-
-  @ApiProperty({
-    description: '평가 기간 종료일',
-    example: '2024-06-30T23:59:59.999Z',
-  })
-  endDate: Date;
 
   @ApiPropertyOptional({
     description: '평가 기간 설명',
