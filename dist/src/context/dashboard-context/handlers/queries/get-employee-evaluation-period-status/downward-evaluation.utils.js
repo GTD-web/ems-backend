@@ -6,6 +6,7 @@ exports.하향평가_상태를_조회한다 = 하향평가_상태를_조회한�
 exports.평가자별_하향평가_상태를_조회한다 = 평가자별_하향평가_상태를_조회한다;
 exports.특정_평가자의_하향평가_상태를_조회한다 = 특정_평가자의_하향평가_상태를_조회한다;
 const typeorm_1 = require("typeorm");
+const evaluation_line_entity_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.entity");
 const evaluation_line_types_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.types");
 const downward_evaluation_types_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.types");
 const downward_evaluation_score_utils_1 = require("./downward-evaluation-score.utils");
@@ -131,7 +132,7 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
         secondaryEvaluators.push(...uniqueEvaluatorIds);
     }
     const secondaryStatuses = await Promise.all(secondaryEvaluators.map(async (evaluatorId) => {
-        const status = await 특정_평가자의_하향평가_상태를_조회한다(evaluationPeriodId, employeeId, evaluatorId, downward_evaluation_types_1.DownwardEvaluationType.SECONDARY, downwardEvaluationRepository, wbsAssignmentRepository);
+        const status = await 특정_평가자의_하향평가_상태를_조회한다(evaluationPeriodId, employeeId, evaluatorId, downward_evaluation_types_1.DownwardEvaluationType.SECONDARY, downwardEvaluationRepository, wbsAssignmentRepository, evaluationLineMappingRepository, evaluationLineRepository);
         let evaluatorInfo = null;
         if (employeeRepository) {
             const evaluator = await employeeRepository.findOne({
@@ -266,14 +267,49 @@ async function 평가자별_하향평가_상태를_조회한다(evaluationPeriod
         averageScore,
     };
 }
-async function 특정_평가자의_하향평가_상태를_조회한다(evaluationPeriodId, employeeId, evaluatorId, evaluationType, downwardEvaluationRepository, wbsAssignmentRepository) {
-    const assignedWbsCount = await wbsAssignmentRepository.count({
-        where: {
-            periodId: evaluationPeriodId,
-            employeeId: employeeId,
-            deletedAt: (0, typeorm_1.IsNull)(),
-        },
-    });
+async function 특정_평가자의_하향평가_상태를_조회한다(evaluationPeriodId, employeeId, evaluatorId, evaluationType, downwardEvaluationRepository, wbsAssignmentRepository, evaluationLineMappingRepository, evaluationLineRepository) {
+    let assignedWbsCount;
+    if (evaluationType === downward_evaluation_types_1.DownwardEvaluationType.SECONDARY) {
+        if (!evaluationLineMappingRepository || !evaluationLineRepository) {
+            throw new Error('evaluationLineMappingRepository와 evaluationLineRepository가 필요합니다.');
+        }
+        const secondaryLine = await evaluationLineRepository.findOne({
+            where: {
+                evaluatorType: evaluation_line_types_1.EvaluatorType.SECONDARY,
+                deletedAt: (0, typeorm_1.IsNull)(),
+            },
+        });
+        if (!secondaryLine) {
+            assignedWbsCount = 0;
+        }
+        else {
+            const assignedMappings = await evaluationLineMappingRepository
+                .createQueryBuilder('mapping')
+                .select(['mapping.id', 'mapping.wbsItemId'])
+                .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
+                .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+                evaluationPeriodId,
+            })
+                .andWhere('mapping.employeeId = :employeeId', { employeeId })
+                .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+                .andWhere('line.evaluatorType = :evaluatorType', {
+                evaluatorType: evaluation_line_types_1.EvaluatorType.SECONDARY,
+            })
+                .andWhere('mapping.deletedAt IS NULL')
+                .andWhere('mapping.wbsItemId IS NOT NULL')
+                .getRawMany();
+            assignedWbsCount = assignedMappings.length;
+        }
+    }
+    else {
+        assignedWbsCount = await wbsAssignmentRepository.count({
+            where: {
+                periodId: evaluationPeriodId,
+                employeeId: employeeId,
+                deletedAt: (0, typeorm_1.IsNull)(),
+            },
+        });
+    }
     const downwardEvaluations = await downwardEvaluationRepository.find({
         where: {
             periodId: evaluationPeriodId,

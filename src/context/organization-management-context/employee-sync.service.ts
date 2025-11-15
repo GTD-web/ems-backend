@@ -309,9 +309,6 @@ export class EmployeeSyncService implements OnModuleInit {
               if (managerLine.managers && managerLine.managers.length > 0) {
                 // 첫 번째 관리자의 employeeId를 managerId로 설정
                 foundManagerId = managerLine.managers[0].employeeId;
-                this.logger.debug(
-                  `직원 ${empManager.name} (${empManager.employeeNumber})의 관리자: ${foundManagerId} (부서: ${managerLine.departmentName}, depth: ${managerLine.depth})`,
-                );
                 break; // 관리자를 찾으면 종료
               }
             }
@@ -324,12 +321,6 @@ export class EmployeeSyncService implements OnModuleInit {
 
           // 관리자를 찾았든 못 찾았든 매핑에 추가 (없으면 null)
           managerMap.set(empManager.employeeId, foundManagerId);
-
-          if (!foundManagerId) {
-            this.logger.debug(
-              `직원 ${empManager.name} (${empManager.employeeNumber})의 관리자를 찾을 수 없습니다.`,
-            );
-          }
         }
 
         const managerCount = Array.from(managerMap.values()).filter(
@@ -691,9 +682,6 @@ export class EmployeeSyncService implements OnModuleInit {
     const missingRankData =
       !existingEmployee.rankId && !existingEmployee.rankName;
     if (hasRankData && missingRankData) {
-      this.logger.debug(
-        `직원 ${existingEmployee.name}의 직급 정보가 없어 강제 업데이트합니다.`,
-      );
       return true;
     }
 
@@ -704,9 +692,6 @@ export class EmployeeSyncService implements OnModuleInit {
         existingEmployee.rankName !== mappedData.rankName ||
         existingEmployee.rankLevel !== mappedData.rankLevel)
     ) {
-      this.logger.debug(
-        `직원 ${existingEmployee.name}의 직급 정보가 변경되어 업데이트합니다.`,
-      );
       return true;
     }
 
@@ -718,9 +703,6 @@ export class EmployeeSyncService implements OnModuleInit {
     const missingDepartmentData =
       !existingEmployee.departmentName && !existingEmployee.departmentCode;
     if (hasDepartmentData && missingDepartmentData) {
-      this.logger.debug(
-        `직원 ${existingEmployee.name}의 부서 정보가 없어 강제 업데이트합니다.`,
-      );
       return true;
     }
 
@@ -731,9 +713,6 @@ export class EmployeeSyncService implements OnModuleInit {
         existingEmployee.departmentName !== mappedData.departmentName ||
         existingEmployee.departmentCode !== mappedData.departmentCode)
     ) {
-      this.logger.debug(
-        `직원 ${existingEmployee.name}의 부서 정보가 변경되어 업데이트합니다.`,
-      );
       return true;
     }
 

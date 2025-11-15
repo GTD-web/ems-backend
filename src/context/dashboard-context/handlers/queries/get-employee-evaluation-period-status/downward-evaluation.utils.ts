@@ -321,6 +321,8 @@ export async function 하향평가_상태를_조회한다(
         DownwardEvaluationType.SECONDARY,
         downwardEvaluationRepository,
         wbsAssignmentRepository,
+        evaluationLineMappingRepository,
+        evaluationLineRepository,
       );
 
       // 평가자 정보 조회
@@ -569,6 +571,8 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
   evaluationType: DownwardEvaluationType,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+  evaluationLineMappingRepository?: Repository<EvaluationLineMapping>,
+  evaluationLineRepository?: Repository<EvaluationLine>,
 ): Promise<{
   status: DownwardEvaluationStatus;
   assignedWbsCount: number;
@@ -576,14 +580,59 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
   isSubmitted: boolean;
   averageScore: number | null;
 }> {
-  // 1. 피평가자에게 할당된 WBS 수 조회 (평가해야 할 WBS 개수)
-  const assignedWbsCount = await wbsAssignmentRepository.count({
-    where: {
-      periodId: evaluationPeriodId,
-      employeeId: employeeId,
-      deletedAt: IsNull(),
-    },
-  });
+  // 1. 평가자에게 할당된 WBS 수 조회
+  let assignedWbsCount: number;
+  
+  if (evaluationType === DownwardEvaluationType.SECONDARY) {
+    // 2차 평가자의 경우: EvaluationLineMapping에서 해당 평가자에게 할당된 WBS 수 조회
+    if (!evaluationLineMappingRepository || !evaluationLineRepository) {
+      throw new Error('evaluationLineMappingRepository와 evaluationLineRepository가 필요합니다.');
+    }
+    
+    // SECONDARY 평가라인 조회
+    const secondaryLine = await evaluationLineRepository.findOne({
+      where: {
+        evaluatorType: EvaluatorType.SECONDARY,
+        deletedAt: IsNull(),
+      },
+    });
+    
+    if (!secondaryLine) {
+      assignedWbsCount = 0;
+    } else {
+      // 해당 평가자에게 할당된 WBS 매핑 조회
+      const assignedMappings = await evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .select(['mapping.id', 'mapping.wbsItemId'])
+        .leftJoin(
+          EvaluationLine,
+          'line',
+          'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+        )
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+        .andWhere('line.evaluatorType = :evaluatorType', {
+          evaluatorType: EvaluatorType.SECONDARY,
+        })
+        .andWhere('mapping.deletedAt IS NULL')
+        .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
+        .getRawMany();
+      
+      assignedWbsCount = assignedMappings.length;
+    }
+  } else {
+    // 1차 평가자의 경우: 피평가자에게 할당된 전체 WBS 수 조회
+    assignedWbsCount = await wbsAssignmentRepository.count({
+      where: {
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+        deletedAt: IsNull(),
+      },
+    });
+  }
 
   // 2. 특정 평가자의 하향평가들 조회
   const downwardEvaluations = await downwardEvaluationRepository.find({

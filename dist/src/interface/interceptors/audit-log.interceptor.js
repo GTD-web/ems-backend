@@ -29,9 +29,6 @@ let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
     intercept(context, next) {
         const request = context.switchToHttp().getRequest();
         const response = context.switchToHttp().getResponse();
-        if (request.method === 'GET') {
-            return next.handle();
-        }
         if (this.shouldExclude(request.path)) {
             return next.handle();
         }

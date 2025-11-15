@@ -474,24 +474,6 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                         : null,
                 },
             };
-            const secondaryLog = secondary.evaluators.length > 0
-                ? secondary.evaluators
-                    .map((s) => `평가자${s.evaluator.id}: ${s.completedEvaluationCount}/${s.assignedWbsCount} (${s.status})`)
-                    .join(', ')
-                : '없음';
-            const finalEvaluationLog = finalEvaluation
-                ? `${finalEvaluation.evaluationGrade}/${finalEvaluation.jobGrade}${finalEvaluation.jobDetailedGrade} (확정: ${finalEvaluation.isConfirmed})`
-                : '없음';
-            this.logger.debug(`직원의 평가기간 현황 조회 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, ` +
-                `프로젝트: ${projectCount}, WBS: ${wbsCount}, 평가항목상태: ${evaluationCriteriaStatus}, ` +
-                `평가기준있는WBS: ${wbsWithCriteriaCount}/${wbsCount}, 평가기준상태: ${wbsCriteriaStatus}, ` +
-                `PRIMARY평가자: ${hasPrimaryEvaluator}, SECONDARY평가자: ${hasSecondaryEvaluator}, 평가라인상태: ${evaluationLineStatus}, ` +
-                `성과입력: ${inputCompletedCount}/${perfTotalWbsCount} (${performanceInputStatus}), ` +
-                `자기평가: ${completedMappingCount}/${totalMappingCount} (${selfEvaluationStatus}, 총점: ${totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${grade ?? 'N/A'}), ` +
-                `1차하향평가(${primary.evaluator?.id ?? 'N/A'}): ${primary.completedEvaluationCount}/${primary.assignedWbsCount} (${primary.status}, 총점: ${primary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${primary.grade ?? 'N/A'}), ` +
-                `2차하향평가: [${secondaryLog}] (총점: ${secondary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${secondary.grade ?? 'N/A'}), ` +
-                `동료평가: ${completedRequestCount}/${totalRequestCount} (${peerEvaluationStatus}), ` +
-                `최종평가: ${finalEvaluationLog} (${finalEvaluationStatus})`);
             return dto;
         }
         catch (error) {

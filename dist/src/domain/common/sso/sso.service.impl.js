@@ -57,7 +57,6 @@ let SSOServiceImpl = SSOServiceImpl_1 = class SSOServiceImpl {
     }
     async 초기화한다() {
         if (this.initialized) {
-            this.logger.debug('SSO 클라이언트가 이미 초기화되어 있습니다.');
             return;
         }
         try {

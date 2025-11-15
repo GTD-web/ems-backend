@@ -35,7 +35,7 @@ import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downwar
 import { ProjectStatus } from '@domain/common/project/project.types';
 import * as fs from 'fs';
 import * as path from 'path';
-import { RecipientType } from '@/domain/sub/evaluation-revision-request';
+import { RecipientType } from '@domain/sub/evaluation-revision-request';
 
 /**
  * Dashboard Context - 2차 평가자 상태 검증 테스트
@@ -474,7 +474,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       await evaluationLineRepository.save(secondaryLine);
     secondaryLineId = savedSecondaryLine.id;
 
-    // 2차 평가자 매핑 (1명)
+    // 2차 평가자 매핑 (1명) - WBS 할당은 각 테스트에서 필요에 따라 설정
     await evaluationLineMappingRepository.save(
       evaluationLineMappingRepository.create({
         evaluationPeriodId: evaluationPeriodId,
@@ -546,6 +546,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Given
       await 기본_테스트데이터를_생성한다();
 
+      // 2차 평가자에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
       // 하향평가 없음 (WBS는 할당되어 있음)
 
       // When
@@ -595,6 +618,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
     it('상태 3: in_progress - 일부만 완료되었으면 secondary.status는 in_progress이어야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
+
+      // 2차 평가자에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
 
       // 2차 하향평가 일부 완료 (1개만 완료)
       await downwardEvaluationRepository.save(
@@ -661,6 +707,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
     it('상태 4: pending - 모든 평가가 완료되었지만 승인 대기 중이면 secondary.status는 pending이어야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
+
+      // 2차 평가자에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
 
       // 2차 하향평가 완료 (모든 WBS 평가 완료)
       await downwardEvaluationRepository.save(
@@ -753,6 +822,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
     it('상태 5: approved - 모든 평가가 완료되고 승인되었으면 secondary.status는 approved이어야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
+
+      // 2차 평가자에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
 
       // 2차 하향평가 완료 (모든 WBS 평가 완료)
       await downwardEvaluationRepository.save(
@@ -853,6 +945,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
     it('상태 6: revision_requested - 재작성 요청되었으면 secondary.status는 revision_requested이어야 한다', async () => {
       // Given
       await 기본_테스트데이터를_생성한다();
+
+      // 2차 평가자에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
 
       // 2차 하향평가 완료 (모든 WBS 평가 완료)
       await downwardEvaluationRepository.save(
@@ -963,6 +1078,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Given
       await 기본_테스트데이터를_생성한다();
 
+      // 2차 평가자에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
       // 2차 하향평가 완료 (모든 WBS 평가 완료)
       await downwardEvaluationRepository.save(
         downwardEvaluationRepository.create({
@@ -1072,6 +1210,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Given
       await 기본_테스트데이터를_생성한다();
 
+      // 2차 평가자1에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
       // 2차 평가자 2명 추가
       await evaluationLineMappingRepository.save(
         evaluationLineMappingRepository.create({
@@ -1080,6 +1241,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           evaluationLineId: secondaryLineId,
           evaluatorId: secondaryEvaluatorId2,
           wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId2,
           createdBy: systemAdminId,
         }),
       );
@@ -1204,6 +1388,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Given
       await 기본_테스트데이터를_생성한다();
 
+      // 2차 평가자1에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
       // 2차 평가자 2명 추가
       await evaluationLineMappingRepository.save(
         evaluationLineMappingRepository.create({
@@ -1212,6 +1419,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           evaluationLineId: secondaryLineId,
           evaluatorId: secondaryEvaluatorId2,
           wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId2,
           createdBy: systemAdminId,
         }),
       );
@@ -1337,6 +1567,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Given
       await 기본_테스트데이터를_생성한다();
 
+      // 2차 평가자1에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
       // 2차 평가자 2명 추가
       await evaluationLineMappingRepository.save(
         evaluationLineMappingRepository.create({
@@ -1345,6 +1598,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           evaluationLineId: secondaryLineId,
           evaluatorId: secondaryEvaluatorId2,
           wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId2,
           createdBy: systemAdminId,
         }),
       );
@@ -1489,6 +1765,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Given
       await 기본_테스트데이터를_생성한다();
 
+      // 2차 평가자1에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
       // 2차 평가자 2명 추가
       await evaluationLineMappingRepository.save(
         evaluationLineMappingRepository.create({
@@ -1497,6 +1796,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           evaluationLineId: secondaryLineId,
           evaluatorId: secondaryEvaluatorId2,
           wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId2,
           createdBy: systemAdminId,
         }),
       );
@@ -1639,6 +1961,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
       // Given
       await 기본_테스트데이터를_생성한다();
 
+      // 2차 평가자1에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
       // 2차 평가자 2명 추가
       await evaluationLineMappingRepository.save(
         evaluationLineMappingRepository.create({
@@ -1647,6 +1992,29 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
           evaluationLineId: secondaryLineId,
           evaluatorId: secondaryEvaluatorId2,
           wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2에게 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId2,
           createdBy: systemAdminId,
         }),
       );
@@ -1904,6 +2272,389 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 2차 평가자 상태 검�
               assignedWbsCount: e.assignedWbsCount,
               completedEvaluationCount: e.completedEvaluationCount,
               isSubmitted: e.isSubmitted,
+            }),
+          ),
+        },
+      });
+    });
+  });
+
+  describe('2차 평가자 assignedWbsCount 수량 검증', () => {
+    it('각 2차 평가자에게 할당된 WBS 수량이 정확하게 계산되어야 한다', async () => {
+      // Given
+      // 기본 데이터 생성
+      await 기본_테스트데이터를_생성한다();
+
+      // 기존 2차 평가자 매핑 제거 (테스트를 위해 깨끗한 상태로 시작)
+      await evaluationLineMappingRepository.delete({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        evaluationLineId: secondaryLineId,
+      });
+
+      // 2차 평가자1 매핑 재생성
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 추가 WBS 아이템 생성 (총 4개)
+      const wbsItem3 = wbsItemRepository.create({
+        wbsCode: 'WBS003',
+        title: 'WBS 항목 3',
+        projectId: projectId,
+        level: 1,
+        createdBy: systemAdminId,
+      });
+      const savedWbsItem3 = await wbsItemRepository.save(wbsItem3);
+      const wbsItemId3 = savedWbsItem3.id;
+
+      const wbsItem4 = wbsItemRepository.create({
+        wbsCode: 'WBS004',
+        title: 'WBS 항목 4',
+        projectId: projectId,
+        level: 1,
+        createdBy: systemAdminId,
+      });
+      const savedWbsItem4 = await wbsItemRepository.save(wbsItem4);
+      const wbsItemId4 = savedWbsItem4.id;
+
+      // 추가 WBS 할당 (총 4개)
+      await wbsAssignmentRepository.save(
+        wbsAssignmentRepository.create({
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          projectId: projectId,
+          wbsItemId: wbsItemId3,
+          weight: 25,
+          assignedBy: systemAdminId,
+          assignedDate: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await wbsAssignmentRepository.save(
+        wbsAssignmentRepository.create({
+          periodId: evaluationPeriodId,
+          employeeId: employeeId,
+          projectId: projectId,
+          wbsItemId: wbsItemId4,
+          weight: 25,
+          assignedBy: systemAdminId,
+          assignedDate: new Date(),
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2 추가
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자1에게 WBS1, WBS2 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2에게 WBS3, WBS4 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId3,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId4,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // When
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).not.toBeNull();
+      expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
+
+      // 2차 평가자1은 WBS1, WBS2 (2개) 할당
+      const evaluator1 = result!.downwardEvaluation.secondary.evaluators.find(
+        (e) => e.evaluator.id === secondaryEvaluatorId1,
+      );
+      expect(evaluator1).not.toBeUndefined();
+      expect(evaluator1!.assignedWbsCount).toBe(2);
+      expect(evaluator1!.completedEvaluationCount).toBe(0);
+      expect(evaluator1!.isSubmitted).toBe(false);
+
+      // 2차 평가자2는 WBS3, WBS4 (2개) 할당
+      const evaluator2 = result!.downwardEvaluation.secondary.evaluators.find(
+        (e) => e.evaluator.id === secondaryEvaluatorId2,
+      );
+      expect(evaluator2).not.toBeUndefined();
+      expect(evaluator2!.assignedWbsCount).toBe(2);
+      expect(evaluator2!.completedEvaluationCount).toBe(0);
+      expect(evaluator2!.isSubmitted).toBe(false);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName:
+          '각 2차 평가자에게 할당된 WBS 수량이 정확하게 계산되어야 한다',
+        result: {
+          totalWbsCount: 4, // 피평가자 전체 WBS 수
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              evaluatorId: e.evaluator.id,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
+              isSubmitted: e.isSubmitted,
+            }),
+          ),
+        },
+      });
+    });
+
+    it('2차 평가자에게 할당된 WBS가 없으면 assignedWbsCount는 0이어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 기존 2차 평가자 매핑 제거
+      await evaluationLineMappingRepository.delete({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        evaluationLineId: secondaryLineId,
+      });
+
+      // 2차 평가자1 매핑 재생성
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2 추가 (WBS 할당 없음)
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자1에게만 WBS 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // When
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).not.toBeNull();
+      expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
+
+      // 2차 평가자1은 WBS1 (1개) 할당
+      const evaluator1 = result!.downwardEvaluation.secondary.evaluators.find(
+        (e) => e.evaluator.id === secondaryEvaluatorId1,
+      );
+      expect(evaluator1).not.toBeUndefined();
+      expect(evaluator1!.assignedWbsCount).toBe(1);
+
+      // 2차 평가자2는 WBS 할당 없음 (0개)
+      const evaluator2 = result!.downwardEvaluation.secondary.evaluators.find(
+        (e) => e.evaluator.id === secondaryEvaluatorId2,
+      );
+      expect(evaluator2).not.toBeUndefined();
+      expect(evaluator2!.assignedWbsCount).toBe(0);
+      expect(evaluator2!.status).toBe('none');
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName:
+          '2차 평가자에게 할당된 WBS가 없으면 assignedWbsCount는 0이어야 한다',
+        result: {
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              evaluatorId: e.evaluator.id,
+              assignedWbsCount: e.assignedWbsCount,
+              status: e.status,
+            }),
+          ),
+        },
+      });
+    });
+
+    it('여러 2차 평가자가 같은 WBS를 평가하는 경우 각자의 assignedWbsCount가 정확해야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      // 기존 2차 평가자 매핑 제거
+      await evaluationLineMappingRepository.delete({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        evaluationLineId: secondaryLineId,
+      });
+
+      // 2차 평가자1 매핑 재생성
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2 추가
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: null as any,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자1에게 WBS1, WBS2 할당
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId1,
+          wbsItemId: wbsItemId2,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // 2차 평가자2에게도 WBS1 할당 (공통 WBS)
+      await evaluationLineMappingRepository.save(
+        evaluationLineMappingRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          evaluationLineId: secondaryLineId,
+          evaluatorId: secondaryEvaluatorId2,
+          wbsItemId: wbsItemId1,
+          createdBy: systemAdminId,
+        }),
+      );
+
+      // When
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+      );
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).not.toBeNull();
+      expect(result!.downwardEvaluation.secondary.evaluators).toHaveLength(2);
+
+      // 2차 평가자1은 WBS1, WBS2 (2개) 할당
+      const evaluator1 = result!.downwardEvaluation.secondary.evaluators.find(
+        (e) => e.evaluator.id === secondaryEvaluatorId1,
+      );
+      expect(evaluator1).not.toBeUndefined();
+      expect(evaluator1!.assignedWbsCount).toBe(2);
+
+      // 2차 평가자2는 WBS1 (1개) 할당
+      const evaluator2 = result!.downwardEvaluation.secondary.evaluators.find(
+        (e) => e.evaluator.id === secondaryEvaluatorId2,
+      );
+      expect(evaluator2).not.toBeUndefined();
+      expect(evaluator2!.assignedWbsCount).toBe(1);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName:
+          '여러 2차 평가자가 같은 WBS를 평가하는 경우 각자의 assignedWbsCount가 정확해야 한다',
+        result: {
+          totalWbsCount: 2, // 피평가자 전체 WBS 수
+          evaluators: result!.downwardEvaluation.secondary.evaluators.map(
+            (e) => ({
+              evaluatorName: e.evaluator.name,
+              evaluatorId: e.evaluator.id,
+              assignedWbsCount: e.assignedWbsCount,
+              completedEvaluationCount: e.completedEvaluationCount,
             }),
           ),
         },

@@ -208,7 +208,6 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         for (const managerLine of sortedManagerLine) {
                             if (managerLine.managers && managerLine.managers.length > 0) {
                                 foundManagerId = managerLine.managers[0].employeeId;
-                                this.logger.debug(`직원 ${empManager.name} (${empManager.employeeNumber})의 관리자: ${foundManagerId} (부서: ${managerLine.departmentName}, depth: ${managerLine.depth})`);
                                 break;
                             }
                         }
@@ -217,9 +216,6 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         }
                     }
                     managerMap.set(empManager.employeeId, foundManagerId);
-                    if (!foundManagerId) {
-                        this.logger.debug(`직원 ${empManager.name} (${empManager.employeeNumber})의 관리자를 찾을 수 없습니다.`);
-                    }
                 }
                 const managerCount = Array.from(managerMap.values()).filter((id) => id !== null).length;
                 this.logger.log(`관리자 정보 ${managerCount}개를 조회했습니다. (null: ${managerMap.size - managerCount}개) 동기화를 시작합니다...`);
@@ -416,14 +412,12 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
         const hasRankData = mappedData.rankId || mappedData.rankName;
         const missingRankData = !existingEmployee.rankId && !existingEmployee.rankName;
         if (hasRankData && missingRankData) {
-            this.logger.debug(`직원 ${existingEmployee.name}의 직급 정보가 없어 강제 업데이트합니다.`);
             return true;
         }
         if (hasRankData &&
             (existingEmployee.rankId !== mappedData.rankId ||
                 existingEmployee.rankName !== mappedData.rankName ||
                 existingEmployee.rankLevel !== mappedData.rankLevel)) {
-            this.logger.debug(`직원 ${existingEmployee.name}의 직급 정보가 변경되어 업데이트합니다.`);
             return true;
         }
         const hasDepartmentData = mappedData.departmentId ||
@@ -431,14 +425,12 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             mappedData.departmentCode;
         const missingDepartmentData = !existingEmployee.departmentName && !existingEmployee.departmentCode;
         if (hasDepartmentData && missingDepartmentData) {
-            this.logger.debug(`직원 ${existingEmployee.name}의 부서 정보가 없어 강제 업데이트합니다.`);
             return true;
         }
         if (hasDepartmentData &&
             (existingEmployee.departmentId !== mappedData.departmentId ||
                 existingEmployee.departmentName !== mappedData.departmentName ||
                 existingEmployee.departmentCode !== mappedData.departmentCode)) {
-            this.logger.debug(`직원 ${existingEmployee.name}의 부서 정보가 변경되어 업데이트합니다.`);
             return true;
         }
         return false;

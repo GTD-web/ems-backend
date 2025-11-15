@@ -1210,8 +1210,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 자기평가 상태 검증'
 
       // 테스트 결과 저장
       testResults.push({
-        testName:
-          '상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다',
+        testName: '상태 11: 재작성 완료 후 승인 시 approved 상태가 되어야 한다',
         result: {
           status: result!.selfEvaluation.status,
           totalMappingCount: result!.selfEvaluation.totalMappingCount,
