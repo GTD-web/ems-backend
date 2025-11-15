@@ -7,7 +7,11 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "build:dist": "node scripts/git-dist-manager.js build-and-stage",
     "build:docker": "node scripts/sync-version.js && docker compose build && docker compose push",
+    "dist:ignore": "node scripts/git-dist-manager.js ignore",
+    "dist:track": "node scripts/git-dist-manager.js track",
+    "dist:status": "node scripts/git-dist-manager.js status",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
