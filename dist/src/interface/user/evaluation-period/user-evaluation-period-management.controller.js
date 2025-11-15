@@ -17,8 +17,8 @@ const evaluation_period_management_service_1 = require("../../../context/evaluat
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const evaluation_period_api_decorators_1 = require("./decorators/evaluation-period-api.decorators");
-const evaluation_management_dto_1 = require("./dto/evaluation-management.dto");
+const evaluation_period_api_decorators_1 = require("../../common/decorators/evaluation-period/evaluation-period-api.decorators");
+const evaluation_management_dto_1 = require("../../common/dto/evaluation-period/evaluation-management.dto");
 let UserEvaluationPeriodManagementController = class UserEvaluationPeriodManagementController {
     evaluationPeriodManagementService;
     constructor(evaluationPeriodManagementService) {

@@ -1,6 +1,6 @@
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
-import { ChangeWbsAssignmentOrderByWbsDto, CreateAndAssignWbsDto, UpdateWbsItemTitleDto } from './dto/wbs-assignment.dto';
+import { ChangeWbsAssignmentOrderByWbsDto, CreateAndAssignWbsDto, UpdateWbsItemTitleDto } from '@interface/common/dto/evaluation-criteria/wbs-assignment.dto';
 export declare class UserWbsAssignmentManagementController {
     private readonly wbsAssignmentBusinessService;
     constructor(wbsAssignmentBusinessService: WbsAssignmentBusinessService);

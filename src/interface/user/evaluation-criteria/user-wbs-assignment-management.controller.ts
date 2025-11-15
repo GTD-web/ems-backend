@@ -8,12 +8,12 @@ import {
   CreateAndAssignWbs,
   ResetEmployeeWbsAssignments,
   UpdateWbsItemTitle,
-} from './decorators/wbs-assignment-api.decorators';
+} from '@interface/common/decorators/evaluation-criteria/wbs-assignment-api.decorators';
 import {
   ChangeWbsAssignmentOrderByWbsDto,
   CreateAndAssignWbsDto,
   UpdateWbsItemTitleDto,
-} from './dto/wbs-assignment.dto';
+} from '@interface/common/dto/evaluation-criteria/wbs-assignment.dto';
 
 /**
  * WBS 할당 관리 컨트롤러

@@ -2,13 +2,13 @@ import { EvaluationPeriodManagementContextService } from '@context/evaluation-pe
 import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
 import { Controller, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { EvaluationPeriodDto } from '../../../domain/core/evaluation-period/evaluation-period.types';
+import type { EvaluationPeriodDto } from '@domain/core/evaluation-period/evaluation-period.types';
 import {
   GetActiveEvaluationPeriods,
   GetEvaluationPeriodDetail,
   GetEvaluationPeriods,
-} from './decorators/evaluation-period-api.decorators';
-import { PaginationQueryDto } from './dto/evaluation-management.dto';
+} from '@interface/common/decorators/evaluation-period/evaluation-period-api.decorators';
+import { PaginationQueryDto } from '@interface/common/dto/evaluation-period/evaluation-management.dto';
 
 /**
  * 사용자용 평가 관리 컨트롤러

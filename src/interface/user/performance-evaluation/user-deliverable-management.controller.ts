@@ -3,8 +3,6 @@ import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   BulkCreateDeliverables,
   BulkDeleteDeliverables,
@@ -12,9 +10,8 @@ import {
   DeleteDeliverable,
   GetDeliverableDetail,
   GetEmployeeDeliverables,
-  GetWbsDeliverables,
   UpdateDeliverable,
-} from './decorators/deliverable-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/deliverable-api.decorators';
 import {
   BulkCreateDeliverablesDto,
   BulkCreateResultDto,
@@ -25,7 +22,9 @@ import {
   DeliverableResponseDto,
   GetDeliverablesQueryDto,
   UpdateDeliverableDto,
-} from './dto/deliverable.dto';
+} from '@interface/common/dto/performance-evaluation/deliverable.dto';
+import { Body, Controller, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * 산출물 관리 컨트롤러

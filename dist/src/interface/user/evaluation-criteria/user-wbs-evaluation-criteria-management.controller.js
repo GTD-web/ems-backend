@@ -17,8 +17,8 @@ const evaluation_criteria_management_service_1 = require("../../../context/evalu
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const wbs_evaluation_criteria_api_decorators_1 = require("./decorators/wbs-evaluation-criteria-api.decorators");
-const wbs_evaluation_criteria_dto_1 = require("./dto/wbs-evaluation-criteria.dto");
+const wbs_evaluation_criteria_api_decorators_1 = require("../../common/decorators/evaluation-criteria/wbs-evaluation-criteria-api.decorators");
+const wbs_evaluation_criteria_dto_1 = require("../../common/dto/evaluation-criteria/wbs-evaluation-criteria.dto");
 let UserWbsEvaluationCriteriaManagementController = class UserWbsEvaluationCriteriaManagementController {
     evaluationCriteriaManagementService;
     constructor(evaluationCriteriaManagementService) {

@@ -3,11 +3,11 @@ import type { AuthenticatedUser } from '@interface/common/decorators/current-use
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { Body, Controller, Param } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { UpsertWbsEvaluationCriteria } from './decorators/wbs-evaluation-criteria-api.decorators';
+import { UpsertWbsEvaluationCriteria } from '@interface/common/decorators/evaluation-criteria/wbs-evaluation-criteria-api.decorators';
 import {
   UpsertWbsEvaluationCriteriaBodyDto,
   WbsEvaluationCriteriaDto,
-} from './dto/wbs-evaluation-criteria.dto';
+} from '@interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 
 /**
  * WBS 평가기준 관리 컨트롤러

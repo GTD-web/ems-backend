@@ -3,8 +3,13 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from '@context/auth-context/auth.service';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { GetMe, Login } from './decorators';
-import { LoginDto, LoginResponseDto, UserInfoDto } from './dto';
+import {
+  GetMe,
+  Login,
+} from '@interface/common/decorators/auth/auth.decorators';
+import { LoginDto } from '@interface/common/dto/auth/login.dto';
+import { LoginResponseDto } from '@interface/common/dto/auth/login-response.dto';
+import { UserInfoDto } from '@interface/common/dto/auth/login-response.dto';
 
 /**
  * 인증 컨트롤러

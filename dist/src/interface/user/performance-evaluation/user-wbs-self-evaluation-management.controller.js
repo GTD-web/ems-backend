@@ -13,14 +13,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserWbsSelfEvaluationManagementController = void 0;
-const performance_evaluation_service_1 = require("../../../context/performance-evaluation-context/performance-evaluation.service");
 const wbs_self_evaluation_business_service_1 = require("../../../business/wbs-self-evaluation/wbs-self-evaluation-business.service");
+const performance_evaluation_service_1 = require("../../../context/performance-evaluation-context/performance-evaluation.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const wbs_self_evaluation_api_decorators_1 = require("./decorators/wbs-self-evaluation-api.decorators");
-const wbs_self_evaluation_dto_1 = require("./dto/wbs-self-evaluation.dto");
+const wbs_self_evaluation_api_decorators_1 = require("../../common/decorators/performance-evaluation/wbs-self-evaluation-api.decorators");
+const wbs_self_evaluation_dto_1 = require("../../common/dto/performance-evaluation/wbs-self-evaluation.dto");
 let UserWbsSelfEvaluationManagementController = class UserWbsSelfEvaluationManagementController {
     performanceEvaluationService;
     wbsSelfEvaluationBusinessService;

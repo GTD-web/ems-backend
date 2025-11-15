@@ -13,11 +13,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserDashboardController = void 0;
+const dashboard_api_decorators_1 = require("../../common/decorators/dashboard/dashboard-api.decorators");
 const decorators_1 = require("../../common/decorators");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const dashboard_service_1 = require("../../../context/dashboard-context/dashboard.service");
-const dashboard_api_decorators_1 = require("../../common/decorators/dashboard/dashboard-api.decorators");
 let UserDashboardController = class UserDashboardController {
     dashboardService;
     constructor(dashboardService) {

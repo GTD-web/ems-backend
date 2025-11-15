@@ -1,6 +1,6 @@
-import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
-import { EmployeeAssignedDataResponseDto } from './dto/employee-assigned-data.dto';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { EmployeeAssignedDataResponseDto } from '@interface/common/dto/dashboard/employee-assigned-data.dto';
+import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
 export declare class UserDashboardController {
     private readonly dashboardService;
     constructor(dashboardService: DashboardService);

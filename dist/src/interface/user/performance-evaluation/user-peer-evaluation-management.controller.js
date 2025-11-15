@@ -18,8 +18,8 @@ const current_user_decorator_1 = require("../../common/decorators/current-user.d
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const peer_evaluation_api_decorators_1 = require("./decorators/peer-evaluation-api.decorators");
-const peer_evaluation_dto_1 = require("./dto/peer-evaluation.dto");
+const peer_evaluation_api_decorators_1 = require("../../common/decorators/performance-evaluation/peer-evaluation-api.decorators");
+const peer_evaluation_dto_1 = require("../../common/dto/performance-evaluation/peer-evaluation.dto");
 let UserPeerEvaluationManagementController = class UserPeerEvaluationManagementController {
     peerEvaluationBusinessService;
     constructor(peerEvaluationBusinessService) {

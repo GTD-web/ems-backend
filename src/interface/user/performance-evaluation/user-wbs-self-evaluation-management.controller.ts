@@ -1,47 +1,27 @@
-import {
-  GetEmployeeSelfEvaluationsQuery,
-  GetWbsSelfEvaluationDetailQuery,
-} from '@context/performance-evaluation-context/handlers/self-evaluation';
-import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
+import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, Query } from '@nestjs/common';
+import { Body, Controller } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   ClearAllWbsSelfEvaluationsByEmployeePeriod,
   ClearWbsSelfEvaluation,
   ClearWbsSelfEvaluationsByProject,
-  GetEmployeeSelfEvaluations,
-  GetWbsSelfEvaluationDetail,
-  ResetAllWbsSelfEvaluationsByEmployeePeriod,
-  ResetWbsSelfEvaluation,
-  ResetWbsSelfEvaluationsByProject,
-  ResetWbsSelfEvaluationToEvaluator,
-  ResetAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod,
-  ResetWbsSelfEvaluationsToEvaluatorByProject,
-  SubmitAllWbsSelfEvaluationsByEmployeePeriod,
   SubmitAllWbsSelfEvaluationsToEvaluatorByEmployeePeriod,
-  SubmitWbsSelfEvaluation,
-  SubmitWbsSelfEvaluationToEvaluator,
-  SubmitWbsSelfEvaluationsByProject,
   SubmitWbsSelfEvaluationsToEvaluatorByProject,
+  SubmitWbsSelfEvaluationToEvaluator,
   UpsertWbsSelfEvaluation,
-} from './decorators/wbs-self-evaluation-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/wbs-self-evaluation-api.decorators';
 import {
   ClearAllWbsSelfEvaluationsResponseDto,
   ClearWbsSelfEvaluationsByProjectResponseDto,
   CreateWbsSelfEvaluationBodyDto,
-  EmployeeSelfEvaluationsResponseDto,
-  ResetAllWbsSelfEvaluationsResponseDto,
-  ResetWbsSelfEvaluationsByProjectResponseDto,
   SubmitAllWbsSelfEvaluationsResponseDto,
   SubmitWbsSelfEvaluationsByProjectResponseDto,
-  WbsSelfEvaluationDetailResponseDto,
-  WbsSelfEvaluationFilterDto,
   WbsSelfEvaluationResponseDto,
-} from './dto/wbs-self-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 
 /**
  * WBS 자기평가 관리 컨트롤러

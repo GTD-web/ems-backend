@@ -3,36 +3,20 @@ import { PeerEvaluationDetailResult } from '@context/performance-evaluation-cont
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, Param, Query } from '@nestjs/common';
+import { Body, Controller, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  CancelPeerEvaluation,
-  CancelPeerEvaluationsByPeriod,
-  GetAllPeerEvaluations,
-  GetEvaluateePeerEvaluations,
   GetEvaluatorAssignedEvaluatees,
-  GetEvaluatorPeerEvaluations,
   GetPeerEvaluationDetail,
-  GetPeerEvaluations,
-  RequestMultiplePeerEvaluations,
-  RequestPeerEvaluation,
-  RequestPeerEvaluationToMultipleEvaluators,
   SubmitPeerEvaluation,
   UpsertPeerEvaluationAnswers,
-} from './decorators/peer-evaluation-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/peer-evaluation-api.decorators';
 import {
   AssignedEvaluateeDto,
-  BulkPeerEvaluationRequestResponseDto,
   GetEvaluatorAssignedEvaluateesQueryDto,
-  PeerEvaluationFilterDto,
-  PeerEvaluationListResponseDto,
-  PeerEvaluationResponseDto,
-  RequestMultiplePeerEvaluationsDto,
-  RequestPeerEvaluationDto,
-  RequestPeerEvaluationToMultipleEvaluatorsDto,
   UpsertPeerEvaluationAnswersDto,
   UpsertPeerEvaluationAnswersResponseDto,
-} from './dto/peer-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/peer-evaluation.dto';
 
 /**
  * 동료평가 관리 컨트롤러

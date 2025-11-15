@@ -16,10 +16,10 @@ exports.UserDeliverableManagementController = void 0;
 const deliverable_business_service_1 = require("../../../business/deliverable/deliverable-business.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
+const deliverable_api_decorators_1 = require("../../common/decorators/performance-evaluation/deliverable-api.decorators");
+const deliverable_dto_1 = require("../../common/dto/performance-evaluation/deliverable.dto");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const deliverable_api_decorators_1 = require("./decorators/deliverable-api.decorators");
-const deliverable_dto_1 = require("./dto/deliverable.dto");
 let UserDeliverableManagementController = class UserDeliverableManagementController {
     deliverableBusinessService;
     constructor(deliverableBusinessService) {
