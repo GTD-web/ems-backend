@@ -13,7 +13,7 @@ import {
   WbsEvaluationCriteriaFilterDto,
   WbsEvaluationCriteriaListResponseDto,
   WbsItemEvaluationCriteriaResponseDto,
-} from '../../common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
+} from '@interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 import {
   DeleteWbsEvaluationCriteria,
   DeleteWbsItemEvaluationCriteria,
@@ -23,7 +23,7 @@ import {
   ResetEvaluationCriteriaSubmission,
   SubmitEvaluationCriteria,
   UpsertWbsEvaluationCriteria,
-} from '../../common/decorators/evaluation-criteria/wbs-evaluation-criteria-api.decorators';
+} from '@interface/common/decorators/evaluation-criteria/wbs-evaluation-criteria-api.decorators';
 
 /**
  * WBS 평가기준 관리 컨트롤러

@@ -16,14 +16,14 @@ import {
   GetFinalEvaluationByEmployeePeriod,
   GetFinalEvaluationList,
   UpsertFinalEvaluation,
-} from '../../common/decorators/performance-evaluation/final-evaluation-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/final-evaluation-api.decorators';
 import {
   FinalEvaluationDetailDto,
   FinalEvaluationFilterDto,
   FinalEvaluationListResponseDto,
   FinalEvaluationResponseDto,
   UpsertFinalEvaluationBodyDto,
-} from '../../common/dto/performance-evaluation/final-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/final-evaluation.dto';
 
 /**
  * 최종평가 관리 컨트롤러

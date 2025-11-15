@@ -25,14 +25,15 @@ const step_approval_context_module_1 = require("../../context/step-approval-cont
 const employee_module_1 = require("../../domain/common/employee/employee.module");
 const evaluation_period_module_1 = require("../../domain/core/evaluation-period/evaluation-period.module");
 const guards_1 = require("../common/guards");
-const user_dashboard_controller_1 = require("./dashboard/user-dashboard.controller");
 const user_auth_controller_1 = require("./auth/user-auth.controller");
-const user_evaluation_period_management_controller_1 = require("./evaluation-period/user-evaluation-period-management.controller");
+const user_dashboard_controller_1 = require("./dashboard/user-dashboard.controller");
 const user_wbs_assignment_management_controller_1 = require("./evaluation-criteria/user-wbs-assignment-management.controller");
 const user_wbs_evaluation_criteria_management_controller_1 = require("./evaluation-criteria/user-wbs-evaluation-criteria-management.controller");
+const user_evaluation_period_management_controller_1 = require("./evaluation-period/user-evaluation-period-management.controller");
+const user_deliverable_management_controller_1 = require("./performance-evaluation/user-deliverable-management.controller");
 const user_peer_evaluation_management_controller_1 = require("./performance-evaluation/user-peer-evaluation-management.controller");
 const user_wbs_self_evaluation_management_controller_1 = require("./performance-evaluation/user-wbs-self-evaluation-management.controller");
-const user_deliverable_management_controller_1 = require("./performance-evaluation/user-deliverable-management.controller");
+const user_revision_request_controller_1 = require("./revision-request/user-revision-request.controller");
 let UserInterfaceModule = class UserInterfaceModule {
 };
 exports.UserInterfaceModule = UserInterfaceModule;
@@ -64,6 +65,7 @@ exports.UserInterfaceModule = UserInterfaceModule = __decorate([
             user_deliverable_management_controller_1.UserDeliverableManagementController,
             user_peer_evaluation_management_controller_1.UserPeerEvaluationManagementController,
             user_wbs_self_evaluation_management_controller_1.UserWbsSelfEvaluationManagementController,
+            user_revision_request_controller_1.UserRevisionRequestController,
         ],
         providers: [
             {

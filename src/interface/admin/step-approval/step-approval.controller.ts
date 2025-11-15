@@ -10,21 +10,21 @@ import { StepApprovalContextService } from '@context/step-approval-context';
 import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
 import { StepApprovalBusinessService } from '@business/step-approval/step-approval-business.service';
-import { UpdateStepApprovalDto } from '../../common/dto/step-approval/update-step-approval.dto';
-import { UpdateSecondaryStepApprovalDto } from '../../common/dto/step-approval/update-secondary-step-approval.dto';
-import { StepApprovalEnumsResponseDto } from '../../common/dto/step-approval/step-approval-enums.dto';
+import { UpdateStepApprovalDto } from '@interface/common/dto/step-approval/update-step-approval.dto';
+import { UpdateSecondaryStepApprovalDto } from '@interface/common/dto/step-approval/update-secondary-step-approval.dto';
+import { StepApprovalEnumsResponseDto } from '@interface/common/dto/step-approval/step-approval-enums.dto';
 import {
   UpdateStepApproval,
   UpdateCriteriaStepApproval,
   UpdateSelfStepApproval,
   UpdatePrimaryStepApproval,
   UpdateSecondaryStepApproval,
-} from '../../common/decorators/step-approval/step-approval-api.decorators';
-import { GetStepApprovalEnums } from '../../common/decorators/step-approval/step-approval-enums-api.decorators';
+} from '@interface/common/decorators/step-approval/step-approval-api.decorators';
+import { GetStepApprovalEnums } from '@interface/common/decorators/step-approval/step-approval-enums-api.decorators';
 import {
   StepTypeEnum,
   StepApprovalStatusEnum,
-} from '../../common/dto/step-approval/update-step-approval.dto';
+} from '@interface/common/dto/step-approval/update-step-approval.dto';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 
 /**

@@ -18,7 +18,7 @@ import {
   ProjectAssignmentResponseDto,
   ProjectEmployeesResponseDto,
   UnassignedEmployeesResponseDto,
-} from '../../common/dto/evaluation-criteria/project-assignment.dto';
+} from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
 import {
   BulkCreateProjectAssignments,
   CancelProjectAssignment,
@@ -32,7 +32,7 @@ import {
   GetProjectAssignmentDetail,
   GetProjectAssignmentList,
   GetUnassignedEmployees,
-} from '../../common/decorators/evaluation-criteria/project-assignment-api.decorators';
+} from '@interface/common/decorators/evaluation-criteria/project-assignment-api.decorators';
 
 /**
  * 프로젝트 할당 관리 컨트롤러

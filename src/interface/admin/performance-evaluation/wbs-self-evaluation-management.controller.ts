@@ -28,7 +28,7 @@ import {
   SubmitWbsSelfEvaluationsByProject,
   SubmitWbsSelfEvaluationsToEvaluatorByProject,
   UpsertWbsSelfEvaluation,
-} from '../../common/decorators/performance-evaluation/wbs-self-evaluation-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/wbs-self-evaluation-api.decorators';
 import {
   ClearAllWbsSelfEvaluationsResponseDto,
   ClearWbsSelfEvaluationsByProjectResponseDto,
@@ -41,7 +41,7 @@ import {
   WbsSelfEvaluationDetailResponseDto,
   WbsSelfEvaluationFilterDto,
   WbsSelfEvaluationResponseDto,
-} from '../../common/dto/performance-evaluation/wbs-self-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 
 /**
  * WBS 자기평가 관리 컨트롤러

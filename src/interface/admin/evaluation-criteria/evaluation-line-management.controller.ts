@@ -15,7 +15,7 @@ import {
   EvaluatorEmployeesResponseDto,
   EvaluatorsByPeriodResponseDto,
   EvaluatorTypeQueryDto,
-} from '../../common/dto/evaluation-criteria/evaluation-line.dto';
+} from '@interface/common/dto/evaluation-criteria/evaluation-line.dto';
 import {
   BatchConfigurePrimaryEvaluator,
   BatchConfigureSecondaryEvaluator,
@@ -24,7 +24,7 @@ import {
   GetEmployeeEvaluationSettings,
   GetEvaluatorEmployees,
   GetEvaluatorsByPeriod,
-} from '../../common/decorators/evaluation-criteria/evaluation-line-api.decorators';
+} from '@interface/common/decorators/evaluation-criteria/evaluation-line-api.decorators';
 
 /**
  * 평가라인 관리 컨트롤러

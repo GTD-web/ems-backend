@@ -9,8 +9,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
-import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
+import { WbsAssignmentBusinessService } from '@business/wbs-assignment/wbs-assignment-business.service';
+import { WbsAssignmentListResult } from '@context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 import {
   BulkCreateWbsAssignmentDto,
   CancelWbsAssignmentByWbsDto,
@@ -26,7 +26,7 @@ import {
   WbsAssignmentDetailResponseDto,
   WbsAssignmentFilterDto,
   WbsItemAssignmentsResponseDto,
-} from '../../common/dto/evaluation-criteria/wbs-assignment.dto';
+} from '@interface/common/dto/evaluation-criteria/wbs-assignment.dto';
 import {
   BulkCreateWbsAssignments,
   CancelWbsAssignment,
@@ -45,7 +45,7 @@ import {
   ResetPeriodWbsAssignments,
   ResetProjectWbsAssignments,
   UpdateWbsItemTitle,
-} from '../../common/decorators/evaluation-criteria/wbs-assignment-api.decorators';
+} from '@interface/common/decorators/evaluation-criteria/wbs-assignment-api.decorators';
 
 /**
  * WBS 할당 관리 컨트롤러

@@ -1,14 +1,14 @@
-import { Body, Controller, ParseBoolPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
-import { EmployeeDto } from '../../../domain/common/employee/employee.types';
 import {
   DepartmentHierarchyDto,
   DepartmentHierarchyWithEmployeesDto,
-} from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
-import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
-import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+} from '@context/organization-management-context/interfaces/organization-management-context.interface';
+import { OrganizationManagementService } from '@context/organization-management-context/organization-management.service';
+import { EmployeeDto } from '@domain/common/employee/employee.types';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
+import { Body, Controller, ParseBoolPipe, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   ExcludeEmployeeFromList,
   GetAllEmployees,
@@ -17,12 +17,11 @@ import {
   GetExcludedEmployees,
   IncludeEmployeeInList,
   UpdateEmployeeAccessibility,
-} from '../../common/decorators/employee-management/employee-management-api.decorators';
+} from '@interface/common/decorators/employee-management/employee-management-api.decorators';
 import {
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
-  UpdateEmployeeAccessibilityQueryDto,
-} from '../../common/dto/employee-management/employee-management.dto';
+} from '@interface/common/dto/employee-management/employee-management.dto';
 
 /**
  * 관리자용 직원 관리 컨트롤러

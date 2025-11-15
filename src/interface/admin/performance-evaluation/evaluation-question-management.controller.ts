@@ -24,7 +24,7 @@ import {
   ReorderGroupQuestions,
   UpdateEvaluationQuestion,
   UpdateQuestionGroup,
-} from '../../common/decorators/performance-evaluation/evaluation-question-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/evaluation-question-api.decorators';
 import {
   AddMultipleQuestionsToGroupDto,
   AddQuestionToGroupDto,
@@ -38,7 +38,7 @@ import {
   SuccessResponseDto,
   UpdateEvaluationQuestionDto,
   UpdateQuestionGroupDto,
-} from '../../common/dto/performance-evaluation/evaluation-question.dto';
+} from '@interface/common/dto/performance-evaluation/evaluation-question.dto';
 
 /**
  * 평가 질문 관리 컨트롤러

@@ -16,19 +16,20 @@ import { StepApprovalContextModule } from '../../context/step-approval-context/s
 import { EmployeeModule } from '../../domain/common/employee/employee.module';
 import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
 import { ROLES_GUARD_OPTIONS, RolesGuard } from '../common/guards';
-import { UserDashboardController } from './dashboard/user-dashboard.controller';
 import { UserAuthController } from './auth/user-auth.controller';
-import { UserEvaluationPeriodManagementController } from './evaluation-period/user-evaluation-period-management.controller';
+import { UserDashboardController } from './dashboard/user-dashboard.controller';
 import { UserWbsAssignmentManagementController } from './evaluation-criteria/user-wbs-assignment-management.controller';
 import { UserWbsEvaluationCriteriaManagementController } from './evaluation-criteria/user-wbs-evaluation-criteria-management.controller';
+import { UserEvaluationPeriodManagementController } from './evaluation-period/user-evaluation-period-management.controller';
+import { UserDeliverableManagementController } from './performance-evaluation/user-deliverable-management.controller';
 import { UserPeerEvaluationManagementController } from './performance-evaluation/user-peer-evaluation-management.controller';
 import { UserWbsSelfEvaluationManagementController } from './performance-evaluation/user-wbs-self-evaluation-management.controller';
-import { UserDeliverableManagementController } from './performance-evaluation/user-deliverable-management.controller';
+import { UserRevisionRequestController } from './revision-request/user-revision-request.controller';
 
 /**
- * 관리자 인터페이스 모듈
+ * 사용자 인터페이스 모듈
  *
- * 관리자 권한이 필요한 API 엔드포인트들을 제공합니다.
+ * 사용자 권한이 필요한 API 엔드포인트들을 제공합니다.
  * 도메인 컨텍스트를 주입받아 비즈니스 로직을 처리합니다.
  */
 @Module({
@@ -58,6 +59,7 @@ import { UserDeliverableManagementController } from './performance-evaluation/us
     UserDeliverableManagementController,
     UserPeerEvaluationManagementController,
     UserWbsSelfEvaluationManagementController,
+    UserRevisionRequestController,
   ],
   providers: [
     {
