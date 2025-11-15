@@ -76,16 +76,27 @@ export class EvaluationActivityLogController {
     @Param('employeeId', ParseUUIDPipe) employeeId: string,
     @Query() query: GetEvaluationActivityLogListQueryDto,
   ): Promise<EvaluationActivityLogListResponseDto> {
+    // Swagger UI가 example 값을 자동으로 채워넣을 수 있으므로,
+    // 빈 문자열이나 특정 기본값을 undefined로 처리
+    const startDateValue =
+      query.startDate && query.startDate.trim() !== ''
+        ? query.startDate
+        : undefined;
+    const endDateValue =
+      query.endDate && query.endDate.trim() !== '' ? query.endDate : undefined;
+
     const result =
-      await this.activityLogContextService.평가기간_피평가자_활동내역을_조회한다({
-        periodId,
-        employeeId,
-        activityType: query.activityType,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
-        page: query.page || 1,
-        limit: query.limit || 20,
-      });
+      await this.activityLogContextService.평가기간_피평가자_활동내역을_조회한다(
+        {
+          periodId,
+          employeeId,
+          activityType: query.activityType,
+          startDate: startDateValue ? new Date(startDateValue) : undefined,
+          endDate: endDateValue ? new Date(endDateValue) : undefined,
+          page: query.page || 1,
+          limit: query.limit || 20,
+        },
+      );
 
     return {
       items: result.items,
@@ -95,4 +106,3 @@ export class EvaluationActivityLogController {
     };
   }
 }
-

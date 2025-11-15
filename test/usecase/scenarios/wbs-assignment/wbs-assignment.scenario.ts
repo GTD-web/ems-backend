@@ -73,7 +73,8 @@ export class WbsAssignmentScenario {
       status: 직원상태?.criteriaSetup?.evaluationCriteria?.status || 'unknown',
       assignedProjectCount:
         직원상태?.criteriaSetup?.evaluationCriteria?.assignedProjectCount || 0,
-      assignedWbsCount: 직원상태?.criteriaSetup?.evaluationCriteria?.assignedWbsCount || 0,
+      assignedWbsCount:
+        직원상태?.criteriaSetup?.evaluationCriteria?.assignedWbsCount || 0,
     };
 
     // 5. 할당 데이터에서 WBS 정보 추출

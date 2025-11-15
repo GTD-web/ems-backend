@@ -27,12 +27,16 @@ let EvaluationActivityLogController = class EvaluationActivityLogController {
         this.activityLogContextService = activityLogContextService;
     }
     async getEvaluationActivityLogs(periodId, employeeId, query) {
+        const startDateValue = query.startDate && query.startDate.trim() !== ''
+            ? query.startDate
+            : undefined;
+        const endDateValue = query.endDate && query.endDate.trim() !== '' ? query.endDate : undefined;
         const result = await this.activityLogContextService.평가기간_피평가자_활동내역을_조회한다({
             periodId,
             employeeId,
             activityType: query.activityType,
-            startDate: query.startDate ? new Date(query.startDate) : undefined,
-            endDate: query.endDate ? new Date(query.endDate) : undefined,
+            startDate: startDateValue ? new Date(startDateValue) : undefined,
+            endDate: endDateValue ? new Date(endDateValue) : undefined,
             page: query.page || 1,
             limit: query.limit || 20,
         });
