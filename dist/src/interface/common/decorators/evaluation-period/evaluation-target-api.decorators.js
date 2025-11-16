@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UnregisterAllEvaluationTargets = exports.UnregisterEvaluationTarget = exports.CheckEvaluationTarget = exports.GetEmployeeEvaluationPeriods = exports.GetExcludedEvaluationTargets = exports.GetEvaluationTargets = exports.IncludeEvaluationTarget = exports.ExcludeEvaluationTarget = exports.RegisterBulkEvaluationTargets = exports.RegisterEvaluationTarget = void 0;
+exports.UnregisterAllEvaluationTargets = exports.UnregisterEvaluationTarget = exports.GetUnregisteredEmployees = exports.CheckEvaluationTarget = exports.GetEmployeeEvaluationPeriods = exports.GetExcludedEvaluationTargets = exports.GetEvaluationTargets = exports.IncludeEvaluationTarget = exports.ExcludeEvaluationTarget = exports.RegisterBulkEvaluationTargets = exports.RegisterEvaluationTarget = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const evaluation_target_dto_1 = require("../../dto/evaluation-period/evaluation-target.dto");
@@ -251,6 +251,38 @@ const CheckEvaluationTarget = () => (0, common_1.applyDecorators)((0, common_1.G
     type: evaluation_target_dto_1.EvaluationTargetStatusResponseDto,
 }), (0, swagger_1.ApiBadRequestResponse)({ description: '잘못된 요청' }));
 exports.CheckEvaluationTarget = CheckEvaluationTarget;
+const GetUnregisteredEmployees = () => (0, common_1.applyDecorators)((0, common_1.Get)(':evaluationPeriodId/targets/unregistered-employees'), (0, swagger_1.ApiOperation)({
+    summary: '등록되지 않은 직원 목록 조회',
+    description: `특정 평가기간에 평가 대상자로 등록되지 않은 활성 직원 목록을 조회합니다.
+
+**동작:**
+- 평가기간에 등록된 직원 ID 목록 조회 (deletedAt IS NULL인 것만)
+- 전체 활성 직원 목록에서 등록된 직원 제외
+- 부서 정보 포함하여 반환
+- 직원명 기준 오름차순 정렬
+
+**테스트 케이스:**
+- 기본 조회: 등록되지 않은 모든 활성 직원 조회
+- 빈 결과: 모든 직원이 등록된 경우 빈 배열 반환
+- 직원 정보: 각 직원의 상세 정보 (이름, 부서, 직급, 이메일 등) 포함
+- 정렬: 직원명 기준 오름차순 정렬
+- 필터링: isExcludedFromList=false인 직원만 포함
+- 존재하지 않는 평가기간: 유효하지 않은 평가기간 ID로 요청 시 404 에러
+- 잘못된 UUID: UUID 형식이 올바르지 않을 때 400 에러`,
+}), (0, swagger_1.ApiParam)({
+    name: 'evaluationPeriodId',
+    description: '평가기간 ID',
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+}), (0, swagger_1.ApiOkResponse)({
+    description: '등록되지 않은 직원 목록 조회 성공',
+    type: evaluation_target_dto_1.UnregisteredEmployeesResponseDto,
+}), (0, swagger_1.ApiNotFoundResponse)({
+    description: '평가기간을 찾을 수 없음',
+}), (0, swagger_1.ApiBadRequestResponse)({
+    description: '잘못된 요청 (잘못된 UUID 형식)',
+}));
+exports.GetUnregisteredEmployees = GetUnregisteredEmployees;
 const UnregisterEvaluationTarget = () => (0, common_1.applyDecorators)((0, common_1.Delete)(':evaluationPeriodId/targets/:employeeId'), (0, swagger_1.ApiOperation)({
     summary: '평가 대상자 등록 해제',
     description: `**중요**: 특정 평가기간에서 직원의 평가 대상자 등록을 해제합니다. 소프트 삭제로 동작하여 데이터는 보존되지만 조회되지 않습니다.

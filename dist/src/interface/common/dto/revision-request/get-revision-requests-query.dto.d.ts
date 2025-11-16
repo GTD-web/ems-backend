@@ -8,7 +8,5 @@ export declare class GetRevisionRequestsQueryDto {
     evaluationPeriodId?: string;
     employeeId?: string;
     requestedBy?: string;
-    isRead?: boolean;
-    isCompleted?: boolean;
     step?: RevisionRequestStepEnum;
 }

@@ -9,8 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EvaluationTargetStatusResponseDto = exports.EvaluationTargetMappingResponseDto = exports.EmployeeEvaluationPeriodsResponseDto = exports.EmployeeEvaluationPeriodMappingItemDto = exports.EvaluationTargetsResponseDto = exports.EvaluationTargetItemDto = exports.GetEvaluationTargetsQueryDto = exports.IncludeEvaluationTargetDto = exports.ExcludeEvaluationTargetDto = exports.RegisterBulkEvaluationTargetsDto = exports.RegisterEvaluationTargetDto = exports.EmployeeBasicInfoDto = exports.EvaluationPeriodBasicInfoDto = void 0;
-const decorators_1 = require("../../decorators");
+exports.UnregisteredEmployeesResponseDto = exports.EvaluationTargetStatusResponseDto = exports.EvaluationTargetMappingResponseDto = exports.EmployeeEvaluationPeriodsResponseDto = exports.EmployeeEvaluationPeriodMappingItemDto = exports.EvaluationTargetsResponseDto = exports.EvaluationTargetItemDto = exports.IncludeEvaluationTargetDto = exports.ExcludeEvaluationTargetDto = exports.RegisterBulkEvaluationTargetsDto = exports.RegisterEvaluationTargetDto = exports.EmployeeBasicInfoDto = exports.EvaluationPeriodBasicInfoDto = void 0;
 const evaluation_period_types_1 = require("../../../../domain/core/evaluation-period/evaluation-period.types");
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
@@ -169,22 +168,6 @@ __decorate([
 class IncludeEvaluationTargetDto {
 }
 exports.IncludeEvaluationTargetDto = IncludeEvaluationTargetDto;
-class GetEvaluationTargetsQueryDto {
-    includeExcluded;
-}
-exports.GetEvaluationTargetsQueryDto = GetEvaluationTargetsQueryDto;
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '제외된 대상자 포함 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
-        type: String,
-        example: 'false',
-        default: 'false',
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, decorators_1.ToBooleanStrict)(false, 'includeExcluded'),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], GetEvaluationTargetsQueryDto.prototype, "includeExcluded", void 0);
 class EvaluationTargetItemDto {
     id;
     employee;
@@ -585,4 +568,23 @@ __decorate([
     }),
     __metadata("design:type", EmployeeBasicInfoDto)
 ], EvaluationTargetStatusResponseDto.prototype, "employee", void 0);
+class UnregisteredEmployeesResponseDto {
+    evaluationPeriodId;
+    employees;
+}
+exports.UnregisteredEmployeesResponseDto = UnregisteredEmployeesResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기간 ID',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    __metadata("design:type", String)
+], UnregisteredEmployeesResponseDto.prototype, "evaluationPeriodId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '등록되지 않은 직원 목록',
+        type: [EmployeeBasicInfoDto],
+    }),
+    __metadata("design:type", Array)
+], UnregisteredEmployeesResponseDto.prototype, "employees", void 0);
 //# sourceMappingURL=evaluation-target.dto.js.map

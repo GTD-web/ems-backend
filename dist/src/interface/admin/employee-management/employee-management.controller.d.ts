@@ -8,7 +8,7 @@ export declare class EmployeeManagementController {
     constructor(organizationManagementService: OrganizationManagementService);
     getDepartmentHierarchy(): Promise<DepartmentHierarchyDto[]>;
     getDepartmentHierarchyWithEmployees(): Promise<DepartmentHierarchyWithEmployeesDto[]>;
-    getAllEmployees(query: GetEmployeesQueryDto): Promise<EmployeeDto[]>;
+    getAllEmployees(query: GetEmployeesQueryDto, includeExcluded: boolean): Promise<EmployeeDto[]>;
     getExcludedEmployees(): Promise<EmployeeDto[]>;
     excludeEmployeeFromList(employeeId: string, excludeData: ExcludeEmployeeFromListDto, user: AuthenticatedUser): Promise<EmployeeDto>;
     includeEmployeeInList(employeeId: string, user: AuthenticatedUser): Promise<EmployeeDto>;

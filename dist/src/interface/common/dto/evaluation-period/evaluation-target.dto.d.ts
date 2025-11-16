@@ -26,9 +26,6 @@ export declare class ExcludeEvaluationTargetDto {
 }
 export declare class IncludeEvaluationTargetDto {
 }
-export declare class GetEvaluationTargetsQueryDto {
-    includeExcluded?: boolean;
-}
 export declare class EvaluationTargetItemDto {
     id: string;
     employee: EmployeeBasicInfoDto;
@@ -85,4 +82,8 @@ export declare class EvaluationTargetStatusResponseDto {
     isEvaluationTarget: boolean;
     evaluationPeriod: EvaluationPeriodBasicInfoDto;
     employee: EmployeeBasicInfoDto;
+}
+export declare class UnregisteredEmployeesResponseDto {
+    evaluationPeriodId: string;
+    employees: EmployeeBasicInfoDto[];
 }

@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthService } from '@context/auth-context/auth.service';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { Public } from '@interface/common/decorators/public.decorator';
 import {
   LoginResponseDto,
   UserInfoDto,

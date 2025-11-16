@@ -31,8 +31,8 @@ let EmployeeManagementController = class EmployeeManagementController {
     async getDepartmentHierarchyWithEmployees() {
         return await this.organizationManagementService.부서하이라키_직원포함_조회();
     }
-    async getAllEmployees(query) {
-        return await this.organizationManagementService.전체직원목록조회(query.includeExcluded || false, query.departmentId);
+    async getAllEmployees(query, includeExcluded) {
+        return await this.organizationManagementService.전체직원목록조회(includeExcluded, query.departmentId);
     }
     async getExcludedEmployees() {
         const allEmployees = await this.organizationManagementService.전체직원목록조회(true);
@@ -64,8 +64,9 @@ __decorate([
 __decorate([
     (0, employee_management_api_decorators_1.GetAllEmployees)(),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Query)('includeExcluded', common_1.ParseBoolPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [employee_management_dto_1.GetEmployeesQueryDto]),
+    __metadata("design:paramtypes", [employee_management_dto_1.GetEmployeesQueryDto, Boolean]),
     __metadata("design:returntype", Promise)
 ], EmployeeManagementController.prototype, "getAllEmployees", null);
 __decorate([
@@ -94,7 +95,7 @@ __decorate([
 __decorate([
     (0, employee_management_api_decorators_1.UpdateEmployeeAccessibility)(),
     __param(0, (0, parse_uuid_decorator_1.ParseId)()),
-    __param(1, (0, common_1.Query)('isAccessible', common_1.ParseBoolPipe)),
+    __param(1, (0, common_1.Query)('isAccessible', new common_1.DefaultValuePipe(false), common_1.ParseBoolPipe)),
     __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Boolean, Object]),

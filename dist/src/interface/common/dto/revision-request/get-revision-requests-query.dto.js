@@ -12,7 +12,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetRevisionRequestsQueryDto = exports.RevisionRequestStepEnum = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
-const decorators_1 = require("../../decorators");
 var RevisionRequestStepEnum;
 (function (RevisionRequestStepEnum) {
     RevisionRequestStepEnum["CRITERIA"] = "criteria";
@@ -24,8 +23,6 @@ class GetRevisionRequestsQueryDto {
     evaluationPeriodId;
     employeeId;
     requestedBy;
-    isRead;
-    isCompleted;
     step;
 }
 exports.GetRevisionRequestsQueryDto = GetRevisionRequestsQueryDto;
@@ -59,26 +56,6 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], GetRevisionRequestsQueryDto.prototype, "requestedBy", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '읽음 여부',
-        type: 'boolean',
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, decorators_1.ToBoolean)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], GetRevisionRequestsQueryDto.prototype, "isRead", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '재작성 완료 여부',
-        type: 'boolean',
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, decorators_1.ToBoolean)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], GetRevisionRequestsQueryDto.prototype, "isCompleted", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '단계',

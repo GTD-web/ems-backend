@@ -39,9 +39,7 @@ exports.SSOModule = SSOModule = __decorate([
                         timeoutMs: configService.get('SSO_TIMEOUT_MS') || 30000,
                         retries: configService.get('SSO_RETRIES') || 2,
                         retryDelay: configService.get('SSO_RETRY_DELAY') || 1000,
-                        enableLogging: configService.get('SSO_ENABLE_LOGGING') === 'false' ||
-                            configService.get('NODE_ENV') === 'development' ||
-                            !!process.env.VERCEL,
+                        enableLogging: false,
                     };
                     const useMockService = configService.get('SSO_USE_MOCK') === 'true' ||
                         configService.get('NODE_ENV') === 'test';

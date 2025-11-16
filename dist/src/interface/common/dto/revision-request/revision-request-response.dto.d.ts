@@ -1,4 +1,4 @@
-import { StepApprovalStatusEnum } from '@/interface/common/dto/step-approval/update-step-approval.dto';
+import { StepApprovalStatusEnum } from '../step-approval/update-step-approval.dto';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 export declare class EmployeeInfoDto {
     id: string;

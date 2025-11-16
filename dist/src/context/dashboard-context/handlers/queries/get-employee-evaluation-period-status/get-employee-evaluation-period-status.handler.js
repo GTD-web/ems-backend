@@ -125,6 +125,9 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             if (includeUnregistered) {
                 queryBuilder.withDeleted();
             }
+            else {
+                queryBuilder.andWhere('mapping.deletedAt IS NULL');
+            }
             const result = await queryBuilder.getRawOne();
             if (!result) {
                 this.logger.debug(`맵핑 정보를 찾을 수 없습니다 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);

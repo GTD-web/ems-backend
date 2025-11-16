@@ -33,7 +33,6 @@ let JwtAuthGuard = JwtAuthGuard_1 = class JwtAuthGuard {
         }
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFromHeader(request);
-        console.log('🚀 ~ JwtAuthGuard ~ canActivate ~ token:', token);
         if (!token) {
             throw new common_1.UnauthorizedException('인증 토큰이 필요합니다.');
         }
