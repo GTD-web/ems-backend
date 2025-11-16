@@ -1,0 +1,87 @@
+{
+  "timestamp": "2025-11-16T14:24:44.056Z",
+  "testResults": [
+    {
+      "testName": "정상적인 등록 해제 시 true를 반환해야 한다",
+      "result": {
+        "success": true,
+        "evaluationPeriodId": "3e557b9a-c953-4698-ad4e-dc35687da6a6",
+        "employeeId": "c46d7b7b-d2ae-4d23-a6af-e86420a1de41"
+      }
+    },
+    {
+      "testName": "등록 해제 시 매핑이 소프트 삭제되어야 한다 (deletedAt이 설정되어야 함)",
+      "result": {
+        "mappingId": "28cb1a73-4ce8-4120-aed7-e325c3ef12b1",
+        "deletedAt": "2025-11-16T14:24:43.905Z",
+        "isSoftDeleted": true
+      }
+    },
+    {
+      "testName": "등록 해제 후 일반 조회 시 매핑이 조회되지 않아야 한다",
+      "result": {
+        "mappingId": "ae4e410a-c1d9-4e5d-a986-e983b0b88b12",
+        "isFound": false,
+        "isCorrectlyDeleted": true
+      }
+    },
+    {
+      "testName": "존재하지 않는 평가기간 ID로 삭제 시도 시 예외가 발생해야 한다",
+      "result": {
+        "evaluationPeriodId": "99999999-9999-9999-9999-999999999999",
+        "employeeId": "7ddff4c9-14b2-40b6-bde4-2b4567d1c30d",
+        "exceptionThrown": true,
+        "exceptionType": "EvaluationPeriodEmployeeMappingNotFoundException"
+      }
+    },
+    {
+      "testName": "존재하지 않는 직원 ID로 삭제 시도 시 예외가 발생해야 한다",
+      "result": {
+        "evaluationPeriodId": "f8e5997b-c905-447e-86a9-cef98d9e2905",
+        "employeeId": "99999999-9999-9999-9999-999999999999",
+        "exceptionThrown": true,
+        "exceptionType": "EvaluationPeriodEmployeeMappingNotFoundException"
+      }
+    },
+    {
+      "testName": "이미 삭제된 매핑을 다시 삭제 시도 시 예외가 발생해야 한다",
+      "result": {
+        "evaluationPeriodId": "ea4fea35-96ec-4422-b52c-2dec596b35bb",
+        "employeeId": "17038a4b-a54c-4f2b-b287-57d7fe28e147",
+        "firstDeletionSuccess": true,
+        "secondDeletionExceptionThrown": true,
+        "exceptionType": "EvaluationPeriodEmployeeMappingNotFoundException"
+      }
+    },
+    {
+      "testName": "제외된 평가 대상자도 정상적으로 삭제되어야 한다",
+      "result": {
+        "evaluationPeriodId": "df6c94e6-4ddf-446e-821b-8b72835352cc",
+        "employeeId": "0ec4320b-622e-459d-88ec-f6fbe16a5b41",
+        "wasExcluded": true,
+        "deletedAt": "2025-11-16T14:24:44.002Z",
+        "isSoftDeleted": true
+      }
+    },
+    {
+      "testName": "다른 평가기간의 동일 직원 매핑은 영향받지 않아야 한다",
+      "result": {
+        "deletedEvaluationPeriodId": "b48d74a0-125d-4ecc-9155-b4ca3c5e9302",
+        "anotherEvaluationPeriodId": "3b0ea6cc-2c3c-40e6-9e34-d65e0b465734",
+        "employeeId": "3466cb26-afd7-4064-a554-329a0cf1e469",
+        "anotherMappingExists": true,
+        "anotherMappingNotDeleted": true
+      }
+    },
+    {
+      "testName": "같은 평가기간의 다른 직원 매핑은 영향받지 않아야 한다",
+      "result": {
+        "evaluationPeriodId": "27be7f27-eeed-442d-a7f1-7c4db25af68d",
+        "deletedEmployeeId": "d05d2e6a-2b7c-45e5-8213-76731645be34",
+        "anotherEmployeeId": "25de63b8-84cd-448e-aea7-6801898fb0af",
+        "anotherMappingExists": true,
+        "anotherMappingNotDeleted": true
+      }
+    }
+  ]
+}

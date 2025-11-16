@@ -7,7 +7,13 @@ import { EmployeeDto } from '@domain/common/employee/employee.types';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, ParseBoolPipe, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  ParseBoolPipe,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   ExcludeEmployeeFromList,
@@ -63,10 +69,11 @@ export class EmployeeManagementController {
   @GetAllEmployees()
   async getAllEmployees(
     @Query() query: GetEmployeesQueryDto,
+    @Query('includeExcluded', ParseBoolPipe) includeExcluded: boolean,
   ): Promise<EmployeeDto[]> {
     // departmentId와 includeExcluded 옵션을 전달하여 조회
     return await this.organizationManagementService.전체직원목록조회(
-      query.includeExcluded || false,
+      includeExcluded,
       query.departmentId,
     );
   }
@@ -120,7 +127,8 @@ export class EmployeeManagementController {
   @UpdateEmployeeAccessibility()
   async updateEmployeeAccessibility(
     @ParseId() employeeId: string,
-    @Query('isAccessible', ParseBoolPipe) isAccessible: boolean,
+    @Query('isAccessible', new DefaultValuePipe(false), ParseBoolPipe)
+    isAccessible: boolean,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<EmployeeDto> {
     return await this.organizationManagementService.직원접근가능여부변경(

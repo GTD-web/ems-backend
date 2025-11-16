@@ -14,7 +14,15 @@ import {
   RevisionRequestResponseDto,
   UnreadCountResponseDto,
 } from '@interface/common/dto/revision-request/revision-request-response.dto';
-import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Param,
+  ParseBoolPipe,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
@@ -36,6 +44,10 @@ export class UserRevisionRequestController {
   @GetMyRevisionRequests()
   async getMyRevisionRequests(
     @Query() query: GetRevisionRequestsQueryDto,
+    @Query('isRead', new DefaultValuePipe(false), ParseBoolPipe)
+    isRead: boolean,
+    @Query('isCompleted', new DefaultValuePipe(false), ParseBoolPipe)
+    isCompleted: boolean,
     @CurrentUser('id') recipientId: string,
   ): Promise<RevisionRequestResponseDto[]> {
     const requests =
@@ -44,8 +56,8 @@ export class UserRevisionRequestController {
         {
           evaluationPeriodId: query.evaluationPeriodId,
           employeeId: query.employeeId,
-          isRead: query.isRead,
-          isCompleted: query.isCompleted,
+          isRead: isRead,
+          isCompleted: isCompleted,
           step: query.step as any,
         },
       );

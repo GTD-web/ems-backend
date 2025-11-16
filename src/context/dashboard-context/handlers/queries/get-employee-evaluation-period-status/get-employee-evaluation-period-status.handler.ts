@@ -174,12 +174,13 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           evaluationPeriodId,
         })
         .andWhere('mapping.employeeId = :employeeId', { employeeId });
-      // 등록 해제된 직원도 조회하도록 조건 제거
-      // .andWhere('mapping.deletedAt IS NULL')
 
       // includeUnregistered가 true면 소프트 삭제된 엔티티도 포함
       if (includeUnregistered) {
         queryBuilder.withDeleted();
+      } else {
+        // includeUnregistered가 false면 활성 레코드만 조회
+        queryBuilder.andWhere('mapping.deletedAt IS NULL');
       }
 
       const result = await queryBuilder.getRawOne();

@@ -8,6 +8,7 @@
 - evaluation-target
 - evaluation-period
 - dashboard
+- evaluation-criteria (1차 평가자 자동 할당 검증용)
 
 - **평가대상 기본 관리** 
     - POST /admin/evaluation-periods (평가기간 생성)
@@ -27,6 +28,21 @@
     - GET /admin/evaluation-periods/{evaluationPeriodId}/targets/{employeeId}/check (평가대상 여부 확인)
         - 등록된 직원: isEvaluationTarget 확인 (true)
         - 등록되지 않은 직원: isEvaluationTarget 확인 (false)
+    - **등록되지 않은 직원 조회 및 등록 시 1차 평가자 자동 할당 검증**
+        - GET /admin/evaluation-periods/{evaluationPeriodId}/targets/unregistered-employees (등록되지 않은 직원 목록 조회)
+            - 등록되지 않은 활성 직원 목록이 조회됨
+            - 직원 정보 포함 (id, employeeNumber, name, email, departmentName 등)
+            - 직원명 기준 오름차순 정렬
+        - POST /admin/evaluation-periods/{evaluationPeriodId}/targets/{employeeId} (등록되지 않은 직원을 대상자로 등록)
+            - 등록 성공 확인 (mapping 객체 반환)
+            - **1차 평가자 자동 할당 검증**
+                - GET /admin/evaluation-criteria/evaluation-lines/employee/{employeeId}/period/{evaluationPeriodId}/settings (직원 평가설정 통합 조회)
+                    - evaluationLineMappings 배열에 PRIMARY 타입 매핑이 존재하는지 확인
+                    - PRIMARY 매핑의 evaluatorId가 직원의 부서장(managerId)과 일치하는지 확인
+                    - 또는 GET /admin/dashboard/{evaluationPeriodId}/employees/status (대시보드 조회)
+                        - 해당 직원의 evaluationLine.primaryEvaluator가 설정되어 있는지 확인
+                        - evaluationLine.hasPrimaryEvaluator가 true인지 확인
+                        - evaluationLine.primaryEvaluator.id가 직원의 부서장 ID와 일치하는지 확인
     - **대량 등록 후 등록 해제 관리**
         - DELETE /admin/evaluation-periods/{evaluationPeriodId}/targets/{employeeId1} (첫 번째 직원 등록 해제)
             - success: true 반환

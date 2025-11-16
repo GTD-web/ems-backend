@@ -14,6 +14,7 @@ import {
   EvaluationTargetMappingResponseDto,
   EvaluationTargetsResponseDto,
   EvaluationTargetStatusResponseDto,
+  UnregisteredEmployeesResponseDto,
 } from '../../dto/evaluation-period/evaluation-target.dto';
 
 /**
@@ -361,6 +362,49 @@ export const CheckEvaluationTarget = () =>
       type: EvaluationTargetStatusResponseDto,
     }),
     ApiBadRequestResponse({ description: '잘못된 요청' }),
+  );
+
+/**
+ * 등록되지 않은 직원 목록 조회 API 데코레이터
+ */
+export const GetUnregisteredEmployees = () =>
+  applyDecorators(
+    Get(':evaluationPeriodId/targets/unregistered-employees'),
+    ApiOperation({
+      summary: '등록되지 않은 직원 목록 조회',
+      description: `특정 평가기간에 평가 대상자로 등록되지 않은 활성 직원 목록을 조회합니다.
+
+**동작:**
+- 평가기간에 등록된 직원 ID 목록 조회 (deletedAt IS NULL인 것만)
+- 전체 활성 직원 목록에서 등록된 직원 제외
+- 부서 정보 포함하여 반환
+- 직원명 기준 오름차순 정렬
+
+**테스트 케이스:**
+- 기본 조회: 등록되지 않은 모든 활성 직원 조회
+- 빈 결과: 모든 직원이 등록된 경우 빈 배열 반환
+- 직원 정보: 각 직원의 상세 정보 (이름, 부서, 직급, 이메일 등) 포함
+- 정렬: 직원명 기준 오름차순 정렬
+- 필터링: isExcludedFromList=false인 직원만 포함
+- 존재하지 않는 평가기간: 유효하지 않은 평가기간 ID로 요청 시 404 에러
+- 잘못된 UUID: UUID 형식이 올바르지 않을 때 400 에러`,
+    }),
+    ApiParam({
+      name: 'evaluationPeriodId',
+      description: '평가기간 ID',
+      type: String,
+      example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    ApiOkResponse({
+      description: '등록되지 않은 직원 목록 조회 성공',
+      type: UnregisteredEmployeesResponseDto,
+    }),
+    ApiNotFoundResponse({
+      description: '평가기간을 찾을 수 없음',
+    }),
+    ApiBadRequestResponse({
+      description: '잘못된 요청 (잘못된 UUID 형식)',
+    }),
   );
 
 /**

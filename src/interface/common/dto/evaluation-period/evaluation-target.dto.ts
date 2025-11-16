@@ -166,23 +166,6 @@ export class IncludeEvaluationTargetDto {
 }
 
 /**
- * 평가 대상자 조회 쿼리 DTO
- */
-export class GetEvaluationTargetsQueryDto {
-  @ApiPropertyOptional({
-    description:
-      '제외된 대상자 포함 여부 (기본값: false, 가능값: "true", "false", "1", "0")',
-    type: String,
-    example: 'false',
-    default: 'false',
-  })
-  @IsOptional()
-  @ToBooleanStrict(false, 'includeExcluded')
-  @IsBoolean()
-  includeExcluded?: boolean;
-}
-
-/**
  * 평가 대상자 아이템 DTO (evaluationPeriodId 제외)
  */
 export class EvaluationTargetItemDto {
@@ -502,4 +485,21 @@ export class EvaluationTargetStatusResponseDto {
     type: EmployeeBasicInfoDto,
   })
   employee!: EmployeeBasicInfoDto;
+}
+
+/**
+ * 등록되지 않은 직원 목록 응답 DTO
+ */
+export class UnregisteredEmployeesResponseDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  evaluationPeriodId!: string;
+
+  @ApiProperty({
+    description: '등록되지 않은 직원 목록',
+    type: [EmployeeBasicInfoDto],
+  })
+  employees!: EmployeeBasicInfoDto[];
 }
