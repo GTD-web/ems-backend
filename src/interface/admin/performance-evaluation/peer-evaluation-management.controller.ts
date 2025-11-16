@@ -3,12 +3,15 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { v4 as uuidv4 } from 'uuid';
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
 import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
+import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
 import { ParseUUID, CurrentUser } from '@interface/decorators';
 import type { AuthenticatedUser } from '@interface/decorators';
 import {
   RequestPeerEvaluation,
   RequestPeerEvaluationToMultipleEvaluators,
   RequestMultiplePeerEvaluations,
+  RequestPartLeaderPeerEvaluations,
   SubmitPeerEvaluation,
   GetPeerEvaluations,
   GetEvaluatorPeerEvaluations,
@@ -24,6 +27,7 @@ import {
   RequestPeerEvaluationDto,
   RequestPeerEvaluationToMultipleEvaluatorsDto,
   RequestMultiplePeerEvaluationsDto,
+  RequestPartLeaderPeerEvaluationsDto,
   CreatePeerEvaluationBodyDto,
   PeerEvaluationFilterDto,
   PeerEvaluationResponseDto,
@@ -46,6 +50,8 @@ import {
 export class PeerEvaluationManagementController {
   constructor(
     private readonly peerEvaluationBusinessService: PeerEvaluationBusinessService,
+    private readonly employeeSyncService: EmployeeSyncService,
+    private readonly evaluationQuestionManagementService: EvaluationQuestionManagementService,
   ) {}
 
   /**
@@ -135,6 +141,79 @@ export class PeerEvaluationManagementController {
         result.summary.failed > 0
           ? `${result.summary.total}건 중 ${result.summary.success}건의 동료평가 요청이 생성되었습니다. (실패: ${result.summary.failed}건)`
           : `${result.summary.success}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+      // 하위 호환성을 위한 필드
+      ids: result.results.filter((r) => r.success).map((r) => r.evaluationId!),
+      count: result.summary.success,
+    };
+  }
+
+  /**
+   * 파트장들 간 동료평가 요청
+   */
+  @RequestPartLeaderPeerEvaluations()
+  async requestPartLeaderPeerEvaluations(
+    @Body() dto: RequestPartLeaderPeerEvaluationsDto,
+  ): Promise<BulkPeerEvaluationRequestResponseDto> {
+    const requestedBy = dto.requestedBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
+
+    // 1. SSO에서 파트장 목록 조회
+    const partLeaders = await this.employeeSyncService.getPartLeaders(false);
+    const partLeaderIds = partLeaders.map((emp) => emp.id);
+
+    if (partLeaderIds.length === 0) {
+      return {
+        results: [],
+        summary: { total: 0, success: 0, failed: 0, partLeaderCount: 0 },
+        message: '파트장이 없어 동료평가 요청을 생성하지 않았습니다.',
+        ids: [],
+        count: 0,
+      };
+    }
+
+    // 2. questionIds가 없으면 기본 파트장 질문 그룹의 질문들을 사용
+    let questionIds = dto.questionIds;
+    if (!questionIds || questionIds.length === 0) {
+      // "파트장 평가 질문" 그룹 조회
+      const questionGroups =
+        await this.evaluationQuestionManagementService.질문그룹목록을_조회한다({
+          nameSearch: '파트장 평가 질문',
+        });
+
+      const partLeaderGroup = questionGroups.find(
+        (group) => group.name === '파트장 평가 질문',
+      );
+
+      if (partLeaderGroup) {
+        // 그룹의 질문 목록 조회
+        const groupMappings =
+          await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(
+            partLeaderGroup.id,
+          );
+
+        // displayOrder로 정렬하고 questionId만 추출
+        questionIds = groupMappings
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+          .map((mapping) => mapping.questionId);
+      }
+    }
+
+    // 3. 파트장들 간 동료평가 요청 생성
+    const result =
+      await this.peerEvaluationBusinessService.파트장들_간_동료평가를_요청한다({
+        periodId: dto.periodId,
+        partLeaderIds,
+        requestDeadline: dto.requestDeadline,
+        questionIds,
+        requestedBy,
+      });
+
+    return {
+      results: result.results,
+      summary: result.summary,
+      message:
+        result.summary.failed > 0
+          ? `파트장 ${result.summary.partLeaderCount}명에 대해 ${result.summary.total}건 중 ${result.summary.success}건의 동료평가 요청이 생성되었습니다. (실패: ${result.summary.failed}건)`
+          : `파트장 ${result.summary.partLeaderCount}명에 대해 ${result.summary.success}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
       // 하위 호환성을 위한 필드
       ids: result.results.filter((r) => r.success).map((r) => r.evaluationId!),
       count: result.summary.success,

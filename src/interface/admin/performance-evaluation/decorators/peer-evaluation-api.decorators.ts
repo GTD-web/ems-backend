@@ -18,6 +18,7 @@ import {
   RequestPeerEvaluationDto,
   RequestPeerEvaluationToMultipleEvaluatorsDto,
   RequestMultiplePeerEvaluationsDto,
+  RequestPartLeaderPeerEvaluationsDto,
   CreatePeerEvaluationBodyDto,
   UpdatePeerEvaluationDto,
   PeerEvaluationFilterDto,
@@ -229,6 +230,70 @@ export function RequestMultiplePeerEvaluations() {
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
       description: '평가자, 피평가자 또는 평가기간을 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 파트장들 간 동료평가 요청 API 데코레이터
+ */
+export function RequestPartLeaderPeerEvaluations() {
+  return applyDecorators(
+    Post('requests/bulk/part-leaders'),
+    HttpCode(HttpStatus.CREATED),
+    ApiOperation({
+      summary: '파트장들 간 동료평가 요청',
+      description: `모든 파트장이 다른 모든 파트장을 평가하도록 요청합니다.
+
+**동작:**
+- SSO에서 파트장 직책(position)을 가진 직원들을 자동으로 조회
+- 각 파트장이 자기 자신을 제외한 다른 모든 파트장을 평가하도록 요청 생성
+- 모든 평가 상태는 PENDING으로 생성됨
+- questionIds 제공 시 모든 평가자에게 동일한 질문들에 대해 작성 요청
+- questionIds 생략 시 질문 없이 요청만 생성
+- 파트장이 N명이면 N * (N-1)개의 평가 요청이 생성됨
+
+**테스트 케이스:**
+- 기본 파트장 간 동료평가 요청을 생성할 수 있어야 한다
+- 요청 마감일을 포함하여 요청을 생성할 수 있어야 한다
+- 질문 ID 목록을 포함하여 요청을 생성할 수 있어야 한다
+- requestedBy를 포함하여 요청을 생성할 수 있어야 한다
+- requestedBy 없이 요청을 생성할 수 있어야 한다
+- 파트장이 1명인 경우 평가 요청이 생성되지 않아야 한다
+- 파트장이 2명인 경우 2개의 평가 요청이 생성되어야 한다
+- 파트장이 N명인 경우 N * (N-1)개의 평가 요청이 생성되어야 한다
+- 각 파트장이 자기 자신을 평가하는 요청은 생성되지 않아야 한다
+- 잘못된 형식의 periodId로 요청 시 400 에러가 발생해야 한다
+- periodId 누락 시 400 에러가 발생해야 한다
+- 잘못된 형식의 requestedBy로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 questionIds로 요청 시 400 에러가 발생해야 한다
+- 존재하지 않는 periodId로 요청 시 404 에러가 발생해야 한다
+- 파트장이 한 명도 없는 경우 0개의 평가 요청이 생성되어야 한다
+- 응답에 필수 필드가 모두 포함되어야 한다 (results, summary, message)
+- 응답의 results에 각 요청 결과가 포함되어야 한다
+- 응답의 summary에 요약 정보가 포함되어야 한다 (total, success, failed, partLeaderCount)
+- 응답의 partLeaderCount가 실제 파트장 수와 일치해야 한다
+- 응답의 IDs가 모두 유효한 UUID 형식이어야 한다
+- 생성된 모든 동료평가가 DB에 올바르게 저장되어야 한다
+- 생성된 모든 동료평가의 상태가 올바르게 설정되어야 한다
+- 생성 시 모든 평가에 createdAt과 updatedAt이 설정되어야 한다`,
+    }),
+    ApiBody({
+      type: RequestPartLeaderPeerEvaluationsDto,
+      description: '파트장 간 동료평가 요청 정보',
+    }),
+    ApiResponse({
+      status: HttpStatus.CREATED,
+      description: '파트장들 간 동료평가 요청이 성공적으로 생성되었습니다.',
+      type: BulkPeerEvaluationRequestResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '평가기간을 찾을 수 없습니다.',
     }),
   );
 }

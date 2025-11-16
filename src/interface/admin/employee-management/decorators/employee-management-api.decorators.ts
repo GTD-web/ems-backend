@@ -6,7 +6,10 @@ import {
   Patch,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
-import { EmployeeResponseDto } from '../dto/employee-management.dto';
+import {
+  EmployeeResponseDto,
+  PartLeadersResponseDto,
+} from '../dto/employee-management.dto';
 import {
   DepartmentHierarchyResponseDto,
   DepartmentHierarchyWithEmployeesResponseDto,
@@ -167,6 +170,55 @@ export function GetExcludedEmployees() {
       status: 200,
       description: '제외된 직원 목록',
       type: [EmployeeResponseDto],
+    }),
+    ApiResponse({ status: 500, description: '서버 내부 오류' }),
+  );
+}
+
+/**
+ * 파트장 목록 조회 엔드포인트 데코레이터
+ */
+export function GetPartLeaders() {
+  return applyDecorators(
+    Get('part-leaders'),
+    ApiOperation({
+      summary: '파트장 목록 조회',
+      description: `SSO 시스템에서 파트장 직책(position)을 가진 직원 목록을 조회합니다.
+
+**동작:**
+- SSO에서 position 정보를 기반으로 파트장 필터링
+- positionName 또는 positionCode에 '파트장'이 포함된 직원 조회
+- 로컬 DB에 동기화된 직원 정보 반환
+- forceRefresh=true 시 SSO에서 최신 데이터를 가져옴
+
+**테스트 케이스:**
+- 기본 조회: 파트장 목록이 정상적으로 반환됨 (200)
+- forceRefresh=false: 캐시된 데이터로 조회 (기본값)
+- forceRefresh=true: SSO에서 최신 데이터를 가져와 조회
+- 파트장이 없는 경우: 빈 배열과 count=0 반환 (200)
+- 파트장이 여러 명인 경우: 모든 파트장이 반환됨
+- 응답 구조 검증: partLeaders 배열과 count 필드 포함
+- count 정확성: count는 partLeaders 배열 길이와 일치
+- 직원 필수 필드 포함: id, employeeNumber, name, email, rankName 등 포함
+- position 정보 확인: positionName에 '파트장' 포함
+- 재직 여부 포함: isActive 필드 포함
+- 부서 정보 포함: departmentName, departmentCode 포함`,
+    }),
+    ApiQuery({
+      name: 'forceRefresh',
+      required: false,
+      description: 'SSO에서 강제로 최신 데이터를 가져올지 여부 (기본값: false)',
+      type: String,
+      example: 'false',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '파트장 목록 및 인원수',
+      type: PartLeadersResponseDto,
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 파라미터',
     }),
     ApiResponse({ status: 500, description: '서버 내부 오류' }),
   );

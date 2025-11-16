@@ -16,13 +16,16 @@ exports.EmployeeManagementController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const organization_management_service_1 = require("../../../context/organization-management-context/organization-management.service");
+const employee_sync_service_1 = require("../../../context/organization-management-context/employee-sync.service");
 const decorators_1 = require("../../decorators");
 const employee_management_api_decorators_1 = require("./decorators/employee-management-api.decorators");
 const employee_management_dto_1 = require("./dto/employee-management.dto");
 let EmployeeManagementController = class EmployeeManagementController {
     organizationManagementService;
-    constructor(organizationManagementService) {
+    employeeSyncService;
+    constructor(organizationManagementService, employeeSyncService) {
         this.organizationManagementService = organizationManagementService;
+        this.employeeSyncService = employeeSyncService;
     }
     async getDepartmentHierarchy() {
         return await this.organizationManagementService.부서하이라키조회();
@@ -36,6 +39,34 @@ let EmployeeManagementController = class EmployeeManagementController {
     async getExcludedEmployees() {
         const allEmployees = await this.organizationManagementService.전체직원목록조회(true);
         return allEmployees.filter((employee) => employee.isExcludedFromList);
+    }
+    async getPartLeaders(query) {
+        const partLeaders = await this.employeeSyncService.getPartLeaders(query.forceRefresh || false);
+        const partLeadersDto = partLeaders.map((employee) => {
+            const dto = employee.DTO로_변환한다();
+            return {
+                id: dto.id,
+                employeeNumber: dto.employeeNumber,
+                name: dto.name,
+                email: dto.email,
+                rankName: dto.rankName,
+                rankCode: dto.rankCode,
+                rankLevel: dto.rankLevel,
+                departmentName: dto.departmentName,
+                departmentCode: dto.departmentCode,
+                isActive: dto.isActive,
+                isExcludedFromList: dto.isExcludedFromList,
+                excludeReason: dto.excludeReason ?? undefined,
+                excludedBy: dto.excludedBy ?? undefined,
+                excludedAt: dto.excludedAt ?? undefined,
+                createdAt: dto.createdAt,
+                updatedAt: dto.updatedAt,
+            };
+        });
+        return {
+            partLeaders: partLeadersDto,
+            count: partLeadersDto.length,
+        };
     }
     async excludeEmployeeFromList(employeeId, excludeData, user) {
         return await this.organizationManagementService.직원조회제외(employeeId, excludeData.excludeReason, user.id);
@@ -71,6 +102,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], EmployeeManagementController.prototype, "getExcludedEmployees", null);
 __decorate([
+    (0, employee_management_api_decorators_1.GetPartLeaders)(),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [employee_management_dto_1.GetPartLeadersQueryDto]),
+    __metadata("design:returntype", Promise)
+], EmployeeManagementController.prototype, "getPartLeaders", null);
+__decorate([
     (0, employee_management_api_decorators_1.ExcludeEmployeeFromList)(),
     __param(0, (0, decorators_1.ParseId)()),
     __param(1, (0, common_1.Body)()),
@@ -91,6 +129,7 @@ exports.EmployeeManagementController = EmployeeManagementController = __decorate
     (0, swagger_1.ApiTags)('A-1. 관리자 - 조직 관리'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/employees'),
-    __metadata("design:paramtypes", [organization_management_service_1.OrganizationManagementService])
+    __metadata("design:paramtypes", [organization_management_service_1.OrganizationManagementService,
+        employee_sync_service_1.EmployeeSyncService])
 ], EmployeeManagementController);
 //# sourceMappingURL=employee-management.controller.js.map

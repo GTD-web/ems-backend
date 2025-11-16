@@ -17,13 +17,19 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const uuid_1 = require("uuid");
 const peer_evaluation_business_service_1 = require("../../../business/peer-evaluation/peer-evaluation-business.service");
+const employee_sync_service_1 = require("../../../context/organization-management-context/employee-sync.service");
+const evaluation_question_management_service_1 = require("../../../context/evaluation-question-management-context/evaluation-question-management.service");
 const decorators_1 = require("../../decorators");
 const peer_evaluation_api_decorators_1 = require("./decorators/peer-evaluation-api.decorators");
 const peer_evaluation_dto_1 = require("./dto/peer-evaluation.dto");
 let PeerEvaluationManagementController = class PeerEvaluationManagementController {
     peerEvaluationBusinessService;
-    constructor(peerEvaluationBusinessService) {
+    employeeSyncService;
+    evaluationQuestionManagementService;
+    constructor(peerEvaluationBusinessService, employeeSyncService, evaluationQuestionManagementService) {
         this.peerEvaluationBusinessService = peerEvaluationBusinessService;
+        this.employeeSyncService = employeeSyncService;
+        this.evaluationQuestionManagementService = evaluationQuestionManagementService;
     }
     async requestPeerEvaluation(dto) {
         const requestedBy = dto.requestedBy || (0, uuid_1.v4)();
@@ -76,6 +82,49 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
             message: result.summary.failed > 0
                 ? `${result.summary.total}건 중 ${result.summary.success}건의 동료평가 요청이 생성되었습니다. (실패: ${result.summary.failed}건)`
                 : `${result.summary.success}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+            ids: result.results.filter((r) => r.success).map((r) => r.evaluationId),
+            count: result.summary.success,
+        };
+    }
+    async requestPartLeaderPeerEvaluations(dto) {
+        const requestedBy = dto.requestedBy || (0, uuid_1.v4)();
+        const partLeaders = await this.employeeSyncService.getPartLeaders(false);
+        const partLeaderIds = partLeaders.map((emp) => emp.id);
+        if (partLeaderIds.length === 0) {
+            return {
+                results: [],
+                summary: { total: 0, success: 0, failed: 0, partLeaderCount: 0 },
+                message: '파트장이 없어 동료평가 요청을 생성하지 않았습니다.',
+                ids: [],
+                count: 0,
+            };
+        }
+        let questionIds = dto.questionIds;
+        if (!questionIds || questionIds.length === 0) {
+            const questionGroups = await this.evaluationQuestionManagementService.질문그룹목록을_조회한다({
+                nameSearch: '파트장 평가 질문',
+            });
+            const partLeaderGroup = questionGroups.find((group) => group.name === '파트장 평가 질문');
+            if (partLeaderGroup) {
+                const groupMappings = await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(partLeaderGroup.id);
+                questionIds = groupMappings
+                    .sort((a, b) => a.displayOrder - b.displayOrder)
+                    .map((mapping) => mapping.questionId);
+            }
+        }
+        const result = await this.peerEvaluationBusinessService.파트장들_간_동료평가를_요청한다({
+            periodId: dto.periodId,
+            partLeaderIds,
+            requestDeadline: dto.requestDeadline,
+            questionIds,
+            requestedBy,
+        });
+        return {
+            results: result.results,
+            summary: result.summary,
+            message: result.summary.failed > 0
+                ? `파트장 ${result.summary.partLeaderCount}명에 대해 ${result.summary.total}건 중 ${result.summary.success}건의 동료평가 요청이 생성되었습니다. (실패: ${result.summary.failed}건)`
+                : `파트장 ${result.summary.partLeaderCount}명에 대해 ${result.summary.success}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
             ids: result.results.filter((r) => r.success).map((r) => r.evaluationId),
             count: result.summary.success,
         };
@@ -198,6 +247,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "requestMultiplePeerEvaluations", null);
 __decorate([
+    (0, peer_evaluation_api_decorators_1.RequestPartLeaderPeerEvaluations)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestPartLeaderPeerEvaluationsDto]),
+    __metadata("design:returntype", Promise)
+], PeerEvaluationManagementController.prototype, "requestPartLeaderPeerEvaluations", null);
+__decorate([
     (0, peer_evaluation_api_decorators_1.SubmitPeerEvaluation)(),
     __param(0, (0, decorators_1.ParseUUID)('id')),
     __param(1, (0, decorators_1.CurrentUser)()),
@@ -278,6 +334,8 @@ exports.PeerEvaluationManagementController = PeerEvaluationManagementController 
     (0, swagger_1.ApiTags)('C-5. 관리자 - 성과평가 - 동료평가'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/performance-evaluation/peer-evaluations'),
-    __metadata("design:paramtypes", [peer_evaluation_business_service_1.PeerEvaluationBusinessService])
+    __metadata("design:paramtypes", [peer_evaluation_business_service_1.PeerEvaluationBusinessService,
+        employee_sync_service_1.EmployeeSyncService,
+        evaluation_question_management_service_1.EvaluationQuestionManagementService])
 ], PeerEvaluationManagementController);
 //# sourceMappingURL=peer-evaluation-management.controller.js.map

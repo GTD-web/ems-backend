@@ -1,13 +1,18 @@
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
 import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
+import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
 import type { AuthenticatedUser } from '@interface/decorators';
-import { RequestPeerEvaluationDto, RequestPeerEvaluationToMultipleEvaluatorsDto, RequestMultiplePeerEvaluationsDto, PeerEvaluationFilterDto, PeerEvaluationResponseDto, BulkPeerEvaluationRequestResponseDto, PeerEvaluationListResponseDto, GetEvaluatorAssignedEvaluateesQueryDto, AssignedEvaluateeDto, UpsertPeerEvaluationAnswersDto, UpsertPeerEvaluationAnswersResponseDto } from './dto/peer-evaluation.dto';
+import { RequestPeerEvaluationDto, RequestPeerEvaluationToMultipleEvaluatorsDto, RequestMultiplePeerEvaluationsDto, RequestPartLeaderPeerEvaluationsDto, PeerEvaluationFilterDto, PeerEvaluationResponseDto, BulkPeerEvaluationRequestResponseDto, PeerEvaluationListResponseDto, GetEvaluatorAssignedEvaluateesQueryDto, AssignedEvaluateeDto, UpsertPeerEvaluationAnswersDto, UpsertPeerEvaluationAnswersResponseDto } from './dto/peer-evaluation.dto';
 export declare class PeerEvaluationManagementController {
     private readonly peerEvaluationBusinessService;
-    constructor(peerEvaluationBusinessService: PeerEvaluationBusinessService);
+    private readonly employeeSyncService;
+    private readonly evaluationQuestionManagementService;
+    constructor(peerEvaluationBusinessService: PeerEvaluationBusinessService, employeeSyncService: EmployeeSyncService, evaluationQuestionManagementService: EvaluationQuestionManagementService);
     requestPeerEvaluation(dto: RequestPeerEvaluationDto): Promise<PeerEvaluationResponseDto>;
     requestPeerEvaluationToMultipleEvaluators(dto: RequestPeerEvaluationToMultipleEvaluatorsDto): Promise<BulkPeerEvaluationRequestResponseDto>;
     requestMultiplePeerEvaluations(dto: RequestMultiplePeerEvaluationsDto): Promise<BulkPeerEvaluationRequestResponseDto>;
+    requestPartLeaderPeerEvaluations(dto: RequestPartLeaderPeerEvaluationsDto): Promise<BulkPeerEvaluationRequestResponseDto>;
     submitPeerEvaluation(id: string, user: AuthenticatedUser): Promise<void>;
     getPeerEvaluations(filter: PeerEvaluationFilterDto): Promise<PeerEvaluationListResponseDto>;
     getEvaluatorPeerEvaluations(evaluatorId: string, filter: PeerEvaluationFilterDto): Promise<PeerEvaluationListResponseDto>;

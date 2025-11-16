@@ -1,6 +1,7 @@
 import { Body, Controller, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
+import { EmployeeSyncService } from '../../../context/organization-management-context/employee-sync.service';
 import { EmployeeDto } from '../../../domain/common/employee/employee.types';
 import {
   DepartmentHierarchyDto,
@@ -14,11 +15,14 @@ import {
   GetDepartmentHierarchy,
   GetDepartmentHierarchyWithEmployees,
   GetExcludedEmployees,
+  GetPartLeaders,
   IncludeEmployeeInList,
 } from './decorators/employee-management-api.decorators';
 import {
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
+  GetPartLeadersQueryDto,
+  PartLeadersResponseDto,
 } from './dto/employee-management.dto';
 
 /**
@@ -34,6 +38,7 @@ import {
 export class EmployeeManagementController {
   constructor(
     private readonly organizationManagementService: OrganizationManagementService,
+    private readonly employeeSyncService: EmployeeSyncService,
   ) {}
 
   // ==================== GET: 조회 ====================
@@ -79,6 +84,44 @@ export class EmployeeManagementController {
     const allEmployees =
       await this.organizationManagementService.전체직원목록조회(true);
     return allEmployees.filter((employee) => employee.isExcludedFromList);
+  }
+
+  /**
+   * 파트장 목록을 조회합니다.
+   */
+  @GetPartLeaders()
+  async getPartLeaders(
+    @Query() query: GetPartLeadersQueryDto,
+  ): Promise<PartLeadersResponseDto> {
+    const partLeaders = await this.employeeSyncService.getPartLeaders(
+      query.forceRefresh || false,
+    );
+    const partLeadersDto = partLeaders.map((employee) => {
+      const dto = employee.DTO로_변환한다();
+      // EmployeeDto를 EmployeeResponseDto로 변환 (null을 undefined로 변환)
+      return {
+        id: dto.id,
+        employeeNumber: dto.employeeNumber,
+        name: dto.name,
+        email: dto.email,
+        rankName: dto.rankName,
+        rankCode: dto.rankCode,
+        rankLevel: dto.rankLevel,
+        departmentName: dto.departmentName,
+        departmentCode: dto.departmentCode,
+        isActive: dto.isActive,
+        isExcludedFromList: dto.isExcludedFromList,
+        excludeReason: dto.excludeReason ?? undefined,
+        excludedBy: dto.excludedBy ?? undefined,
+        excludedAt: dto.excludedAt ?? undefined,
+        createdAt: dto.createdAt,
+        updatedAt: dto.updatedAt,
+      };
+    });
+    return {
+      partLeaders: partLeadersDto,
+      count: partLeadersDto.length,
+    };
   }
 
   // ==================== PATCH: 부분 수정 ====================

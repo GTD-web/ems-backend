@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EmployeeResponseDto = exports.GetEmployeesQueryDto = exports.IncludeEmployeeInListDto = exports.ExcludeEmployeeFromListDto = void 0;
+exports.PartLeadersResponseDto = exports.EmployeeResponseDto = exports.GetPartLeadersQueryDto = exports.GetEmployeesQueryDto = exports.IncludeEmployeeInListDto = exports.ExcludeEmployeeFromListDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
@@ -56,6 +56,21 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], GetEmployeesQueryDto.prototype, "departmentId", void 0);
+class GetPartLeadersQueryDto {
+    forceRefresh;
+}
+exports.GetPartLeadersQueryDto = GetPartLeadersQueryDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'SSO에서 강제로 최신 데이터를 가져올지 여부',
+        example: false,
+        default: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Type)(() => Boolean),
+    __metadata("design:type", Boolean)
+], GetPartLeadersQueryDto.prototype, "forceRefresh", void 0);
 class EmployeeResponseDto {
     id;
     employeeNumber;
@@ -195,4 +210,23 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], EmployeeResponseDto.prototype, "updatedAt", void 0);
+class PartLeadersResponseDto {
+    partLeaders;
+    count;
+}
+exports.PartLeadersResponseDto = PartLeadersResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '파트장 목록',
+        type: [EmployeeResponseDto],
+    }),
+    __metadata("design:type", Array)
+], PartLeadersResponseDto.prototype, "partLeaders", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '파트장 인원수',
+        example: 5,
+    }),
+    __metadata("design:type", Number)
+], PartLeadersResponseDto.prototype, "count", void 0);
 //# sourceMappingURL=employee-management.dto.js.map

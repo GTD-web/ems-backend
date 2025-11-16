@@ -22,6 +22,12 @@ export declare class RequestMultiplePeerEvaluationsDto {
     questionIds?: string[];
     requestedBy?: string;
 }
+export declare class RequestPartLeaderPeerEvaluationsDto {
+    periodId: string;
+    requestDeadline?: Date;
+    questionIds?: string[];
+    requestedBy?: string;
+}
 export declare class CreatePeerEvaluationBodyDto {
     evaluatorId?: string;
     peerEvaluationContent?: string;
@@ -60,6 +66,7 @@ export declare class BulkRequestSummary {
     total: number;
     success: number;
     failed: number;
+    partLeaderCount?: number;
 }
 export declare class BulkPeerEvaluationRequestResponseDto {
     results: PeerEvaluationRequestResult[];

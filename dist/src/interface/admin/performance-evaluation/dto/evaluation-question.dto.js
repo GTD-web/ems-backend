@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BatchSuccessResponseDto = exports.SuccessResponseDto = exports.QuestionGroupMappingResponseDto = exports.ReorderGroupQuestionsDto = exports.AddMultipleQuestionsToGroupDto = exports.AddQuestionToGroupDto = exports.EvaluationQuestionResponseDto = exports.UpdateEvaluationQuestionDto = exports.CreateEvaluationQuestionDto = exports.QuestionGroupResponseDto = exports.UpdateQuestionGroupDto = exports.CreateQuestionGroupDto = void 0;
+exports.UpdatePartLeaderQuestionSettingsDto = exports.PartLeaderQuestionSettingsResponseDto = exports.BatchSuccessResponseDto = exports.SuccessResponseDto = exports.QuestionGroupMappingResponseDto = exports.ReorderGroupQuestionsDto = exports.AddMultipleQuestionsToGroupDto = exports.AddQuestionToGroupDto = exports.EvaluationQuestionResponseDto = exports.UpdateEvaluationQuestionDto = exports.CreateEvaluationQuestionDto = exports.QuestionGroupResponseDto = exports.UpdateQuestionGroupDto = exports.CreateQuestionGroupDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 class CreateQuestionGroupDto {
@@ -485,4 +485,40 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], BatchSuccessResponseDto.prototype, "totalCount", void 0);
+class PartLeaderQuestionSettingsResponseDto {
+    group;
+    questions;
+}
+exports.PartLeaderQuestionSettingsResponseDto = PartLeaderQuestionSettingsResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '파트장 질문 그룹 정보',
+        type: QuestionGroupResponseDto,
+    }),
+    __metadata("design:type", QuestionGroupResponseDto)
+], PartLeaderQuestionSettingsResponseDto.prototype, "group", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '파트장 질문 목록 (displayOrder 순)',
+        type: [QuestionGroupMappingResponseDto],
+    }),
+    __metadata("design:type", Array)
+], PartLeaderQuestionSettingsResponseDto.prototype, "questions", void 0);
+class UpdatePartLeaderQuestionSettingsDto {
+    questionIds;
+}
+exports.UpdatePartLeaderQuestionSettingsDto = UpdatePartLeaderQuestionSettingsDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '파트장 평가에 사용할 질문 ID 목록 (순서대로 적용)',
+        type: [String],
+        example: [
+            '123e4567-e89b-12d3-a456-426614174000',
+            '123e4567-e89b-12d3-a456-426614174001',
+            '123e4567-e89b-12d3-a456-426614174002',
+        ],
+    }),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], UpdatePartLeaderQuestionSettingsDto.prototype, "questionIds", void 0);
 //# sourceMappingURL=evaluation-question.dto.js.map

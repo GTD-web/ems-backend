@@ -282,6 +282,117 @@ export class PeerEvaluationBusinessService {
   }
 
   /**
+   * 파트장들 간 동료평가를 요청하고 알림을 발송한다
+   * 모든 파트장이 다른 모든 파트장을 평가하도록 일괄 요청합니다.
+   * (자기 자신 제외)
+   */
+  async 파트장들_간_동료평가를_요청한다(params: {
+    periodId: string;
+    partLeaderIds: string[];
+    requestDeadline?: Date;
+    questionIds?: string[];
+    requestedBy: string;
+  }): Promise<{
+    results: Array<{
+      evaluatorId: string;
+      evaluateeId: string;
+      success: boolean;
+      evaluationId?: string;
+      error?: { code: string; message: string };
+    }>;
+    summary: {
+      total: number;
+      success: number;
+      failed: number;
+      partLeaderCount: number;
+    };
+  }> {
+    const {
+      periodId,
+      partLeaderIds,
+      requestDeadline,
+      questionIds,
+      requestedBy,
+    } = params;
+
+    this.logger.log('파트장들 간 동료평가 요청 비즈니스 로직 시작', {
+      partLeaderCount: partLeaderIds.length,
+      periodId,
+      requestDeadline,
+      questionCount: questionIds?.length || 0,
+    });
+
+    const results: Array<{
+      evaluatorId: string;
+      evaluateeId: string;
+      success: boolean;
+      evaluationId?: string;
+      error?: { code: string; message: string };
+    }> = [];
+
+    // 각 파트장이 다른 모든 파트장을 평가하도록 요청 생성
+    for (const evaluatorId of partLeaderIds) {
+      // 자기 자신을 제외한 다른 파트장들을 피평가자로 설정
+      const evaluateeIds = partLeaderIds.filter((id) => id !== evaluatorId);
+
+      for (const evaluateeId of evaluateeIds) {
+        try {
+          const evaluationId = await this.동료평가를_요청한다({
+            evaluatorId,
+            evaluateeId,
+            periodId,
+            requestDeadline,
+            questionIds,
+            requestedBy,
+          });
+
+          results.push({
+            evaluatorId,
+            evaluateeId,
+            success: true,
+            evaluationId,
+          });
+        } catch (error) {
+          this.logger.error(
+            `파트장 간 동료평가 요청 생성 실패 (평가자: ${evaluatorId}, 피평가자: ${evaluateeId})`,
+            error,
+          );
+
+          results.push({
+            evaluatorId,
+            evaluateeId,
+            success: false,
+            error: {
+              code: error.name || 'UNKNOWN_ERROR',
+              message: error.message || '알 수 없는 오류가 발생했습니다.',
+            },
+          });
+        }
+      }
+    }
+
+    const successCount = results.filter((r) => r.success).length;
+    const failedCount = results.filter((r) => !r.success).length;
+
+    this.logger.log('파트장들 간 동료평가 요청 완료', {
+      partLeaderCount: partLeaderIds.length,
+      totalRequested: results.length,
+      successCount,
+      failedCount,
+    });
+
+    return {
+      results,
+      summary: {
+        total: results.length,
+        success: successCount,
+        failed: failedCount,
+        partLeaderCount: partLeaderIds.length,
+      },
+    };
+  }
+
+  /**
    * 동료평가를 생성하고 알림을 발송한다
    */
   async 동료평가를_생성한다(params: {

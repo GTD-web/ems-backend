@@ -31,6 +31,7 @@ const downward_evaluation_entity_1 = require("../../../../../domain/core/downwar
 const evaluation_line_entity_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.entity");
 const evaluation_line_mapping_entity_1 = require("../../../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity");
 const deliverable_entity_1 = require("../../../../../domain/core/deliverable/deliverable.entity");
+const evaluation_period_employee_mapping_exceptions_1 = require("../../../../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.exceptions");
 const project_wbs_utils_1 = require("./project-wbs.utils");
 const summary_calculation_utils_1 = require("./summary-calculation.utils");
 class GetEmployeeAssignedDataQuery {
@@ -108,6 +109,9 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
         });
         if (!mapping) {
             throw new common_1.NotFoundException(`평가기간에 등록되지 않은 직원입니다. (evaluationPeriodId: ${evaluationPeriodId}, employeeId: ${employeeId})`);
+        }
+        if (mapping.isExcluded) {
+            throw new evaluation_period_employee_mapping_exceptions_1.ExcludedEvaluationTargetAccessException(evaluationPeriodId, employeeId);
         }
         const projects = await (0, project_wbs_utils_1.getProjectsWithWbs)(evaluationPeriodId, employeeId, mapping, this.projectAssignmentRepository, this.wbsAssignmentRepository, this.wbsItemRepository, this.criteriaRepository, this.selfEvaluationRepository, this.downwardEvaluationRepository, this.evaluationLineMappingRepository, this.deliverableRepository);
         let completedPerformances = 0;
