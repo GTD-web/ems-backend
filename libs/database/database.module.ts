@@ -42,6 +42,7 @@ import { TransactionManagerService } from './transaction-manager.service';
           password,
           database,
           autoLoadEntities: true,
+          synchronize: isDevelopment && !isTest, // 개발 환경에서만 스키마 자동 동기화
           logging: configService.get<boolean>('DB_LOGGING', isDevelopment && !isTest),
           ssl: needsSSL ? { rejectUnauthorized: false } : false,
           extra: {

@@ -309,6 +309,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 통합 테스트', () => {
       externalId: 'EXT001',
       departmentId: departmentId,
       status: '재직중',
+      hireDate: new Date('2020-01-15'),
       createdBy: systemAdminId,
     });
     const savedEmployee = await employeeRepository.save(employee);
@@ -541,6 +542,9 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 통합 테스트', () => {
       expect(result?.employee).not.toBeNull();
       expect(result?.employee?.id).toBe(employeeId);
       expect(result?.employee?.name).toBe('김피평가');
+      expect(result?.employee?.status).toBe('재직중');
+      expect(result?.employee?.hireDate).not.toBeNull();
+      expect(result?.employee?.hireDate).toBeInstanceOf(Date);
       expect(result?.exclusionInfo).not.toBeNull();
       expect(result?.exclusionInfo.isExcluded).toBe(false);
 
@@ -603,6 +607,8 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 통합 테스트', () => {
           employee: {
             id: result?.employee?.id,
             name: result?.employee?.name,
+            status: result?.employee?.status,
+            hireDate: result?.employee?.hireDate,
           },
           evaluationCriteria: {
             status: result?.evaluationCriteria.status,
@@ -862,7 +868,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 통합 테스트', () => {
       expect(result?.downwardEvaluation.primary.isSubmitted).toBe(false); // 일부만 완료
       expect(
         result?.downwardEvaluation.secondary.evaluators[0].assignedWbsCount,
-      ).toBe(3); // 모든 WBS가 할당되어 있음
+      ).toBe(2); // 2차 평가자는 wbsItemId1과 wbsItemId2에만 할당됨
       expect(
         result?.downwardEvaluation.secondary.evaluators[0]
           .completedEvaluationCount,
@@ -896,6 +902,98 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - 통합 테스트', () => {
                 }),
               ),
             },
+          },
+        },
+      });
+    });
+
+    it('직원 정보 필드 검증 - status와 hireDate가 올바르게 반환되어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+        false,
+      );
+
+      // When
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).not.toBeNull();
+      expect(result?.employee).not.toBeNull();
+      
+      // 직원 기본 정보
+      expect(result?.employee?.id).toBe(employeeId);
+      expect(result?.employee?.name).toBe('김피평가');
+      expect(result?.employee?.employeeNumber).toBe('EMP001');
+      expect(result?.employee?.email).toBe('employee@test.com');
+      
+      // status 필드 검증
+      expect(result?.employee?.status).toBeDefined();
+      expect(result?.employee?.status).toBe('재직중');
+      expect(['재직중', '휴직중', '퇴사']).toContain(result?.employee?.status);
+      
+      // hireDate 필드 검증
+      expect(result?.employee?.hireDate).toBeDefined();
+      expect(result?.employee?.hireDate).toBeInstanceOf(Date);
+      expect(result?.employee?.hireDate?.getFullYear()).toBe(2020);
+      expect(result?.employee?.hireDate?.getMonth()).toBe(0); // 0-based, January
+      expect(result?.employee?.hireDate?.getDate()).toBe(15);
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '직원 정보 필드 검증 - status와 hireDate가 올바르게 반환되어야 한다',
+        result: {
+          employee: {
+            id: result?.employee?.id,
+            name: result?.employee?.name,
+            employeeNumber: result?.employee?.employeeNumber,
+            email: result?.employee?.email,
+            status: result?.employee?.status,
+            hireDate: result?.employee?.hireDate,
+          },
+        },
+      });
+    });
+
+    it('직원 정보 필드 검증 - hireDate가 null인 경우도 처리되어야 한다', async () => {
+      // Given
+      await 기본_테스트데이터를_생성한다();
+      
+      // 직원의 hireDate를 null로 업데이트
+      const employee = await employeeRepository.findOne({
+        where: { id: employeeId },
+      });
+      if (employee) {
+        employee.hireDate = null;
+        await employeeRepository.save(employee);
+      }
+
+      const query = new GetEmployeeEvaluationPeriodStatusQuery(
+        evaluationPeriodId,
+        employeeId,
+        false,
+      );
+
+      // When
+      const result = await handler.execute(query);
+
+      // Then
+      expect(result).not.toBeNull();
+      expect(result?.employee).not.toBeNull();
+      expect(result?.employee?.status).toBe('재직중');
+      expect(result?.employee?.hireDate).toBeNull();
+
+      // 테스트 결과 저장
+      testResults.push({
+        testName: '직원 정보 필드 검증 - hireDate가 null인 경우도 처리되어야 한다',
+        result: {
+          employee: {
+            id: result?.employee?.id,
+            status: result?.employee?.status,
+            hireDate: result?.employee?.hireDate,
           },
         },
       });

@@ -49,6 +49,8 @@ class EmployeeBasicDto {
     email;
     departmentName;
     rankName;
+    status;
+    hireDate;
 }
 exports.EmployeeBasicDto = EmployeeBasicDto;
 __decorate([
@@ -95,6 +97,25 @@ __decorate([
     }),
     __metadata("design:type", Object)
 ], EmployeeBasicDto.prototype, "rankName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '직원 상태',
+        enum: ['재직중', '휴직중', '퇴사'],
+        example: '재직중',
+        nullable: true,
+    }),
+    __metadata("design:type", String)
+], EmployeeBasicDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '입사일',
+        type: 'string',
+        format: 'date',
+        example: '2024-01-01',
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], EmployeeBasicDto.prototype, "hireDate", void 0);
 class PeriodBasicDto {
     id;
     name;

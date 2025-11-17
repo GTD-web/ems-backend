@@ -30,6 +30,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
         email: string;
         departmentName?: string;
         rankName?: string;
+        status?: '재직중' | '휴직중' | '퇴사';
+        hireDate?: Date | null;
     } | null;
     exclusionInfo: {
         isExcluded: boolean;

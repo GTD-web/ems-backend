@@ -119,6 +119,10 @@ export interface EmployeeEvaluationPeriodStatusDto {
     departmentName?: string;
     /** 직책명 */
     rankName?: string;
+    /** 직원 상태 */
+    status?: '재직중' | '휴직중' | '퇴사';
+    /** 입사일 */
+    hireDate?: Date | null;
   } | null;
 
   /** 평가 대상 제외 정보 */

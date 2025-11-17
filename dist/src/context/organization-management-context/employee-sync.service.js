@@ -374,6 +374,9 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         name: mappedData.name,
                         email: mappedData.email,
                         phoneNumber: mappedData.phoneNumber,
+                        dateOfBirth: mappedData.dateOfBirth,
+                        gender: mappedData.gender,
+                        hireDate: mappedData.hireDate,
                         managerId: mappedData.managerId,
                         status: mappedData.status,
                         departmentId: mappedData.departmentId,
@@ -431,6 +434,32 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             (existingEmployee.departmentId !== mappedData.departmentId ||
                 existingEmployee.departmentName !== mappedData.departmentName ||
                 existingEmployee.departmentCode !== mappedData.departmentCode)) {
+            return true;
+        }
+        if (existingEmployee.status !== mappedData.status) {
+            return true;
+        }
+        if (mappedData.hireDate) {
+            const existingHireDate = existingEmployee.hireDate
+                ? new Date(existingEmployee.hireDate)
+                : null;
+            const mappedHireDate = new Date(mappedData.hireDate);
+            if (!existingHireDate ||
+                existingHireDate.getTime() !== mappedHireDate.getTime()) {
+                return true;
+            }
+        }
+        if (mappedData.dateOfBirth) {
+            const existingDateOfBirth = existingEmployee.dateOfBirth
+                ? new Date(existingEmployee.dateOfBirth)
+                : null;
+            const mappedDateOfBirth = new Date(mappedData.dateOfBirth);
+            if (!existingDateOfBirth ||
+                existingDateOfBirth.getTime() !== mappedDateOfBirth.getTime()) {
+                return true;
+            }
+        }
+        if (mappedData.gender && existingEmployee.gender !== mappedData.gender) {
             return true;
         }
         return false;

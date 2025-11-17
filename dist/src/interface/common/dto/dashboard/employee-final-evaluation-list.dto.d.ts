@@ -9,6 +9,8 @@ export declare class EmployeeBasicInfoDto {
     email: string;
     departmentName: string | null;
     rankName: string | null;
+    status?: '재직중' | '휴직중' | '퇴사';
+    hireDate?: Date | null;
 }
 export declare class EvaluationPeriodInfoDto {
     id: string;

@@ -610,6 +610,9 @@ export class EmployeeSyncService implements OnModuleInit {
             name: mappedData.name,
             email: mappedData.email,
             phoneNumber: mappedData.phoneNumber,
+            dateOfBirth: mappedData.dateOfBirth,
+            gender: mappedData.gender,
+            hireDate: mappedData.hireDate,
             managerId: mappedData.managerId,
             status: mappedData.status,
             departmentId: mappedData.departmentId,
@@ -713,6 +716,46 @@ export class EmployeeSyncService implements OnModuleInit {
         existingEmployee.departmentName !== mappedData.departmentName ||
         existingEmployee.departmentCode !== mappedData.departmentCode)
     ) {
+      return true;
+    }
+
+    // 상태가 변경된 경우
+    if (existingEmployee.status !== mappedData.status) {
+      return true;
+    }
+
+    // 입사일이 변경된 경우
+    if (mappedData.hireDate) {
+      const existingHireDate = existingEmployee.hireDate
+        ? new Date(existingEmployee.hireDate)
+        : null;
+      const mappedHireDate = new Date(mappedData.hireDate);
+
+      if (
+        !existingHireDate ||
+        existingHireDate.getTime() !== mappedHireDate.getTime()
+      ) {
+        return true;
+      }
+    }
+
+    // 생년월일이 변경된 경우
+    if (mappedData.dateOfBirth) {
+      const existingDateOfBirth = existingEmployee.dateOfBirth
+        ? new Date(existingEmployee.dateOfBirth)
+        : null;
+      const mappedDateOfBirth = new Date(mappedData.dateOfBirth);
+
+      if (
+        !existingDateOfBirth ||
+        existingDateOfBirth.getTime() !== mappedDateOfBirth.getTime()
+      ) {
+        return true;
+      }
+    }
+
+    // 성별이 변경된 경우
+    if (mappedData.gender && existingEmployee.gender !== mappedData.gender) {
       return true;
     }
 

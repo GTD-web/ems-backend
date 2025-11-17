@@ -1,3 +1,8 @@
+export declare enum EmployeeStatus {
+    ACTIVE = "\uC7AC\uC9C1\uC911",
+    ON_LEAVE = "\uD734\uC9C1",
+    TERMINATED = "\uD1F4\uC0AC"
+}
 export interface ISSOOrganizationService {
     직원정보를조회한다(params: GetEmployeeParams): Promise<EmployeeInfo>;
     여러직원정보를조회한다(params: GetEmployeesParams): Promise<EmployeeInfo[]>;
@@ -27,6 +32,10 @@ export interface EmployeeInfo {
     email: string;
     phoneNumber?: string;
     isTerminated: boolean;
+    status?: EmployeeStatus;
+    hireDate?: string;
+    dateOfBirth?: string;
+    gender?: string;
     department?: DepartmentInfo;
     position?: PositionInfo;
     jobTitle?: JobTitleInfo;
@@ -36,16 +45,21 @@ export interface DepartmentInfo {
     departmentCode: string;
     departmentName: string;
     parentDepartmentId?: string;
+    type?: string;
+    order?: number;
 }
 export interface PositionInfo {
     id: string;
     positionName: string;
     positionLevel: number;
+    positionCode?: string;
+    hasManagementAuthority?: boolean;
 }
 export interface JobTitleInfo {
     id: string;
     jobTitleName: string;
     jobTitleLevel: number;
+    jobTitleCode?: string;
 }
 export interface DepartmentHierarchy {
     departments: DepartmentNode[];
@@ -61,6 +75,8 @@ export interface DepartmentNode {
     employeeCount: number;
     employees: EmployeeInfo[];
     children: DepartmentNode[];
+    type?: string;
+    order?: number;
 }
 export interface GetEmployeesManagersResponse {
     employees: EmployeeManagers[];

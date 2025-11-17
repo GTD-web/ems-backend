@@ -13,6 +13,7 @@ import {
   DepartmentInfo,
   DepartmentNode,
   EmployeeInfo,
+  EmployeeStatus,
   FCMTokenInfo,
   GetDepartmentHierarchyParams,
   GetEmployeeParams,
@@ -401,6 +402,7 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
         withEmployeeDetail: params?.withEmployeeDetail,
         includeEmptyDepartments: params?.includeEmptyDepartments,
       });
+      this.logger.log(JSON.stringify(result, null, 2));
 
       const elapsedTime = Date.now() - startTime;
       this.logger.log(`부서 계층구조 조회 완료 (소요 시간: ${elapsedTime}ms)`);
@@ -712,11 +714,33 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
 
   private mapToEmployeeInfo(data: any): EmployeeInfo {
     // 실제 SSO 데이터 구조에 맞게 매핑
+    // status 값을 enum으로 변환
+    const mapStatusToEnum = (status: string | undefined): EmployeeStatus | undefined => {
+      if (!status) return undefined;
+      
+      // 정확한 매칭
+      if (status === '재직중' || status === 'ACTIVE' || status === 'active') {
+        return EmployeeStatus.ACTIVE;
+      }
+      if (status === '휴직' || status === 'ON_LEAVE' || status === 'on_leave') {
+        return EmployeeStatus.ON_LEAVE;
+      }
+      if (status === '퇴사' || status === 'TERMINATED' || status === 'terminated') {
+        return EmployeeStatus.TERMINATED;
+      }
+      
+      // 기본값: 알 수 없는 상태는 undefined로 반환
+      return undefined;
+    };
+
+    const employeeStatus = mapStatusToEnum(data.status);
+    
     // status가 "재직중"이면 isTerminated는 false, 그 외는 true
     const isTerminated =
-      data.status !== '재직중' &&
-      data.status !== 'ACTIVE' &&
-      data.status !== 'active';
+      data.isTerminated !== undefined
+        ? data.isTerminated
+        : employeeStatus === EmployeeStatus.TERMINATED ||
+          (employeeStatus !== EmployeeStatus.ACTIVE && employeeStatus !== EmployeeStatus.ON_LEAVE);
 
     return {
       id: data.id,
@@ -724,14 +748,19 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
       name: data.name,
       email: data.email,
       phoneNumber: data.phoneNumber || undefined,
-      isTerminated:
-        data.isTerminated !== undefined ? data.isTerminated : isTerminated,
+      isTerminated,
+      status: employeeStatus,
+      hireDate: data.hireDate,
+      dateOfBirth: data.dateOfBirth,
+      gender: data.gender,
       department: data.department
         ? {
             id: data.department.id,
             departmentCode: data.department.departmentCode,
             departmentName: data.department.departmentName,
             parentDepartmentId: data.department.parentDepartmentId,
+            type: data.department.type,
+            order: data.department.order,
           }
         : undefined,
       position: data.position
@@ -740,6 +769,8 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
             positionName:
               data.position.positionTitle || data.position.positionName,
             positionLevel: data.position.level || data.position.positionLevel,
+            positionCode: data.position.positionCode,
+            hasManagementAuthority: data.position.hasManagementAuthority,
           }
         : undefined,
       jobTitle: data.rank
@@ -747,12 +778,14 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
             id: data.rank.id,
             jobTitleName: data.rank.rankName,
             jobTitleLevel: data.rank.level,
+            jobTitleCode: data.rank.rankCode,
           }
         : data.jobTitle
           ? {
               id: data.jobTitle.id,
               jobTitleName: data.jobTitle.jobTitleName,
               jobTitleLevel: data.jobTitle.jobTitleLevel,
+              jobTitleCode: data.jobTitle.jobTitleCode,
             }
           : undefined,
     };
@@ -775,6 +808,8 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
       children: Array.isArray(childDepartments)
         ? childDepartments.map((child) => this.mapToDepartmentNode(child))
         : [],
+      type: data.type,
+      order: data.order,
     };
   }
 }
