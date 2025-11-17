@@ -73,7 +73,6 @@ export class EvaluationPeriodAutoPhaseService {
     // 다음 단계로 전이해야 하는지 확인
     const nextPhase = this.getNextPhase(currentPhase);
     if (!nextPhase) {
-      this.logger.debug(`평가기간 ${period.id}는 더 이상 전이할 단계가 없습니다. (현재: ${currentPhase})`);
       return false;
     }
 
