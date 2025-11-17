@@ -1,28 +1,29 @@
-import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
-import { ParseUUID, CurrentUser } from '@interface/decorators';
-import type { AuthenticatedUser } from '@interface/decorators';
+import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
+import { Body, Controller, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  UpsertFinalEvaluation,
-  ConfirmFinalEvaluation,
-  CancelConfirmationFinalEvaluation,
-  GetFinalEvaluation,
-  GetFinalEvaluationList,
-  GetFinalEvaluationByEmployeePeriod,
-} from './decorators/final-evaluation-api.decorators';
-import {
-  UpsertFinalEvaluationBodyDto,
-  FinalEvaluationFilterDto,
-  FinalEvaluationResponseDto,
-  FinalEvaluationDetailDto,
-  FinalEvaluationListResponseDto,
-} from './dto/final-evaluation.dto';
-import {
-  GetFinalEvaluationQuery,
-  GetFinalEvaluationListQuery,
   GetFinalEvaluationByEmployeePeriodQuery,
-} from '../../../context/performance-evaluation-context/handlers/final-evaluation';
+  GetFinalEvaluationListQuery,
+  GetFinalEvaluationQuery,
+} from '@context/performance-evaluation-context/handlers/final-evaluation';
+import {
+  CancelConfirmationFinalEvaluation,
+  ConfirmFinalEvaluation,
+  GetFinalEvaluation,
+  GetFinalEvaluationByEmployeePeriod,
+  GetFinalEvaluationList,
+  UpsertFinalEvaluation,
+} from '@interface/common/decorators/performance-evaluation/final-evaluation-api.decorators';
+import {
+  FinalEvaluationDetailDto,
+  FinalEvaluationFilterDto,
+  FinalEvaluationListResponseDto,
+  FinalEvaluationResponseDto,
+  UpsertFinalEvaluationBodyDto,
+} from '@interface/common/dto/performance-evaluation/final-evaluation.dto';
 
 /**
  * 최종평가 관리 컨트롤러

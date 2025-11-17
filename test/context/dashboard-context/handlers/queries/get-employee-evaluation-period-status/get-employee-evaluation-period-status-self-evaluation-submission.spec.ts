@@ -114,9 +114,10 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
     handler = module.get<GetEmployeeEvaluationPeriodStatusHandler>(
       GetEmployeeEvaluationPeriodStatusHandler,
     );
-    submitToEvaluatorHandler = module.get<SubmitWbsSelfEvaluationToEvaluatorHandler>(
-      SubmitWbsSelfEvaluationToEvaluatorHandler,
-    );
+    submitToEvaluatorHandler =
+      module.get<SubmitWbsSelfEvaluationToEvaluatorHandler>(
+        SubmitWbsSelfEvaluationToEvaluatorHandler,
+      );
     submitToManagerHandler = module.get<SubmitWbsSelfEvaluationHandler>(
       SubmitWbsSelfEvaluationHandler,
     );
@@ -132,12 +133,8 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
     projectAssignmentRepository = dataSource.getRepository(
       EvaluationProjectAssignment,
     );
-    wbsAssignmentRepository = dataSource.getRepository(
-      EvaluationWbsAssignment,
-    );
-    wbsSelfEvaluationRepository = dataSource.getRepository(
-      WbsSelfEvaluation,
-    );
+    wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
+    wbsSelfEvaluationRepository = dataSource.getRepository(WbsSelfEvaluation);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
 
@@ -205,7 +202,6 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -234,9 +230,6 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);
@@ -348,9 +341,8 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
       selfEvaluationScore: 100,
       createdBy: systemAdminId,
     });
-    const savedEvaluation1 = await wbsSelfEvaluationRepository.save(
-      evaluation1,
-    );
+    const savedEvaluation1 =
+      await wbsSelfEvaluationRepository.save(evaluation1);
     evaluationId1 = savedEvaluation1.id;
 
     const evaluation2 = wbsSelfEvaluationRepository.create({
@@ -365,9 +357,8 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
       selfEvaluationScore: 110,
       createdBy: systemAdminId,
     });
-    const savedEvaluation2 = await wbsSelfEvaluationRepository.save(
-      evaluation2,
-    );
+    const savedEvaluation2 =
+      await wbsSelfEvaluationRepository.save(evaluation2);
     evaluationId2 = savedEvaluation2.id;
 
     const evaluation3 = wbsSelfEvaluationRepository.create({
@@ -382,9 +373,8 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
       selfEvaluationScore: 105,
       createdBy: systemAdminId,
     });
-    const savedEvaluation3 = await wbsSelfEvaluationRepository.save(
-      evaluation3,
-    );
+    const savedEvaluation3 =
+      await wbsSelfEvaluationRepository.save(evaluation3);
     evaluationId3 = savedEvaluation3.id;
   }
 
@@ -474,22 +464,25 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
       await 기본_테스트데이터를_생성한다();
 
       // 모든 평가를 1차 평가자에게 제출
-      const submitToEvaluatorCommand1 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId1,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand1 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId1,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand1);
 
-      const submitToEvaluatorCommand2 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId2,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand2 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId2,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand2);
 
-      const submitToEvaluatorCommand3 = new SubmitWbsSelfEvaluationToEvaluatorCommand(
-        evaluationId3,
-        submittedBy,
-      );
+      const submitToEvaluatorCommand3 =
+        new SubmitWbsSelfEvaluationToEvaluatorCommand(
+          evaluationId3,
+          submittedBy,
+        );
       await submitToEvaluatorHandler.execute(submitToEvaluatorCommand3);
 
       // 모든 평가를 관리자에게 제출
@@ -553,4 +546,3 @@ describe('Dashboard Context - Self Evaluation Submission Status', () => {
     });
   });
 });
-

@@ -126,10 +126,11 @@ export class AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler
 
         const evaluationLineId = primaryEvaluationLine.DTO로_변환한다().id;
 
-        // 3. 모든 직원 정보 수집 (employeeId, managerId)
+        // 3. 모든 직원 정보 수집 (employeeId, evaluatorId)
+        // managerId는 외부 시스템 ID(externalId)이므로, 내부 Employee id로 변환 필요
         const employeeDataMap = new Map<
           string,
-          { employeeId: string; managerId: string | null }
+          { employeeId: string; evaluatorId: string }
         >();
         const results: Array<{
           employeeId: string;
@@ -170,9 +171,24 @@ export class AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler
               continue;
             }
 
+            // managerId는 외부 시스템 ID(externalId)이므로, 내부 Employee id로 변환
+            const managerEmployee = await this.employeeService.findByExternalId(
+              employee.managerId,
+            );
+            if (!managerEmployee) {
+              skippedCount++;
+              results.push({
+                employeeId,
+                success: true,
+                message: `관리자(managerId: ${employee.managerId})를 찾을 수 없어 1차 평가자를 구성할 수 없습니다.`,
+                createdMappings: 0,
+              });
+              continue;
+            }
+
             employeeDataMap.set(employeeId, {
               employeeId,
-              managerId: employee.managerId,
+              evaluatorId: managerEmployee.id, // 내부 Employee id 사용
             });
           } catch (error) {
             failedCount++;
@@ -235,7 +251,7 @@ export class AutoConfigurePrimaryEvaluatorByManagerForAllEmployeesHandler
           const mapping = mappingRepository.create({
             evaluationPeriodId: periodId,
             employeeId,
-            evaluatorId: employeeData.managerId!,
+            evaluatorId: employeeData.evaluatorId, // 내부 Employee id 사용
             wbsItemId: undefined, // 직원별 고정 담당자이므로 WBS와 무관
             evaluationLineId,
             createdBy,

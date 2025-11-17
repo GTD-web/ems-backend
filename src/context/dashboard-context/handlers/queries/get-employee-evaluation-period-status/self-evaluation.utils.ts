@@ -125,8 +125,59 @@ export function 자기평가_상태를_계산한다(
 }
 
 /**
+ * 자기평가 통합 상태를 계산한다
+ * - 자기평가 진행 상태와 승인 상태를 통합하여 계산
+ *
+ * 계산 로직:
+ * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
+ *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
+ *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
+ * 2. 자기평가 진행 상태가 none이면 → none
+ * 3. 자기평가 진행 상태가 in_progress이면 → in_progress
+ * 4. 자기평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
+ * 5. 자기평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
+ */
+export function 자기평가_통합_상태를_계산한다(
+  selfEvaluationStatus: SelfEvaluationStatus,
+  approvalStatus:
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed',
+):
+  | SelfEvaluationStatus
+  | 'pending'
+  | 'approved'
+  | 'revision_requested'
+  | 'revision_completed' {
+  // 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환
+  // none이나 in_progress 상태에서도 재작성 요청이 있을 수 있음
+  if (approvalStatus === 'revision_requested') {
+    return 'revision_requested';
+  }
+  if (approvalStatus === 'revision_completed') {
+    return 'revision_completed';
+  }
+
+  // 2. 자기평가 진행 상태가 none이면 → none
+  if (selfEvaluationStatus === 'none') {
+    return 'none';
+  }
+
+  // 3. 자기평가 진행 상태가 in_progress이면 → in_progress
+  if (selfEvaluationStatus === 'in_progress') {
+    return 'in_progress';
+  }
+
+  // 4. 자기평가 진행 상태가 complete이면 승인 상태 반환 (pending, approved 등)
+  // selfEvaluationStatus === 'complete'
+  return approvalStatus;
+}
+
+/**
  * 가중치 기반 자기평가 점수를 계산한다
- * 계산식: Σ(WBS 가중치 × 자기평가 점수 / maxSelfEvaluationRate × 100)
+ * 계산식: Σ(WBS 가중치 × 자기평가 점수)
+ * 최대 점수: 평가기간의 maxSelfEvaluationRate
  */
 export async function 가중치_기반_자기평가_점수를_계산한다(
   evaluationPeriodId: string,
@@ -191,11 +242,9 @@ export async function 가중치_기반_자기평가_점수를_계산한다(
       const weight = weightMap.get(evaluation.wbsItemId) || 0;
       const score = evaluation.selfEvaluationScore || 0;
 
-      // 정규화: (score / maxSelfEvaluationRate) × 100
-      const normalizedScore = (score / maxSelfEvaluationRate) * 100;
-
-      // 가중치 적용: weight × normalizedScore
-      totalWeightedScore += (weight / 100) * normalizedScore;
+      // 가중치 적용: (weight / 100) × score
+      // 점수는 0 ~ maxSelfEvaluationRate 범위를 유지
+      totalWeightedScore += (weight / 100) * score;
       totalWeight += weight;
     });
 
@@ -204,14 +253,14 @@ export async function 가중치_기반_자기평가_점수를_계산한다(
       return null;
     }
 
-    // 최종 점수 (0-100 범위)
+    // 최종 점수 (0 ~ maxSelfEvaluationRate 범위)
     const finalScore = totalWeightedScore;
 
     // 소수점일 때는 내림을 통해 정수로 변환
     const integerScore = Math.floor(finalScore);
 
     logger.log(
-      `가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`,
+      `가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}, 최대값: ${maxSelfEvaluationRate}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`,
     );
 
     return integerScore;

@@ -14,11 +14,18 @@ import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-eva
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.entity';
 import { FinalEvaluation } from '@domain/core/final-evaluation/final-evaluation.entity';
-import { EmployeeEvaluationPeriodStatusDto } from '../../../interfaces/dashboard-context.interface';
+import {
+  EmployeeEvaluationPeriodStatusDto,
+  SelfEvaluationStatus,
+} from '../../../interfaces/dashboard-context.interface';
 import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
-import { 평가자들별_2차평가_단계승인_상태를_조회한다 } from './step-approval.utils';
+import {
+  평가자들별_2차평가_단계승인_상태를_조회한다,
+  일차평가_단계승인_상태를_조회한다,
+  자기평가_단계승인_상태를_조회한다,
+} from './step-approval.utils';
 
 // 유틸 함수 import
 import {
@@ -37,6 +44,7 @@ import {
 import {
   자기평가_진행_상태를_조회한다,
   자기평가_상태를_계산한다,
+  자기평가_통합_상태를_계산한다,
 } from './self-evaluation.utils';
 import {
   하향평가_상태를_조회한다,
@@ -143,6 +151,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'mapping.isExcluded AS mapping_isexcluded',
           'mapping.excludeReason AS mapping_excludereason',
           'mapping.excludedAt AS mapping_excludedat',
+          'mapping.isCriteriaSubmitted AS mapping_iscriteriasubmitted',
+          'mapping.criteriaSubmittedAt AS mapping_criteriasubmittedat',
+          'mapping.criteriaSubmittedBy AS mapping_criteriasubmittedby',
           'mapping.deletedAt AS mapping_deletedat',
           // 평가기간 정보
           'period.name AS period_name',
@@ -163,12 +174,13 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           evaluationPeriodId,
         })
         .andWhere('mapping.employeeId = :employeeId', { employeeId });
-      // 등록 해제된 직원도 조회하도록 조건 제거
-      // .andWhere('mapping.deletedAt IS NULL')
 
       // includeUnregistered가 true면 소프트 삭제된 엔티티도 포함
       if (includeUnregistered) {
         queryBuilder.withDeleted();
+      } else {
+        // includeUnregistered가 false면 활성 레코드만 조회
+        queryBuilder.andWhere('mapping.deletedAt IS NULL');
       }
 
       const result = await queryBuilder.getRawOne();
@@ -262,12 +274,18 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         inputCompletedCount,
       );
 
-      // 12. 자기평가 진행 상태 조회
+      // 12. 단계별 확인 상태 조회 (자기평가 상태 계산에 필요)
+      const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+        result.mapping_id,
+      );
+
+      // 13. 자기평가 진행 상태 조회
       const {
         totalMappingCount,
         completedMappingCount,
         submittedToEvaluatorCount,
         isSubmittedToEvaluator,
+        isSubmittedToManager,
         totalScore,
         grade,
       } = await 자기평가_진행_상태를_조회한다(
@@ -278,11 +296,58 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         this.periodRepository,
       );
 
-      // 13. 자기평가 상태 계산
+      // 14. 자기평가 상태 계산
       const selfEvaluationStatus = 자기평가_상태를_계산한다(
         totalMappingCount,
         completedMappingCount,
       );
+
+      // 14-1. 자기평가 단계 승인 상태 조회 (재작성 요청 포함)
+      const selfEvaluationApprovalStatus =
+        await 자기평가_단계승인_상태를_조회한다(
+          evaluationPeriodId,
+          employeeId,
+          this.revisionRequestRepository,
+          this.revisionRequestRecipientRepository,
+        );
+
+      // 14-2. 자기평가 통합 상태 계산 (재작성 요청 상태 우선)
+      let finalSelfEvaluationStatus:
+        | SelfEvaluationStatus
+        | 'pending'
+        | 'approved'
+        | 'revision_requested'
+        | 'revision_completed';
+
+      // 재작성 요청이 있으면 그 상태를 사용
+      if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
+        if (selfEvaluationApprovalStatus.isCompleted) {
+          // 재작성 완료 후 승인 상태 확인
+          // 재작성 완료 후 승인을 받으면 approved 상태가 되어야 함
+          const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
+          if (stepApprovalStatus === 'approved') {
+            finalSelfEvaluationStatus = 'approved';
+          } else {
+            finalSelfEvaluationStatus = 'revision_completed';
+          }
+        } else {
+          finalSelfEvaluationStatus = 'revision_requested';
+        }
+      } else {
+        // 재작성 요청이 없으면 stepApproval 상태 확인
+        const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
+        if (stepApprovalStatus === 'approved') {
+          finalSelfEvaluationStatus = 'approved';
+        } else if (stepApprovalStatus === 'revision_completed') {
+          finalSelfEvaluationStatus = 'revision_completed';
+        } else {
+          // 통합 상태 계산 (진행 상태와 승인 상태 통합)
+          finalSelfEvaluationStatus = 자기평가_통합_상태를_계산한다(
+            selfEvaluationStatus,
+            stepApprovalStatus ?? 'pending',
+          );
+        }
+      }
 
       // 14. 하향평가 상태 조회
       const { primary, secondary } = await 하향평가_상태를_조회한다(
@@ -296,7 +361,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         this.employeeRepository,
       );
 
-      // 15. 동료평가 상태 조회
+      // 16. 동료평가 상태 조회
       const { totalRequestCount, completedRequestCount } =
         await 동료평가_상태를_조회한다(
           evaluationPeriodId,
@@ -304,26 +369,86 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           this.peerEvaluationRepository,
         );
 
-      // 16. 동료평가 상태 계산
+      // 17. 동료평가 상태 계산
       const peerEvaluationStatus = 동료평가_상태를_계산한다(
         totalRequestCount,
         completedRequestCount,
       );
 
-      // 17. 최종평가 조회
+      // 18. 최종평가 조회
       const finalEvaluation = await 최종평가를_조회한다(
         evaluationPeriodId,
         employeeId,
         this.finalEvaluationRepository,
       );
 
-      // 18. 최종평가 상태 계산
+      // 19. 최종평가 상태 계산
       const finalEvaluationStatus = 최종평가_상태를_계산한다(finalEvaluation);
 
-      // 19. 단계별 확인 상태 조회
-      const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
-        result.mapping_id,
-      );
+      // 20. 1차 평가자 단계 승인 상태 조회
+      let primaryEvaluationStatus:
+        | 'pending'
+        | 'approved'
+        | 'revision_requested'
+        | 'revision_completed' = 'pending';
+      let primaryApprovedBy: string | null = null;
+      let primaryApprovedAt: Date | null = null;
+
+      if (primary.evaluator?.id) {
+        const primaryStatusInfo = await 일차평가_단계승인_상태를_조회한다(
+          evaluationPeriodId,
+          employeeId,
+          primary.evaluator.id,
+          this.revisionRequestRepository,
+          this.revisionRequestRecipientRepository,
+        );
+
+        // 재작성 요청이 있으면 그 상태를 사용
+        if (primaryStatusInfo.revisionRequestId !== null) {
+          if (primaryStatusInfo.isCompleted) {
+            // 재작성 완료 후 승인 상태 확인
+            // 재작성 완료 후 승인을 받으면 approved 상태가 되어야 함
+            const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+            if (stepApprovalStatus === 'approved') {
+              primaryEvaluationStatus = 'approved';
+              primaryApprovedBy =
+                stepApproval?.primaryEvaluationApprovedBy ?? null;
+              primaryApprovedAt =
+                stepApproval?.primaryEvaluationApprovedAt ?? null;
+            } else {
+              primaryEvaluationStatus = 'revision_completed';
+            }
+          } else {
+            primaryEvaluationStatus = 'revision_requested';
+          }
+        } else {
+          // 재작성 요청이 없으면 stepApproval 상태 확인
+          const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+          if (stepApprovalStatus === 'approved') {
+            primaryEvaluationStatus = 'approved';
+            primaryApprovedBy =
+              stepApproval?.primaryEvaluationApprovedBy ?? null;
+            primaryApprovedAt =
+              stepApproval?.primaryEvaluationApprovedAt ?? null;
+          } else if (stepApprovalStatus === 'revision_completed') {
+            primaryEvaluationStatus = 'revision_completed';
+          } else {
+            primaryEvaluationStatus = 'pending';
+          }
+        }
+      } else {
+        // 1차 평가자가 없으면 stepApproval 상태만 확인
+        const stepApprovalStatus = stepApproval?.primaryEvaluationStatus;
+        if (stepApprovalStatus === 'approved') {
+          primaryEvaluationStatus = 'approved';
+          primaryApprovedBy = stepApproval?.primaryEvaluationApprovedBy ?? null;
+          primaryApprovedAt = stepApproval?.primaryEvaluationApprovedAt ?? null;
+        } else if (stepApprovalStatus === 'revision_completed') {
+          primaryEvaluationStatus = 'revision_completed';
+        } else {
+          primaryEvaluationStatus = (stepApprovalStatus as any) ?? 'pending';
+        }
+      }
 
       // 19-1. 2차 평가자별 단계 승인 상태 조회
       // evaluator가 존재하는 항목만 필터링
@@ -376,10 +501,16 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               }
             } else {
               // 재작성 요청이 없는 경우, stepApproval 상태 확인
-              if (stepApproval?.secondaryEvaluationStatus === 'approved') {
+              const stepApprovalStatus =
+                stepApproval?.secondaryEvaluationStatus;
+              if (stepApprovalStatus === 'approved') {
                 finalStatus = 'approved';
-                approvedBy = stepApproval.secondaryEvaluationApprovedBy;
-                approvedAt = stepApproval.secondaryEvaluationApprovedAt;
+                approvedBy =
+                  stepApproval?.secondaryEvaluationApprovedBy ?? null;
+                approvedAt =
+                  stepApproval?.secondaryEvaluationApprovedAt ?? null;
+              } else if (stepApprovalStatus === 'revision_completed') {
+                finalStatus = 'revision_completed';
               } else {
                 finalStatus = 'pending';
               }
@@ -512,6 +643,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             wbsCriteriaStatus,
             evaluationLineStatus,
             stepApproval?.criteriaSettingStatus ?? null,
+            result.mapping_iscriteriasubmitted || false,
           ),
           evaluationCriteria: {
             status: evaluationCriteriaStatus,
@@ -527,6 +659,11 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             hasPrimaryEvaluator,
             hasSecondaryEvaluator,
           },
+          criteriaSubmission: {
+            isSubmitted: result.mapping_iscriteriasubmitted || false,
+            submittedAt: result.mapping_criteriasubmittedat || null,
+            submittedBy: result.mapping_criteriasubmittedby || null,
+          },
         },
 
         // 성과 입력 정보
@@ -538,10 +675,11 @@ export class GetEmployeeEvaluationPeriodStatusHandler
 
         // 자기평가 진행 정보
         selfEvaluation: {
-          status: selfEvaluationStatus,
+          status: finalSelfEvaluationStatus,
           totalMappingCount,
           completedMappingCount,
           isSubmittedToEvaluator,
+          isSubmittedToManager,
           totalScore,
           grade,
         },
@@ -552,7 +690,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             evaluator: primary.evaluator,
             status: 하향평가_통합_상태를_계산한다(
               primary.status,
-              stepApproval?.primaryEvaluationStatus ?? 'pending',
+              primaryEvaluationStatus,
             ),
             assignedWbsCount: primary.assignedWbsCount,
             completedEvaluationCount: primary.completedEvaluationCount,
@@ -628,12 +766,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             stepApproval?.selfEvaluationApprovedBy ?? null,
           selfEvaluationApprovedAt:
             stepApproval?.selfEvaluationApprovedAt ?? null,
-          primaryEvaluationStatus:
-            stepApproval?.primaryEvaluationStatus ?? 'pending',
-          primaryEvaluationApprovedBy:
-            stepApproval?.primaryEvaluationApprovedBy ?? null,
-          primaryEvaluationApprovedAt:
-            stepApproval?.primaryEvaluationApprovedAt ?? null,
+          primaryEvaluationStatus: primaryEvaluationStatus,
+          primaryEvaluationApprovedBy: primaryApprovedBy,
+          primaryEvaluationApprovedAt: primaryApprovedAt,
           secondaryEvaluationStatuses:
             secondaryEvaluationStatusesWithEvaluatorInfo,
           secondaryEvaluationStatus: finalSecondaryStatus,
@@ -648,33 +783,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               : null,
         },
       };
-
-      const secondaryLog =
-        secondary.evaluators.length > 0
-          ? secondary.evaluators
-              .map(
-                (s) =>
-                  `평가자${s.evaluator.id}: ${s.completedEvaluationCount}/${s.assignedWbsCount} (${s.status})`,
-              )
-              .join(', ')
-          : '없음';
-
-      const finalEvaluationLog = finalEvaluation
-        ? `${finalEvaluation.evaluationGrade}/${finalEvaluation.jobGrade}${finalEvaluation.jobDetailedGrade} (확정: ${finalEvaluation.isConfirmed})`
-        : '없음';
-
-      this.logger.debug(
-        `직원의 평가기간 현황 조회 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, ` +
-          `프로젝트: ${projectCount}, WBS: ${wbsCount}, 평가항목상태: ${evaluationCriteriaStatus}, ` +
-          `평가기준있는WBS: ${wbsWithCriteriaCount}/${wbsCount}, 평가기준상태: ${wbsCriteriaStatus}, ` +
-          `PRIMARY평가자: ${hasPrimaryEvaluator}, SECONDARY평가자: ${hasSecondaryEvaluator}, 평가라인상태: ${evaluationLineStatus}, ` +
-          `성과입력: ${inputCompletedCount}/${perfTotalWbsCount} (${performanceInputStatus}), ` +
-          `자기평가: ${completedMappingCount}/${totalMappingCount} (${selfEvaluationStatus}, 총점: ${totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${grade ?? 'N/A'}), ` +
-          `1차하향평가(${primary.evaluator?.id ?? 'N/A'}): ${primary.completedEvaluationCount}/${primary.assignedWbsCount} (${primary.status}, 총점: ${primary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${primary.grade ?? 'N/A'}), ` +
-          `2차하향평가: [${secondaryLog}] (총점: ${secondary.totalScore?.toFixed(2) ?? 'N/A'}, 등급: ${secondary.grade ?? 'N/A'}), ` +
-          `동료평가: ${completedRequestCount}/${totalRequestCount} (${peerEvaluationStatus}), ` +
-          `최종평가: ${finalEvaluationLog} (${finalEvaluationStatus})`,
-      );
 
       return dto;
     } catch (error) {

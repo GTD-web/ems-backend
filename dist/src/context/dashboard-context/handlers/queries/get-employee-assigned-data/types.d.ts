@@ -114,5 +114,10 @@ export interface EmployeeAssignedDataResult {
                 isSubmitted: boolean;
             }>;
         };
+        criteriaSubmission: {
+            isSubmitted: boolean;
+            submittedAt: Date | null;
+            submittedBy: string | null;
+        };
     };
 }

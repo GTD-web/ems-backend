@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { InvalidDownwardEvaluationScoreException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
-import { EvaluationPeriodDto, EvaluationPeriodPhase } from '../../domain/core/evaluation-period/evaluation-period.types';
+import {
+  EvaluationPeriodDto,
+  EvaluationPeriodPhase,
+} from '../../domain/core/evaluation-period/evaluation-period.types';
 import { EvaluationPeriodService } from '../../domain/core/evaluation-period/evaluation-period.service';
 import { EvaluationPeriodAutoPhaseService } from '../../domain/core/evaluation-period/evaluation-period-auto-phase.service';
 import {
@@ -55,6 +58,7 @@ import {
   GetEmployeeEvaluationPeriodsQuery,
   CheckEvaluationTargetQuery,
   GetEvaluationTargetsByFilterQuery,
+  GetUnregisteredEmployeesQuery,
 } from './handlers';
 
 /**
@@ -494,6 +498,29 @@ export class EvaluationPeriodManagementContextService
   }
 
   /**
+   * 평가기간에 등록되지 않은 직원 목록을 조회한다
+   */
+  async 평가기간에_등록되지_않은_직원_목록을_조회한다(
+    evaluationPeriodId: string,
+  ): Promise<{
+    evaluationPeriodId: string;
+    employees: Array<{
+      id: string;
+      employeeNumber: string;
+      name: string;
+      email: string;
+      phoneNumber?: string;
+      status: string;
+      departmentId?: string;
+      departmentName?: string;
+      rankName?: string;
+    }>;
+  }> {
+    const query = new GetUnregisteredEmployeesQuery(evaluationPeriodId);
+    return await this.queryBus.execute(query);
+  }
+
+  /**
    * 평가 점수를 검증한다
    * - 평가기간의 달성률 최대값을 기준으로 점수 범위를 검증
    * @param periodId 평가기간 ID
@@ -554,7 +581,11 @@ export class EvaluationPeriodManagementContextService
     createdBy: string,
   ) {
     return await this.commandBus.execute(
-      new RegisterEvaluationTargetWithAutoEvaluatorCommand(evaluationPeriodId, employeeId, createdBy),
+      new RegisterEvaluationTargetWithAutoEvaluatorCommand(
+        evaluationPeriodId,
+        employeeId,
+        createdBy,
+      ),
     );
   }
 
@@ -591,9 +622,12 @@ export class EvaluationPeriodManagementContextService
     this.logger.log('자동 단계 전이 컨텍스트 로직 시작');
 
     // 자동 단계 전이 서비스를 직접 호출
-    const result = await this.evaluationPeriodAutoPhaseService.autoPhaseTransition();
+    const result =
+      await this.evaluationPeriodAutoPhaseService.autoPhaseTransition();
 
-    this.logger.log(`자동 단계 전이 컨텍스트 로직 완료 - 전이된 평가기간 수: ${result}`);
+    this.logger.log(
+      `자동 단계 전이 컨텍스트 로직 완료 - 전이된 평가기간 수: ${result}`,
+    );
 
     return result;
   }

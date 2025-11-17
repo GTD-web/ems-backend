@@ -260,6 +260,11 @@ export class GetEmployeeAssignedDataHandler
       selfEvaluation,
       primaryDownwardEvaluation,
       secondaryDownwardEvaluation,
+      criteriaSubmission: {
+        isSubmitted: mapping.isCriteriaSubmitted || false,
+        submittedAt: mapping.criteriaSubmittedAt || null,
+        submittedBy: mapping.criteriaSubmittedBy || null,
+      },
     };
 
     return {

@@ -46,6 +46,20 @@ export declare class EvaluationPeriodManagementContextService implements IEvalua
     직원의_평가기간_맵핑_조회한다(employeeId: string): Promise<any[]>;
     평가대상_여부_확인한다(evaluationPeriodId: string, employeeId: string): Promise<any>;
     필터로_평가대상자_조회한다(filter: any): Promise<any[]>;
+    평가기간에_등록되지_않은_직원_목록을_조회한다(evaluationPeriodId: string): Promise<{
+        evaluationPeriodId: string;
+        employees: Array<{
+            id: string;
+            employeeNumber: string;
+            name: string;
+            email: string;
+            phoneNumber?: string;
+            status: string;
+            departmentId?: string;
+            departmentName?: string;
+            rankName?: string;
+        }>;
+    }>;
     평가_점수를_검증한다(periodId: string, score: number): Promise<void>;
     평가기간을_대상자와_함께_생성한다(createData: CreateEvaluationPeriodMinimalDto, createdBy: string): Promise<any>;
     평가대상자를_자동평가자와_함께_등록한다(evaluationPeriodId: string, employeeId: string, createdBy: string): Promise<any>;

@@ -1,7 +1,7 @@
 import { Body, Controller, Query, Logger, Post } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { EvaluationPeriodManagementContextService } from '../../../context/evaluation-period-management-context/evaluation-period-management.service';
-import { EvaluationPeriodBusinessService } from '../../../business/evaluation-period/evaluation-period-business.service';
+import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
+import { EvaluationPeriodBusinessService } from '@business/evaluation-period/evaluation-period-business.service';
 import type {
   CreateEvaluationPeriodMinimalDto,
   UpdateCriteriaSettingPermissionDto,
@@ -16,10 +16,11 @@ import type {
   UpdatePerformanceDeadlineDto,
   UpdateSelfEvaluationDeadlineDto,
   UpdateSelfEvaluationSettingPermissionDto,
-} from '../../../context/evaluation-period-management-context/interfaces/evaluation-period-creation.interface';
+} from '@context/evaluation-period-management-context/interfaces/evaluation-period-creation.interface';
 import type { EvaluationPeriodDto } from '../../../domain/core/evaluation-period/evaluation-period.types';
-import { ParseId, CurrentUser } from '../../decorators';
-import type { AuthenticatedUser } from '../../decorators';
+import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import {
   ChangeEvaluationPeriodPhase,
   CompleteEvaluationPeriod,
@@ -41,7 +42,7 @@ import {
   UpdatePerformanceDeadline,
   UpdateSelfEvaluationDeadline,
   UpdateSelfEvaluationSettingPermission,
-} from './decorators/evaluation-period-api.decorators';
+} from '@interface/common/decorators/evaluation-period/evaluation-period-api.decorators';
 import {
   ChangeEvaluationPeriodPhaseApiDto,
   CreateEvaluationPeriodApiDto,
@@ -56,7 +57,7 @@ import {
   UpdatePeerEvaluationDeadlineApiDto,
   UpdatePerformanceDeadlineApiDto,
   UpdateSelfEvaluationDeadlineApiDto,
-} from './dto/evaluation-management.dto';
+} from '@interface/common/dto/evaluation-period/evaluation-management.dto';
 
 /**
  * 관리자용 평가 관리 컨트롤러
@@ -67,9 +68,10 @@ import {
 @ApiTags('A-2. 관리자 - 평가기간')
 @ApiBearerAuth('Bearer')
 @Controller('admin/evaluation-periods')
-// @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EvaluationPeriodManagementController {
-  private readonly logger = new Logger(EvaluationPeriodManagementController.name);
+  private readonly logger = new Logger(
+    EvaluationPeriodManagementController.name,
+  );
 
   constructor(
     private readonly evaluationPeriodBusinessService: EvaluationPeriodBusinessService,
@@ -135,10 +137,11 @@ export class EvaluationPeriodManagementController {
           maxRange: range.maxRange,
         })) || [],
     };
-    const result = await this.evaluationPeriodBusinessService.평가기간을_생성한다(
-      contextDto,
-      createdBy,
-    );
+    const result =
+      await this.evaluationPeriodBusinessService.평가기간을_생성한다(
+        contextDto,
+        createdBy,
+      );
     return result.evaluationPeriod;
   }
 
@@ -472,13 +475,13 @@ export class EvaluationPeriodManagementController {
   ): Promise<EvaluationPeriodDto> {
     const changedBy = user.id;
     const targetPhase = changePhaseDto.targetPhase as any; // 타입 변환
-    
+
     const result = await this.evaluationPeriodBusinessService.단계_변경한다(
       periodId,
       targetPhase,
       changedBy,
     );
-    
+
     return result;
   }
 
@@ -491,8 +494,9 @@ export class EvaluationPeriodManagementController {
     transitionedCount: number;
     message: string;
   }> {
-    const result = await this.evaluationPeriodBusinessService.자동_단계_전이를_실행한다();
-    
+    const result =
+      await this.evaluationPeriodBusinessService.자동_단계_전이를_실행한다();
+
     return {
       success: true,
       transitionedCount: result,

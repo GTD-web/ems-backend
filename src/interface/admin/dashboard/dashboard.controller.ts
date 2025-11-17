@@ -1,12 +1,12 @@
 import { Controller, Query, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { DashboardService } from '../../../context/dashboard-context/dashboard.service';
-import { ParseUUID } from '../../decorators/parse-uuid.decorator';
-import { CurrentUser } from '../../decorators/current-user.decorator';
-import type { AuthenticatedUser } from '../../decorators/current-user.decorator';
-import { EvaluationPeriodService } from '../../../domain/core/evaluation-period/evaluation-period.service';
-import { EmployeeSyncService } from '../../../context/organization-management-context/employee-sync.service';
-import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from './dto/get-all-employees-evaluation-period-status-query.dto';
+import { DashboardService } from '@context/dashboard-context/dashboard.service';
+import { ParseUUID } from '@interface/common/decorators';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
+import { GetAllEmployeesEvaluationPeriodStatusQueryDto } from '@interface/common/dto/dashboard/get-all-employees-evaluation-period-status-query.dto';
 import {
   GetEmployeeEvaluationPeriodStatus,
   GetAllEmployeesEvaluationPeriodStatus,
@@ -18,23 +18,21 @@ import {
   GetFinalEvaluationsByEmployee,
   GetAllEmployeesFinalEvaluations,
   GetEmployeeCompleteStatus,
-} from './decorators/dashboard-api.decorators';
-import { EmployeeEvaluationPeriodStatusResponseDto } from './dto/employee-evaluation-period-status.dto';
-import { MyEvaluationTargetStatusResponseDto } from './dto/my-evaluation-targets-status.dto';
-import {
-  EmployeeAssignedDataResponseDto,
-  EvaluatorAssignedEmployeesDataResponseDto,
-} from './dto/employee-assigned-data.dto';
-import { DashboardFinalEvaluationsByPeriodResponseDto } from './dto/final-evaluation-list.dto';
+} from '@interface/common/decorators/dashboard/dashboard-api.decorators';
+import { EmployeeEvaluationPeriodStatusResponseDto } from '@interface/common/dto/dashboard/employee-evaluation-period-status.dto';
+import { MyEvaluationTargetStatusResponseDto } from '@interface/common/dto/dashboard/my-evaluation-targets-status.dto';
+import { EmployeeAssignedDataResponseDto } from '@interface/common/dto/dashboard/employee-assigned-data.dto';
+import { EvaluatorAssignedEmployeesDataResponseDto } from '@interface/common/dto/dashboard/employee-assigned-data.dto';
+import { DashboardFinalEvaluationsByPeriodResponseDto } from '@interface/common/dto/dashboard/final-evaluation-list.dto';
 import {
   EmployeeFinalEvaluationListResponseDto,
   GetEmployeeFinalEvaluationsQueryDto,
-} from './dto/employee-final-evaluation-list.dto';
+} from '@interface/common/dto/dashboard/employee-final-evaluation-list.dto';
 import {
   AllEmployeesFinalEvaluationsResponseDto,
   GetAllEmployeesFinalEvaluationsQueryDto,
-} from './dto/all-employees-final-evaluations.dto';
-import { EmployeeCompleteStatusResponseDto } from './dto/employee-complete-status.dto';
+} from '@interface/common/dto/dashboard/all-employees-final-evaluations.dto';
+import { EmployeeCompleteStatusResponseDto } from '@interface/common/dto/dashboard/employee-complete-status.dto';
 
 /**
  * 관리자용 대시보드 컨트롤러
@@ -45,7 +43,6 @@ import { EmployeeCompleteStatusResponseDto } from './dto/employee-complete-statu
 @ApiTags('A-0-2. 관리자 - 대시보드')
 @ApiBearerAuth('Bearer')
 @Controller('admin/dashboard')
-// @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class DashboardController {
   constructor(
     private readonly dashboardService: DashboardService,
@@ -63,10 +60,18 @@ export class DashboardController {
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @Query() queryDto: GetAllEmployeesEvaluationPeriodStatusQueryDto,
   ): Promise<EmployeeEvaluationPeriodStatusResponseDto[]> {
-    return await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(
-      evaluationPeriodId,
-      queryDto.includeUnregistered,
-    );
+    const results =
+      await this.dashboardService.평가기간의_모든_피평가자_현황을_조회한다(
+        evaluationPeriodId,
+        queryDto.includeUnregistered,
+      );
+
+    // 최상위 레벨의 evaluationCriteria, wbsCriteria, evaluationLine 필드 제거
+    return results.map((result) => {
+      const { evaluationCriteria, wbsCriteria, evaluationLine, ...rest } =
+        result as any;
+      return rest as EmployeeEvaluationPeriodStatusResponseDto;
+    });
   }
 
   /**
@@ -91,15 +96,24 @@ export class DashboardController {
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
     @ParseUUID('employeeId') employeeId: string,
   ): Promise<EmployeeEvaluationPeriodStatusResponseDto | null> {
-    return await this.dashboardService.직원의_평가기간_현황을_조회한다(
+    const result = await this.dashboardService.직원의_평가기간_현황을_조회한다(
       evaluationPeriodId,
       employeeId,
     );
+
+    if (!result) {
+      return null;
+    }
+
+    // 최상위 레벨의 evaluationCriteria, wbsCriteria, evaluationLine 필드 제거
+    const { evaluationCriteria, wbsCriteria, evaluationLine, ...rest } =
+      result as any;
+    return rest as EmployeeEvaluationPeriodStatusResponseDto;
   }
 
   /**
    * 현재 로그인한 사용자의 할당된 정보를 조회합니다.
-   * 피평가자는 상위 평가자의 하향평가를 볼 수 없습니다.
+   * 피평가자는 2차 평가자의 하향평가를 볼 수 없습니다.
    */
   @GetMyAssignedData()
   async getMyAssignedData(
@@ -111,8 +125,8 @@ export class DashboardController {
       user.id, // JWT에서 추출한 현재 로그인 사용자의 ID
     );
 
-    // 피평가자는 상위 평가자의 하향평가를 볼 수 없음
-    return this.하향평가_정보를_제거한다(data);
+    // 피평가자는 2차 평가자의 하향평가를 볼 수 없음 (1차 하향평가는 제공)
+    return this.이차_하향평가_정보를_제거한다(data);
   }
 
   /**
@@ -130,30 +144,29 @@ export class DashboardController {
   }
 
   /**
-   * 하향평가 정보를 제거합니다.
+   * 2차 하향평가 정보를 제거합니다.
    * 피평가자가 자신의 할당 정보를 조회할 때 사용됩니다.
+   * 1차 하향평가 정보는 유지하고, 2차 하향평가 정보만 제거합니다.
    */
-  private 하향평가_정보를_제거한다(
+  private 이차_하향평가_정보를_제거한다(
     data: EmployeeAssignedDataResponseDto,
   ): EmployeeAssignedDataResponseDto {
-    // 각 프로젝트의 WBS에서 하향평가 정보 제거
-    const projectsWithoutDownwardEvaluation = data.projects.map((project) => ({
-      ...project,
-      wbsList: project.wbsList.map((wbs) => ({
-        ...wbs,
-        primaryDownwardEvaluation: null,
-        secondaryDownwardEvaluation: null,
-      })),
-    }));
+    // 각 프로젝트의 WBS에서 2차 하향평가 정보만 제거 (1차는 유지)
+    const projectsWithoutSecondaryDownwardEvaluation = data.projects.map(
+      (project) => ({
+        ...project,
+        wbsList: project.wbsList.map((wbs) => ({
+          ...wbs,
+          // primaryDownwardEvaluation은 유지
+          secondaryDownwardEvaluation: null,
+        })),
+      }),
+    );
 
-    // summary에서 하향평가 정보 제거
-    const summaryWithoutDownwardEvaluation = {
+    // summary에서 2차 하향평가 정보만 제거 (1차는 유지)
+    const summaryWithoutSecondaryDownwardEvaluation = {
       ...data.summary,
-      primaryDownwardEvaluation: {
-        totalScore: null,
-        grade: null,
-        isSubmitted: false,
-      },
+      // primaryDownwardEvaluation은 유지
       secondaryDownwardEvaluation: {
         totalScore: null,
         grade: null,
@@ -164,8 +177,8 @@ export class DashboardController {
 
     return {
       ...data,
-      projects: projectsWithoutDownwardEvaluation,
-      summary: summaryWithoutDownwardEvaluation,
+      projects: projectsWithoutSecondaryDownwardEvaluation,
+      summary: summaryWithoutSecondaryDownwardEvaluation,
     };
   }
 
@@ -500,6 +513,9 @@ export class DashboardController {
         status: statusData.selfEvaluation.status,
         totalCount: statusData.selfEvaluation.totalMappingCount,
         completedCount: statusData.selfEvaluation.completedMappingCount,
+        isSubmittedToEvaluator:
+          statusData.selfEvaluation.isSubmittedToEvaluator,
+        isSubmittedToManager: statusData.selfEvaluation.isSubmittedToManager,
         totalScore: statusData.selfEvaluation.totalScore,
         grade: statusData.selfEvaluation.grade,
       },

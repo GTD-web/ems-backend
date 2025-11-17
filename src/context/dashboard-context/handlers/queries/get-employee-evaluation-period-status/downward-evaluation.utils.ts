@@ -16,30 +16,49 @@ import {
 /**
  * 하향평가 통합 상태를 계산한다
  * - 하향평가 진행 상태와 승인 상태를 통합하여 계산
- * 
+ *
  * 계산 로직:
- * 1. 하향평가 진행 상태가 none이면 → none
- * 2. 하향평가 진행 상태가 in_progress이면 → in_progress
- * 3. 하향평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
- * 4. 하향평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
- * 5. 하향평가 진행 상태가 complete이고 승인 상태가 revision_requested이면 → revision_requested
- * 6. 하향평가 진행 상태가 complete이고 승인 상태가 revision_completed이면 → revision_completed
+ * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
+ *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
+ *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
+ * 2. 하향평가 진행 상태가 none이면 → none
+ * 3. 하향평가 진행 상태가 in_progress이면 → in_progress
+ * 4. 하향평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
+ * 5. 하향평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
  */
 export function 하향평가_통합_상태를_계산한다(
   downwardStatus: DownwardEvaluationStatus,
-  approvalStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed',
-): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed' {
-  // 1. 하향평가 진행 상태가 none이면 → none
+  approvalStatus:
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed',
+):
+  | DownwardEvaluationStatus
+  | 'pending'
+  | 'approved'
+  | 'revision_requested'
+  | 'revision_completed' {
+  // 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환
+  // none이나 in_progress 상태에서도 재작성 요청이 있을 수 있음
+  if (approvalStatus === 'revision_requested') {
+    return 'revision_requested';
+  }
+  if (approvalStatus === 'revision_completed') {
+    return 'revision_completed';
+  }
+
+  // 2. 하향평가 진행 상태가 none이면 → none
   if (downwardStatus === 'none') {
     return 'none';
   }
 
-  // 2. 하향평가 진행 상태가 in_progress이면 → in_progress
+  // 3. 하향평가 진행 상태가 in_progress이면 → in_progress
   if (downwardStatus === 'in_progress') {
     return 'in_progress';
   }
 
-  // 3. 하향평가 진행 상태가 complete이면 승인 상태 반환
+  // 4. 하향평가 진행 상태가 complete이면 승인 상태 반환 (pending, approved 등)
   // downwardStatus === 'complete'
   return approvalStatus;
 }
@@ -47,59 +66,80 @@ export function 하향평가_통합_상태를_계산한다(
 /**
  * 2차 평가 전체 상태를 계산한다
  * - 여러 평가자의 상태를 통합하여 전체 상태를 계산
- * 
+ *
  * 계산 로직:
  * 1. 평가자가 없거나 모두 none인 경우 → none
- * 2. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우 → in_progress
- * 3. 모두 complete 이상인 경우:
- *    - revision_requested가 하나라도 있으면 → revision_requested (최우선)
+ * 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환:
+ *    - revision_requested가 하나라도 있으면 → revision_requested (최우선, 제출 여부 무관)
+ *    - revision_completed가 하나라도 있으면 → revision_completed (제출 여부 무관)
+ * 3. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우 → in_progress
+ * 4. 모두 complete 이상인 경우:
  *    - 모두 pending인 경우 → pending
- *    - revision_completed가 하나라도 있으면 → revision_completed
  *    - 모두 approved인 경우 → approved
- *    - 혼합 상태 (pending + approved 등) → pending
+ *    - 혼합 상태 (pending + approved 등) → in_progress (진행중)
  */
 export function 이차평가_전체_상태를_계산한다(
-  evaluatorStatuses: Array<DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed'>,
-): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed' {
+  evaluatorStatuses: Array<
+    | DownwardEvaluationStatus
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed'
+  >,
+):
+  | DownwardEvaluationStatus
+  | 'pending'
+  | 'approved'
+  | 'revision_requested'
+  | 'revision_completed' {
   // 1. 평가자가 없거나 모두 none인 경우
-  if (evaluatorStatuses.length === 0 || evaluatorStatuses.every(s => s === 'none')) {
+  if (
+    evaluatorStatuses.length === 0 ||
+    evaluatorStatuses.every((s) => s === 'none')
+  ) {
     return 'none';
   }
 
-  // 2. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
-  const hasInProgress = evaluatorStatuses.some(s => s === 'in_progress' || s === 'complete');
-  if (hasInProgress && evaluatorStatuses.some(s => s === 'none' || s === 'in_progress')) {
+  // 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환
+  // revision_requested가 하나라도 있으면 최우선 (제출 여부 무관)
+  if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
+    return 'revision_requested';
+  }
+  // revision_completed가 하나라도 있으면 (제출 여부 무관)
+  if (evaluatorStatuses.some((s) => s === 'revision_completed')) {
+    return 'revision_completed';
+  }
+
+  // 3. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
+  const hasInProgress = evaluatorStatuses.some(
+    (s) => s === 'in_progress' || s === 'complete',
+  );
+  if (
+    hasInProgress &&
+    evaluatorStatuses.some((s) => s === 'none' || s === 'in_progress')
+  ) {
     return 'in_progress';
   }
 
-  // 3. 모두 complete 이상인 경우 (none, in_progress 없음)
-  const allCompleteOrAbove = evaluatorStatuses.every(s => 
-    s === 'complete' || s === 'pending' || s === 'approved' || 
-    s === 'revision_requested' || s === 'revision_completed'
+  // 4. 모두 complete 이상인 경우 (none, in_progress 없음)
+  const allCompleteOrAbove = evaluatorStatuses.every(
+    (s) => s === 'complete' || s === 'pending' || s === 'approved',
   );
 
   if (allCompleteOrAbove) {
-    // revision_requested가 하나라도 있으면 최우선
-    if (evaluatorStatuses.some(s => s === 'revision_requested')) {
-      return 'revision_requested';
-    }
     // 모두 pending인 경우
-    if (evaluatorStatuses.every(s => s === 'pending')) {
+    if (evaluatorStatuses.every((s) => s === 'pending')) {
       return 'pending';
     }
-    // revision_completed가 하나라도 있으면
-    if (evaluatorStatuses.some(s => s === 'revision_completed')) {
-      return 'revision_completed';
-    }
     // 모두 approved인 경우
-    if (evaluatorStatuses.every(s => s === 'approved')) {
+    if (evaluatorStatuses.every((s) => s === 'approved')) {
       return 'approved';
     }
-    // 혼합 상태 (pending + approved 등) → pending 반환
-    return 'pending';
+    // 혼합 상태 (pending + approved 등) → in_progress 반환 (진행중)
+    return 'in_progress';
   }
 
-  // 4. 기본값: in_progress
+  // 5. 기본값: in_progress
   return 'in_progress';
 }
 
@@ -168,7 +208,9 @@ export async function 하향평가_상태를_조회한다(
   if (primaryLine) {
     const primaryMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.evaluationLineId = :lineId', {
         lineId: primaryLine.id,
@@ -186,9 +228,10 @@ export async function 하향평가_상태를_조회한다(
     ];
     primaryEvaluators.push(...uniqueEvaluatorIds);
   }
-  
+
   // 대표 평가자 ID (첫 번째 평가자, 하위 호환성 유지)
-  const primaryEvaluatorId = primaryEvaluators.length > 0 ? primaryEvaluators[0] : null;
+  const primaryEvaluatorId =
+    primaryEvaluators.length > 0 ? primaryEvaluators[0] : null;
 
   // 3. PRIMARY 평가자의 하향평가 상태 조회
   const primaryStatus = await 평가자별_하향평가_상태를_조회한다(
@@ -248,7 +291,9 @@ export async function 하향평가_상태를_조회한다(
   if (secondaryLine) {
     const secondaryMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
-      .where('mapping.evaluationPeriodId = :evaluationPeriodId', { evaluationPeriodId })
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
       .andWhere('mapping.evaluationLineId = :lineId', {
         lineId: secondaryLine.id,
@@ -276,6 +321,8 @@ export async function 하향평가_상태를_조회한다(
         DownwardEvaluationType.SECONDARY,
         downwardEvaluationRepository,
         wbsAssignmentRepository,
+        evaluationLineMappingRepository,
+        evaluationLineRepository,
       );
 
       // 평가자 정보 조회
@@ -524,6 +571,8 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
   evaluationType: DownwardEvaluationType,
   downwardEvaluationRepository: Repository<DownwardEvaluation>,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+  evaluationLineMappingRepository?: Repository<EvaluationLineMapping>,
+  evaluationLineRepository?: Repository<EvaluationLine>,
 ): Promise<{
   status: DownwardEvaluationStatus;
   assignedWbsCount: number;
@@ -531,14 +580,59 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
   isSubmitted: boolean;
   averageScore: number | null;
 }> {
-  // 1. 피평가자에게 할당된 WBS 수 조회 (평가해야 할 WBS 개수)
-  const assignedWbsCount = await wbsAssignmentRepository.count({
-    where: {
-      periodId: evaluationPeriodId,
-      employeeId: employeeId,
-      deletedAt: IsNull(),
-    },
-  });
+  // 1. 평가자에게 할당된 WBS 수 조회
+  let assignedWbsCount: number;
+  
+  if (evaluationType === DownwardEvaluationType.SECONDARY) {
+    // 2차 평가자의 경우: EvaluationLineMapping에서 해당 평가자에게 할당된 WBS 수 조회
+    if (!evaluationLineMappingRepository || !evaluationLineRepository) {
+      throw new Error('evaluationLineMappingRepository와 evaluationLineRepository가 필요합니다.');
+    }
+    
+    // SECONDARY 평가라인 조회
+    const secondaryLine = await evaluationLineRepository.findOne({
+      where: {
+        evaluatorType: EvaluatorType.SECONDARY,
+        deletedAt: IsNull(),
+      },
+    });
+    
+    if (!secondaryLine) {
+      assignedWbsCount = 0;
+    } else {
+      // 해당 평가자에게 할당된 WBS 매핑 조회
+      const assignedMappings = await evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .select(['mapping.id', 'mapping.wbsItemId'])
+        .leftJoin(
+          EvaluationLine,
+          'line',
+          'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+        )
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+        .andWhere('line.evaluatorType = :evaluatorType', {
+          evaluatorType: EvaluatorType.SECONDARY,
+        })
+        .andWhere('mapping.deletedAt IS NULL')
+        .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
+        .getRawMany();
+      
+      assignedWbsCount = assignedMappings.length;
+    }
+  } else {
+    // 1차 평가자의 경우: 피평가자에게 할당된 전체 WBS 수 조회
+    assignedWbsCount = await wbsAssignmentRepository.count({
+      where: {
+        periodId: evaluationPeriodId,
+        employeeId: employeeId,
+        deletedAt: IsNull(),
+      },
+    });
+  }
 
   // 2. 특정 평가자의 하향평가들 조회
   const downwardEvaluations = await downwardEvaluationRepository.find({

@@ -1,6 +1,6 @@
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
-import { GetEvaluationActivityLogListQueryDto } from './dto/get-evaluation-activity-log-list-query.dto';
-import { EvaluationActivityLogListResponseDto } from './dto/evaluation-activity-log-response.dto';
+import { EvaluationActivityLogListResponseDto } from '@interface/common/dto/evaluation-activity-log/evaluation-activity-log-response.dto';
+import { GetEvaluationActivityLogListQueryDto } from '@interface/common/dto/evaluation-activity-log/get-evaluation-activity-log-list-query.dto';
 export declare class EvaluationActivityLogController {
     private readonly activityLogContextService;
     constructor(activityLogContextService: EvaluationActivityLogContextService);

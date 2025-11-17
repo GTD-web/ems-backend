@@ -1,14 +1,11 @@
-import { Body, Controller, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
-import { EmployeeSyncService } from '../../../context/organization-management-context/employee-sync.service';
-import { EmployeeDto } from '../../../domain/common/employee/employee.types';
 import {
   DepartmentHierarchyDto,
   DepartmentHierarchyWithEmployeesDto,
-} from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
-import { ParseId, CurrentUser } from '../../decorators';
-import type { AuthenticatedUser } from '../../decorators';
+  EmployeeSyncService,
+  OrganizationManagementService,
+} from '@/context/organization-management-context';
+import { EmployeeDto } from '@/domain/common/employee/employee.types';
+import { CurrentUser, ParseId } from '@/interface/common/decorators';
 import {
   ExcludeEmployeeFromList,
   GetAllEmployees,
@@ -17,13 +14,24 @@ import {
   GetExcludedEmployees,
   GetPartLeaders,
   IncludeEmployeeInList,
-} from './decorators/employee-management-api.decorators';
+  UpdateEmployeeAccessibility,
+} from '@/interface/common/decorators/employee-management/employee-management-api.decorators';
 import {
+  EmployeeResponseDto,
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
   GetPartLeadersQueryDto,
   PartLeadersResponseDto,
-} from './dto/employee-management.dto';
+} from '@/interface/common/dto/employee-management/employee-management.dto';
+import type { AuthenticatedUser } from '@/interface/common/guards';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  ParseBoolPipe,
+  Query,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * 관리자용 직원 관리 컨트롤러
@@ -34,7 +42,6 @@ import {
 @ApiTags('A-1. 관리자 - 조직 관리')
 @ApiBearerAuth('Bearer')
 @Controller('admin/employees')
-// @UseGuards(AdminGuard) // TODO: 관리자 권한 가드 추가
 export class EmployeeManagementController {
   constructor(
     private readonly organizationManagementService: OrganizationManagementService,
@@ -67,10 +74,11 @@ export class EmployeeManagementController {
   @GetAllEmployees()
   async getAllEmployees(
     @Query() query: GetEmployeesQueryDto,
+    @Query('includeExcluded', ParseBoolPipe) includeExcluded: boolean,
   ): Promise<EmployeeDto[]> {
     // departmentId와 includeExcluded 옵션을 전달하여 조회
     return await this.organizationManagementService.전체직원목록조회(
-      query.includeExcluded || false,
+      includeExcluded,
       query.departmentId,
     );
   }
@@ -119,7 +127,7 @@ export class EmployeeManagementController {
       };
     });
     return {
-      partLeaders: partLeadersDto,
+      partLeaders: partLeadersDto as EmployeeResponseDto[],
       count: partLeadersDto.length,
     };
   }
@@ -152,6 +160,23 @@ export class EmployeeManagementController {
   ): Promise<EmployeeDto> {
     return await this.organizationManagementService.직원조회포함(
       employeeId,
+      user.id,
+    );
+  }
+
+  /**
+   * 직원의 접근 가능 여부를 변경합니다.
+   */
+  @UpdateEmployeeAccessibility()
+  async updateEmployeeAccessibility(
+    @ParseId() employeeId: string,
+    @Query('isAccessible', new DefaultValuePipe(false), ParseBoolPipe)
+    isAccessible: boolean,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<EmployeeDto> {
+    return await this.organizationManagementService.직원접근가능여부변경(
+      employeeId,
+      isAccessible,
       user.id,
     );
   }

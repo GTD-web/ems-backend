@@ -1,47 +1,4 @@
 {
-  "timestamp": "2025-11-12T23:38:12.164Z",
-  "testResults": [
-    {
-      "testName": "정상적으로 직원 할당 정보를 조회할 수 있어야 한다",
-      "result": {
-        "evaluationPeriodId": "04cfb7f6-76ee-49b3-b8f4-40cadaf82dea",
-        "employeeId": "ba852886-42e9-43e3-8be2-8c39f1792eed",
-        "employeeName": "김피평가",
-        "totalProjects": 1,
-        "totalWbs": 1
-      }
-    },
-    {
-      "testName": "평가 대상에서 제외된 직원일 경우 ExcludedEvaluationTargetAccessException을 던져야 한다",
-      "result": {
-        "evaluationPeriodId": "c593f64c-5c5f-4661-9af0-e941db446d2e",
-        "employeeId": "0d29e7b5-73df-4514-be9e-3b12cd91fcf5",
-        "isExcluded": true,
-        "excludeReason": "테스트 제외 사유",
-        "exceptionThrown": "ExcludedEvaluationTargetAccessException",
-        "exceptionMessage": "평가 대상에서 제외된 직원은 할당 정보를 조회할 수 없습니다"
-      }
-    },
-    {
-      "testName": "여러 프로젝트와 WBS가 할당된 경우 모두 반환되어야 한다",
-      "result": {
-        "evaluationPeriodId": "c887a57c-0c9b-4ee7-86ac-3564af609cf2",
-        "employeeId": "03fc38cc-bce5-4019-8fcc-f8b0563bdae0",
-        "totalProjects": 2,
-        "totalWbs": 3,
-        "projects": [
-          {
-            "projectId": "2cebefca-5999-4c54-9ac1-c0ab56f0b5f8",
-            "projectName": "테스트 프로젝트 2",
-            "wbsCount": 1
-          },
-          {
-            "projectId": "1e00d791-f5a1-4d9a-a93b-ad512ba6dba3",
-            "projectName": "테스트 프로젝트",
-            "wbsCount": 2
-          }
-        ]
-      }
-    }
-  ]
+  "timestamp": "2025-11-17T00:49:47.569Z",
+  "testResults": []
 }

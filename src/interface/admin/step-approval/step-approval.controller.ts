@@ -10,22 +10,22 @@ import { StepApprovalContextService } from '@context/step-approval-context';
 import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
 import { StepApprovalBusinessService } from '@business/step-approval/step-approval-business.service';
-import { UpdateStepApprovalDto } from './dto/update-step-approval.dto';
-import { UpdateSecondaryStepApprovalDto } from './dto/update-secondary-step-approval.dto';
-import { StepApprovalEnumsResponseDto } from './dto/step-approval-enums.dto';
+import { UpdateStepApprovalDto } from '@interface/common/dto/step-approval/update-step-approval.dto';
+import { UpdateSecondaryStepApprovalDto } from '@interface/common/dto/step-approval/update-secondary-step-approval.dto';
+import { StepApprovalEnumsResponseDto } from '@interface/common/dto/step-approval/step-approval-enums.dto';
 import {
   UpdateStepApproval,
   UpdateCriteriaStepApproval,
   UpdateSelfStepApproval,
   UpdatePrimaryStepApproval,
   UpdateSecondaryStepApproval,
-} from './decorators/step-approval-api.decorators';
-import { GetStepApprovalEnums } from './decorators/step-approval-enums-api.decorators';
+} from '@interface/common/decorators/step-approval/step-approval-api.decorators';
+import { GetStepApprovalEnums } from '@interface/common/decorators/step-approval/step-approval-enums-api.decorators';
 import {
   StepTypeEnum,
   StepApprovalStatusEnum,
-} from './dto/update-step-approval.dto';
-import { CurrentUser } from '@interface/decorators/current-user.decorator';
+} from '@interface/common/dto/step-approval/update-step-approval.dto';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 
 /**
  * 단계 승인 컨트롤러
@@ -76,6 +76,8 @@ export class StepApprovalController {
 
   /**
    * 평가기준 설정 단계 승인 상태를 변경한다
+   * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
+   * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
    */
   @UpdateCriteriaStepApproval()
   async updateCriteriaStepApproval(
@@ -84,13 +86,38 @@ export class StepApprovalController {
     @Body() dto: UpdateStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
   ): Promise<void> {
-    await this.stepApprovalBusinessService.평가기준설정_확인상태를_변경한다({
-      evaluationPeriodId,
-      employeeId,
-      status: dto.status as any,
-      revisionComment: dto.revisionComment,
-      updatedBy,
-    });
+    // 재작성 요청 생성 시 제출 상태 초기화를 함께 처리
+    if (dto.status === StepApprovalStatusEnum.REVISION_REQUESTED) {
+      if (!dto.revisionComment || dto.revisionComment.trim() === '') {
+        throw new BadRequestException('재작성 요청 코멘트는 필수입니다.');
+      }
+
+      // 비즈니스 서비스를 통해 제출 상태 초기화 및 재작성 요청 생성
+      await this.stepApprovalBusinessService.평가기준설정_재작성요청_생성_및_제출상태_초기화(
+        evaluationPeriodId,
+        employeeId,
+        dto.revisionComment,
+        updatedBy,
+      );
+    } else {
+      // 승인 상태로 변경 시 제출 상태도 함께 변경
+      if (dto.status === StepApprovalStatusEnum.APPROVED) {
+        await this.stepApprovalBusinessService.평가기준설정_승인_시_제출상태_변경(
+          evaluationPeriodId,
+          employeeId,
+          updatedBy,
+        );
+      }
+
+      // 단계 승인 상태 변경
+      await this.stepApprovalBusinessService.평가기준설정_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        status: dto.status as any,
+        revisionComment: dto.revisionComment,
+        updatedBy,
+      });
+    }
   }
 
   /**

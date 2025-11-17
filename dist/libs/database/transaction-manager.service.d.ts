@@ -27,6 +27,7 @@ export declare class TransactionManagerService {
     private readonly logger;
     private readonly errorHandlers;
     constructor(dataSource: DataSource);
+    private isHttpException;
     private handleDatabaseError;
     private isRetryableError;
     private executeWithRetry;

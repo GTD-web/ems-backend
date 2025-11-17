@@ -13,20 +13,20 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeliverableManagementController = void 0;
+const deliverable_business_service_1 = require("../../../business/deliverable/deliverable-business.service");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const uuid_1 = require("uuid");
-const decorators_1 = require("../../decorators");
-const deliverable_business_service_1 = require("../../../business/deliverable/deliverable-business.service");
-const deliverable_api_decorators_1 = require("./decorators/deliverable-api.decorators");
-const deliverable_dto_1 = require("./dto/deliverable.dto");
+const deliverable_api_decorators_1 = require("../../common/decorators/performance-evaluation/deliverable-api.decorators");
+const deliverable_dto_1 = require("../../common/dto/performance-evaluation/deliverable.dto");
 let DeliverableManagementController = class DeliverableManagementController {
     deliverableBusinessService;
     constructor(deliverableBusinessService) {
         this.deliverableBusinessService = deliverableBusinessService;
     }
     async createDeliverable(dto, user) {
-        const createdBy = user?.id || dto.createdBy || (0, uuid_1.v4)();
+        const createdBy = user.id;
         const deliverable = await this.deliverableBusinessService.산출물을_생성한다({
             name: dto.name,
             type: dto.type,
@@ -39,7 +39,7 @@ let DeliverableManagementController = class DeliverableManagementController {
         return this.toResponseDto(deliverable);
     }
     async bulkCreateDeliverables(dto, user) {
-        const createdBy = user?.id || (0, uuid_1.v4)();
+        const createdBy = user.id;
         const result = await this.deliverableBusinessService.산출물을_벌크_생성한다({
             deliverables: dto.deliverables.map((d) => ({
                 name: d.name,
@@ -59,7 +59,7 @@ let DeliverableManagementController = class DeliverableManagementController {
         };
     }
     async bulkDeleteDeliverables(dto, user) {
-        const deletedBy = user?.id || (0, uuid_1.v4)();
+        const deletedBy = user.id;
         const result = await this.deliverableBusinessService.산출물을_벌크_삭제한다({
             ids: dto.deliverableIds,
             deletedBy,
@@ -71,7 +71,7 @@ let DeliverableManagementController = class DeliverableManagementController {
         };
     }
     async updateDeliverable(id, dto, user) {
-        const updatedBy = user?.id || dto.updatedBy || (0, uuid_1.v4)();
+        const updatedBy = user.id;
         const deliverable = await this.deliverableBusinessService.산출물을_수정한다({
             id,
             updatedBy,
@@ -86,7 +86,7 @@ let DeliverableManagementController = class DeliverableManagementController {
         return this.toResponseDto(deliverable);
     }
     async deleteDeliverable(id, user) {
-        const deletedBy = user?.id || (0, uuid_1.v4)();
+        const deletedBy = user.id;
         await this.deliverableBusinessService.산출물을_삭제한다(id, deletedBy);
     }
     async getEmployeeDeliverables(employeeId, query) {
@@ -134,7 +134,7 @@ exports.DeliverableManagementController = DeliverableManagementController;
 __decorate([
     (0, deliverable_api_decorators_1.CreateDeliverable)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [deliverable_dto_1.CreateDeliverableDto, Object]),
     __metadata("design:returntype", Promise)
@@ -142,7 +142,7 @@ __decorate([
 __decorate([
     (0, deliverable_api_decorators_1.BulkCreateDeliverables)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [deliverable_dto_1.BulkCreateDeliverablesDto, Object]),
     __metadata("design:returntype", Promise)
@@ -150,31 +150,31 @@ __decorate([
 __decorate([
     (0, deliverable_api_decorators_1.BulkDeleteDeliverables)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [deliverable_dto_1.BulkDeleteDeliverablesDto, Object]),
     __metadata("design:returntype", Promise)
 ], DeliverableManagementController.prototype, "bulkDeleteDeliverables", null);
 __decorate([
     (0, deliverable_api_decorators_1.UpdateDeliverable)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, deliverable_dto_1.UpdateDeliverableDto, Object]),
     __metadata("design:returntype", Promise)
 ], DeliverableManagementController.prototype, "updateDeliverable", null);
 __decorate([
     (0, deliverable_api_decorators_1.DeleteDeliverable)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], DeliverableManagementController.prototype, "deleteDeliverable", null);
 __decorate([
     (0, deliverable_api_decorators_1.GetEmployeeDeliverables)(),
-    __param(0, (0, decorators_1.ParseUUID)('employeeId')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('employeeId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, deliverable_dto_1.GetDeliverablesQueryDto]),
@@ -182,7 +182,7 @@ __decorate([
 ], DeliverableManagementController.prototype, "getEmployeeDeliverables", null);
 __decorate([
     (0, deliverable_api_decorators_1.GetWbsDeliverables)(),
-    __param(0, (0, decorators_1.ParseUUID)('wbsItemId')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('wbsItemId')),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, deliverable_dto_1.GetDeliverablesQueryDto]),
@@ -190,7 +190,7 @@ __decorate([
 ], DeliverableManagementController.prototype, "getWbsDeliverables", null);
 __decorate([
     (0, deliverable_api_decorators_1.GetDeliverableDetail)(),
-    __param(0, (0, decorators_1.ParseUUID)('id')),
+    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)

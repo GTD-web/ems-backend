@@ -28,6 +28,10 @@ import {
   자기평가_진행_상태를_조회한다,
   자기평가_상태를_계산한다,
 } from '../queries/get-employee-evaluation-period-status/self-evaluation.utils';
+import {
+  평가라인_지정_여부를_확인한다,
+  평가라인_상태를_계산한다,
+} from '../queries/get-employee-evaluation-period-status/evaluation-line.utils';
 
 /**
  * 내가 담당하는 평가 대상자 현황 조회 쿼리
@@ -225,11 +229,16 @@ export class GetMyEvaluationTargetsStatusHandler
 
           // 평가라인 지정 상태 확인
           const { hasPrimaryEvaluator, hasSecondaryEvaluator } =
-            await this.평가라인_지정_여부를_확인한다(evaluationPeriodId, employeeId);
+            await 평가라인_지정_여부를_확인한다(
+              evaluationPeriodId,
+              employeeId,
+              this.lineRepository,
+              this.lineMappingRepository,
+            );
 
           // 평가라인 상태 계산
           const evaluationLineStatus: EvaluationLineStatus =
-            this.평가라인_상태를_계산한다(
+            평가라인_상태를_계산한다(
               hasPrimaryEvaluator,
               hasSecondaryEvaluator,
             );
@@ -602,78 +611,4 @@ export class GetMyEvaluationTargetsStatusHandler
     }
   }
 
-  /**
-   * 평가라인 지정 여부를 확인한다
-   * PRIMARY와 SECONDARY 평가라인에 평가자가 지정되었는지 확인
-   */
-  private async 평가라인_지정_여부를_확인한다(
-    evaluationPeriodId: string,
-    employeeId: string,
-  ): Promise<{ hasPrimaryEvaluator: boolean; hasSecondaryEvaluator: boolean }> {
-    // PRIMARY 평가라인 조회
-    const primaryLine = await this.lineRepository.findOne({
-      where: {
-        evaluatorType: EvaluatorType.PRIMARY,
-        deletedAt: IsNull(),
-      },
-    });
-
-    // SECONDARY 평가라인 조회
-    const secondaryLine = await this.lineRepository.findOne({
-      where: {
-        evaluatorType: EvaluatorType.SECONDARY,
-        deletedAt: IsNull(),
-      },
-    });
-
-    let hasPrimaryEvaluator = false;
-    let hasSecondaryEvaluator = false;
-
-    // PRIMARY 평가라인에 평가자가 지정되었는지 확인
-    if (primaryLine) {
-      const primaryMapping = await this.lineMappingRepository.findOne({
-        where: {
-          evaluationPeriodId: evaluationPeriodId,
-          employeeId: employeeId,
-          evaluationLineId: primaryLine.id,
-          deletedAt: IsNull(),
-        },
-      });
-      hasPrimaryEvaluator = !!primaryMapping;
-    }
-
-    // SECONDARY 평가라인에 평가자가 지정되었는지 확인
-    if (secondaryLine) {
-      const secondaryMapping = await this.lineMappingRepository.findOne({
-        where: {
-          evaluationPeriodId: evaluationPeriodId,
-          employeeId: employeeId,
-          evaluationLineId: secondaryLine.id,
-          deletedAt: IsNull(),
-        },
-      });
-      hasSecondaryEvaluator = !!secondaryMapping;
-    }
-
-    return { hasPrimaryEvaluator, hasSecondaryEvaluator };
-  }
-
-  /**
-   * 평가라인 상태를 계산한다
-   * - PRIMARY와 SECONDARY 모두 평가자가 지정됨: complete (존재)
-   * - 하나만 평가자가 지정됨: in_progress (설정중)
-   * - 둘 다 평가자가 미지정: none (미존재)
-   */
-  private 평가라인_상태를_계산한다(
-    hasPrimaryEvaluator: boolean,
-    hasSecondaryEvaluator: boolean,
-  ): EvaluationLineStatus {
-    if (hasPrimaryEvaluator && hasSecondaryEvaluator) {
-      return 'complete';
-    } else if (hasPrimaryEvaluator || hasSecondaryEvaluator) {
-      return 'in_progress';
-    } else {
-      return 'none';
-    }
-  }
 }

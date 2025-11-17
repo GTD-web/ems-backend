@@ -13,13 +13,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProjectAssignmentManagementController = void 0;
+const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const parse_uuid_decorator_1 = require("../../decorators/parse-uuid.decorator");
-const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
-const project_assignment_api_decorators_1 = require("./decorators/project-assignment-api.decorators");
-const project_assignment_dto_1 = require("./dto/project-assignment.dto");
-const decorators_1 = require("../../decorators");
+const project_assignment_dto_1 = require("../../common/dto/evaluation-criteria/project-assignment.dto");
+const project_assignment_api_decorators_1 = require("../../common/decorators/evaluation-criteria/project-assignment-api.decorators");
 let ProjectAssignmentManagementController = class ProjectAssignmentManagementController {
     evaluationCriteriaManagementService;
     constructor(evaluationCriteriaManagementService) {
@@ -113,7 +113,7 @@ exports.ProjectAssignmentManagementController = ProjectAssignmentManagementContr
 __decorate([
     (0, project_assignment_api_decorators_1.CreateProjectAssignment)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [project_assignment_dto_1.CreateProjectAssignmentDto, Object]),
     __metadata("design:returntype", Promise)
@@ -121,7 +121,7 @@ __decorate([
 __decorate([
     (0, project_assignment_api_decorators_1.CancelProjectAssignment)(),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
@@ -173,7 +173,7 @@ __decorate([
 __decorate([
     (0, project_assignment_api_decorators_1.BulkCreateProjectAssignments)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [project_assignment_dto_1.BulkCreateProjectAssignmentDto, Object]),
     __metadata("design:returntype", Promise)
@@ -182,7 +182,7 @@ __decorate([
     (0, project_assignment_api_decorators_1.ChangeProjectAssignmentOrder)(),
     __param(0, (0, parse_uuid_decorator_1.ParseId)()),
     __param(1, (0, common_1.Query)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, project_assignment_dto_1.ChangeProjectAssignmentOrderQueryDto, Object]),
     __metadata("design:returntype", Promise)
@@ -191,7 +191,7 @@ __decorate([
     (0, project_assignment_api_decorators_1.CancelProjectAssignmentByProject)(),
     __param(0, (0, common_1.Param)('projectId', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, project_assignment_dto_1.CancelProjectAssignmentByProjectDto, Object]),
     __metadata("design:returntype", Promise)
@@ -200,7 +200,7 @@ __decorate([
     (0, project_assignment_api_decorators_1.ChangeProjectAssignmentOrderByProject)(),
     __param(0, (0, common_1.Param)('projectId', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, project_assignment_dto_1.ChangeProjectAssignmentOrderByProjectDto, Object]),
     __metadata("design:returntype", Promise)

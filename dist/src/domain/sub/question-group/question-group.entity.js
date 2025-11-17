@@ -92,10 +92,6 @@ __decorate([
 ], QuestionGroup.prototype, "isDeletable", void 0);
 exports.QuestionGroup = QuestionGroup = __decorate([
     (0, typeorm_1.Entity)('question_group'),
-    (0, typeorm_1.Index)('UQ_question_group_name_not_deleted', ['name'], {
-        unique: true,
-        where: '"deletedAt" IS NULL',
-    }),
     (0, typeorm_1.Index)(['isDefault']),
     __metadata("design:paramtypes", [Object])
 ], QuestionGroup);

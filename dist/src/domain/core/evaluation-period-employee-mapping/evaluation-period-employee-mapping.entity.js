@@ -19,6 +19,9 @@ let EvaluationPeriodEmployeeMapping = class EvaluationPeriodEmployeeMapping exte
     excludeReason;
     excludedBy;
     excludedAt;
+    isCriteriaSubmitted;
+    criteriaSubmittedAt;
+    criteriaSubmittedBy;
     constructor(data) {
         super();
         if (data) {
@@ -28,6 +31,9 @@ let EvaluationPeriodEmployeeMapping = class EvaluationPeriodEmployeeMapping exte
             this.excludeReason = null;
             this.excludedBy = null;
             this.excludedAt = null;
+            this.isCriteriaSubmitted = false;
+            this.criteriaSubmittedAt = null;
+            this.criteriaSubmittedBy = null;
             this.메타데이터를_업데이트한다(data.createdBy);
         }
     }
@@ -64,6 +70,21 @@ let EvaluationPeriodEmployeeMapping = class EvaluationPeriodEmployeeMapping exte
         this.excludeReason = excludeReason;
         this.메타데이터를_업데이트한다(updatedBy);
     }
+    평가기준을_제출한다(submittedBy) {
+        this.isCriteriaSubmitted = true;
+        this.criteriaSubmittedAt = new Date();
+        this.criteriaSubmittedBy = submittedBy;
+        this.메타데이터를_업데이트한다(submittedBy);
+    }
+    평가기준_제출을_초기화한다(updatedBy) {
+        this.isCriteriaSubmitted = false;
+        this.criteriaSubmittedAt = null;
+        this.criteriaSubmittedBy = null;
+        this.메타데이터를_업데이트한다(updatedBy);
+    }
+    평가기준이_제출되었는가() {
+        return this.isCriteriaSubmitted;
+    }
     삭제한다() {
         this.deletedAt = new Date();
     }
@@ -76,6 +97,9 @@ let EvaluationPeriodEmployeeMapping = class EvaluationPeriodEmployeeMapping exte
             excludeReason: this.excludeReason,
             excludedBy: this.excludedBy,
             excludedAt: this.excludedAt,
+            isCriteriaSubmitted: this.isCriteriaSubmitted,
+            criteriaSubmittedAt: this.criteriaSubmittedAt,
+            criteriaSubmittedBy: this.criteriaSubmittedBy,
             createdBy: this.createdBy,
             updatedBy: this.updatedBy,
             createdAt: this.createdAt,
@@ -133,6 +157,31 @@ __decorate([
     }),
     __metadata("design:type", Object)
 ], EvaluationPeriodEmployeeMapping.prototype, "excludedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'boolean',
+        default: false,
+        comment: '평가기준 제출 여부',
+    }),
+    __metadata("design:type", Boolean)
+], EvaluationPeriodEmployeeMapping.prototype, "isCriteriaSubmitted", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'timestamp with time zone',
+        nullable: true,
+        comment: '평가기준 제출 일시',
+    }),
+    __metadata("design:type", Object)
+], EvaluationPeriodEmployeeMapping.prototype, "criteriaSubmittedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        type: 'varchar',
+        length: 100,
+        nullable: true,
+        comment: '평가기준 제출 처리자 ID',
+    }),
+    __metadata("design:type", Object)
+], EvaluationPeriodEmployeeMapping.prototype, "criteriaSubmittedBy", void 0);
 exports.EvaluationPeriodEmployeeMapping = EvaluationPeriodEmployeeMapping = __decorate([
     (0, typeorm_1.Entity)('evaluation_period_employee_mapping'),
     (0, typeorm_1.Index)(['evaluationPeriodId']),

@@ -1,0 +1,133 @@
+{
+  "timestamp": "2025-11-15T08:02:12.341Z",
+  "testResults": [
+    {
+      "testName": "기본 조회 - 모든 필드가 올바르게 반환되어야 한다",
+      "result": {
+        "mappingId": "fcdefe44-6a00-4162-a4e7-99525e875c50",
+        "employeeId": "33224f50-a763-46bb-9d1f-025c93baa9c3",
+        "isEvaluationTarget": true,
+        "evaluationPeriod": {
+          "id": "b104ec3a-e9e1-4ac4-826d-26d2e8934cf3",
+          "name": "2024년 상반기 평가"
+        },
+        "employee": {
+          "id": "33224f50-a763-46bb-9d1f-025c93baa9c3",
+          "name": "김피평가"
+        },
+        "evaluationCriteria": {
+          "status": "complete",
+          "assignedProjectCount": 1,
+          "assignedWbsCount": 3
+        },
+        "wbsCriteria": {
+          "status": "complete",
+          "wbsWithCriteriaCount": 3
+        },
+        "evaluationLine": {
+          "status": "complete",
+          "hasPrimaryEvaluator": true,
+          "hasSecondaryEvaluator": true
+        },
+        "selfEvaluation": {
+          "status": "none",
+          "totalMappingCount": 0,
+          "completedMappingCount": 0,
+          "isSubmittedToEvaluator": false,
+          "isSubmittedToManager": false
+        },
+        "downwardEvaluation": {
+          "primary": {
+            "evaluatorId": "c1d724bd-93f6-4b10-bd63-826a57fb5ed0",
+            "status": "none",
+            "assignedWbsCount": 3
+          },
+          "secondary": {
+            "evaluatorsCount": 1
+          }
+        }
+      }
+    },
+    {
+      "testName": "자기평가 상태 - isSubmittedToManager 필드가 올바르게 반환되어야 한다",
+      "result": {
+        "selfEvaluation": {
+          "totalMappingCount": 2,
+          "completedMappingCount": 1,
+          "isSubmittedToEvaluator": true,
+          "isSubmittedToManager": false,
+          "totalScore": null,
+          "grade": null
+        }
+      }
+    },
+    {
+      "testName": "자기평가 전체 제출 - 모든 자기평가가 관리자에게 제출된 경우 isSubmittedToManager가 true여야 한다",
+      "result": {
+        "selfEvaluation": {
+          "totalMappingCount": 3,
+          "completedMappingCount": 3,
+          "isSubmittedToEvaluator": true,
+          "isSubmittedToManager": true,
+          "totalScore": 0,
+          "grade": "D"
+        }
+      }
+    },
+    {
+      "testName": "하향평가 상태 - 1차 및 2차 하향평가 상태가 올바르게 반환되어야 한다",
+      "result": {
+        "downwardEvaluation": {
+          "primary": {
+            "status": "in_progress",
+            "assignedWbsCount": 3,
+            "completedEvaluationCount": 2,
+            "isSubmitted": false,
+            "totalScore": null,
+            "grade": null
+          },
+          "secondary": {
+            "status": "in_progress",
+            "evaluators": [
+              {
+                "evaluatorId": "2074935f-a709-47f6-a815-a56c222a752d",
+                "status": "in_progress",
+                "assignedWbsCount": 3,
+                "completedEvaluationCount": 1,
+                "isSubmitted": false
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "testName": "존재하지 않는 직원 - null을 반환해야 한다",
+      "result": {
+        "isNull": true
+      }
+    },
+    {
+      "testName": "평가 대상 제외 - isExcluded가 true인 경우 isEvaluationTarget이 false여야 한다",
+      "result": {
+        "isEvaluationTarget": false,
+        "exclusionInfo": {
+          "isExcluded": true,
+          "excludeReason": "테스트 제외"
+        }
+      }
+    },
+    {
+      "testName": "단계별 승인 상태 - stepApproval 정보가 올바르게 반환되어야 한다",
+      "result": {
+        "stepApproval": {
+          "criteriaSettingStatus": "approved",
+          "criteriaSettingApprovedBy": "00000000-0000-0000-0000-000000000001",
+          "selfEvaluationStatus": "pending",
+          "primaryEvaluationStatus": "pending",
+          "secondaryEvaluationStatus": "pending"
+        }
+      }
+    }
+  ]
+}

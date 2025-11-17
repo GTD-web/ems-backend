@@ -1,31 +1,31 @@
-import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
-import { ParseUUID, CurrentUser } from '@interface/decorators';
-import type { AuthenticatedUser } from '@interface/decorators';
 import { DeliverableBusinessService } from '@business/deliverable/deliverable-business.service';
+import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
+import { Body, Controller, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  CreateDeliverable,
-  UpdateDeliverable,
-  DeleteDeliverable,
   BulkCreateDeliverables,
   BulkDeleteDeliverables,
+  CreateDeliverable,
+  DeleteDeliverable,
+  GetDeliverableDetail,
   GetEmployeeDeliverables,
   GetWbsDeliverables,
-  GetDeliverableDetail,
-} from './decorators/deliverable-api.decorators';
+  UpdateDeliverable,
+} from '@interface/common/decorators/performance-evaluation/deliverable-api.decorators';
 import {
-  CreateDeliverableDto,
-  UpdateDeliverableDto,
   BulkCreateDeliverablesDto,
-  BulkDeleteDeliverablesDto,
-  DeliverableResponseDto,
-  DeliverableListResponseDto,
   BulkCreateResultDto,
+  BulkDeleteDeliverablesDto,
   BulkDeleteResultDto,
+  CreateDeliverableDto,
+  DeliverableListResponseDto,
+  DeliverableResponseDto,
   GetDeliverablesQueryDto,
-} from './dto/deliverable.dto';
-import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
+  UpdateDeliverableDto,
+} from '@interface/common/dto/performance-evaluation/deliverable.dto';
 
 /**
  * 산출물 관리 컨트롤러
@@ -48,7 +48,7 @@ export class DeliverableManagementController {
     @Body() dto: CreateDeliverableDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<DeliverableResponseDto> {
-    const createdBy = user?.id || dto.createdBy || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
+    const createdBy = user.id;
 
     const deliverable = await this.deliverableBusinessService.산출물을_생성한다(
       {
@@ -73,7 +73,7 @@ export class DeliverableManagementController {
     @Body() dto: BulkCreateDeliverablesDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<BulkCreateResultDto> {
-    const createdBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
+    const createdBy = user.id;
 
     const result = await this.deliverableBusinessService.산출물을_벌크_생성한다(
       {
@@ -105,7 +105,7 @@ export class DeliverableManagementController {
     @Body() dto: BulkDeleteDeliverablesDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<BulkDeleteResultDto> {
-    const deletedBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
+    const deletedBy = user.id;
 
     const result = await this.deliverableBusinessService.산출물을_벌크_삭제한다(
       {
@@ -130,7 +130,7 @@ export class DeliverableManagementController {
     @Body() dto: UpdateDeliverableDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<DeliverableResponseDto> {
-    const updatedBy = user?.id || dto.updatedBy || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
+    const updatedBy = user.id;
 
     const deliverable = await this.deliverableBusinessService.산출물을_수정한다(
       {
@@ -157,7 +157,7 @@ export class DeliverableManagementController {
     @ParseUUID('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    const deletedBy = user?.id || uuidv4(); // TODO: 추후 사용자 인증 구현 시 수정
+    const deletedBy = user.id;
 
     await this.deliverableBusinessService.산출물을_삭제한다(id, deletedBy);
   }

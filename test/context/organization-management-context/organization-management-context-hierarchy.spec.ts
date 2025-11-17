@@ -17,7 +17,8 @@ import { EmployeeModule } from '@domain/common/employee/employee.module';
 import { SSOModule } from '@domain/common/sso/sso.module';
 import { Department } from '@domain/common/department/department.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
-import { SSOService } from '@domain/common/sso/sso.service';
+import { SSOService } from '@domain/common/sso';
+import type { ISSOService } from '@domain/common/sso/interfaces';
 import type {
   DepartmentHierarchyDto,
   DepartmentHierarchyWithEmployeesDto,
@@ -33,7 +34,7 @@ describe('OrganizationManagementContext - 하이라키 조회 통합 테스트',
   let departmentHierarchyWithEmployeesHandler: GetDepartmentHierarchyWithEmployeesQueryHandler;
   let departmentSyncService: DepartmentSyncService;
   let employeeSyncService: EmployeeSyncService;
-  let ssoService: SSOService;
+  let ssoService: ISSOService;
   let dataSource: DataSource;
   let module: TestingModule;
 
@@ -72,7 +73,7 @@ describe('OrganizationManagementContext - 하이라키 조회 통합 테스트',
       DepartmentSyncService,
     );
     employeeSyncService = module.get<EmployeeSyncService>(EmployeeSyncService);
-    ssoService = module.get<SSOService>(SSOService);
+    ssoService = module.get<ISSOService>(SSOService);
     dataSource = module.get<DataSource>(DataSource);
 
     // Repository 초기화
@@ -86,12 +87,15 @@ describe('OrganizationManagementContext - 하이라키 조회 통합 테스트',
     try {
       await ssoService.초기화한다();
       console.log('✅ SSO 서비스 초기화 완료');
-      
+
       // 초기화 확인을 위한 테스트 호출
       await ssoService.부서계층구조를조회한다({});
       console.log('✅ SSO 서비스 연결 확인 완료');
     } catch (error) {
-      console.warn('⚠️ SSO 서비스 초기화/연결 실패 (테스트는 계속 진행):', error.message);
+      console.warn(
+        '⚠️ SSO 서비스 초기화/연결 실패 (테스트는 계속 진행):',
+        error.message,
+      );
     }
   });
 
@@ -152,9 +156,7 @@ describe('OrganizationManagementContext - 하이라키 조회 통합 테스트',
 
       // 부서 맵을 생성하여 externalId로 매핑
       const allDbDepartments = await departmentRepository.find();
-      const deptMapById = new Map(
-        allDbDepartments.map((d) => [d.id, d]),
-      );
+      const deptMapById = new Map(allDbDepartments.map((d) => [d.id, d]));
 
       // 계층 구조 재귀 검증
       const validateHierarchy = (
@@ -445,4 +447,3 @@ describe('OrganizationManagementContext - 하이라키 조회 통합 테스트',
     }, 120000);
   });
 });
-

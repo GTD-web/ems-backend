@@ -1,25 +1,29 @@
+import { EvaluationCriteriaBusinessService } from '@business/evaluation-criteria/evaluation-criteria-business.service';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
-import { EvaluationCriteriaManagementService } from '../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  EvaluationCriteriaSubmissionResponseDto,
+  SubmitEvaluationCriteriaDto,
+  UpsertWbsEvaluationCriteriaBodyDto,
+  WbsEvaluationCriteriaDetailDto,
+  WbsEvaluationCriteriaDto,
+  WbsEvaluationCriteriaFilterDto,
+  WbsEvaluationCriteriaListResponseDto,
+  WbsItemEvaluationCriteriaResponseDto,
+} from '@interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 import {
   DeleteWbsEvaluationCriteria,
   DeleteWbsItemEvaluationCriteria,
   GetWbsEvaluationCriteriaDetail,
   GetWbsEvaluationCriteriaList,
   GetWbsItemEvaluationCriteria,
+  ResetEvaluationCriteriaSubmission,
+  SubmitEvaluationCriteria,
   UpsertWbsEvaluationCriteria,
-} from './decorators/wbs-evaluation-criteria-api.decorators';
-import {
-  UpsertWbsEvaluationCriteriaBodyDto,
-  WbsEvaluationCriteriaDto,
-  WbsEvaluationCriteriaDetailDto,
-  WbsEvaluationCriteriaFilterDto,
-  WbsItemEvaluationCriteriaResponseDto,
-  WbsEvaluationCriteriaListResponseDto,
-} from './dto/wbs-evaluation-criteria.dto';
-import { CurrentUser } from '../../decorators';
-import type { AuthenticatedUser } from '../../decorators';
+} from '@interface/common/decorators/evaluation-criteria/wbs-evaluation-criteria-api.decorators';
 
 /**
  * WBS 평가기준 관리 컨트롤러
@@ -32,6 +36,7 @@ import type { AuthenticatedUser } from '../../decorators';
 export class WbsEvaluationCriteriaManagementController {
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
+    private readonly evaluationCriteriaBusinessService: EvaluationCriteriaBusinessService,
   ) {}
 
   /**
@@ -130,5 +135,56 @@ export class WbsEvaluationCriteriaManagementController {
         deletedBy,
       );
     return { success };
+  }
+
+  /**
+   * 평가기준 제출
+   * 제출 시 재작성 요청이 존재하고 미응답 상태면 자동으로 완료 처리됩니다.
+   */
+  @SubmitEvaluationCriteria()
+  async submitEvaluationCriteria(
+    @Body() dto: SubmitEvaluationCriteriaDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<EvaluationCriteriaSubmissionResponseDto> {
+    const submittedBy = user.id;
+    const result =
+      await this.evaluationCriteriaBusinessService.평가기준을_제출하고_재작성요청을_완료한다(
+        dto.evaluationPeriodId,
+        dto.employeeId,
+        submittedBy,
+      );
+    return {
+      id: result.id,
+      evaluationPeriodId: result.evaluationPeriodId,
+      employeeId: result.employeeId,
+      isCriteriaSubmitted: result.isCriteriaSubmitted,
+      criteriaSubmittedAt: result.criteriaSubmittedAt,
+      criteriaSubmittedBy: result.criteriaSubmittedBy,
+    };
+  }
+
+  /**
+   * 평가기준 제출 초기화
+   */
+  @ResetEvaluationCriteriaSubmission()
+  async resetEvaluationCriteriaSubmission(
+    @Body() dto: SubmitEvaluationCriteriaDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<EvaluationCriteriaSubmissionResponseDto> {
+    const updatedBy = user.id;
+    const result =
+      await this.evaluationCriteriaManagementService.평가기준_제출을_초기화한다(
+        dto.evaluationPeriodId,
+        dto.employeeId,
+        updatedBy,
+      );
+    return {
+      id: result.id,
+      evaluationPeriodId: result.evaluationPeriodId,
+      employeeId: result.employeeId,
+      isCriteriaSubmitted: result.isCriteriaSubmitted,
+      criteriaSubmittedAt: result.criteriaSubmittedAt,
+      criteriaSubmittedBy: result.criteriaSubmittedBy,
+    };
   }
 }

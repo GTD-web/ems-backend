@@ -52,7 +52,7 @@ export declare function 평가자별_하향평가_상태를_조회한다(evaluat
     isSubmitted: boolean;
     averageScore: number | null;
 }>;
-export declare function 특정_평가자의_하향평가_상태를_조회한다(evaluationPeriodId: string, employeeId: string, evaluatorId: string, evaluationType: DownwardEvaluationType, downwardEvaluationRepository: Repository<DownwardEvaluation>, wbsAssignmentRepository: Repository<EvaluationWbsAssignment>): Promise<{
+export declare function 특정_평가자의_하향평가_상태를_조회한다(evaluationPeriodId: string, employeeId: string, evaluatorId: string, evaluationType: DownwardEvaluationType, downwardEvaluationRepository: Repository<DownwardEvaluation>, wbsAssignmentRepository: Repository<EvaluationWbsAssignment>, evaluationLineMappingRepository?: Repository<EvaluationLineMapping>, evaluationLineRepository?: Repository<EvaluationLine>): Promise<{
     status: DownwardEvaluationStatus;
     assignedWbsCount: number;
     completedEvaluationCount: number;

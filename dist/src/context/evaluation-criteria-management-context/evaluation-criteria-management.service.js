@@ -22,6 +22,7 @@ const cqrs_1 = require("@nestjs/cqrs");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const wbs_assignment_validation_service_1 = require("./services/wbs-assignment-validation.service");
+const evaluation_period_employee_mapping_service_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.service");
 const project_assignment_1 = require("./handlers/project-assignment");
 const wbs_assignment_1 = require("./handlers/wbs-assignment");
 const wbs_evaluation_criteria_1 = require("./handlers/wbs-evaluation-criteria");
@@ -33,13 +34,15 @@ let EvaluationCriteriaManagementService = EvaluationCriteriaManagementService_1 
     evaluationLineMappingRepository;
     evaluationLineRepository;
     wbsAssignmentValidationService;
+    evaluationPeriodEmployeeMappingService;
     logger = new common_1.Logger(EvaluationCriteriaManagementService_1.name);
-    constructor(commandBus, queryBus, evaluationLineMappingRepository, evaluationLineRepository, wbsAssignmentValidationService) {
+    constructor(commandBus, queryBus, evaluationLineMappingRepository, evaluationLineRepository, wbsAssignmentValidationService, evaluationPeriodEmployeeMappingService) {
         this.commandBus = commandBus;
         this.queryBus = queryBus;
         this.evaluationLineMappingRepository = evaluationLineMappingRepository;
         this.evaluationLineRepository = evaluationLineRepository;
         this.wbsAssignmentValidationService = wbsAssignmentValidationService;
+        this.evaluationPeriodEmployeeMappingService = evaluationPeriodEmployeeMappingService;
     }
     async 프로젝트를_할당한다(data, assignedBy) {
         const command = new project_assignment_1.CreateProjectAssignmentCommand(data, assignedBy);
@@ -421,6 +424,12 @@ let EvaluationCriteriaManagementService = EvaluationCriteriaManagementService_1 
         const query = new project_assignment_1.GetAvailableProjectsQuery(periodId, options);
         return await this.queryBus.execute(query);
     }
+    async 평가기준을_제출한다(evaluationPeriodId, employeeId, submittedBy) {
+        return await this.evaluationPeriodEmployeeMappingService.평가기준을_제출한다(evaluationPeriodId, employeeId, submittedBy);
+    }
+    async 평가기준_제출을_초기화한다(evaluationPeriodId, employeeId, updatedBy) {
+        return await this.evaluationPeriodEmployeeMappingService.평가기준_제출을_초기화한다(evaluationPeriodId, employeeId, updatedBy);
+    }
 };
 exports.EvaluationCriteriaManagementService = EvaluationCriteriaManagementService;
 exports.EvaluationCriteriaManagementService = EvaluationCriteriaManagementService = EvaluationCriteriaManagementService_1 = __decorate([
@@ -431,6 +440,7 @@ exports.EvaluationCriteriaManagementService = EvaluationCriteriaManagementServic
         cqrs_1.QueryBus,
         typeorm_2.Repository,
         typeorm_2.Repository,
-        wbs_assignment_validation_service_1.WbsAssignmentValidationService])
+        wbs_assignment_validation_service_1.WbsAssignmentValidationService,
+        evaluation_period_employee_mapping_service_1.EvaluationPeriodEmployeeMappingService])
 ], EvaluationCriteriaManagementService);
 //# sourceMappingURL=evaluation-criteria-management.service.js.map

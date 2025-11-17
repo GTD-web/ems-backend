@@ -1,7 +1,7 @@
 import { IQueryHandler } from '@nestjs/cqrs';
 import { Repository } from 'typeorm';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
-import { ProjectInfoDto } from '@interface/admin/evaluation-criteria/dto/project-assignment.dto';
+import { ProjectInfoDto } from '@/interface/common/dto/evaluation-criteria/project-assignment.dto';
 export declare class GetEmployeeProjectAssignmentsQuery {
     readonly employeeId: string;
     readonly periodId: string;

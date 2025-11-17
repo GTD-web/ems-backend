@@ -10,8 +10,11 @@ import { EmployeeModule } from '@domain/common/employee/employee.module';
 import { SSOModule } from '@domain/common/sso/sso.module';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { EmployeeService } from '@domain/common/employee/employee.service';
-import { SSOService } from '@domain/common/sso/sso.service';
+import { SSOService } from '@domain/common/sso';
+import type { ISSOService } from '@domain/common/sso/interfaces';
 import type { EmployeeSyncResult } from '@domain/common/employee/employee.types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * EmployeeSyncService 통합 테스트
@@ -21,12 +24,15 @@ import type { EmployeeSyncResult } from '@domain/common/employee/employee.types'
 describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
   let service: EmployeeSyncService;
   let employeeService: EmployeeService;
-  let ssoService: SSOService;
+  let ssoService: ISSOService;
   let dataSource: DataSource;
   let module: TestingModule;
 
   // Repository 참조
   let employeeRepository: Repository<Employee>;
+
+  // 테스트 결과 저장용
+  const testResults: any[] = [];
 
   beforeAll(async () => {
     module = await Test.createTestingModule({
@@ -45,7 +51,7 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
 
     service = module.get<EmployeeSyncService>(EmployeeSyncService);
     employeeService = module.get<EmployeeService>(EmployeeService);
-    ssoService = module.get<SSOService>(SSOService);
+    ssoService = module.get<ISSOService>(SSOService);
     dataSource = module.get<DataSource>(DataSource);
 
     // Repository 초기화
@@ -68,6 +74,19 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
   });
 
   afterAll(async () => {
+    // 테스트 결과를 JSON 파일로 저장
+    const outputPath = path.join(
+      __dirname,
+      'employee-sync-manager-assignment-test-result.json',
+    );
+    const output = {
+      timestamp: new Date().toISOString(),
+      testResults: testResults,
+    };
+
+    fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
+    console.log(`✅ 테스트 결과가 저장되었습니다: ${outputPath}`);
+
     await dataSource.destroy();
     await module.close();
   });
@@ -201,7 +220,7 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
       // EmployeeSyncService를 직접 생성하여 테스트
       const employeeServiceInstance =
         module.get<EmployeeService>(EmployeeService);
-      const ssoServiceInstance = module.get<SSOService>(SSOService);
+      const ssoServiceInstance = module.get<ISSOService>(SSOService);
 
       const disabledService = new EmployeeSyncService(
         employeeServiceInstance,
@@ -936,20 +955,21 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
               `    - 관리자 라인 레벨 수: ${firstDept.managerLine.length}`,
             );
 
-            // depth=0인 부서의 관리자 확인
-            const ownDept = firstDept.managerLine.find(
-              (line) => line.depth === 0,
+            // managerLine을 depth 순서대로 정렬하여 확인
+            const sortedManagerLine = [...firstDept.managerLine].sort(
+              (a, b) => a.depth - b.depth,
             );
-            if (ownDept) {
+
+            sortedManagerLine.forEach((line) => {
               console.log(
-                `    - 소속 부서(depth=0) 관리자 수: ${ownDept.managers.length}`,
+                `    - depth ${line.depth} (${line.departmentName}): 관리자 ${line.managers.length}명`,
               );
-              if (ownDept.managers.length > 0) {
+              if (line.managers.length > 0) {
                 console.log(
-                  `    - 첫 번째 관리자: ${ownDept.managers[0].name} (${ownDept.managers[0].employeeId})`,
+                  `      → 첫 번째 관리자: ${line.managers[0].name} (${line.managers[0].employeeId})`,
                 );
               }
-            }
+            });
           }
         }
       } catch (error) {
@@ -980,6 +1000,10 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
           emp.managerId !== '',
       );
 
+      const dbEmployeesWithoutManagerId = dbEmployees.filter(
+        (emp) => !emp.managerId || emp.managerId === '',
+      );
+
       console.log(`\n📊 managerId 저장 현황:`);
       console.log(
         `  - getEmployeesManagers API 호출: ${managersResponse ? '성공' : '실패'}`,
@@ -992,15 +1016,25 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
       console.log(
         `  - DB에 managerId가 저장된 직원: ${dbEmployeesWithManagerId.length}명`,
       );
+
+      console.log(
+        `  - DB에 managerId가 없는 직원: ${dbEmployeesWithoutManagerId.length}명`,
+      );
       console.log(`  - 전체 동기화된 직원: ${dbEmployees.length}명`);
 
       // managerId가 있는 직원 상세 확인
+      const employeesWithManagerDetails: any[] = [];
       if (dbEmployeesWithManagerId.length > 0) {
         console.log(`\n✅ managerId가 저장된 직원 (처음 10명):`);
         dbEmployeesWithManagerId.slice(0, 10).forEach((emp) => {
           console.log(
             `  - ${emp.name} (${emp.employeeNumber}): managerId = ${emp.managerId}`,
           );
+          employeesWithManagerDetails.push({
+            name: emp.name,
+            employeeNumber: emp.employeeNumber,
+            managerId: emp.managerId,
+          });
         });
       } else {
         console.log(`\n⚠️ DB에 managerId가 저장된 직원이 없습니다.`);
@@ -1017,42 +1051,157 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
       }
 
       // 관리자 정보가 있는 직원과 DB에 저장된 managerId 비교
-      if (managersResponse && managersResponse.employees.length > 0) {
-        const managerMap = new Map<string, string>();
+      const managerMappingDetails: any[] = [];
+      let matchedCount = 0;
+      let mismatchedCount = 0;
+      let missingMappingCount = 0;
 
-        // 관리자 정보에서 managerId 매핑 생성
+      if (managersResponse && managersResponse.employees.length > 0) {
+        const managerMap = new Map<string, string | null>();
+
+        // 새로운 로직: managerLine을 depth 순서대로 순회하여 managers가 있는 첫 번째 항목 찾기
         for (const empManager of managersResponse.employees) {
+          let foundManagerId: string | null = null;
+
           for (const deptManager of empManager.departments) {
-            const ownDepartment = deptManager.managerLine.find(
-              (line) => line.depth === 0,
+            // managerLine을 depth 순서대로 정렬
+            const sortedManagerLine = [...deptManager.managerLine].sort(
+              (a, b) => a.depth - b.depth,
             );
 
-            if (ownDepartment && ownDepartment.managers.length > 0) {
-              const managerId = ownDepartment.managers[0].employeeId;
-              managerMap.set(empManager.employeeId, managerId);
-              break;
+            // depth=0부터 순회하면서 managers가 있는 첫 번째 항목 찾기
+            for (const managerLine of sortedManagerLine) {
+              if (managerLine.managers && managerLine.managers.length > 0) {
+                foundManagerId = managerLine.managers[0].employeeId;
+                managerMappingDetails.push({
+                  employeeId: empManager.employeeId,
+                  employeeName: empManager.name,
+                  employeeNumber: empManager.employeeNumber,
+                  foundManagerId: foundManagerId,
+                  foundAtDepth: managerLine.depth,
+                  foundAtDepartment: managerLine.departmentName,
+                });
+                break; // 관리자를 찾으면 종료
+              }
+            }
+
+            if (foundManagerId) {
+              break; // 첫 번째 부서에서 관리자를 찾으면 종료
             }
           }
+
+          managerMap.set(empManager.employeeId, foundManagerId);
         }
 
         console.log(`\n📊 관리자 정보 매핑 현황:`);
         console.log(`  - 매핑된 관리자 정보: ${managerMap.size}개`);
 
         // DB 직원과 매핑 비교
-        let matchedCount = 0;
+        const comparisonDetails: any[] = [];
         for (const dbEmp of dbEmployees) {
           const expectedManagerId = managerMap.get(dbEmp.externalId);
+          const comparison = {
+            employeeId: dbEmp.id,
+            employeeName: dbEmp.name,
+            employeeNumber: dbEmp.employeeNumber,
+            externalId: dbEmp.externalId,
+            expectedManagerId: expectedManagerId || null,
+            actualManagerId: dbEmp.managerId || null,
+            status: 'unknown',
+          };
+
           if (expectedManagerId && dbEmp.managerId === expectedManagerId) {
             matchedCount++;
+            comparison.status = 'matched';
           } else if (expectedManagerId && !dbEmp.managerId) {
+            missingMappingCount++;
+            comparison.status = 'missing';
             console.log(
               `  ⚠️ 매핑 누락: ${dbEmp.name} (${dbEmp.employeeNumber}) - 예상 managerId: ${expectedManagerId}`,
             );
+          } else if (
+            expectedManagerId &&
+            dbEmp.managerId !== expectedManagerId
+          ) {
+            mismatchedCount++;
+            comparison.status = 'mismatched';
+            console.log(
+              `  ⚠️ 매핑 불일치: ${dbEmp.name} (${dbEmp.employeeNumber}) - 예상: ${expectedManagerId}, 실제: ${dbEmp.managerId}`,
+            );
+          } else if (!expectedManagerId && dbEmp.managerId) {
+            comparison.status = 'unexpected';
+            console.log(
+              `  ℹ️ 예상치 못한 managerId: ${dbEmp.name} (${dbEmp.employeeNumber}) - managerId: ${dbEmp.managerId}`,
+            );
+          } else {
+            comparison.status = 'no_manager';
           }
+
+          comparisonDetails.push(comparison);
         }
 
         console.log(`  - 매핑 일치: ${matchedCount}명`);
-        console.log(`  - 매핑 불일치: ${managerMap.size - matchedCount}명`);
+        console.log(`  - 매핑 누락: ${missingMappingCount}명`);
+        console.log(`  - 매핑 불일치: ${mismatchedCount}명`);
+
+        // 테스트 결과 저장
+        testResults.push({
+          testName:
+            '동기화 후 DB에 managerId가 제대로 저장되었는지 확인해야 한다',
+          result: {
+            syncResult: {
+              success: result.success,
+              totalProcessed: result.totalProcessed,
+              created: result.created,
+              updated: result.updated,
+            },
+            managersApi: {
+              success: managersResponse !== null,
+              totalEmployees: managersResponse?.total || 0,
+              employeesWithManagerInfo: managersResponse?.employees.length || 0,
+            },
+            dbStatistics: {
+              totalEmployees: dbEmployees.length,
+              employeesWithManagerId: dbEmployeesWithManagerId.length,
+              employeesWithoutManagerId: dbEmployeesWithoutManagerId.length,
+            },
+            mappingStatistics: {
+              totalMapped: managerMap.size,
+              matched: matchedCount,
+              missing: missingMappingCount,
+              mismatched: mismatchedCount,
+            },
+            employeesWithManagerDetails: employeesWithManagerDetails.slice(
+              0,
+              20,
+            ),
+            managerMappingDetails: managerMappingDetails.slice(0, 20),
+            comparisonDetails: comparisonDetails.slice(0, 50),
+          },
+        });
+      } else {
+        // 관리자 정보가 없는 경우
+        testResults.push({
+          testName:
+            '동기화 후 DB에 managerId가 제대로 저장되었는지 확인해야 한다',
+          result: {
+            syncResult: {
+              success: result.success,
+              totalProcessed: result.totalProcessed,
+              created: result.created,
+              updated: result.updated,
+            },
+            managersApi: {
+              success: false,
+              error: '관리자 정보 조회 실패 또는 없음',
+            },
+            dbStatistics: {
+              totalEmployees: dbEmployees.length,
+              employeesWithManagerId: dbEmployeesWithManagerId.length,
+              employeesWithoutManagerId: dbEmployeesWithoutManagerId.length,
+            },
+          },
+        });
       }
 
       // 테스트는 통과 (managerId가 없어도 정상, 있으면 저장되어야 함)

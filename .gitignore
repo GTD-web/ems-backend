@@ -1,5 +1,5 @@
 # compiled output
-# /dist
+# /dist (Vercel 배포를 위해 추적하되, 개발 중 변경사항은 skip-worktree로 무시)
 /node_modules
 /build
 
@@ -54,3 +54,6 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# SSO Mock 데이터 (실제 SSO 응답 데이터 포함)
+src/domain/common/sso/mock-data/*.json

@@ -1,26 +1,33 @@
-import { Controller, Query, Param, Body, ParseUUIDPipe } from '@nestjs/common';
-import { ParseUUID } from '@interface/decorators';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CompleteRevisionRequestByEvaluatorQueryDto } from './dto/complete-revision-request-by-evaluator-query.dto';
 import { RevisionRequestBusinessService } from '@business/revision-request/revision-request-business.service';
 import { RevisionRequestContextService } from '@context/revision-request-context';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import {
-  GetRevisionRequests,
-  GetMyRevisionRequests,
-  GetMyUnreadCount,
-  MarkRevisionRequestAsRead,
   CompleteRevisionRequest,
   CompleteRevisionRequestByEvaluator,
-} from './decorators/revision-request-api.decorators';
+  GetMyRevisionRequests,
+  GetMyUnreadCount,
+  GetRevisionRequests,
+  MarkRevisionRequestAsRead,
+} from '@interface/common/decorators/revision-request/revision-request-api.decorators';
+import { CompleteRevisionRequestByEvaluatorQueryDto } from '@interface/common/dto/revision-request/complete-revision-request-by-evaluator-query.dto';
+import { CompleteRevisionRequestByEvaluatorDto } from '@interface/common/dto/revision-request/complete-revision-request-by-evaluator.dto';
+import { CompleteRevisionRequestDto } from '@interface/common/dto/revision-request/complete-revision-request.dto';
+import { GetRevisionRequestsQueryDto } from '@interface/common/dto/revision-request/get-revision-requests-query.dto';
 import {
   RevisionRequestResponseDto,
   UnreadCountResponseDto,
-} from './dto/revision-request-response.dto';
-import { GetRevisionRequestsQueryDto } from './dto/get-revision-requests-query.dto';
-import { CompleteRevisionRequestDto } from './dto/complete-revision-request.dto';
-import { CompleteRevisionRequestByEvaluatorDto } from './dto/complete-revision-request-by-evaluator.dto';
-import { CurrentUser } from '@interface/decorators/current-user.decorator';
-import { StepApprovalStatusEnum } from '@interface/admin/step-approval/dto/update-step-approval.dto';
+} from '@interface/common/dto/revision-request/revision-request-response.dto';
+import { StepApprovalStatusEnum } from '@interface/common/dto/step-approval/update-step-approval.dto';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  Param,
+  ParseBoolPipe,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * 재작성 요청 컨트롤러
@@ -41,14 +48,18 @@ export class RevisionRequestController {
   @GetRevisionRequests()
   async getRevisionRequests(
     @Query() query: GetRevisionRequestsQueryDto,
+    @Query('isRead', new DefaultValuePipe(false), ParseBoolPipe)
+    isRead: boolean,
+    @Query('isCompleted', new DefaultValuePipe(false), ParseBoolPipe)
+    isCompleted: boolean,
   ): Promise<RevisionRequestResponseDto[]> {
     const requests =
       await this.revisionRequestContextService.전체_재작성요청목록을_조회한다({
         evaluationPeriodId: query.evaluationPeriodId,
         employeeId: query.employeeId,
         requestedBy: query.requestedBy,
-        isRead: query.isRead,
-        isCompleted: query.isCompleted,
+        isRead: isRead,
+        isCompleted: isCompleted,
         step: query.step as any,
       });
 
@@ -77,6 +88,10 @@ export class RevisionRequestController {
   @GetMyRevisionRequests()
   async getMyRevisionRequests(
     @Query() query: GetRevisionRequestsQueryDto,
+    @Query('isRead', new DefaultValuePipe(false), ParseBoolPipe)
+    isRead: boolean,
+    @Query('isCompleted', new DefaultValuePipe(false), ParseBoolPipe)
+    isCompleted: boolean,
     @CurrentUser('id') recipientId: string,
   ): Promise<RevisionRequestResponseDto[]> {
     const requests =
@@ -85,8 +100,8 @@ export class RevisionRequestController {
         {
           evaluationPeriodId: query.evaluationPeriodId,
           employeeId: query.employeeId,
-          isRead: query.isRead,
-          isCompleted: query.isCompleted,
+          isRead: isRead,
+          isCompleted: isCompleted,
           step: query.step as any,
         },
       );

@@ -256,27 +256,27 @@ describe('평가기준 정보 조회 검증 시나리오', () => {
       expect(직원현황.employeeId).toBe(testEmployeeId); // employeeId 일치 확인
 
       // 평가항목 상태 검증
-      expect(직원현황.evaluationCriteria).toBeDefined(); // evaluationCriteria 객체 존재 확인
-      expect(직원현황.evaluationCriteria.status).toBe('complete'); // evaluationCriteria.status가 'complete'인지 확인 (WBS 할당 완료)
-      expect(직원현황.evaluationCriteria.assignedProjectCount).toBeDefined(); // assignedProjectCount 확인
-      expect(직원현황.evaluationCriteria.assignedWbsCount).toBeDefined(); // assignedWbsCount 확인
+      expect(직원현황.criteriaSetup?.evaluationCriteria).toBeDefined(); // evaluationCriteria 객체 존재 확인
+      expect(직원현황.criteriaSetup?.evaluationCriteria.status).toBe(
+        'complete',
+      ); // evaluationCriteria.status가 'complete'인지 확인 (WBS 할당 완료)
+      expect(
+        직원현황.criteriaSetup?.evaluationCriteria.assignedProjectCount,
+      ).toBeDefined(); // assignedProjectCount 확인
+      expect(
+        직원현황.criteriaSetup?.evaluationCriteria.assignedWbsCount,
+      ).toBeDefined(); // assignedWbsCount 확인
 
       console.log('✅ 직원 평가기간 현황 조회 검증 완료');
-      console.log(`  - 평가항목 상태: ${직원현황.evaluationCriteria.status}`);
       console.log(
-        `  - 할당된 프로젝트 수: ${직원현황.evaluationCriteria.assignedProjectCount}`,
+        `  - 평가항목 상태: ${직원현황.criteriaSetup?.evaluationCriteria.status}`,
       );
       console.log(
-        `  - 할당된 WBS 수: ${직원현황.evaluationCriteria.assignedWbsCount}`,
+        `  - 할당된 프로젝트 수: ${직원현황.criteriaSetup?.evaluationCriteria.assignedProjectCount}`,
+      );
+      console.log(
+        `  - 할당된 WBS 수: ${직원현황.criteriaSetup?.evaluationCriteria.assignedWbsCount}`,
       );
     });
   });
 });
-
-
-
-
-
-
-
-

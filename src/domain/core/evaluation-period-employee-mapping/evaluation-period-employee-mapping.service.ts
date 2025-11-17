@@ -48,7 +48,39 @@ export class EvaluationPeriodEmployeeMappingService
     // 유효성 검사
     this.유효성을_검사한다(data);
 
-    // 중복 검사
+    // 소프트 삭제된 레코드 확인 및 복구
+    const softDeletedMapping = await this.repository.findOne({
+      where: {
+        evaluationPeriodId: data.evaluationPeriodId,
+        employeeId: data.employeeId,
+      },
+      withDeleted: true, // 소프트 삭제된 레코드도 조회
+    });
+
+    if (softDeletedMapping && softDeletedMapping.deletedAt) {
+      // 소프트 삭제된 레코드가 있으면 복구
+      this.logger.log(
+        `소프트 삭제된 매핑 복구 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`,
+      );
+      // TypeORM의 restore 메서드를 사용하여 복구
+      await this.repository.restore(softDeletedMapping.id);
+      // 복구 후 엔티티를 다시 조회하여 최신 상태 확인
+      const restored = await this.repository.findOne({
+        where: { id: softDeletedMapping.id },
+      });
+      if (!restored) {
+        throw new Error(
+          `매핑 복구 후 조회 실패 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`,
+        );
+      }
+      // 메타데이터 업데이트
+      restored.메타데이터를_업데이트한다(data.createdBy);
+      const saved = await this.repository.save(restored);
+      this.logger.log(`평가 대상자 복구 완료 - ID: ${saved.id}`);
+      return saved.DTO로_변환한다();
+    }
+
+    // 중복 검사 (활성 레코드만 확인)
     await this.중복_검사를_수행한다(data.evaluationPeriodId, data.employeeId);
 
     try {
@@ -497,7 +529,7 @@ export class EvaluationPeriodEmployeeMappingService
 
   /**
    * 평가기간별 모든 평가 대상자의 수정 가능 상태를 일괄 변경한다
-   * 
+   *
    * 주의: 엔티티 필드가 삭제되었으므로 이 메서드는 실제로 아무 작업도 수행하지 않습니다.
    * 평가기간별 일괄 변경 기능과의 호환성을 위해 유지됩니다.
    */
@@ -546,6 +578,94 @@ export class EvaluationPeriodEmployeeMappingService
         evaluationPeriodId,
         employeeId,
       );
+    }
+  }
+
+  /**
+   * 평가기준을 제출한다
+   */
+  async 평가기준을_제출한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    submittedBy: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    this.logger.log(
+      `평가기준 제출 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+    );
+
+    const mapping = await this.맵핑을_조회한다(evaluationPeriodId, employeeId);
+    if (!mapping) {
+      throw new EvaluationPeriodEmployeeMappingNotFoundException(
+        `평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+    }
+
+    if (mapping.평가기준이_제출되었는가()) {
+      this.logger.warn(
+        `이미 제출된 평가기준 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+      // 이미 제출된 경우에도 성공으로 처리 (멱등성 보장)
+      return mapping.DTO로_변환한다();
+    }
+
+    try {
+      mapping.평가기준을_제출한다(submittedBy);
+      const saved = await this.repository.save(mapping);
+
+      this.logger.log(
+        `평가기준 제출 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+      return saved.DTO로_변환한다();
+    } catch (error) {
+      this.logger.error(
+        `평가기준 제출 실패 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+        error.stack,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 평가기준 제출을 초기화한다
+   */
+  async 평가기준_제출을_초기화한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    updatedBy: string,
+  ): Promise<EvaluationPeriodEmployeeMappingDto> {
+    this.logger.log(
+      `평가기준 제출 초기화 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+    );
+
+    const mapping = await this.맵핑을_조회한다(evaluationPeriodId, employeeId);
+    if (!mapping) {
+      throw new EvaluationPeriodEmployeeMappingNotFoundException(
+        `평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+    }
+
+    if (!mapping.평가기준이_제출되었는가()) {
+      this.logger.warn(
+        `제출되지 않은 평가기준 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+      // 제출되지 않은 경우에도 성공으로 처리 (멱등성 보장)
+      return mapping.DTO로_변환한다();
+    }
+
+    try {
+      mapping.평가기준_제출을_초기화한다(updatedBy);
+      const saved = await this.repository.save(mapping);
+
+      this.logger.log(
+        `평가기준 제출 초기화 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+      );
+      return saved.DTO로_변환한다();
+    } catch (error) {
+      this.logger.error(
+        `평가기준 제출 초기화 실패 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+        error.stack,
+      );
+      throw error;
     }
   }
 

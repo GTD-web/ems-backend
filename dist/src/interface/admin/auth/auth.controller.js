@@ -16,9 +16,9 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const auth_service_1 = require("../../../context/auth-context/auth.service");
-const current_user_decorator_1 = require("../../decorators/current-user.decorator");
-const decorators_1 = require("./decorators");
-const dto_1 = require("./dto");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const login_dto_1 = require("../../common/dto/auth/login.dto");
+const auth_decorators_1 = require("../../common/decorators/auth/auth.decorators");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -66,14 +66,14 @@ let AuthController = class AuthController {
 };
 exports.AuthController = AuthController;
 __decorate([
-    (0, decorators_1.Login)(),
+    (0, auth_decorators_1.Login)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [dto_1.LoginDto]),
+    __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
-    (0, decorators_1.GetMe)(),
+    (0, auth_decorators_1.GetMe)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

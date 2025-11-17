@@ -28,6 +28,27 @@ let EvaluationPeriodEmployeeMappingService = EvaluationPeriodEmployeeMappingServ
     async 평가대상자를_등록한다(data) {
         this.logger.log(`평가 대상자 등록 시작 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`);
         this.유효성을_검사한다(data);
+        const softDeletedMapping = await this.repository.findOne({
+            where: {
+                evaluationPeriodId: data.evaluationPeriodId,
+                employeeId: data.employeeId,
+            },
+            withDeleted: true,
+        });
+        if (softDeletedMapping && softDeletedMapping.deletedAt) {
+            this.logger.log(`소프트 삭제된 매핑 복구 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`);
+            await this.repository.restore(softDeletedMapping.id);
+            const restored = await this.repository.findOne({
+                where: { id: softDeletedMapping.id },
+            });
+            if (!restored) {
+                throw new Error(`매핑 복구 후 조회 실패 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`);
+            }
+            restored.메타데이터를_업데이트한다(data.createdBy);
+            const saved = await this.repository.save(restored);
+            this.logger.log(`평가 대상자 복구 완료 - ID: ${saved.id}`);
+            return saved.DTO로_변환한다();
+        }
         await this.중복_검사를_수행한다(data.evaluationPeriodId, data.employeeId);
         try {
             const mapping = new evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping(data);
@@ -284,6 +305,48 @@ let EvaluationPeriodEmployeeMappingService = EvaluationPeriodEmployeeMappingServ
         const existing = await this.맵핑을_조회한다(evaluationPeriodId, employeeId);
         if (existing) {
             throw new evaluation_period_employee_mapping_exceptions_1.EvaluationPeriodEmployeeMappingDuplicateException(evaluationPeriodId, employeeId);
+        }
+    }
+    async 평가기준을_제출한다(evaluationPeriodId, employeeId, submittedBy) {
+        this.logger.log(`평가기준 제출 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+        const mapping = await this.맵핑을_조회한다(evaluationPeriodId, employeeId);
+        if (!mapping) {
+            throw new evaluation_period_employee_mapping_exceptions_1.EvaluationPeriodEmployeeMappingNotFoundException(`평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+        }
+        if (mapping.평가기준이_제출되었는가()) {
+            this.logger.warn(`이미 제출된 평가기준 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+            return mapping.DTO로_변환한다();
+        }
+        try {
+            mapping.평가기준을_제출한다(submittedBy);
+            const saved = await this.repository.save(mapping);
+            this.logger.log(`평가기준 제출 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+            return saved.DTO로_변환한다();
+        }
+        catch (error) {
+            this.logger.error(`평가기준 제출 실패 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`, error.stack);
+            throw error;
+        }
+    }
+    async 평가기준_제출을_초기화한다(evaluationPeriodId, employeeId, updatedBy) {
+        this.logger.log(`평가기준 제출 초기화 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+        const mapping = await this.맵핑을_조회한다(evaluationPeriodId, employeeId);
+        if (!mapping) {
+            throw new evaluation_period_employee_mapping_exceptions_1.EvaluationPeriodEmployeeMappingNotFoundException(`평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+        }
+        if (!mapping.평가기준이_제출되었는가()) {
+            this.logger.warn(`제출되지 않은 평가기준 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+            return mapping.DTO로_변환한다();
+        }
+        try {
+            mapping.평가기준_제출을_초기화한다(updatedBy);
+            const saved = await this.repository.save(mapping);
+            this.logger.log(`평가기준 제출 초기화 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+            return saved.DTO로_변환한다();
+        }
+        catch (error) {
+            this.logger.error(`평가기준 제출 초기화 실패 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`, error.stack);
+            throw error;
         }
     }
     유효성을_검사한다(data) {

@@ -1,9 +1,9 @@
+import type { ISSOService } from '@domain/common/sso/interfaces';
 import { OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Employee } from '../../domain/common/employee/employee.entity';
 import { EmployeeService } from '../../domain/common/employee/employee.service';
 import { EmployeeSyncResult } from '../../domain/common/employee/employee.types';
-import { SSOService } from '@domain/common/sso/sso.service';
 export declare class EmployeeSyncService implements OnModuleInit {
     private readonly employeeService;
     private readonly configService;
@@ -11,7 +11,7 @@ export declare class EmployeeSyncService implements OnModuleInit {
     private readonly logger;
     private readonly syncEnabled;
     private readonly systemUserId;
-    constructor(employeeService: EmployeeService, configService: ConfigService, ssoService: SSOService);
+    constructor(employeeService: EmployeeService, configService: ConfigService, ssoService: ISSOService);
     onModuleInit(): Promise<void>;
     fetchExternalEmployees(useHierarchyAPI?: boolean): Promise<any[]>;
     private mapSSOEmployeeToDto;

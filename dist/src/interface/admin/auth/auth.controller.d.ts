@@ -1,6 +1,7 @@
 import { AuthService } from '@context/auth-context/auth.service';
-import type { AuthenticatedUser } from '@interface/decorators/current-user.decorator';
-import { LoginDto, LoginResponseDto, UserInfoDto } from './dto';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { LoginResponseDto, UserInfoDto } from '@interface/common/dto/auth/login-response.dto';
+import { LoginDto } from '@interface/common/dto/auth/login.dto';
 export declare class AuthController {
     private readonly authService;
     constructor(authService: AuthService);

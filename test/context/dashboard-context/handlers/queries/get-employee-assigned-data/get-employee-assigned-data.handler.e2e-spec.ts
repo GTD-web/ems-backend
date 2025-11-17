@@ -91,8 +91,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
     dataSource = module.get<DataSource>(DataSource);
 
     // Repository 초기화
-    evaluationPeriodRepository =
-      dataSource.getRepository(EvaluationPeriod);
+    evaluationPeriodRepository = dataSource.getRepository(EvaluationPeriod);
     employeeRepository = dataSource.getRepository(Employee);
     departmentRepository = dataSource.getRepository(Department);
     mappingRepository = dataSource.getRepository(
@@ -101,14 +100,13 @@ describe('GetEmployeeAssignedDataHandler', () => {
     projectAssignmentRepository = dataSource.getRepository(
       EvaluationProjectAssignment,
     );
-    wbsAssignmentRepository = dataSource.getRepository(
-      EvaluationWbsAssignment,
-    );
+    wbsAssignmentRepository = dataSource.getRepository(EvaluationWbsAssignment);
     projectRepository = dataSource.getRepository(Project);
     wbsItemRepository = dataSource.getRepository(WbsItem);
     evaluationLineRepository = dataSource.getRepository(EvaluationLine);
-    evaluationLineMappingRepository =
-      dataSource.getRepository(EvaluationLineMapping);
+    evaluationLineMappingRepository = dataSource.getRepository(
+      EvaluationLineMapping,
+    );
 
     // 데이터베이스 스키마 동기화
     await dataSource.synchronize(true);
@@ -157,7 +155,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -166,8 +163,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
       maxSelfEvaluationRate: 120,
       createdBy: systemAdminId,
     });
-    const savedPeriod =
-      await evaluationPeriodRepository.save(evaluationPeriod);
+    const savedPeriod = await evaluationPeriodRepository.save(evaluationPeriod);
     evaluationPeriodId = savedPeriod.id;
 
     // 3. 피평가자 직원 생성
@@ -257,8 +253,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
       isAutoAssigned: false,
       createdBy: systemAdminId,
     });
-    const savedPrimaryLine =
-      await evaluationLineRepository.save(primaryLine);
+    const savedPrimaryLine = await evaluationLineRepository.save(primaryLine);
     primaryEvaluationLineId = savedPrimaryLine.id;
 
     // 11. 평가라인 매핑 생성 (1차 평가자)
@@ -346,9 +341,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
       );
 
       // isCompleted 검증
-      expect(typeof wbs.primaryDownwardEvaluation!.isCompleted).toBe(
-        'boolean',
-      );
+      expect(typeof wbs.primaryDownwardEvaluation!.isCompleted).toBe('boolean');
       expect(wbs.primaryDownwardEvaluation!.isCompleted).toBe(false);
 
       // JSON 출력
@@ -361,9 +354,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
         null,
         2,
       );
-      process.stdout.write(
-        '\n📊 primaryDownwardEvaluation 유닛테스트 결과:\n',
-      );
+      process.stdout.write('\n📊 primaryDownwardEvaluation 유닛테스트 결과:\n');
       process.stdout.write(jsonOutput);
       process.stdout.write('\n\n');
     });
@@ -421,9 +412,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
       );
 
       // When & Then
-      await expect(handler.execute(query)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
       await expect(handler.execute(query)).rejects.toThrow(
         '평가기간을 찾을 수 없습니다',
       );
@@ -439,9 +428,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
       );
 
       // When & Then
-      await expect(handler.execute(query)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
       await expect(handler.execute(query)).rejects.toThrow(
         '직원을 찾을 수 없습니다',
       );
@@ -469,9 +456,7 @@ describe('GetEmployeeAssignedDataHandler', () => {
       );
 
       // When & Then
-      await expect(handler.execute(query)).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(handler.execute(query)).rejects.toThrow(NotFoundException);
       await expect(handler.execute(query)).rejects.toThrow(
         '평가기간에 등록되지 않은 직원입니다',
       );
@@ -494,7 +479,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
         name: '2024년 하반기 평가',
         description: '프로젝트 없는 테스트',
         startDate: new Date('2024-07-01'),
-        endDate: new Date('2024-12-31'),
         status: EvaluationPeriodStatus.IN_PROGRESS,
         currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
         criteriaSettingEnabled: true,
@@ -520,9 +504,6 @@ describe('GetEmployeeAssignedDataHandler', () => {
       const mapping = mappingRepository.create({
         evaluationPeriodId: savedPeriod.id,
         employeeId: savedEmployee.id,
-        isSelfEvaluationEditable: true,
-        isPrimaryEvaluationEditable: true,
-        isSecondaryEvaluationEditable: true,
         createdBy: systemAdminId,
       });
       await mappingRepository.save(mapping);
@@ -639,4 +620,3 @@ describe('GetEmployeeAssignedDataHandler', () => {
     });
   });
 });
-

@@ -1,48 +1,44 @@
-import { Body, Controller, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
-import { CurrentUser } from '@interface/decorators';
-import type { AuthenticatedUser } from '@interface/decorators';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { Body, Controller, Param, ParseUUIDPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  CreateQuestionGroup,
-  UpdateQuestionGroup,
-  DeleteQuestionGroup,
-  GetQuestionGroup,
-  GetQuestionGroups,
-  GetDefaultQuestionGroup,
+  AddMultipleQuestionsToGroup,
+  AddQuestionToGroup,
+  CopyEvaluationQuestion,
   CreateEvaluationQuestion,
-  UpdateEvaluationQuestion,
+  CreateQuestionGroup,
   DeleteEvaluationQuestion,
+  DeleteQuestionGroup,
+  GetDefaultQuestionGroup,
   GetEvaluationQuestion,
   GetEvaluationQuestions,
-  CopyEvaluationQuestion,
-  AddQuestionToGroup,
-  AddMultipleQuestionsToGroup,
-  ReorderGroupQuestions,
-  RemoveQuestionFromGroup,
-  MoveQuestionUp,
-  MoveQuestionDown,
   GetGroupQuestions,
+  GetQuestionGroup,
+  GetQuestionGroups,
   GetQuestionGroupsByQuestion,
-  GetPartLeaderQuestionSettings,
-  UpdatePartLeaderQuestionSettings,
-} from './decorators/evaluation-question-api.decorators';
+  MoveQuestionDown,
+  MoveQuestionUp,
+  RemoveQuestionFromGroup,
+  ReorderGroupQuestions,
+  UpdateEvaluationQuestion,
+  UpdateQuestionGroup,
+} from '@interface/common/decorators/performance-evaluation/evaluation-question-api.decorators';
 import {
-  CreateQuestionGroupDto,
-  UpdateQuestionGroupDto,
-  QuestionGroupResponseDto,
-  CreateEvaluationQuestionDto,
-  UpdateEvaluationQuestionDto,
-  EvaluationQuestionResponseDto,
-  AddQuestionToGroupDto,
   AddMultipleQuestionsToGroupDto,
-  ReorderGroupQuestionsDto,
-  QuestionGroupMappingResponseDto,
-  SuccessResponseDto,
+  AddQuestionToGroupDto,
   BatchSuccessResponseDto,
-  PartLeaderQuestionSettingsResponseDto,
-  UpdatePartLeaderQuestionSettingsDto,
-} from './dto/evaluation-question.dto';
+  CreateEvaluationQuestionDto,
+  CreateQuestionGroupDto,
+  EvaluationQuestionResponseDto,
+  QuestionGroupMappingResponseDto,
+  QuestionGroupResponseDto,
+  ReorderGroupQuestionsDto,
+  SuccessResponseDto,
+  UpdateEvaluationQuestionDto,
+  UpdateQuestionGroupDto,
+} from '@interface/common/dto/performance-evaluation/evaluation-question.dto';
 
 /**
  * 평가 질문 관리 컨트롤러
@@ -156,98 +152,6 @@ export class EvaluationQuestionManagementController {
 
   // ==================== 평가 질문 관리 ====================
 
-  // 🔹 주의: 정적 라우트를 동적 라우트(:id)보다 먼저 정의해야 합니다!
-
-  /**
-   * 파트장 질문 설정 조회
-   */
-  @GetPartLeaderQuestionSettings()
-  async getPartLeaderQuestionSettings(): Promise<PartLeaderQuestionSettingsResponseDto> {
-    // "파트장 평가 질문" 그룹 조회
-    const questionGroups =
-      await this.evaluationQuestionManagementService.질문그룹목록을_조회한다({
-        nameSearch: '파트장 평가 질문',
-      });
-
-    const partLeaderGroup = questionGroups.find(
-      (group) => group.name === '파트장 평가 질문',
-    );
-
-    if (!partLeaderGroup) {
-      throw new Error('파트장 평가 질문 그룹을 찾을 수 없습니다.');
-    }
-
-    // 그룹의 질문 목록 조회 (displayOrder 순)
-    const questions =
-      await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(
-        partLeaderGroup.id,
-      );
-
-    return {
-      group: partLeaderGroup,
-      questions,
-    };
-  }
-
-  /**
-   * 파트장 질문 설정 업데이트
-   */
-  @UpdatePartLeaderQuestionSettings()
-  async updatePartLeaderQuestionSettings(
-    @Body() dto: UpdatePartLeaderQuestionSettingsDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<PartLeaderQuestionSettingsResponseDto> {
-    const updatedBy = user.id;
-
-    // "파트장 평가 질문" 그룹 조회
-    const questionGroups =
-      await this.evaluationQuestionManagementService.질문그룹목록을_조회한다({
-        nameSearch: '파트장 평가 질문',
-      });
-
-    const partLeaderGroup = questionGroups.find(
-      (group) => group.name === '파트장 평가 질문',
-    );
-
-    if (!partLeaderGroup) {
-      throw new Error('파트장 평가 질문 그룹을 찾을 수 없습니다.');
-    }
-
-    // 기존 매핑 모두 제거
-    const existingMappings =
-      await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(
-        partLeaderGroup.id,
-      );
-
-    for (const mapping of existingMappings) {
-      await this.evaluationQuestionManagementService.그룹에서_질문을_제거한다(
-        mapping.id,
-        updatedBy,
-      );
-    }
-
-    // 새로운 질문들 추가
-    if (dto.questionIds.length > 0) {
-      await this.evaluationQuestionManagementService.그룹에_여러_질문을_추가한다(
-        partLeaderGroup.id,
-        dto.questionIds,
-        0, // startDisplayOrder
-        updatedBy,
-      );
-    }
-
-    // 업데이트된 설정 조회
-    const updatedQuestions =
-      await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(
-        partLeaderGroup.id,
-      );
-
-    return {
-      group: partLeaderGroup,
-      questions: updatedQuestions,
-    };
-  }
-
   /**
    * 평가 질문 생성
    */
@@ -320,6 +224,18 @@ export class EvaluationQuestionManagementController {
   }
 
   /**
+   * 평가 질문 조회
+   */
+  @GetEvaluationQuestion()
+  async getEvaluationQuestion(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<EvaluationQuestionResponseDto> {
+    return await this.evaluationQuestionManagementService.평가질문을_조회한다(
+      id,
+    );
+  }
+
+  /**
    * 평가 질문 목록 조회
    */
   @GetEvaluationQuestions()
@@ -347,18 +263,6 @@ export class EvaluationQuestionManagementController {
       id: newQuestionId,
       message: '평가 질문이 성공적으로 복사되었습니다.',
     };
-  }
-
-  /**
-   * 평가 질문 조회
-   */
-  @GetEvaluationQuestion()
-  async getEvaluationQuestion(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<EvaluationQuestionResponseDto> {
-    return await this.evaluationQuestionManagementService.평가질문을_조회한다(
-      id,
-    );
   }
 
   // ==================== 질문-그룹 매핑 관리 ====================

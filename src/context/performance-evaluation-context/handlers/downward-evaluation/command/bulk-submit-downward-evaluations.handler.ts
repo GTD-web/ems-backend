@@ -5,7 +5,6 @@ import { Repository } from 'typeorm';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { DownwardEvaluationService } from '@domain/core/downward-evaluation/downward-evaluation.service';
 import {
-  DownwardEvaluationNotFoundException,
   DownwardEvaluationAlreadyCompletedException,
   DownwardEvaluationValidationException,
 } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
@@ -74,10 +73,19 @@ export class BulkSubmitDownwardEvaluationsHandler
         },
       });
 
+      // 하향평가가 없는 경우 빈 결과 반환 (스킵)
       if (evaluations.length === 0) {
-        throw new DownwardEvaluationNotFoundException(
-          `하향평가를 찾을 수 없습니다. (evaluatorId: ${evaluatorId}, evaluateeId: ${evaluateeId}, periodId: ${periodId}, evaluationType: ${evaluationType})`,
+        this.logger.debug(
+          `하향평가가 없어 제출을 건너뜀 - 평가자: ${evaluatorId}, 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가유형: ${evaluationType}`,
         );
+        return {
+          submittedCount: 0,
+          skippedCount: 0,
+          failedCount: 0,
+          submittedIds: [],
+          skippedIds: [],
+          failedItems: [],
+        };
       }
 
       const submittedIds: string[] = [];

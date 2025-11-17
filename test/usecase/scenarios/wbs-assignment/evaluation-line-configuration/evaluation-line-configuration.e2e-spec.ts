@@ -198,10 +198,12 @@ describe('평가라인 변경 관리 시나리오', () => {
           },
         );
 
-      expect(직원현황.evaluationLine).toBeDefined();
-      expect(직원현황.evaluationLine.hasPrimaryEvaluator).toBe(true);
+      expect(직원현황.criteriaSetup?.evaluationLine).toBeDefined();
+      expect(직원현황.criteriaSetup?.evaluationLine.hasPrimaryEvaluator).toBe(
+        true,
+      );
       expect(['in_progress', 'complete']).toContain(
-        직원현황.evaluationLine.status,
+        직원현황.criteriaSetup?.evaluationLine.status,
       );
 
       console.log('✅ 대시보드 API 검증 완료');
@@ -327,7 +329,9 @@ describe('평가라인 변경 관리 시나리오', () => {
           (emp: any) => emp.employeeId === employeeId,
         );
         expect(직원현황).toBeDefined();
-        expect(직원현황.evaluationLine.hasPrimaryEvaluator).toBe(true);
+        expect(직원현황.criteriaSetup?.evaluationLine.hasPrimaryEvaluator).toBe(
+          true,
+        );
       }
 
       console.log('✅ 배치 구성 후 대시보드 검증 완료');
@@ -395,8 +399,10 @@ describe('평가라인 변경 관리 시나리오', () => {
           },
         );
 
-      expect(직원현황.evaluationLine).toBeDefined();
-      expect(직원현황.evaluationLine.hasSecondaryEvaluator).toBe(true);
+      expect(직원현황.criteriaSetup?.evaluationLine).toBeDefined();
+      expect(직원현황.criteriaSetup?.evaluationLine.hasSecondaryEvaluator).toBe(
+        true,
+      );
 
       console.log('✅ 대시보드 API 검증 완료');
     });
@@ -535,7 +541,9 @@ describe('평가라인 변경 관리 시나리오', () => {
           (emp: any) => emp.employeeId === employeeId,
         );
         expect(직원현황).toBeDefined();
-        expect(직원현황.evaluationLine.hasSecondaryEvaluator).toBe(true);
+        expect(
+          직원현황.criteriaSetup?.evaluationLine.hasSecondaryEvaluator,
+        ).toBe(true);
       }
 
       console.log('✅ 배치 구성 후 대시보드 검증 완료');
@@ -610,9 +618,13 @@ describe('평가라인 변경 관리 시나리오', () => {
           },
         );
 
-      expect(직원현황.evaluationLine.hasPrimaryEvaluator).toBe(true);
-      expect(직원현황.evaluationLine.hasSecondaryEvaluator).toBe(true);
-      expect(직원현황.evaluationLine.status).toBe('complete');
+      expect(직원현황.criteriaSetup?.evaluationLine.hasPrimaryEvaluator).toBe(
+        true,
+      );
+      expect(직원현황.criteriaSetup?.evaluationLine.hasSecondaryEvaluator).toBe(
+        true,
+      );
+      expect(직원현황.criteriaSetup?.evaluationLine.status).toBe('complete');
 
       console.log('✅ 1차/2차 평가자 통합 구성 검증 완료');
     });
@@ -895,10 +907,14 @@ describe('평가라인 변경 관리 시나리오', () => {
       // 검증
       expect(직원현황.employee).toBeDefined();
       expect(직원현황.employeeId).toBe(testEmployeeId);
-      expect(직원현황.evaluationLine).toBeDefined();
-      expect(직원현황.evaluationLine.status).toBe('complete');
-      expect(직원현황.evaluationLine.hasPrimaryEvaluator).toBe(true);
-      expect(직원현황.evaluationLine.hasSecondaryEvaluator).toBe(true);
+      expect(직원현황.criteriaSetup?.evaluationLine).toBeDefined();
+      expect(직원현황.criteriaSetup?.evaluationLine.status).toBe('complete');
+      expect(직원현황.criteriaSetup?.evaluationLine.hasPrimaryEvaluator).toBe(
+        true,
+      );
+      expect(직원현황.criteriaSetup?.evaluationLine.hasSecondaryEvaluator).toBe(
+        true,
+      );
 
       console.log('✅ 직원 평가기간 현황 조회 검증 완료');
     });

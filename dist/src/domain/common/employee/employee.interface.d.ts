@@ -27,4 +27,5 @@ export interface IEmployee {
     readonly excludeReason?: string | null;
     readonly excludedBy?: string | null;
     readonly excludedAt?: Date | null;
+    readonly isAccessible: boolean;
 }

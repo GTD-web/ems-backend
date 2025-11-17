@@ -125,6 +125,15 @@ export class EvaluationTargetScenario {
   }
 
   /**
+   * 등록되지 않은 직원 목록을 조회한다
+   */
+  async 등록되지_않은_직원_목록을_조회한다(
+    evaluationPeriodId: string,
+  ): Promise<any> {
+    return await this.apiClient.getUnregisteredEmployees(evaluationPeriodId);
+  }
+
+  /**
    * 평가대상자 등록을 해제한다
    */
   async 평가대상자_등록을_해제한다(

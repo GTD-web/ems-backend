@@ -23,7 +23,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any[]> {
     const response = await this.testSuite
       .request()
-      .post(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/bulk`)
+      .post(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/bulk`,
+      )
       .send({
         employeeIds: config.employeeIds,
       })
@@ -45,7 +47,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .post(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}`)
+      .post(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}`,
+      )
       .expect(201);
 
     return response.body;
@@ -64,7 +68,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .post(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}`)
+      .post(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}`,
+      )
       .expect(409);
 
     return response.body;
@@ -87,7 +93,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .patch(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/exclude`)
+      .patch(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/exclude`,
+      )
       .send({
         excludeReason: config.excludeReason,
       })
@@ -109,7 +117,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .patch(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/include`)
+      .patch(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/include`,
+      )
       .expect(200);
 
     return response.body;
@@ -163,7 +173,9 @@ export class EvaluationTargetApiClient {
   async getEmployeeEvaluationPeriods(employeeId: string): Promise<any> {
     const response = await this.testSuite
       .request()
-      .get(`/admin/evaluation-periods/employees/${employeeId}/evaluation-periods`)
+      .get(
+        `/admin/evaluation-periods/employees/${employeeId}/evaluation-periods`,
+      )
       .expect(200);
 
     return response.body;
@@ -182,7 +194,26 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .get(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/check`)
+      .get(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/check`,
+      )
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * 등록되지 않은 직원 목록 조회 API 호출
+   *
+   * @param evaluationPeriodId - 평가기간 ID
+   * @returns 등록되지 않은 직원 목록
+   */
+  async getUnregisteredEmployees(evaluationPeriodId: string): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get(
+        `/admin/evaluation-periods/${evaluationPeriodId}/targets/unregistered-employees`,
+      )
       .expect(200);
 
     return response.body;
@@ -203,7 +234,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .delete(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}`)
+      .delete(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}`,
+      )
       .expect(200);
 
     return response.body;
@@ -215,7 +248,9 @@ export class EvaluationTargetApiClient {
    * @param evaluationPeriodId - 평가기간 ID
    * @returns 해제된 대상자 수
    */
-  async unregisterAllEvaluationTargets(evaluationPeriodId: string): Promise<any> {
+  async unregisterAllEvaluationTargets(
+    evaluationPeriodId: string,
+  ): Promise<any> {
     const response = await this.testSuite
       .request()
       .delete(`/admin/evaluation-periods/${evaluationPeriodId}/targets`)
@@ -239,7 +274,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .post(`/admin/evaluation-periods/${config.invalidEvaluationPeriodId}/targets/bulk`)
+      .post(
+        `/admin/evaluation-periods/${config.invalidEvaluationPeriodId}/targets/bulk`,
+      )
       .send({
         employeeIds: config.employeeIds,
       })
@@ -261,12 +298,13 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .post(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.invalidEmployeeId}`)
+      .post(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.invalidEmployeeId}`,
+      )
       .expect(404);
 
     return response.body;
   }
-
 
   /**
    * 제외되지 않은 대상자를 포함 시도 (409 에러)
@@ -281,7 +319,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .patch(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/include`)
+      .patch(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/include`,
+      )
       .expect(409);
 
     return response.body;
@@ -302,7 +342,9 @@ export class EvaluationTargetApiClient {
   }): Promise<any> {
     const response = await this.testSuite
       .request()
-      .patch(`/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/exclude`)
+      .patch(
+        `/admin/evaluation-periods/${config.evaluationPeriodId}/targets/${config.employeeId}/exclude`,
+      )
       .send({
         excludeReason: config.excludeReason,
       })
@@ -339,7 +381,9 @@ export class EvaluationTargetApiClient {
    * @param evaluationPeriodId - 평가기간 ID
    * @returns 400 에러 응답
    */
-  async registerBulkEvaluationTargetsWithEmptyArray(evaluationPeriodId: string): Promise<any> {
+  async registerBulkEvaluationTargetsWithEmptyArray(
+    evaluationPeriodId: string,
+  ): Promise<any> {
     const response = await this.testSuite
       .request()
       .post(`/admin/evaluation-periods/${evaluationPeriodId}/targets/bulk`)

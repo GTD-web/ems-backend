@@ -13,12 +13,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationLineManagementController = void 0;
+const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
-const current_user_decorator_1 = require("../../decorators/current-user.decorator");
-const evaluation_line_api_decorators_1 = require("./decorators/evaluation-line-api.decorators");
-const evaluation_line_dto_1 = require("./dto/evaluation-line.dto");
+const evaluation_line_dto_1 = require("../../common/dto/evaluation-criteria/evaluation-line.dto");
+const evaluation_line_api_decorators_1 = require("../../common/decorators/evaluation-criteria/evaluation-line-api.decorators");
 let EvaluationLineManagementController = class EvaluationLineManagementController {
     evaluationCriteriaManagementService;
     constructor(evaluationCriteriaManagementService) {

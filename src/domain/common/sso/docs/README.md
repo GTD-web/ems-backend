@@ -33,9 +33,9 @@ SSO_CLIENT_SECRET=72970ccc55d3fd612ed78c667d1c94882281f64a4ae4be7cc0ac85149f9020
 
 # 선택 (기본값 사용 가능)
 SSO_SYSTEM_NAME=EMS-PROD  # 시스템 이름 (기본값: EMS-PROD)
-SSO_TIMEOUT_MS=10000
-SSO_RETRIES=3
-SSO_RETRY_DELAY=200
+SSO_TIMEOUT_MS=30000  # 타임아웃 (기본값: 30000ms = 30초, Vercel Pro 플랜 권장)
+SSO_RETRIES=2  # 재시도 횟수 (기본값: 2회)
+SSO_RETRY_DELAY=1000  # 재시도 지연 (기본값: 1000ms = 1초)
 SSO_ENABLE_LOGGING=false
 ```
 

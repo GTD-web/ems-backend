@@ -691,13 +691,14 @@ export class EvaluationPeriodValidationService {
     id: string,
     manager?: EntityManager,
   ): Promise<void> {
-    // 이미 활성 평가 기간이 있는지 확인
-    const activePeriod = await this.현재진행중평가기간조회한다(manager);
-    if (activePeriod && activePeriod.id !== id) {
-      throw new EvaluationPeriodBusinessRuleViolationException(
-        `이미 활성화된 평가 기간이 있습니다: ${activePeriod.name}`,
-      );
-    }
+    // TODO: 여러 평가기간 동시 시작 정책 검증 주석처리 (임시)
+    // // 이미 활성 평가 기간이 있는지 확인
+    // const activePeriod = await this.현재진행중평가기간조회한다(manager);
+    // if (activePeriod && activePeriod.id !== id) {
+    //   throw new EvaluationPeriodBusinessRuleViolationException(
+    //     `이미 활성화된 평가 기간이 있습니다: ${activePeriod.name}`,
+    //   );
+    // }
   }
 
   /**

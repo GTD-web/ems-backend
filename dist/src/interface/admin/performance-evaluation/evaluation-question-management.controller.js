@@ -13,12 +13,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationQuestionManagementController = void 0;
+const evaluation_question_management_service_1 = require("../../../context/evaluation-question-management-context/evaluation-question-management.service");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const evaluation_question_management_service_1 = require("../../../context/evaluation-question-management-context/evaluation-question-management.service");
-const decorators_1 = require("../../decorators");
-const evaluation_question_api_decorators_1 = require("./decorators/evaluation-question-api.decorators");
-const evaluation_question_dto_1 = require("./dto/evaluation-question.dto");
+const evaluation_question_api_decorators_1 = require("../../common/decorators/performance-evaluation/evaluation-question-api.decorators");
+const evaluation_question_dto_1 = require("../../common/dto/performance-evaluation/evaluation-question.dto");
 let EvaluationQuestionManagementController = class EvaluationQuestionManagementController {
     evaluationQuestionManagementService;
     constructor(evaluationQuestionManagementService) {
@@ -59,42 +59,6 @@ let EvaluationQuestionManagementController = class EvaluationQuestionManagementC
     async getQuestionGroup(id) {
         return await this.evaluationQuestionManagementService.질문그룹을_조회한다(id);
     }
-    async getPartLeaderQuestionSettings() {
-        const questionGroups = await this.evaluationQuestionManagementService.질문그룹목록을_조회한다({
-            nameSearch: '파트장 평가 질문',
-        });
-        const partLeaderGroup = questionGroups.find((group) => group.name === '파트장 평가 질문');
-        if (!partLeaderGroup) {
-            throw new Error('파트장 평가 질문 그룹을 찾을 수 없습니다.');
-        }
-        const questions = await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(partLeaderGroup.id);
-        return {
-            group: partLeaderGroup,
-            questions,
-        };
-    }
-    async updatePartLeaderQuestionSettings(dto, user) {
-        const updatedBy = user.id;
-        const questionGroups = await this.evaluationQuestionManagementService.질문그룹목록을_조회한다({
-            nameSearch: '파트장 평가 질문',
-        });
-        const partLeaderGroup = questionGroups.find((group) => group.name === '파트장 평가 질문');
-        if (!partLeaderGroup) {
-            throw new Error('파트장 평가 질문 그룹을 찾을 수 없습니다.');
-        }
-        const existingMappings = await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(partLeaderGroup.id);
-        for (const mapping of existingMappings) {
-            await this.evaluationQuestionManagementService.그룹에서_질문을_제거한다(mapping.id, updatedBy);
-        }
-        if (dto.questionIds.length > 0) {
-            await this.evaluationQuestionManagementService.그룹에_여러_질문을_추가한다(partLeaderGroup.id, dto.questionIds, 0, updatedBy);
-        }
-        const updatedQuestions = await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(partLeaderGroup.id);
-        return {
-            group: partLeaderGroup,
-            questions: updatedQuestions,
-        };
-    }
     async createEvaluationQuestion(dto, user) {
         const createdBy = user.id;
         const questionId = await this.evaluationQuestionManagementService.평가질문을_생성한다({
@@ -125,6 +89,9 @@ let EvaluationQuestionManagementController = class EvaluationQuestionManagementC
         const deletedBy = user.id;
         await this.evaluationQuestionManagementService.평가질문을_삭제한다(id, deletedBy);
     }
+    async getEvaluationQuestion(id) {
+        return await this.evaluationQuestionManagementService.평가질문을_조회한다(id);
+    }
     async getEvaluationQuestions() {
         return await this.evaluationQuestionManagementService.평가질문목록을_조회한다();
     }
@@ -135,9 +102,6 @@ let EvaluationQuestionManagementController = class EvaluationQuestionManagementC
             id: newQuestionId,
             message: '평가 질문이 성공적으로 복사되었습니다.',
         };
-    }
-    async getEvaluationQuestion(id) {
-        return await this.evaluationQuestionManagementService.평가질문을_조회한다(id);
     }
     async addQuestionToGroup(dto, user) {
         const createdBy = user.id;
@@ -200,7 +164,7 @@ exports.EvaluationQuestionManagementController = EvaluationQuestionManagementCon
 __decorate([
     (0, evaluation_question_api_decorators_1.CreateQuestionGroup)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [evaluation_question_dto_1.CreateQuestionGroupDto, Object]),
     __metadata("design:returntype", Promise)
@@ -209,7 +173,7 @@ __decorate([
     (0, evaluation_question_api_decorators_1.UpdateQuestionGroup)(),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_question_dto_1.UpdateQuestionGroupDto, Object]),
     __metadata("design:returntype", Promise)
@@ -217,7 +181,7 @@ __decorate([
 __decorate([
     (0, evaluation_question_api_decorators_1.DeleteQuestionGroup)(),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
@@ -242,23 +206,9 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], EvaluationQuestionManagementController.prototype, "getQuestionGroup", null);
 __decorate([
-    (0, evaluation_question_api_decorators_1.GetPartLeaderQuestionSettings)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], EvaluationQuestionManagementController.prototype, "getPartLeaderQuestionSettings", null);
-__decorate([
-    (0, evaluation_question_api_decorators_1.UpdatePartLeaderQuestionSettings)(),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [evaluation_question_dto_1.UpdatePartLeaderQuestionSettingsDto, Object]),
-    __metadata("design:returntype", Promise)
-], EvaluationQuestionManagementController.prototype, "updatePartLeaderQuestionSettings", null);
-__decorate([
     (0, evaluation_question_api_decorators_1.CreateEvaluationQuestion)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [evaluation_question_dto_1.CreateEvaluationQuestionDto, Object]),
     __metadata("design:returntype", Promise)
@@ -267,7 +217,7 @@ __decorate([
     (0, evaluation_question_api_decorators_1.UpdateEvaluationQuestion)(),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
-    __param(2, (0, decorators_1.CurrentUser)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, evaluation_question_dto_1.UpdateEvaluationQuestionDto, Object]),
     __metadata("design:returntype", Promise)
@@ -275,11 +225,18 @@ __decorate([
 __decorate([
     (0, evaluation_question_api_decorators_1.DeleteEvaluationQuestion)(),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationQuestionManagementController.prototype, "deleteEvaluationQuestion", null);
+__decorate([
+    (0, evaluation_question_api_decorators_1.GetEvaluationQuestion)(),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], EvaluationQuestionManagementController.prototype, "getEvaluationQuestion", null);
 __decorate([
     (0, evaluation_question_api_decorators_1.GetEvaluationQuestions)(),
     __metadata("design:type", Function),
@@ -289,22 +246,15 @@ __decorate([
 __decorate([
     (0, evaluation_question_api_decorators_1.CopyEvaluationQuestion)(),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], EvaluationQuestionManagementController.prototype, "copyEvaluationQuestion", null);
 __decorate([
-    (0, evaluation_question_api_decorators_1.GetEvaluationQuestion)(),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], EvaluationQuestionManagementController.prototype, "getEvaluationQuestion", null);
-__decorate([
     (0, evaluation_question_api_decorators_1.AddQuestionToGroup)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [evaluation_question_dto_1.AddQuestionToGroupDto, Object]),
     __metadata("design:returntype", Promise)
@@ -312,7 +262,7 @@ __decorate([
 __decorate([
     (0, evaluation_question_api_decorators_1.AddMultipleQuestionsToGroup)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [evaluation_question_dto_1.AddMultipleQuestionsToGroupDto, Object]),
     __metadata("design:returntype", Promise)
@@ -320,7 +270,7 @@ __decorate([
 __decorate([
     (0, evaluation_question_api_decorators_1.ReorderGroupQuestions)(),
     __param(0, (0, common_1.Body)()),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [evaluation_question_dto_1.ReorderGroupQuestionsDto, Object]),
     __metadata("design:returntype", Promise)
@@ -328,7 +278,7 @@ __decorate([
 __decorate([
     (0, evaluation_question_api_decorators_1.RemoveQuestionFromGroup)(),
     __param(0, (0, common_1.Param)('mappingId', common_1.ParseUUIDPipe)),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
@@ -336,7 +286,7 @@ __decorate([
 __decorate([
     (0, evaluation_question_api_decorators_1.MoveQuestionUp)(),
     __param(0, (0, common_1.Param)('mappingId', common_1.ParseUUIDPipe)),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
@@ -344,7 +294,7 @@ __decorate([
 __decorate([
     (0, evaluation_question_api_decorators_1.MoveQuestionDown)(),
     __param(0, (0, common_1.Param)('mappingId', common_1.ParseUUIDPipe)),
-    __param(1, (0, decorators_1.CurrentUser)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)

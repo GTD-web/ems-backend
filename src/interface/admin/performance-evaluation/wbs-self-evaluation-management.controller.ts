@@ -4,8 +4,9 @@ import {
 } from '@context/performance-evaluation-context/handlers/self-evaluation';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
-import type { AuthenticatedUser } from '@interface/decorators';
-import { CurrentUser, ParseUUID } from '@interface/decorators';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
 import { Body, Controller, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -27,7 +28,7 @@ import {
   SubmitWbsSelfEvaluationsByProject,
   SubmitWbsSelfEvaluationsToEvaluatorByProject,
   UpsertWbsSelfEvaluation,
-} from './decorators/wbs-self-evaluation-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/wbs-self-evaluation-api.decorators';
 import {
   ClearAllWbsSelfEvaluationsResponseDto,
   ClearWbsSelfEvaluationsByProjectResponseDto,
@@ -40,7 +41,7 @@ import {
   WbsSelfEvaluationDetailResponseDto,
   WbsSelfEvaluationFilterDto,
   WbsSelfEvaluationResponseDto,
-} from './dto/wbs-self-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 
 /**
  * WBS 자기평가 관리 컨트롤러

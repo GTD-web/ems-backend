@@ -2,10 +2,10 @@ import { StepApprovalContextService } from '@context/step-approval-context';
 import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
 import { StepApprovalBusinessService } from '@business/step-approval/step-approval-business.service';
-import { UpdateStepApprovalDto } from './dto/update-step-approval.dto';
-import { UpdateSecondaryStepApprovalDto } from './dto/update-secondary-step-approval.dto';
-import { StepApprovalEnumsResponseDto } from './dto/step-approval-enums.dto';
-import { StepTypeEnum } from './dto/update-step-approval.dto';
+import { UpdateStepApprovalDto } from '@interface/common/dto/step-approval/update-step-approval.dto';
+import { UpdateSecondaryStepApprovalDto } from '@interface/common/dto/step-approval/update-secondary-step-approval.dto';
+import { StepApprovalEnumsResponseDto } from '@interface/common/dto/step-approval/step-approval-enums.dto';
+import { StepTypeEnum } from '@interface/common/dto/step-approval/update-step-approval.dto';
 export declare class StepApprovalController {
     private readonly stepApprovalContextService;
     private readonly wbsSelfEvaluationBusinessService;

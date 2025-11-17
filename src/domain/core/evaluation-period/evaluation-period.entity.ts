@@ -508,7 +508,7 @@ export class EvaluationPeriod
   만료된_상태인가(): boolean {
     // endDate가 제거되었으므로 항상 false 반환
     // 만료 여부는 peerEvaluationDeadline을 기준으로 판단해야 함
-    return false;
+    return this.completedDate !== undefined;
   }
 
   /**

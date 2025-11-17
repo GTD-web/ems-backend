@@ -15,7 +15,6 @@ import { EmployeeEvaluationStepApproval } from '@domain/sub/employee-evaluation-
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
-import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
@@ -30,6 +29,7 @@ import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-reque
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
+import { RecipientType } from '@/domain/sub/evaluation-revision-request';
 
 /**
  * Dashboard Context - StepApproval 통합 테스트
@@ -156,7 +156,6 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -185,9 +184,6 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);
@@ -802,7 +798,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       const recipient = recipientRepository.create({
         revisionRequestId: savedRevisionRequest.id,
         recipientId: secondaryEvaluatorId1,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: systemAdminId,
@@ -881,7 +877,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       const recipient = recipientRepository.create({
         revisionRequestId: savedRevisionRequest.id,
         recipientId: secondaryEvaluatorId1,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: true,
         readAt: now,
         isCompleted: true,
@@ -949,7 +945,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       const recipient1 = recipientRepository.create({
         revisionRequestId: savedRequest1.id,
         recipientId: secondaryEvaluatorId1,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: true,
         readAt: now,
         isCompleted: true,
@@ -975,7 +971,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       const recipient2 = recipientRepository.create({
         revisionRequestId: savedRequest2.id,
         recipientId: secondaryEvaluatorId2,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: true,
         readAt: now,
         isCompleted: true,
@@ -1053,7 +1049,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       const recipient1 = recipientRepository.create({
         revisionRequestId: savedRequest1.id,
         recipientId: secondaryEvaluatorId1,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: true,
         readAt: now,
         isCompleted: true,
@@ -1079,7 +1075,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       const recipient2 = recipientRepository.create({
         revisionRequestId: savedRequest2.id,
         recipientId: secondaryEvaluatorId2,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: false,
         isCompleted: false,
         createdBy: systemAdminId,
@@ -1154,7 +1150,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       const recipient = recipientRepository.create({
         revisionRequestId: savedRevisionRequest.id,
         recipientId: secondaryEvaluatorId1,
-        recipientType: 'secondary_evaluator',
+        recipientType: RecipientType.SECONDARY_EVALUATOR,
         isRead: true,
         readAt: now,
         isCompleted: true,

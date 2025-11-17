@@ -51,16 +51,28 @@ export class SecondaryDownwardEvaluationScenario extends BaseDownwardEvaluationS
   async 이차하향평가를_제출한다(config: {
     evaluateeId: string;
     periodId: string;
-    wbsId: string;
+    wbsId?: string; // bulk-submit 사용 시 선택적
     evaluatorId: string;
   }): Promise<any> {
-    console.log(`📤 2차 하향평가 제출 시작...`);
+    console.log(`📤 2차 하향평가 제출 시작... (bulk-submit 사용)`);
 
-    await this.apiClient.submitSecondary(config);
+    // bulk-submit API 사용
+    const result = await this.apiClient.bulkSubmit({
+      evaluateeId: config.evaluateeId,
+      periodId: config.periodId,
+      evaluatorId: config.evaluatorId,
+      evaluationType: 'secondary',
+    });
 
-    console.log(`✅ 2차 하향평가 제출 완료`);
+    console.log(`✅ 2차 하향평가 제출 완료 (제출된 개수: ${result.submittedCount})`);
 
-    return { isSubmitted: true, evaluatorType: 'secondary' };
+    return { 
+      isSubmitted: true, 
+      evaluatorType: 'secondary',
+      submittedCount: result.submittedCount,
+      skippedCount: result.skippedCount,
+      failedCount: result.failedCount,
+    };
   }
 
   /**

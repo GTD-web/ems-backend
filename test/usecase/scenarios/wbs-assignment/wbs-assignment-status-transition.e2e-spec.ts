@@ -164,12 +164,18 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       );
 
       expect(초기직원상태).toBeDefined();
-      expect(초기직원상태.evaluationCriteria?.status).toBe('none');
-      expect(초기직원상태.evaluationCriteria?.assignedProjectCount).toBe(0);
-      expect(초기직원상태.evaluationCriteria?.assignedWbsCount).toBe(0);
+      expect(초기직원상태.criteriaSetup?.evaluationCriteria?.status).toBe(
+        'none',
+      );
+      expect(
+        초기직원상태.criteriaSetup?.evaluationCriteria?.assignedProjectCount,
+      ).toBe(0);
+      expect(
+        초기직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount,
+      ).toBe(0);
 
       console.log(
-        `✅ 초기 상태 검증 완료 - status: ${초기직원상태.evaluationCriteria?.status}`,
+        `✅ 초기 상태 검증 완료 - status: ${초기직원상태.criteriaSetup?.evaluationCriteria?.status}`,
       );
 
       // ========================================
@@ -188,18 +194,20 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       );
 
       expect(프로젝트할당후직원상태).toBeDefined();
-      expect(프로젝트할당후직원상태.evaluationCriteria?.status).toBe(
-        'in_progress',
-      );
       expect(
-        프로젝트할당후직원상태.evaluationCriteria?.assignedProjectCount,
+        프로젝트할당후직원상태.criteriaSetup?.evaluationCriteria?.status,
+      ).toBe('in_progress');
+      expect(
+        프로젝트할당후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedProjectCount,
       ).toBe(1);
-      expect(프로젝트할당후직원상태.evaluationCriteria?.assignedWbsCount).toBe(
-        0,
-      );
+      expect(
+        프로젝트할당후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedWbsCount,
+      ).toBe(0);
 
       console.log(
-        `✅ 프로젝트 할당 후 상태 검증 완료 - status: ${프로젝트할당후직원상태.evaluationCriteria?.status}, projectCount: ${프로젝트할당후직원상태.evaluationCriteria?.assignedProjectCount}`,
+        `✅ 프로젝트 할당 후 상태 검증 완료 - status: ${프로젝트할당후직원상태.criteriaSetup?.evaluationCriteria?.status}, projectCount: ${프로젝트할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedProjectCount}`,
       );
 
       // ========================================
@@ -223,16 +231,19 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       );
 
       expect(WBS할당후직원상태).toBeDefined();
-      expect(WBS할당후직원상태.evaluationCriteria?.status).toBe('complete');
-      expect(WBS할당후직원상태.evaluationCriteria?.assignedProjectCount).toBe(
-        1,
+      expect(WBS할당후직원상태.criteriaSetup?.evaluationCriteria?.status).toBe(
+        'complete',
       );
       expect(
-        WBS할당후직원상태.evaluationCriteria?.assignedWbsCount,
+        WBS할당후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedProjectCount,
+      ).toBe(1);
+      expect(
+        WBS할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount,
       ).toBeGreaterThanOrEqual(1);
 
       console.log(
-        `✅ WBS 할당 후 상태 검증 완료 - status: ${WBS할당후직원상태.evaluationCriteria?.status}, wbsCount: ${WBS할당후직원상태.evaluationCriteria?.assignedWbsCount}`,
+        `✅ WBS 할당 후 상태 검증 완료 - status: ${WBS할당후직원상태.criteriaSetup?.evaluationCriteria?.status}, wbsCount: ${WBS할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount}`,
       );
 
       // ========================================
@@ -258,14 +269,19 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       );
 
       expect(WBS취소후직원상태).toBeDefined();
-      expect(WBS취소후직원상태.evaluationCriteria?.status).toBe('in_progress');
-      expect(WBS취소후직원상태.evaluationCriteria?.assignedProjectCount).toBe(
-        1,
+      expect(WBS취소후직원상태.criteriaSetup?.evaluationCriteria?.status).toBe(
+        'in_progress',
       );
-      expect(WBS취소후직원상태.evaluationCriteria?.assignedWbsCount).toBe(0);
+      expect(
+        WBS취소후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedProjectCount,
+      ).toBe(1);
+      expect(
+        WBS취소후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount,
+      ).toBe(0);
 
       console.log(
-        `✅ WBS 취소 후 상태 검증 완료 - status: ${WBS취소후직원상태.evaluationCriteria?.status}, wbsCount: ${WBS취소후직원상태.evaluationCriteria?.assignedWbsCount}`,
+        `✅ WBS 취소 후 상태 검증 완료 - status: ${WBS취소후직원상태.criteriaSetup?.evaluationCriteria?.status}, wbsCount: ${WBS취소후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount}`,
       );
 
       // ========================================
@@ -312,16 +328,20 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       );
 
       expect(프로젝트취소후직원상태).toBeDefined();
-      expect(프로젝트취소후직원상태.evaluationCriteria?.status).toBe('none');
       expect(
-        프로젝트취소후직원상태.evaluationCriteria?.assignedProjectCount,
+        프로젝트취소후직원상태.criteriaSetup?.evaluationCriteria?.status,
+      ).toBe('none');
+      expect(
+        프로젝트취소후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedProjectCount,
       ).toBe(0);
-      expect(프로젝트취소후직원상태.evaluationCriteria?.assignedWbsCount).toBe(
-        0,
-      );
+      expect(
+        프로젝트취소후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedWbsCount,
+      ).toBe(0);
 
       console.log(
-        `✅ 프로젝트 취소 후 상태 검증 완료 - status: ${프로젝트취소후직원상태.evaluationCriteria?.status}`,
+        `✅ 프로젝트 취소 후 상태 검증 완료 - status: ${프로젝트취소후직원상태.criteriaSetup?.evaluationCriteria?.status}`,
       );
       console.log(
         `\n🎉 전체 상태 전환 시나리오 검증 완료: none → in_progress → complete → in_progress → none`,
@@ -382,21 +402,26 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       );
 
       expect(다중할당후직원상태).toBeDefined();
-      expect(다중할당후직원상태.evaluationCriteria?.status).toBe('complete');
-      expect(다중할당후직원상태.evaluationCriteria?.assignedProjectCount).toBe(
-        3,
+      expect(다중할당후직원상태.criteriaSetup?.evaluationCriteria?.status).toBe(
+        'complete',
       );
-      expect(다중할당후직원상태.evaluationCriteria?.assignedWbsCount).toBe(3);
+      expect(
+        다중할당후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedProjectCount,
+      ).toBe(3);
+      expect(
+        다중할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount,
+      ).toBe(3);
 
       console.log(`✅ 다중 할당 후 상태 검증 완료`);
       console.log(
-        `  - status: ${다중할당후직원상태.evaluationCriteria?.status}`,
+        `  - status: ${다중할당후직원상태.criteriaSetup?.evaluationCriteria?.status}`,
       );
       console.log(
-        `  - projectCount: ${다중할당후직원상태.evaluationCriteria?.assignedProjectCount}`,
+        `  - projectCount: ${다중할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedProjectCount}`,
       );
       console.log(
-        `  - wbsCount: ${다중할당후직원상태.evaluationCriteria?.assignedWbsCount}`,
+        `  - wbsCount: ${다중할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount}`,
       );
 
       // ========================================
@@ -420,20 +445,25 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       );
 
       expect(일부취소후직원상태).toBeDefined();
-      expect(일부취소후직원상태.evaluationCriteria?.status).toBe('complete'); // 여전히 complete (다른 WBS가 있음)
-      expect(일부취소후직원상태.evaluationCriteria?.assignedProjectCount).toBe(
-        3,
-      );
-      expect(일부취소후직원상태.evaluationCriteria?.assignedWbsCount).toBe(2); // 하나 취소됨
+      expect(일부취소후직원상태.criteriaSetup?.evaluationCriteria?.status).toBe(
+        'complete',
+      ); // 여전히 complete (다른 WBS가 있음)
+      expect(
+        일부취소후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedProjectCount,
+      ).toBe(3);
+      expect(
+        일부취소후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount,
+      ).toBe(2); // 하나 취소됨
 
       console.log(
         `✅ 일부 WBS 취소 후 상태 검증 완료 - 여전히 complete 상태 유지`,
       );
       console.log(
-        `  - status: ${일부취소후직원상태.evaluationCriteria?.status}`,
+        `  - status: ${일부취소후직원상태.criteriaSetup?.evaluationCriteria?.status}`,
       );
       console.log(
-        `  - wbsCount: ${일부취소후직원상태.evaluationCriteria?.assignedWbsCount}`,
+        `  - wbsCount: ${일부취소후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount}`,
       );
 
       console.log(`\n🎉 다중 할당 상태 검증 시나리오 완료`);
@@ -487,8 +517,12 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
       }
 
       expect(할당후직원상태).toBeDefined();
-      expect(할당후직원상태.evaluationCriteria?.status).toBe('complete');
-      expect(할당후직원상태.evaluationCriteria?.assignedWbsCount).toBe(2);
+      expect(할당후직원상태.criteriaSetup?.evaluationCriteria?.status).toBe(
+        'complete',
+      );
+      expect(
+        할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount,
+      ).toBe(2);
 
       console.log(`✅ WBS 할당 후 complete 상태 확인`);
 
@@ -510,8 +544,13 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
         (emp: any) => emp.employeeId === testEmployeeId,
       );
 
-      expect(첫번째취소후직원상태.evaluationCriteria?.status).toBe('complete');
-      expect(첫번째취소후직원상태.evaluationCriteria?.assignedWbsCount).toBe(1);
+      expect(
+        첫번째취소후직원상태.criteriaSetup?.evaluationCriteria?.status,
+      ).toBe('complete');
+      expect(
+        첫번째취소후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedWbsCount,
+      ).toBe(1);
 
       console.log(`✅ 첫 번째 WBS 취소 후 여전히 complete 상태`);
 
@@ -533,14 +572,19 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
         (emp: any) => emp.employeeId === testEmployeeId,
       );
 
-      expect(모두취소후직원상태.evaluationCriteria?.status).toBe('in_progress');
-      expect(모두취소후직원상태.evaluationCriteria?.assignedWbsCount).toBe(0);
-      expect(모두취소후직원상태.evaluationCriteria?.assignedProjectCount).toBe(
-        1,
+      expect(모두취소후직원상태.criteriaSetup?.evaluationCriteria?.status).toBe(
+        'in_progress',
       );
+      expect(
+        모두취소후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount,
+      ).toBe(0);
+      expect(
+        모두취소후직원상태.criteriaSetup?.evaluationCriteria
+          ?.assignedProjectCount,
+      ).toBe(1);
 
       console.log(
-        `✅ 모든 WBS 취소 후 in_progress로 전환 - projectCount: ${모두취소후직원상태.evaluationCriteria?.assignedProjectCount}`,
+        `✅ 모든 WBS 취소 후 in_progress로 전환 - projectCount: ${모두취소후직원상태.criteriaSetup?.evaluationCriteria?.assignedProjectCount}`,
       );
       console.log(
         `\n🎉 모든 WBS 취소 시 상태 전환 시나리오 완료: complete → in_progress`,
@@ -561,13 +605,19 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
 
       expect(초기직원상태).toBeDefined();
       expect(초기직원상태.employeeId).toBe(testEmployeeId);
-      expect(초기직원상태.evaluationCriteria).toBeDefined();
-      expect(초기직원상태.evaluationCriteria.status).toBe('none');
-      expect(초기직원상태.evaluationCriteria.assignedProjectCount).toBe(0);
-      expect(초기직원상태.evaluationCriteria.assignedWbsCount).toBe(0);
+      expect(초기직원상태.criteriaSetup?.evaluationCriteria).toBeDefined();
+      expect(초기직원상태.criteriaSetup?.evaluationCriteria.status).toBe(
+        'none',
+      );
+      expect(
+        초기직원상태.criteriaSetup?.evaluationCriteria.assignedProjectCount,
+      ).toBe(0);
+      expect(
+        초기직원상태.criteriaSetup?.evaluationCriteria.assignedWbsCount,
+      ).toBe(0);
 
       console.log(
-        `✅ 프로젝트 미할당 시 none 상태 유지 검증 완료 - status: ${초기직원상태.evaluationCriteria.status}`,
+        `✅ 프로젝트 미할당 시 none 상태 유지 검증 완료 - status: ${초기직원상태.criteriaSetup?.evaluationCriteria.status}`,
       );
     });
 
@@ -595,9 +645,15 @@ describe('평가항목 상태(evaluationCriteria.status) 변경 검증 시나리
         (emp: any) => emp.employeeId === testEmployeeId,
       );
 
-      expect(할당후직원상태.evaluationCriteria?.status).toBe('complete');
-      expect(할당후직원상태.evaluationCriteria?.assignedProjectCount).toBe(1);
-      expect(할당후직원상태.evaluationCriteria?.assignedWbsCount).toBe(1);
+      expect(할당후직원상태.criteriaSetup?.evaluationCriteria?.status).toBe(
+        'complete',
+      );
+      expect(
+        할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedProjectCount,
+      ).toBe(1);
+      expect(
+        할당후직원상태.criteriaSetup?.evaluationCriteria?.assignedWbsCount,
+      ).toBe(1);
 
       console.log(`✅ WBS 할당으로 complete 상태 전환 검증 완료`);
     });

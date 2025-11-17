@@ -40,9 +40,7 @@ import type {
   ClearWbsSelfEvaluationsByProjectResponse,
 } from './handlers/self-evaluation';
 // 평가 수정 가능 상태 관련 커맨드
-import {
-  UpdatePeriodAllEvaluationEditableStatusCommand,
-} from './handlers/evaluation-editable-status';
+import { UpdatePeriodAllEvaluationEditableStatusCommand } from './handlers/evaluation-editable-status';
 import type { UpdatePeriodAllEvaluationEditableStatusResponse } from './handlers/evaluation-editable-status';
 
 // 동료평가 관련 커맨드 및 쿼리
@@ -112,7 +110,7 @@ import {
   EmployeeSelfEvaluationsResponseDto,
   WbsSelfEvaluationBasicDto,
   WbsSelfEvaluationResponseDto,
-} from '@interface/admin/performance-evaluation/dto/wbs-self-evaluation.dto';
+} from '@/interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import { IPerformanceEvaluationService } from './interfaces/performance-evaluation.interface';
 
@@ -1022,7 +1020,7 @@ export class PerformanceEvaluationService
 
   /**
    * 평가기간별 모든 평가 대상자의 수정 가능 상태를 일괄 변경한다
-   * 
+   *
    * 주의: 엔티티 필드가 삭제되었으므로 이 메서드는 실제로 아무 작업도 수행하지 않습니다.
    * 평가기간별 일괄 변경 기능과의 호환성을 위해 유지됩니다.
    */

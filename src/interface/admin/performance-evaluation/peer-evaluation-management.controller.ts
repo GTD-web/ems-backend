@@ -1,12 +1,11 @@
-import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { v4 as uuidv4 } from 'uuid';
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
 import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
 import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
-import { ParseUUID, CurrentUser } from '@interface/decorators';
-import type { AuthenticatedUser } from '@interface/decorators';
+import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { v4 as uuidv4 } from 'uuid';
 import {
   RequestPeerEvaluation,
   RequestPeerEvaluationToMultipleEvaluators,
@@ -22,22 +21,24 @@ import {
   CancelPeerEvaluation,
   CancelPeerEvaluationsByPeriod,
   UpsertPeerEvaluationAnswers,
-} from './decorators/peer-evaluation-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/peer-evaluation-api.decorators';
 import {
+  AssignedEvaluateeDto,
+  BulkPeerEvaluationRequestResponseDto,
+  GetEvaluatorAssignedEvaluateesQueryDto,
+  PeerEvaluationFilterDto,
+  PeerEvaluationListResponseDto,
+  PeerEvaluationResponseDto,
+  RequestMultiplePeerEvaluationsDto,
   RequestPeerEvaluationDto,
   RequestPeerEvaluationToMultipleEvaluatorsDto,
-  RequestMultiplePeerEvaluationsDto,
   RequestPartLeaderPeerEvaluationsDto,
   CreatePeerEvaluationBodyDto,
-  PeerEvaluationFilterDto,
-  PeerEvaluationResponseDto,
-  BulkPeerEvaluationRequestResponseDto,
-  PeerEvaluationListResponseDto,
-  GetEvaluatorAssignedEvaluateesQueryDto,
-  AssignedEvaluateeDto,
   UpsertPeerEvaluationAnswersDto,
   UpsertPeerEvaluationAnswersResponseDto,
-} from './dto/peer-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/peer-evaluation.dto';
+import { Body, Controller, Param, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * 동료평가 관리 컨트롤러
@@ -60,8 +61,9 @@ export class PeerEvaluationManagementController {
   @RequestPeerEvaluation()
   async requestPeerEvaluation(
     @Body() dto: RequestPeerEvaluationDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<PeerEvaluationResponseDto> {
-    const requestedBy = dto.requestedBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
+    const requestedBy = user.id;
 
     const evaluationId =
       await this.peerEvaluationBusinessService.동료평가를_요청한다({
@@ -85,8 +87,9 @@ export class PeerEvaluationManagementController {
   @RequestPeerEvaluationToMultipleEvaluators()
   async requestPeerEvaluationToMultipleEvaluators(
     @Body() dto: RequestPeerEvaluationToMultipleEvaluatorsDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<BulkPeerEvaluationRequestResponseDto> {
-    const requestedBy = dto.requestedBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
+    const requestedBy = user.id;
 
     const result =
       await this.peerEvaluationBusinessService.여러_평가자에게_동료평가를_요청한다(
@@ -119,8 +122,9 @@ export class PeerEvaluationManagementController {
   @RequestMultiplePeerEvaluations()
   async requestMultiplePeerEvaluations(
     @Body() dto: RequestMultiplePeerEvaluationsDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<BulkPeerEvaluationRequestResponseDto> {
-    const requestedBy = dto.requestedBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
+    const requestedBy = user.id;
 
     const result =
       await this.peerEvaluationBusinessService.여러_피평가자에_대한_동료평가를_요청한다(
@@ -394,8 +398,11 @@ export class PeerEvaluationManagementController {
    * 동료평가 요청 취소
    */
   @CancelPeerEvaluation()
-  async cancelPeerEvaluation(@Param('id') id: string): Promise<void> {
-    const cancelledBy = uuidv4(); // TODO: 추후 요청자 ID로 변경
+  async cancelPeerEvaluation(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    const cancelledBy = user.id;
 
     await this.peerEvaluationBusinessService.동료평가_요청을_취소한다({
       evaluationId: id,
@@ -410,8 +417,9 @@ export class PeerEvaluationManagementController {
   async cancelPeerEvaluationsByPeriod(
     @ParseUUID('evaluateeId') evaluateeId: string,
     @ParseUUID('periodId') periodId: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<{ message: string; cancelledCount: number }> {
-    const cancelledBy = uuidv4(); // TODO: 추후 요청자 ID로 변경
+    const cancelledBy = user.id;
 
     const result =
       await this.peerEvaluationBusinessService.피평가자의_동료평가_요청을_일괄_취소한다(
@@ -433,7 +441,6 @@ export class PeerEvaluationManagementController {
    */
   @UpsertPeerEvaluationAnswers()
   async upsertPeerEvaluationAnswers(
-    @ParseUUID('id') id: string,
     @Body() dto: UpsertPeerEvaluationAnswersDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UpsertPeerEvaluationAnswersResponseDto> {

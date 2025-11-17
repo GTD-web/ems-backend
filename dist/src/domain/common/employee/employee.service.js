@@ -229,6 +229,30 @@ let EmployeeService = class EmployeeService {
         });
         return employee ? employee.isExcludedFromList : false;
     }
+    async 사번으로_접근가능한가(employeeNumber) {
+        const employee = await this.employeeRepository.findOne({
+            where: { employeeNumber, deletedAt: (0, typeorm_2.IsNull)() },
+        });
+        return employee ? employee.isAccessible : false;
+    }
+    async 접근가능한가(id) {
+        const employee = await this.employeeRepository.findOne({
+            where: { id, deletedAt: (0, typeorm_2.IsNull)() },
+        });
+        return employee ? employee.isAccessible : false;
+    }
+    async 접근가능여부변경한다(id, isAccessible, updatedBy) {
+        const employee = await this.employeeRepository.findOne({
+            where: { id, deletedAt: (0, typeorm_2.IsNull)() },
+        });
+        if (!employee) {
+            return null;
+        }
+        employee.isAccessible = isAccessible;
+        employee.updatedBy = updatedBy;
+        const updated = await this.employeeRepository.save(employee);
+        return updated.DTO로_변환한다();
+    }
     async findById(id) {
         return this.employeeRepository.findOne({
             where: { id, deletedAt: (0, typeorm_2.IsNull)() },

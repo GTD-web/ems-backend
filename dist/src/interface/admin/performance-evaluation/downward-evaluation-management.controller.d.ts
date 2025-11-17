@@ -1,8 +1,8 @@
-import type { AuthenticatedUser } from '@interface/decorators';
-import { PerformanceEvaluationService } from '../../../context/performance-evaluation-context/performance-evaluation.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
-import { CreatePrimaryDownwardEvaluationBodyDto, CreateSecondaryDownwardEvaluationBodyDto, DownwardEvaluationDetailResponseDto, DownwardEvaluationFilterDto, DownwardEvaluationListResponseDto, DownwardEvaluationResponseDto, SubmitDownwardEvaluationDto } from './dto/downward-evaluation.dto';
-import { BulkSubmitDownwardEvaluationQueryDto } from './dto/bulk-submit-downward-evaluation-query.dto';
+import { CreatePrimaryDownwardEvaluationBodyDto, CreateSecondaryDownwardEvaluationBodyDto, DownwardEvaluationDetailResponseDto, DownwardEvaluationFilterDto, DownwardEvaluationListResponseDto, DownwardEvaluationResponseDto, SubmitDownwardEvaluationDto } from '@interface/common/dto/performance-evaluation/downward-evaluation.dto';
+import { BulkSubmitDownwardEvaluationQueryDto } from '@interface/common/dto/performance-evaluation/bulk-submit-downward-evaluation-query.dto';
 export declare class DownwardEvaluationManagementController {
     private readonly performanceEvaluationService;
     private readonly downwardEvaluationBusinessService;
