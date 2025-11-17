@@ -549,6 +549,193 @@ describe('동료평가 관리 E2E 테스트', () => {
         );
       }
     }, 120000);
+
+    it('특정 평가자들만 지정하여 동료평가 요청을 생성한다', async () => {
+      // 1. 평가 질문 생성
+      const { 질문들 } =
+        await peerEvaluationScenario.테스트용_평가질문들을_생성한다();
+      const 질문Ids = 질문들.map((q) => q.id);
+
+      // 2. 파트장 목록 조회
+      const 파트장목록결과 = await testSuite
+        .request()
+        .get('/admin/employees/part-leaders')
+        .expect(200);
+
+      const 파트장들 = 파트장목록결과.body.partLeaders;
+      if (파트장들.length < 3) {
+        console.log(
+          `\n⚠️ 테스트에 필요한 파트장이 부족합니다 (필요: 3명, 실제: ${파트장들.length}명)`,
+        );
+        return;
+      }
+
+      // 3. 처음 2명의 파트장만 평가자로 지정
+      const 평가자Ids = [파트장들[0].id, 파트장들[1].id];
+
+      console.log(`\n📝 특정 평가자 지정 동료평가 요청:`);
+      console.log(`  - 전체 파트장 수: ${파트장들.length}명`);
+      console.log(`  - 지정된 평가자 수: ${평가자Ids.length}명`);
+
+      // 4. 파트장 간 동료평가 요청 생성 (evaluatorIds만 지정)
+      const 결과 = await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/part-leaders',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: 평가자Ids,
+          questionIds: 질문Ids,
+        })
+        .expect(201);
+
+      console.log(`\n📊 요청 결과:`);
+      console.log(`  - 생성된 평가 요청: ${결과.body.summary.total}건`);
+      console.log(`  - 성공: ${결과.body.summary.success}건`);
+      console.log(`  - 실패: ${결과.body.summary.failed}건`);
+
+      // 5. 검증: 지정된 평가자들만 평가 요청이 생성되었는지 확인
+      expect(결과.body.summary.success).toBeGreaterThan(0);
+      expect(결과.body.results.length).toBeGreaterThan(0);
+
+      // 모든 평가자가 지정된 목록에 포함되어 있는지 확인
+      결과.body.results.forEach((result: any) => {
+        if (result.success) {
+          expect(평가자Ids).toContain(result.evaluatorId);
+        }
+      });
+
+      console.log(`\n✅ 지정된 평가자들만 평가 요청이 생성되었습니다!`);
+    }, 120000);
+
+    it('특정 피평가자들만 지정하여 동료평가 요청을 생성한다', async () => {
+      // 1. 평가 질문 생성
+      const { 질문들 } =
+        await peerEvaluationScenario.테스트용_평가질문들을_생성한다();
+      const 질문Ids = 질문들.map((q) => q.id);
+
+      // 2. 파트장 목록 조회
+      const 파트장목록결과 = await testSuite
+        .request()
+        .get('/admin/employees/part-leaders')
+        .expect(200);
+
+      const 파트장들 = 파트장목록결과.body.partLeaders;
+      if (파트장들.length < 3) {
+        console.log(
+          `\n⚠️ 테스트에 필요한 파트장이 부족합니다 (필요: 3명, 실제: ${파트장들.length}명)`,
+        );
+        return;
+      }
+
+      // 3. 처음 2명의 파트장만 피평가자로 지정
+      const 피평가자Ids = [파트장들[0].id, 파트장들[1].id];
+
+      console.log(`\n📝 특정 피평가자 지정 동료평가 요청:`);
+      console.log(`  - 전체 파트장 수: ${파트장들.length}명`);
+      console.log(`  - 지정된 피평가자 수: ${피평가자Ids.length}명`);
+
+      // 4. 파트장 간 동료평가 요청 생성 (evaluateeIds만 지정)
+      const 결과 = await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/part-leaders',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluateeIds: 피평가자Ids,
+          questionIds: 질문Ids,
+        })
+        .expect(201);
+
+      console.log(`\n📊 요청 결과:`);
+      console.log(`  - 생성된 평가 요청: ${결과.body.summary.total}건`);
+      console.log(`  - 성공: ${결과.body.summary.success}건`);
+      console.log(`  - 실패: ${결과.body.summary.failed}건`);
+
+      // 5. 검증: 지정된 피평가자들만 평가 요청이 생성되었는지 확인
+      expect(결과.body.summary.success).toBeGreaterThan(0);
+      expect(결과.body.results.length).toBeGreaterThan(0);
+
+      // 모든 피평가자가 지정된 목록에 포함되어 있는지 확인
+      결과.body.results.forEach((result: any) => {
+        if (result.success) {
+          expect(피평가자Ids).toContain(result.evaluateeId);
+        }
+      });
+
+      console.log(`\n✅ 지정된 피평가자들만 평가 요청이 생성되었습니다!`);
+    }, 120000);
+
+    it('평가자와 피평가자를 모두 지정하여 동료평가 요청을 생성한다', async () => {
+      // 1. 평가 질문 생성
+      const { 질문들 } =
+        await peerEvaluationScenario.테스트용_평가질문들을_생성한다();
+      const 질문Ids = 질문들.map((q) => q.id);
+
+      // 2. 파트장 목록 조회
+      const 파트장목록결과 = await testSuite
+        .request()
+        .get('/admin/employees/part-leaders')
+        .expect(200);
+
+      const 파트장들 = 파트장목록결과.body.partLeaders;
+      if (파트장들.length < 4) {
+        console.log(
+          `\n⚠️ 테스트에 필요한 파트장이 부족합니다 (필요: 4명, 실제: ${파트장들.length}명)`,
+        );
+        return;
+      }
+
+      // 3. 평가자 2명, 피평가자 2명 지정
+      const 평가자Ids = [파트장들[0].id, 파트장들[1].id];
+      const 피평가자Ids = [파트장들[2].id, 파트장들[3].id];
+
+      console.log(`\n📝 평가자와 피평가자 모두 지정한 동료평가 요청:`);
+      console.log(`  - 전체 파트장 수: ${파트장들.length}명`);
+      console.log(`  - 지정된 평가자 수: ${평가자Ids.length}명`);
+      console.log(`  - 지정된 피평가자 수: ${피평가자Ids.length}명`);
+
+      // 4. 파트장 간 동료평가 요청 생성 (evaluatorIds, evaluateeIds 모두 지정)
+      const 결과 = await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/part-leaders',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: 평가자Ids,
+          evaluateeIds: 피평가자Ids,
+          questionIds: 질문Ids,
+        })
+        .expect(201);
+
+      console.log(`\n📊 요청 결과:`);
+      console.log(`  - 생성된 평가 요청: ${결과.body.summary.total}건`);
+      console.log(`  - 성공: ${결과.body.summary.success}건`);
+      console.log(`  - 실패: ${결과.body.summary.failed}건`);
+
+      // 5. 검증
+      expect(결과.body.summary.success).toBeGreaterThan(0);
+      expect(결과.body.results.length).toBeGreaterThan(0);
+
+      // 예상 요청 수: 평가자 수 * 피평가자 수 = 2 * 2 = 4
+      const 예상요청수 = 평가자Ids.length * 피평가자Ids.length;
+      expect(결과.body.summary.total).toBe(예상요청수);
+
+      // 모든 평가자와 피평가자가 지정된 목록에 포함되어 있는지 확인
+      결과.body.results.forEach((result: any) => {
+        if (result.success) {
+          expect(평가자Ids).toContain(result.evaluatorId);
+          expect(피평가자Ids).toContain(result.evaluateeId);
+        }
+      });
+
+      console.log(
+        `\n✅ 지정된 평가자들이 지정된 피평가자들을 평가하는 요청이 생성되었습니다!`,
+      );
+    }, 120000);
   });
 
   // ==================== 동료평가 전체 시나리오 ====================

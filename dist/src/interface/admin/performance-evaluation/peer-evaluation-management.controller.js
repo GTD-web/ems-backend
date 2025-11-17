@@ -88,13 +88,27 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
     }
     async requestPartLeaderPeerEvaluations(dto) {
         const requestedBy = dto.requestedBy || (0, uuid_1.v4)();
-        const partLeaders = await this.employeeSyncService.getPartLeaders(false);
-        const partLeaderIds = partLeaders.map((emp) => emp.id);
-        if (partLeaderIds.length === 0) {
+        let evaluatorIds;
+        let evaluateeIds;
+        if (dto.evaluatorIds && dto.evaluatorIds.length > 0) {
+            evaluatorIds = dto.evaluatorIds;
+        }
+        else {
+            const partLeaders = await this.employeeSyncService.getPartLeaders(false);
+            evaluatorIds = partLeaders.map((emp) => emp.id);
+        }
+        if (dto.evaluateeIds && dto.evaluateeIds.length > 0) {
+            evaluateeIds = dto.evaluateeIds;
+        }
+        else {
+            const partLeaders = await this.employeeSyncService.getPartLeaders(false);
+            evaluateeIds = partLeaders.map((emp) => emp.id);
+        }
+        if (evaluatorIds.length === 0 || evaluateeIds.length === 0) {
             return {
                 results: [],
                 summary: { total: 0, success: 0, failed: 0, partLeaderCount: 0 },
-                message: '파트장이 없어 동료평가 요청을 생성하지 않았습니다.',
+                message: '평가자 또는 피평가자가 없어 동료평가 요청을 생성하지 않았습니다.',
                 ids: [],
                 count: 0,
             };
@@ -112,21 +126,40 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
                     .map((mapping) => mapping.questionId);
             }
         }
-        const result = await this.peerEvaluationBusinessService.파트장들_간_동료평가를_요청한다({
-            periodId: dto.periodId,
-            partLeaderIds,
-            requestDeadline: dto.requestDeadline,
-            questionIds,
-            requestedBy,
-        });
+        const allResults = [];
+        let successCount = 0;
+        let failedCount = 0;
+        for (const evaluatorId of evaluatorIds) {
+            const targetEvaluateeIds = evaluateeIds.filter((id) => id !== evaluatorId);
+            if (targetEvaluateeIds.length > 0) {
+                const result = await this.peerEvaluationBusinessService.여러_피평가자에_대한_동료평가를_요청한다({
+                    evaluatorId,
+                    evaluateeIds: targetEvaluateeIds,
+                    periodId: dto.periodId,
+                    requestDeadline: dto.requestDeadline,
+                    questionIds,
+                    requestedBy,
+                });
+                allResults.push(...result.results);
+                successCount += result.summary.success;
+                failedCount += result.summary.failed;
+            }
+        }
+        const uniquePartLeaderIds = new Set([...evaluatorIds, ...evaluateeIds]);
+        const partLeaderCount = uniquePartLeaderIds.size;
         return {
-            results: result.results,
-            summary: result.summary,
-            message: result.summary.failed > 0
-                ? `파트장 ${result.summary.partLeaderCount}명에 대해 ${result.summary.total}건 중 ${result.summary.success}건의 동료평가 요청이 생성되었습니다. (실패: ${result.summary.failed}건)`
-                : `파트장 ${result.summary.partLeaderCount}명에 대해 ${result.summary.success}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
-            ids: result.results.filter((r) => r.success).map((r) => r.evaluationId),
-            count: result.summary.success,
+            results: allResults,
+            summary: {
+                total: allResults.length,
+                success: successCount,
+                failed: failedCount,
+                partLeaderCount,
+            },
+            message: failedCount > 0
+                ? `파트장 ${partLeaderCount}명에 대해 ${allResults.length}건 중 ${successCount}건의 동료평가 요청이 생성되었습니다. (실패: ${failedCount}건)`
+                : `파트장 ${partLeaderCount}명에 대해 ${successCount}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+            ids: allResults.filter((r) => r.success).map((r) => r.evaluationId),
+            count: successCount,
         };
     }
     async submitPeerEvaluation(id, user) {

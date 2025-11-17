@@ -198,6 +198,32 @@ export class RequestPartLeaderPeerEvaluationsDto {
   periodId: string;
 
   @ApiPropertyOptional({
+    description:
+      '평가자 ID 목록 (특정 파트장들만 평가자로 지정, 생략 시 모든 파트장)',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440000',
+      '550e8400-e29b-41d4-a716-446655440001',
+    ],
+  })
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  evaluatorIds?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      '피평가자 ID 목록 (특정 파트장들만 피평가자로 지정, 생략 시 모든 파트장)',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440002',
+      '550e8400-e29b-41d4-a716-446655440003',
+    ],
+  })
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  evaluateeIds?: string[];
+
+  @ApiPropertyOptional({
     description: '요청 마감일 (ISO 8601 형식)',
     example: '2024-12-31T23:59:59Z',
     type: String,

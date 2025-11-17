@@ -209,6 +209,8 @@ __decorate([
 ], RequestMultiplePeerEvaluationsDto.prototype, "requestedBy", void 0);
 class RequestPartLeaderPeerEvaluationsDto {
     periodId;
+    evaluatorIds;
+    evaluateeIds;
     requestDeadline;
     questionIds;
     requestedBy;
@@ -222,6 +224,32 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], RequestPartLeaderPeerEvaluationsDto.prototype, "periodId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '평가자 ID 목록 (특정 파트장들만 평가자로 지정, 생략 시 모든 파트장)',
+        type: [String],
+        example: [
+            '550e8400-e29b-41d4-a716-446655440000',
+            '550e8400-e29b-41d4-a716-446655440001',
+        ],
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "evaluatorIds", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '피평가자 ID 목록 (특정 파트장들만 피평가자로 지정, 생략 시 모든 파트장)',
+        type: [String],
+        example: [
+            '550e8400-e29b-41d4-a716-446655440002',
+            '550e8400-e29b-41d4-a716-446655440003',
+        ],
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "evaluateeIds", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '요청 마감일 (ISO 8601 형식)',

@@ -24,6 +24,8 @@ export declare class RequestMultiplePeerEvaluationsDto {
 }
 export declare class RequestPartLeaderPeerEvaluationsDto {
     periodId: string;
+    evaluatorIds?: string[];
+    evaluateeIds?: string[];
     requestDeadline?: Date;
     questionIds?: string[];
     requestedBy?: string;

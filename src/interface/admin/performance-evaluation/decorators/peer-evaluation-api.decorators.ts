@@ -243,18 +243,29 @@ export function RequestPartLeaderPeerEvaluations() {
     HttpCode(HttpStatus.CREATED),
     ApiOperation({
       summary: '파트장들 간 동료평가 요청',
-      description: `모든 파트장이 다른 모든 파트장을 평가하도록 요청합니다.
+      description: `파트장들 간 동료평가를 요청합니다. evaluatorIds와 evaluateeIds를 지정하여 특정 파트장들만 평가하도록 설정할 수 있습니다.
 
 **동작:**
-- SSO에서 파트장 직책(position)을 가진 직원들을 자동으로 조회
-- 각 파트장이 자기 자신을 제외한 다른 모든 파트장을 평가하도록 요청 생성
+- evaluatorIds 미제공 시: SSO에서 모든 파트장을 평가자로 설정
+- evaluateeIds 미제공 시: SSO에서 모든 파트장을 피평가자로 설정
+- evaluatorIds 제공 시: 지정된 파트장들만 평가자로 설정
+- evaluateeIds 제공 시: 지정된 파트장들만 피평가자로 설정
+- 각 평가자가 자기 자신을 제외한 모든 피평가자를 평가하도록 요청 생성
 - 모든 평가 상태는 PENDING으로 생성됨
 - questionIds 제공 시 모든 평가자에게 동일한 질문들에 대해 작성 요청
-- questionIds 생략 시 질문 없이 요청만 생성
-- 파트장이 N명이면 N * (N-1)개의 평가 요청이 생성됨
+- questionIds 생략 시 "파트장 평가 질문" 그룹의 질문들을 자동으로 사용 (그룹이 없으면 질문 없이 생성)
+
+**사용 예시:**
+1. 모든 파트장 간 평가: evaluatorIds, evaluateeIds 생략
+2. 특정 파트장들만 평가자로: evaluatorIds 지정, evaluateeIds 생략
+3. 특정 파트장들만 피평가자로: evaluatorIds 생략, evaluateeIds 지정
+4. 특정 파트장들끼리만 평가: evaluatorIds, evaluateeIds 모두 지정
 
 **테스트 케이스:**
 - 기본 파트장 간 동료평가 요청을 생성할 수 있어야 한다
+- 특정 평가자들만 지정하여 요청을 생성할 수 있어야 한다
+- 특정 피평가자들만 지정하여 요청을 생성할 수 있어야 한다
+- 평가자와 피평가자를 모두 지정하여 요청을 생성할 수 있어야 한다
 - 요청 마감일을 포함하여 요청을 생성할 수 있어야 한다
 - 질문 ID 목록을 포함하여 요청을 생성할 수 있어야 한다
 - requestedBy를 포함하여 요청을 생성할 수 있어야 한다
@@ -265,6 +276,8 @@ export function RequestPartLeaderPeerEvaluations() {
 - 각 파트장이 자기 자신을 평가하는 요청은 생성되지 않아야 한다
 - 잘못된 형식의 periodId로 요청 시 400 에러가 발생해야 한다
 - periodId 누락 시 400 에러가 발생해야 한다
+- 잘못된 형식의 evaluatorIds로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 evaluateeIds로 요청 시 400 에러가 발생해야 한다
 - 잘못된 형식의 requestedBy로 요청 시 400 에러가 발생해야 한다
 - 잘못된 형식의 questionIds로 요청 시 400 에러가 발생해야 한다
 - 존재하지 않는 periodId로 요청 시 404 에러가 발생해야 한다

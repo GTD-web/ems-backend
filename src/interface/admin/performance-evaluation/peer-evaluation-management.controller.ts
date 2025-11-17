@@ -156,15 +156,35 @@ export class PeerEvaluationManagementController {
   ): Promise<BulkPeerEvaluationRequestResponseDto> {
     const requestedBy = dto.requestedBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
 
-    // 1. SSO에서 파트장 목록 조회
-    const partLeaders = await this.employeeSyncService.getPartLeaders(false);
-    const partLeaderIds = partLeaders.map((emp) => emp.id);
+    // 1. 파트장 목록 결정
+    let evaluatorIds: string[];
+    let evaluateeIds: string[];
 
-    if (partLeaderIds.length === 0) {
+    if (dto.evaluatorIds && dto.evaluatorIds.length > 0) {
+      // evaluatorIds가 제공된 경우: 해당 ID들 사용
+      evaluatorIds = dto.evaluatorIds;
+    } else {
+      // evaluatorIds가 없는 경우: SSO에서 모든 파트장 조회
+      const partLeaders = await this.employeeSyncService.getPartLeaders(false);
+      evaluatorIds = partLeaders.map((emp) => emp.id);
+    }
+
+    if (dto.evaluateeIds && dto.evaluateeIds.length > 0) {
+      // evaluateeIds가 제공된 경우: 해당 ID들 사용
+      evaluateeIds = dto.evaluateeIds;
+    } else {
+      // evaluateeIds가 없는 경우: SSO에서 모든 파트장 조회
+      const partLeaders = await this.employeeSyncService.getPartLeaders(false);
+      evaluateeIds = partLeaders.map((emp) => emp.id);
+    }
+
+    // 파트장이 없는 경우
+    if (evaluatorIds.length === 0 || evaluateeIds.length === 0) {
       return {
         results: [],
         summary: { total: 0, success: 0, failed: 0, partLeaderCount: 0 },
-        message: '파트장이 없어 동료평가 요청을 생성하지 않았습니다.',
+        message:
+          '평가자 또는 피평가자가 없어 동료평가 요청을 생성하지 않았습니다.',
         ids: [],
         count: 0,
       };
@@ -197,26 +217,55 @@ export class PeerEvaluationManagementController {
       }
     }
 
-    // 3. 파트장들 간 동료평가 요청 생성
-    const result =
-      await this.peerEvaluationBusinessService.파트장들_간_동료평가를_요청한다({
-        periodId: dto.periodId,
-        partLeaderIds,
-        requestDeadline: dto.requestDeadline,
-        questionIds,
-        requestedBy,
-      });
+    // 3. 각 평가자가 지정된 피평가자들을 평가하도록 요청 생성
+    const allResults: any[] = [];
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const evaluatorId of evaluatorIds) {
+      // 각 평가자가 자신을 제외한 모든 피평가자를 평가
+      const targetEvaluateeIds = evaluateeIds.filter(
+        (id) => id !== evaluatorId,
+      );
+
+      if (targetEvaluateeIds.length > 0) {
+        const result =
+          await this.peerEvaluationBusinessService.여러_피평가자에_대한_동료평가를_요청한다(
+            {
+              evaluatorId,
+              evaluateeIds: targetEvaluateeIds,
+              periodId: dto.periodId,
+              requestDeadline: dto.requestDeadline,
+              questionIds,
+              requestedBy,
+            },
+          );
+
+        allResults.push(...result.results);
+        successCount += result.summary.success;
+        failedCount += result.summary.failed;
+      }
+    }
+
+    // 고유한 파트장 수 계산 (evaluators와 evaluatees 합집합)
+    const uniquePartLeaderIds = new Set([...evaluatorIds, ...evaluateeIds]);
+    const partLeaderCount = uniquePartLeaderIds.size;
 
     return {
-      results: result.results,
-      summary: result.summary,
+      results: allResults,
+      summary: {
+        total: allResults.length,
+        success: successCount,
+        failed: failedCount,
+        partLeaderCount,
+      },
       message:
-        result.summary.failed > 0
-          ? `파트장 ${result.summary.partLeaderCount}명에 대해 ${result.summary.total}건 중 ${result.summary.success}건의 동료평가 요청이 생성되었습니다. (실패: ${result.summary.failed}건)`
-          : `파트장 ${result.summary.partLeaderCount}명에 대해 ${result.summary.success}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+        failedCount > 0
+          ? `파트장 ${partLeaderCount}명에 대해 ${allResults.length}건 중 ${successCount}건의 동료평가 요청이 생성되었습니다. (실패: ${failedCount}건)`
+          : `파트장 ${partLeaderCount}명에 대해 ${successCount}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
       // 하위 호환성을 위한 필드
-      ids: result.results.filter((r) => r.success).map((r) => r.evaluationId!),
-      count: result.summary.success,
+      ids: allResults.filter((r) => r.success).map((r) => r.evaluationId!),
+      count: successCount,
     };
   }
 
