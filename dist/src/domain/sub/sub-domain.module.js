@@ -13,6 +13,7 @@ const evaluation_question_module_1 = require("./evaluation-question/evaluation-q
 const question_group_mapping_module_1 = require("./question-group-mapping/question-group-mapping.module");
 const evaluation_response_module_1 = require("./evaluation-response/evaluation-response.module");
 const employee_evaluation_step_approval_module_1 = require("./employee-evaluation-step-approval/employee-evaluation-step-approval.module");
+const secondary_evaluation_step_approval_module_1 = require("./secondary-evaluation-step-approval/secondary-evaluation-step-approval.module");
 const evaluation_revision_request_module_1 = require("./evaluation-revision-request/evaluation-revision-request.module");
 let SubDomainModule = class SubDomainModule {
 };
@@ -25,6 +26,7 @@ exports.SubDomainModule = SubDomainModule = __decorate([
             question_group_mapping_module_1.QuestionGroupMappingModule,
             evaluation_response_module_1.EvaluationResponseModule,
             employee_evaluation_step_approval_module_1.EmployeeEvaluationStepApprovalModule,
+            secondary_evaluation_step_approval_module_1.SecondaryEvaluationStepApprovalModule,
             evaluation_revision_request_module_1.EvaluationRevisionRequestModule,
         ],
         exports: [
@@ -33,6 +35,7 @@ exports.SubDomainModule = SubDomainModule = __decorate([
             question_group_mapping_module_1.QuestionGroupMappingModule,
             evaluation_response_module_1.EvaluationResponseModule,
             employee_evaluation_step_approval_module_1.EmployeeEvaluationStepApprovalModule,
+            secondary_evaluation_step_approval_module_1.SecondaryEvaluationStepApprovalModule,
             evaluation_revision_request_module_1.EvaluationRevisionRequestModule,
         ],
     })

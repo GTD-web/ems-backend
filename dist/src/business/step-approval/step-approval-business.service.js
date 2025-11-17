@@ -187,7 +187,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
         }
     }
     async 이차하향평가_확인상태를_변경한다(params) {
-        await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+        const approval = await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
             evaluationPeriodId: params.evaluationPeriodId,
             employeeId: params.employeeId,
             evaluatorId: params.evaluatorId,
@@ -211,6 +211,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
                 error: error.message,
             });
         }
+        return approval;
     }
     async 자기평가_승인_시_하위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy) {
         this.logger.log(`자기평가 승인 시 하위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);

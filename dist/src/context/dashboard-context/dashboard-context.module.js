@@ -29,8 +29,10 @@ const final_evaluation_entity_1 = require("../../domain/core/final-evaluation/fi
 const deliverable_entity_1 = require("../../domain/core/deliverable/deliverable.entity");
 const evaluation_revision_request_entity_1 = require("../../domain/sub/evaluation-revision-request/evaluation-revision-request.entity");
 const evaluation_revision_request_recipient_entity_1 = require("../../domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity");
+const secondary_evaluation_step_approval_entity_1 = require("../../domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity");
 const queries_1 = require("./handlers/queries");
 const employee_evaluation_step_approval_1 = require("../../domain/sub/employee-evaluation-step-approval");
+const secondary_evaluation_step_approval_1 = require("../../domain/sub/secondary-evaluation-step-approval");
 let DashboardContextModule = class DashboardContextModule {
 };
 exports.DashboardContextModule = DashboardContextModule;
@@ -39,6 +41,7 @@ exports.DashboardContextModule = DashboardContextModule = __decorate([
         imports: [
             cqrs_1.CqrsModule,
             employee_evaluation_step_approval_1.EmployeeEvaluationStepApprovalModule,
+            secondary_evaluation_step_approval_1.SecondaryEvaluationStepApprovalModule,
             typeorm_1.TypeOrmModule.forFeature([
                 evaluation_period_entity_1.EvaluationPeriod,
                 evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping,
@@ -58,6 +61,7 @@ exports.DashboardContextModule = DashboardContextModule = __decorate([
                 deliverable_entity_1.Deliverable,
                 evaluation_revision_request_entity_1.EvaluationRevisionRequest,
                 evaluation_revision_request_recipient_entity_1.EvaluationRevisionRequestRecipient,
+                secondary_evaluation_step_approval_entity_1.SecondaryEvaluationStepApproval,
             ]),
         ],
         providers: [dashboard_service_1.DashboardService, ...queries_1.QUERY_HANDLERS],

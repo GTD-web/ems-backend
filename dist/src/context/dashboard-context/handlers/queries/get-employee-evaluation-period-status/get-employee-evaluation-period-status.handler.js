@@ -31,6 +31,7 @@ const downward_evaluation_entity_1 = require("../../../../../domain/core/downwar
 const peer_evaluation_entity_1 = require("../../../../../domain/core/peer-evaluation/peer-evaluation.entity");
 const final_evaluation_entity_1 = require("../../../../../domain/core/final-evaluation/final-evaluation.entity");
 const employee_evaluation_step_approval_1 = require("../../../../../domain/sub/employee-evaluation-step-approval");
+const secondary_evaluation_step_approval_entity_1 = require("../../../../../domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity");
 const evaluation_revision_request_entity_1 = require("../../../../../domain/sub/evaluation-revision-request/evaluation-revision-request.entity");
 const evaluation_revision_request_recipient_entity_1 = require("../../../../../domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity");
 const step_approval_utils_1 = require("./step-approval.utils");
@@ -67,9 +68,10 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
     finalEvaluationRepository;
     revisionRequestRepository;
     revisionRequestRecipientRepository;
+    secondaryStepApprovalRepository;
     stepApprovalService;
     logger = new common_1.Logger(GetEmployeeEvaluationPeriodStatusHandler_1.name);
-    constructor(mappingRepository, periodRepository, employeeRepository, projectAssignmentRepository, wbsAssignmentRepository, wbsCriteriaRepository, evaluationLineRepository, evaluationLineMappingRepository, wbsSelfEvaluationRepository, downwardEvaluationRepository, peerEvaluationRepository, finalEvaluationRepository, revisionRequestRepository, revisionRequestRecipientRepository, stepApprovalService) {
+    constructor(mappingRepository, periodRepository, employeeRepository, projectAssignmentRepository, wbsAssignmentRepository, wbsCriteriaRepository, evaluationLineRepository, evaluationLineMappingRepository, wbsSelfEvaluationRepository, downwardEvaluationRepository, peerEvaluationRepository, finalEvaluationRepository, revisionRequestRepository, revisionRequestRecipientRepository, secondaryStepApprovalRepository, stepApprovalService) {
         this.mappingRepository = mappingRepository;
         this.periodRepository = periodRepository;
         this.employeeRepository = employeeRepository;
@@ -84,6 +86,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
         this.finalEvaluationRepository = finalEvaluationRepository;
         this.revisionRequestRepository = revisionRequestRepository;
         this.revisionRequestRecipientRepository = revisionRequestRecipientRepository;
+        this.secondaryStepApprovalRepository = secondaryStepApprovalRepository;
         this.stepApprovalService = stepApprovalService;
     }
     async execute(query) {
@@ -266,7 +269,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             }
             const validSecondaryEvaluators = secondary.evaluators.filter((e) => e.evaluator && e.evaluator.id);
             const secondaryEvaluatorIds = validSecondaryEvaluators.map((e) => e.evaluator.id);
-            const secondaryEvaluationStatuses = await (0, step_approval_utils_1.평가자들별_2차평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, secondaryEvaluatorIds, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
+            const secondaryEvaluationStatuses = await (0, step_approval_utils_1.평가자들별_2차평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, secondaryEvaluatorIds, result.mapping_id, this.revisionRequestRepository, this.revisionRequestRecipientRepository, this.secondaryStepApprovalRepository);
             const secondaryEvaluationStatusesWithEvaluatorInfo = validSecondaryEvaluators
                 .map((evaluatorInfo) => {
                 if (!evaluatorInfo.evaluator || !evaluatorInfo.evaluator.id) {
@@ -276,33 +279,9 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 let finalStatus;
                 let approvedBy = null;
                 let approvedAt = null;
-                if (statusInfo && statusInfo.revisionRequestId !== null) {
-                    if (statusInfo.isCompleted) {
-                        finalStatus = 'revision_completed';
-                    }
-                    else if (statusInfo.status === 'revision_requested') {
-                        finalStatus = 'revision_requested';
-                    }
-                    else {
-                        finalStatus = 'revision_requested';
-                    }
-                }
-                else {
-                    const stepApprovalStatus = stepApproval?.secondaryEvaluationStatus;
-                    if (stepApprovalStatus === 'approved') {
-                        finalStatus = 'approved';
-                        approvedBy =
-                            stepApproval?.secondaryEvaluationApprovedBy ?? null;
-                        approvedAt =
-                            stepApproval?.secondaryEvaluationApprovedAt ?? null;
-                    }
-                    else if (stepApprovalStatus === 'revision_completed') {
-                        finalStatus = 'revision_completed';
-                    }
-                    else {
-                        finalStatus = 'pending';
-                    }
-                }
+                finalStatus = statusInfo?.status ?? 'pending';
+                approvedBy = statusInfo?.approvedBy ?? null;
+                approvedAt = statusInfo?.approvedAt ?? null;
                 return {
                     evaluatorId: evaluatorInfo.evaluator.id,
                     evaluatorName: evaluatorInfo.evaluator.name || '알 수 없음',
@@ -507,7 +486,9 @@ exports.GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodSt
     __param(11, (0, typeorm_1.InjectRepository)(final_evaluation_entity_1.FinalEvaluation)),
     __param(12, (0, typeorm_1.InjectRepository)(evaluation_revision_request_entity_1.EvaluationRevisionRequest)),
     __param(13, (0, typeorm_1.InjectRepository)(evaluation_revision_request_recipient_entity_1.EvaluationRevisionRequestRecipient)),
+    __param(14, (0, typeorm_1.InjectRepository)(secondary_evaluation_step_approval_entity_1.SecondaryEvaluationStepApproval)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

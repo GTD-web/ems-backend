@@ -30,11 +30,14 @@ function 이차평가_전체_상태를_계산한다(evaluatorStatuses) {
         evaluatorStatuses.every((s) => s === 'none')) {
         return 'none';
     }
+    if (evaluatorStatuses.some((s) => s === 'revision_completed')) {
+        return 'revision_completed';
+    }
     if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
         return 'revision_requested';
     }
-    if (evaluatorStatuses.some((s) => s === 'revision_completed')) {
-        return 'revision_completed';
+    if (evaluatorStatuses.some((s) => s === 'pending')) {
+        return 'pending';
     }
     const hasInProgress = evaluatorStatuses.some((s) => s === 'in_progress' || s === 'complete');
     if (hasInProgress &&
@@ -48,6 +51,9 @@ function 이차평가_전체_상태를_계산한다(evaluatorStatuses) {
         }
         if (evaluatorStatuses.every((s) => s === 'approved')) {
             return 'approved';
+        }
+        if (evaluatorStatuses.some((s) => s === 'pending')) {
+            return 'pending';
         }
         return 'in_progress';
     }

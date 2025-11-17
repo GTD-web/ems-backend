@@ -20,6 +20,7 @@ const step_approval_context_service_1 = require("../../context/step-approval-con
 const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
+const employee_evaluation_step_approval_1 = require("../../domain/sub/employee-evaluation-step-approval");
 let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = class DownwardEvaluationBusinessService {
     performanceEvaluationService;
     evaluationCriteriaManagementService;
@@ -107,7 +108,7 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
         catch (error) {
             this.logger.warn(`2차 하향평가 초기화 실패 (하향평가가 없을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`, error);
         }
-        await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+        const approval = await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
             evaluationPeriodId,
             employeeId,
             evaluatorId,
@@ -116,6 +117,7 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
             updatedBy: requestedBy,
         });
         this.logger.log(`2차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`);
+        return approval;
     }
     async 피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, evaluateeId, periodId, evaluationType, submittedBy) {
         this.logger.log('하향평가 일괄 제출 시작', {
@@ -145,6 +147,30 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
                 evaluationType,
                 error: error.message,
             });
+        }
+        if (evaluationType === downward_evaluation_types_1.DownwardEvaluationType.SECONDARY) {
+            try {
+                await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+                    evaluationPeriodId: periodId,
+                    employeeId: evaluateeId,
+                    evaluatorId: evaluatorId,
+                    status: employee_evaluation_step_approval_1.StepApprovalStatus.APPROVED,
+                    updatedBy: submittedBy,
+                });
+                this.logger.log('2차 평가 일괄 제출 시 개별 승인 상태 자동 승인 처리 완료', {
+                    evaluatorId,
+                    evaluateeId,
+                    periodId,
+                });
+            }
+            catch (error) {
+                this.logger.warn('2차 평가 개별 승인 상태 자동 승인 처리 실패', {
+                    evaluatorId,
+                    evaluateeId,
+                    periodId,
+                    error: error.message,
+                });
+            }
         }
         try {
             const evaluationTypeText = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
