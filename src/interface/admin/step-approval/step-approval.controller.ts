@@ -231,9 +231,11 @@ export class StepApprovalController {
   }
 
   /**
-   * 2차 하향평가 단계 승인 상태를 평가자별로 변경한다
+   * 2차 하향평가 단계 승인 상태를 평가자별로 변경한다 (부분 승인 지원)
    * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
    * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
+   *
+   * 각 2차 평가자별로 개별적으로 승인 상태를 관리할 수 있습니다.
    */
   @UpdateSecondaryStepApproval()
   async updateSecondaryStepApproval(
@@ -250,6 +252,7 @@ export class StepApprovalController {
       }
 
       // 비즈니스 서비스를 통해 제출 상태 초기화 및 재작성 요청 생성
+      // 내부에서 이미 stepApprovalContextService.이차하향평가_확인상태를_변경한다를 호출함
       await this.downwardEvaluationBusinessService.이차_하향평가_재작성요청_생성_및_제출상태_초기화(
         evaluationPeriodId,
         employeeId,
@@ -268,7 +271,8 @@ export class StepApprovalController {
         );
       }
 
-      // 단계 승인 상태 변경
+      // 단계 승인 상태 변경 (평가자별 부분 승인 지원)
+      // secondary_evaluation_step_approval 테이블에 평가자별로 개별 상태 저장
       await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다({
         evaluationPeriodId,
         employeeId,

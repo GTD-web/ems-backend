@@ -7,6 +7,7 @@ import { StepApprovalContextService } from '@context/step-approval-context/step-
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 
 /**
  * 하향평가 비즈니스 서비스
@@ -441,7 +442,37 @@ export class DownwardEvaluationBusinessService {
       });
     }
 
-    // 3. 활동 내역 기록
+    // 3. 2차 평가인 경우 개별 승인 상태를 자동으로 승인 처리
+    if (evaluationType === DownwardEvaluationType.SECONDARY) {
+      try {
+        await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+          evaluationPeriodId: periodId,
+          employeeId: evaluateeId,
+          evaluatorId: evaluatorId,
+          status: StepApprovalStatus.APPROVED,
+          updatedBy: submittedBy,
+        });
+
+        this.logger.log(
+          '2차 평가 일괄 제출 시 개별 승인 상태 자동 승인 처리 완료',
+          {
+            evaluatorId,
+            evaluateeId,
+            periodId,
+          },
+        );
+      } catch (error) {
+        // 개별 승인 상태 변경 실패 시에도 하향평가 제출은 정상 처리
+        this.logger.warn('2차 평가 개별 승인 상태 자동 승인 처리 실패', {
+          evaluatorId,
+          evaluateeId,
+          periodId,
+          error: error.message,
+        });
+      }
+    }
+
+    // 4. 활동 내역 기록
     try {
       const evaluationTypeText =
         evaluationType === DownwardEvaluationType.PRIMARY

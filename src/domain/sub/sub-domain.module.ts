@@ -4,6 +4,7 @@ import { EvaluationQuestionModule } from './evaluation-question/evaluation-quest
 import { QuestionGroupMappingModule } from './question-group-mapping/question-group-mapping.module';
 import { EvaluationResponseModule } from './evaluation-response/evaluation-response.module';
 import { EmployeeEvaluationStepApprovalModule } from './employee-evaluation-step-approval/employee-evaluation-step-approval.module';
+import { SecondaryEvaluationStepApprovalModule } from './secondary-evaluation-step-approval/secondary-evaluation-step-approval.module';
 import { EvaluationRevisionRequestModule } from './evaluation-revision-request/evaluation-revision-request.module';
 
 /**
@@ -19,6 +20,7 @@ import { EvaluationRevisionRequestModule } from './evaluation-revision-request/e
     QuestionGroupMappingModule,
     EvaluationResponseModule,
     EmployeeEvaluationStepApprovalModule,
+    SecondaryEvaluationStepApprovalModule,
     EvaluationRevisionRequestModule,
   ],
   exports: [
@@ -27,6 +29,7 @@ import { EvaluationRevisionRequestModule } from './evaluation-revision-request/e
     QuestionGroupMappingModule,
     EvaluationResponseModule,
     EmployeeEvaluationStepApprovalModule,
+    SecondaryEvaluationStepApprovalModule,
     EvaluationRevisionRequestModule,
   ],
 })

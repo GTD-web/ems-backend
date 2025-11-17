@@ -1,6 +1,7 @@
 import { Repository, IsNull } from 'typeorm';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
+import { SecondaryEvaluationStepApproval } from '@domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 
@@ -24,26 +25,36 @@ export interface EvaluatorRevisionRequestStatus {
   responseComment: string | null;
   /** 요청 일시 */
   requestedAt: Date | null;
+  /** 승인자 ID (approved 상태일 때) */
+  approvedBy: string | null;
+  /** 승인 일시 (approved 상태일 때) */
+  approvedAt: Date | null;
 }
 
 /**
- * 평가자별 2차 평가 단계 승인 상태를 조회한다
+ * 평가자별 2차 평가 단계 승인 상태를 조회한다 (개선 버전)
  *
- * 재작성 요청 테이블에서 평가자별 상태를 조회하여 반환합니다.
+ * 1. 재작성 요청 테이블에서 평가자별 재작성 요청 상태 조회
+ * 2. 재작성 요청이 없으면 secondary_evaluation_step_approval 테이블에서 approved 상태 조회
+ * 3. 둘 다 없으면 pending 상태 반환
  *
  * @param evaluationPeriodId 평가기간 ID
  * @param employeeId 직원 ID
  * @param evaluatorId 평가자 ID
+ * @param mappingId 평가기간-직원 맵핑 ID
  * @param revisionRequestRepository 재작성 요청 Repository
  * @param revisionRequestRecipientRepository 재작성 요청 수신자 Repository
+ * @param secondaryStepApprovalRepository 2차 평가자별 단계 승인 Repository
  * @returns 평가자별 재작성 요청 상태 정보
  */
 export async function 평가자별_2차평가_단계승인_상태를_조회한다(
   evaluationPeriodId: string,
   employeeId: string,
   evaluatorId: string,
+  mappingId: string,
   revisionRequestRepository: Repository<EvaluationRevisionRequest>,
   revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>,
+  secondaryStepApprovalRepository: Repository<SecondaryEvaluationStepApproval>,
 ): Promise<EvaluatorRevisionRequestStatus> {
   // 1. 해당 평가자에게 전송된 재작성 요청 조회
   // - 평가기간 ID, 직원 ID, 단계('secondary'), 수신자 ID로 조회
@@ -64,39 +75,63 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
     .orderBy('request.requestedAt', 'DESC')
     .getOne();
 
-  // 재작성 요청이 없으면 기본 상태 반환
-  if (!recipient || !recipient.revisionRequest) {
+  // 2. 재작성 요청이 있는 경우
+  if (recipient && recipient.revisionRequest) {
+    const request = recipient.revisionRequest;
+    const status: StepApprovalStatus = recipient.isCompleted
+      ? ('revision_completed' as StepApprovalStatus)
+      : ('revision_requested' as StepApprovalStatus);
+
     return {
       evaluatorId,
-      status: 'pending' as StepApprovalStatus,
+      status,
+      revisionRequestId: request.id,
+      revisionComment: request.comment,
+      isCompleted: recipient.isCompleted,
+      completedAt: recipient.completedAt,
+      responseComment: recipient.responseComment,
+      requestedAt: request.requestedAt,
+      approvedBy: null, // 재작성 요청 중에는 승인 정보 없음
+      approvedAt: null,
+    };
+  }
+
+  // 3. 재작성 요청이 없는 경우: 새 테이블에서 approved 상태 조회
+  const secondaryApproval = await secondaryStepApprovalRepository.findOne({
+    where: {
+      evaluationPeriodEmployeeMappingId: mappingId,
+      evaluatorId: evaluatorId,
+      deletedAt: IsNull(),
+    },
+  });
+
+  if (secondaryApproval && secondaryApproval.status === 'approved') {
+    return {
+      evaluatorId,
+      status: 'approved' as StepApprovalStatus,
       revisionRequestId: null,
       revisionComment: null,
       isCompleted: false,
       completedAt: null,
       responseComment: null,
       requestedAt: null,
+      approvedBy: secondaryApproval.approvedBy,
+      approvedAt: secondaryApproval.approvedAt,
     };
   }
 
-  const request = recipient.revisionRequest;
-
-  // 2. 재작성 완료 여부에 따라 상태 결정
-  let status: StepApprovalStatus;
-  if (recipient.isCompleted) {
-    status = 'revision_completed' as StepApprovalStatus;
-  } else {
-    status = 'revision_requested' as StepApprovalStatus;
-  }
-
+  // 4. 둘 다 없으면 pending 상태
   return {
     evaluatorId,
-    status,
-    revisionRequestId: request.id,
-    revisionComment: request.comment,
-    isCompleted: recipient.isCompleted,
-    completedAt: recipient.completedAt,
-    responseComment: recipient.responseComment,
-    requestedAt: request.requestedAt,
+    status: 'pending' as StepApprovalStatus,
+    revisionRequestId: null,
+    revisionComment: null,
+    isCompleted: false,
+    completedAt: null,
+    responseComment: null,
+    requestedAt: null,
+    approvedBy: null,
+    approvedAt: null,
   };
 }
 
@@ -149,6 +184,8 @@ export async function 일차평가_단계승인_상태를_조회한다(
       completedAt: null,
       responseComment: null,
       requestedAt: null,
+      approvedBy: null,
+      approvedAt: null,
     };
   }
 
@@ -171,25 +208,31 @@ export async function 일차평가_단계승인_상태를_조회한다(
     completedAt: recipient.completedAt,
     responseComment: recipient.responseComment,
     requestedAt: request.requestedAt,
+    approvedBy: null,
+    approvedAt: null,
   };
 }
 
 /**
- * 여러 평가자별 2차 평가 단계 승인 상태를 조회한다
+ * 여러 평가자별 2차 평가 단계 승인 상태를 조회한다 (개선 버전)
  *
  * @param evaluationPeriodId 평가기간 ID
  * @param employeeId 직원 ID
  * @param evaluatorIds 평가자 ID 목록
+ * @param mappingId 평가기간-직원 맵핑 ID
  * @param revisionRequestRepository 재작성 요청 Repository
  * @param revisionRequestRecipientRepository 재작성 요청 수신자 Repository
+ * @param secondaryStepApprovalRepository 2차 평가자별 단계 승인 Repository
  * @returns 평가자별 재작성 요청 상태 정보 배열
  */
 export async function 평가자들별_2차평가_단계승인_상태를_조회한다(
   evaluationPeriodId: string,
   employeeId: string,
   evaluatorIds: string[],
+  mappingId: string,
   revisionRequestRepository: Repository<EvaluationRevisionRequest>,
   revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>,
+  secondaryStepApprovalRepository: Repository<SecondaryEvaluationStepApproval>,
 ): Promise<EvaluatorRevisionRequestStatus[]> {
   if (evaluatorIds.length === 0) {
     return [];
@@ -202,8 +245,10 @@ export async function 평가자들별_2차평가_단계승인_상태를_조회�
         evaluationPeriodId,
         employeeId,
         evaluatorId,
+        mappingId,
         revisionRequestRepository,
         revisionRequestRecipientRepository,
+        secondaryStepApprovalRepository,
       ),
     ),
   );

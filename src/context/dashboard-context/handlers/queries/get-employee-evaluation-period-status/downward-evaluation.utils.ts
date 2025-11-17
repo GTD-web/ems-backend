@@ -101,16 +101,23 @@ export function 이차평가_전체_상태를_계산한다(
   }
 
   // 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환
-  // revision_requested가 하나라도 있으면 최우선 (제출 여부 무관)
-  if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
-    return 'revision_requested';
-  }
-  // revision_completed가 하나라도 있으면 (제출 여부 무관)
+  // revision_completed가 하나라도 있으면 우선 반환 (완료된 것이 우선)
+  // revision_requested + revision_completed 혼합 시 revision_completed 반환
   if (evaluatorStatuses.some((s) => s === 'revision_completed')) {
     return 'revision_completed';
   }
+  // revision_requested가 하나라도 있으면 반환 (제출 여부 무관)
+  if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
+    return 'revision_requested';
+  }
 
-  // 3. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
+  // 3. pending이 하나라도 있으면 pending 반환 (in_progress + pending 등)
+  // pending은 승인 대기 상태이므로 우선적으로 반환
+  if (evaluatorStatuses.some((s) => s === 'pending')) {
+    return 'pending';
+  }
+
+  // 4. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
   const hasInProgress = evaluatorStatuses.some(
     (s) => s === 'in_progress' || s === 'complete',
   );
@@ -121,7 +128,7 @@ export function 이차평가_전체_상태를_계산한다(
     return 'in_progress';
   }
 
-  // 4. 모두 complete 이상인 경우 (none, in_progress 없음)
+  // 5. 모두 complete 이상인 경우 (none, in_progress 없음)
   const allCompleteOrAbove = evaluatorStatuses.every(
     (s) => s === 'complete' || s === 'pending' || s === 'approved',
   );
@@ -135,11 +142,16 @@ export function 이차평가_전체_상태를_계산한다(
     if (evaluatorStatuses.every((s) => s === 'approved')) {
       return 'approved';
     }
-    // 혼합 상태 (pending + approved 등) → in_progress 반환 (진행중)
+    // 혼합 상태 (pending + approved 등) → pending 반환 (하나라도 pending이면 pending)
+    // pending이 하나라도 있으면 전체 상태는 pending
+    if (evaluatorStatuses.some((s) => s === 'pending')) {
+      return 'pending';
+    }
+    // 그 외 혼합 상태 → in_progress 반환 (진행중)
     return 'in_progress';
   }
 
-  // 5. 기본값: in_progress
+  // 6. 기본값: in_progress
   return 'in_progress';
 }
 

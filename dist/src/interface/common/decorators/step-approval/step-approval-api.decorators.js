@@ -201,7 +201,7 @@ function UpdatePrimaryStepApproval() {
     }));
 }
 function UpdateSecondaryStepApproval() {
-    return (0, common_1.applyDecorators)((0, common_1.Patch)(':evaluationPeriodId/employees/:employeeId/secondary/:evaluatorId'), (0, swagger_1.ApiOperation)({
+    return (0, common_1.applyDecorators)((0, common_1.Patch)(':evaluationPeriodId/employees/:employeeId/secondary/:evaluatorId'), (0, common_1.HttpCode)(common_1.HttpStatus.OK), (0, swagger_1.ApiOperation)({
         summary: '2차 하향평가 단계 승인 상태 변경 (평가자별)',
         description: `**관리자용**: 특정 직원의 2차 하향평가 단계 승인 상태를 특정 평가자 기준으로 변경합니다.
 

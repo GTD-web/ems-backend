@@ -19,6 +19,7 @@ import {
   SelfEvaluationStatus,
 } from '../../../interfaces/dashboard-context.interface';
 import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
+import { SecondaryEvaluationStepApproval } from '@domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
 import {
@@ -117,6 +118,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
     private readonly revisionRequestRepository: Repository<EvaluationRevisionRequest>,
     @InjectRepository(EvaluationRevisionRequestRecipient)
     private readonly revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>,
+    @InjectRepository(SecondaryEvaluationStepApproval)
+    private readonly secondaryStepApprovalRepository: Repository<SecondaryEvaluationStepApproval>,
     private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
   ) {}
 
@@ -465,8 +468,10 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           evaluationPeriodId,
           employeeId,
           secondaryEvaluatorIds,
+          result.mapping_id,
           this.revisionRequestRepository,
           this.revisionRequestRecipientRepository,
+          this.secondaryStepApprovalRepository,
         );
 
       // 19-2. 평가자별 단계 승인 정보 구성 (평가자 정보 포함)
@@ -502,20 +507,11 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                 finalStatus = 'revision_requested';
               }
             } else {
-              // 재작성 요청이 없는 경우, stepApproval 상태 확인
-              const stepApprovalStatus =
-                stepApproval?.secondaryEvaluationStatus;
-              if (stepApprovalStatus === 'approved') {
-                finalStatus = 'approved';
-                approvedBy =
-                  stepApproval?.secondaryEvaluationApprovedBy ?? null;
-                approvedAt =
-                  stepApproval?.secondaryEvaluationApprovedAt ?? null;
-              } else if (stepApprovalStatus === 'revision_completed') {
-                finalStatus = 'revision_completed';
-              } else {
-                finalStatus = 'pending';
-              }
+              // 재작성 요청이 없는 경우, statusInfo에서 이미 새 테이블 조회 결과 포함
+              // statusInfo는 평가자별_2차평가_단계승인_상태를_조회한다에서 반환된 값
+              finalStatus = statusInfo?.status ?? 'pending';
+              approvedBy = statusInfo?.approvedBy ?? null;
+              approvedAt = statusInfo?.approvedAt ?? null;
             }
 
             return {

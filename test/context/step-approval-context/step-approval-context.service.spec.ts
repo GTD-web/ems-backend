@@ -13,6 +13,8 @@ import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EmployeeEvaluationStepApproval } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.entity';
+import { SecondaryEvaluationStepApproval } from '@domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity';
+import { SecondaryEvaluationStepApprovalModule } from '@domain/sub/secondary-evaluation-step-approval';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
 import {
@@ -42,6 +44,7 @@ describe('StepApprovalContextService', () => {
   let evaluationLineRepository: Repository<EvaluationLine>;
   let evaluationLineMappingRepository: Repository<EvaluationLineMapping>;
   let stepApprovalRepository: Repository<EmployeeEvaluationStepApproval>;
+  let secondaryStepApprovalRepository: Repository<SecondaryEvaluationStepApproval>;
   let revisionRequestRepository: Repository<EvaluationRevisionRequest>;
   let recipientRepository: Repository<EvaluationRevisionRequestRecipient>;
 
@@ -71,10 +74,12 @@ describe('StepApprovalContextService', () => {
           EvaluationLine,
           EvaluationLineMapping,
           EmployeeEvaluationStepApproval,
+          SecondaryEvaluationStepApproval,
           EvaluationRevisionRequest,
           EvaluationRevisionRequestRecipient,
         ]),
         EmployeeEvaluationStepApprovalModule,
+        SecondaryEvaluationStepApprovalModule,
         EvaluationRevisionRequestModule,
       ],
       providers: [StepApprovalContextService],
@@ -98,6 +103,9 @@ describe('StepApprovalContextService', () => {
     );
     stepApprovalRepository = dataSource.getRepository(
       EmployeeEvaluationStepApproval,
+    );
+    secondaryStepApprovalRepository = dataSource.getRepository(
+      SecondaryEvaluationStepApproval,
     );
     revisionRequestRepository = dataSource.getRepository(
       EvaluationRevisionRequest,
@@ -124,9 +132,7 @@ describe('StepApprovalContextService', () => {
     };
 
     fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
-    console.log(
-      `✅ 테스트 결과가 저장되었습니다: ${outputPath}`,
-    );
+    console.log(`✅ 테스트 결과가 저장되었습니다: ${outputPath}`);
 
     await dataSource.destroy();
     await module.close();
@@ -144,6 +150,10 @@ describe('StepApprovalContextService', () => {
 
       const stepApprovals = await stepApprovalRepository.find();
       await stepApprovalRepository.remove(stepApprovals);
+
+      const secondaryStepApprovals =
+        await secondaryStepApprovalRepository.find();
+      await secondaryStepApprovalRepository.remove(secondaryStepApprovals);
 
       const lineMappings = await evaluationLineMappingRepository.find();
       await evaluationLineMappingRepository.remove(lineMappings);
@@ -605,7 +615,8 @@ describe('StepApprovalContextService', () => {
 
       // 테스트 결과 저장
       testResults.push({
-        testName: '평가기준 설정을 재작성 요청 상태로 변경하면 재작성 요청이 생성되어야 한다',
+        testName:
+          '평가기준 설정을 재작성 요청 상태로 변경하면 재작성 요청이 생성되어야 한다',
         result: {
           evaluationPeriodId,
           employeeId,
@@ -660,7 +671,8 @@ describe('StepApprovalContextService', () => {
 
       // 테스트 결과 저장
       testResults.push({
-        testName: '평가기준 설정 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다',
+        testName:
+          '평가기준 설정 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다',
         result: {
           evaluationPeriodId,
           employeeId,
@@ -715,7 +727,8 @@ describe('StepApprovalContextService', () => {
 
       // 테스트 결과 저장
       testResults.push({
-        testName: '자기평가 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다',
+        testName:
+          '자기평가 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다',
         result: {
           evaluationPeriodId,
           employeeId,
@@ -832,17 +845,19 @@ describe('StepApprovalContextService', () => {
         updatedBy: adminId,
       });
 
-      // Then
-      const stepApproval = await stepApprovalRepository.findOne({
-        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      // Then - 새로운 테이블에 평가자별 승인 상태가 저장되어야 함
+      const secondaryApproval = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId,
+        },
       });
 
-      expect(stepApproval).toBeDefined();
-      expect(stepApproval!.secondaryEvaluationStatus).toBe(
-        StepApprovalStatus.APPROVED,
-      );
-      expect(stepApproval!.secondaryEvaluationApprovedBy).toBe(adminId);
-      expect(stepApproval!.secondaryEvaluationApprovedAt).toBeDefined();
+      expect(secondaryApproval).toBeDefined();
+      expect(secondaryApproval!.status).toBe(StepApprovalStatus.APPROVED);
+      expect(secondaryApproval!.evaluatorId).toBe(secondaryEvaluatorId);
+      expect(secondaryApproval!.approvedBy).toBe(adminId);
+      expect(secondaryApproval!.approvedAt).toBeDefined();
 
       // 재작성 요청이 생성되지 않아야 함
       const revisionRequests = await revisionRequestRepository.find();
@@ -864,13 +879,18 @@ describe('StepApprovalContextService', () => {
         updatedBy: adminId,
       });
 
-      // Then - 상태 변경 확인
-      const stepApproval = await stepApprovalRepository.findOne({
-        where: { evaluationPeriodEmployeeMappingId: mappingId },
+      // Then - 새로운 테이블에 평가자별 재작성 요청 상태가 저장되어야 함
+      const secondaryApproval = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId,
+        },
       });
-      expect(stepApproval!.secondaryEvaluationStatus).toBe(
+      expect(secondaryApproval).toBeDefined();
+      expect(secondaryApproval!.status).toBe(
         StepApprovalStatus.REVISION_REQUESTED,
       );
+      expect(secondaryApproval!.revisionRequestId).toBeDefined();
 
       // Then - 재작성 요청 생성 확인
       const revisionRequests = await revisionRequestRepository.find({
@@ -1046,6 +1066,432 @@ describe('StepApprovalContextService', () => {
           updatedBy: adminId,
         }),
       ).rejects.toThrow('평가기간-직원 맵핑을 찾을 수 없습니다');
+    });
+  });
+
+  describe('이차하향평가_확인상태를_변경한다 - 부분 승인 기능 검증', () => {
+    let secondaryEvaluatorId2: string;
+    let secondaryEvaluatorId3: string;
+
+    beforeEach(async () => {
+      // 각 테스트 전에 데이터 정리
+      try {
+        const recipients = await recipientRepository.find();
+        await recipientRepository.remove(recipients);
+
+        const revisionRequests = await revisionRequestRepository.find();
+        await revisionRequestRepository.remove(revisionRequests);
+
+        const secondaryStepApprovals =
+          await secondaryStepApprovalRepository.find();
+        await secondaryStepApprovalRepository.remove(secondaryStepApprovals);
+
+        const stepApprovals = await stepApprovalRepository.find();
+        await stepApprovalRepository.remove(stepApprovals);
+
+        const lineMappings = await evaluationLineMappingRepository.find();
+        await evaluationLineMappingRepository.remove(lineMappings);
+      } catch (error) {
+        // 무시
+      }
+    });
+
+    async function 여러_2차평가자_테스트데이터를_생성한다(): Promise<void> {
+      await 테스트데이터를_생성한다();
+
+      // 2번째 2차 평가자 생성
+      const secondaryEvaluator2 = employeeRepository.create({
+        name: '최이차평가자2',
+        employeeNumber: 'EMP004',
+        email: 'secondary2@test.com',
+        externalId: 'EXT004',
+        departmentId: departmentId,
+        status: '재직중',
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryEvaluator2 =
+        await employeeRepository.save(secondaryEvaluator2);
+      secondaryEvaluatorId2 = savedSecondaryEvaluator2.id;
+
+      // 3번째 2차 평가자 생성
+      const secondaryEvaluator3 = employeeRepository.create({
+        name: '최이차평가자3',
+        employeeNumber: 'EMP005',
+        email: 'secondary3@test.com',
+        externalId: 'EXT005',
+        departmentId: departmentId,
+        status: '재직중',
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryEvaluator3 =
+        await employeeRepository.save(secondaryEvaluator3);
+      secondaryEvaluatorId3 = savedSecondaryEvaluator3.id;
+
+      // 2번째 2차 평가자용 평가라인 매핑 생성
+      const secondaryLine2 = evaluationLineRepository.create({
+        evaluatorType: EvaluatorType.SECONDARY,
+        order: 3,
+        isRequired: false,
+        isAutoAssigned: false,
+        version: 1,
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryLine2 =
+        await evaluationLineRepository.save(secondaryLine2);
+
+      const secondaryLineMapping2 = evaluationLineMappingRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        evaluatorId: secondaryEvaluatorId2,
+        evaluationLineId: savedSecondaryLine2.id,
+        version: 1,
+        createdBy: systemAdminId,
+      });
+      await evaluationLineMappingRepository.save(secondaryLineMapping2);
+
+      // 3번째 2차 평가자용 평가라인 매핑 생성
+      const secondaryLine3 = evaluationLineRepository.create({
+        evaluatorType: EvaluatorType.SECONDARY,
+        order: 4,
+        isRequired: false,
+        isAutoAssigned: false,
+        version: 1,
+        createdBy: systemAdminId,
+      });
+      const savedSecondaryLine3 =
+        await evaluationLineRepository.save(secondaryLine3);
+
+      const secondaryLineMapping3 = evaluationLineMappingRepository.create({
+        evaluationPeriodId: evaluationPeriodId,
+        employeeId: employeeId,
+        evaluatorId: secondaryEvaluatorId3,
+        evaluationLineId: savedSecondaryLine3.id,
+        version: 1,
+        createdBy: systemAdminId,
+      });
+      await evaluationLineMappingRepository.save(secondaryLineMapping3);
+    }
+
+    it('여러 2차 평가자 중 일부만 승인할 수 있어야 한다 (부분 승인)', async () => {
+      // Given
+      await 여러_2차평가자_테스트데이터를_생성한다();
+
+      // When - 첫 번째 평가자만 승인
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      // Then - 첫 번째 평가자만 approved 상태
+      const approval1 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId,
+        },
+      });
+      expect(approval1).toBeDefined();
+      expect(approval1!.status).toBe(StepApprovalStatus.APPROVED);
+      expect(approval1!.approvedBy).toBe(adminId);
+
+      // Then - 두 번째, 세 번째 평가자는 아직 승인 상태가 없어야 함
+      const approval2 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId2,
+        },
+      });
+      const approval3 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId3,
+        },
+      });
+      expect(approval2).toBeNull();
+      expect(approval3).toBeNull();
+
+      // When - 두 번째 평가자도 승인
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId2,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      // Then - 두 번째 평가자도 approved 상태
+      const approval2After = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId2,
+        },
+      });
+      expect(approval2After).toBeDefined();
+      expect(approval2After!.status).toBe(StepApprovalStatus.APPROVED);
+
+      // Then - 첫 번째 평가자의 상태는 그대로 유지되어야 함
+      const approval1After = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId,
+        },
+      });
+      expect(approval1After!.status).toBe(StepApprovalStatus.APPROVED);
+
+      // Then - 세 번째 평가자는 여전히 승인 상태가 없어야 함
+      const approval3After = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId3,
+        },
+      });
+      expect(approval3After).toBeNull();
+    });
+
+    it('평가자별로 독립적인 재작성 요청을 보낼 수 있어야 한다', async () => {
+      // Given
+      await 여러_2차평가자_테스트데이터를_생성한다();
+
+      // When - 첫 번째 평가자에게만 재작성 요청
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment: '첫 번째 평가자 수정 필요',
+        updatedBy: adminId,
+      });
+
+      // Then - 첫 번째 평가자만 revision_requested 상태
+      const approval1 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId,
+        },
+      });
+      expect(approval1).toBeDefined();
+      expect(approval1!.status).toBe(StepApprovalStatus.REVISION_REQUESTED);
+      expect(approval1!.revisionRequestId).toBeDefined();
+
+      // Then - 재작성 요청이 하나만 생성되어야 함
+      const revisionRequests = await revisionRequestRepository.find({
+        relations: ['recipients'],
+      });
+      expect(revisionRequests.length).toBe(1);
+      expect(revisionRequests[0].recipients.length).toBe(1);
+      expect(revisionRequests[0].recipients[0].recipientId).toBe(
+        secondaryEvaluatorId,
+      );
+
+      // When - 두 번째 평가자에게도 재작성 요청
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId2,
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment: '두 번째 평가자 수정 필요',
+        updatedBy: adminId,
+      });
+
+      // Then - 두 번째 평가자도 revision_requested 상태
+      const approval2 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId2,
+        },
+      });
+      expect(approval2).toBeDefined();
+      expect(approval2!.status).toBe(StepApprovalStatus.REVISION_REQUESTED);
+      expect(approval2!.revisionRequestId).toBeDefined();
+      expect(approval2!.revisionRequestId).not.toBe(
+        approval1!.revisionRequestId,
+      );
+
+      // Then - 재작성 요청이 두 개 생성되어야 함
+      const revisionRequests2 = await revisionRequestRepository.find({
+        relations: ['recipients'],
+      });
+      expect(revisionRequests2.length).toBe(2);
+
+      // Then - 첫 번째 평가자의 상태는 그대로 유지되어야 함
+      const approval1After = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId,
+        },
+      });
+      expect(approval1After!.status).toBe(
+        StepApprovalStatus.REVISION_REQUESTED,
+      );
+    });
+
+    it('평가자별로 다른 상태를 가질 수 있어야 한다', async () => {
+      // Given
+      await 여러_2차평가자_테스트데이터를_생성한다();
+
+      // When - 첫 번째 평가자는 승인, 두 번째 평가자는 재작성 요청, 세 번째 평가자는 대기
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId2,
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment: '수정 필요',
+        updatedBy: adminId,
+      });
+
+      // 세 번째 평가자는 상태 변경하지 않음 (기본 pending)
+
+      // Then - 각 평가자별로 다른 상태 확인
+      const approval1 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId,
+        },
+      });
+      expect(approval1!.status).toBe(StepApprovalStatus.APPROVED);
+
+      const approval2 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId2,
+        },
+      });
+      expect(approval2!.status).toBe(StepApprovalStatus.REVISION_REQUESTED);
+
+      // 세 번째 평가자는 아직 레코드가 없어야 함 (pending 상태는 레코드 생성 안 함)
+      const approval3 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId3,
+        },
+      });
+      expect(approval3).toBeNull();
+    });
+
+    it('맵핑 ID로 모든 평가자별 승인 상태를 조회할 수 있어야 한다', async () => {
+      // Given
+      await 여러_2차평가자_테스트데이터를_생성한다();
+
+      // When - 모든 평가자 승인
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId2,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId3,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      // Then - 맵핑 ID로 모든 승인 상태 조회
+      const allApprovals = await secondaryStepApprovalRepository.find({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+        },
+      });
+
+      expect(allApprovals.length).toBe(3);
+      expect(allApprovals.map((a) => a.evaluatorId)).toContain(
+        secondaryEvaluatorId,
+      );
+      expect(allApprovals.map((a) => a.evaluatorId)).toContain(
+        secondaryEvaluatorId2,
+      );
+      expect(allApprovals.map((a) => a.evaluatorId)).toContain(
+        secondaryEvaluatorId3,
+      );
+      expect(
+        allApprovals.every((a) => a.status === StepApprovalStatus.APPROVED),
+      ).toBe(true);
+    });
+
+    it('평가자별 승인 상태를 개별적으로 변경할 수 있어야 한다', async () => {
+      // Given
+      await 여러_2차평가자_테스트데이터를_생성한다();
+
+      // When - 모든 평가자 승인
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId2,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId3,
+        status: StepApprovalStatus.APPROVED,
+        updatedBy: adminId,
+      });
+
+      // When - 첫 번째 평가자만 재작성 요청으로 변경
+      await service.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId: secondaryEvaluatorId,
+        status: StepApprovalStatus.REVISION_REQUESTED,
+        revisionComment: '다시 검토 필요',
+        updatedBy: adminId,
+      });
+
+      // Then - 첫 번째 평가자만 revision_requested 상태
+      const approval1 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId,
+        },
+      });
+      expect(approval1!.status).toBe(StepApprovalStatus.REVISION_REQUESTED);
+
+      // Then - 두 번째, 세 번째 평가자는 여전히 approved 상태
+      const approval2 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId2,
+        },
+      });
+      const approval3 = await secondaryStepApprovalRepository.findOne({
+        where: {
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId3,
+        },
+      });
+      expect(approval2!.status).toBe(StepApprovalStatus.APPROVED);
+      expect(approval3!.status).toBe(StepApprovalStatus.APPROVED);
     });
   });
 });

@@ -17,6 +17,7 @@ import {
   EmployeeEvaluationStepApprovalService,
   StepApprovalStatus,
 } from '@domain/sub/employee-evaluation-step-approval';
+import { SecondaryEvaluationStepApprovalService } from '@domain/sub/secondary-evaluation-step-approval';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
@@ -37,6 +38,7 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
   constructor(
     private readonly revisionRequestService: EvaluationRevisionRequestService,
     private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
+    private readonly secondaryStepApprovalService: SecondaryEvaluationStepApprovalService,
     @InjectRepository(Employee)
     private readonly employeeRepository: Repository<Employee>,
     @InjectRepository(EvaluationPeriod)
@@ -351,6 +353,19 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
     // 저장
     await this.revisionRequestService.수신자를_저장한다(recipient);
 
+    // 2차 평가자인 경우, 개별 승인 상태를 REVISION_COMPLETED로 변경
+    if (
+      request.step === 'secondary' &&
+      recipient.recipientType === RecipientType.SECONDARY_EVALUATOR
+    ) {
+      await this.이차평가자_개별_승인상태를_재작성완료로_변경한다(
+        request.evaluationPeriodId,
+        request.employeeId,
+        recipientId,
+        request.id,
+      );
+    }
+
     // 평가기준(criteria)과 자기평가(self) 단계의 경우,
     // 각 수신자별로 별도의 재작성 요청이 생성되므로,
     // 다른 수신자에게 보낸 별도의 재작성 요청도 함께 완료 처리
@@ -529,6 +544,19 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
 
     // 저장
     await this.revisionRequestService.수신자를_저장한다(targetRecipient);
+
+    // 2차 평가자인 경우, 개별 승인 상태를 REVISION_COMPLETED로 변경
+    if (
+      targetRequest.step === 'secondary' &&
+      targetRecipient.recipientType === RecipientType.SECONDARY_EVALUATOR
+    ) {
+      await this.이차평가자_개별_승인상태를_재작성완료로_변경한다(
+        targetRequest.evaluationPeriodId,
+        targetRequest.employeeId,
+        evaluatorId,
+        targetRequest.id,
+      );
+    }
 
     // 평가기준(criteria)과 자기평가(self) 단계의 경우,
     // 각 수신자별로 별도의 재작성 요청이 생성되므로,
@@ -997,6 +1025,71 @@ export class RevisionRequestContextService implements IRevisionRequestContext {
 
     this.logger.log(
       `단계 승인 상태를 재작성 완료로 변경 완료 - 직원: ${employeeId}, 단계: ${step}`,
+    );
+  }
+
+  /**
+   * 2차 평가자 개별 승인 상태를 재작성 완료로 변경한다
+   * 2차 평가자가 재작성 완료 응답을 제출할 때 호출됩니다.
+   */
+  private async 이차평가자_개별_승인상태를_재작성완료로_변경한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    evaluatorId: string,
+    revisionRequestId: string,
+  ): Promise<void> {
+    this.logger.log(
+      `2차 평가자 개별 승인 상태를 재작성 완료로 변경 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 평가자: ${evaluatorId}`,
+    );
+
+    // 맵핑 조회
+    const mapping = await this.mappingRepository.findOne({
+      where: {
+        evaluationPeriodId,
+        employeeId,
+        deletedAt: null as any,
+      },
+    });
+
+    if (!mapping) {
+      this.logger.warn(
+        `평가기간-직원 맵핑을 찾을 수 없습니다. - 평가기간 ID: ${evaluationPeriodId}, 직원 ID: ${employeeId}`,
+      );
+      return;
+    }
+
+    // 2차 평가자별 단계 승인 정보 조회 또는 생성
+    let secondaryApproval =
+      await this.secondaryStepApprovalService.맵핑ID와_평가자ID로_조회한다(
+        mapping.id,
+        evaluatorId,
+      );
+
+    if (!secondaryApproval) {
+      this.logger.log(
+        `2차 평가자별 단계 승인 정보가 없어 새로 생성합니다. - 맵핑 ID: ${mapping.id}, 평가자 ID: ${evaluatorId}`,
+      );
+      secondaryApproval = await this.secondaryStepApprovalService.생성한다({
+        evaluationPeriodEmployeeMappingId: mapping.id,
+        evaluatorId: evaluatorId,
+        status: StepApprovalStatus.REVISION_COMPLETED,
+        createdBy: evaluatorId, // 재작성 완료한 평가자가 생성자
+      });
+    }
+
+    // 재작성 완료 상태로 변경
+    this.secondaryStepApprovalService.상태를_변경한다(
+      secondaryApproval,
+      StepApprovalStatus.REVISION_COMPLETED,
+      evaluatorId,
+      revisionRequestId,
+    );
+
+    // 저장
+    await this.secondaryStepApprovalService.저장한다(secondaryApproval);
+
+    this.logger.log(
+      `2차 평가자 개별 승인 상태를 재작성 완료로 변경 완료 - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
     );
   }
 }

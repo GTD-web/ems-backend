@@ -372,7 +372,14 @@ exports.CriteriaSetupDto = CriteriaSetupDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '평가기준 설정 상태 (계산된 상태)',
-        enum: ['none', 'in_progress', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+        enum: [
+            'none',
+            'in_progress',
+            'pending',
+            'approved',
+            'revision_requested',
+            'revision_completed',
+        ],
         example: 'none',
     }),
     __metadata("design:type", String)
@@ -516,7 +523,15 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '1차 하향평가 통합 상태 (진행 상태 + 승인 상태)',
-        enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+        enum: [
+            'complete',
+            'in_progress',
+            'none',
+            'pending',
+            'approved',
+            'revision_requested',
+            'revision_completed',
+        ],
         example: 'complete',
     }),
     __metadata("design:type", String)
@@ -576,7 +591,15 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '2차 하향평가 통합 상태 (진행 상태 + 승인 상태)',
-        enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+        enum: [
+            'complete',
+            'in_progress',
+            'none',
+            'pending',
+            'approved',
+            'revision_requested',
+            'revision_completed',
+        ],
         example: 'complete',
     }),
     __metadata("design:type", String)
@@ -613,7 +636,15 @@ exports.SecondaryDownwardEvaluationDto = SecondaryDownwardEvaluationDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '2차 평가 전체 통합 상태 (모든 평가자 통합)',
-        enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+        enum: [
+            'complete',
+            'in_progress',
+            'none',
+            'pending',
+            'approved',
+            'revision_requested',
+            'revision_completed',
+        ],
         example: 'complete',
     }),
     __metadata("design:type", String)
@@ -994,6 +1025,20 @@ __decorate([
                 evaluatorName: '홍길동',
                 evaluatorEmployeeNumber: 'EMP001',
                 evaluatorEmail: 'hong@example.com',
+                status: 'approved',
+                approvedBy: '123e4567-e89b-12d3-a456-426614174004',
+                approvedAt: '2024-01-15T10:00:00Z',
+                revisionRequestId: null,
+                revisionComment: null,
+                isRevisionCompleted: false,
+                revisionCompletedAt: null,
+                responseComment: null,
+            },
+            {
+                evaluatorId: '123e4567-e89b-12d3-a456-426614174005',
+                evaluatorName: '김철수',
+                evaluatorEmployeeNumber: 'EMP002',
+                evaluatorEmail: 'kim@example.com',
                 status: 'pending',
                 approvedBy: null,
                 approvedAt: null,
@@ -1001,6 +1046,7 @@ __decorate([
                 revisionComment: null,
                 isRevisionCompleted: false,
                 revisionCompletedAt: null,
+                responseComment: null,
             },
         ],
     }),

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-11-15T13:15:11.817Z",
+  "timestamp": "2025-11-17T15:07:12.375Z",
   "testResults": [
     {
       "testName": "상태 1: none - 평가할 WBS가 없으면 secondary.status는 none이어야 한다",
@@ -80,7 +80,7 @@
         "grade": "B",
         "stepApprovalStatus": "approved",
         "approvedBy": "00000000-0000-0000-0000-000000000001",
-        "approvedAt": "2025-11-15T13:15:10.168Z"
+        "approvedAt": "2025-11-17T15:07:10.885Z"
       }
     },
     {
@@ -143,7 +143,7 @@
       }
     },
     {
-      "testName": "상태 9: 여러 평가자 혼합 상태 - pending + pending 혼합이면 전체 상태는 pending이어야 한다",
+      "testName": "상태 9: 여러 평가자 혼합 상태 - pending + approved 혼합이면 전체 상태는 pending이어야 한다",
       "result": {
         "status": "pending",
         "evaluators": [
@@ -156,7 +156,7 @@
           },
           {
             "evaluatorName": "2차평가자2",
-            "status": "pending",
+            "status": "approved",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 2,
             "isSubmitted": true
@@ -209,9 +209,9 @@
       }
     },
     {
-      "testName": "상태 12: 여러 평가자 혼합 상태 - in_progress + pending 혼합이면 전체 상태는 in_progress이어야 한다",
+      "testName": "상태 12: 여러 평가자 혼합 상태 - in_progress + pending 혼합이면 전체 상태는 pending이어야 한다",
       "result": {
-        "status": "in_progress",
+        "status": "pending",
         "evaluators": [
           {
             "evaluatorName": "2차평가자1",
@@ -231,9 +231,9 @@
       }
     },
     {
-      "testName": "상태 13: 여러 평가자 혼합 상태 - revision_requested + revision_completed 혼합이면 전체 상태는 revision_requested이어야 한다 (최우선)",
+      "testName": "상태 13: 여러 평가자 혼합 상태 - revision_requested + revision_completed 혼합이면 전체 상태는 revision_completed이어야 한다",
       "result": {
-        "status": "revision_requested",
+        "status": "revision_completed",
         "evaluators": [
           {
             "evaluatorName": "2차평가자1",
@@ -259,14 +259,14 @@
         "evaluators": [
           {
             "evaluatorName": "2차평가자1",
-            "evaluatorId": "01c3e6ef-d274-4db1-9291-0358b0be47c4",
+            "evaluatorId": "66c91f7f-f9df-4eea-ab58-be02abb351cc",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
           },
           {
             "evaluatorName": "2차평가자2",
-            "evaluatorId": "c640b3ee-ade7-4ea0-b867-3e4f86e97cfa",
+            "evaluatorId": "846027c4-d759-4e1d-ba35-f3be50abae0c",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0,
             "isSubmitted": false
@@ -280,13 +280,13 @@
         "evaluators": [
           {
             "evaluatorName": "2차평가자1",
-            "evaluatorId": "ceb0e52e-bb1e-4e7b-a99f-eefa9b75afe8",
+            "evaluatorId": "745a690c-76f9-4ca9-a605-cd1157a72c20",
             "assignedWbsCount": 1,
             "status": "none"
           },
           {
             "evaluatorName": "2차평가자2",
-            "evaluatorId": "2b3b6172-8739-4f28-b768-bcccdf3809d1",
+            "evaluatorId": "4d244bb8-6932-4be0-a9f6-73eaad4d2e06",
             "assignedWbsCount": 0,
             "status": "none"
           }
@@ -300,13 +300,13 @@
         "evaluators": [
           {
             "evaluatorName": "2차평가자1",
-            "evaluatorId": "763e2e78-2377-4df9-9379-c027b7ba3320",
+            "evaluatorId": "eaedfc3e-696e-4a08-99f4-b9b9484eb7b8",
             "assignedWbsCount": 2,
             "completedEvaluationCount": 0
           },
           {
             "evaluatorName": "2차평가자2",
-            "evaluatorId": "3b100e58-af63-40cd-83d1-fa817ac06d23",
+            "evaluatorId": "f8a446dc-83af-4506-934a-2740f03c600e",
             "assignedWbsCount": 1,
             "completedEvaluationCount": 0
           }
