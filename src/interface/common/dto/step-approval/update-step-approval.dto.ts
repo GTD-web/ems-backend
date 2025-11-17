@@ -5,7 +5,9 @@ import {
   IsNotEmpty,
   ValidateIf,
   IsOptional,
+  IsBoolean,
 } from 'class-validator';
+import { ToBoolean } from '@/interface/common/decorators';
 
 /**
  * 단계 타입 enum
@@ -42,8 +44,7 @@ export class UpdateStepApprovalDto {
   status: StepApprovalStatusEnum;
 
   @ApiPropertyOptional({
-    description:
-      '재작성 요청 코멘트 (status가 revision_requested인 경우 필수)',
+    description: '재작성 요청 코멘트 (status가 revision_requested인 경우 필수)',
     example: '평가기준이 명확하지 않습니다. 다시 작성해 주세요.',
   })
   @ValidateIf((o) => o.status === StepApprovalStatusEnum.REVISION_REQUESTED)
@@ -51,6 +52,15 @@ export class UpdateStepApprovalDto {
   @IsNotEmpty()
   @IsOptional()
   revisionComment?: string;
+
+  @ApiPropertyOptional({
+    description:
+      '하위 평가 자동 승인 여부 (true: 하위 평가도 함께 승인, false: 현재 평가만 승인)',
+    example: false,
+    type: Boolean,
+  })
+  @IsOptional()
+  @ToBoolean(false)
+  @IsBoolean()
+  approveSubsequentSteps?: boolean;
 }
-
-

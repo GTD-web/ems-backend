@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpsertPeerEvaluationAnswersResponseDto = exports.UpsertPeerEvaluationAnswersDto = exports.PeerEvaluationAnswerItemDto = exports.PeerEvaluationListResponseDto = exports.PeerEvaluationDetailResponseDto = exports.EvaluationPeriodInfoDto = exports.EvaluationQuestionInDetailDto = exports.AssignedEvaluateeDto = exports.GetEvaluatorAssignedEvaluateesQueryDto = exports.DepartmentInfoDto = exports.EmployeeInfoDto = exports.PeerEvaluationBasicDto = exports.BulkPeerEvaluationRequestResponseDto = exports.BulkRequestSummary = exports.PeerEvaluationRequestResult = exports.PeerEvaluationResponseDto = exports.PeerEvaluationFilterDto = exports.SubmitPeerEvaluationDto = exports.UpdatePeerEvaluationDto = exports.CreatePeerEvaluationBodyDto = exports.RequestMultiplePeerEvaluationsDto = exports.RequestPeerEvaluationToMultipleEvaluatorsDto = exports.RequestPeerEvaluationDto = void 0;
+exports.UpsertPeerEvaluationAnswersResponseDto = exports.UpsertPeerEvaluationAnswersDto = exports.PeerEvaluationAnswerItemDto = exports.PeerEvaluationListResponseDto = exports.PeerEvaluationDetailResponseDto = exports.EvaluationPeriodInfoDto = exports.EvaluationQuestionInDetailDto = exports.AssignedEvaluateeDto = exports.GetEvaluatorAssignedEvaluateesQueryDto = exports.DepartmentInfoDto = exports.EmployeeInfoDto = exports.PeerEvaluationBasicDto = exports.BulkPeerEvaluationRequestResponseDto = exports.BulkRequestSummary = exports.PeerEvaluationRequestResult = exports.PeerEvaluationResponseDto = exports.PeerEvaluationFilterDto = exports.SubmitPeerEvaluationDto = exports.UpdatePeerEvaluationDto = exports.CreatePeerEvaluationBodyDto = exports.RequestPartLeaderPeerEvaluationsDto = exports.RequestMultiplePeerEvaluationsDto = exports.RequestPeerEvaluationToMultipleEvaluatorsDto = exports.RequestPeerEvaluationDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
@@ -207,6 +207,77 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], RequestMultiplePeerEvaluationsDto.prototype, "requestedBy", void 0);
+class RequestPartLeaderPeerEvaluationsDto {
+    periodId;
+    evaluatorIds;
+    evaluateeIds;
+    requestDeadline;
+    questionIds;
+    requestedBy;
+}
+exports.RequestPartLeaderPeerEvaluationsDto = RequestPartLeaderPeerEvaluationsDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기간 ID',
+        example: '550e8400-e29b-41d4-a716-446655440003',
+    }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "periodId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '평가자 ID 목록 (특정 파트장들만 평가자로 지정, 생략 시 모든 파트장)',
+        type: [String],
+        example: [
+            '550e8400-e29b-41d4-a716-446655440000',
+            '550e8400-e29b-41d4-a716-446655440001',
+        ],
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "evaluatorIds", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '피평가자 ID 목록 (특정 파트장들만 피평가자로 지정, 생략 시 모든 파트장)',
+        type: [String],
+        example: [
+            '550e8400-e29b-41d4-a716-446655440002',
+            '550e8400-e29b-41d4-a716-446655440003',
+        ],
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "evaluateeIds", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '요청 마감일 (ISO 8601 형식)',
+        example: '2024-12-31T23:59:59Z',
+        type: String,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", Date)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "requestDeadline", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',
+        type: [String],
+        example: [
+            '550e8400-e29b-41d4-a716-446655440010',
+            '550e8400-e29b-41d4-a716-446655440011',
+        ],
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "questionIds", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "requestedBy", void 0);
 class CreatePeerEvaluationBodyDto {
     evaluatorId;
     peerEvaluationContent;
@@ -420,6 +491,7 @@ class BulkRequestSummary {
     total;
     success;
     failed;
+    partLeaderCount;
 }
 exports.BulkRequestSummary = BulkRequestSummary;
 __decorate([
@@ -443,6 +515,13 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], BulkRequestSummary.prototype, "failed", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '파트장 수 (파트장 간 동료평가 요청 시에만 포함)',
+        example: 11,
+    }),
+    __metadata("design:type", Number)
+], BulkRequestSummary.prototype, "partLeaderCount", void 0);
 class BulkPeerEvaluationRequestResponseDto {
     results;
     summary;

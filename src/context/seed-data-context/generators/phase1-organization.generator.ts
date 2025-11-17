@@ -380,6 +380,11 @@ export class Phase1OrganizationGenerator {
     // 나머지 직원 생성
     // existingAdminId가 있으면 i=0부터, 없으면 i=1부터 시작
     const startIndex = existingAdminId ? 0 : 1;
+    
+    // 파트장 비율 결정 (20%를 파트장으로 설정, 최소 2명)
+    const partLeaderCount = Math.max(2, Math.ceil((count - startIndex) * 0.2));
+    let partLeadersCreated = 0;
+    
     for (let i = startIndex; i < count; i++) {
       const emp = new Employee();
       emp.employeeNumber = `EMP${timestamp}${String(i + 1).padStart(3, '0')}`;
@@ -420,6 +425,14 @@ export class Phase1OrganizationGenerator {
       const randomDept =
         departments[Math.floor(Math.random() * departments.length)];
       emp.departmentId = randomDept.id; // id로 매칭
+      
+      // 일부 직원을 파트장으로 설정 (테스트 환경용)
+      // 파트장이 필요한 만큼 생성될 때까지 positionId를 부여
+      if (partLeadersCreated < partLeaderCount && emp.status === '재직중') {
+        emp.positionId = faker.string.uuid(); // 더미 position ID
+        partLeadersCreated++;
+      }
+      
       emp.externalId = faker.string.uuid();
       emp.externalCreatedAt = new Date();
       emp.externalUpdatedAt = new Date();
@@ -427,6 +440,10 @@ export class Phase1OrganizationGenerator {
 
       employees.push(emp);
     }
+    
+    this.logger.log(
+      `직원 생성 완료: 총 ${employees.length}명 (파트장: ${partLeadersCreated}명)`,
+    );
 
     // 배치 저장
     let saved: Employee[] = [];

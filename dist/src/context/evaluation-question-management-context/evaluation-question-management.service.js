@@ -8,20 +8,99 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var EvaluationQuestionManagementService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationQuestionManagementService = void 0;
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const question_group_entity_1 = require("../../domain/sub/question-group/question-group.entity");
+const evaluation_question_entity_1 = require("../../domain/sub/evaluation-question/evaluation-question.entity");
+const question_group_mapping_entity_1 = require("../../domain/sub/question-group-mapping/question-group-mapping.entity");
 const question_group_1 = require("./handlers/question-group");
 const evaluation_question_1 = require("./handlers/evaluation-question");
 const question_group_mapping_1 = require("./handlers/question-group-mapping");
 const evaluation_response_1 = require("./handlers/evaluation-response");
-let EvaluationQuestionManagementService = class EvaluationQuestionManagementService {
+let EvaluationQuestionManagementService = EvaluationQuestionManagementService_1 = class EvaluationQuestionManagementService {
     queryBus;
     commandBus;
-    constructor(queryBus, commandBus) {
+    questionGroupRepository;
+    evaluationQuestionRepository;
+    questionGroupMappingRepository;
+    logger = new common_1.Logger(EvaluationQuestionManagementService_1.name);
+    constructor(queryBus, commandBus, questionGroupRepository, evaluationQuestionRepository, questionGroupMappingRepository) {
         this.queryBus = queryBus;
         this.commandBus = commandBus;
+        this.questionGroupRepository = questionGroupRepository;
+        this.evaluationQuestionRepository = evaluationQuestionRepository;
+        this.questionGroupMappingRepository = questionGroupMappingRepository;
+    }
+    async onModuleInit() {
+        try {
+            this.logger.log('모듈 초기화: 파트장 평가 질문 그룹 확인 중...');
+            const existingGroup = await this.questionGroupRepository.findOne({
+                where: { name: '파트장 평가 질문' },
+            });
+            if (!existingGroup) {
+                this.logger.log('파트장 평가 질문 그룹이 없습니다. 자동 생성을 시작합니다...');
+                await this.생성_파트장평가질문그룹();
+                this.logger.log('파트장 평가 질문 그룹이 성공적으로 생성되었습니다.');
+            }
+            else {
+                this.logger.log(`파트장 평가 질문 그룹이 이미 존재합니다. (ID: ${existingGroup.id})`);
+            }
+        }
+        catch (error) {
+            this.logger.error(`모듈 초기화 중 오류 발생: ${error.message}`, error.stack);
+        }
+    }
+    async 생성_파트장평가질문그룹() {
+        const systemAdminId = '00000000-0000-0000-0000-000000000000';
+        const partLeaderGroup = new question_group_entity_1.QuestionGroup();
+        partLeaderGroup.name = '파트장 평가 질문';
+        partLeaderGroup.isDefault = false;
+        partLeaderGroup.isDeletable = false;
+        partLeaderGroup.createdBy = systemAdminId;
+        const [savedGroup] = await this.questionGroupRepository.save([
+            partLeaderGroup,
+        ]);
+        this.logger.log(`파트장 평가 질문 그룹 생성 완료 (ID: ${savedGroup.id})`);
+        const partLeaderQuestions = [];
+        const question1 = new evaluation_question_entity_1.EvaluationQuestion();
+        question1.text = '업무 능력은 어떠한가요?';
+        question1.minScore = 1;
+        question1.maxScore = 5;
+        question1.createdBy = systemAdminId;
+        partLeaderQuestions.push(question1);
+        const question2 = new evaluation_question_entity_1.EvaluationQuestion();
+        question2.text = '프로젝트 수행 능력은 어떠한가요?';
+        question2.minScore = 1;
+        question2.maxScore = 5;
+        question2.createdBy = systemAdminId;
+        partLeaderQuestions.push(question2);
+        const question3 = new evaluation_question_entity_1.EvaluationQuestion();
+        question3.text = '부서 관리 능력은 어떠한가요?';
+        question3.minScore = 1;
+        question3.maxScore = 5;
+        question3.createdBy = systemAdminId;
+        partLeaderQuestions.push(question3);
+        const savedQuestions = await this.evaluationQuestionRepository.save(partLeaderQuestions);
+        this.logger.log(`파트장 평가 질문 ${savedQuestions.length}개 생성 완료`);
+        const partLeaderMappings = [];
+        for (let i = 0; i < savedQuestions.length; i++) {
+            const mapping = new question_group_mapping_entity_1.QuestionGroupMapping();
+            mapping.groupId = savedGroup.id;
+            mapping.questionId = savedQuestions[i].id;
+            mapping.displayOrder = i;
+            mapping.createdBy = systemAdminId;
+            partLeaderMappings.push(mapping);
+        }
+        await this.questionGroupMappingRepository.save(partLeaderMappings);
+        this.logger.log(`파트장 평가 질문 매핑 ${partLeaderMappings.length}개 생성 완료`);
     }
     async 질문그룹을_생성한다(data, createdBy) {
         return await this.commandBus.execute(new question_group_1.CreateQuestionGroupCommand(data, createdBy));
@@ -106,9 +185,15 @@ let EvaluationQuestionManagementService = class EvaluationQuestionManagementServ
     }
 };
 exports.EvaluationQuestionManagementService = EvaluationQuestionManagementService;
-exports.EvaluationQuestionManagementService = EvaluationQuestionManagementService = __decorate([
+exports.EvaluationQuestionManagementService = EvaluationQuestionManagementService = EvaluationQuestionManagementService_1 = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, typeorm_1.InjectRepository)(question_group_entity_1.QuestionGroup)),
+    __param(3, (0, typeorm_1.InjectRepository)(evaluation_question_entity_1.EvaluationQuestion)),
+    __param(4, (0, typeorm_1.InjectRepository)(question_group_mapping_entity_1.QuestionGroupMapping)),
     __metadata("design:paramtypes", [cqrs_1.QueryBus,
-        cqrs_1.CommandBus])
+        cqrs_1.CommandBus,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository])
 ], EvaluationQuestionManagementService);
 //# sourceMappingURL=evaluation-question-management.service.js.map

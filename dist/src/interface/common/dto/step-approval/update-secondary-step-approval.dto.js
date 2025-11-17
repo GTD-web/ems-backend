@@ -13,9 +13,11 @@ exports.UpdateSecondaryStepApprovalDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const update_step_approval_dto_1 = require("./update-step-approval.dto");
+const decorators_1 = require("../../decorators");
 class UpdateSecondaryStepApprovalDto {
     status;
     revisionComment;
+    approveSubsequentSteps;
 }
 exports.UpdateSecondaryStepApprovalDto = UpdateSecondaryStepApprovalDto;
 __decorate([
@@ -39,4 +41,15 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateSecondaryStepApprovalDto.prototype, "revisionComment", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '하위 평가 자동 승인 여부 (true: 하위 평가도 함께 승인, false: 현재 평가만 승인)',
+        example: false,
+        type: Boolean,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, decorators_1.ToBoolean)(false),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateSecondaryStepApprovalDto.prototype, "approveSubsequentSteps", void 0);
 //# sourceMappingURL=update-secondary-step-approval.dto.js.map

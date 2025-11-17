@@ -22,6 +22,8 @@ import {
   QuestionGroupMappingResponseDto,
   SuccessResponseDto,
   BatchSuccessResponseDto,
+  PartLeaderQuestionSettingsResponseDto,
+  UpdatePartLeaderQuestionSettingsDto,
 } from '../../dto/performance-evaluation/evaluation-question.dto';
 
 // ==================== 질문 그룹 API ====================
@@ -874,6 +876,86 @@ export function MoveQuestionDown() {
     ApiResponse({
       status: HttpStatus.NOT_FOUND,
       description: '매핑 정보를 찾을 수 없습니다.',
+    }),
+  );
+}
+
+// ==================== 파트장 질문 설정 API ====================
+
+/**
+ * 파트장 질문 설정 조회 API 데코레이터
+ */
+export function GetPartLeaderQuestionSettings() {
+  return applyDecorators(
+    Get('part-leader-settings'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '파트장 질문 설정 조회',
+      description: `파트장 간 동료평가에 사용되는 기본 질문 설정을 조회합니다.
+
+**동작:**
+- "파트장 평가 질문" 그룹과 해당 그룹의 질문 목록 조회
+- displayOrder 순으로 정렬된 질문 목록 반환
+
+**테스트 케이스:**
+- 정상 조회: 파트장 질문 그룹과 질문 목록을 조회할 수 있어야 한다
+- 응답 구조 검증: group과 questions 필드가 포함되어야 한다
+- 질문 순서: questions가 displayOrder 오름차순으로 정렬되어야 한다
+- 그룹 없음: 파트장 질문 그룹이 없는 경우 404 에러가 발생해야 한다`,
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '파트장 질문 설정 조회 성공',
+      type: PartLeaderQuestionSettingsResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '파트장 질문 그룹을 찾을 수 없습니다.',
+    }),
+  );
+}
+
+/**
+ * 파트장 질문 설정 업데이트 API 데코레이터
+ */
+export function UpdatePartLeaderQuestionSettings() {
+  return applyDecorators(
+    Put('part-leader-settings'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '파트장 질문 설정 업데이트',
+      description: `파트장 간 동료평가에 사용되는 기본 질문 설정을 업데이트합니다.
+
+**동작:**
+- 기존 "파트장 평가 질문" 그룹의 모든 질문 매핑 제거
+- 새로운 질문 ID 목록을 순서대로 그룹에 추가
+- displayOrder는 배열의 인덱스 순서로 자동 설정 (0, 1, 2, ...)
+
+**테스트 케이스:**
+- 정상 업데이트: questionIds 배열로 질문 설정을 업데이트할 수 있어야 한다
+- 순서 적용: 배열 순서대로 displayOrder가 설정되어야 한다
+- 기존 질문 제거: 업데이트 시 기존 질문들이 제거되어야 한다
+- 응답 구조 검증: 업데이트된 그룹과 질문 목록이 반환되어야 한다
+- 빈 배열: 빈 배열로 요청 시 모든 질문이 제거되어야 한다
+- 존재하지 않는 질문: 유효하지 않은 questionId 포함 시 404 에러가 발생해야 한다
+- 필수 필드 누락: questionIds 누락 시 400 에러가 발생해야 한다`,
+    }),
+    ApiBody({
+      type: UpdatePartLeaderQuestionSettingsDto,
+      description: '파트장 질문 설정 업데이트 정보',
+    }),
+    ApiResponse({
+      status: HttpStatus.OK,
+      description: '파트장 질문 설정이 성공적으로 업데이트되었습니다.',
+      type: PartLeaderQuestionSettingsResponseDto,
+    }),
+    ApiResponse({
+      status: HttpStatus.BAD_REQUEST,
+      description: '잘못된 요청 데이터입니다.',
+    }),
+    ApiResponse({
+      status: HttpStatus.NOT_FOUND,
+      description: '파트장 질문 그룹 또는 질문을 찾을 수 없습니다.',
     }),
   );
 }

@@ -1,10 +1,10 @@
 {
-  "timestamp": "2025-11-15T06:13:06.831Z",
+  "timestamp": "2025-11-17T00:48:48.667Z",
   "testResults": [
     {
       "testName": "isCompleted=false로 필터링 시 false인 항목만 반환되어야 한다",
       "result": {
-        "recipientId": "f4e423f3-7b23-4d45-81f7-7bd10fbbb598",
+        "recipientId": "6683d443-1fdc-43b1-83bf-65ba4a8fe55d",
         "filter": {
           "isCompleted": false
         },
@@ -18,7 +18,7 @@
     {
       "testName": "isCompleted=true로 필터링 시 true인 항목만 반환되어야 한다",
       "result": {
-        "recipientId": "135fbc0e-a401-4853-a15d-ba30d949f942",
+        "recipientId": "a0ee70bb-eeb9-4454-b127-aaf12ceb19f2",
         "filter": {
           "isCompleted": true
         },
@@ -32,7 +32,7 @@
     {
       "testName": "isRead=false로 필터링 시 false인 항목만 반환되어야 한다",
       "result": {
-        "recipientId": "121e2269-3acf-4edd-8074-131e63304f5c",
+        "recipientId": "6e0793ed-97bb-4070-9661-e686619504d7",
         "filter": {
           "isRead": false
         },
@@ -46,7 +46,7 @@
     {
       "testName": "isRead=true로 필터링 시 true인 항목만 반환되어야 한다",
       "result": {
-        "recipientId": "89aa3f18-efed-41b7-9978-4ed916d4a84e",
+        "recipientId": "8704c78b-e419-49e7-a6a4-0e97eafde68b",
         "filter": {
           "isRead": true
         },
@@ -60,7 +60,7 @@
     {
       "testName": "isRead=false와 isCompleted=false를 함께 사용 시 두 조건 모두 만족하는 항목만 반환되어야 한다",
       "result": {
-        "recipientId": "9be4c4a9-fe69-4490-8879-035d0b1ce1ac",
+        "recipientId": "bd042417-6ac1-4c32-9f45-838993320e43",
         "filter": {
           "isRead": false,
           "isCompleted": false

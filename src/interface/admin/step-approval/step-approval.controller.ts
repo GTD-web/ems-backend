@@ -153,6 +153,15 @@ export class StepApprovalController {
           employeeId,
           updatedBy,
         );
+
+        // 하위 평가 자동 승인 옵션이 활성화된 경우
+        if (dto.approveSubsequentSteps) {
+          await this.stepApprovalBusinessService.자기평가_승인_시_하위평가들을_승인한다(
+            evaluationPeriodId,
+            employeeId,
+            updatedBy,
+          );
+        }
       }
 
       // 단계 승인 상태 변경
@@ -199,6 +208,15 @@ export class StepApprovalController {
           employeeId,
           updatedBy,
         );
+
+        // 하위 평가 자동 승인 옵션이 활성화된 경우
+        if (dto.approveSubsequentSteps) {
+          await this.stepApprovalBusinessService.일차하향평가_승인_시_하위평가들을_승인한다(
+            evaluationPeriodId,
+            employeeId,
+            updatedBy,
+          );
+        }
       }
 
       // 단계 승인 상태 변경

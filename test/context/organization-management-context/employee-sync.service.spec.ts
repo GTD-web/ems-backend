@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, Repository, Not, IsNull } from 'typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { DatabaseModule } from '@libs/database/database.module';
 import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
@@ -12,7 +12,6 @@ import { Employee } from '@domain/common/employee/employee.entity';
 import { EmployeeService } from '@domain/common/employee/employee.service';
 import { SSOService } from '@domain/common/sso';
 import type { ISSOService } from '@domain/common/sso/interfaces';
-import type { EmployeeInfo } from '@domain/common/sso/interfaces';
 import type { EmployeeSyncResult } from '@domain/common/employee/employee.types';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -1017,6 +1016,7 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
       console.log(
         `  - DB에 managerId가 저장된 직원: ${dbEmployeesWithManagerId.length}명`,
       );
+
       console.log(
         `  - DB에 managerId가 없는 직원: ${dbEmployeesWithoutManagerId.length}명`,
       );
@@ -1206,6 +1206,197 @@ describe('EmployeeSyncService - SSO 직원 동기화 통합 테스트', () => {
 
       // 테스트는 통과 (managerId가 없어도 정상, 있으면 저장되어야 함)
       expect(dbEmployees.length).toBeGreaterThan(0);
+    }, 120000);
+  });
+
+  describe('파트장 동기화 및 동료평가', () => {
+    it('파트장 정보가 올바르게 동기화되어야 한다', async () => {
+      // Given
+      // SSO에서 원시 데이터 조회
+      const ssoEmployees = await service.fetchExternalEmployees();
+      expect(ssoEmployees.length).toBeGreaterThan(0);
+
+      // SSO 데이터에서 파트장 찾기
+      const ssoPartLeaders = ssoEmployees.filter(
+        (emp) =>
+          emp.position &&
+          (emp.position.positionName?.includes('파트장') ||
+            emp.position.positionCode?.includes('파트장')),
+      );
+
+      console.log(`\n📊 SSO 원시 데이터 파트장 현황:`);
+      console.log(`  - 전체 직원 수: ${ssoEmployees.length}명`);
+      console.log(`  - 파트장 수: ${ssoPartLeaders.length}명`);
+
+      // 파트장 예시 출력 (처음 5명)
+      if (ssoPartLeaders.length > 0) {
+        console.log(`\n📋 파트장 예시 (처음 5명):`);
+        ssoPartLeaders.slice(0, 5).forEach((emp) => {
+          console.log(`  - ${emp.name} (${emp.employeeNumber})`);
+          console.log(`    직책: ${emp.position.positionName}`);
+          console.log(`    직책 코드: ${emp.position.positionCode || '없음'}`);
+          console.log(`    부서: ${emp.department?.departmentName || '없음'}`);
+          console.log(`    직급: ${emp.rank?.rankName || '없음'}`);
+        });
+      }
+
+      // When
+      // 동기화 수행
+      const result = await service.syncEmployees(true);
+      expect(result.success).toBe(true);
+
+      // Then
+      // DB에서 동기화된 파트장 데이터 조회
+      const dbEmployees = await employeeRepository.find({
+        order: { name: 'ASC' },
+      });
+
+      // DB에서 파트장 필터링 (positionId가 파트장인 직원)
+      const dbPartLeaders = dbEmployees.filter((emp) => {
+        if (!emp.positionId) return false;
+
+        // SSO 데이터에서 해당 직원의 position 정보 확인
+        const ssoEmp = ssoEmployees.find((ssoE) => ssoE.id === emp.externalId);
+        return (
+          ssoEmp &&
+          ssoEmp.position &&
+          (ssoEmp.position.positionName?.includes('파트장') ||
+            ssoEmp.position.positionCode?.includes('파트장'))
+        );
+      });
+
+      console.log(`\n📊 DB 동기화 파트장 현황:`);
+      console.log(`  - 전체 동기화된 직원: ${dbEmployees.length}명`);
+      console.log(`  - DB에 저장된 파트장: ${dbPartLeaders.length}명`);
+
+      // 파트장이 있다면 상세 검증
+      if (ssoPartLeaders.length > 0) {
+        expect(dbPartLeaders.length).toBe(ssoPartLeaders.length);
+
+        console.log(`\n✅ DB에 저장된 파트장 상세 정보 (처음 5명):`);
+        dbPartLeaders.slice(0, 5).forEach((emp) => {
+          const ssoEmp = ssoEmployees.find(
+            (ssoE) => ssoE.id === emp.externalId,
+          );
+
+          console.log(`  - ${emp.name} (${emp.employeeNumber})`);
+          console.log(`    직책 ID: ${emp.positionId}`);
+          console.log(`    부서: ${emp.departmentName || '없음'}`);
+          console.log(`    직급: ${emp.rankName || '없음'}`);
+          console.log(`    상태: ${emp.status}`);
+
+          // 필드 검증
+          expect(emp.positionId).toBeTruthy();
+          expect(emp.positionId).toBe(ssoEmp?.position?.id);
+
+          // 부서 정보 검증 (있을 경우)
+          if (ssoEmp?.department) {
+            expect(emp.departmentId).toBe(ssoEmp.department.id);
+            expect(emp.departmentName).toBe(ssoEmp.department.departmentName);
+          }
+
+          // 직급 정보 검증 (있을 경우)
+          if (ssoEmp?.rank) {
+            expect(emp.rankId).toBe(ssoEmp.rank.id);
+            expect(emp.rankName).toBe(ssoEmp.rank.rankName);
+          }
+        });
+
+        console.log(`\n✅ 파트장 ${dbPartLeaders.length}명 동기화 검증 완료`);
+      } else {
+        console.log(`\n⚠️ SSO 데이터에 파트장이 없습니다.`);
+
+        // 파트장이 없어도 테스트는 통과하지만, position 데이터는 확인
+        const employeesWithPosition = dbEmployees.filter(
+          (emp) => emp.positionId !== null && emp.positionId !== undefined,
+        );
+
+        console.log(
+          `\nℹ️ 직책 정보가 있는 직원: ${employeesWithPosition.length}명`,
+        );
+
+        if (employeesWithPosition.length > 0) {
+          console.log(`\n📋 직책 정보 예시 (처음 5명):`);
+          employeesWithPosition.slice(0, 5).forEach((emp) => {
+            const ssoEmp = ssoEmployees.find(
+              (ssoE) => ssoE.id === emp.externalId,
+            );
+
+            console.log(`  - ${emp.name} (${emp.employeeNumber})`);
+            console.log(`    직책 ID: ${emp.positionId}`);
+            if (ssoEmp?.position) {
+              console.log(`    직책명: ${ssoEmp.position.positionName}`);
+            }
+          });
+        }
+      }
+
+      // 기본 검증
+      expect(dbEmployees.length).toBeGreaterThan(0);
+    }, 120000);
+
+    it('파트장 목록을 조회할 수 있어야 한다', async () => {
+      // Given
+      // 동기화 수행
+      await service.syncEmployees(true);
+
+      // When
+      const partLeaders = await service.getPartLeaders(false);
+
+      // Then
+      console.log(`\n📊 파트장 조회 결과:`);
+      console.log(`  - 조회된 파트장 수: ${partLeaders.length}명`);
+
+      if (partLeaders.length > 0) {
+        console.log(`\n📋 파트장 목록 (처음 5명):`);
+        partLeaders.slice(0, 5).forEach((leader, index) => {
+          console.log(
+            `  ${index + 1}. ${leader.name} (${leader.employeeNumber})`,
+          );
+          console.log(`     부서: ${leader.departmentName || '없음'}`);
+          console.log(`     직급: ${leader.rankName || '없음'}`);
+        });
+      } else {
+        console.log(`\n⚠️ 파트장이 조회되지 않았습니다.`);
+      }
+
+      // 파트장이 있든 없든 배열이어야 함
+      expect(Array.isArray(partLeaders)).toBe(true);
+    }, 120000);
+
+    it('조회된 파트장들이 모두 유효한 직원이어야 한다', async () => {
+      // Given
+      await service.syncEmployees(true);
+
+      // When
+      const partLeaders = await service.getPartLeaders(false);
+
+      // Then
+      if (partLeaders.length > 0) {
+        console.log(`\n📊 파트장 유효성 검증:`);
+        console.log(`  - 파트장 수: ${partLeaders.length}명`);
+
+        partLeaders.forEach((leader) => {
+          // 필수 필드 검증
+          expect(leader.id).toBeTruthy();
+          expect(leader.employeeNumber).toBeTruthy();
+          expect(leader.name).toBeTruthy();
+          expect(leader.email).toBeTruthy();
+          expect(leader.externalId).toBeTruthy();
+          expect(leader.status).toBeTruthy();
+
+          // UUID 형식 검증
+          expect(leader.id).toMatch(
+            /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+          );
+        });
+
+        console.log(`  ✅ 모든 파트장의 필수 필드가 유효합니다.`);
+      } else {
+        console.log(`\n⚠️ 파트장이 없어 유효성 검증을 건너뜁니다.`);
+      }
+
+      expect(Array.isArray(partLeaders)).toBe(true);
     }, 120000);
   });
 });

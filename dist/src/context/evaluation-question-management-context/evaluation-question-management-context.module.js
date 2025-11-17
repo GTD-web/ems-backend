@@ -9,10 +9,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationQuestionManagementContextModule = void 0;
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
+const typeorm_1 = require("@nestjs/typeorm");
 const question_group_module_1 = require("../../domain/sub/question-group/question-group.module");
 const evaluation_question_module_1 = require("../../domain/sub/evaluation-question/evaluation-question.module");
 const question_group_mapping_module_1 = require("../../domain/sub/question-group-mapping/question-group-mapping.module");
 const evaluation_response_module_1 = require("../../domain/sub/evaluation-response/evaluation-response.module");
+const question_group_entity_1 = require("../../domain/sub/question-group/question-group.entity");
+const evaluation_question_entity_1 = require("../../domain/sub/evaluation-question/evaluation-question.entity");
+const question_group_mapping_entity_1 = require("../../domain/sub/question-group-mapping/question-group-mapping.entity");
 const evaluation_question_management_service_1 = require("./evaluation-question-management.service");
 const handlers_1 = require("./handlers");
 let EvaluationQuestionManagementContextModule = class EvaluationQuestionManagementContextModule {
@@ -22,6 +26,11 @@ exports.EvaluationQuestionManagementContextModule = EvaluationQuestionManagement
     (0, common_1.Module)({
         imports: [
             cqrs_1.CqrsModule,
+            typeorm_1.TypeOrmModule.forFeature([
+                question_group_entity_1.QuestionGroup,
+                evaluation_question_entity_1.EvaluationQuestion,
+                question_group_mapping_entity_1.QuestionGroupMapping,
+            ]),
             question_group_module_1.QuestionGroupModule,
             evaluation_question_module_1.EvaluationQuestionModule,
             question_group_mapping_module_1.QuestionGroupMappingModule,

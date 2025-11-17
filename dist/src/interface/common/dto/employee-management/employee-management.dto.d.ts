@@ -10,6 +10,9 @@ export declare class GetEmployeesQueryDto {
     includeExcluded?: boolean;
     departmentId?: string;
 }
+export declare class GetPartLeadersQueryDto {
+    forceRefresh?: boolean;
+}
 export declare class EmployeeResponseDto {
     id: string;
     employeeNumber: string;
@@ -28,4 +31,8 @@ export declare class EmployeeResponseDto {
     createdAt: Date;
     updatedAt: Date;
     isAccessible: boolean;
+}
+export declare class PartLeadersResponseDto {
+    partLeaders: EmployeeResponseDto[];
+    count: number;
 }
