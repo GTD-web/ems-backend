@@ -369,6 +369,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             if (existingEmployee) {
                 const needsUpdate = this.업데이트가_필요한가(existingEmployee, mappedData, forceSync);
                 if (needsUpdate) {
+                    const preservedIsAccessible = existingEmployee.isAccessible;
                     Object.assign(existingEmployee, {
                         employeeNumber: mappedData.employeeNumber,
                         name: mappedData.name,
@@ -390,6 +391,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         lastSyncAt: syncStartTime,
                         updatedBy: this.systemUserId,
                     });
+                    existingEmployee.isAccessible = preservedIsAccessible;
                     return { success: true, employee: existingEmployee, isNew: false };
                 }
                 return { success: false };
@@ -528,6 +530,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                 existingEmployee = await this.employeeService.findByExternalId(employee.externalId);
             }
             if (existingEmployee) {
+                const preservedIsAccessible = existingEmployee.isAccessible;
                 Object.assign(existingEmployee, {
                     employeeNumber: employee.employeeNumber,
                     name: employee.name,
@@ -552,6 +555,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                     lastSyncAt: employee.lastSyncAt,
                     updatedBy: this.systemUserId,
                 });
+                existingEmployee.isAccessible = preservedIsAccessible;
                 await this.employeeService.save(existingEmployee);
                 return { success: true };
             }

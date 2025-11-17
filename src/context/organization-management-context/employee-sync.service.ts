@@ -605,6 +605,9 @@ export class EmployeeSyncService implements OnModuleInit {
 
         if (needsUpdate) {
           // 기존 직원 업데이트
+          // isAccessible 필드는 동기화 시 변경하지 않음 (수동 설정 값 보존)
+          const preservedIsAccessible = existingEmployee.isAccessible;
+          
           Object.assign(existingEmployee, {
             employeeNumber: mappedData.employeeNumber,
             name: mappedData.name,
@@ -626,6 +629,9 @@ export class EmployeeSyncService implements OnModuleInit {
             lastSyncAt: syncStartTime,
             updatedBy: this.systemUserId,
           } as UpdateEmployeeDto);
+
+          // isAccessible 필드 보존 (동기화 시 변경하지 않음)
+          existingEmployee.isAccessible = preservedIsAccessible;
 
           return { success: true, employee: existingEmployee, isNew: false };
         }
@@ -870,6 +876,9 @@ export class EmployeeSyncService implements OnModuleInit {
 
       if (existingEmployee) {
         // 기존 엔티티에 새 데이터 덮어쓰기
+        // isAccessible 필드는 동기화 시 변경하지 않음 (수동 설정 값 보존)
+        const preservedIsAccessible = existingEmployee.isAccessible;
+        
         Object.assign(existingEmployee, {
           employeeNumber: employee.employeeNumber,
           name: employee.name,
@@ -894,6 +903,9 @@ export class EmployeeSyncService implements OnModuleInit {
           lastSyncAt: employee.lastSyncAt,
           updatedBy: this.systemUserId,
         });
+
+        // isAccessible 필드 보존 (동기화 시 변경하지 않음)
+        existingEmployee.isAccessible = preservedIsAccessible;
 
         await this.employeeService.save(existingEmployee);
         return { success: true };
