@@ -41,7 +41,7 @@ import { TransactionManagerService } from './transaction-manager.service';
           username,
           password,
           database,
-          autoLoadEntities: false,
+          autoLoadEntities: true,
           logging: configService.get<boolean>('DB_LOGGING', isDevelopment && !isTest),
           ssl: needsSSL ? { rejectUnauthorized: false } : false,
           extra: {

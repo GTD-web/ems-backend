@@ -43,8 +43,6 @@ exports.DatabaseModule = DatabaseModule = __decorate([
                         password,
                         database,
                         autoLoadEntities: true,
-                        dropSchema: isTest,
-                        synchronize: configService.get('DB_SYNCHRONIZE', isDevelopment || isTest),
                         logging: configService.get('DB_LOGGING', isDevelopment && !isTest),
                         ssl: needsSSL ? { rejectUnauthorized: false } : false,
                         extra: {
