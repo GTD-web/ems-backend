@@ -12,6 +12,7 @@ import { DownwardEvaluationBusinessService } from '@business/downward-evaluation
 import { StepApprovalBusinessService } from '@business/step-approval/step-approval-business.service';
 import { UpdateStepApprovalDto } from '@interface/common/dto/step-approval/update-step-approval.dto';
 import { UpdateSecondaryStepApprovalDto } from '@interface/common/dto/step-approval/update-secondary-step-approval.dto';
+import { UpdateSecondaryStepApprovalResponseDto } from '@interface/common/dto/step-approval/update-secondary-step-approval-response.dto';
 import { StepApprovalEnumsResponseDto } from '@interface/common/dto/step-approval/step-approval-enums.dto';
 import {
   UpdateStepApproval,
@@ -244,7 +245,9 @@ export class StepApprovalController {
     @Param('evaluatorId', ParseUUIDPipe) evaluatorId: string,
     @Body() dto: UpdateSecondaryStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
-  ): Promise<void> {
+  ): Promise<UpdateSecondaryStepApprovalResponseDto> {
+    let approval;
+
     // 재작성 요청 생성 시 제출 상태 초기화를 함께 처리
     if (dto.status === StepApprovalStatusEnum.REVISION_REQUESTED) {
       if (!dto.revisionComment || dto.revisionComment.trim() === '') {
@@ -253,13 +256,14 @@ export class StepApprovalController {
 
       // 비즈니스 서비스를 통해 제출 상태 초기화 및 재작성 요청 생성
       // 내부에서 이미 stepApprovalContextService.이차하향평가_확인상태를_변경한다를 호출함
-      await this.downwardEvaluationBusinessService.이차_하향평가_재작성요청_생성_및_제출상태_초기화(
-        evaluationPeriodId,
-        employeeId,
-        evaluatorId,
-        dto.revisionComment,
-        updatedBy,
-      );
+      approval =
+        await this.downwardEvaluationBusinessService.이차_하향평가_재작성요청_생성_및_제출상태_초기화(
+          evaluationPeriodId,
+          employeeId,
+          evaluatorId,
+          dto.revisionComment,
+          updatedBy,
+        );
     } else {
       // 승인 상태로 변경 시 제출 상태도 함께 변경
       if (dto.status === StepApprovalStatusEnum.APPROVED) {
@@ -273,14 +277,32 @@ export class StepApprovalController {
 
       // 단계 승인 상태 변경 (평가자별 부분 승인 지원)
       // secondary_evaluation_step_approval 테이블에 평가자별로 개별 상태 저장
-      await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다({
-        evaluationPeriodId,
-        employeeId,
-        evaluatorId,
-        status: dto.status as any,
-        revisionComment: dto.revisionComment,
-        updatedBy,
-      });
+      approval =
+        await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다(
+          {
+            evaluationPeriodId,
+            employeeId,
+            evaluatorId,
+            status: dto.status as any,
+            revisionComment: dto.revisionComment,
+            updatedBy,
+          },
+        );
     }
+
+    // 응답 DTO로 변환
+    const dto_result = approval.DTO로_변환한다();
+    return {
+      id: dto_result.id,
+      evaluationPeriodEmployeeMappingId:
+        dto_result.evaluationPeriodEmployeeMappingId,
+      evaluatorId: dto_result.evaluatorId,
+      status: dto_result.status as StepApprovalStatusEnum,
+      approvedBy: dto_result.approvedBy,
+      approvedAt: dto_result.approvedAt,
+      revisionRequestId: dto_result.revisionRequestId,
+      createdAt: dto_result.createdAt,
+      updatedAt: dto_result.updatedAt,
+    };
   }
 }

@@ -486,7 +486,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
               (s) => s.evaluatorId === evaluatorInfo.evaluator.id,
             );
 
-            // 재작성 요청이 없고, stepApproval에서 approved 상태인 경우
+            // secondary_evaluation_step_approval 테이블의 상태를 최종 상태로 사용
+            // statusInfo는 평가자별_2차평가_단계승인_상태를_조회한다에서 반환된 값
+            // 이 함수는 이미 secondary_evaluation_step_approval.status를 기준으로 반환함
             let finalStatus:
               | 'pending'
               | 'approved'
@@ -495,24 +497,10 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             let approvedBy: string | null = null;
             let approvedAt: Date | null = null;
 
-            // statusInfo가 있고 revisionRequestId가 null이 아니면 재작성 요청이 있는 것
-            if (statusInfo && statusInfo.revisionRequestId !== null) {
-              // 재작성 요청이 있는 경우
-              if (statusInfo.isCompleted) {
-                finalStatus = 'revision_completed';
-              } else if (statusInfo.status === 'revision_requested') {
-                finalStatus = 'revision_requested';
-              } else {
-                // 재작성 요청이 있지만 완료되지 않은 경우
-                finalStatus = 'revision_requested';
-              }
-            } else {
-              // 재작성 요청이 없는 경우, statusInfo에서 이미 새 테이블 조회 결과 포함
-              // statusInfo는 평가자별_2차평가_단계승인_상태를_조회한다에서 반환된 값
-              finalStatus = statusInfo?.status ?? 'pending';
-              approvedBy = statusInfo?.approvedBy ?? null;
-              approvedAt = statusInfo?.approvedAt ?? null;
-            }
+            // statusInfo의 status가 secondary_evaluation_step_approval 테이블의 최종 상태
+            finalStatus = statusInfo?.status ?? 'pending';
+            approvedBy = statusInfo?.approvedBy ?? null;
+            approvedAt = statusInfo?.approvedAt ?? null;
 
             return {
               evaluatorId: evaluatorInfo.evaluator.id,

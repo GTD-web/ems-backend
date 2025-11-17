@@ -5,7 +5,10 @@ import {
   EmployeeEvaluationStepApprovalService,
   StepApprovalStatus,
 } from '@domain/sub/employee-evaluation-step-approval';
-import { SecondaryEvaluationStepApprovalService } from '@domain/sub/secondary-evaluation-step-approval';
+import {
+  SecondaryEvaluationStepApprovalService,
+  SecondaryEvaluationStepApproval,
+} from '@domain/sub/secondary-evaluation-step-approval';
 import {
   EvaluationRevisionRequestService,
   EvaluationRevisionRequest,
@@ -434,7 +437,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
    */
   async 이차하향평가_확인상태를_변경한다(
     request: UpdateSecondaryStepApprovalRequest,
-  ): Promise<void> {
+  ): Promise<SecondaryEvaluationStepApproval> {
     this.logger.log(
       `2차 하향평가 확인 상태 변경 시작 - 평가기간: ${request.evaluationPeriodId}, 직원: ${request.employeeId}, 평가자: ${request.evaluatorId}, 상태: ${request.status}`,
     );
@@ -513,11 +516,14 @@ export class StepApprovalContextService implements IStepApprovalContext {
     );
 
     // 6. 저장
-    await this.secondaryStepApprovalService.저장한다(secondaryApproval);
+    const savedApproval =
+      await this.secondaryStepApprovalService.저장한다(secondaryApproval);
 
     this.logger.log(
       `2차 하향평가 확인 상태 변경 완료 - 직원: ${request.employeeId}, 평가자: ${request.evaluatorId}`,
     );
+
+    return savedApproval;
   }
 
   /**

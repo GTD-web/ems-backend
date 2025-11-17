@@ -9,6 +9,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const update_step_approval_dto_1 = require("../../dto/step-approval/update-step-approval.dto");
 const update_secondary_step_approval_dto_1 = require("../../dto/step-approval/update-secondary-step-approval.dto");
+const update_secondary_step_approval_response_dto_1 = require("../../dto/step-approval/update-secondary-step-approval-response.dto");
 function UpdateStepApproval() {
     return (0, common_1.applyDecorators)((0, common_1.Patch)(':evaluationPeriodId/employees/:employeeId/step'), (0, swagger_1.ApiOperation)({
         summary: '단계 승인 상태 변경 (Deprecated)',
@@ -248,6 +249,7 @@ function UpdateSecondaryStepApproval() {
         description: '2차 하향평가 단계 승인 상태 업데이트 정보',
     }), (0, swagger_1.ApiOkResponse)({
         description: '2차 하향평가 단계 승인 상태 변경 성공',
+        type: update_secondary_step_approval_response_dto_1.UpdateSecondaryStepApprovalResponseDto,
     }), (0, swagger_1.ApiNotFoundResponse)({
         description: '평가기간-직원 맵핑 또는 평가자를 찾을 수 없음',
     }), (0, swagger_1.ApiBadRequestResponse)({

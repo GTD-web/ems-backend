@@ -56,8 +56,57 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
   revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>,
   secondaryStepApprovalRepository: Repository<SecondaryEvaluationStepApproval>,
 ): Promise<EvaluatorRevisionRequestStatus> {
-  // 1. 해당 평가자에게 전송된 재작성 요청 조회
-  // - 평가기간 ID, 직원 ID, 단계('secondary'), 수신자 ID로 조회
+  // 1. secondary_evaluation_step_approval 테이블에서 승인 상태 조회 (최종 상태 기준)
+  const secondaryApproval = await secondaryStepApprovalRepository.findOne({
+    where: {
+      evaluationPeriodEmployeeMappingId: mappingId,
+      evaluatorId: evaluatorId,
+      deletedAt: IsNull(),
+    },
+  });
+
+  // 2. secondary_evaluation_step_approval 상태가 있는 경우, 해당 상태를 기준으로 반환
+  if (secondaryApproval) {
+    // 재작성 요청 정보도 함께 조회 (상태가 revision_requested 또는 revision_completed인 경우)
+    let recipient: EvaluationRevisionRequestRecipient | null = null;
+    if (
+      secondaryApproval.status === 'revision_requested' ||
+      secondaryApproval.status === 'revision_completed'
+    ) {
+      recipient = await revisionRequestRecipientRepository
+        .createQueryBuilder('recipient')
+        .leftJoinAndSelect('recipient.revisionRequest', 'request')
+        .where('request.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
+        .andWhere('request.employeeId = :employeeId', { employeeId })
+        .andWhere('request.step = :step', { step: 'secondary' })
+        .andWhere('recipient.recipientId = :evaluatorId', { evaluatorId })
+        .andWhere('recipient.recipientType = :recipientType', {
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
+        })
+        .andWhere('recipient.deletedAt IS NULL')
+        .andWhere('request.deletedAt IS NULL')
+        .orderBy('request.requestedAt', 'DESC')
+        .getOne();
+    }
+
+    return {
+      evaluatorId,
+      status: secondaryApproval.status as StepApprovalStatus,
+      revisionRequestId:
+        recipient?.revisionRequest?.id ?? secondaryApproval.revisionRequestId,
+      revisionComment: recipient?.revisionRequest?.comment ?? null,
+      isCompleted: recipient?.isCompleted ?? false,
+      completedAt: recipient?.completedAt ?? null,
+      responseComment: recipient?.responseComment ?? null,
+      requestedAt: recipient?.revisionRequest?.requestedAt ?? null,
+      approvedBy: secondaryApproval.approvedBy,
+      approvedAt: secondaryApproval.approvedAt,
+    };
+  }
+
+  // 3. secondary_evaluation_step_approval 상태가 없는 경우: 재작성 요청 조회
   const recipient = await revisionRequestRecipientRepository
     .createQueryBuilder('recipient')
     .leftJoinAndSelect('recipient.revisionRequest', 'request')
@@ -75,7 +124,7 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
     .orderBy('request.requestedAt', 'DESC')
     .getOne();
 
-  // 2. 재작성 요청이 있는 경우
+  // 4. 재작성 요청이 있는 경우
   if (recipient && recipient.revisionRequest) {
     const request = recipient.revisionRequest;
     const status: StepApprovalStatus = recipient.isCompleted
@@ -96,31 +145,7 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
     };
   }
 
-  // 3. 재작성 요청이 없는 경우: 새 테이블에서 approved 상태 조회
-  const secondaryApproval = await secondaryStepApprovalRepository.findOne({
-    where: {
-      evaluationPeriodEmployeeMappingId: mappingId,
-      evaluatorId: evaluatorId,
-      deletedAt: IsNull(),
-    },
-  });
-
-  if (secondaryApproval && secondaryApproval.status === 'approved') {
-    return {
-      evaluatorId,
-      status: 'approved' as StepApprovalStatus,
-      revisionRequestId: null,
-      revisionComment: null,
-      isCompleted: false,
-      completedAt: null,
-      responseComment: null,
-      requestedAt: null,
-      approvedBy: secondaryApproval.approvedBy,
-      approvedAt: secondaryApproval.approvedAt,
-    };
-  }
-
-  // 4. 둘 다 없으면 pending 상태
+  // 5. 둘 다 없으면 pending 상태
   return {
     evaluatorId,
     status: 'pending' as StepApprovalStatus,

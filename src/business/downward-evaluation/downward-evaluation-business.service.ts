@@ -335,7 +335,9 @@ export class DownwardEvaluationBusinessService {
     evaluatorId: string,
     revisionComment: string,
     requestedBy: string,
-  ): Promise<void> {
+  ): Promise<
+    import('@domain/sub/secondary-evaluation-step-approval').SecondaryEvaluationStepApproval
+  > {
     this.logger.log(
       `2차 하향평가 재작성 요청 생성 및 제출 상태 초기화 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`,
     );
@@ -358,18 +360,21 @@ export class DownwardEvaluationBusinessService {
     }
 
     // 2. 재작성 요청 생성
-    await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
-      evaluationPeriodId,
-      employeeId,
-      evaluatorId,
-      status: 'revision_requested' as any,
-      revisionComment,
-      updatedBy: requestedBy,
-    });
+    const approval =
+      await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId,
+        status: 'revision_requested' as any,
+        revisionComment,
+        updatedBy: requestedBy,
+      });
 
     this.logger.log(
       `2차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`,
     );
+
+    return approval;
   }
 
   /**

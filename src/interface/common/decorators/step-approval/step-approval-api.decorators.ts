@@ -9,6 +9,7 @@ import {
 } from '@nestjs/swagger';
 import { UpdateStepApprovalDto } from '../../dto/step-approval/update-step-approval.dto';
 import { UpdateSecondaryStepApprovalDto } from '../../dto/step-approval/update-secondary-step-approval.dto';
+import { UpdateSecondaryStepApprovalResponseDto } from '../../dto/step-approval/update-secondary-step-approval-response.dto';
 
 /**
  * 단계 승인 상태 업데이트 API 데코레이터 (Deprecated)
@@ -313,6 +314,7 @@ export function UpdateSecondaryStepApproval() {
     }),
     ApiOkResponse({
       description: '2차 하향평가 단계 승인 상태 변경 성공',
+      type: UpdateSecondaryStepApprovalResponseDto,
     }),
     ApiNotFoundResponse({
       description: '평가기간-직원 맵핑 또는 평가자를 찾을 수 없음',

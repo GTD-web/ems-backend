@@ -423,9 +423,9 @@ export class StepApprovalBusinessService {
     status: StepApprovalStatus;
     revisionComment?: string;
     updatedBy: string;
-  }): Promise<void> {
+  }): Promise<import('@domain/sub/secondary-evaluation-step-approval').SecondaryEvaluationStepApproval> {
     // 1. 단계 승인 상태 변경
-    await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+    const approval = await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
       evaluationPeriodId: params.evaluationPeriodId,
       employeeId: params.employeeId,
       evaluatorId: params.evaluatorId,
@@ -453,6 +453,8 @@ export class StepApprovalBusinessService {
         error: error.message,
       });
     }
+
+    return approval;
   }
 
   /**
