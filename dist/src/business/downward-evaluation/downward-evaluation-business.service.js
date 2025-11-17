@@ -148,23 +148,23 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
                 error: error.message,
             });
         }
-        if (evaluationType === downward_evaluation_types_1.DownwardEvaluationType.SECONDARY) {
+        if (evaluationType === downward_evaluation_types_1.DownwardEvaluationType.SECONDARY && result.submittedCount > 0) {
             try {
                 await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
                     evaluationPeriodId: periodId,
                     employeeId: evaluateeId,
                     evaluatorId: evaluatorId,
-                    status: employee_evaluation_step_approval_1.StepApprovalStatus.APPROVED,
+                    status: employee_evaluation_step_approval_1.StepApprovalStatus.REVISION_COMPLETED,
                     updatedBy: submittedBy,
                 });
-                this.logger.log('2차 평가 일괄 제출 시 개별 승인 상태 자동 승인 처리 완료', {
+                this.logger.log('2차 평가 일괄 제출 시 개별 승인 상태를 revision_completed로 설정 완료', {
                     evaluatorId,
                     evaluateeId,
                     periodId,
                 });
             }
             catch (error) {
-                this.logger.warn('2차 평가 개별 승인 상태 자동 승인 처리 실패', {
+                this.logger.warn('2차 평가 개별 승인 상태 설정 실패', {
                     evaluatorId,
                     evaluateeId,
                     periodId,

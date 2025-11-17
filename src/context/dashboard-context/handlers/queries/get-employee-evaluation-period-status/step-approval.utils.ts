@@ -67,74 +67,42 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
 
   // 2. secondary_evaluation_step_approval 상태가 있는 경우
   if (secondaryApproval) {
-    // 재작성 요청 정보 조회 (모든 상태에서 확인)
-    const recipient = await revisionRequestRecipientRepository
-      .createQueryBuilder('recipient')
-      .leftJoinAndSelect('recipient.revisionRequest', 'request')
-      .where('request.evaluationPeriodId = :evaluationPeriodId', {
-        evaluationPeriodId,
-      })
-      .andWhere('request.employeeId = :employeeId', { employeeId })
-      .andWhere('request.step = :step', { step: 'secondary' })
-      .andWhere('recipient.recipientId = :evaluatorId', { evaluatorId })
-      .andWhere('recipient.recipientType = :recipientType', {
-        recipientType: RecipientType.SECONDARY_EVALUATOR,
-      })
-      .andWhere('recipient.deletedAt IS NULL')
-      .andWhere('request.deletedAt IS NULL')
-      .orderBy('request.requestedAt', 'DESC')
-      .getOne();
-
-    // 재작성 요청이 있는 경우: 재작성 요청 상태 반환
-    if (recipient && recipient.revisionRequest) {
-      const request = recipient.revisionRequest;
-      const status: StepApprovalStatus = recipient.isCompleted
-        ? ('revision_completed' as StepApprovalStatus)
-        : ('revision_requested' as StepApprovalStatus);
-
-      return {
-        evaluatorId,
-        status,
-        revisionRequestId: request.id,
-        revisionComment: request.comment,
-        isCompleted: recipient.isCompleted,
-        completedAt: recipient.completedAt,
-        responseComment: recipient.responseComment,
-        requestedAt: request.requestedAt,
-        approvedBy: null, // 재작성 요청 중에는 승인 정보 없음
-        approvedAt: null,
-      };
+    // 재작성 요청 정보 조회 (재작성 요청 상태인 경우에만 확인)
+    let recipient: EvaluationRevisionRequestRecipient | null = null;
+    if (
+      secondaryApproval.status === 'revision_requested' ||
+      secondaryApproval.status === 'revision_completed'
+    ) {
+      recipient = await revisionRequestRecipientRepository
+        .createQueryBuilder('recipient')
+        .leftJoinAndSelect('recipient.revisionRequest', 'request')
+        .where('request.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
+        .andWhere('request.employeeId = :employeeId', { employeeId })
+        .andWhere('request.step = :step', { step: 'secondary' })
+        .andWhere('recipient.recipientId = :evaluatorId', { evaluatorId })
+        .andWhere('recipient.recipientType = :recipientType', {
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
+        })
+        .andWhere('recipient.deletedAt IS NULL')
+        .andWhere('request.deletedAt IS NULL')
+        .orderBy('request.requestedAt', 'DESC')
+        .getOne();
     }
 
-    // 재작성 요청이 없는 경우:
-    // - secondaryApproval.status가 approved여도 재작성 요청이 없으면 pending 반환
-    // - revision_requested 또는 revision_completed 상태는 위에서 이미 처리됨
-    if (secondaryApproval.status === 'approved') {
-      // 재작성 요청이 없으면 pending 반환
-      return {
-        evaluatorId,
-        status: 'pending' as StepApprovalStatus,
-        revisionRequestId: null,
-        revisionComment: null,
-        isCompleted: false,
-        completedAt: null,
-        responseComment: null,
-        requestedAt: null,
-        approvedBy: null,
-        approvedAt: null,
-      };
-    }
-
-    // revision_requested 또는 revision_completed 상태인 경우 (이미 처리되었지만 안전장치)
+    // secondary_evaluation_step_approval 테이블의 상태를 그대로 반환
+    // stepApproval.secondaryEvaluationStatuses는 실제 데이터베이스 값을 반영해야 함
     return {
       evaluatorId,
       status: secondaryApproval.status as StepApprovalStatus,
-      revisionRequestId: secondaryApproval.revisionRequestId,
-      revisionComment: null,
-      isCompleted: false,
-      completedAt: null,
-      responseComment: null,
-      requestedAt: null,
+      revisionRequestId:
+        recipient?.revisionRequest?.id ?? secondaryApproval.revisionRequestId,
+      revisionComment: recipient?.revisionRequest?.comment ?? null,
+      isCompleted: recipient?.isCompleted ?? false,
+      completedAt: recipient?.completedAt ?? null,
+      responseComment: recipient?.responseComment ?? null,
+      requestedAt: recipient?.revisionRequest?.requestedAt ?? null,
       approvedBy: secondaryApproval.approvedBy,
       approvedAt: secondaryApproval.approvedAt,
     };

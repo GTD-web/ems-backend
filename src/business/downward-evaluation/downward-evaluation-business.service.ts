@@ -447,19 +447,19 @@ export class DownwardEvaluationBusinessService {
       });
     }
 
-    // 3. 2차 평가인 경우 개별 승인 상태를 자동으로 승인 처리
-    if (evaluationType === DownwardEvaluationType.SECONDARY) {
+    // 3. 2차 평가인 경우 개별 승인 상태를 revision_completed로 설정 (제출 시 재작성 완료 상태)
+    if (evaluationType === DownwardEvaluationType.SECONDARY && result.submittedCount > 0) {
       try {
         await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
           evaluationPeriodId: periodId,
           employeeId: evaluateeId,
           evaluatorId: evaluatorId,
-          status: StepApprovalStatus.APPROVED,
+          status: StepApprovalStatus.REVISION_COMPLETED,
           updatedBy: submittedBy,
         });
 
         this.logger.log(
-          '2차 평가 일괄 제출 시 개별 승인 상태 자동 승인 처리 완료',
+          '2차 평가 일괄 제출 시 개별 승인 상태를 revision_completed로 설정 완료',
           {
             evaluatorId,
             evaluateeId,
@@ -468,7 +468,7 @@ export class DownwardEvaluationBusinessService {
         );
       } catch (error) {
         // 개별 승인 상태 변경 실패 시에도 하향평가 제출은 정상 처리
-        this.logger.warn('2차 평가 개별 승인 상태 자동 승인 처리 실패', {
+        this.logger.warn('2차 평가 개별 승인 상태 설정 실패', {
           evaluatorId,
           evaluateeId,
           periodId,

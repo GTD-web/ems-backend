@@ -17,6 +17,12 @@ function 하향평가_통합_상태를_계산한다(downwardStatus, approvalStat
     if (approvalStatus === 'revision_completed') {
         return 'revision_completed';
     }
+    if (approvalStatus === 'approved') {
+        return 'approved';
+    }
+    if (approvalStatus === 'pending') {
+        return 'pending';
+    }
     if (downwardStatus === 'none') {
         return 'none';
     }
