@@ -402,7 +402,6 @@ export class SSOServiceImpl implements ISSOService, OnModuleInit {
         withEmployeeDetail: params?.withEmployeeDetail,
         includeEmptyDepartments: params?.includeEmptyDepartments,
       });
-      this.logger.log(JSON.stringify(result, null, 2));
 
       const elapsedTime = Date.now() - startTime;
       this.logger.log(`부서 계층구조 조회 완료 (소요 시간: ${elapsedTime}ms)`);
