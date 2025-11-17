@@ -15,35 +15,63 @@ async function 평가자별_2차평가_단계승인_상태를_조회한다(evalu
         },
     });
     if (secondaryApproval) {
-        let recipient = null;
-        if (secondaryApproval.status === 'revision_requested' ||
-            secondaryApproval.status === 'revision_completed') {
-            recipient = await revisionRequestRecipientRepository
-                .createQueryBuilder('recipient')
-                .leftJoinAndSelect('recipient.revisionRequest', 'request')
-                .where('request.evaluationPeriodId = :evaluationPeriodId', {
-                evaluationPeriodId,
-            })
-                .andWhere('request.employeeId = :employeeId', { employeeId })
-                .andWhere('request.step = :step', { step: 'secondary' })
-                .andWhere('recipient.recipientId = :evaluatorId', { evaluatorId })
-                .andWhere('recipient.recipientType = :recipientType', {
-                recipientType: evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR,
-            })
-                .andWhere('recipient.deletedAt IS NULL')
-                .andWhere('request.deletedAt IS NULL')
-                .orderBy('request.requestedAt', 'DESC')
-                .getOne();
+        const recipient = await revisionRequestRecipientRepository
+            .createQueryBuilder('recipient')
+            .leftJoinAndSelect('recipient.revisionRequest', 'request')
+            .where('request.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+        })
+            .andWhere('request.employeeId = :employeeId', { employeeId })
+            .andWhere('request.step = :step', { step: 'secondary' })
+            .andWhere('recipient.recipientId = :evaluatorId', { evaluatorId })
+            .andWhere('recipient.recipientType = :recipientType', {
+            recipientType: evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR,
+        })
+            .andWhere('recipient.deletedAt IS NULL')
+            .andWhere('request.deletedAt IS NULL')
+            .orderBy('request.requestedAt', 'DESC')
+            .getOne();
+        if (recipient && recipient.revisionRequest) {
+            const request = recipient.revisionRequest;
+            const status = recipient.isCompleted
+                ? 'revision_completed'
+                : 'revision_requested';
+            return {
+                evaluatorId,
+                status,
+                revisionRequestId: request.id,
+                revisionComment: request.comment,
+                isCompleted: recipient.isCompleted,
+                completedAt: recipient.completedAt,
+                responseComment: recipient.responseComment,
+                requestedAt: request.requestedAt,
+                approvedBy: null,
+                approvedAt: null,
+            };
+        }
+        if (secondaryApproval.status === 'approved') {
+            return {
+                evaluatorId,
+                status: 'pending',
+                revisionRequestId: null,
+                revisionComment: null,
+                isCompleted: false,
+                completedAt: null,
+                responseComment: null,
+                requestedAt: null,
+                approvedBy: null,
+                approvedAt: null,
+            };
         }
         return {
             evaluatorId,
             status: secondaryApproval.status,
-            revisionRequestId: recipient?.revisionRequest?.id ?? secondaryApproval.revisionRequestId,
-            revisionComment: recipient?.revisionRequest?.comment ?? null,
-            isCompleted: recipient?.isCompleted ?? false,
-            completedAt: recipient?.completedAt ?? null,
-            responseComment: recipient?.responseComment ?? null,
-            requestedAt: recipient?.revisionRequest?.requestedAt ?? null,
+            revisionRequestId: secondaryApproval.revisionRequestId,
+            revisionComment: null,
+            isCompleted: false,
+            completedAt: null,
+            responseComment: null,
+            requestedAt: null,
             approvedBy: secondaryApproval.approvedBy,
             approvedAt: secondaryApproval.approvedAt,
         };

@@ -91,7 +91,6 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
     }
     async execute(query) {
         const { evaluationPeriodId, employeeId, includeUnregistered } = query;
-        this.logger.debug(`직원의 평가기간 현황 조회 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
         try {
             const queryBuilder = this.mappingRepository
                 .createQueryBuilder('mapping')

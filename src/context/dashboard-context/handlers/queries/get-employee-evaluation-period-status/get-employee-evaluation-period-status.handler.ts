@@ -128,9 +128,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
   ): Promise<EmployeeEvaluationPeriodStatusDto | null> {
     const { evaluationPeriodId, employeeId, includeUnregistered } = query;
 
-    this.logger.debug(
-      `직원의 평가기간 현황 조회 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
-    );
 
     try {
       // 1. 맵핑 정보 조회 (LEFT JOIN으로 평가기간과 직원 정보 함께 조회)
