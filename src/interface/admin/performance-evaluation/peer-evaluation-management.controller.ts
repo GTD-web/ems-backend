@@ -1,25 +1,27 @@
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
 import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
-import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
+import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
 import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, Param, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { v4 as uuidv4 } from 'uuid';
 import {
-  CancelPeerEvaluation,
-  CancelPeerEvaluationsByPeriod,
-  GetAllPeerEvaluations,
-  GetEvaluateePeerEvaluations,
-  GetEvaluatorAssignedEvaluatees,
-  GetEvaluatorPeerEvaluations,
-  GetPeerEvaluationDetail,
-  GetPeerEvaluations,
-  RequestMultiplePeerEvaluations,
   RequestPeerEvaluation,
   RequestPeerEvaluationToMultipleEvaluators,
+  RequestMultiplePeerEvaluations,
+  RequestPartLeaderPeerEvaluations,
   SubmitPeerEvaluation,
+  GetPeerEvaluations,
+  GetEvaluatorPeerEvaluations,
+  GetEvaluateePeerEvaluations,
+  GetAllPeerEvaluations,
+  GetPeerEvaluationDetail,
+  GetEvaluatorAssignedEvaluatees,
+  CancelPeerEvaluation,
+  CancelPeerEvaluationsByPeriod,
   UpsertPeerEvaluationAnswers,
-} from './decorators/peer-evaluation-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/peer-evaluation-api.decorators';
 import {
   AssignedEvaluateeDto,
   BulkPeerEvaluationRequestResponseDto,
@@ -30,9 +32,13 @@ import {
   RequestMultiplePeerEvaluationsDto,
   RequestPeerEvaluationDto,
   RequestPeerEvaluationToMultipleEvaluatorsDto,
+  RequestPartLeaderPeerEvaluationsDto,
+  CreatePeerEvaluationBodyDto,
   UpsertPeerEvaluationAnswersDto,
   UpsertPeerEvaluationAnswersResponseDto,
-} from './dto/peer-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/peer-evaluation.dto';
+import { Body, Controller, Param, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * 동료평가 관리 컨트롤러
@@ -45,6 +51,8 @@ import {
 export class PeerEvaluationManagementController {
   constructor(
     private readonly peerEvaluationBusinessService: PeerEvaluationBusinessService,
+    private readonly employeeSyncService: EmployeeSyncService,
+    private readonly evaluationQuestionManagementService: EvaluationQuestionManagementService,
   ) {}
 
   /**
@@ -140,6 +148,128 @@ export class PeerEvaluationManagementController {
       // 하위 호환성을 위한 필드
       ids: result.results.filter((r) => r.success).map((r) => r.evaluationId!),
       count: result.summary.success,
+    };
+  }
+
+  /**
+   * 파트장들 간 동료평가 요청
+   */
+  @RequestPartLeaderPeerEvaluations()
+  async requestPartLeaderPeerEvaluations(
+    @Body() dto: RequestPartLeaderPeerEvaluationsDto,
+  ): Promise<BulkPeerEvaluationRequestResponseDto> {
+    const requestedBy = dto.requestedBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
+
+    // 1. 파트장 목록 결정
+    let evaluatorIds: string[];
+    let evaluateeIds: string[];
+
+    if (dto.evaluatorIds && dto.evaluatorIds.length > 0) {
+      // evaluatorIds가 제공된 경우: 해당 ID들 사용
+      evaluatorIds = dto.evaluatorIds;
+    } else {
+      // evaluatorIds가 없는 경우: SSO에서 모든 파트장 조회
+      const partLeaders = await this.employeeSyncService.getPartLeaders(false);
+      evaluatorIds = partLeaders.map((emp) => emp.id);
+    }
+
+    if (dto.evaluateeIds && dto.evaluateeIds.length > 0) {
+      // evaluateeIds가 제공된 경우: 해당 ID들 사용
+      evaluateeIds = dto.evaluateeIds;
+    } else {
+      // evaluateeIds가 없는 경우: SSO에서 모든 파트장 조회
+      const partLeaders = await this.employeeSyncService.getPartLeaders(false);
+      evaluateeIds = partLeaders.map((emp) => emp.id);
+    }
+
+    // 파트장이 없는 경우
+    if (evaluatorIds.length === 0 || evaluateeIds.length === 0) {
+      return {
+        results: [],
+        summary: { total: 0, success: 0, failed: 0, partLeaderCount: 0 },
+        message:
+          '평가자 또는 피평가자가 없어 동료평가 요청을 생성하지 않았습니다.',
+        ids: [],
+        count: 0,
+      };
+    }
+
+    // 2. questionIds가 없으면 기본 파트장 질문 그룹의 질문들을 사용
+    let questionIds = dto.questionIds;
+    if (!questionIds || questionIds.length === 0) {
+      // "파트장 평가 질문" 그룹 조회
+      const questionGroups =
+        await this.evaluationQuestionManagementService.질문그룹목록을_조회한다({
+          nameSearch: '파트장 평가 질문',
+        });
+
+      const partLeaderGroup = questionGroups.find(
+        (group) => group.name === '파트장 평가 질문',
+      );
+
+      if (partLeaderGroup) {
+        // 그룹의 질문 목록 조회
+        const groupMappings =
+          await this.evaluationQuestionManagementService.그룹의_질문목록을_조회한다(
+            partLeaderGroup.id,
+          );
+
+        // displayOrder로 정렬하고 questionId만 추출
+        questionIds = groupMappings
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+          .map((mapping) => mapping.questionId);
+      }
+    }
+
+    // 3. 각 평가자가 지정된 피평가자들을 평가하도록 요청 생성
+    const allResults: any[] = [];
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const evaluatorId of evaluatorIds) {
+      // 각 평가자가 자신을 제외한 모든 피평가자를 평가
+      const targetEvaluateeIds = evaluateeIds.filter(
+        (id) => id !== evaluatorId,
+      );
+
+      if (targetEvaluateeIds.length > 0) {
+        const result =
+          await this.peerEvaluationBusinessService.여러_피평가자에_대한_동료평가를_요청한다(
+            {
+              evaluatorId,
+              evaluateeIds: targetEvaluateeIds,
+              periodId: dto.periodId,
+              requestDeadline: dto.requestDeadline,
+              questionIds,
+              requestedBy,
+            },
+          );
+
+        allResults.push(...result.results);
+        successCount += result.summary.success;
+        failedCount += result.summary.failed;
+      }
+    }
+
+    // 고유한 파트장 수 계산 (evaluators와 evaluatees 합집합)
+    const uniquePartLeaderIds = new Set([...evaluatorIds, ...evaluateeIds]);
+    const partLeaderCount = uniquePartLeaderIds.size;
+
+    return {
+      results: allResults,
+      summary: {
+        total: allResults.length,
+        success: successCount,
+        failed: failedCount,
+        partLeaderCount,
+      },
+      message:
+        failedCount > 0
+          ? `파트장 ${partLeaderCount}명에 대해 ${allResults.length}건 중 ${successCount}건의 동료평가 요청이 생성되었습니다. (실패: ${failedCount}건)`
+          : `파트장 ${partLeaderCount}명에 대해 ${successCount}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+      // 하위 호환성을 위한 필드
+      ids: allResults.filter((r) => r.success).map((r) => r.evaluationId!),
+      count: successCount,
     };
   }
 

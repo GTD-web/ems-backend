@@ -249,7 +249,18 @@ let GetMyEvaluationTargetsStatusHandler = GetMyEvaluationTargetsStatusHandler_1 
                     grade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, totalScore, this.evaluationPeriodRepository);
                 }
             }
+            let status;
+            if (assignedWbsCount === 0) {
+                status = 'none';
+            }
+            else if (assignedWbsCount === completedEvaluationCount) {
+                status = 'complete';
+            }
+            else {
+                status = 'in_progress';
+            }
             primaryStatus = {
+                status,
                 assignedWbsCount,
                 completedEvaluationCount,
                 totalScore,
@@ -281,16 +292,42 @@ let GetMyEvaluationTargetsStatusHandler = GetMyEvaluationTargetsStatusHandler_1 
                     grade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, totalScore, this.evaluationPeriodRepository);
                 }
             }
+            let status;
+            if (assignedWbsCount === 0) {
+                status = 'none';
+            }
+            else if (assignedWbsCount === completedEvaluationCount) {
+                status = 'complete';
+            }
+            else {
+                status = 'in_progress';
+            }
             secondaryStatus = {
+                status,
                 assignedWbsCount,
                 completedEvaluationCount,
                 totalScore,
                 grade,
             };
         }
+        const primaryStatusValue = primaryStatus?.status || 'none';
+        const secondaryStatusValue = secondaryStatus?.status || 'none';
+        let integratedStatus;
+        if (primaryStatusValue === 'complete' ||
+            secondaryStatusValue === 'complete') {
+            integratedStatus = 'complete';
+        }
+        else if (primaryStatusValue === 'in_progress' ||
+            secondaryStatusValue === 'in_progress') {
+            integratedStatus = 'in_progress';
+        }
+        else {
+            integratedStatus = 'none';
+        }
         return {
             isPrimary,
             isSecondary,
+            status: integratedStatus,
             primaryStatus,
             secondaryStatus,
         };

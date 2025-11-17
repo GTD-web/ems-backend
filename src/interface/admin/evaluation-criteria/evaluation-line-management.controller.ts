@@ -1,18 +1,13 @@
-import { Body, Controller, Param, Query, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
-  ConfigurePrimaryEvaluator,
-  ConfigureSecondaryEvaluator,
-  GetEmployeeEvaluationSettings,
-  GetEvaluatorEmployees,
-  GetEvaluatorsByPeriod,
-  BatchConfigurePrimaryEvaluator,
-  BatchConfigureSecondaryEvaluator,
-} from './decorators/evaluation-line-api.decorators';
-import {
+  BatchConfigurePrimaryEvaluatorDto,
+  BatchConfigurePrimaryEvaluatorResponseDto,
+  BatchConfigureSecondaryEvaluatorDto,
+  BatchConfigureSecondaryEvaluatorResponseDto,
   ConfigureEvaluatorResponseDto,
   ConfigurePrimaryEvaluatorDto,
   ConfigureSecondaryEvaluatorDto,
@@ -20,11 +15,16 @@ import {
   EvaluatorEmployeesResponseDto,
   EvaluatorsByPeriodResponseDto,
   EvaluatorTypeQueryDto,
-  BatchConfigurePrimaryEvaluatorDto,
-  BatchConfigurePrimaryEvaluatorResponseDto,
-  BatchConfigureSecondaryEvaluatorDto,
-  BatchConfigureSecondaryEvaluatorResponseDto,
-} from './dto/evaluation-line.dto';
+} from '@interface/common/dto/evaluation-criteria/evaluation-line.dto';
+import {
+  BatchConfigurePrimaryEvaluator,
+  BatchConfigureSecondaryEvaluator,
+  ConfigurePrimaryEvaluator,
+  ConfigureSecondaryEvaluator,
+  GetEmployeeEvaluationSettings,
+  GetEvaluatorEmployees,
+  GetEvaluatorsByPeriod,
+} from '@interface/common/decorators/evaluation-criteria/evaluation-line-api.decorators';
 
 /**
  * 평가라인 관리 컨트롤러

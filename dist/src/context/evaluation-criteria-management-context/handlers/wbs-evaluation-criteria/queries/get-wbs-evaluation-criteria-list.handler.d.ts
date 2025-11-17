@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { WbsEvaluationCriteriaFilter } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
-import { WbsEvaluationCriteriaListResponseDto } from '@interface/admin/evaluation-criteria/dto/wbs-evaluation-criteria.dto';
+import { WbsEvaluationCriteriaListResponseDto } from '@/interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 export declare class GetWbsEvaluationCriteriaListQuery {
     readonly filter: WbsEvaluationCriteriaFilter;
     constructor(filter: WbsEvaluationCriteriaFilter);

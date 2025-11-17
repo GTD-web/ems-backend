@@ -20,8 +20,8 @@ const evaluation_period_management_service_1 = require("../../../context/evaluat
 const evaluation_period_business_service_1 = require("../../../business/evaluation-period/evaluation-period-business.service");
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
-const evaluation_period_api_decorators_1 = require("./decorators/evaluation-period-api.decorators");
-const evaluation_management_dto_1 = require("./dto/evaluation-management.dto");
+const evaluation_period_api_decorators_1 = require("../../common/decorators/evaluation-period/evaluation-period-api.decorators");
+const evaluation_management_dto_1 = require("../../common/dto/evaluation-period/evaluation-management.dto");
 let EvaluationPeriodManagementController = EvaluationPeriodManagementController_1 = class EvaluationPeriodManagementController {
     evaluationPeriodBusinessService;
     evaluationPeriodManagementService;

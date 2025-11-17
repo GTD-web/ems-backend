@@ -1,7 +1,24 @@
-import { Body, Controller, Param, Query, ParseUUIDPipe } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
+import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  AvailableProjectsResponseDto,
+  BulkCreateProjectAssignmentDto,
+  CancelProjectAssignmentByProjectDto,
+  ChangeProjectAssignmentOrderByProjectDto,
+  ChangeProjectAssignmentOrderQueryDto,
+  CreateProjectAssignmentDto,
+  EmployeeProjectsResponseDto,
+  GetAvailableProjectsQueryDto,
+  GetUnassignedEmployeesQueryDto,
+  ProjectAssignmentFilterDto,
+  ProjectAssignmentResponseDto,
+  ProjectEmployeesResponseDto,
+  UnassignedEmployeesResponseDto,
+} from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
 import {
   BulkCreateProjectAssignments,
   CancelProjectAssignment,
@@ -15,25 +32,7 @@ import {
   GetProjectAssignmentDetail,
   GetProjectAssignmentList,
   GetUnassignedEmployees,
-} from './decorators/project-assignment-api.decorators';
-import {
-  BulkCreateProjectAssignmentDto,
-  ChangeProjectAssignmentOrderQueryDto,
-  ChangeProjectAssignmentOrderBodyDto,
-  CancelProjectAssignmentByProjectDto,
-  ChangeProjectAssignmentOrderByProjectDto,
-  CreateProjectAssignmentDto,
-  EmployeeProjectsResponseDto,
-  GetAvailableProjectsQueryDto,
-  GetUnassignedEmployeesQueryDto,
-  ProjectAssignmentFilterDto,
-  ProjectAssignmentResponseDto,
-  ProjectEmployeesResponseDto,
-  UnassignedEmployeesResponseDto,
-  AvailableProjectsResponseDto,
-} from './dto/project-assignment.dto';
-import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+} from '@interface/common/decorators/evaluation-criteria/project-assignment-api.decorators';
 
 /**
  * 프로젝트 할당 관리 컨트롤러

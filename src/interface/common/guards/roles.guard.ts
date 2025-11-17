@@ -1,16 +1,16 @@
+import { OrganizationManagementService } from '@context/organization-management-context';
 import {
-  Injectable,
   CanActivate,
   ExecutionContext,
   ForbiddenException,
+  Inject,
+  Injectable,
   Logger,
   Optional,
-  Inject,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { ROLES_KEY } from '../decorators/roles.decorator';
-import { OrganizationManagementService } from '@context/organization-management-context';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 /**
  * RolesGuard 설정 옵션
@@ -114,6 +114,17 @@ export class RolesGuard implements CanActivate {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // @Public() 데코레이터가 있는지 확인
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // @Public() 데코레이터가 있으면 역할 검증을 건너뜀
+    if (isPublic) {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest<Request>();
     const user = request.user;
 

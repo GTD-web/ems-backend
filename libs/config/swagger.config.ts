@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, Type } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export interface SwaggerConfigOptions {
@@ -6,6 +6,7 @@ export interface SwaggerConfigOptions {
   description: string;
   version: string;
   path: string;
+  includeModules?: Type<any>[];
 }
 
 /**
@@ -33,7 +34,15 @@ export function setupSwagger(
     )
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
+  const document = SwaggerModule.createDocument(
+    app,
+    config,
+    options.includeModules
+      ? {
+          include: options.includeModules,
+        }
+      : undefined,
+  );
 
   SwaggerModule.setup(options.path, app, document, {
     swaggerOptions: {

@@ -43,6 +43,13 @@ export class Phase6QuestionGenerator {
 
     const systemAdminId = phase1Result.generatedIds.systemAdminId as string;
 
+    // 0. 파트장 평가 질문 그룹 및 질문 생성 (기본 데이터)
+    const { partLeaderGroup, partLeaderQuestions, partLeaderMappings } =
+      await this.생성_파트장평가질문그룹(systemAdminId);
+    this.logger.log(
+      `생성 완료: 파트장 평가 질문 그룹 1개, 질문 ${partLeaderQuestions.length}개`,
+    );
+
     // 1. QuestionGroup 생성
     const questionGroups = await this.생성_질문그룹들(dist, systemAdminId);
     this.logger.log(`생성 완료: QuestionGroup ${questionGroups.length}개`);
@@ -65,19 +72,92 @@ export class Phase6QuestionGenerator {
     const duration = Date.now() - startTime;
     this.logger.log(`Phase 6 완료 (${duration}ms)`);
 
+    // 모든 그룹, 질문, 매핑 합산
+    const allQuestionGroups = [partLeaderGroup, ...questionGroups];
+    const allQuestions = [...partLeaderQuestions, ...questions];
+    const allGroupMappings = [...partLeaderMappings, ...groupMappings];
+
     return {
       phase: 'Phase6',
       entityCounts: {
-        QuestionGroup: questionGroups.length,
-        EvaluationQuestion: questions.length,
-        QuestionGroupMapping: groupMappings.length,
+        QuestionGroup: allQuestionGroups.length,
+        EvaluationQuestion: allQuestions.length,
+        QuestionGroupMapping: allGroupMappings.length,
       },
       generatedIds: {
-        questionGroupIds: questionGroups.map((qg) => qg.id),
-        questionIds: questions.map((q) => q.id),
-        questionGroupMappingIds: groupMappings.map((qgm) => qgm.id),
+        questionGroupIds: allQuestionGroups.map((qg) => qg.id),
+        questionIds: allQuestions.map((q) => q.id),
+        questionGroupMappingIds: allGroupMappings.map((qgm) => qgm.id),
+        partLeaderQuestionGroupId: partLeaderGroup.id,
+        partLeaderQuestionIds: partLeaderQuestions.map((q) => q.id),
       },
       duration,
+    };
+  }
+
+  private async 생성_파트장평가질문그룹(systemAdminId: string): Promise<{
+    partLeaderGroup: QuestionGroup;
+    partLeaderQuestions: EvaluationQuestion[];
+    partLeaderMappings: QuestionGroupMapping[];
+  }> {
+    // 1. 파트장 평가 질문 그룹 생성
+    const partLeaderGroup = new QuestionGroup();
+    partLeaderGroup.name = '파트장 평가 질문';
+    partLeaderGroup.isDefault = false;
+    partLeaderGroup.isDeletable = false;
+    partLeaderGroup.createdBy = systemAdminId;
+
+    const [savedGroup] = await this.questionGroupRepository.save([
+      partLeaderGroup,
+    ]);
+
+    // 2. 파트장 평가 질문 3개 생성
+    const partLeaderQuestions: EvaluationQuestion[] = [];
+
+    const question1 = new EvaluationQuestion();
+    question1.text = '업무 능력은 어떠한가요?';
+    question1.minScore = 1;
+    question1.maxScore = 5;
+    question1.createdBy = systemAdminId;
+    partLeaderQuestions.push(question1);
+
+    const question2 = new EvaluationQuestion();
+    question2.text = '프로젝트 수행 능력은 어떠한가요?';
+    question2.minScore = 1;
+    question2.maxScore = 5;
+    question2.createdBy = systemAdminId;
+    partLeaderQuestions.push(question2);
+
+    const question3 = new EvaluationQuestion();
+    question3.text = '부서 관리 능력은 어떠한가요?';
+    question3.minScore = 1;
+    question3.maxScore = 5;
+    question3.createdBy = systemAdminId;
+    partLeaderQuestions.push(question3);
+
+    const savedQuestions = await this.evaluationQuestionRepository.save(
+      partLeaderQuestions,
+    );
+
+    // 3. 질문-그룹 매핑 생성
+    const partLeaderMappings: QuestionGroupMapping[] = [];
+    for (let i = 0; i < savedQuestions.length; i++) {
+      const mapping = new QuestionGroupMapping();
+      mapping.groupId = savedGroup.id;
+      mapping.questionId = savedQuestions[i].id;
+      mapping.displayOrder = i;
+      mapping.createdBy = systemAdminId;
+      partLeaderMappings.push(mapping);
+    }
+
+    const savedMappings = await this.questionGroupMappingRepository.save(
+      partLeaderMappings,
+    );
+
+    return {
+      partLeaderGroup: savedGroup,
+      partLeaderQuestions: savedQuestions,
+      partLeaderMappings: savedMappings,
     };
   }
 

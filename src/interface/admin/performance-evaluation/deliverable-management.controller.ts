@@ -14,7 +14,7 @@ import {
   GetEmployeeDeliverables,
   GetWbsDeliverables,
   UpdateDeliverable,
-} from './decorators/deliverable-api.decorators';
+} from '@interface/common/decorators/performance-evaluation/deliverable-api.decorators';
 import {
   BulkCreateDeliverablesDto,
   BulkCreateResultDto,
@@ -25,7 +25,7 @@ import {
   DeliverableResponseDto,
   GetDeliverablesQueryDto,
   UpdateDeliverableDto,
-} from './dto/deliverable.dto';
+} from '@interface/common/dto/performance-evaluation/deliverable.dto';
 
 /**
  * 산출물 관리 컨트롤러

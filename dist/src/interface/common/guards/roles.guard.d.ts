@@ -1,6 +1,6 @@
+import { OrganizationManagementService } from '@context/organization-management-context';
 import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { OrganizationManagementService } from '@context/organization-management-context';
 export interface RolesGuardOptions {
     rolesRequiringAccessibilityCheck?: string[];
 }

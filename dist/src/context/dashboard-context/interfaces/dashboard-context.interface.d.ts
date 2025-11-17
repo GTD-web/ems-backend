@@ -30,6 +30,8 @@ export interface EmployeeEvaluationPeriodStatusDto {
         email: string;
         departmentName?: string;
         rankName?: string;
+        status?: '재직중' | '휴직중' | '퇴사';
+        hireDate?: Date | null;
     } | null;
     exclusionInfo: {
         isExcluded: boolean;
@@ -174,13 +176,16 @@ export interface IDashboardContext {
 export interface MyDownwardEvaluationStatus {
     isPrimary: boolean;
     isSecondary: boolean;
+    status: 'none' | 'in_progress' | 'complete';
     primaryStatus: {
+        status: 'none' | 'in_progress' | 'complete';
         assignedWbsCount: number;
         completedEvaluationCount: number;
         totalScore: number | null;
         grade: string | null;
     } | null;
     secondaryStatus: {
+        status: 'none' | 'in_progress' | 'complete';
         assignedWbsCount: number;
         completedEvaluationCount: number;
         totalScore: number | null;

@@ -5,6 +5,9 @@ import { DataSource } from 'typeorm';
 import { SSOService } from '../src/domain/common/sso';
 import type { ISSOService } from '../src/domain/common/sso/interfaces';
 import { AuthService } from '../src/context/auth-context/auth.service';
+import { OrganizationManagementService } from '../src/context/organization-management-context/organization-management.service';
+import { QueryBus, CommandBus } from '@nestjs/cqrs';
+import { EmployeeService } from '../src/domain/common/employee/employee.service';
 import request from 'supertest';
 
 /**
@@ -113,6 +116,27 @@ export class BaseE2ETest {
       // AuthService를 mock으로 대체 - 항상 성공하는 인증 반환
       .overrideProvider(AuthService)
       .useValue(this.mockAuthService)
+      // OrganizationManagementService를 부분 모킹 - 사번으로_접근가능한가만 모킹
+      .overrideProvider(OrganizationManagementService)
+      .useFactory({
+        factory: (
+          queryBus: QueryBus,
+          commandBus: CommandBus,
+          ssoService: ISSOService,
+          employeeService: EmployeeService,
+        ) => {
+          const service = new OrganizationManagementService(
+            queryBus,
+            commandBus,
+            ssoService,
+            employeeService,
+          );
+          // 사번으로_접근가능한가만 모킹
+          service.사번으로_접근가능한가 = jest.fn().mockResolvedValue(true);
+          return service;
+        },
+        inject: [QueryBus, CommandBus, SSOService, EmployeeService],
+      })
       .overrideProvider('SSO_CONFIG')
       .useValue({
         baseUrl: 'http://localhost:3000',

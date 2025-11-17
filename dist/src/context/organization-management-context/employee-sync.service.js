@@ -359,6 +359,32 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             throw new common_1.HttpException('직원 조회에 실패했습니다.', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    async getPartLeaders(forceRefresh = false) {
+        try {
+            const employees = await this.getEmployees(forceRefresh);
+            try {
+                const ssoEmployees = await this.fetchExternalEmployees();
+                const partLeaderExternalIds = new Set(ssoEmployees
+                    .filter((emp) => emp.position &&
+                    (emp.position.positionName?.includes('파트장') ||
+                        emp.position.positionCode?.includes('파트장')))
+                    .map((emp) => emp.id));
+                const partLeaders = employees.filter((emp) => partLeaderExternalIds.has(emp.externalId));
+                this.logger.log(`파트장 ${partLeaders.length}명 조회 완료 (전체 직원: ${employees.length}명)`);
+                return partLeaders;
+            }
+            catch (ssoError) {
+                this.logger.warn(`SSO 조회 실패, 로컬 DB 데이터로 파트장 추정: ${ssoError.message}`);
+                const partLeaders = employees.filter((emp) => emp.positionId);
+                this.logger.log(`파트장 ${partLeaders.length}명 추정 완료 (positionId 기반, 전체 직원: ${employees.length}명)`);
+                return partLeaders;
+            }
+        }
+        catch (error) {
+            this.logger.error(`파트장 목록 조회 실패:`, error.message);
+            return [];
+        }
+    }
     async 직원을_처리한다(ssoEmp, forceSync, syncStartTime) {
         try {
             let existingEmployee = await this.employeeService.findByEmployeeNumber(ssoEmp.employeeNumber);
@@ -369,11 +395,15 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             if (existingEmployee) {
                 const needsUpdate = this.업데이트가_필요한가(existingEmployee, mappedData, forceSync);
                 if (needsUpdate) {
+                    const preservedIsAccessible = existingEmployee.isAccessible;
                     Object.assign(existingEmployee, {
                         employeeNumber: mappedData.employeeNumber,
                         name: mappedData.name,
                         email: mappedData.email,
                         phoneNumber: mappedData.phoneNumber,
+                        dateOfBirth: mappedData.dateOfBirth,
+                        gender: mappedData.gender,
+                        hireDate: mappedData.hireDate,
                         managerId: mappedData.managerId,
                         status: mappedData.status,
                         departmentId: mappedData.departmentId,
@@ -387,6 +417,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         lastSyncAt: syncStartTime,
                         updatedBy: this.systemUserId,
                     });
+                    existingEmployee.isAccessible = preservedIsAccessible;
                     return { success: true, employee: existingEmployee, isNew: false };
                 }
                 return { success: false };
@@ -431,6 +462,32 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             (existingEmployee.departmentId !== mappedData.departmentId ||
                 existingEmployee.departmentName !== mappedData.departmentName ||
                 existingEmployee.departmentCode !== mappedData.departmentCode)) {
+            return true;
+        }
+        if (existingEmployee.status !== mappedData.status) {
+            return true;
+        }
+        if (mappedData.hireDate) {
+            const existingHireDate = existingEmployee.hireDate
+                ? new Date(existingEmployee.hireDate)
+                : null;
+            const mappedHireDate = new Date(mappedData.hireDate);
+            if (!existingHireDate ||
+                existingHireDate.getTime() !== mappedHireDate.getTime()) {
+                return true;
+            }
+        }
+        if (mappedData.dateOfBirth) {
+            const existingDateOfBirth = existingEmployee.dateOfBirth
+                ? new Date(existingEmployee.dateOfBirth)
+                : null;
+            const mappedDateOfBirth = new Date(mappedData.dateOfBirth);
+            if (!existingDateOfBirth ||
+                existingDateOfBirth.getTime() !== mappedDateOfBirth.getTime()) {
+                return true;
+            }
+        }
+        if (mappedData.gender && existingEmployee.gender !== mappedData.gender) {
             return true;
         }
         return false;
@@ -499,6 +556,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                 existingEmployee = await this.employeeService.findByExternalId(employee.externalId);
             }
             if (existingEmployee) {
+                const preservedIsAccessible = existingEmployee.isAccessible;
                 Object.assign(existingEmployee, {
                     employeeNumber: employee.employeeNumber,
                     name: employee.name,
@@ -523,6 +581,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                     lastSyncAt: employee.lastSyncAt,
                     updatedBy: this.systemUserId,
                 });
+                existingEmployee.isAccessible = preservedIsAccessible;
                 await this.employeeService.save(existingEmployee);
                 return { success: true };
             }

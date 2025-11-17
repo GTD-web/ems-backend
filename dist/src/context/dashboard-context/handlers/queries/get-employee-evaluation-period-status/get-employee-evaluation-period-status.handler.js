@@ -117,6 +117,8 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 'employee.email AS employee_email',
                 'employee.departmentName AS employee_departmentname',
                 'employee.rankName AS employee_rankname',
+                'employee.status AS employee_status',
+                'employee.hireDate AS employee_hiredate',
             ])
                 .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
                 evaluationPeriodId,
@@ -124,6 +126,9 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 .andWhere('mapping.employeeId = :employeeId', { employeeId });
             if (includeUnregistered) {
                 queryBuilder.withDeleted();
+            }
+            else {
+                queryBuilder.andWhere('mapping.deletedAt IS NULL');
             }
             const result = await queryBuilder.getRawOne();
             if (!result) {
@@ -354,6 +359,8 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                         email: result.employee_email,
                         departmentName: result.employee_departmentname,
                         rankName: result.employee_rankname,
+                        status: result.employee_status,
+                        hireDate: result.employee_hiredate,
                     }
                     : null,
                 exclusionInfo: {

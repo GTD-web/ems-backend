@@ -35,9 +35,7 @@ export class EvaluationRevisionRequestService
   /**
    * ID로 재작성 요청을 조회한다
    */
-  async ID로_조회한다(
-    id: string,
-  ): Promise<EvaluationRevisionRequest | null> {
+  async ID로_조회한다(id: string): Promise<EvaluationRevisionRequest | null> {
     this.logger.log(`재작성 요청 조회 - ID: ${id}`);
     return await this.revisionRequestRepository.findOne({
       where: { id, deletedAt: IsNull() },
@@ -58,9 +56,12 @@ export class EvaluationRevisionRequestService
       .where('request.deletedAt IS NULL');
 
     if (filter.evaluationPeriodId) {
-      queryBuilder.andWhere('request.evaluationPeriodId = :evaluationPeriodId', {
-        evaluationPeriodId: filter.evaluationPeriodId,
-      });
+      queryBuilder.andWhere(
+        'request.evaluationPeriodId = :evaluationPeriodId',
+        {
+          evaluationPeriodId: filter.evaluationPeriodId,
+        },
+      );
     }
 
     if (filter.employeeId) {
@@ -80,7 +81,11 @@ export class EvaluationRevisionRequestService
     }
 
     queryBuilder
-      .leftJoinAndSelect('request.recipients', 'recipients')
+      .leftJoinAndSelect(
+        'request.recipients',
+        'recipients',
+        'recipients.deletedAt IS NULL',
+      )
       .orderBy('request.requestedAt', 'DESC');
 
     return await queryBuilder.getMany();
@@ -151,14 +156,19 @@ export class EvaluationRevisionRequestService
     recipientId: string,
     filter?: RevisionRequestRecipientFilter,
   ): Promise<EvaluationRevisionRequestRecipient[]> {
-    this.logger.log(`수신자의 재작성 요청 목록 조회 - 수신자 ID: ${recipientId}`);
+    this.logger.log(
+      `수신자의 재작성 요청 목록 조회 - 수신자 ID: ${recipientId}`,
+    );
 
     const queryBuilder = this.recipientRepository
       .createQueryBuilder('recipient')
-      .leftJoinAndSelect('recipient.revisionRequest', 'request')
+      .leftJoinAndSelect(
+        'recipient.revisionRequest',
+        'request',
+        'request.deletedAt IS NULL',
+      )
       .where('recipient.deletedAt IS NULL')
-      .andWhere('recipient.recipientId = :recipientId', { recipientId })
-      .andWhere('request.deletedAt IS NULL');
+      .andWhere('recipient.recipientId = :recipientId', { recipientId });
 
     if (filter?.isRead !== undefined) {
       queryBuilder.andWhere('recipient.isRead = :isRead', {
@@ -173,22 +183,33 @@ export class EvaluationRevisionRequestService
     }
 
     if (filter?.evaluationPeriodId) {
-      queryBuilder.andWhere('request.evaluationPeriodId = :evaluationPeriodId', {
-        evaluationPeriodId: filter.evaluationPeriodId,
-      });
+      queryBuilder.andWhere(
+        '(request.id IS NULL OR request.evaluationPeriodId = :evaluationPeriodId)',
+        {
+          evaluationPeriodId: filter.evaluationPeriodId,
+        },
+      );
     }
 
     if (filter?.employeeId) {
-      queryBuilder.andWhere('request.employeeId = :employeeId', {
-        employeeId: filter.employeeId,
-      });
+      queryBuilder.andWhere(
+        '(request.id IS NULL OR request.employeeId = :employeeId)',
+        {
+          employeeId: filter.employeeId,
+        },
+      );
     }
 
     if (filter?.step) {
-      queryBuilder.andWhere('request.step = :step', { step: filter.step });
+      queryBuilder.andWhere('(request.id IS NULL OR request.step = :step)', {
+        step: filter.step,
+      });
     }
 
-    queryBuilder.orderBy('request.requestedAt', 'DESC');
+    queryBuilder.orderBy(
+      'COALESCE(request.requestedAt, recipient.createdAt)',
+      'DESC',
+    );
 
     return await queryBuilder.getMany();
   }
@@ -230,7 +251,9 @@ export class EvaluationRevisionRequestService
    * 읽지 않은 재작성 요청 수를 조회한다
    */
   async 읽지않은_요청수를_조회한다(recipientId: string): Promise<number> {
-    this.logger.log(`읽지 않은 재작성 요청 수 조회 - 수신자 ID: ${recipientId}`);
+    this.logger.log(
+      `읽지 않은 재작성 요청 수 조회 - 수신자 ID: ${recipientId}`,
+    );
 
     return await this.recipientRepository
       .createQueryBuilder('recipient')
@@ -242,6 +265,3 @@ export class EvaluationRevisionRequestService
       .getCount();
   }
 }
-
-
-

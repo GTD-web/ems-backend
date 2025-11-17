@@ -16,6 +16,9 @@ const audit_log_context_module_1 = require("../context/audit-log-context/audit-l
 const organization_management_context_1 = require("../context/organization-management-context");
 const jwt_auth_guard_1 = require("./common/guards/jwt-auth.guard");
 const audit_log_interceptor_1 = require("./common/interceptors/audit-log.interceptor");
+const user_interface_module_1 = require("./user/user-interface.module");
+const evaluator_interface_module_1 = require("./evaluator/evaluator-interface.module");
+const public_interface_module_1 = require("./public/public-interface.module");
 let InterfaceModule = class InterfaceModule {
 };
 exports.InterfaceModule = InterfaceModule;
@@ -27,6 +30,9 @@ exports.InterfaceModule = InterfaceModule = __decorate([
             audit_log_context_module_1.AuditLogContextModule,
             organization_management_context_1.OrganizationManagementContextModule,
             admin_interface_module_1.AdminInterfaceModule,
+            user_interface_module_1.UserInterfaceModule,
+            evaluator_interface_module_1.EvaluatorInterfaceModule,
+            public_interface_module_1.PublicInterfaceModule,
         ],
         controllers: [],
         providers: [
@@ -39,9 +45,7 @@ exports.InterfaceModule = InterfaceModule = __decorate([
                 useClass: audit_log_interceptor_1.AuditLogInterceptor,
             },
         ],
-        exports: [
-            admin_interface_module_1.AdminInterfaceModule,
-        ],
+        exports: [],
     })
 ], InterfaceModule);
 //# sourceMappingURL=interface.module.js.map

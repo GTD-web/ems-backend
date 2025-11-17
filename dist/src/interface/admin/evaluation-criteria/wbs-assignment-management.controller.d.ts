@@ -1,7 +1,7 @@
-import { WbsAssignmentBusinessService } from '../../../business/wbs-assignment/wbs-assignment-business.service';
-import { WbsAssignmentListResult } from '../../../context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { BulkCreateWbsAssignmentDto, CancelWbsAssignmentByWbsDto, ChangeWbsAssignmentOrderByWbsDto, ChangeWbsAssignmentOrderQueryDto, CreateAndAssignWbsDto, CreateWbsAssignmentDto, EmployeeWbsAssignmentsResponseDto, GetUnassignedWbsItemsDto, ProjectWbsAssignmentsResponseDto, UnassignedWbsItemsResponseDto, UpdateWbsItemTitleDto, WbsAssignmentDetailResponseDto, WbsAssignmentFilterDto, WbsItemAssignmentsResponseDto } from './dto/wbs-assignment.dto';
+import { WbsAssignmentBusinessService } from '@business/wbs-assignment/wbs-assignment-business.service';
+import { WbsAssignmentListResult } from '@context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
+import { BulkCreateWbsAssignmentDto, CancelWbsAssignmentByWbsDto, ChangeWbsAssignmentOrderByWbsDto, ChangeWbsAssignmentOrderQueryDto, CreateAndAssignWbsDto, CreateWbsAssignmentDto, EmployeeWbsAssignmentsResponseDto, GetUnassignedWbsItemsDto, ProjectWbsAssignmentsResponseDto, UnassignedWbsItemsResponseDto, UpdateWbsItemTitleDto, WbsAssignmentDetailResponseDto, WbsAssignmentFilterDto, WbsItemAssignmentsResponseDto } from '@interface/common/dto/evaluation-criteria/wbs-assignment.dto';
 export declare class WbsAssignmentManagementController {
     private readonly wbsAssignmentBusinessService;
     constructor(wbsAssignmentBusinessService: WbsAssignmentBusinessService);

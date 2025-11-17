@@ -20,9 +20,9 @@ const swagger_1 = require("@nestjs/swagger");
 const downward_evaluation_1 = require("../../../context/performance-evaluation-context/handlers/downward-evaluation");
 const performance_evaluation_service_1 = require("../../../context/performance-evaluation-context/performance-evaluation.service");
 const downward_evaluation_business_service_1 = require("../../../business/downward-evaluation/downward-evaluation-business.service");
-const downward_evaluation_api_decorators_1 = require("./decorators/downward-evaluation-api.decorators");
-const downward_evaluation_dto_1 = require("./dto/downward-evaluation.dto");
-const bulk_submit_downward_evaluation_query_dto_1 = require("./dto/bulk-submit-downward-evaluation-query.dto");
+const downward_evaluation_api_decorators_1 = require("../../common/decorators/performance-evaluation/downward-evaluation-api.decorators");
+const downward_evaluation_dto_1 = require("../../common/dto/performance-evaluation/downward-evaluation.dto");
+const bulk_submit_downward_evaluation_query_dto_1 = require("../../common/dto/performance-evaluation/bulk-submit-downward-evaluation-query.dto");
 let DownwardEvaluationManagementController = class DownwardEvaluationManagementController {
     performanceEvaluationService;
     downwardEvaluationBusinessService;

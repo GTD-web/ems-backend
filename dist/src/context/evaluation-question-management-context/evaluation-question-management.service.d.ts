@@ -1,12 +1,23 @@
+import { OnModuleInit } from '@nestjs/common';
 import { QueryBus, CommandBus } from '@nestjs/cqrs';
+import { Repository } from 'typeorm';
+import { QuestionGroup } from '@domain/sub/question-group/question-group.entity';
+import { EvaluationQuestion } from '@domain/sub/evaluation-question/evaluation-question.entity';
+import { QuestionGroupMapping } from '@domain/sub/question-group-mapping/question-group-mapping.entity';
 import type { QuestionGroupDto, CreateQuestionGroupDto, UpdateQuestionGroupDto, QuestionGroupFilter } from '../../domain/sub/question-group/question-group.types';
 import type { EvaluationQuestionDto, CreateEvaluationQuestionDto, UpdateEvaluationQuestionDto, EvaluationQuestionFilter } from '../../domain/sub/evaluation-question/evaluation-question.types';
 import type { QuestionGroupMappingDto, CreateQuestionGroupMappingDto } from '../../domain/sub/question-group-mapping/question-group-mapping.types';
 import type { EvaluationResponseDto, CreateEvaluationResponseDto, UpdateEvaluationResponseDto, EvaluationResponseFilter, EvaluationResponseStats } from '../../domain/sub/evaluation-response/evaluation-response.types';
-export declare class EvaluationQuestionManagementService {
+export declare class EvaluationQuestionManagementService implements OnModuleInit {
     private readonly queryBus;
     private readonly commandBus;
-    constructor(queryBus: QueryBus, commandBus: CommandBus);
+    private readonly questionGroupRepository;
+    private readonly evaluationQuestionRepository;
+    private readonly questionGroupMappingRepository;
+    private readonly logger;
+    constructor(queryBus: QueryBus, commandBus: CommandBus, questionGroupRepository: Repository<QuestionGroup>, evaluationQuestionRepository: Repository<EvaluationQuestion>, questionGroupMappingRepository: Repository<QuestionGroupMapping>);
+    onModuleInit(): Promise<void>;
+    private 생성_파트장평가질문그룹;
     질문그룹을_생성한다(data: CreateQuestionGroupDto, createdBy: string): Promise<string>;
     질문그룹을_수정한다(id: string, data: UpdateQuestionGroupDto, updatedBy: string): Promise<void>;
     질문그룹을_삭제한다(id: string, deletedBy: string): Promise<void>;

@@ -18,8 +18,8 @@ const current_user_decorator_1 = require("../../common/decorators/current-user.d
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const deliverable_api_decorators_1 = require("./decorators/deliverable-api.decorators");
-const deliverable_dto_1 = require("./dto/deliverable.dto");
+const deliverable_api_decorators_1 = require("../../common/decorators/performance-evaluation/deliverable-api.decorators");
+const deliverable_dto_1 = require("../../common/dto/performance-evaluation/deliverable.dto");
 let DeliverableManagementController = class DeliverableManagementController {
     deliverableBusinessService;
     constructor(deliverableBusinessService) {

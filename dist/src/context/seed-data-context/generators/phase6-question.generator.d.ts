@@ -10,6 +10,7 @@ export declare class Phase6QuestionGenerator {
     private readonly logger;
     constructor(questionGroupRepository: Repository<QuestionGroup>, evaluationQuestionRepository: Repository<EvaluationQuestion>, questionGroupMappingRepository: Repository<QuestionGroupMapping>);
     generate(config: SeedDataConfig, phase1Result: GeneratorResult): Promise<GeneratorResult>;
+    private 생성_파트장평가질문그룹;
     private 생성_질문그룹들;
     private 생성_평가질문들;
     private 생성_질문그룹매핑들;

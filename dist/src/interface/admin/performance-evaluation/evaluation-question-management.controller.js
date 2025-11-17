@@ -17,8 +17,8 @@ const evaluation_question_management_service_1 = require("../../../context/evalu
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const evaluation_question_api_decorators_1 = require("./decorators/evaluation-question-api.decorators");
-const evaluation_question_dto_1 = require("./dto/evaluation-question.dto");
+const evaluation_question_api_decorators_1 = require("../../common/decorators/performance-evaluation/evaluation-question-api.decorators");
+const evaluation_question_dto_1 = require("../../common/dto/performance-evaluation/evaluation-question.dto");
 let EvaluationQuestionManagementController = class EvaluationQuestionManagementController {
     evaluationQuestionManagementService;
     constructor(evaluationQuestionManagementService) {

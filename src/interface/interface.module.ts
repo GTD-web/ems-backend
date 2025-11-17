@@ -7,14 +7,18 @@ import { AuditLogContextModule } from '@context/audit-log-context/audit-log-cont
 import { OrganizationManagementContextModule } from '@context/organization-management-context';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
+import { UserInterfaceModule } from './user/user-interface.module';
+import { EvaluatorInterfaceModule } from './evaluator/evaluator-interface.module';
+import { PublicInterfaceModule } from './public/public-interface.module';
 
 /**
  * 인터페이스 모듈
  *
  * 모든 API 인터페이스 모듈들을 통합 관리합니다.
  * - 관리자 인터페이스
- * - 사용자 인터페이스 (향후 추가)
- * - 공개 인터페이스 (향후 추가)
+ * - 사용자 인터페이스
+ * - 평가자 인터페이스
+ * - Public 인터페이스 (인증 불필요)
  *
  * JWT 인증 가드와 Audit 로그 인터셉터를 전역으로 적용합니다.
  */
@@ -25,8 +29,9 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
     AuditLogContextModule, // Audit 로그 컨텍스트 모듈
     OrganizationManagementContextModule, // 조직 관리 컨텍스트 모듈 (RolesGuard에서 사용)
     AdminInterfaceModule, // 관리자 인터페이스 모듈
-    // UserInterfaceModule,   // TODO: 사용자 인터페이스 모듈 (향후 추가)
-    // PublicInterfaceModule, // TODO: 공개 인터페이스 모듈 (향후 추가)
+    UserInterfaceModule, // 사용자 인터페이스 모듈
+    EvaluatorInterfaceModule, // 평가자 인터페이스 모듈
+    PublicInterfaceModule, // Public 인터페이스 모듈 (크론 작업 등)
   ],
   controllers: [],
   providers: [
@@ -39,10 +44,6 @@ import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor
       useClass: AuditLogInterceptor, // Audit 로그 인터셉터를 전역으로 적용
     },
   ],
-  exports: [
-    AdminInterfaceModule,
-    // UserInterfaceModule,
-    // PublicInterfaceModule,
-  ],
+  exports: [],
 })
 export class InterfaceModule {}

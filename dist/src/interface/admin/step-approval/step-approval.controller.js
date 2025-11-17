@@ -19,11 +19,11 @@ const step_approval_context_1 = require("../../../context/step-approval-context"
 const wbs_self_evaluation_business_service_1 = require("../../../business/wbs-self-evaluation/wbs-self-evaluation-business.service");
 const downward_evaluation_business_service_1 = require("../../../business/downward-evaluation/downward-evaluation-business.service");
 const step_approval_business_service_1 = require("../../../business/step-approval/step-approval-business.service");
-const update_step_approval_dto_1 = require("./dto/update-step-approval.dto");
-const update_secondary_step_approval_dto_1 = require("./dto/update-secondary-step-approval.dto");
-const step_approval_api_decorators_1 = require("./decorators/step-approval-api.decorators");
-const step_approval_enums_api_decorators_1 = require("./decorators/step-approval-enums-api.decorators");
-const update_step_approval_dto_2 = require("./dto/update-step-approval.dto");
+const update_step_approval_dto_1 = require("../../common/dto/step-approval/update-step-approval.dto");
+const update_secondary_step_approval_dto_1 = require("../../common/dto/step-approval/update-secondary-step-approval.dto");
+const step_approval_api_decorators_1 = require("../../common/decorators/step-approval/step-approval-api.decorators");
+const step_approval_enums_api_decorators_1 = require("../../common/decorators/step-approval/step-approval-enums-api.decorators");
+const update_step_approval_dto_2 = require("../../common/dto/step-approval/update-step-approval.dto");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 let StepApprovalController = class StepApprovalController {
     stepApprovalContextService;
@@ -82,6 +82,9 @@ let StepApprovalController = class StepApprovalController {
         else {
             if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.APPROVED) {
                 await this.stepApprovalBusinessService.자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+                if (dto.approveSubsequentSteps) {
+                    await this.stepApprovalBusinessService.자기평가_승인_시_하위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy);
+                }
             }
             await this.stepApprovalBusinessService.자기평가_확인상태를_변경한다({
                 evaluationPeriodId,
@@ -102,6 +105,9 @@ let StepApprovalController = class StepApprovalController {
         else {
             if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.APPROVED) {
                 await this.stepApprovalBusinessService.일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+                if (dto.approveSubsequentSteps) {
+                    await this.stepApprovalBusinessService.일차하향평가_승인_시_하위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy);
+                }
             }
             await this.stepApprovalBusinessService.일차하향평가_확인상태를_변경한다({
                 evaluationPeriodId,

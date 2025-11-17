@@ -1,28 +1,37 @@
-import { Body, Controller, ParseBoolPipe, Query } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { OrganizationManagementService } from '../../../context/organization-management-context/organization-management.service';
-import { EmployeeDto } from '../../../domain/common/employee/employee.types';
 import {
   DepartmentHierarchyDto,
   DepartmentHierarchyWithEmployeesDto,
-} from '../../../context/organization-management-context/interfaces/organization-management-context.interface';
-import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
-import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
-import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+  EmployeeSyncService,
+  OrganizationManagementService,
+} from '@/context/organization-management-context';
+import { EmployeeDto } from '@/domain/common/employee/employee.types';
+import { CurrentUser, ParseId } from '@/interface/common/decorators';
 import {
   ExcludeEmployeeFromList,
   GetAllEmployees,
   GetDepartmentHierarchy,
   GetDepartmentHierarchyWithEmployees,
   GetExcludedEmployees,
+  GetPartLeaders,
   IncludeEmployeeInList,
   UpdateEmployeeAccessibility,
-} from './decorators/employee-management-api.decorators';
+} from '@/interface/common/decorators/employee-management/employee-management-api.decorators';
 import {
+  EmployeeResponseDto,
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
-  UpdateEmployeeAccessibilityQueryDto,
-} from './dto/employee-management.dto';
+  GetPartLeadersQueryDto,
+  PartLeadersResponseDto,
+} from '@/interface/common/dto/employee-management/employee-management.dto';
+import type { AuthenticatedUser } from '@/interface/common/guards';
+import {
+  Body,
+  Controller,
+  DefaultValuePipe,
+  ParseBoolPipe,
+  Query,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * 관리자용 직원 관리 컨트롤러
@@ -36,6 +45,7 @@ import {
 export class EmployeeManagementController {
   constructor(
     private readonly organizationManagementService: OrganizationManagementService,
+    private readonly employeeSyncService: EmployeeSyncService,
   ) {}
 
   // ==================== GET: 조회 ====================
@@ -64,10 +74,11 @@ export class EmployeeManagementController {
   @GetAllEmployees()
   async getAllEmployees(
     @Query() query: GetEmployeesQueryDto,
+    @Query('includeExcluded', ParseBoolPipe) includeExcluded: boolean,
   ): Promise<EmployeeDto[]> {
     // departmentId와 includeExcluded 옵션을 전달하여 조회
     return await this.organizationManagementService.전체직원목록조회(
-      query.includeExcluded || false,
+      includeExcluded,
       query.departmentId,
     );
   }
@@ -81,6 +92,44 @@ export class EmployeeManagementController {
     const allEmployees =
       await this.organizationManagementService.전체직원목록조회(true);
     return allEmployees.filter((employee) => employee.isExcludedFromList);
+  }
+
+  /**
+   * 파트장 목록을 조회합니다.
+   */
+  @GetPartLeaders()
+  async getPartLeaders(
+    @Query() query: GetPartLeadersQueryDto,
+  ): Promise<PartLeadersResponseDto> {
+    const partLeaders = await this.employeeSyncService.getPartLeaders(
+      query.forceRefresh || false,
+    );
+    const partLeadersDto = partLeaders.map((employee) => {
+      const dto = employee.DTO로_변환한다();
+      // EmployeeDto를 EmployeeResponseDto로 변환 (null을 undefined로 변환)
+      return {
+        id: dto.id,
+        employeeNumber: dto.employeeNumber,
+        name: dto.name,
+        email: dto.email,
+        rankName: dto.rankName,
+        rankCode: dto.rankCode,
+        rankLevel: dto.rankLevel,
+        departmentName: dto.departmentName,
+        departmentCode: dto.departmentCode,
+        isActive: dto.isActive,
+        isExcludedFromList: dto.isExcludedFromList,
+        excludeReason: dto.excludeReason ?? undefined,
+        excludedBy: dto.excludedBy ?? undefined,
+        excludedAt: dto.excludedAt ?? undefined,
+        createdAt: dto.createdAt,
+        updatedAt: dto.updatedAt,
+      };
+    });
+    return {
+      partLeaders: partLeadersDto as EmployeeResponseDto[],
+      count: partLeadersDto.length,
+    };
   }
 
   // ==================== PATCH: 부분 수정 ====================
@@ -121,7 +170,8 @@ export class EmployeeManagementController {
   @UpdateEmployeeAccessibility()
   async updateEmployeeAccessibility(
     @ParseId() employeeId: string,
-    @Query('isAccessible', ParseBoolPipe) isAccessible: boolean,
+    @Query('isAccessible', new DefaultValuePipe(false), ParseBoolPipe)
+    isAccessible: boolean,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<EmployeeDto> {
     return await this.organizationManagementService.직원접근가능여부변경(

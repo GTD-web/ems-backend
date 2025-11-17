@@ -19,8 +19,8 @@ const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decor
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const final_evaluation_1 = require("../../../context/performance-evaluation-context/handlers/final-evaluation");
-const final_evaluation_api_decorators_1 = require("./decorators/final-evaluation-api.decorators");
-const final_evaluation_dto_1 = require("./dto/final-evaluation.dto");
+const final_evaluation_api_decorators_1 = require("../../common/decorators/performance-evaluation/final-evaluation-api.decorators");
+const final_evaluation_dto_1 = require("../../common/dto/performance-evaluation/final-evaluation.dto");
 let FinalEvaluationManagementController = class FinalEvaluationManagementController {
     performanceEvaluationService;
     constructor(performanceEvaluationService) {

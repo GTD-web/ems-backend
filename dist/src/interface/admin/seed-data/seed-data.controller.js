@@ -16,8 +16,11 @@ exports.SeedDataController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const seed_data_service_1 = require("../../../context/seed-data-context/seed-data.service");
-const dto_1 = require("./dto");
-const decorators_1 = require("./decorators");
+const seed_data_1 = require("../../common/dto/seed-data");
+const clear_seed_data_decorator_1 = require("../../common/decorators/seed-data/clear-seed-data.decorator");
+const generate_seed_data_decorator_1 = require("../../common/decorators/seed-data/generate-seed-data.decorator");
+const generate_seed_data_with_real_data_decorator_1 = require("../../common/decorators/seed-data/generate-seed-data-with-real-data.decorator");
+const get_seed_data_status_decorator_1 = require("../../common/decorators/seed-data/get-seed-data-status.decorator");
 let SeedDataController = class SeedDataController {
     seedDataService;
     constructor(seedDataService) {
@@ -27,7 +30,9 @@ let SeedDataController = class SeedDataController {
         const startTime = Date.now();
         const configWithUser = {
             ...config,
-            currentUserId: config.includeCurrentUserAsEvaluator ? req.user?.id : undefined,
+            currentUserId: config.includeCurrentUserAsEvaluator
+                ? req.user?.id
+                : undefined,
         };
         const results = await this.seedDataService.시드_데이터를_생성한다(configWithUser);
         const totalDuration = Date.now() - startTime;
@@ -55,7 +60,9 @@ let SeedDataController = class SeedDataController {
             stateDistribution: config.stateDistribution,
             useRealDepartments: true,
             useRealEmployees: true,
-            currentUserId: config.includeCurrentUserAsEvaluator ? req.user?.id : undefined,
+            currentUserId: config.includeCurrentUserAsEvaluator
+                ? req.user?.id
+                : undefined,
         };
         if (config.stateDistribution) {
             console.log('[Controller] stateDistribution.selfEvaluationProgress:', JSON.stringify(config.stateDistribution.selfEvaluationProgress));
@@ -87,27 +94,27 @@ exports.SeedDataController = SeedDataController;
 __decorate([
     (0, common_1.Post)('generate'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
-    (0, decorators_1.ApiGenerateSeedData)(),
+    (0, generate_seed_data_decorator_1.ApiGenerateSeedData)(),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [dto_1.SeedDataConfigDto, Object]),
+    __metadata("design:paramtypes", [seed_data_1.SeedDataConfigDto, Object]),
     __metadata("design:returntype", Promise)
 ], SeedDataController.prototype, "generateSeedData", null);
 __decorate([
     (0, common_1.Post)('generate-with-real-data'),
     (0, common_1.HttpCode)(common_1.HttpStatus.CREATED),
-    (0, decorators_1.ApiGenerateSeedDataWithRealData)(),
+    (0, generate_seed_data_with_real_data_decorator_1.ApiGenerateSeedDataWithRealData)(),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Request)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [dto_1.RealDataSeedConfigDto, Object]),
+    __metadata("design:paramtypes", [seed_data_1.RealDataSeedConfigDto, Object]),
     __metadata("design:returntype", Promise)
 ], SeedDataController.prototype, "generateSeedDataWithRealData", null);
 __decorate([
     (0, common_1.Delete)('clear'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, decorators_1.ApiClearSeedData)(),
+    (0, clear_seed_data_decorator_1.ApiClearSeedData)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -115,7 +122,7 @@ __decorate([
 __decorate([
     (0, common_1.Get)('status'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, decorators_1.ApiGetSeedDataStatus)(),
+    (0, get_seed_data_status_decorator_1.ApiGetSeedDataStatus)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)

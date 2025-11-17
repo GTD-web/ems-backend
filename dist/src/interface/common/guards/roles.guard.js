@@ -14,9 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var RolesGuard_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RolesGuard = exports.ROLES_GUARD_OPTIONS = void 0;
+const organization_management_context_1 = require("../../../context/organization-management-context");
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
-const organization_management_context_1 = require("../../../context/organization-management-context");
+const public_decorator_1 = require("../decorators/public.decorator");
 exports.ROLES_GUARD_OPTIONS = 'ROLES_GUARD_OPTIONS';
 let RolesGuard = RolesGuard_1 = class RolesGuard {
     reflector;
@@ -32,6 +33,13 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
             options?.rolesRequiringAccessibilityCheck ?? [];
     }
     async canActivate(context) {
+        const isPublic = this.reflector.getAllAndOverride(public_decorator_1.IS_PUBLIC_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        if (isPublic) {
+            return true;
+        }
         const request = context.switchToHttp().getRequest();
         const user = request.user;
         if (!user) {

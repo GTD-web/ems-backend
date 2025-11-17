@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { PeerEvaluationBusinessModule } from './peer-evaluation/peer-evaluation-business.module';
 import { WbsAssignmentBusinessModule } from './wbs-assignment/wbs-assignment-business.module';
 import { EvaluationPeriodBusinessModule } from './evaluation-period/evaluation-period-business.module';
+import { EvaluationTargetBusinessModule } from './evaluation-target/evaluation-target-business.module';
 import { DownwardEvaluationBusinessModule } from './downward-evaluation/downward-evaluation-business.module';
 import { WbsSelfEvaluationBusinessModule } from './wbs-self-evaluation/wbs-self-evaluation-business.module';
 import { StepApprovalBusinessModule } from './step-approval/step-approval-business.module';
@@ -20,6 +21,7 @@ import { EvaluationCriteriaBusinessModule } from './evaluation-criteria/evaluati
     WbsAssignmentBusinessModule,
     DownwardEvaluationBusinessModule,
     EvaluationPeriodBusinessModule,
+    EvaluationTargetBusinessModule,
     WbsSelfEvaluationBusinessModule,
     StepApprovalBusinessModule,
     DeliverableBusinessModule,
@@ -31,6 +33,7 @@ import { EvaluationCriteriaBusinessModule } from './evaluation-criteria/evaluati
     WbsAssignmentBusinessModule,
     DownwardEvaluationBusinessModule,
     EvaluationPeriodBusinessModule,
+    EvaluationTargetBusinessModule,
     WbsSelfEvaluationBusinessModule,
     StepApprovalBusinessModule,
     DeliverableBusinessModule,

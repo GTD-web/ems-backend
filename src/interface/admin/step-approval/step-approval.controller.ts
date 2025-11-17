@@ -10,21 +10,21 @@ import { StepApprovalContextService } from '@context/step-approval-context';
 import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
 import { StepApprovalBusinessService } from '@business/step-approval/step-approval-business.service';
-import { UpdateStepApprovalDto } from './dto/update-step-approval.dto';
-import { UpdateSecondaryStepApprovalDto } from './dto/update-secondary-step-approval.dto';
-import { StepApprovalEnumsResponseDto } from './dto/step-approval-enums.dto';
+import { UpdateStepApprovalDto } from '@interface/common/dto/step-approval/update-step-approval.dto';
+import { UpdateSecondaryStepApprovalDto } from '@interface/common/dto/step-approval/update-secondary-step-approval.dto';
+import { StepApprovalEnumsResponseDto } from '@interface/common/dto/step-approval/step-approval-enums.dto';
 import {
   UpdateStepApproval,
   UpdateCriteriaStepApproval,
   UpdateSelfStepApproval,
   UpdatePrimaryStepApproval,
   UpdateSecondaryStepApproval,
-} from './decorators/step-approval-api.decorators';
-import { GetStepApprovalEnums } from './decorators/step-approval-enums-api.decorators';
+} from '@interface/common/decorators/step-approval/step-approval-api.decorators';
+import { GetStepApprovalEnums } from '@interface/common/decorators/step-approval/step-approval-enums-api.decorators';
 import {
   StepTypeEnum,
   StepApprovalStatusEnum,
-} from './dto/update-step-approval.dto';
+} from '@interface/common/dto/step-approval/update-step-approval.dto';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 
 /**
@@ -153,6 +153,15 @@ export class StepApprovalController {
           employeeId,
           updatedBy,
         );
+
+        // 하위 평가 자동 승인 옵션이 활성화된 경우
+        if (dto.approveSubsequentSteps) {
+          await this.stepApprovalBusinessService.자기평가_승인_시_하위평가들을_승인한다(
+            evaluationPeriodId,
+            employeeId,
+            updatedBy,
+          );
+        }
       }
 
       // 단계 승인 상태 변경
@@ -199,6 +208,15 @@ export class StepApprovalController {
           employeeId,
           updatedBy,
         );
+
+        // 하위 평가 자동 승인 옵션이 활성화된 경우
+        if (dto.approveSubsequentSteps) {
+          await this.stepApprovalBusinessService.일차하향평가_승인_시_하위평가들을_승인한다(
+            evaluationPeriodId,
+            employeeId,
+            updatedBy,
+          );
+        }
       }
 
       // 단계 승인 상태 변경

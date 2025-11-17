@@ -13,16 +13,16 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RevisionRequestController = void 0;
-const common_1 = require("@nestjs/common");
-const swagger_1 = require("@nestjs/swagger");
-const complete_revision_request_by_evaluator_query_dto_1 = require("./dto/complete-revision-request-by-evaluator-query.dto");
 const revision_request_business_service_1 = require("../../../business/revision-request/revision-request-business.service");
 const revision_request_context_1 = require("../../../context/revision-request-context");
-const revision_request_api_decorators_1 = require("./decorators/revision-request-api.decorators");
-const get_revision_requests_query_dto_1 = require("./dto/get-revision-requests-query.dto");
-const complete_revision_request_dto_1 = require("./dto/complete-revision-request.dto");
-const complete_revision_request_by_evaluator_dto_1 = require("./dto/complete-revision-request-by-evaluator.dto");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const revision_request_api_decorators_1 = require("../../common/decorators/revision-request/revision-request-api.decorators");
+const complete_revision_request_by_evaluator_query_dto_1 = require("../../common/dto/revision-request/complete-revision-request-by-evaluator-query.dto");
+const complete_revision_request_by_evaluator_dto_1 = require("../../common/dto/revision-request/complete-revision-request-by-evaluator.dto");
+const complete_revision_request_dto_1 = require("../../common/dto/revision-request/complete-revision-request.dto");
+const get_revision_requests_query_dto_1 = require("../../common/dto/revision-request/get-revision-requests-query.dto");
+const common_1 = require("@nestjs/common");
+const swagger_1 = require("@nestjs/swagger");
 let RevisionRequestController = class RevisionRequestController {
     revisionRequestBusinessService;
     revisionRequestContextService;
@@ -30,13 +30,13 @@ let RevisionRequestController = class RevisionRequestController {
         this.revisionRequestBusinessService = revisionRequestBusinessService;
         this.revisionRequestContextService = revisionRequestContextService;
     }
-    async getRevisionRequests(query) {
+    async getRevisionRequests(query, isRead, isCompleted) {
         const requests = await this.revisionRequestContextService.전체_재작성요청목록을_조회한다({
             evaluationPeriodId: query.evaluationPeriodId,
             employeeId: query.employeeId,
             requestedBy: query.requestedBy,
-            isRead: query.isRead,
-            isCompleted: query.isCompleted,
+            isRead: isRead,
+            isCompleted: isCompleted,
             step: query.step,
         });
         return requests.map((req) => ({
@@ -57,12 +57,12 @@ let RevisionRequestController = class RevisionRequestController {
             approvalStatus: req.approvalStatus,
         }));
     }
-    async getMyRevisionRequests(query, recipientId) {
+    async getMyRevisionRequests(query, isRead, isCompleted, recipientId) {
         const requests = await this.revisionRequestContextService.내_재작성요청목록을_조회한다(recipientId, {
             evaluationPeriodId: query.evaluationPeriodId,
             employeeId: query.employeeId,
-            isRead: query.isRead,
-            isCompleted: query.isCompleted,
+            isRead: isRead,
+            isCompleted: isCompleted,
             step: query.step,
         });
         return requests.map((req) => ({
@@ -101,16 +101,20 @@ exports.RevisionRequestController = RevisionRequestController;
 __decorate([
     (0, revision_request_api_decorators_1.GetRevisionRequests)(),
     __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Query)('isRead', new common_1.DefaultValuePipe(false), common_1.ParseBoolPipe)),
+    __param(2, (0, common_1.Query)('isCompleted', new common_1.DefaultValuePipe(false), common_1.ParseBoolPipe)),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [get_revision_requests_query_dto_1.GetRevisionRequestsQueryDto]),
+    __metadata("design:paramtypes", [get_revision_requests_query_dto_1.GetRevisionRequestsQueryDto, Boolean, Boolean]),
     __metadata("design:returntype", Promise)
 ], RevisionRequestController.prototype, "getRevisionRequests", null);
 __decorate([
     (0, revision_request_api_decorators_1.GetMyRevisionRequests)(),
     __param(0, (0, common_1.Query)()),
-    __param(1, (0, current_user_decorator_1.CurrentUser)('id')),
+    __param(1, (0, common_1.Query)('isRead', new common_1.DefaultValuePipe(false), common_1.ParseBoolPipe)),
+    __param(2, (0, common_1.Query)('isCompleted', new common_1.DefaultValuePipe(false), common_1.ParseBoolPipe)),
+    __param(3, (0, current_user_decorator_1.CurrentUser)('id')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [get_revision_requests_query_dto_1.GetRevisionRequestsQueryDto, String]),
+    __metadata("design:paramtypes", [get_revision_requests_query_dto_1.GetRevisionRequestsQueryDto, Boolean, Boolean, String]),
     __metadata("design:returntype", Promise)
 ], RevisionRequestController.prototype, "getMyRevisionRequests", null);
 __decorate([

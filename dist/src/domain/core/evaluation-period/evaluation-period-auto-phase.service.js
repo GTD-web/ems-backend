@@ -62,7 +62,6 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
         }
         const nextPhase = this.getNextPhase(currentPhase);
         if (!nextPhase) {
-            this.logger.debug(`평가기간 ${period.id}는 더 이상 전이할 단계가 없습니다. (현재: ${currentPhase})`);
             return false;
         }
         const shouldTransition = this.shouldTransitionToNextPhase(period, nextPhase, now);

@@ -12,6 +12,9 @@ const swagger_config_1 = require("../libs/config/swagger.config");
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const express_1 = __importDefault(require("express"));
+const admin_interface_module_1 = require("./interface/admin/admin-interface.module");
+const user_interface_module_1 = require("./interface/user/user-interface.module");
+const evaluator_interface_module_1 = require("./interface/evaluator/evaluator-interface.module");
 let cachedApp;
 async function bootstrap() {
     const isVercel = !!process.env.VERCEL;
@@ -50,18 +53,21 @@ async function bootstrap() {
         description: '루미르 평가 관리 시스템 - 관리자용 API 문서입니다.',
         version: '1.0',
         path: 'admin/api-docs',
+        includeModules: [admin_interface_module_1.AdminInterfaceModule],
     });
     (0, swagger_config_1.setupSwagger)(app, {
         title: 'Lumir User API',
         description: '루미르 평가 관리 시스템 - 일반 사용자용 API 문서입니다.',
         version: '1.0',
         path: 'user/api-docs',
+        includeModules: [user_interface_module_1.UserInterfaceModule],
     });
     (0, swagger_config_1.setupSwagger)(app, {
         title: 'Lumir Evaluator API',
         description: '루미르 평가 관리 시스템 - 평가자용 API 문서입니다.',
         version: '1.0',
         path: 'evaluator/api-docs',
+        includeModules: [evaluator_interface_module_1.EvaluatorInterfaceModule],
     });
     if (isVercel) {
         await app.init();

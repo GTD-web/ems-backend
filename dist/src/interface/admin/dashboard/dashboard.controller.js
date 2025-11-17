@@ -20,10 +20,10 @@ const decorators_1 = require("../../common/decorators");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const evaluation_period_service_1 = require("../../../domain/core/evaluation-period/evaluation-period.service");
 const employee_sync_service_1 = require("../../../context/organization-management-context/employee-sync.service");
-const get_all_employees_evaluation_period_status_query_dto_1 = require("./dto/get-all-employees-evaluation-period-status-query.dto");
-const dashboard_api_decorators_1 = require("./decorators/dashboard-api.decorators");
-const employee_final_evaluation_list_dto_1 = require("./dto/employee-final-evaluation-list.dto");
-const all_employees_final_evaluations_dto_1 = require("./dto/all-employees-final-evaluations.dto");
+const get_all_employees_evaluation_period_status_query_dto_1 = require("../../common/dto/dashboard/get-all-employees-evaluation-period-status-query.dto");
+const dashboard_api_decorators_1 = require("../../common/decorators/dashboard/dashboard-api.decorators");
+const employee_final_evaluation_list_dto_1 = require("../../common/dto/dashboard/employee-final-evaluation-list.dto");
+const all_employees_final_evaluations_dto_1 = require("../../common/dto/dashboard/all-employees-final-evaluations.dto");
 let DashboardController = class DashboardController {
     dashboardService;
     evaluationPeriodService;

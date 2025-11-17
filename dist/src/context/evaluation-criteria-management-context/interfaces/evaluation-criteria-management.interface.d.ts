@@ -1,13 +1,13 @@
 import type { EvaluationLineMappingDto } from '../../../domain/core/evaluation-line-mapping/evaluation-line-mapping.types';
 import type { CreateEvaluationProjectAssignmentData, EvaluationProjectAssignmentDto, EvaluationProjectAssignmentFilter, OrderDirection } from '../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
-import type { ProjectInfoDto, EmployeeInfoDto } from '../../../interface/admin/evaluation-criteria/dto/project-assignment.dto';
+import type { ProjectInfoDto, EmployeeInfoDto } from '../../../interface/common/dto/evaluation-criteria/project-assignment.dto';
 import type { CreateEvaluationWbsAssignmentData, EvaluationWbsAssignmentDto, EvaluationWbsAssignmentFilter } from '../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 import type { CreateWbsEvaluationCriteriaData, UpdateWbsEvaluationCriteriaData, WbsEvaluationCriteriaDto, WbsEvaluationCriteriaFilter } from '../../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
 import type { WbsItemDto } from '../../../domain/common/wbs-item/wbs-item.types';
 import type { ProjectAssignmentListResult } from '../handlers/project-assignment/queries/get-project-assignment-list.handler';
 import type { WbsAssignmentListResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 import type { WbsAssignmentDetailResult } from '../handlers/wbs-assignment/queries/get-wbs-assignment-detail.handler';
-import { WbsEvaluationCriteriaListResponseDto } from '@/interface/admin/evaluation-criteria/dto/wbs-evaluation-criteria.dto';
+import { WbsEvaluationCriteriaListResponseDto } from '@/interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 export interface IEvaluationCriteriaManagementService {
     프로젝트를_할당한다(data: CreateEvaluationProjectAssignmentData, assignedBy: string): Promise<EvaluationProjectAssignmentDto>;
     프로젝트_할당을_취소한다(id: string, cancelledBy: string): Promise<void>;

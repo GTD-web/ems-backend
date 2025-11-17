@@ -2,7 +2,7 @@ import { IQueryHandler } from '@nestjs/cqrs';
 import { Repository } from 'typeorm';
 import { FinalEvaluation } from '@domain/core/final-evaluation/final-evaluation.entity';
 import type { JobGrade, JobDetailedGrade } from '@domain/core/final-evaluation/final-evaluation.types';
-import type { FinalEvaluationListItemDto } from '@interface/admin/performance-evaluation/dto/final-evaluation.dto';
+import type { FinalEvaluationListItemDto } from '@/interface/common/dto/performance-evaluation/final-evaluation.dto';
 export declare class GetFinalEvaluationListQuery {
     readonly employeeId?: string | undefined;
     readonly periodId?: string | undefined;

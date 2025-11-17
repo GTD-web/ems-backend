@@ -7,6 +7,9 @@ import { setupSwagger } from '../libs/config/swagger.config';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import express from 'express';
+import { AdminInterfaceModule } from './interface/admin/admin-interface.module';
+import { UserInterfaceModule } from './interface/user/user-interface.module';
+import { EvaluatorInterfaceModule } from './interface/evaluator/evaluator-interface.module';
 
 // Vercel 서버리스 함수를 위한 전역 변수
 let cachedApp: express.Application;
@@ -65,6 +68,7 @@ async function bootstrap() {
     description: '루미르 평가 관리 시스템 - 관리자용 API 문서입니다.',
     version: '1.0',
     path: 'admin/api-docs',
+    includeModules: [AdminInterfaceModule],
   });
 
   // 사용자용 Swagger 설정
@@ -73,6 +77,7 @@ async function bootstrap() {
     description: '루미르 평가 관리 시스템 - 일반 사용자용 API 문서입니다.',
     version: '1.0',
     path: 'user/api-docs',
+    includeModules: [UserInterfaceModule],
   });
 
   // 평가자용 Swagger 설정
@@ -81,6 +86,7 @@ async function bootstrap() {
     description: '루미르 평가 관리 시스템 - 평가자용 API 문서입니다.',
     version: '1.0',
     path: 'evaluator/api-docs',
+    includeModules: [EvaluatorInterfaceModule],
   });
 
   if (isVercel) {

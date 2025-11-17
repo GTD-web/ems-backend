@@ -106,7 +106,7 @@ export interface EmployeeInfo {
   phoneNumber?: string;
   departmentId: string;
   departmentName?: string;
-  status: string;
+  status?: '재직중' | '휴직중' | '퇴사';
 }
 
 /**

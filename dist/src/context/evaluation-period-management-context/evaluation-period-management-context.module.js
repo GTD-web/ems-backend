@@ -14,6 +14,8 @@ const evaluation_period_module_1 = require("../../domain/core/evaluation-period/
 const evaluation_period_employee_mapping_module_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.module");
 const evaluation_period_entity_1 = require("../../domain/core/evaluation-period/evaluation-period.entity");
 const employee_entity_1 = require("../../domain/common/employee/employee.entity");
+const department_entity_1 = require("../../domain/common/department/department.entity");
+const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 const evaluation_period_management_service_1 = require("./evaluation-period-management.service");
 const handlers_1 = require("./handlers");
 let EvaluationPeriodManagementContextModule = class EvaluationPeriodManagementContextModule {
@@ -23,7 +25,12 @@ exports.EvaluationPeriodManagementContextModule = EvaluationPeriodManagementCont
     (0, common_1.Module)({
         imports: [
             cqrs_1.CqrsModule,
-            typeorm_1.TypeOrmModule.forFeature([evaluation_period_entity_1.EvaluationPeriod, employee_entity_1.Employee]),
+            typeorm_1.TypeOrmModule.forFeature([
+                evaluation_period_entity_1.EvaluationPeriod,
+                employee_entity_1.Employee,
+                department_entity_1.Department,
+                evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping,
+            ]),
             evaluation_period_module_1.EvaluationPeriodModule,
             evaluation_period_employee_mapping_module_1.EvaluationPeriodEmployeeMappingModule,
         ],

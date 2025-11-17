@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
-import { EmployeeInfoDto } from '@interface/admin/evaluation-criteria/dto/project-assignment.dto';
+import { EmployeeInfoDto } from '@/interface/common/dto/evaluation-criteria/project-assignment.dto';
 
 /**
  * 할당되지 않은 직원 목록 조회 쿼리
@@ -32,9 +32,7 @@ export class GetUnassignedEmployeesHandler
     private readonly employeeRepository: Repository<Employee>,
   ) {}
 
-  async execute(
-    query: GetUnassignedEmployeesQuery,
-  ): Promise<{
+  async execute(query: GetUnassignedEmployeesQuery): Promise<{
     periodId: string;
     projectId?: string;
     employees: EmployeeInfoDto[];

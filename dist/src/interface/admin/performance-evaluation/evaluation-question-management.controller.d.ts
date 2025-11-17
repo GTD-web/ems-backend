@@ -1,6 +1,6 @@
 import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { AddMultipleQuestionsToGroupDto, AddQuestionToGroupDto, BatchSuccessResponseDto, CreateEvaluationQuestionDto, CreateQuestionGroupDto, EvaluationQuestionResponseDto, QuestionGroupMappingResponseDto, QuestionGroupResponseDto, ReorderGroupQuestionsDto, SuccessResponseDto, UpdateEvaluationQuestionDto, UpdateQuestionGroupDto } from './dto/evaluation-question.dto';
+import { AddMultipleQuestionsToGroupDto, AddQuestionToGroupDto, BatchSuccessResponseDto, CreateEvaluationQuestionDto, CreateQuestionGroupDto, EvaluationQuestionResponseDto, QuestionGroupMappingResponseDto, QuestionGroupResponseDto, ReorderGroupQuestionsDto, SuccessResponseDto, UpdateEvaluationQuestionDto, UpdateQuestionGroupDto } from '@interface/common/dto/performance-evaluation/evaluation-question.dto';
 export declare class EvaluationQuestionManagementController {
     private readonly evaluationQuestionManagementService;
     constructor(evaluationQuestionManagementService: EvaluationQuestionManagementService);

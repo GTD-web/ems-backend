@@ -150,6 +150,10 @@ let EvaluationPeriodManagementContextService = EvaluationPeriodManagementContext
         const query = new handlers_2.GetEvaluationTargetsByFilterQuery(filter);
         return await this.queryBus.execute(query);
     }
+    async 평가기간에_등록되지_않은_직원_목록을_조회한다(evaluationPeriodId) {
+        const query = new handlers_2.GetUnregisteredEmployeesQuery(evaluationPeriodId);
+        return await this.queryBus.execute(query);
+    }
     async 평가_점수를_검증한다(periodId, score) {
         this.logger.debug('평가 점수 검증 시작', { periodId, score });
         const period = await this.평가기간상세_조회한다(periodId);

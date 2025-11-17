@@ -13,13 +13,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WbsEvaluationCriteriaManagementController = void 0;
+const evaluation_criteria_business_service_1 = require("../../../business/evaluation-criteria/evaluation-criteria-business.service");
+const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
-const evaluation_criteria_business_service_1 = require("../../../business/evaluation-criteria/evaluation-criteria-business.service");
-const wbs_evaluation_criteria_api_decorators_1 = require("./decorators/wbs-evaluation-criteria-api.decorators");
-const wbs_evaluation_criteria_dto_1 = require("./dto/wbs-evaluation-criteria.dto");
-const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const wbs_evaluation_criteria_dto_1 = require("../../common/dto/evaluation-criteria/wbs-evaluation-criteria.dto");
+const wbs_evaluation_criteria_api_decorators_1 = require("../../common/decorators/evaluation-criteria/wbs-evaluation-criteria-api.decorators");
 let WbsEvaluationCriteriaManagementController = class WbsEvaluationCriteriaManagementController {
     evaluationCriteriaManagementService;
     evaluationCriteriaBusinessService;

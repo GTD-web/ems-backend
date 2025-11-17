@@ -28,6 +28,27 @@ let EvaluationPeriodEmployeeMappingService = EvaluationPeriodEmployeeMappingServ
     async 평가대상자를_등록한다(data) {
         this.logger.log(`평가 대상자 등록 시작 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`);
         this.유효성을_검사한다(data);
+        const softDeletedMapping = await this.repository.findOne({
+            where: {
+                evaluationPeriodId: data.evaluationPeriodId,
+                employeeId: data.employeeId,
+            },
+            withDeleted: true,
+        });
+        if (softDeletedMapping && softDeletedMapping.deletedAt) {
+            this.logger.log(`소프트 삭제된 매핑 복구 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`);
+            await this.repository.restore(softDeletedMapping.id);
+            const restored = await this.repository.findOne({
+                where: { id: softDeletedMapping.id },
+            });
+            if (!restored) {
+                throw new Error(`매핑 복구 후 조회 실패 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`);
+            }
+            restored.메타데이터를_업데이트한다(data.createdBy);
+            const saved = await this.repository.save(restored);
+            this.logger.log(`평가 대상자 복구 완료 - ID: ${saved.id}`);
+            return saved.DTO로_변환한다();
+        }
         await this.중복_검사를_수행한다(data.evaluationPeriodId, data.employeeId);
         try {
             const mapping = new evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping(data);

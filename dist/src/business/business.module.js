@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const peer_evaluation_business_module_1 = require("./peer-evaluation/peer-evaluation-business.module");
 const wbs_assignment_business_module_1 = require("./wbs-assignment/wbs-assignment-business.module");
 const evaluation_period_business_module_1 = require("./evaluation-period/evaluation-period-business.module");
+const evaluation_target_business_module_1 = require("./evaluation-target/evaluation-target-business.module");
 const downward_evaluation_business_module_1 = require("./downward-evaluation/downward-evaluation-business.module");
 const wbs_self_evaluation_business_module_1 = require("./wbs-self-evaluation/wbs-self-evaluation-business.module");
 const step_approval_business_module_1 = require("./step-approval/step-approval-business.module");
@@ -27,6 +28,7 @@ exports.BusinessModule = BusinessModule = __decorate([
             wbs_assignment_business_module_1.WbsAssignmentBusinessModule,
             downward_evaluation_business_module_1.DownwardEvaluationBusinessModule,
             evaluation_period_business_module_1.EvaluationPeriodBusinessModule,
+            evaluation_target_business_module_1.EvaluationTargetBusinessModule,
             wbs_self_evaluation_business_module_1.WbsSelfEvaluationBusinessModule,
             step_approval_business_module_1.StepApprovalBusinessModule,
             deliverable_business_module_1.DeliverableBusinessModule,
@@ -38,6 +40,7 @@ exports.BusinessModule = BusinessModule = __decorate([
             wbs_assignment_business_module_1.WbsAssignmentBusinessModule,
             downward_evaluation_business_module_1.DownwardEvaluationBusinessModule,
             evaluation_period_business_module_1.EvaluationPeriodBusinessModule,
+            evaluation_target_business_module_1.EvaluationTargetBusinessModule,
             wbs_self_evaluation_business_module_1.WbsSelfEvaluationBusinessModule,
             step_approval_business_module_1.StepApprovalBusinessModule,
             deliverable_business_module_1.DeliverableBusinessModule,

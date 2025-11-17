@@ -20,8 +20,8 @@ const current_user_decorator_1 = require("../../common/decorators/current-user.d
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const wbs_self_evaluation_api_decorators_1 = require("./decorators/wbs-self-evaluation-api.decorators");
-const wbs_self_evaluation_dto_1 = require("./dto/wbs-self-evaluation.dto");
+const wbs_self_evaluation_api_decorators_1 = require("../../common/decorators/performance-evaluation/wbs-self-evaluation-api.decorators");
+const wbs_self_evaluation_dto_1 = require("../../common/dto/performance-evaluation/wbs-self-evaluation.dto");
 let WbsSelfEvaluationManagementController = class WbsSelfEvaluationManagementController {
     performanceEvaluationService;
     wbsSelfEvaluationBusinessService;

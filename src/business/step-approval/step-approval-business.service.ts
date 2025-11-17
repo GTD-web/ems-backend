@@ -454,4 +454,149 @@ export class StepApprovalBusinessService {
       });
     }
   }
+
+  /**
+   * 자기평가 승인 시 하위 평가들도 함께 승인한다
+   * 1차 하향평가, 2차 하향평가를 자동으로 승인 처리합니다.
+   */
+  async 자기평가_승인_시_하위평가들을_승인한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    updatedBy: string,
+  ): Promise<void> {
+    this.logger.log(
+      `자기평가 승인 시 하위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+    );
+
+    try {
+      // 1. 1차 하향평가 승인
+      await this.일차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        status: 'approved' as StepApprovalStatus,
+        updatedBy,
+      });
+
+      // 1차 하향평가 제출 상태 변경
+      await this.일차_하향평가_승인_시_제출상태_변경(
+        evaluationPeriodId,
+        employeeId,
+        updatedBy,
+      );
+
+      this.logger.log(
+        `1차 하향평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+      );
+
+      // 2. 2차 하향평가 승인 (모든 2차 평가자에 대해)
+      const secondaryEvaluators =
+        await this.stepApprovalContextService.이차평가자들을_조회한다(
+          evaluationPeriodId,
+          employeeId,
+        );
+
+      for (const evaluatorId of secondaryEvaluators) {
+        try {
+          await this.이차하향평가_확인상태를_변경한다({
+            evaluationPeriodId,
+            employeeId,
+            evaluatorId,
+            status: 'approved' as StepApprovalStatus,
+            updatedBy,
+          });
+
+          // 2차 하향평가 제출 상태 변경
+          await this.이차_하향평가_승인_시_제출상태_변경(
+            evaluationPeriodId,
+            employeeId,
+            evaluatorId,
+            updatedBy,
+          );
+
+          this.logger.log(
+            `2차 하향평가 자동 승인 완료 - 직원: ${employeeId}, 평가자: ${evaluatorId}, 평가기간: ${evaluationPeriodId}`,
+          );
+        } catch (error) {
+          // 개별 2차 평가자 승인 실패 시에도 다른 평가자는 계속 처리
+          this.logger.warn(
+            `2차 하향평가 자동 승인 실패 - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
+            error,
+          );
+        }
+      }
+
+      this.logger.log(
+        `자기평가 승인 시 하위 평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `자기평가 승인 시 하위 평가 자동 승인 실패 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * 1차 하향평가 승인 시 하위 평가들도 함께 승인한다
+   * 2차 하향평가를 자동으로 승인 처리합니다.
+   */
+  async 일차하향평가_승인_시_하위평가들을_승인한다(
+    evaluationPeriodId: string,
+    employeeId: string,
+    updatedBy: string,
+  ): Promise<void> {
+    this.logger.log(
+      `1차 하향평가 승인 시 하위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+    );
+
+    try {
+      // 2차 하향평가 승인 (모든 2차 평가자에 대해)
+      const secondaryEvaluators =
+        await this.stepApprovalContextService.이차평가자들을_조회한다(
+          evaluationPeriodId,
+          employeeId,
+        );
+
+      for (const evaluatorId of secondaryEvaluators) {
+        try {
+          await this.이차하향평가_확인상태를_변경한다({
+            evaluationPeriodId,
+            employeeId,
+            evaluatorId,
+            status: 'approved' as StepApprovalStatus,
+            updatedBy,
+          });
+
+          // 2차 하향평가 제출 상태 변경
+          await this.이차_하향평가_승인_시_제출상태_변경(
+            evaluationPeriodId,
+            employeeId,
+            evaluatorId,
+            updatedBy,
+          );
+
+          this.logger.log(
+            `2차 하향평가 자동 승인 완료 - 직원: ${employeeId}, 평가자: ${evaluatorId}, 평가기간: ${evaluationPeriodId}`,
+          );
+        } catch (error) {
+          // 개별 2차 평가자 승인 실패 시에도 다른 평가자는 계속 처리
+          this.logger.warn(
+            `2차 하향평가 자동 승인 실패 - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
+            error,
+          );
+        }
+      }
+
+      this.logger.log(
+        `1차 하향평가 승인 시 하위 평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `1차 하향평가 승인 시 하위 평가 자동 승인 실패 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+        error,
+      );
+      throw error;
+    }
+  }
 }

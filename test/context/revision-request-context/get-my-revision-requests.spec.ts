@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { DatabaseModule } from '@libs/database/database.module';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
+
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
 import { EvaluationRevisionRequestModule } from '@domain/sub/evaluation-revision-request';
 import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evaluation-step-approval';
@@ -22,6 +23,7 @@ import {
   RecipientType,
 } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.types';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -45,6 +47,7 @@ describe('내_재작성요청목록을_조회한다', () => {
   // 테스트 데이터 ID
   let evaluationPeriodId: string;
   let employeeId: string;
+
   let recipientId: string;
   let otherRecipientId: string;
   let departmentId: string;
@@ -164,6 +167,7 @@ describe('내_재작성요청목록을_조회한다', () => {
       name: `2024년 상반기 평가-${uniqueSuffix}`,
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
+
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -198,6 +202,7 @@ describe('내_재작성요청목록을_조회한다', () => {
       status: '재직중',
       createdBy: systemAdminId,
     });
+
     const savedRecipient = await employeeRepository.save(recipient);
     recipientId = savedRecipient.id;
 
@@ -256,6 +261,7 @@ describe('내_재작성요청목록을_조회한다', () => {
       isCompleted: false,
       createdBy: adminId,
     });
+
     await recipientRepository.save(recipientEntity);
   }
 
@@ -264,7 +270,10 @@ describe('내_재작성요청목록을_조회한다', () => {
     await 테스트데이터를_생성한다();
 
     // When
-    const requests = await service.내_재작성요청목록을_조회한다(recipientId, {});
+    const requests = await service.내_재작성요청목록을_조회한다(
+      recipientId,
+      {},
+    );
 
     // Then
     expect(requests.length).toBeGreaterThan(0);
@@ -307,7 +316,8 @@ describe('내_재작성요청목록을_조회한다', () => {
       requestedAt: new Date(),
       createdBy: adminId,
     });
-    const savedOtherRequest = await revisionRequestRepository.save(otherRequest);
+    const savedOtherRequest =
+      await revisionRequestRepository.save(otherRequest);
 
     const otherRecipientEntity = recipientRepository.create({
       revisionRequestId: savedOtherRequest.id,
@@ -320,7 +330,10 @@ describe('내_재작성요청목록을_조회한다', () => {
     await recipientRepository.save(otherRecipientEntity);
 
     // When
-    const requests = await service.내_재작성요청목록을_조회한다(recipientId, {});
+    const requests = await service.내_재작성요청목록을_조회한다(
+      recipientId,
+      {},
+    );
 
     // Then
     expect(requests.length).toBe(1);
@@ -341,7 +354,9 @@ describe('내_재작성요청목록을_조회한다', () => {
         requestCount: requests.length,
         filteredRequestId: requests[0].request.id,
         otherRecipientRequestCount: otherRecipientRequestIds.length,
-        otherRecipientRequestExcluded: !otherRecipientRequestIds.includes(savedOtherRequest.id),
+        otherRecipientRequestExcluded: !otherRecipientRequestIds.includes(
+          savedOtherRequest.id,
+        ),
       },
     });
   });
@@ -376,7 +391,8 @@ describe('내_재작성요청목록을_조회한다', () => {
       requestedAt: new Date(),
       createdBy: adminId,
     });
-    const savedOtherRequest = await revisionRequestRepository.save(otherRequest);
+    const savedOtherRequest =
+      await revisionRequestRepository.save(otherRequest);
 
     const otherRecipientEntity = recipientRepository.create({
       revisionRequestId: savedOtherRequest.id,
@@ -436,7 +452,8 @@ describe('내_재작성요청목록을_조회한다', () => {
       requestedAt: new Date(),
       createdBy: adminId,
     });
-    const savedOtherRequest = await revisionRequestRepository.save(otherRequest);
+    const savedOtherRequest =
+      await revisionRequestRepository.save(otherRequest);
 
     const otherRecipientEntity = recipientRepository.create({
       revisionRequestId: savedOtherRequest.id,
@@ -752,7 +769,10 @@ describe('내_재작성요청목록을_조회한다', () => {
     await recipientRepository.save(recipientForDeletedRequest);
 
     // When
-    const requests = await service.내_재작성요청목록을_조회한다(recipientId, {});
+    const requests = await service.내_재작성요청목록을_조회한다(
+      recipientId,
+      {},
+    );
 
     // Then
     // 삭제된 요청은 제외되어야 하므로 원래 요청만 반환
@@ -799,7 +819,10 @@ describe('내_재작성요청목록을_조회한다', () => {
     await recipientRepository.save(recipientForDeletedEmployee);
 
     // When
-    const requests = await service.내_재작성요청목록을_조회한다(recipientId, {});
+    const requests = await service.내_재작성요청목록을_조회한다(
+      recipientId,
+      {},
+    );
 
     // Then
     // 직원이 없는 요청은 제외되어야 하므로 원래 요청만 반환
@@ -832,8 +855,9 @@ describe('내_재작성요청목록을_조회한다', () => {
       requestedAt: new Date(),
       createdBy: adminId,
     });
-    const savedRequestWithDeletedPeriod =
-      await revisionRequestRepository.save(requestWithDeletedPeriod);
+    const savedRequestWithDeletedPeriod = await revisionRequestRepository.save(
+      requestWithDeletedPeriod,
+    );
 
     const recipientForDeletedPeriod = recipientRepository.create({
       revisionRequestId: savedRequestWithDeletedPeriod.id,
@@ -846,7 +870,10 @@ describe('내_재작성요청목록을_조회한다', () => {
     await recipientRepository.save(recipientForDeletedPeriod);
 
     // When
-    const requests = await service.내_재작성요청목록을_조회한다(recipientId, {});
+    const requests = await service.내_재작성요청목록을_조회한다(
+      recipientId,
+      {},
+    );
 
     // Then
     // 평가기간이 없는 요청은 제외되어야 하므로 원래 요청만 반환
@@ -877,9 +904,6 @@ describe('내_재작성요청목록을_조회한다', () => {
     };
 
     fs.writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
-    console.log(
-      `✅ 테스트 결과가 저장되었습니다: ${outputPath}`,
-    );
+    console.log(`✅ 테스트 결과가 저장되었습니다: ${outputPath}`);
   });
 });
-
