@@ -1,31 +1,31 @@
 {
-  "timestamp": "2025-11-13T15:18:18.010Z",
+  "timestamp": "2025-11-17T00:48:10.730Z",
   "testResults": [
     {
       "testName": "평가기준 설정을 재작성 요청 상태로 변경하면 재작성 요청이 생성되어야 한다",
       "result": {
-        "evaluationPeriodId": "90645c80-c6ba-4c6f-865c-c02ec0b5bedf",
-        "employeeId": "03799f75-b682-43c6-92b4-8f6313b901dd",
+        "evaluationPeriodId": "876fa340-1229-4d7d-bb0b-ee2821e326bc",
+        "employeeId": "51b13ce4-998f-4f7c-bf5e-9cfd1049f95b",
         "step": "criteria",
         "status": "revision_requested",
         "revisionRequestCount": 2,
         "recipientIds": [
-          "03799f75-b682-43c6-92b4-8f6313b901dd",
-          "1fcd6639-a63e-444a-a3cc-648e288e203f"
+          "51b13ce4-998f-4f7c-bf5e-9cfd1049f95b",
+          "d3554923-b653-4d13-ab8b-ea8c61ac4233"
         ],
-        "employeeRequestId": "af092f15-0455-4a31-ac19-41d88945ee25",
-        "primaryEvaluatorRequestId": "7d99f9a7-4324-4598-8835-722e1b08eb12"
+        "employeeRequestId": "a2b0de02-473a-4376-862d-b487b7bacf7b",
+        "primaryEvaluatorRequestId": "cc12be75-9c39-4c3a-bd34-361173d27b84"
       }
     },
     {
       "testName": "평가기준 설정 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다",
       "result": {
-        "evaluationPeriodId": "7762b13a-50df-4add-9e9c-7b352b03ab1b",
-        "employeeId": "3f327e72-8ef6-41e0-bef3-ba10af719492",
+        "evaluationPeriodId": "8b9accf2-5dc9-4c54-8c23-a7718f8e7a02",
+        "employeeId": "e82550cf-9303-4b00-a46b-1b5c7cbfea61",
         "step": "criteria",
         "status": "revision_requested",
         "revisionRequestCount": 1,
-        "recipientId": "3f327e72-8ef6-41e0-bef3-ba10af719492",
+        "recipientId": "e82550cf-9303-4b00-a46b-1b5c7cbfea61",
         "recipientType": "evaluatee",
         "isSamePerson": true
       }
@@ -33,12 +33,12 @@
     {
       "testName": "자기평가 재작성 요청 시 평가자와 피평가자가 같으면 요청이 하나만 생성되어야 한다",
       "result": {
-        "evaluationPeriodId": "65b1bb69-8f47-4339-a4fa-9394123985d5",
-        "employeeId": "a84208c9-0acf-4f6d-a47a-0256f3ece738",
+        "evaluationPeriodId": "8061c828-cab6-4a43-8dbc-1808ebfc2bfb",
+        "employeeId": "31f1a9f1-1c78-4598-8acc-a95ac09aa2e9",
         "step": "self",
         "status": "revision_requested",
         "revisionRequestCount": 1,
-        "recipientId": "a84208c9-0acf-4f6d-a47a-0256f3ece738",
+        "recipientId": "31f1a9f1-1c78-4598-8acc-a95ac09aa2e9",
         "recipientType": "evaluatee",
         "isSamePerson": true
       }

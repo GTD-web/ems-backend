@@ -68,3 +68,10 @@ export declare class BatchSuccessResponseDto {
     successCount: number;
     totalCount: number;
 }
+export declare class PartLeaderQuestionSettingsResponseDto {
+    group: QuestionGroupResponseDto;
+    questions: QuestionGroupMappingResponseDto[];
+}
+export declare class UpdatePartLeaderQuestionSettingsDto {
+    questionIds: string[];
+}

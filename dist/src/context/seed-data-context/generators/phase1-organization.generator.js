@@ -257,6 +257,8 @@ let Phase1OrganizationGenerator = Phase1OrganizationGenerator_1 = class Phase1Or
             employees.push(adminEmp);
         }
         const startIndex = existingAdminId ? 0 : 1;
+        const partLeaderCount = Math.max(2, Math.ceil((count - startIndex) * 0.2));
+        let partLeadersCreated = 0;
         for (let i = startIndex; i < count; i++) {
             const emp = new employee_entity_1.Employee();
             emp.employeeNumber = `EMP${timestamp}${String(i + 1).padStart(3, '0')}`;
@@ -286,12 +288,17 @@ let Phase1OrganizationGenerator = Phase1OrganizationGenerator_1 = class Phase1Or
             }
             const randomDept = departments[Math.floor(Math.random() * departments.length)];
             emp.departmentId = randomDept.id;
+            if (partLeadersCreated < partLeaderCount && emp.status === '재직중') {
+                emp.positionId = faker_1.faker.string.uuid();
+                partLeadersCreated++;
+            }
             emp.externalId = faker_1.faker.string.uuid();
             emp.externalCreatedAt = new Date();
             emp.externalUpdatedAt = new Date();
             emp.createdBy = 'temp-system';
             employees.push(emp);
         }
+        this.logger.log(`직원 생성 완료: 총 ${employees.length}명 (파트장: ${partLeadersCreated}명)`);
         let saved = [];
         if (employees.length > 0) {
             saved = await this.직원을_배치로_저장한다(employees);

@@ -432,3 +432,39 @@ export class BatchSuccessResponseDto {
   })
   totalCount: number;
 }
+
+// ==================== 파트장 질문 설정 관련 DTO ====================
+
+/**
+ * 파트장 질문 설정 응답 DTO
+ */
+export class PartLeaderQuestionSettingsResponseDto {
+  @ApiProperty({
+    description: '파트장 질문 그룹 정보',
+    type: QuestionGroupResponseDto,
+  })
+  group: QuestionGroupResponseDto;
+
+  @ApiProperty({
+    description: '파트장 질문 목록 (displayOrder 순)',
+    type: [QuestionGroupMappingResponseDto],
+  })
+  questions: QuestionGroupMappingResponseDto[];
+}
+
+/**
+ * 파트장 질문 설정 업데이트 DTO
+ */
+export class UpdatePartLeaderQuestionSettingsDto {
+  @ApiProperty({
+    description: '파트장 평가에 사용할 질문 ID 목록 (순서대로 적용)',
+    type: [String],
+    example: [
+      '123e4567-e89b-12d3-a456-426614174000',
+      '123e4567-e89b-12d3-a456-426614174001',
+      '123e4567-e89b-12d3-a456-426614174002',
+    ],
+  })
+  @IsUUID('4', { each: true })
+  questionIds: string[];
+}

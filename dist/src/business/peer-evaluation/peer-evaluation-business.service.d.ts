@@ -60,6 +60,30 @@ export declare class PeerEvaluationBusinessService {
             failed: number;
         };
     }>;
+    파트장들_간_동료평가를_요청한다(params: {
+        periodId: string;
+        partLeaderIds: string[];
+        requestDeadline?: Date;
+        questionIds?: string[];
+        requestedBy: string;
+    }): Promise<{
+        results: Array<{
+            evaluatorId: string;
+            evaluateeId: string;
+            success: boolean;
+            evaluationId?: string;
+            error?: {
+                code: string;
+                message: string;
+            };
+        }>;
+        summary: {
+            total: number;
+            success: number;
+            failed: number;
+            partLeaderCount: number;
+        };
+    }>;
     동료평가를_생성한다(params: {
         evaluatorId: string;
         evaluateeId: string;

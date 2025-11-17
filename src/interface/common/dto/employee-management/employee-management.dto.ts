@@ -70,6 +70,21 @@ export class GetEmployeesQueryDto {
 }
 
 /**
+ * 파트장 목록 조회 쿼리 DTO
+ */
+export class GetPartLeadersQueryDto {
+  @ApiPropertyOptional({
+    description: 'SSO에서 강제로 최신 데이터를 가져올지 여부',
+    example: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  forceRefresh?: boolean;
+}
+
+/**
  * 직원 응답 DTO
  */
 export class EmployeeResponseDto {
@@ -182,4 +197,21 @@ export class EmployeeResponseDto {
     example: true,
   })
   isAccessible!: boolean;
+}
+
+/**
+ * 파트장 목록 조회 응답 DTO
+ */
+export class PartLeadersResponseDto {
+  @ApiProperty({
+    description: '파트장 목록',
+    type: [EmployeeResponseDto],
+  })
+  partLeaders!: EmployeeResponseDto[];
+
+  @ApiProperty({
+    description: '파트장 인원수',
+    example: 5,
+  })
+  count!: number;
 }

@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
 import { CqrsModule } from '@nestjs/cqrs';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { QuestionGroupModule } from '../../domain/sub/question-group/question-group.module';
 import { EvaluationQuestionModule } from '../../domain/sub/evaluation-question/evaluation-question.module';
 import { QuestionGroupMappingModule } from '../../domain/sub/question-group-mapping/question-group-mapping.module';
 import { EvaluationResponseModule } from '../../domain/sub/evaluation-response/evaluation-response.module';
+import { QuestionGroup } from '../../domain/sub/question-group/question-group.entity';
+import { EvaluationQuestion } from '../../domain/sub/evaluation-question/evaluation-question.entity';
+import { QuestionGroupMapping } from '../../domain/sub/question-group-mapping/question-group-mapping.entity';
 import { EvaluationQuestionManagementService } from './evaluation-question-management.service';
 import { COMMAND_HANDLERS, QUERY_HANDLERS } from './handlers';
 
@@ -19,6 +23,11 @@ import { COMMAND_HANDLERS, QUERY_HANDLERS } from './handlers';
 @Module({
   imports: [
     CqrsModule,
+    TypeOrmModule.forFeature([
+      QuestionGroup,
+      EvaluationQuestion,
+      QuestionGroupMapping,
+    ]),
     QuestionGroupModule,
     EvaluationQuestionModule,
     QuestionGroupMappingModule,

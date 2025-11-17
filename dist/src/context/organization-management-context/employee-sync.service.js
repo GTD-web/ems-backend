@@ -359,6 +359,32 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             throw new common_1.HttpException('직원 조회에 실패했습니다.', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    async getPartLeaders(forceRefresh = false) {
+        try {
+            const employees = await this.getEmployees(forceRefresh);
+            try {
+                const ssoEmployees = await this.fetchExternalEmployees();
+                const partLeaderExternalIds = new Set(ssoEmployees
+                    .filter((emp) => emp.position &&
+                    (emp.position.positionName?.includes('파트장') ||
+                        emp.position.positionCode?.includes('파트장')))
+                    .map((emp) => emp.id));
+                const partLeaders = employees.filter((emp) => partLeaderExternalIds.has(emp.externalId));
+                this.logger.log(`파트장 ${partLeaders.length}명 조회 완료 (전체 직원: ${employees.length}명)`);
+                return partLeaders;
+            }
+            catch (ssoError) {
+                this.logger.warn(`SSO 조회 실패, 로컬 DB 데이터로 파트장 추정: ${ssoError.message}`);
+                const partLeaders = employees.filter((emp) => emp.positionId);
+                this.logger.log(`파트장 ${partLeaders.length}명 추정 완료 (positionId 기반, 전체 직원: ${employees.length}명)`);
+                return partLeaders;
+            }
+        }
+        catch (error) {
+            this.logger.error(`파트장 목록 조회 실패:`, error.message);
+            return [];
+        }
+    }
     async 직원을_처리한다(ssoEmp, forceSync, syncStartTime) {
         try {
             let existingEmployee = await this.employeeService.findByEmployeeNumber(ssoEmp.employeeNumber);

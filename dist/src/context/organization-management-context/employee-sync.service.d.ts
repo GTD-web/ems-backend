@@ -23,6 +23,7 @@ export declare class EmployeeSyncService implements OnModuleInit {
     getEmployeeByExternalId(externalId: string, forceRefresh?: boolean): Promise<Employee | null>;
     getEmployeeByEmployeeNumber(employeeNumber: string, forceRefresh?: boolean): Promise<Employee | null>;
     getEmployeeByEmail(email: string, forceRefresh?: boolean): Promise<Employee | null>;
+    getPartLeaders(forceRefresh?: boolean): Promise<Employee[]>;
     private 직원을_처리한다;
     private 업데이트가_필요한가;
     private 직원들을_저장한다;

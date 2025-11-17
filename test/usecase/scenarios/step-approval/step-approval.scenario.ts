@@ -209,6 +209,7 @@ export class StepApprovalScenario {
     employeeId: string;
     status: 'pending' | 'approved' | 'revision_requested';
     revisionComment?: string;
+    approveSubsequentSteps?: boolean;
   }) {
     return await this.stepApprovalApiClient.updateSelfStepApproval(config);
   }
@@ -274,6 +275,7 @@ export class StepApprovalScenario {
     employeeId: string;
     status: 'pending' | 'approved' | 'revision_requested';
     revisionComment?: string;
+    approveSubsequentSteps?: boolean;
   }) {
     return await this.stepApprovalApiClient.updatePrimaryStepApproval(config);
   }
@@ -352,6 +354,7 @@ export class StepApprovalScenario {
     evaluatorId: string;
     status: 'pending' | 'approved' | 'revision_requested';
     revisionComment?: string;
+    approveSubsequentSteps?: boolean;
   }) {
     return await this.stepApprovalApiClient.updateSecondaryStepApproval(config);
   }

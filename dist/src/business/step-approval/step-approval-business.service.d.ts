@@ -44,4 +44,6 @@ export declare class StepApprovalBusinessService {
         revisionComment?: string;
         updatedBy: string;
     }): Promise<void>;
+    자기평가_승인_시_하위평가들을_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
+    일차하향평가_승인_시_하위평가들을_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
 }

@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RequestPeerEvaluation = RequestPeerEvaluation;
 exports.RequestPeerEvaluationToMultipleEvaluators = RequestPeerEvaluationToMultipleEvaluators;
 exports.RequestMultiplePeerEvaluations = RequestMultiplePeerEvaluations;
+exports.RequestPartLeaderPeerEvaluations = RequestPartLeaderPeerEvaluations;
 exports.UpdatePeerEvaluation = UpdatePeerEvaluation;
 exports.SubmitPeerEvaluation = SubmitPeerEvaluation;
 exports.GetPeerEvaluations = GetPeerEvaluations;
@@ -179,6 +180,71 @@ function RequestMultiplePeerEvaluations() {
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: '평가자, 피평가자 또는 평가기간을 찾을 수 없습니다.',
+    }));
+}
+function RequestPartLeaderPeerEvaluations() {
+    return (0, common_1.applyDecorators)((0, common_1.Post)('requests/bulk/part-leaders'), (0, common_1.HttpCode)(common_1.HttpStatus.CREATED), (0, swagger_1.ApiOperation)({
+        summary: '파트장들 간 동료평가 요청',
+        description: `파트장들 간 동료평가를 요청합니다. evaluatorIds와 evaluateeIds를 지정하여 특정 파트장들만 평가하도록 설정할 수 있습니다.
+
+**동작:**
+- evaluatorIds 미제공 시: SSO에서 모든 파트장을 평가자로 설정
+- evaluateeIds 미제공 시: SSO에서 모든 파트장을 피평가자로 설정
+- evaluatorIds 제공 시: 지정된 파트장들만 평가자로 설정
+- evaluateeIds 제공 시: 지정된 파트장들만 피평가자로 설정
+- 각 평가자가 자기 자신을 제외한 모든 피평가자를 평가하도록 요청 생성
+- 모든 평가 상태는 PENDING으로 생성됨
+- questionIds 제공 시 모든 평가자에게 동일한 질문들에 대해 작성 요청
+- questionIds 생략 시 "파트장 평가 질문" 그룹의 질문들을 자동으로 사용 (그룹이 없으면 질문 없이 생성)
+
+**사용 예시:**
+1. 모든 파트장 간 평가: evaluatorIds, evaluateeIds 생략
+2. 특정 파트장들만 평가자로: evaluatorIds 지정, evaluateeIds 생략
+3. 특정 파트장들만 피평가자로: evaluatorIds 생략, evaluateeIds 지정
+4. 특정 파트장들끼리만 평가: evaluatorIds, evaluateeIds 모두 지정
+
+**테스트 케이스:**
+- 기본 파트장 간 동료평가 요청을 생성할 수 있어야 한다
+- 특정 평가자들만 지정하여 요청을 생성할 수 있어야 한다
+- 특정 피평가자들만 지정하여 요청을 생성할 수 있어야 한다
+- 평가자와 피평가자를 모두 지정하여 요청을 생성할 수 있어야 한다
+- 요청 마감일을 포함하여 요청을 생성할 수 있어야 한다
+- 질문 ID 목록을 포함하여 요청을 생성할 수 있어야 한다
+- requestedBy를 포함하여 요청을 생성할 수 있어야 한다
+- requestedBy 없이 요청을 생성할 수 있어야 한다
+- 파트장이 1명인 경우 평가 요청이 생성되지 않아야 한다
+- 파트장이 2명인 경우 2개의 평가 요청이 생성되어야 한다
+- 파트장이 N명인 경우 N * (N-1)개의 평가 요청이 생성되어야 한다
+- 각 파트장이 자기 자신을 평가하는 요청은 생성되지 않아야 한다
+- 잘못된 형식의 periodId로 요청 시 400 에러가 발생해야 한다
+- periodId 누락 시 400 에러가 발생해야 한다
+- 잘못된 형식의 evaluatorIds로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 evaluateeIds로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 requestedBy로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 questionIds로 요청 시 400 에러가 발생해야 한다
+- 존재하지 않는 periodId로 요청 시 404 에러가 발생해야 한다
+- 파트장이 한 명도 없는 경우 0개의 평가 요청이 생성되어야 한다
+- 응답에 필수 필드가 모두 포함되어야 한다 (results, summary, message)
+- 응답의 results에 각 요청 결과가 포함되어야 한다
+- 응답의 summary에 요약 정보가 포함되어야 한다 (total, success, failed, partLeaderCount)
+- 응답의 partLeaderCount가 실제 파트장 수와 일치해야 한다
+- 응답의 IDs가 모두 유효한 UUID 형식이어야 한다
+- 생성된 모든 동료평가가 DB에 올바르게 저장되어야 한다
+- 생성된 모든 동료평가의 상태가 올바르게 설정되어야 한다
+- 생성 시 모든 평가에 createdAt과 updatedAt이 설정되어야 한다`,
+    }), (0, swagger_1.ApiBody)({
+        type: peer_evaluation_dto_1.RequestPartLeaderPeerEvaluationsDto,
+        description: '파트장 간 동료평가 요청 정보',
+    }), (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.CREATED,
+        description: '파트장들 간 동료평가 요청이 성공적으로 생성되었습니다.',
+        type: peer_evaluation_dto_1.BulkPeerEvaluationRequestResponseDto,
+    }), (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: '잘못된 요청 데이터입니다.',
+    }), (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: '평가기간을 찾을 수 없습니다.',
     }));
 }
 function UpdatePeerEvaluation() {

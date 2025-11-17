@@ -59,7 +59,7 @@ let EvaluationRevisionRequestService = EvaluationRevisionRequestService_1 = clas
             });
         }
         queryBuilder
-            .leftJoinAndSelect('request.recipients', 'recipients')
+            .leftJoinAndSelect('request.recipients', 'recipients', 'recipients.deletedAt IS NULL')
             .orderBy('request.requestedAt', 'DESC');
         return await queryBuilder.getMany();
     }
@@ -101,10 +101,9 @@ let EvaluationRevisionRequestService = EvaluationRevisionRequestService_1 = clas
         this.logger.log(`수신자의 재작성 요청 목록 조회 - 수신자 ID: ${recipientId}`);
         const queryBuilder = this.recipientRepository
             .createQueryBuilder('recipient')
-            .leftJoinAndSelect('recipient.revisionRequest', 'request')
+            .leftJoinAndSelect('recipient.revisionRequest', 'request', 'request.deletedAt IS NULL')
             .where('recipient.deletedAt IS NULL')
-            .andWhere('recipient.recipientId = :recipientId', { recipientId })
-            .andWhere('request.deletedAt IS NULL');
+            .andWhere('recipient.recipientId = :recipientId', { recipientId });
         if (filter?.isRead !== undefined) {
             queryBuilder.andWhere('recipient.isRead = :isRead', {
                 isRead: filter.isRead,
@@ -116,19 +115,21 @@ let EvaluationRevisionRequestService = EvaluationRevisionRequestService_1 = clas
             });
         }
         if (filter?.evaluationPeriodId) {
-            queryBuilder.andWhere('request.evaluationPeriodId = :evaluationPeriodId', {
+            queryBuilder.andWhere('(request.id IS NULL OR request.evaluationPeriodId = :evaluationPeriodId)', {
                 evaluationPeriodId: filter.evaluationPeriodId,
             });
         }
         if (filter?.employeeId) {
-            queryBuilder.andWhere('request.employeeId = :employeeId', {
+            queryBuilder.andWhere('(request.id IS NULL OR request.employeeId = :employeeId)', {
                 employeeId: filter.employeeId,
             });
         }
         if (filter?.step) {
-            queryBuilder.andWhere('request.step = :step', { step: filter.step });
+            queryBuilder.andWhere('(request.id IS NULL OR request.step = :step)', {
+                step: filter.step,
+            });
         }
-        queryBuilder.orderBy('request.requestedAt', 'DESC');
+        queryBuilder.orderBy('COALESCE(request.requestedAt, recipient.createdAt)', 'DESC');
         return await queryBuilder.getMany();
     }
     async 수신자를_조회한다(requestId, recipientId) {

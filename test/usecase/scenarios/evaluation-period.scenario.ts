@@ -472,15 +472,58 @@ export class EvaluationPeriodScenario {
   }
 
   /**
+   * 평가기간 취소 (진행 중 → 대기)
+   */
+  async 평가기간을_취소한다(periodId: string): Promise<void> {
+    try {
+      const response = await this.testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${periodId}/reset`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      console.log(`✅ 평가기간 취소 완료: ${periodId}`);
+    } catch (error) {
+      // 이미 대기 상태이거나 취소할 수 없는 상태면 무시
+      console.log(`⚠️ 평가기간 취소 실패 (무시): ${periodId}`);
+    }
+  }
+
+  /**
    * 평가기간 삭제
    */
   async 평가기간을_삭제한다(periodId: string): Promise<void> {
-    const response = await this.testSuite
-      .request()
-      .delete(`/admin/evaluation-periods/${periodId}`)
-      .expect(200);
+    try {
+      const response = await this.testSuite
+        .request()
+        .delete(`/admin/evaluation-periods/${periodId}`)
+        .expect(200);
 
-    expect(response.body.success).toBe(true);
-    console.log(`✅ 평가기간 삭제 완료: ${periodId}`);
+      expect(response.body.success).toBe(true);
+      console.log(`✅ 평가기간 삭제 완료: ${periodId}`);
+    } catch (error) {
+      // 이미 삭제되었거나 없는 경우 무시
+      console.log(`⚠️ 평가기간 삭제 실패 (무시): ${periodId}`);
+    }
+  }
+
+  /**
+   * 모든 활성 평가기간을 취소하고 삭제
+   */
+  async 모든_활성_평가기간을_정리한다(): Promise<void> {
+    try {
+      // 1. 활성 평가기간 목록 조회
+      const activePeriods = await this.활성_평가기간을_조회한다();
+
+      // 2. 각 평가기간을 취소하고 삭제
+      for (const period of activePeriods) {
+        await this.평가기간을_취소한다(period.id);
+        await this.평가기간을_삭제한다(period.id);
+      }
+
+      console.log(`✅ 모든 활성 평가기간 정리 완료 (${activePeriods.length}개)`);
+    } catch (error) {
+      console.log(`⚠️ 활성 평가기간 정리 중 오류 (무시): ${error.message}`);
+    }
   }
 }

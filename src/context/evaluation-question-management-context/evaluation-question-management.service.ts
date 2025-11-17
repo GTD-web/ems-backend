@@ -1,5 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { QueryBus, CommandBus } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { QuestionGroup } from '@domain/sub/question-group/question-group.entity';
+import { EvaluationQuestion } from '@domain/sub/evaluation-question/evaluation-question.entity';
+import { QuestionGroupMapping } from '@domain/sub/question-group-mapping/question-group-mapping.entity';
 import type {
   QuestionGroupDto,
   CreateQuestionGroupDto,
@@ -66,11 +71,121 @@ import {
  * CQRS 패턴을 사용하여 Command와 Query를 처리합니다.
  */
 @Injectable()
-export class EvaluationQuestionManagementService {
+export class EvaluationQuestionManagementService implements OnModuleInit {
+  private readonly logger = new Logger(
+    EvaluationQuestionManagementService.name,
+  );
+
   constructor(
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
+    @InjectRepository(QuestionGroup)
+    private readonly questionGroupRepository: Repository<QuestionGroup>,
+    @InjectRepository(EvaluationQuestion)
+    private readonly evaluationQuestionRepository: Repository<EvaluationQuestion>,
+    @InjectRepository(QuestionGroupMapping)
+    private readonly questionGroupMappingRepository: Repository<QuestionGroupMapping>,
   ) {}
+
+  /**
+   * 모듈 초기화 시 실행
+   * 파트장 평가 질문 그룹이 없으면 자동으로 생성합니다.
+   */
+  async onModuleInit(): Promise<void> {
+    try {
+      this.logger.log('모듈 초기화: 파트장 평가 질문 그룹 확인 중...');
+
+      // "파트장 평가 질문" 그룹 존재 여부 확인
+      const existingGroup = await this.questionGroupRepository.findOne({
+        where: { name: '파트장 평가 질문' },
+      });
+
+      if (!existingGroup) {
+        this.logger.log(
+          '파트장 평가 질문 그룹이 없습니다. 자동 생성을 시작합니다...',
+        );
+        await this.생성_파트장평가질문그룹();
+        this.logger.log('파트장 평가 질문 그룹이 성공적으로 생성되었습니다.');
+      } else {
+        this.logger.log(
+          `파트장 평가 질문 그룹이 이미 존재합니다. (ID: ${existingGroup.id})`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `모듈 초기화 중 오류 발생: ${error.message}`,
+        error.stack,
+      );
+      // 초기화 오류는 애플리케이션 시작을 막지 않습니다
+    }
+  }
+
+  /**
+   * 파트장 평가 질문 그룹 자동 생성
+   */
+  private async 생성_파트장평가질문그룹(): Promise<void> {
+    const systemAdminId = '00000000-0000-0000-0000-000000000000'; // 시스템 관리자 ID
+
+    // 1. 파트장 평가 질문 그룹 생성
+    const partLeaderGroup = new QuestionGroup();
+    partLeaderGroup.name = '파트장 평가 질문';
+    partLeaderGroup.isDefault = false;
+    partLeaderGroup.isDeletable = false;
+    partLeaderGroup.createdBy = systemAdminId;
+
+    const [savedGroup] = await this.questionGroupRepository.save([
+      partLeaderGroup,
+    ]);
+
+    this.logger.log(`파트장 평가 질문 그룹 생성 완료 (ID: ${savedGroup.id})`);
+
+    // 2. 파트장 평가 질문 3개 생성
+    const partLeaderQuestions: EvaluationQuestion[] = [];
+
+    const question1 = new EvaluationQuestion();
+    question1.text = '업무 능력은 어떠한가요?';
+    question1.minScore = 1;
+    question1.maxScore = 5;
+    question1.createdBy = systemAdminId;
+    partLeaderQuestions.push(question1);
+
+    const question2 = new EvaluationQuestion();
+    question2.text = '프로젝트 수행 능력은 어떠한가요?';
+    question2.minScore = 1;
+    question2.maxScore = 5;
+    question2.createdBy = systemAdminId;
+    partLeaderQuestions.push(question2);
+
+    const question3 = new EvaluationQuestion();
+    question3.text = '부서 관리 능력은 어떠한가요?';
+    question3.minScore = 1;
+    question3.maxScore = 5;
+    question3.createdBy = systemAdminId;
+    partLeaderQuestions.push(question3);
+
+    const savedQuestions = await this.evaluationQuestionRepository.save(
+      partLeaderQuestions,
+    );
+
+    this.logger.log(`파트장 평가 질문 ${savedQuestions.length}개 생성 완료`);
+
+    // 3. 질문-그룹 매핑 생성
+    const partLeaderMappings: QuestionGroupMapping[] = [];
+    for (let i = 0; i < savedQuestions.length; i++) {
+      const mapping = new QuestionGroupMapping();
+      mapping.groupId = savedGroup.id;
+      mapping.questionId = savedQuestions[i].id;
+      mapping.displayOrder = i;
+      mapping.createdBy = systemAdminId;
+      partLeaderMappings.push(mapping);
+    }
+
+    await this.questionGroupMappingRepository.save(partLeaderMappings);
+
+    this.logger.log(
+      `파트장 평가 질문 매핑 ${partLeaderMappings.length}개 생성 완료`,
+    );
+  }
 
   // ==================== 질문 그룹 관리 ====================
 

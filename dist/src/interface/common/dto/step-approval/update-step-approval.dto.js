@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateStepApprovalDto = exports.StepApprovalStatusEnum = exports.StepTypeEnum = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
+const decorators_1 = require("../../decorators");
 var StepTypeEnum;
 (function (StepTypeEnum) {
     StepTypeEnum["CRITERIA"] = "criteria";
@@ -29,6 +30,7 @@ var StepApprovalStatusEnum;
 class UpdateStepApprovalDto {
     status;
     revisionComment;
+    approveSubsequentSteps;
 }
 exports.UpdateStepApprovalDto = UpdateStepApprovalDto;
 __decorate([
@@ -52,4 +54,15 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], UpdateStepApprovalDto.prototype, "revisionComment", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '하위 평가 자동 승인 여부 (true: 하위 평가도 함께 승인, false: 현재 평가만 승인)',
+        example: false,
+        type: Boolean,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, decorators_1.ToBoolean)(false),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateStepApprovalDto.prototype, "approveSubsequentSteps", void 0);
 //# sourceMappingURL=update-step-approval.dto.js.map
