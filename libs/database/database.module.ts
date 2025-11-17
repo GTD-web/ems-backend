@@ -35,15 +35,13 @@ import { TransactionManagerService } from './transaction-manager.service';
         }
 
         return {
-          type: 'postgres',
+          type: 'postgres' as const,
           host,
           port,
           username,
           password,
           database,
-          autoLoadEntities: true,
-          dropSchema: isTest,
-          synchronize: configService.get<boolean>('DB_SYNCHRONIZE', isDevelopment || isTest),
+          autoLoadEntities: false,
           logging: configService.get<boolean>('DB_LOGGING', isDevelopment && !isTest),
           ssl: needsSSL ? { rejectUnauthorized: false } : false,
           extra: {
