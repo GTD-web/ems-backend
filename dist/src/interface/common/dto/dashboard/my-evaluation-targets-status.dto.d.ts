@@ -1,4 +1,5 @@
 export declare class MyEvaluationStatusDetailDto {
+    status: 'none' | 'in_progress' | 'complete';
     assignedWbsCount: number;
     completedEvaluationCount: number;
     totalScore: number | null;
@@ -7,6 +8,7 @@ export declare class MyEvaluationStatusDetailDto {
 export declare class MyDownwardEvaluationStatusDto {
     isPrimary: boolean;
     isSecondary: boolean;
+    status: 'none' | 'in_progress' | 'complete';
     primaryStatus: MyEvaluationStatusDetailDto | null;
     secondaryStatus: MyEvaluationStatusDetailDto | null;
 }

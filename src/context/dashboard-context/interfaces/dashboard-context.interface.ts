@@ -463,9 +463,24 @@ export interface MyDownwardEvaluationStatus {
   isSecondary: boolean;
 
   /**
+   * 1차와 2차 평가의 통합 상태
+   * - none, none = none
+   * - none, in_progress = in_progress
+   * - in_progress, in_progress = in_progress
+   * - in_progress, complete = complete
+   * - complete, complete = complete
+   */
+  status: 'none' | 'in_progress' | 'complete';
+
+  /**
    * 1차 평가 현황 (1차 평가자인 경우에만 제공)
    */
   primaryStatus: {
+    /**
+     * 평가 상태
+     */
+    status: 'none' | 'in_progress' | 'complete';
+
     /**
      * 평가 대상 WBS 수
      */
@@ -491,6 +506,11 @@ export interface MyDownwardEvaluationStatus {
    * 2차 평가 현황 (2차 평가자인 경우에만 제공)
    */
   secondaryStatus: {
+    /**
+     * 평가 상태
+     */
+    status: 'none' | 'in_progress' | 'complete';
+
     /**
      * 평가 대상 WBS 수
      */

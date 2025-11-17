@@ -8,6 +8,13 @@ import { Type } from 'class-transformer';
  */
 export class MyEvaluationStatusDetailDto {
   @ApiProperty({
+    description: '평가 상태 (할당수 = 완료수 = 0: none, 할당수 > 완료수: in_progress, 할당수 = 완료수 > 0: complete)',
+    enum: ['none', 'in_progress', 'complete'],
+    example: 'in_progress',
+  })
+  status: 'none' | 'in_progress' | 'complete';
+
+  @ApiProperty({
     description: '평가 대상 WBS 수',
     example: 5,
   })
@@ -50,6 +57,13 @@ export class MyDownwardEvaluationStatusDto {
     example: false,
   })
   isSecondary: boolean;
+
+  @ApiProperty({
+    description: '1차와 2차 평가의 통합 상태 (none, in_progress, complete)',
+    enum: ['none', 'in_progress', 'complete'],
+    example: 'in_progress',
+  })
+  status: 'none' | 'in_progress' | 'complete';
 
   @ApiPropertyOptional({
     description: '1차 평가 현황 (1차 평가자인 경우에만 제공)',
