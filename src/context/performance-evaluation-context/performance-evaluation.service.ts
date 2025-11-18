@@ -110,7 +110,7 @@ import {
   EmployeeSelfEvaluationsResponseDto,
   WbsSelfEvaluationBasicDto,
   WbsSelfEvaluationResponseDto,
-} from '@/interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import { IPerformanceEvaluationService } from './interfaces/performance-evaluation.interface';
 

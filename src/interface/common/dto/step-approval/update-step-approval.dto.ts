@@ -7,7 +7,7 @@ import {
   IsOptional,
   IsBoolean,
 } from 'class-validator';
-import { ToBoolean } from '@/interface/common/decorators';
+import { ToBoolean } from '@interface/common/decorators';
 
 /**
  * 단계 타입 enum

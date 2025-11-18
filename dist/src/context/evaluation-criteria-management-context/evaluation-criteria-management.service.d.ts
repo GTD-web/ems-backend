@@ -15,8 +15,8 @@ import type { EvaluationLineMappingDto } from '@domain/core/evaluation-line-mapp
 import type { CreateEvaluationProjectAssignmentData, EvaluationProjectAssignmentDto, EvaluationProjectAssignmentFilter, OrderDirection } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.types';
 import type { CreateEvaluationWbsAssignmentData, EvaluationWbsAssignmentDto, EvaluationWbsAssignmentFilter, OrderDirection as WbsOrderDirection } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.types';
 import type { CreateWbsEvaluationCriteriaData, UpdateWbsEvaluationCriteriaData, WbsEvaluationCriteriaDto, WbsEvaluationCriteriaFilter } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.types';
-import { EmployeeInfoDto, ProjectInfoDto } from '@/interface/common/dto/evaluation-criteria/project-assignment.dto';
-import type { WbsEvaluationCriteriaListResponseDto } from '@/interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
+import { EmployeeInfoDto, ProjectInfoDto } from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
+import type { WbsEvaluationCriteriaListResponseDto } from '@interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 export declare class EvaluationCriteriaManagementService implements IEvaluationCriteriaManagementService {
     private readonly commandBus;
     private readonly queryBus;

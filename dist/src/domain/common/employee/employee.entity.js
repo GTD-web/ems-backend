@@ -388,7 +388,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({
         type: 'boolean',
-        default: false,
+        default: true,
         comment: '시스템 접근 가능 여부 (2중 보안용)',
     }),
     __metadata("design:type", Boolean)

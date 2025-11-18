@@ -1,4 +1,4 @@
-import { EmployeeSelfEvaluationsResponseDto, WbsSelfEvaluationBasicDto, WbsSelfEvaluationResponseDto } from '@/interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
+import { EmployeeSelfEvaluationsResponseDto, WbsSelfEvaluationBasicDto, WbsSelfEvaluationResponseDto } from '@interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 import { GetDownwardEvaluationDetailQuery, GetDownwardEvaluationListQuery } from '../handlers/downward-evaluation';
 import { GetFinalEvaluationByEmployeePeriodQuery, GetFinalEvaluationListQuery, GetFinalEvaluationQuery } from '../handlers/final-evaluation';
 import { GetPeerEvaluationDetailQuery, GetPeerEvaluationListQuery } from '../handlers/peer-evaluation';

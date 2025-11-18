@@ -4,6 +4,7 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Post,
 } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 
@@ -391,6 +392,74 @@ export function UpdateEmployeeAccessibility() {
     ApiResponse({
       status: 404,
       description: '직원을 찾을 수 없습니다.',
+    }),
+    ApiResponse({ status: 500, description: '서버 내부 오류' }),
+  );
+}
+
+// ==================== POST 엔드포인트 데코레이터 ====================
+
+/**
+ * 직원 동기화 엔드포인트 데코레이터
+ */
+export function SyncEmployees() {
+  return applyDecorators(
+    Post('sync'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: 'SSO에서 직원 데이터 동기화',
+      description: `SSO 서버에서 직원 정보를 가져와 로컬 데이터베이스와 동기화합니다.
+
+**동작:**
+- SSO getEmployees API를 통해 모든 직원 정보 조회
+- 새로운 직원은 생성, 기존 직원은 업데이트
+- 관리자 정보도 함께 동기화
+- 동기화 결과(생성/업데이트 건수, 오류 목록) 반환
+
+**사용 시기:**
+- 애플리케이션 최초 시작 시 직원 데이터가 없을 때
+- SSO에서 직원 정보 변경 후 수동 동기화가 필요할 때
+- 동기화 실패 후 재시도할 때
+
+**테스트 케이스:**
+- 초기 동기화: 직원 데이터가 없을 때 SSO에서 전체 직원 동기화 (200)
+- 생성 건수 확인: 동기화 결과에 created 건수 포함
+- 업데이트 동기화: 기존 직원 정보 변경 후 재동기화 (200)
+- 업데이트 건수 확인: 동기화 결과에 updated 건수 포함
+- 성공 플래그: success=true로 반환
+- 총 처리 건수: totalProcessed가 SSO 직원 수와 일치
+- 오류 처리: 동기화 중 일부 오류 발생 시 errors 배열에 포함
+- 멱등성: 여러 번 호출해도 안전하게 동작`,
+    }),
+    ApiQuery({
+      name: 'forceSync',
+      required: false,
+      description: '동기화가 비활성화되어 있어도 강제 실행 여부 (기본값: false)',
+      type: String,
+      example: 'false',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '직원 동기화가 완료되었습니다.',
+      schema: {
+        type: 'object',
+        properties: {
+          success: { type: 'boolean', example: true },
+          totalProcessed: { type: 'number', example: 50 },
+          created: { type: 'number', example: 45 },
+          updated: { type: 'number', example: 5 },
+          errors: { type: 'array', items: { type: 'string' }, example: [] },
+          syncedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 파라미터',
+    }),
+    ApiResponse({
+      status: 503,
+      description: 'SSO 서버 연결 실패',
     }),
     ApiResponse({ status: 500, description: '서버 내부 오류' }),
   );

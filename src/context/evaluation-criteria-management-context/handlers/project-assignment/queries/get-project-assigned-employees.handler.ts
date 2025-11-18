@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
-import { EmployeeInfoDto } from '@/interface/common/dto/evaluation-criteria/project-assignment.dto';
+import { EmployeeInfoDto } from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
 
 /**
  * 프로젝트별 할당된 직원 조회 쿼리

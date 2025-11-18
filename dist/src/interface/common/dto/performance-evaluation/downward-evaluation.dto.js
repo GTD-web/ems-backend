@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DownwardEvaluationDetailResponseDto = exports.DownwardEvaluationListResponseDto = exports.DownwardEvaluationResponseDto = exports.DownwardEvaluationBasicDto = exports.DownwardEvaluationFilterDto = exports.SubmitDownwardEvaluationDto = exports.UpdateDownwardEvaluationDto = exports.CreateSecondaryDownwardEvaluationBodyDto = exports.CreatePrimaryDownwardEvaluationBodyDto = void 0;
+exports.DownwardEvaluationDetailResponseDto = exports.DownwardEvaluationListResponseDto = exports.DownwardEvaluationResponseDto = exports.DownwardEvaluationBasicDto = exports.DownwardEvaluationFilterDto = exports.SubmitDownwardEvaluationQueryDto = exports.SubmitDownwardEvaluationDto = exports.UpdateDownwardEvaluationDto = exports.CreateSecondaryDownwardEvaluationBodyDto = exports.CreatePrimaryDownwardEvaluationBodyDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
@@ -139,6 +139,21 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], SubmitDownwardEvaluationDto.prototype, "evaluatorId", void 0);
+class SubmitDownwardEvaluationQueryDto {
+    approveAllBelow;
+}
+exports.SubmitDownwardEvaluationQueryDto = SubmitDownwardEvaluationQueryDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '하위 단계 자동 승인 여부 (기본값: false)',
+        example: false,
+        type: Boolean,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, decorators_1.ToBoolean)(false),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], SubmitDownwardEvaluationQueryDto.prototype, "approveAllBelow", void 0);
 class DownwardEvaluationFilterDto {
     evaluateeId;
     periodId;

@@ -104,8 +104,8 @@ import type {
 import {
   EmployeeInfoDto,
   ProjectInfoDto,
-} from '@/interface/common/dto/evaluation-criteria/project-assignment.dto';
-import type { WbsEvaluationCriteriaListResponseDto } from '@/interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
+} from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
+import type { WbsEvaluationCriteriaListResponseDto } from '@interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 
 /**
  * 평가기준관리 서비스 (MVP 버전)

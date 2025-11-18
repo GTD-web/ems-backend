@@ -30,6 +30,7 @@ import {
   DownwardEvaluationListResponseDto,
   DownwardEvaluationResponseDto,
   SubmitDownwardEvaluationDto,
+  SubmitDownwardEvaluationQueryDto,
 } from '@interface/common/dto/performance-evaluation/downward-evaluation.dto';
 import { BulkSubmitDownwardEvaluationQueryDto } from '@interface/common/dto/performance-evaluation/bulk-submit-downward-evaluation-query.dto';
 
@@ -124,17 +125,21 @@ export class DownwardEvaluationManagementController {
     @ParseUUID('evaluateeId') evaluateeId: string,
     @ParseUUID('periodId') periodId: string,
     @ParseUUID('wbsId') wbsId: string,
+    @Query() queryDto: SubmitDownwardEvaluationQueryDto,
     @Body() submitDto: SubmitDownwardEvaluationDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     const evaluatorId = submitDto.evaluatorId;
     const submittedBy = user.id;
+    const approveAllBelow = queryDto.approveAllBelow || false;
+
     await this.downwardEvaluationBusinessService.일차_하향평가를_제출하고_재작성요청을_완료한다(
       evaluateeId,
       periodId,
       wbsId,
       evaluatorId,
       submittedBy,
+      approveAllBelow,
     );
   }
 
@@ -147,17 +152,21 @@ export class DownwardEvaluationManagementController {
     @ParseUUID('evaluateeId') evaluateeId: string,
     @ParseUUID('periodId') periodId: string,
     @ParseUUID('wbsId') wbsId: string,
+    @Query() queryDto: SubmitDownwardEvaluationQueryDto,
     @Body() submitDto: SubmitDownwardEvaluationDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     const evaluatorId = submitDto.evaluatorId;
     const submittedBy = user.id;
+    const approveAllBelow = queryDto.approveAllBelow || false;
+
     await this.downwardEvaluationBusinessService.이차_하향평가를_제출하고_재작성요청을_완료한다(
       evaluateeId,
       periodId,
       wbsId,
       evaluatorId,
       submittedBy,
+      approveAllBelow,
     );
   }
 

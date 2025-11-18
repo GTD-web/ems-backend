@@ -3,9 +3,9 @@ import {
   DepartmentHierarchyWithEmployeesDto,
   EmployeeSyncService,
   OrganizationManagementService,
-} from '@/context/organization-management-context';
-import { EmployeeDto } from '@/domain/common/employee/employee.types';
-import { CurrentUser, ParseId } from '@/interface/common/decorators';
+} from '@context/organization-management-context';
+import { EmployeeDto } from '@domain/common/employee/employee.types';
+import { CurrentUser, ParseId } from '@interface/common/decorators';
 import {
   ExcludeEmployeeFromList,
   GetAllEmployees,
@@ -14,16 +14,17 @@ import {
   GetExcludedEmployees,
   GetPartLeaders,
   IncludeEmployeeInList,
+  SyncEmployees,
   UpdateEmployeeAccessibility,
-} from '@/interface/common/decorators/employee-management/employee-management-api.decorators';
+} from '@interface/common/decorators/employee-management/employee-management-api.decorators';
 import {
   EmployeeResponseDto,
   ExcludeEmployeeFromListDto,
   GetEmployeesQueryDto,
   GetPartLeadersQueryDto,
   PartLeadersResponseDto,
-} from '@/interface/common/dto/employee-management/employee-management.dto';
-import type { AuthenticatedUser } from '@/interface/common/guards';
+} from '@interface/common/dto/employee-management/employee-management.dto';
+import type { AuthenticatedUser } from '@interface/common/guards';
 import {
   Body,
   Controller,
@@ -32,6 +33,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { EmployeeSyncResult } from '@domain/common/employee/employee.types';
 
 /**
  * 관리자용 직원 관리 컨트롤러
@@ -179,5 +181,18 @@ export class EmployeeManagementController {
       isAccessible,
       user.id,
     );
+  }
+
+  // ==================== POST: 생성/동기화 ====================
+
+  /**
+   * SSO에서 직원 데이터를 동기화합니다.
+   */
+  @SyncEmployees()
+  async syncEmployees(
+    @Query('forceSync', new DefaultValuePipe(false), ParseBoolPipe)
+    forceSync: boolean,
+  ): Promise<EmployeeSyncResult> {
+    return await this.employeeSyncService.syncEmployees(forceSync);
   }
 }

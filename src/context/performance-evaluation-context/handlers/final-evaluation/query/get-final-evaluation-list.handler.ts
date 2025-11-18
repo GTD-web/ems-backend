@@ -9,7 +9,7 @@ import type {
   JobGrade,
   JobDetailedGrade,
 } from '@domain/core/final-evaluation/final-evaluation.types';
-import type { FinalEvaluationListItemDto } from '@/interface/common/dto/performance-evaluation/final-evaluation.dto';
+import type { FinalEvaluationListItemDto } from '@interface/common/dto/performance-evaluation/final-evaluation.dto';
 
 /**
  * 최종평가 목록 조회 쿼리

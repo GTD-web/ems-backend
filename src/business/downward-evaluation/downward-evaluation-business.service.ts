@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
@@ -7,6 +9,8 @@ import { StepApprovalContextService } from '@context/step-approval-context/step-
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 
 /**
  * 하향평가 비즈니스 서비스
@@ -29,6 +33,10 @@ export class DownwardEvaluationBusinessService {
     private readonly revisionRequestContextService: RevisionRequestContextService,
     private readonly stepApprovalContextService: StepApprovalContextService,
     private readonly activityLogContextService: EvaluationActivityLogContextService,
+    @InjectRepository(WbsSelfEvaluation)
+    private readonly wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>,
+    @InjectRepository(DownwardEvaluation)
+    private readonly downwardEvaluationRepository: Repository<DownwardEvaluation>,
     // private readonly notificationService: NotificationService, // TODO: 알림 서비스 추가 시 주입
   ) {}
 
@@ -176,6 +184,8 @@ export class DownwardEvaluationBusinessService {
    * 1차 하향평가를 제출하고 재작성 요청을 자동 완료 처리한다
    * 특정 피평가자에 대한 1차 하향평가를 제출하고,
    * 해당 평가기간에 발생한 1차 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
+   *
+   * @param approveAllBelow true일 경우 자기평가도 함께 제출합니다.
    */
   async 일차_하향평가를_제출하고_재작성요청을_완료한다(
     evaluateeId: string,
@@ -183,9 +193,10 @@ export class DownwardEvaluationBusinessService {
     wbsId: string,
     evaluatorId: string,
     submittedBy: string,
+    approveAllBelow = false,
   ): Promise<void> {
     this.logger.log(
-      `1차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+      `1차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}, 하위승인: ${approveAllBelow}`,
     );
 
     // 1. 1차 하향평가 제출
@@ -208,6 +219,16 @@ export class DownwardEvaluationBusinessService {
       '1차 하향평가 제출로 인한 재작성 완료 처리',
     );
 
+    // 3. 하위 단계 자동 승인: 자기평가 제출
+    if (approveAllBelow) {
+      await this.자기평가를_자동_제출한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        submittedBy,
+      );
+    }
+
     this.logger.log(
       `1차 하향평가 제출 및 재작성 요청 완료 처리 완료 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
     );
@@ -217,6 +238,8 @@ export class DownwardEvaluationBusinessService {
    * 2차 하향평가를 제출하고 재작성 요청을 자동 완료 처리한다
    * 특정 피평가자에 대한 2차 하향평가를 제출하고,
    * 해당 평가기간에 발생한 2차 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
+   *
+   * @param approveAllBelow true일 경우 1차 하향평가와 자기평가도 함께 제출합니다.
    */
   async 이차_하향평가를_제출하고_재작성요청을_완료한다(
     evaluateeId: string,
@@ -224,9 +247,10 @@ export class DownwardEvaluationBusinessService {
     wbsId: string,
     evaluatorId: string,
     submittedBy: string,
+    approveAllBelow = false,
   ): Promise<void> {
     this.logger.log(
-      `2차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+      `2차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}, 하위승인: ${approveAllBelow}`,
     );
 
     // 1. 2차 하향평가 제출
@@ -248,6 +272,25 @@ export class DownwardEvaluationBusinessService {
       RecipientType.SECONDARY_EVALUATOR,
       '2차 하향평가 제출로 인한 재작성 완료 처리',
     );
+
+    // 3. 하위 단계 자동 승인: 1차 하향평가와 자기평가 제출
+    if (approveAllBelow) {
+      // 3-1. 1차 하향평가 자동 제출
+      await this.일차_하향평가를_자동_제출한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        submittedBy,
+      );
+
+      // 3-2. 자기평가 자동 제출
+      await this.자기평가를_자동_제출한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        submittedBy,
+      );
+    }
 
     this.logger.log(
       `2차 하향평가 제출 및 재작성 요청 완료 처리 완료 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
@@ -484,5 +527,141 @@ export class DownwardEvaluationBusinessService {
     });
 
     return result;
+  }
+
+  /**
+   * 자기평가를 자동으로 제출한다
+   * 해당 WBS와 피평가자의 미제출 자기평가를 찾아서 제출합니다.
+   */
+  private async 자기평가를_자동_제출한다(
+    employeeId: string,
+    periodId: string,
+    wbsId: string,
+    submittedBy: string,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        `자기평가 자동 제출 시작 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+      );
+
+      // 1. 해당 WBS와 피평가자의 자기평가 조회
+      const selfEvaluation = await this.wbsSelfEvaluationRepository.findOne({
+        where: {
+          employeeId,
+          periodId,
+          wbsItemId: wbsId,
+          deletedAt: IsNull(),
+        },
+      });
+
+      if (!selfEvaluation) {
+        this.logger.warn(
+          `자기평가를 찾을 수 없습니다 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+        );
+        return;
+      }
+
+      // 2. 이미 제출된 자기평가는 건너뛰기
+      if (selfEvaluation.submittedToManager) {
+        this.logger.log(
+          `자기평가가 이미 제출되어 있습니다 - 자기평가 ID: ${selfEvaluation.id}`,
+        );
+        return;
+      }
+
+      // 3. 자기평가 제출
+      await this.performanceEvaluationService.WBS자기평가를_제출한다(
+        selfEvaluation.id,
+        submittedBy,
+      );
+
+      this.logger.log(
+        `자기평가 자동 제출 완료 - 자기평가 ID: ${selfEvaluation.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `자기평가 자동 제출 실패 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+        error,
+      );
+      // 자기평가 제출 실패 시에도 하향평가 제출은 정상 처리
+    }
+  }
+
+  /**
+   * 1차 하향평가를 자동으로 제출한다
+   * 해당 WBS와 피평가자의 미제출 1차 하향평가를 찾아서 제출합니다.
+   */
+  private async 일차_하향평가를_자동_제출한다(
+    evaluateeId: string,
+    periodId: string,
+    wbsId: string,
+    submittedBy: string,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        `1차 하향평가 자동 제출 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+      );
+
+      // 1. 1차 평가자 조회
+      const primaryEvaluatorId =
+        await this.stepApprovalContextService.일차평가자를_조회한다(
+          periodId,
+          evaluateeId,
+        );
+
+      if (!primaryEvaluatorId) {
+        this.logger.warn(
+          `1차 평가자를 찾을 수 없습니다 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}`,
+        );
+        return;
+      }
+
+      // 2. 해당 WBS와 피평가자의 1차 하향평가 조회
+      const downwardEvaluation =
+        await this.downwardEvaluationRepository.findOne({
+          where: {
+            employeeId: evaluateeId,
+            evaluatorId: primaryEvaluatorId,
+            periodId,
+            wbsId,
+            evaluationType: DownwardEvaluationType.PRIMARY,
+            deletedAt: IsNull(),
+          },
+        });
+
+      if (!downwardEvaluation) {
+        this.logger.warn(
+          `1차 하향평가를 찾을 수 없습니다 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+        );
+        return;
+      }
+
+      // 3. 이미 제출된 1차 하향평가는 건너뛰기
+      if (downwardEvaluation.isCompleted) {
+        this.logger.log(
+          `1차 하향평가가 이미 제출되어 있습니다 - 하향평가 ID: ${downwardEvaluation.id}`,
+        );
+        return;
+      }
+
+      // 4. 1차 하향평가 제출
+      await this.performanceEvaluationService.일차_하향평가를_제출한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        primaryEvaluatorId,
+        submittedBy,
+      );
+
+      this.logger.log(
+        `1차 하향평가 자동 제출 완료 - 하향평가 ID: ${downwardEvaluation.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `1차 하향평가 자동 제출 실패 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+        error,
+      );
+      // 1차 하향평가 제출 실패 시에도 2차 하향평가 제출은 정상 처리
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { DownwardEvaluationBusinessService } from './downward-evaluation-business.service';
 import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
 import { EvaluationCriteriaManagementContextModule } from '@context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
@@ -6,6 +7,8 @@ import { EvaluationPeriodManagementContextModule } from '@context/evaluation-per
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
 import { StepApprovalContextModule } from '@context/step-approval-context/step-approval-context.module';
 import { EvaluationActivityLogContextModule } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.module';
+import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 
 /**
  * 하향평가 비즈니스 모듈
@@ -14,6 +17,7 @@ import { EvaluationActivityLogContextModule } from '@context/evaluation-activity
  */
 @Module({
   imports: [
+    TypeOrmModule.forFeature([WbsSelfEvaluation, DownwardEvaluation]),
     PerformanceEvaluationContextModule,
     EvaluationCriteriaManagementContextModule,
     EvaluationPeriodManagementContextModule,

@@ -1,4 +1,4 @@
-import { StepApprovalStatusEnum } from '@/interface/common/dto/step-approval/update-step-approval.dto';
+import { StepApprovalStatusEnum } from '@interface/common/dto/step-approval/update-step-approval.dto';
 import { RevisionRequestBusinessService } from '@business/revision-request/revision-request-business.service';
 import { RevisionRequestContextService } from '@context/revision-request-context';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';

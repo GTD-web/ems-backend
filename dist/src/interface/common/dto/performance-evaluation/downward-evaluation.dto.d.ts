@@ -17,6 +17,9 @@ export declare class UpdateDownwardEvaluationDto {
 export declare class SubmitDownwardEvaluationDto {
     evaluatorId: string;
 }
+export declare class SubmitDownwardEvaluationQueryDto {
+    approveAllBelow?: boolean;
+}
 export declare class DownwardEvaluationFilterDto {
     evaluateeId?: string;
     periodId?: string;

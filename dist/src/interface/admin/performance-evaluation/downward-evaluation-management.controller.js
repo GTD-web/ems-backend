@@ -68,15 +68,17 @@ let DownwardEvaluationManagementController = class DownwardEvaluationManagementC
             message: '2차 하향평가가 성공적으로 저장되었습니다.',
         };
     }
-    async submitPrimaryDownwardEvaluation(evaluateeId, periodId, wbsId, submitDto, user) {
+    async submitPrimaryDownwardEvaluation(evaluateeId, periodId, wbsId, queryDto, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
         const submittedBy = user.id;
-        await this.downwardEvaluationBusinessService.일차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy);
+        const approveAllBelow = queryDto.approveAllBelow || false;
+        await this.downwardEvaluationBusinessService.일차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy, approveAllBelow);
     }
-    async submitSecondaryDownwardEvaluation(evaluateeId, periodId, wbsId, submitDto, user) {
+    async submitSecondaryDownwardEvaluation(evaluateeId, periodId, wbsId, queryDto, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
         const submittedBy = user.id;
-        await this.downwardEvaluationBusinessService.이차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy);
+        const approveAllBelow = queryDto.approveAllBelow || false;
+        await this.downwardEvaluationBusinessService.이차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy, approveAllBelow);
     }
     async resetPrimaryDownwardEvaluation(evaluateeId, periodId, wbsId, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
@@ -139,10 +141,12 @@ __decorate([
     __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluateeId')),
     __param(1, (0, parse_uuid_decorator_1.ParseUUID)('periodId')),
     __param(2, (0, parse_uuid_decorator_1.ParseUUID)('wbsId')),
-    __param(3, (0, common_1.Body)()),
-    __param(4, (0, current_user_decorator_1.CurrentUser)()),
+    __param(3, (0, common_1.Query)()),
+    __param(4, (0, common_1.Body)()),
+    __param(5, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, downward_evaluation_dto_1.SubmitDownwardEvaluationDto, Object]),
+    __metadata("design:paramtypes", [String, String, String, downward_evaluation_dto_1.SubmitDownwardEvaluationQueryDto,
+        downward_evaluation_dto_1.SubmitDownwardEvaluationDto, Object]),
     __metadata("design:returntype", Promise)
 ], DownwardEvaluationManagementController.prototype, "submitPrimaryDownwardEvaluation", null);
 __decorate([
@@ -150,10 +154,12 @@ __decorate([
     __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluateeId')),
     __param(1, (0, parse_uuid_decorator_1.ParseUUID)('periodId')),
     __param(2, (0, parse_uuid_decorator_1.ParseUUID)('wbsId')),
-    __param(3, (0, common_1.Body)()),
-    __param(4, (0, current_user_decorator_1.CurrentUser)()),
+    __param(3, (0, common_1.Query)()),
+    __param(4, (0, common_1.Body)()),
+    __param(5, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String, downward_evaluation_dto_1.SubmitDownwardEvaluationDto, Object]),
+    __metadata("design:paramtypes", [String, String, String, downward_evaluation_dto_1.SubmitDownwardEvaluationQueryDto,
+        downward_evaluation_dto_1.SubmitDownwardEvaluationDto, Object]),
     __metadata("design:returntype", Promise)
 ], DownwardEvaluationManagementController.prototype, "submitSecondaryDownwardEvaluation", null);
 __decorate([

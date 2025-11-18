@@ -214,7 +214,7 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
 
   @Column({
     type: 'boolean',
-    default: false,
+    default: true,
     comment: '시스템 접근 가능 여부 (2중 보안용)',
   })
   isAccessible: boolean;
@@ -265,7 +265,7 @@ export class Employee extends BaseEntity<EmployeeDto> implements IEmployee {
     this.externalUpdatedAt = externalUpdatedAt || new Date();
     this.status = status || '재직중';
     this.isExcludedFromList = false; // 기본값: 조회 제외 안 함
-    this.isAccessible = false; // 기본값: 접근 불가능 (2중 보안)
+    this.isAccessible = true; // 기본값: 접근 가능 (2중 보안용)
   }
 
   /**
