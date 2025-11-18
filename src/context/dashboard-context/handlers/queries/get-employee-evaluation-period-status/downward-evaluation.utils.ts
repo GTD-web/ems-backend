@@ -408,13 +408,24 @@ export async function 하향평가_상태를_조회한다(
   let secondaryGrade: string | null = null;
 
   // 모든 2차 평가자의 평가가 완료되었는지 확인
+  // 할당된 것보다 완료한 것이 많아도 완료 처리
   const allSecondaryEvaluationsCompleted = secondaryStatuses.every(
     (status) =>
       status.assignedWbsCount > 0 &&
-      status.completedEvaluationCount === status.assignedWbsCount,
+      status.completedEvaluationCount >= status.assignedWbsCount,
   );
 
-  if (secondaryEvaluators.length > 0 && allSecondaryEvaluationsCompleted) {
+  // 모든 2차 평가자가 제출했는지 확인
+  const allSecondaryEvaluationsSubmitted = secondaryStatuses.every(
+    (status) => status.isSubmitted,
+  );
+
+  // 모든 평가자가 완료되고 제출했을 때만 스코어 계산
+  if (
+    secondaryEvaluators.length > 0 &&
+    allSecondaryEvaluationsCompleted &&
+    allSecondaryEvaluationsSubmitted
+  ) {
     secondaryTotalScore = await 가중치_기반_2차_하향평가_점수를_계산한다(
       evaluationPeriodId,
       employeeId,
@@ -574,10 +585,11 @@ export async function 평가자별_하향평가_상태를_조회한다(
   }
 
   // 6. 제출 여부 계산
-  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수와 같으면 제출 완료
+  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수 이상이면 제출 완료
+  // 할당된 것보다 완료한 것이 많아도 제출 처리
   const isSubmitted =
     assignedWbsCount > 0 &&
-    completedEvaluationCount === assignedWbsCount &&
+    completedEvaluationCount >= assignedWbsCount &&
     completedEvaluationCount > 0;
 
   return {
@@ -610,13 +622,15 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
 }> {
   // 1. 평가자에게 할당된 WBS 수 조회
   let assignedWbsCount: number;
-  
+
   if (evaluationType === DownwardEvaluationType.SECONDARY) {
     // 2차 평가자의 경우: EvaluationLineMapping에서 해당 평가자에게 할당된 WBS 수 조회
     if (!evaluationLineMappingRepository || !evaluationLineRepository) {
-      throw new Error('evaluationLineMappingRepository와 evaluationLineRepository가 필요합니다.');
+      throw new Error(
+        'evaluationLineMappingRepository와 evaluationLineRepository가 필요합니다.',
+      );
     }
-    
+
     // SECONDARY 평가라인 조회
     const secondaryLine = await evaluationLineRepository.findOne({
       where: {
@@ -624,7 +638,7 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
         deletedAt: IsNull(),
       },
     });
-    
+
     if (!secondaryLine) {
       assignedWbsCount = 0;
     } else {
@@ -648,7 +662,7 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
         .andWhere('mapping.deletedAt IS NULL')
         .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
         .getRawMany();
-      
+
       assignedWbsCount = assignedMappings.length;
     }
   } else {
@@ -718,10 +732,11 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
   }
 
   // 6. 제출 여부 계산
-  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수와 같으면 제출 완료
+  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수 이상이면 제출 완료
+  // 할당된 것보다 완료한 것이 많아도 제출 처리
   const isSubmitted =
     assignedWbsCount > 0 &&
-    completedEvaluationCount === assignedWbsCount &&
+    completedEvaluationCount >= assignedWbsCount &&
     completedEvaluationCount > 0;
 
   return {

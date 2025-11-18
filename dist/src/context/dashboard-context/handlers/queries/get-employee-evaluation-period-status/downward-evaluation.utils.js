@@ -187,8 +187,11 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
     let secondaryTotalScore = null;
     let secondaryGrade = null;
     const allSecondaryEvaluationsCompleted = secondaryStatuses.every((status) => status.assignedWbsCount > 0 &&
-        status.completedEvaluationCount === status.assignedWbsCount);
-    if (secondaryEvaluators.length > 0 && allSecondaryEvaluationsCompleted) {
+        status.completedEvaluationCount >= status.assignedWbsCount);
+    const allSecondaryEvaluationsSubmitted = secondaryStatuses.every((status) => status.isSubmitted);
+    if (secondaryEvaluators.length > 0 &&
+        allSecondaryEvaluationsCompleted &&
+        allSecondaryEvaluationsSubmitted) {
         secondaryTotalScore = await (0, downward_evaluation_score_utils_1.가중치_기반_2차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, secondaryEvaluators, downwardEvaluationRepository, wbsAssignmentRepository, periodRepository);
         if (secondaryTotalScore !== null) {
             secondaryGrade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, secondaryTotalScore, periodRepository);
@@ -269,7 +272,7 @@ async function 평가자별_하향평가_상태를_조회한다(evaluationPeriod
         status = 'none';
     }
     const isSubmitted = assignedWbsCount > 0 &&
-        completedEvaluationCount === assignedWbsCount &&
+        completedEvaluationCount >= assignedWbsCount &&
         completedEvaluationCount > 0;
     return {
         status,
@@ -357,7 +360,7 @@ async function 특정_평가자의_하향평가_상태를_조회한다(evaluatio
         status = 'none';
     }
     const isSubmitted = assignedWbsCount > 0 &&
-        completedEvaluationCount === assignedWbsCount &&
+        completedEvaluationCount >= assignedWbsCount &&
         completedEvaluationCount > 0;
     return {
         status,
