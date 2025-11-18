@@ -17,21 +17,25 @@ const step_approval_context_service_1 = require("../../context/step-approval-con
 const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
 const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
 const revision_request_context_service_1 = require("../../context/revision-request-context/revision-request-context.service");
+const employee_sync_service_1 = require("../../context/organization-management-context/employee-sync.service");
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
+const get_employee_self_evaluations_handler_1 = require("../../context/performance-evaluation-context/handlers/self-evaluation/queries/get-employee-self-evaluations.handler");
 let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepApprovalBusinessService {
     performanceEvaluationService;
     stepApprovalContextService;
     activityLogContextService;
     evaluationCriteriaManagementService;
     revisionRequestContextService;
+    employeeSyncService;
     logger = new common_1.Logger(StepApprovalBusinessService_1.name);
-    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService, revisionRequestContextService) {
+    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService, revisionRequestContextService, employeeSyncService) {
         this.performanceEvaluationService = performanceEvaluationService;
         this.stepApprovalContextService = stepApprovalContextService;
         this.activityLogContextService = activityLogContextService;
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
         this.revisionRequestContextService = revisionRequestContextService;
+        this.employeeSyncService = employeeSyncService;
     }
     async 자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, approvedBy) {
         this.logger.log(`자기평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
@@ -295,6 +299,19 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
     async 일차하향평가_승인_시_상위평가를_승인한다(evaluationPeriodId, employeeId, updatedBy) {
         this.logger.log(`1차 하향평가 승인 시 상위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
         try {
+            const approver = await this.employeeSyncService.getEmployeeById(updatedBy);
+            const approverName = approver?.name || '관리자';
+            const wbsAssignments = await this.evaluationCriteriaManagementService.특정_평가기간에_직원에게_할당된_WBS를_조회한다(employeeId, evaluationPeriodId);
+            const existingSelfEvaluationsQuery = new get_employee_self_evaluations_handler_1.GetEmployeeSelfEvaluationsQuery(employeeId, evaluationPeriodId, undefined, 1, 1000);
+            const existingSelfEvaluationsResult = await this.performanceEvaluationService.직원의_자기평가_목록을_조회한다(existingSelfEvaluationsQuery);
+            const existingWbsItemIds = new Set(existingSelfEvaluationsResult.evaluations.map((e) => e.wbsItemId));
+            for (const assignment of wbsAssignments) {
+                if (!existingWbsItemIds.has(assignment.wbsItemId)) {
+                    const approvalMessage = `${approverName}님에 따라 자기평가가 승인 처리되었습니다.`;
+                    await this.performanceEvaluationService.WBS자기평가를_생성한다(evaluationPeriodId, employeeId, assignment.wbsItemId, approvalMessage, 0, undefined, updatedBy);
+                    this.logger.log(`자기평가 자동 생성 완료 - 직원: ${employeeId}, WBS: ${assignment.wbsItemId}, 평가기간: ${evaluationPeriodId}`);
+                }
+            }
             await this.자기평가_확인상태를_변경한다({
                 evaluationPeriodId,
                 employeeId,
@@ -343,6 +360,7 @@ exports.StepApprovalBusinessService = StepApprovalBusinessService = StepApproval
         step_approval_context_service_1.StepApprovalContextService,
         evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
         evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
-        revision_request_context_service_1.RevisionRequestContextService])
+        revision_request_context_service_1.RevisionRequestContextService,
+        employee_sync_service_1.EmployeeSyncService])
 ], StepApprovalBusinessService);
 //# sourceMappingURL=step-approval-business.service.js.map

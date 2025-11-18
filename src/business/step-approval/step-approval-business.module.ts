@@ -4,6 +4,7 @@ import { StepApprovalContextModule } from '@context/step-approval-context/step-a
 import { EvaluationActivityLogContextModule } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.module';
 import { EvaluationCriteriaManagementContextModule } from '@context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
+import { OrganizationManagementContextModule } from '@context/organization-management-context/organization-management-context.module';
 import { StepApprovalBusinessService } from './step-approval-business.service';
 
 /**
@@ -18,6 +19,7 @@ import { StepApprovalBusinessService } from './step-approval-business.service';
     EvaluationActivityLogContextModule,
     EvaluationCriteriaManagementContextModule,
     RevisionRequestContextModule,
+    OrganizationManagementContextModule,
   ],
   providers: [StepApprovalBusinessService],
   exports: [StepApprovalBusinessService],

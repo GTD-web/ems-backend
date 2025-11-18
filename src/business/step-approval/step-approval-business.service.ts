@@ -4,9 +4,12 @@ import { StepApprovalContextService } from '@context/step-approval-context/step-
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
+import { GetEmployeeSelfEvaluationsQuery } from '@context/performance-evaluation-context/handlers/self-evaluation/queries/get-employee-self-evaluations.handler';
+import { SecondaryEvaluationStepApproval } from '@/domain/sub/secondary-evaluation-step-approval';
 
 /**
  * 단계 승인 비즈니스 서비스
@@ -26,6 +29,7 @@ export class StepApprovalBusinessService {
     private readonly activityLogContextService: EvaluationActivityLogContextService,
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
+    private readonly employeeSyncService: EmployeeSyncService,
   ) {}
 
   /**
@@ -457,16 +461,17 @@ export class StepApprovalBusinessService {
     status: StepApprovalStatus;
     revisionComment?: string;
     updatedBy: string;
-  }): Promise<import('@domain/sub/secondary-evaluation-step-approval').SecondaryEvaluationStepApproval> {
+  }): Promise<SecondaryEvaluationStepApproval> {
     // 1. 단계 승인 상태 변경
-    const approval = await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
-      evaluationPeriodId: params.evaluationPeriodId,
-      employeeId: params.employeeId,
-      evaluatorId: params.evaluatorId,
-      status: params.status,
-      revisionComment: params.revisionComment,
-      updatedBy: params.updatedBy,
-    });
+    const approval =
+      await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId: params.evaluationPeriodId,
+        employeeId: params.employeeId,
+        evaluatorId: params.evaluatorId,
+        status: params.status,
+        revisionComment: params.revisionComment,
+        updatedBy: params.updatedBy,
+      });
 
     // 2. 활동 내역 기록
     try {
@@ -639,6 +644,7 @@ export class StepApprovalBusinessService {
   /**
    * 1차 하향평가 승인 시 상위 평가를 함께 승인한다
    * 자기평가를 자동으로 승인 처리합니다.
+   * 자기평가가 없는 경우 자동으로 생성합니다.
    */
   async 일차하향평가_승인_시_상위평가를_승인한다(
     evaluationPeriodId: string,
@@ -650,7 +656,56 @@ export class StepApprovalBusinessService {
     );
 
     try {
-      // 자기평가 승인
+      // 1. 승인자 이름 조회
+      const approver =
+        await this.employeeSyncService.getEmployeeById(updatedBy);
+      const approverName = approver?.name || '관리자';
+
+      // 2. 할당된 WBS 목록 조회
+      const wbsAssignments =
+        await this.evaluationCriteriaManagementService.특정_평가기간에_직원에게_할당된_WBS를_조회한다(
+          employeeId,
+          evaluationPeriodId,
+        );
+
+      // 3. 기존 자기평가 목록 조회
+      const existingSelfEvaluationsQuery = new GetEmployeeSelfEvaluationsQuery(
+        employeeId,
+        evaluationPeriodId,
+        undefined, // projectId
+        1, // page
+        1000, // limit (충분히 큰 값)
+      );
+      const existingSelfEvaluationsResult =
+        await this.performanceEvaluationService.직원의_자기평가_목록을_조회한다(
+          existingSelfEvaluationsQuery,
+        );
+      const existingWbsItemIds = new Set(
+        existingSelfEvaluationsResult.evaluations.map((e) => e.wbsItemId),
+      );
+
+      // 4. 각 WBS에 대해 자기평가가 없으면 생성
+      for (const assignment of wbsAssignments) {
+        if (!existingWbsItemIds.has(assignment.wbsItemId)) {
+          // 자기평가 생성 (승인 메시지 포함)
+          const approvalMessage = `${approverName}님에 따라 자기평가가 승인 처리되었습니다.`;
+          await this.performanceEvaluationService.WBS자기평가를_생성한다(
+            evaluationPeriodId,
+            employeeId,
+            assignment.wbsItemId,
+            approvalMessage, // selfEvaluationContent
+            0, // selfEvaluationScore (기본값)
+            undefined, // performanceResult
+            updatedBy, // createdBy
+          );
+
+          this.logger.log(
+            `자기평가 자동 생성 완료 - 직원: ${employeeId}, WBS: ${assignment.wbsItemId}, 평가기간: ${evaluationPeriodId}`,
+          );
+        }
+      }
+
+      // 5. 자기평가 승인
       await this.자기평가_확인상태를_변경한다({
         evaluationPeriodId,
         employeeId,
@@ -658,7 +713,7 @@ export class StepApprovalBusinessService {
         updatedBy,
       });
 
-      // 자기평가 제출 상태 변경
+      // 6. 자기평가 제출 상태 변경
       await this.자기평가_승인_시_제출상태_변경(
         evaluationPeriodId,
         employeeId,

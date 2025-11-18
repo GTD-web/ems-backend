@@ -3,15 +3,18 @@ import { StepApprovalContextService } from '@context/step-approval-context/step-
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
+import { SecondaryEvaluationStepApproval } from '@/domain/sub/secondary-evaluation-step-approval';
 export declare class StepApprovalBusinessService {
     private readonly performanceEvaluationService;
     private readonly stepApprovalContextService;
     private readonly activityLogContextService;
     private readonly evaluationCriteriaManagementService;
     private readonly revisionRequestContextService;
+    private readonly employeeSyncService;
     private readonly logger;
-    constructor(performanceEvaluationService: PerformanceEvaluationService, stepApprovalContextService: StepApprovalContextService, activityLogContextService: EvaluationActivityLogContextService, evaluationCriteriaManagementService: EvaluationCriteriaManagementService, revisionRequestContextService: RevisionRequestContextService);
+    constructor(performanceEvaluationService: PerformanceEvaluationService, stepApprovalContextService: StepApprovalContextService, activityLogContextService: EvaluationActivityLogContextService, evaluationCriteriaManagementService: EvaluationCriteriaManagementService, revisionRequestContextService: RevisionRequestContextService, employeeSyncService: EmployeeSyncService);
     자기평가_승인_시_제출상태_변경(evaluationPeriodId: string, employeeId: string, approvedBy: string): Promise<void>;
     일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId: string, employeeId: string, approvedBy: string): Promise<void>;
     이차_하향평가_승인_시_제출상태_변경(evaluationPeriodId: string, employeeId: string, evaluatorId: string, approvedBy: string): Promise<void>;
@@ -45,7 +48,7 @@ export declare class StepApprovalBusinessService {
         status: StepApprovalStatus;
         revisionComment?: string;
         updatedBy: string;
-    }): Promise<import('@domain/sub/secondary-evaluation-step-approval').SecondaryEvaluationStepApproval>;
+    }): Promise<SecondaryEvaluationStepApproval>;
     자기평가_승인_시_하위평가들을_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
     일차하향평가_승인_시_하위평가들을_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
     일차하향평가_승인_시_상위평가를_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
