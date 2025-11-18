@@ -121,7 +121,8 @@ export class StepApprovalBusinessService {
       return;
     }
 
-    // 해당 피평가자의 모든 1차 하향평가를 일괄 제출 처리
+    // 해당 피평가자의 모든 1차 하향평가를 강제 제출 처리
+    // 승인 시에는 필수 항목 검증을 건너뛰고 모든 평가를 제출합니다.
     const result =
       await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(
         primaryEvaluatorId,
@@ -129,6 +130,7 @@ export class StepApprovalBusinessService {
         evaluationPeriodId,
         DownwardEvaluationType.PRIMARY,
         approvedBy,
+        true, // forceSubmit: true - 승인 시 강제 제출
       );
 
     // 하향평가가 없는 경우는 정상적인 상황일 수 있음 (아직 하향평가가 생성되지 않았을 수 있음)
@@ -188,8 +190,8 @@ export class StepApprovalBusinessService {
       `2차 하향평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`,
     );
 
-    // 해당 평가자의 모든 2차 하향평가를 제출 처리
-    // BulkSubmitDownwardEvaluationsCommand를 활용하여 처리
+    // 해당 평가자의 모든 2차 하향평가를 강제 제출 처리
+    // 승인 시에는 필수 항목 검증을 건너뛰고 모든 평가를 제출합니다.
     const result =
       await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(
         evaluatorId,
@@ -197,6 +199,7 @@ export class StepApprovalBusinessService {
         evaluationPeriodId,
         DownwardEvaluationType.SECONDARY,
         approvedBy,
+        true, // forceSubmit: true - 승인 시 강제 제출
       );
 
     // 하향평가가 없는 경우는 정상적인 상황일 수 있음 (아직 하향평가가 생성되지 않았을 수 있음)
