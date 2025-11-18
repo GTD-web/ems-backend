@@ -21,11 +21,12 @@ import {
  * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
  *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
  *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
- * 2. 승인 상태가 approved이면 → approved (하향평가 진행 상태와 무관하게 승인 상태 반환)
- * 3. 승인 상태가 pending이면 → pending (하향평가 진행 상태와 무관하게 승인 상태 반환)
- * 4. 하향평가 진행 상태가 none이면 → none (승인 상태가 없을 때만)
- * 5. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태가 없을 때만)
- * 6. 하향평가 진행 상태가 complete이면 승인 상태 반환 (pending, approved 등)
+ * 2. 하향평가 진행 상태가 none이면 → none (승인 상태와 무관하게 진행 상태 우선)
+ * 3. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태와 무관하게 진행 상태 우선)
+ * 4. 하향평가 진행 상태가 complete일 때만 승인 상태 반환:
+ *    - 승인 상태가 approved이면 → approved
+ *    - 승인 상태가 pending이면 → pending
+ *    - 승인 상태가 없으면 → pending (기본값)
  */
 export function 하향평가_통합_상태를_계산한다(
   downwardStatus: DownwardEvaluationStatus,
@@ -49,29 +50,26 @@ export function 하향평가_통합_상태를_계산한다(
     return 'revision_completed';
   }
 
-  // 2. 승인 상태가 approved이면 → approved (하향평가 진행 상태와 무관하게 승인 상태 반환)
-  if (approvalStatus === 'approved') {
-    return 'approved';
-  }
-
-  // 3. 승인 상태가 pending이면 → pending (하향평가 진행 상태와 무관하게 승인 상태 반환)
-  if (approvalStatus === 'pending') {
-    return 'pending';
-  }
-
-  // 4. 하향평가 진행 상태가 none이면 → none (승인 상태가 없을 때만)
+  // 2. 하향평가 진행 상태가 none이면 → none (승인 상태와 무관하게 진행 상태 우선)
   if (downwardStatus === 'none') {
     return 'none';
   }
 
-  // 5. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태가 없을 때만)
+  // 3. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태와 무관하게 진행 상태 우선)
   if (downwardStatus === 'in_progress') {
     return 'in_progress';
   }
 
-  // 6. 하향평가 진행 상태가 complete이면 승인 상태 반환 (pending, approved 등)
+  // 4. 하향평가 진행 상태가 complete일 때만 승인 상태 반환
   // downwardStatus === 'complete'
-  return approvalStatus;
+  // 승인 상태가 approved이면 → approved
+  if (approvalStatus === 'approved') {
+    return 'approved';
+  }
+
+  // 승인 상태가 pending이면 → pending
+  // 승인 상태가 없으면 기본값으로 pending 반환
+  return approvalStatus || 'pending';
 }
 
 /**
