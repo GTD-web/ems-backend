@@ -13,13 +13,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluatorProjectAssignmentManagementController = void 0;
-const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
 const project_assignment_business_service_1 = require("../../../business/project-assignment/project-assignment-business.service");
+const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const project_assignment_api_decorators_1 = require("../../common/decorators/evaluation-criteria/project-assignment-api.decorators");
+const project_assignment_dto_1 = require("../../common/dto/evaluation-criteria/project-assignment.dto");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const project_assignment_dto_1 = require("../../common/dto/evaluation-criteria/project-assignment.dto");
-const project_assignment_api_decorators_1 = require("../../common/decorators/evaluation-criteria/project-assignment-api.decorators");
 let EvaluatorProjectAssignmentManagementController = class EvaluatorProjectAssignmentManagementController {
     evaluationCriteriaManagementService;
     projectAssignmentBusinessService;

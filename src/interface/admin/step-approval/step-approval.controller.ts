@@ -15,7 +15,6 @@ import { UpdateSecondaryStepApprovalDto } from '@interface/common/dto/step-appro
 import { UpdateSecondaryStepApprovalResponseDto } from '@interface/common/dto/step-approval/update-secondary-step-approval-response.dto';
 import { StepApprovalEnumsResponseDto } from '@interface/common/dto/step-approval/step-approval-enums.dto';
 import {
-  UpdateStepApproval,
   UpdateCriteriaStepApproval,
   UpdateSelfStepApproval,
   UpdatePrimaryStepApproval,
@@ -52,27 +51,6 @@ export class StepApprovalController {
       steps: Object.values(StepTypeEnum),
       statuses: Object.values(StepApprovalStatusEnum),
     };
-  }
-
-  /**
-   * 단계 승인 상태를 변경한다 (Deprecated)
-   * @deprecated 단계별 엔드포인트를 사용하세요. updateCriteriaStepApproval, updateSelfStepApproval, updatePrimaryStepApproval, updateSecondaryStepApproval
-   */
-  @UpdateStepApproval()
-  async updateStepApproval(
-    @Param('evaluationPeriodId', ParseUUIDPipe) evaluationPeriodId: string,
-    @Param('employeeId', ParseUUIDPipe) employeeId: string,
-    @Body() dto: UpdateStepApprovalDto & { step: StepTypeEnum },
-    @CurrentUser('id') updatedBy: string,
-  ): Promise<void> {
-    await this.stepApprovalContextService.단계별_확인상태를_변경한다({
-      evaluationPeriodId,
-      employeeId,
-      step: dto.step as any,
-      status: dto.status as any,
-      revisionComment: dto.revisionComment,
-      updatedBy,
-    });
   }
 
   /**

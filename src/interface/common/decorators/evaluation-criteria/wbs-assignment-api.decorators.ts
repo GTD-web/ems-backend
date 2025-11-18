@@ -105,57 +105,6 @@ export const CreateWbsAssignment = () =>
     }),
   );
 
-/**
- * WBS 할당 취소 API 데코레이터 (Deprecated)
- * @deprecated WBS ID 기반 엔드포인트를 사용하세요. DELETE /wbs-item/:wbsItemId
- */
-export const CancelWbsAssignment = () =>
-  applyDecorators(
-    Delete(':id'),
-    HttpCode(HttpStatus.OK),
-    ApiOperation({
-      summary: 'WBS 할당 취소 (Deprecated)',
-      deprecated: true,
-      description: `⚠️ **Deprecated**: 이 엔드포인트는 더 이상 권장되지 않습니다. 대신 \`DELETE /wbs-item/:wbsItemId\` 엔드포인트를 사용하세요.
-
-기존 WBS 할당을 취소(소프트 삭제)합니다. 할당 취소 시 평가기준 정리 및 멱등성 보장을 수행합니다.
-
-**자동 수행 작업:**
-- 소프트 삭제: 실제 레코드 삭제가 아닌 deletedAt 필드를 업데이트
-- 평가기준 정리: 해당 WBS 항목의 마지막 할당인 경우 관련 평가기준도 자동 삭제
-- 평가라인 매핑 정리: 할당과 연결된 평가라인 매핑 자동 삭제
-- 멱등성 보장: 이미 취소되었거나 존재하지 않는 할당 ID로 요청해도 200 OK 반환
-
-**테스트 케이스:**
-- 기본 할당 취소: 유효한 할당 ID로 취소 시 성공
-- 소프트 삭제 확인: deletedAt 필드가 설정되고 물리적 삭제는 되지 않음
-- 마지막 할당 취소: 해당 WBS의 마지막 할당 취소 시 평가기준도 자동 삭제
-- 평가기준 유지: 다른 할당이 남아있으면 평가기준은 유지됨
-- 여러 할당 순차 취소: 동일 직원의 여러 할당을 순차적으로 취소 가능
-- UUID 형식 검증: 잘못된 UUID 형식 시 400 에러
-- 멱등성 - 존재하지 않는 ID: 유효한 UUID이지만 존재하지 않는 할당 ID로 취소 시도 시 200 성공 반환
-- 멱등성 - 이미 취소된 할당: 이미 취소된 할당을 다시 취소 시도 시 200 성공 반환
-- 할당 목록 제외: 취소된 할당은 목록 조회에서 제외됨
-- 상세 조회 불가: 취소된 할당은 상세 조회 시 404 반환
-- 대량 할당 후 전체 취소: 모든 할당을 취소하면 평가기준도 모두 삭제됨
-- 트랜잭션 보장: 할당 취소와 평가기준 정리가 원자적으로 수행됨`,
-    }),
-    ApiParam({
-      name: 'id',
-      description: 'WBS 할당 ID (UUID 형식)',
-      type: 'string',
-      format: 'uuid',
-      example: '123e4567-e89b-12d3-a456-426614174000',
-    }),
-    ApiResponse({
-      status: 200,
-      description: 'WBS 할당이 성공적으로 취소되었습니다.',
-    }),
-    ApiResponse({
-      status: 400,
-      description: '잘못된 요청 데이터 (UUID 형식 오류)',
-    }),
-  );
 
 /**
  * WBS ID 기반 할당 취소 API 데코레이터
@@ -1466,75 +1415,6 @@ export const ResetEmployeeWbsAssignments = () =>
     }),
   );
 
-/**
- * WBS 할당 순서 변경 엔드포인트 데코레이터 (Deprecated)
- * @deprecated WBS ID 기반 엔드포인트를 사용하세요. PATCH /wbs-item/:wbsItemId/order
- */
-export const ChangeWbsAssignmentOrder = () =>
-  applyDecorators(
-    Patch(':id/order'),
-    ApiOperation({
-      summary: 'WBS 할당 순서 변경 (Deprecated)',
-      deprecated: true,
-      description: `⚠️ **Deprecated**: 이 엔드포인트는 더 이상 권장되지 않습니다. 대신 \`PATCH /wbs-item/:wbsItemId/order\` 엔드포인트를 사용하세요.
-
-WBS 할당의 표시 순서를 위 또는 아래로 이동합니다. 같은 프로젝트-평가기간 내에서 인접한 항목과 순서를 자동으로 교환합니다.
-
-**기능:**
-- 위로 이동(up): 현재 항목과 바로 위 항목의 순서를 교환
-- 아래로 이동(down): 현재 항목과 바로 아래 항목의 순서를 교환
-- 자동 재정렬: 순서 교환 시 두 항목만 업데이트되어 효율적
-- 경계 처리: 첫 번째 항목을 위로, 마지막 항목을 아래로 이동 시도시 현재 상태 유지
-
-**테스트 케이스:**
-- 위로 이동: 중간 항목을 위로 이동 시 순서 교환 확인
-- 아래로 이동: 중간 항목을 아래로 이동 시 순서 교환 확인
-- 첫 번째 항목 위로: 이미 첫 번째 항목을 위로 이동 시 순서 변화 없음
-- 마지막 항목 아래로: 이미 마지막 항목을 아래로 이동 시 순서 변화 없음
-- 단일 항목: 할당이 하나만 있을 때 순서 변경 시도
-- 존재하지 않는 ID: 유효하지 않은 할당 ID로 요청 시 404 에러
-- 잘못된 방향: 'up' 또는 'down' 이외의 값 전달 시 400 에러
-- 완료된 평가기간: 완료된 평가기간의 할당 순서 변경 시 422 에러
-- 다른 프로젝트 항목: 같은 프로젝트-평가기간의 항목들만 영향받음
-- 순서 일관성: 이동 후 displayOrder 값의 일관성 유지
-- 동시 순서 변경: 동일 할당에 대한 동시 순서 변경 요청 처리
-- 트랜잭션 보장: 순서 변경 중 오류 시 롤백 처리`,
-    }),
-    ApiParam({
-      name: 'id',
-      description: 'WBS 할당 ID (UUID 형식)',
-      example: '550e8400-e29b-41d4-a716-446655440002',
-      schema: { type: 'string', format: 'uuid' },
-    }),
-    ApiQuery({
-      name: 'direction',
-      description: '이동 방향',
-      enum: ['up', 'down'],
-      required: true,
-      example: 'up',
-    }),
-    ApiResponse({
-      status: 200,
-      description: 'WBS 할당 순서가 성공적으로 변경되었습니다.',
-    }),
-    ApiResponse({
-      status: 400,
-      description:
-        '잘못된 요청 데이터 (UUID 형식 오류, 잘못된 direction 값 등)',
-    }),
-    ApiResponse({
-      status: 404,
-      description: 'WBS 할당을 찾을 수 없습니다.',
-    }),
-    ApiResponse({
-      status: 422,
-      description: '비즈니스 로직 오류 (완료된 평가기간의 순서 변경 제한 등)',
-    }),
-    ApiResponse({
-      status: 500,
-      description: '서버 내부 오류 (트랜잭션 처리 실패 등)',
-    }),
-  );
 
 /**
  * WBS ID 기반 할당 순서 변경 엔드포인트 데코레이터

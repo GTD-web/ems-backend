@@ -6,7 +6,6 @@ import { UpdateStepApprovalDto } from '@interface/common/dto/step-approval/updat
 import { UpdateSecondaryStepApprovalDto } from '@interface/common/dto/step-approval/update-secondary-step-approval.dto';
 import { UpdateSecondaryStepApprovalResponseDto } from '@interface/common/dto/step-approval/update-secondary-step-approval-response.dto';
 import { StepApprovalEnumsResponseDto } from '@interface/common/dto/step-approval/step-approval-enums.dto';
-import { StepTypeEnum } from '@interface/common/dto/step-approval/update-step-approval.dto';
 export declare class StepApprovalController {
     private readonly stepApprovalContextService;
     private readonly wbsSelfEvaluationBusinessService;
@@ -14,9 +13,6 @@ export declare class StepApprovalController {
     private readonly stepApprovalBusinessService;
     constructor(stepApprovalContextService: StepApprovalContextService, wbsSelfEvaluationBusinessService: WbsSelfEvaluationBusinessService, downwardEvaluationBusinessService: DownwardEvaluationBusinessService, stepApprovalBusinessService: StepApprovalBusinessService);
     getStepApprovalEnums(): Promise<StepApprovalEnumsResponseDto>;
-    updateStepApproval(evaluationPeriodId: string, employeeId: string, dto: UpdateStepApprovalDto & {
-        step: StepTypeEnum;
-    }, updatedBy: string): Promise<void>;
     updateCriteriaStepApproval(evaluationPeriodId: string, employeeId: string, dto: UpdateStepApprovalDto, updatedBy: string): Promise<void>;
     updateSelfStepApproval(evaluationPeriodId: string, employeeId: string, dto: UpdateStepApprovalDto, updatedBy: string): Promise<void>;
     updatePrimaryStepApproval(evaluationPeriodId: string, employeeId: string, dto: UpdateStepApprovalDto, updatedBy: string): Promise<void>;

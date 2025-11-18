@@ -1,30 +1,10 @@
-import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { ProjectAssignmentBusinessService } from '@business/project-assignment/project-assignment-business.service';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
-import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import {
-  AvailableProjectsResponseDto,
-  BulkCreateProjectAssignmentDto,
-  CancelProjectAssignmentByProjectDto,
-  ChangeProjectAssignmentOrderByProjectDto,
-  ChangeProjectAssignmentOrderQueryDto,
-  CreateProjectAssignmentDto,
-  EmployeeProjectsResponseDto,
-  GetAvailableProjectsQueryDto,
-  GetUnassignedEmployeesQueryDto,
-  ProjectAssignmentFilterDto,
-  ProjectAssignmentResponseDto,
-  ProjectEmployeesResponseDto,
-  UnassignedEmployeesResponseDto,
-} from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
 import {
   BulkCreateProjectAssignments,
-  CancelProjectAssignment,
   CancelProjectAssignmentByProject,
-  ChangeProjectAssignmentOrder,
   ChangeProjectAssignmentOrderByProject,
   CreateProjectAssignment,
   GetAvailableProjects,
@@ -32,8 +12,24 @@ import {
   GetProjectAssignedEmployees,
   GetProjectAssignmentDetail,
   GetProjectAssignmentList,
-  GetUnassignedEmployees,
+  GetUnassignedEmployees
 } from '@interface/common/decorators/evaluation-criteria/project-assignment-api.decorators';
+import {
+  AvailableProjectsResponseDto,
+  BulkCreateProjectAssignmentDto,
+  CancelProjectAssignmentByProjectDto,
+  ChangeProjectAssignmentOrderByProjectDto,
+  CreateProjectAssignmentDto,
+  EmployeeProjectsResponseDto,
+  GetAvailableProjectsQueryDto,
+  GetUnassignedEmployeesQueryDto,
+  ProjectAssignmentFilterDto,
+  ProjectAssignmentResponseDto,
+  ProjectEmployeesResponseDto,
+  UnassignedEmployeesResponseDto
+} from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
+import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * 프로젝트 할당 관리 컨트롤러
@@ -69,21 +65,6 @@ export class ProjectAssignmentManagementController {
     );
   }
 
-  /**
-   * 프로젝트 할당 취소 (Deprecated)
-   * @deprecated 프로젝트 ID 기반 엔드포인트를 사용하세요. cancelProjectAssignmentByProject
-   */
-  @CancelProjectAssignment()
-  async cancelProjectAssignment(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
-    const cancelledBy = user.id;
-    return await this.projectAssignmentBusinessService.프로젝트_할당을_취소한다(
-      id,
-      cancelledBy,
-    );
-  }
 
   /**
    * 프로젝트 할당 목록 조회
@@ -221,24 +202,6 @@ export class ProjectAssignmentManagementController {
         assignedBy,
       })),
       assignedBy,
-    );
-  }
-
-  /**
-   * 프로젝트 할당 순서 변경 (Deprecated)
-   * @deprecated 프로젝트 ID 기반 엔드포인트를 사용하세요. changeProjectAssignmentOrderByProject
-   */
-  @ChangeProjectAssignmentOrder()
-  async changeProjectAssignmentOrder(
-    @ParseId() id: string,
-    @Query() queryDto: ChangeProjectAssignmentOrderQueryDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<ProjectAssignmentResponseDto> {
-    const updatedBy = user.id;
-    return await this.evaluationCriteriaManagementService.프로젝트_할당_순서를_변경한다(
-      id,
-      queryDto.direction,
-      updatedBy,
     );
   }
 

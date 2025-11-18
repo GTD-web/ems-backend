@@ -1,12 +1,11 @@
-import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { WbsAssignmentBusinessService } from '@business/wbs-assignment/wbs-assignment-business.service';
 import { WbsAssignmentListResult } from '@context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
-import { BulkCreateWbsAssignmentDto, CancelWbsAssignmentByWbsDto, ChangeWbsAssignmentOrderByWbsDto, ChangeWbsAssignmentOrderQueryDto, CreateAndAssignWbsDto, CreateWbsAssignmentDto, EmployeeWbsAssignmentsResponseDto, GetUnassignedWbsItemsDto, ProjectWbsAssignmentsResponseDto, UnassignedWbsItemsResponseDto, UpdateWbsItemTitleDto, WbsAssignmentDetailResponseDto, WbsAssignmentFilterDto, WbsItemAssignmentsResponseDto } from '@interface/common/dto/evaluation-criteria/wbs-assignment.dto';
+import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
+import { BulkCreateWbsAssignmentDto, CancelWbsAssignmentByWbsDto, ChangeWbsAssignmentOrderByWbsDto, CreateAndAssignWbsDto, CreateWbsAssignmentDto, EmployeeWbsAssignmentsResponseDto, GetUnassignedWbsItemsDto, ProjectWbsAssignmentsResponseDto, UnassignedWbsItemsResponseDto, UpdateWbsItemTitleDto, WbsAssignmentDetailResponseDto, WbsAssignmentFilterDto, WbsItemAssignmentsResponseDto } from '@interface/common/dto/evaluation-criteria/wbs-assignment.dto';
 export declare class WbsAssignmentManagementController {
     private readonly wbsAssignmentBusinessService;
     constructor(wbsAssignmentBusinessService: WbsAssignmentBusinessService);
     createWbsAssignment(createDto: CreateWbsAssignmentDto, user: AuthenticatedUser): Promise<any>;
-    cancelWbsAssignment(id: string, user: AuthenticatedUser): Promise<void>;
     cancelWbsAssignmentByWbs(wbsItemId: string, bodyDto: CancelWbsAssignmentByWbsDto, user: AuthenticatedUser): Promise<void>;
     getWbsAssignmentList(filter: WbsAssignmentFilterDto): Promise<WbsAssignmentListResult>;
     getEmployeeWbsAssignments(employeeId: string, periodId: string): Promise<EmployeeWbsAssignmentsResponseDto>;
@@ -18,7 +17,6 @@ export declare class WbsAssignmentManagementController {
     resetPeriodWbsAssignments(periodId: string, user: AuthenticatedUser): Promise<void>;
     resetProjectWbsAssignments(projectId: string, periodId: string, user: AuthenticatedUser): Promise<void>;
     resetEmployeeWbsAssignments(employeeId: string, periodId: string, user: AuthenticatedUser): Promise<void>;
-    changeWbsAssignmentOrder(id: string, queryDto: ChangeWbsAssignmentOrderQueryDto, user: AuthenticatedUser): Promise<any>;
     changeWbsAssignmentOrderByWbs(wbsItemId: string, bodyDto: ChangeWbsAssignmentOrderByWbsDto, user: AuthenticatedUser): Promise<any>;
     createAndAssignWbs(createDto: CreateAndAssignWbsDto, user: AuthenticatedUser): Promise<any>;
     updateWbsItemTitle(wbsItemId: string, updateDto: UpdateWbsItemTitleDto, user: AuthenticatedUser): Promise<any>;

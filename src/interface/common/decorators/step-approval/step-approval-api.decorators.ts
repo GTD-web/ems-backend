@@ -11,69 +11,7 @@ import { UpdateStepApprovalDto } from '../../dto/step-approval/update-step-appro
 import { UpdateSecondaryStepApprovalDto } from '../../dto/step-approval/update-secondary-step-approval.dto';
 import { UpdateSecondaryStepApprovalResponseDto } from '../../dto/step-approval/update-secondary-step-approval-response.dto';
 
-/**
- * 단계 승인 상태 업데이트 API 데코레이터 (Deprecated)
- * @deprecated 단계별 엔드포인트를 사용하세요. updateCriteriaStepApproval, updateSelfStepApproval, updatePrimaryStepApproval, updateSecondaryStepApproval
- */
-export function UpdateStepApproval() {
-  return applyDecorators(
-    Patch(':evaluationPeriodId/employees/:employeeId/step'),
-    ApiOperation({
-      summary: '단계 승인 상태 변경 (Deprecated)',
-      deprecated: true,
-      description: `**Deprecated**: 단계별 엔드포인트를 사용하세요.
 
-**동작:**
-- 평가 단계별 승인 상태를 변경합니다
-- 상태가 \`revision_requested\`인 경우 재작성 요청이 자동으로 생성됩니다
-- 재작성 요청은 해당 단계의 담당자에게 전송됩니다
-- 평가기준/자기평가 단계: 피평가자 + 1차평가자에게 전송
-- 1차평가 단계: 1차평가자에게 전송
-- 2차평가 단계: 2차평가자들에게 전송
-
-**변경 가능한 단계:**
-- \`criteria\`: 평가기준 설정
-- \`self\`: 자기평가 입력
-- \`primary\`: 1차 하향평가 입력
-- \`secondary\`: 2차 하향평가 입력
-
-**승인 상태:**
-- \`pending\`: 대기 (미확인)
-- \`approved\`: 확인 완료
-- \`revision_requested\`: 재작성 요청 (코멘트 필수)
-- \`revision_completed\`: 재작성 완료 (재작성 완료 응답 제출 시 자동 변경, 이 API로 직접 설정 불가)
-
-**주의사항:**
-- \`revision_requested\` 상태로 변경 시 \`revisionComment\`는 필수입니다
-- \`revision_completed\` 상태는 재작성 완료 응답 제출 시 자동으로 변경되므로 이 API로 직접 설정할 수 없습니다`,
-    }),
-    ApiParam({
-      name: 'evaluationPeriodId',
-      description: '평가기간 ID',
-      type: 'string',
-      format: 'uuid',
-    }),
-    ApiParam({
-      name: 'employeeId',
-      description: '직원 ID',
-      type: 'string',
-      format: 'uuid',
-    }),
-    ApiBody({
-      type: UpdateStepApprovalDto,
-      description: '단계 승인 상태 업데이트 정보',
-    }),
-    ApiOkResponse({
-      description: '단계 승인 상태 변경 성공',
-    }),
-    ApiNotFoundResponse({
-      description: '평가기간-직원 맵핑을 찾을 수 없음',
-    }),
-    ApiBadRequestResponse({
-      description: '잘못된 요청 (예: 재작성 요청 시 코멘트 누락)',
-    }),
-  );
-}
 
 /**
  * 평가기준 설정 단계 승인 상태 업데이트 API 데코레이터

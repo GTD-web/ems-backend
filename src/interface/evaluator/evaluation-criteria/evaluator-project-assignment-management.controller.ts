@@ -1,39 +1,25 @@
-import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { ProjectAssignmentBusinessService } from '@business/project-assignment/project-assignment-business.service';
+import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
-import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  BulkCreateProjectAssignments,
+  CancelProjectAssignmentByProject,
+  ChangeProjectAssignmentOrderByProject,
+  CreateProjectAssignment,
+  GetAvailableProjects
+} from '@interface/common/decorators/evaluation-criteria/project-assignment-api.decorators';
 import {
   AvailableProjectsResponseDto,
   BulkCreateProjectAssignmentDto,
   CancelProjectAssignmentByProjectDto,
   ChangeProjectAssignmentOrderByProjectDto,
-  ChangeProjectAssignmentOrderQueryDto,
   CreateProjectAssignmentDto,
-  EmployeeProjectsResponseDto,
   GetAvailableProjectsQueryDto,
-  GetUnassignedEmployeesQueryDto,
-  ProjectAssignmentFilterDto,
-  ProjectAssignmentResponseDto,
-  ProjectEmployeesResponseDto,
-  UnassignedEmployeesResponseDto,
+  ProjectAssignmentResponseDto
 } from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
-import {
-  BulkCreateProjectAssignments,
-  CancelProjectAssignment,
-  CancelProjectAssignmentByProject,
-  ChangeProjectAssignmentOrder,
-  ChangeProjectAssignmentOrderByProject,
-  CreateProjectAssignment,
-  GetAvailableProjects,
-  GetEmployeeProjectAssignments,
-  GetProjectAssignedEmployees,
-  GetProjectAssignmentDetail,
-  GetProjectAssignmentList,
-  GetUnassignedEmployees,
-} from '@interface/common/decorators/evaluation-criteria/project-assignment-api.decorators';
+import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * 프로젝트 할당 관리 컨트롤러

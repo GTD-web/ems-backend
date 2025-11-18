@@ -13,12 +13,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WbsAssignmentManagementController = void 0;
+const wbs_assignment_business_service_1 = require("../../../business/wbs-assignment/wbs-assignment-business.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
+const wbs_assignment_api_decorators_1 = require("../../common/decorators/evaluation-criteria/wbs-assignment-api.decorators");
+const wbs_assignment_dto_1 = require("../../common/dto/evaluation-criteria/wbs-assignment.dto");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const wbs_assignment_business_service_1 = require("../../../business/wbs-assignment/wbs-assignment-business.service");
-const wbs_assignment_dto_1 = require("../../common/dto/evaluation-criteria/wbs-assignment.dto");
-const wbs_assignment_api_decorators_1 = require("../../common/decorators/evaluation-criteria/wbs-assignment-api.decorators");
 let WbsAssignmentManagementController = class WbsAssignmentManagementController {
     wbsAssignmentBusinessService;
     constructor(wbsAssignmentBusinessService) {
@@ -32,13 +32,6 @@ let WbsAssignmentManagementController = class WbsAssignmentManagementController 
             projectId: createDto.projectId,
             periodId: createDto.periodId,
             assignedBy: assignedBy,
-        });
-    }
-    async cancelWbsAssignment(id, user) {
-        const cancelledBy = user.id;
-        return await this.wbsAssignmentBusinessService.WBS_할당을_취소한다({
-            assignmentId: id,
-            cancelledBy,
         });
     }
     async cancelWbsAssignmentByWbs(wbsItemId, bodyDto, user) {
@@ -122,14 +115,6 @@ let WbsAssignmentManagementController = class WbsAssignmentManagementController 
             resetBy,
         });
     }
-    async changeWbsAssignmentOrder(id, queryDto, user) {
-        const updatedBy = user.id;
-        return await this.wbsAssignmentBusinessService.WBS_할당_순서를_변경한다({
-            assignmentId: id,
-            direction: queryDto.direction,
-            updatedBy,
-        });
-    }
     async changeWbsAssignmentOrderByWbs(wbsItemId, bodyDto, user) {
         const updatedBy = user.id;
         return await this.wbsAssignmentBusinessService.WBS_할당_순서를_WBS_ID로_변경한다({
@@ -169,14 +154,6 @@ __decorate([
     __metadata("design:paramtypes", [wbs_assignment_dto_1.CreateWbsAssignmentDto, Object]),
     __metadata("design:returntype", Promise)
 ], WbsAssignmentManagementController.prototype, "createWbsAssignment", null);
-__decorate([
-    (0, wbs_assignment_api_decorators_1.CancelWbsAssignment)(),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], WbsAssignmentManagementController.prototype, "cancelWbsAssignment", null);
 __decorate([
     (0, wbs_assignment_api_decorators_1.CancelWbsAssignmentByWbs)(),
     __param(0, (0, common_1.Param)('wbsItemId', common_1.ParseUUIDPipe)),
@@ -268,15 +245,6 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], WbsAssignmentManagementController.prototype, "resetEmployeeWbsAssignments", null);
-__decorate([
-    (0, wbs_assignment_api_decorators_1.ChangeWbsAssignmentOrder)(),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Query)()),
-    __param(2, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, wbs_assignment_dto_1.ChangeWbsAssignmentOrderQueryDto, Object]),
-    __metadata("design:returntype", Promise)
-], WbsAssignmentManagementController.prototype, "changeWbsAssignmentOrder", null);
 __decorate([
     (0, wbs_assignment_api_decorators_1.ChangeWbsAssignmentOrderByWbs)(),
     __param(0, (0, common_1.Param)('wbsItemId', common_1.ParseUUIDPipe)),

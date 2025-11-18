@@ -42,16 +42,6 @@ let StepApprovalController = class StepApprovalController {
             statuses: Object.values(update_step_approval_dto_2.StepApprovalStatusEnum),
         };
     }
-    async updateStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
-        await this.stepApprovalContextService.단계별_확인상태를_변경한다({
-            evaluationPeriodId,
-            employeeId,
-            step: dto.step,
-            status: dto.status,
-            revisionComment: dto.revisionComment,
-            updatedBy,
-        });
-    }
     async updateCriteriaStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
         if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {
             if (!dto.revisionComment || dto.revisionComment.trim() === '') {
@@ -165,16 +155,6 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], StepApprovalController.prototype, "getStepApprovalEnums", null);
-__decorate([
-    (0, step_approval_api_decorators_1.UpdateStepApproval)(),
-    __param(0, (0, common_1.Param)('evaluationPeriodId', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Param)('employeeId', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)()),
-    __param(3, (0, current_user_decorator_1.CurrentUser)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object, String]),
-    __metadata("design:returntype", Promise)
-], StepApprovalController.prototype, "updateStepApproval", null);
 __decorate([
     (0, step_approval_api_decorators_1.UpdateCriteriaStepApproval)(),
     __param(0, (0, common_1.Param)('evaluationPeriodId', common_1.ParseUUIDPipe)),
