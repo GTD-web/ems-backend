@@ -128,7 +128,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
   ): Promise<EmployeeEvaluationPeriodStatusDto | null> {
     const { evaluationPeriodId, employeeId, includeUnregistered } = query;
 
-
     try {
       // 1. 맵핑 정보 조회 (LEFT JOIN으로 평가기간과 직원 정보 함께 조회)
       const queryBuilder = this.mappingRepository
@@ -621,12 +620,12 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           hasSecondaryEvaluator,
         },
 
-        // 평가기준 설정 정보 (평가항목, WBS 평가기준, 평가라인을 통합)
+        // 평가기준 설정 정보 (평가항목, WBS 평가기준을 통합)
+        // 평가라인은 상태 계산에서도 제외됨
         criteriaSetup: {
           status: 평가기준설정_상태를_계산한다(
             evaluationCriteriaStatus,
             wbsCriteriaStatus,
-            evaluationLineStatus,
             stepApproval?.criteriaSettingStatus ?? null,
             result.mapping_iscriteriasubmitted || false,
           ),
@@ -638,11 +637,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           wbsCriteria: {
             status: wbsCriteriaStatus,
             wbsWithCriteriaCount,
-          },
-          evaluationLine: {
-            status: evaluationLineStatus,
-            hasPrimaryEvaluator,
-            hasSecondaryEvaluator,
           },
           criteriaSubmission: {
             isSubmitted: result.mapping_iscriteriasubmitted || false,

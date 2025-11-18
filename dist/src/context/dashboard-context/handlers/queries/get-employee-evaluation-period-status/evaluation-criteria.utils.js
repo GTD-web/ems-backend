@@ -31,22 +31,20 @@ function WBS평가기준_상태를_계산한다(totalWbsCount, wbsWithCriteriaCo
         return 'in_progress';
     }
 }
-function 평가기준설정_진행_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus) {
+function 평가기준설정_진행_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus) {
     if (evaluationCriteriaStatus === 'none' &&
-        wbsCriteriaStatus === 'none' &&
-        evaluationLineStatus === 'none') {
+        wbsCriteriaStatus === 'none') {
         return 'none';
     }
     const allComplete = evaluationCriteriaStatus === 'complete' &&
-        wbsCriteriaStatus === 'complete' &&
-        evaluationLineStatus === 'complete';
+        wbsCriteriaStatus === 'complete';
     if (allComplete) {
         return 'complete';
     }
     return 'in_progress';
 }
-function 평가기준설정_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus, approvalStatus, isSubmitted) {
-    const progressStatus = 평가기준설정_진행_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus);
+function 평가기준설정_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus, approvalStatus, isSubmitted) {
+    const progressStatus = 평가기준설정_진행_상태를_계산한다(evaluationCriteriaStatus, wbsCriteriaStatus);
     if (progressStatus === 'none') {
         return 'none';
     }

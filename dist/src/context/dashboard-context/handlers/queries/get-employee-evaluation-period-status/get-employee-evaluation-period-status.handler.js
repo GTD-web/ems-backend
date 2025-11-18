@@ -361,7 +361,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     hasSecondaryEvaluator,
                 },
                 criteriaSetup: {
-                    status: (0, evaluation_criteria_utils_1.평가기준설정_상태를_계산한다)(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus, stepApproval?.criteriaSettingStatus ?? null, result.mapping_iscriteriasubmitted || false),
+                    status: (0, evaluation_criteria_utils_1.평가기준설정_상태를_계산한다)(evaluationCriteriaStatus, wbsCriteriaStatus, stepApproval?.criteriaSettingStatus ?? null, result.mapping_iscriteriasubmitted || false),
                     evaluationCriteria: {
                         status: evaluationCriteriaStatus,
                         assignedProjectCount: projectCount,
@@ -370,11 +370,6 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     wbsCriteria: {
                         status: wbsCriteriaStatus,
                         wbsWithCriteriaCount,
-                    },
-                    evaluationLine: {
-                        status: evaluationLineStatus,
-                        hasPrimaryEvaluator,
-                        hasSecondaryEvaluator,
                     },
                     criteriaSubmission: {
                         isSubmitted: result.mapping_iscriteriasubmitted || false,
