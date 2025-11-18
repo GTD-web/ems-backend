@@ -18,6 +18,9 @@ const step_approval_business_module_1 = require("./step-approval/step-approval-b
 const deliverable_business_module_1 = require("./deliverable/deliverable-business.module");
 const revision_request_business_module_1 = require("./revision-request/revision-request-business.module");
 const evaluation_criteria_business_module_1 = require("./evaluation-criteria/evaluation-criteria-business.module");
+const project_assignment_business_module_1 = require("./project-assignment/project-assignment-business.module");
+const evaluation_line_business_module_1 = require("./evaluation-line/evaluation-line-business.module");
+const final_evaluation_business_module_1 = require("./final-evaluation/final-evaluation-business.module");
 let BusinessModule = class BusinessModule {
 };
 exports.BusinessModule = BusinessModule;
@@ -34,6 +37,9 @@ exports.BusinessModule = BusinessModule = __decorate([
             deliverable_business_module_1.DeliverableBusinessModule,
             revision_request_business_module_1.RevisionRequestBusinessModule,
             evaluation_criteria_business_module_1.EvaluationCriteriaBusinessModule,
+            project_assignment_business_module_1.ProjectAssignmentBusinessModule,
+            evaluation_line_business_module_1.EvaluationLineBusinessModule,
+            final_evaluation_business_module_1.FinalEvaluationBusinessModule,
         ],
         exports: [
             peer_evaluation_business_module_1.PeerEvaluationBusinessModule,
@@ -46,6 +52,9 @@ exports.BusinessModule = BusinessModule = __decorate([
             deliverable_business_module_1.DeliverableBusinessModule,
             revision_request_business_module_1.RevisionRequestBusinessModule,
             evaluation_criteria_business_module_1.EvaluationCriteriaBusinessModule,
+            project_assignment_business_module_1.ProjectAssignmentBusinessModule,
+            evaluation_line_business_module_1.EvaluationLineBusinessModule,
+            final_evaluation_business_module_1.FinalEvaluationBusinessModule,
         ],
     })
 ], BusinessModule);

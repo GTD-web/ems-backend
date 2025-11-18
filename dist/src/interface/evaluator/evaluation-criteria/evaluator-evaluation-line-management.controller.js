@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluatorEvaluationLineManagementController = void 0;
 const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const evaluation_line_business_service_1 = require("../../../business/evaluation-line/evaluation-line-business.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const evaluation_line_api_decorators_1 = require("../../common/decorators/evaluation-criteria/evaluation-line-api.decorators");
 const evaluation_line_dto_1 = require("../../common/dto/evaluation-criteria/evaluation-line.dto");
@@ -21,11 +22,13 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 let EvaluatorEvaluationLineManagementController = class EvaluatorEvaluationLineManagementController {
     evaluationCriteriaManagementService;
-    constructor(evaluationCriteriaManagementService) {
+    evaluationLineBusinessService;
+    constructor(evaluationCriteriaManagementService, evaluationLineBusinessService) {
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
+        this.evaluationLineBusinessService = evaluationLineBusinessService;
     }
     async configureSecondaryEvaluator(employeeId, wbsItemId, periodId, dto, user) {
-        return await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(employeeId, wbsItemId, periodId, dto.evaluatorId, user.id);
+        return await this.evaluationLineBusinessService.이차_평가자를_구성한다(employeeId, wbsItemId, periodId, dto.evaluatorId, user.id);
     }
     async getEvaluatorsByPeriod(periodId, query) {
         const type = query.type || 'all';
@@ -56,6 +59,7 @@ exports.EvaluatorEvaluationLineManagementController = EvaluatorEvaluationLineMan
     (0, swagger_1.ApiTags)('B-4. 평가자 - 평가 설정 - 평가라인'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('evaluator/evaluation-criteria/evaluation-lines'),
-    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService])
+    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
+        evaluation_line_business_service_1.EvaluationLineBusinessService])
 ], EvaluatorEvaluationLineManagementController);
 //# sourceMappingURL=evaluator-evaluation-line-management.controller.js.map

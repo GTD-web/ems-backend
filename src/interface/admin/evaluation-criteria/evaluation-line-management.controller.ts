@@ -1,4 +1,5 @@
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { EvaluationLineBusinessService } from '@business/evaluation-line/evaluation-line-business.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { Body, Controller, Param, ParseUUIDPipe, Query } from '@nestjs/common';
@@ -37,6 +38,7 @@ import {
 export class EvaluationLineManagementController {
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
+    private readonly evaluationLineBusinessService: EvaluationLineBusinessService,
   ) {}
 
   /**
@@ -84,7 +86,7 @@ export class EvaluationLineManagementController {
     @Body() dto: ConfigurePrimaryEvaluatorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ConfigureEvaluatorResponseDto> {
-    return await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(
+    return await this.evaluationLineBusinessService.일차_평가자를_구성한다(
       employeeId,
       periodId,
       dto.evaluatorId,
@@ -103,7 +105,7 @@ export class EvaluationLineManagementController {
     @Body() dto: ConfigureSecondaryEvaluatorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ConfigureEvaluatorResponseDto> {
-    return await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
+    return await this.evaluationLineBusinessService.이차_평가자를_구성한다(
       employeeId,
       wbsItemId,
       periodId,
@@ -136,7 +138,7 @@ export class EvaluationLineManagementController {
     @Body() dto: BatchConfigurePrimaryEvaluatorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<BatchConfigurePrimaryEvaluatorResponseDto> {
-    return await this.evaluationCriteriaManagementService.여러_피평가자의_일차_평가자를_일괄_구성한다(
+    return await this.evaluationLineBusinessService.여러_피평가자의_일차_평가자를_일괄_구성한다(
       periodId,
       dto.assignments,
       user.id,
@@ -152,7 +154,7 @@ export class EvaluationLineManagementController {
     @Body() dto: BatchConfigureSecondaryEvaluatorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<BatchConfigureSecondaryEvaluatorResponseDto> {
-    return await this.evaluationCriteriaManagementService.여러_피평가자의_이차_평가자를_일괄_구성한다(
+    return await this.evaluationLineBusinessService.여러_피평가자의_이차_평가자를_일괄_구성한다(
       periodId,
       dto.assignments,
       user.id,

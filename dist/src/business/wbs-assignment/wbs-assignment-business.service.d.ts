@@ -1,4 +1,5 @@
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { EmployeeService } from '@domain/common/employee/employee.service';
 import { ProjectService } from '@domain/common/project/project.service';
 import { EvaluationLineService } from '@domain/core/evaluation-line/evaluation-line.service';
@@ -8,13 +9,14 @@ import type { OrderDirection } from '@domain/core/evaluation-wbs-assignment/eval
 import type { WbsItemDto } from '@domain/common/wbs-item/wbs-item.types';
 export declare class WbsAssignmentBusinessService {
     private readonly evaluationCriteriaManagementService;
+    private readonly activityLogContextService;
     private readonly employeeService;
     private readonly projectService;
     private readonly evaluationLineService;
     private readonly evaluationLineMappingService;
     private readonly evaluationWbsAssignmentService;
     private readonly logger;
-    constructor(evaluationCriteriaManagementService: EvaluationCriteriaManagementService, employeeService: EmployeeService, projectService: ProjectService, evaluationLineService: EvaluationLineService, evaluationLineMappingService: EvaluationLineMappingService, evaluationWbsAssignmentService: EvaluationWbsAssignmentService);
+    constructor(evaluationCriteriaManagementService: EvaluationCriteriaManagementService, activityLogContextService: EvaluationActivityLogContextService, employeeService: EmployeeService, projectService: ProjectService, evaluationLineService: EvaluationLineService, evaluationLineMappingService: EvaluationLineMappingService, evaluationWbsAssignmentService: EvaluationWbsAssignmentService);
     WBS를_할당한다(params: {
         employeeId: string;
         wbsItemId: string;

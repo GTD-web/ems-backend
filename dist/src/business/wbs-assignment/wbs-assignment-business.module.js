@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WbsAssignmentBusinessModule = void 0;
 const common_1 = require("@nestjs/common");
 const evaluation_criteria_management_context_module_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module");
+const evaluation_activity_log_context_module_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.module");
 const employee_module_1 = require("../../domain/common/employee/employee.module");
 const project_module_1 = require("../../domain/common/project/project.module");
 const evaluation_line_module_1 = require("../../domain/core/evaluation-line/evaluation-line.module");
@@ -22,6 +23,7 @@ exports.WbsAssignmentBusinessModule = WbsAssignmentBusinessModule = __decorate([
     (0, common_1.Module)({
         imports: [
             evaluation_criteria_management_context_module_1.EvaluationCriteriaManagementContextModule,
+            evaluation_activity_log_context_module_1.EvaluationActivityLogContextModule,
             employee_module_1.EmployeeModule,
             project_module_1.ProjectModule,
             evaluation_line_module_1.EvaluationLineModule,

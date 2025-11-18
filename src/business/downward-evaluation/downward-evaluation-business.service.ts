@@ -5,6 +5,7 @@ import { EvaluationPeriodManagementContextService } from '@context/evaluation-pe
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { GetDownwardEvaluationListQuery } from '@context/performance-evaluation-context/handlers/downward-evaluation';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
@@ -72,7 +73,22 @@ export class DownwardEvaluationBusinessService {
       );
     }
 
-    // 3. 하향평가 저장 (컨텍스트 호출)
+    // 3. 기존 하향평가 존재 여부 확인 (생성인지 수정인지 구분)
+    const existingEvaluations = await this.performanceEvaluationService.하향평가_목록을_조회한다(
+      new GetDownwardEvaluationListQuery(
+        params.evaluatorId,
+        params.evaluateeId,
+        params.periodId,
+        params.wbsId,
+        'primary',
+        undefined,
+        1,
+        1,
+      ),
+    );
+    const isNewEvaluation = !existingEvaluations || existingEvaluations.items?.length === 0;
+
+    // 4. 하향평가 저장 (컨텍스트 호출)
     const evaluationId =
       await this.performanceEvaluationService.하향평가를_저장한다(
         params.evaluatorId,
@@ -86,7 +102,34 @@ export class DownwardEvaluationBusinessService {
         params.actionBy,
       );
 
-    // 4. 알림 발송 (추후 구현)
+    // 5. 초기 생성 시에만 활동 내역 기록
+    if (isNewEvaluation) {
+      try {
+        await this.activityLogContextService.활동내역을_기록한다({
+          periodId: params.periodId,
+          employeeId: params.evaluateeId,
+          activityType: 'downward_evaluation',
+          activityAction: 'created',
+          activityTitle: '1차 하향평가 생성',
+          relatedEntityType: 'downward_evaluation',
+          relatedEntityId: evaluationId,
+          performedBy: params.actionBy,
+          activityMetadata: {
+            evaluatorId: params.evaluatorId,
+            evaluationType: 'primary',
+            wbsId: params.wbsId,
+          },
+        });
+      } catch (error) {
+        // 활동 내역 기록 실패 시에도 하향평가 저장은 정상 처리
+        this.logger.warn('1차 하향평가 생성 활동 내역 기록 실패', {
+          evaluationId,
+          error: error.message,
+        });
+      }
+    }
+
+    // 6. 알림 발송 (추후 구현)
     // TODO: 1차 하향평가 저장 알림 발송
     // await this.notificationService.send({
     //   type: 'PRIMARY_DOWNWARD_EVALUATION_SAVED',
@@ -142,7 +185,22 @@ export class DownwardEvaluationBusinessService {
       );
     }
 
-    // 3. 하향평가 저장 (컨텍스트 호출)
+    // 3. 기존 하향평가 존재 여부 확인 (생성인지 수정인지 구분)
+    const existingEvaluations = await this.performanceEvaluationService.하향평가_목록을_조회한다(
+      new GetDownwardEvaluationListQuery(
+        params.evaluatorId,
+        params.evaluateeId,
+        params.periodId,
+        params.wbsId,
+        'secondary',
+        undefined,
+        1,
+        1,
+      ),
+    );
+    const isNewEvaluation = !existingEvaluations || existingEvaluations.items?.length === 0;
+
+    // 4. 하향평가 저장 (컨텍스트 호출)
     const evaluationId =
       await this.performanceEvaluationService.하향평가를_저장한다(
         params.evaluatorId,
@@ -156,7 +214,34 @@ export class DownwardEvaluationBusinessService {
         params.actionBy,
       );
 
-    // 4. 알림 발송 (추후 구현)
+    // 5. 초기 생성 시에만 활동 내역 기록
+    if (isNewEvaluation) {
+      try {
+        await this.activityLogContextService.활동내역을_기록한다({
+          periodId: params.periodId,
+          employeeId: params.evaluateeId,
+          activityType: 'downward_evaluation',
+          activityAction: 'created',
+          activityTitle: '2차 하향평가 생성',
+          relatedEntityType: 'downward_evaluation',
+          relatedEntityId: evaluationId,
+          performedBy: params.actionBy,
+          activityMetadata: {
+            evaluatorId: params.evaluatorId,
+            evaluationType: 'secondary',
+            wbsId: params.wbsId,
+          },
+        });
+      } catch (error) {
+        // 활동 내역 기록 실패 시에도 하향평가 저장은 정상 처리
+        this.logger.warn('2차 하향평가 생성 활동 내역 기록 실패', {
+          evaluationId,
+          error: error.message,
+        });
+      }
+    }
+
+    // 6. 알림 발송 (추후 구현)
     // TODO: 2차 하향평가 저장 알림 발송
     // await this.notificationService.send({
     //   type: 'SECONDARY_DOWNWARD_EVALUATION_SAVED',
@@ -314,6 +399,23 @@ export class DownwardEvaluationBusinessService {
       updatedBy: requestedBy,
     });
 
+    // 4. 활동 내역 기록
+    try {
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
+        evaluationPeriodId,
+        employeeId,
+        step: 'primary',
+        status: 'revision_requested' as StepApprovalStatus,
+        revisionComment,
+        updatedBy: requestedBy,
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
+      this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+        error: error.message,
+      });
+    }
+
     this.logger.log(
       `1차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
     );
@@ -369,6 +471,24 @@ export class DownwardEvaluationBusinessService {
         revisionComment,
         updatedBy: requestedBy,
       });
+
+    // 3. 활동 내역 기록
+    try {
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
+        evaluationPeriodId,
+        employeeId,
+        step: 'secondary',
+        status: 'revision_requested' as StepApprovalStatus,
+        revisionComment,
+        updatedBy: requestedBy,
+        evaluatorId,
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
+      this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+        error: error.message,
+      });
+    }
 
     this.logger.log(
       `2차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`,

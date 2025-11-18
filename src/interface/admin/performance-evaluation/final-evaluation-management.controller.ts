@@ -1,4 +1,5 @@
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
+import { FinalEvaluationBusinessService } from '@business/final-evaluation/final-evaluation-business.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
@@ -36,6 +37,7 @@ import {
 export class FinalEvaluationManagementController {
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
+    private readonly finalEvaluationBusinessService: FinalEvaluationBusinessService,
   ) {}
 
   /**
@@ -51,7 +53,7 @@ export class FinalEvaluationManagementController {
     const actionBy = user.id;
 
     const evaluationId =
-      await this.performanceEvaluationService.최종평가를_저장한다(
+      await this.finalEvaluationBusinessService.최종평가를_저장한다(
         employeeId,
         periodId,
         dto.evaluationGrade,

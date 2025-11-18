@@ -1,4 +1,5 @@
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { ProjectAssignmentBusinessService } from '@business/project-assignment/project-assignment-business.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { ParseId } from '@interface/common/decorators/parse-uuid.decorator';
@@ -45,6 +46,7 @@ import {
 export class ProjectAssignmentManagementController {
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
+    private readonly projectAssignmentBusinessService: ProjectAssignmentBusinessService,
   ) {}
 
   /**
@@ -56,7 +58,7 @@ export class ProjectAssignmentManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<any> {
     const assignedBy = user.id;
-    return await this.evaluationCriteriaManagementService.프로젝트를_할당한다(
+    return await this.projectAssignmentBusinessService.프로젝트를_할당한다(
       {
         employeeId: createDto.employeeId,
         projectId: createDto.projectId,
@@ -77,7 +79,7 @@ export class ProjectAssignmentManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     const cancelledBy = user.id;
-    return await this.evaluationCriteriaManagementService.프로젝트_할당을_취소한다(
+    return await this.projectAssignmentBusinessService.프로젝트_할당을_취소한다(
       id,
       cancelledBy,
     );
@@ -211,7 +213,7 @@ export class ProjectAssignmentManagementController {
   ): Promise<any[]> {
     const assignedBy = user.id;
 
-    return await this.evaluationCriteriaManagementService.프로젝트를_대량으로_할당한다(
+    return await this.projectAssignmentBusinessService.프로젝트를_대량으로_할당한다(
       bulkCreateDto.assignments.map((assignment) => ({
         employeeId: assignment.employeeId,
         projectId: assignment.projectId,
@@ -250,7 +252,7 @@ export class ProjectAssignmentManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     const cancelledBy = user.id;
-    return await this.evaluationCriteriaManagementService.프로젝트_할당을_프로젝트_ID로_취소한다(
+    return await this.projectAssignmentBusinessService.프로젝트_할당을_프로젝트_ID로_취소한다(
       bodyDto.employeeId,
       projectId,
       bodyDto.periodId,

@@ -9,6 +9,9 @@ import { StepApprovalBusinessModule } from './step-approval/step-approval-busine
 import { DeliverableBusinessModule } from './deliverable/deliverable-business.module';
 import { RevisionRequestBusinessModule } from './revision-request/revision-request-business.module';
 import { EvaluationCriteriaBusinessModule } from './evaluation-criteria/evaluation-criteria-business.module';
+import { ProjectAssignmentBusinessModule } from './project-assignment/project-assignment-business.module';
+import { EvaluationLineBusinessModule } from './evaluation-line/evaluation-line-business.module';
+import { FinalEvaluationBusinessModule } from './final-evaluation/final-evaluation-business.module';
 
 /**
  * 비즈니스 레이어 통합 모듈
@@ -27,6 +30,9 @@ import { EvaluationCriteriaBusinessModule } from './evaluation-criteria/evaluati
     DeliverableBusinessModule,
     RevisionRequestBusinessModule,
     EvaluationCriteriaBusinessModule,
+    ProjectAssignmentBusinessModule,
+    EvaluationLineBusinessModule,
+    FinalEvaluationBusinessModule,
   ],
   exports: [
     PeerEvaluationBusinessModule,
@@ -39,6 +45,9 @@ import { EvaluationCriteriaBusinessModule } from './evaluation-criteria/evaluati
     DeliverableBusinessModule,
     RevisionRequestBusinessModule,
     EvaluationCriteriaBusinessModule,
+    ProjectAssignmentBusinessModule,
+    EvaluationLineBusinessModule,
+    FinalEvaluationBusinessModule,
   ],
 })
 export class BusinessModule {}
