@@ -16,18 +16,22 @@ const performance_evaluation_service_1 = require("../../context/performance-eval
 const step_approval_context_service_1 = require("../../context/step-approval-context/step-approval-context.service");
 const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
 const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const revision_request_context_service_1 = require("../../context/revision-request-context/revision-request-context.service");
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
+const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepApprovalBusinessService {
     performanceEvaluationService;
     stepApprovalContextService;
     activityLogContextService;
     evaluationCriteriaManagementService;
+    revisionRequestContextService;
     logger = new common_1.Logger(StepApprovalBusinessService_1.name);
-    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService) {
+    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService, revisionRequestContextService) {
         this.performanceEvaluationService = performanceEvaluationService;
         this.stepApprovalContextService = stepApprovalContextService;
         this.activityLogContextService = activityLogContextService;
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
+        this.revisionRequestContextService = revisionRequestContextService;
     }
     async 자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, approvedBy) {
         this.logger.log(`자기평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
@@ -58,6 +62,18 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
         if (result.submittedCount === 0 && result.skippedCount === 0) {
             this.logger.debug(`1차 하향평가가 없어 제출 상태 변경을 건너뜀 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${primaryEvaluatorId}`);
             return;
+        }
+        try {
+            await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(evaluationPeriodId, employeeId, 'primary', primaryEvaluatorId, evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR, '1차 하향평가 승인으로 인한 재작성 완료 처리');
+            this.logger.log(`1차 하향평가 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${primaryEvaluatorId}`);
+        }
+        catch (error) {
+            this.logger.warn('1차 하향평가 승인 시 재작성 요청 완료 처리 실패', {
+                evaluatorId: primaryEvaluatorId,
+                employeeId,
+                evaluationPeriodId,
+                error: error.message,
+            });
         }
         this.logger.log(`1차 하향평가 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${primaryEvaluatorId}, 제출: ${result.submittedCount}, 건너뜀: ${result.skippedCount}`);
     }
@@ -163,6 +179,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
         }
     }
     async 일차하향평가_확인상태를_변경한다(params) {
+        this.logger.log(`1차 하향평가 단계 승인 상태를 변경한다 - 직원: ${params.employeeId}, 평가기간: ${params.evaluationPeriodId}, 상태: ${params.status}`);
         await this.stepApprovalContextService.일차하향평가_확인상태를_변경한다({
             evaluationPeriodId: params.evaluationPeriodId,
             employeeId: params.employeeId,
@@ -282,6 +299,7 @@ exports.StepApprovalBusinessService = StepApprovalBusinessService = StepApproval
     __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
         step_approval_context_service_1.StepApprovalContextService,
         evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
-        evaluation_criteria_management_service_1.EvaluationCriteriaManagementService])
+        evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
+        revision_request_context_service_1.RevisionRequestContextService])
 ], StepApprovalBusinessService);
 //# sourceMappingURL=step-approval-business.service.js.map

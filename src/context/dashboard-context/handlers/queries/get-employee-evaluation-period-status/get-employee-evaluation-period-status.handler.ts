@@ -696,6 +696,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                 status: 하향평가_통합_상태를_계산한다(
                   evaluatorInfo.status,
                   approvalInfo?.status ?? 'pending',
+                  'secondary', // 2차 평가자임을 명시
                 ),
                 assignedWbsCount: evaluatorInfo.assignedWbsCount,
                 completedEvaluationCount:
@@ -712,6 +713,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                 return 하향평가_통합_상태를_계산한다(
                   evaluatorInfo.status,
                   approvalInfo?.status ?? 'pending',
+                  'secondary', // 2차 평가자임을 명시
                 );
               }),
             ),

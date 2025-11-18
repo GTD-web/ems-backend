@@ -411,7 +411,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                             const approvalInfo = secondaryEvaluationStatusesWithEvaluatorInfo.find((s) => s.evaluatorId === evaluatorInfo.evaluator.id);
                             return {
                                 evaluator: evaluatorInfo.evaluator,
-                                status: (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending'),
+                                status: (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending', 'secondary'),
                                 assignedWbsCount: evaluatorInfo.assignedWbsCount,
                                 completedEvaluationCount: evaluatorInfo.completedEvaluationCount,
                                 isSubmitted: evaluatorInfo.isSubmitted,
@@ -419,7 +419,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                         }),
                         status: (0, downward_evaluation_utils_1.이차평가_전체_상태를_계산한다)(secondary.evaluators.map((evaluatorInfo) => {
                             const approvalInfo = secondaryEvaluationStatusesWithEvaluatorInfo.find((s) => s.evaluatorId === evaluatorInfo.evaluator.id);
-                            return (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending');
+                            return (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending', 'secondary');
                         })),
                         isSubmitted: secondary.isSubmitted,
                         totalScore: secondary.totalScore,

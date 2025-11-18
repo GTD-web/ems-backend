@@ -10,12 +10,15 @@ const evaluation_line_entity_1 = require("../../../../../domain/core/evaluation-
 const evaluation_line_types_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.types");
 const downward_evaluation_types_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.types");
 const downward_evaluation_score_utils_1 = require("./downward-evaluation-score.utils");
-function 하향평가_통합_상태를_계산한다(downwardStatus, approvalStatus) {
+function 하향평가_통합_상태를_계산한다(downwardStatus, approvalStatus, evaluationType) {
     if (approvalStatus === 'revision_requested') {
         return 'revision_requested';
     }
     if (approvalStatus === 'revision_completed') {
         return 'revision_completed';
+    }
+    if (evaluationType === 'secondary' && approvalStatus === 'approved') {
+        return 'approved';
     }
     if (downwardStatus === 'none') {
         return 'none';

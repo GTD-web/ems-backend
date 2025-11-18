@@ -3,8 +3,10 @@ import { PerformanceEvaluationService } from '@context/performance-evaluation-co
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
+import { RecipientType } from '@domain/sub/evaluation-revision-request';
 
 /**
  * 단계 승인 비즈니스 서비스
@@ -23,6 +25,7 @@ export class StepApprovalBusinessService {
     private readonly stepApprovalContextService: StepApprovalContextService,
     private readonly activityLogContextService: EvaluationActivityLogContextService,
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
+    private readonly revisionRequestContextService: RevisionRequestContextService,
   ) {}
 
   /**
@@ -134,6 +137,30 @@ export class StepApprovalBusinessService {
         `1차 하향평가가 없어 제출 상태 변경을 건너뜀 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${primaryEvaluatorId}`,
       );
       return;
+    }
+
+    // 2. 해당 평가기간에 발생한 1차 하향평가에 대한 재작성 요청 자동 완료 처리
+    try {
+      await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'primary',
+        primaryEvaluatorId,
+        RecipientType.PRIMARY_EVALUATOR,
+        '1차 하향평가 승인으로 인한 재작성 완료 처리',
+      );
+
+      this.logger.log(
+        `1차 하향평가 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${primaryEvaluatorId}`,
+      );
+    } catch (error) {
+      // 재작성 요청 완료 처리 실패 시에도 하향평가 제출은 정상 처리
+      this.logger.warn('1차 하향평가 승인 시 재작성 요청 완료 처리 실패', {
+        evaluatorId: primaryEvaluatorId,
+        employeeId,
+        evaluationPeriodId,
+        error: error.message,
+      });
     }
 
     this.logger.log(
@@ -384,6 +411,10 @@ export class StepApprovalBusinessService {
     revisionComment?: string;
     updatedBy: string;
   }): Promise<void> {
+    this.logger.log(
+      `1차 하향평가 단계 승인 상태를 변경한다 - 직원: ${params.employeeId}, 평가기간: ${params.evaluationPeriodId}, 상태: ${params.status}`,
+    );
+
     // 1. 단계 승인 상태 변경
     await this.stepApprovalContextService.일차하향평가_확인상태를_변경한다({
       evaluationPeriodId: params.evaluationPeriodId,
