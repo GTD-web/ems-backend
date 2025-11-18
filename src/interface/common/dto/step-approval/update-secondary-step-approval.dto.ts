@@ -36,7 +36,7 @@ export class UpdateSecondaryStepApprovalDto {
 
   @ApiPropertyOptional({
     description:
-      '하위 평가 자동 승인 여부 (true: 하위 평가도 함께 승인, false: 현재 평가만 승인)',
+      '상위 평가 자동 승인 여부 (true: 1차 하향평가와 자기평가도 함께 승인, false: 현재 평가만 승인)',
     example: false,
     type: Boolean,
   })

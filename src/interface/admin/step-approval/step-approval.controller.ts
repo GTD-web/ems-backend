@@ -180,6 +180,7 @@ export class StepApprovalController {
    * 1차 하향평가 단계 승인 상태를 변경한다
    * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
    * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
+   * approveSubsequentSteps 옵션이 true인 경우 자기평가도 함께 승인합니다.
    */
   @UpdatePrimaryStepApproval()
   async updatePrimaryStepApproval(
@@ -210,9 +211,9 @@ export class StepApprovalController {
           updatedBy,
         );
 
-        // 하위 평가 자동 승인 옵션이 활성화된 경우
+        // 상위 평가 자동 승인 옵션이 활성화된 경우 (자기평가 승인)
         if (dto.approveSubsequentSteps) {
-          await this.stepApprovalBusinessService.일차하향평가_승인_시_하위평가들을_승인한다(
+          await this.stepApprovalBusinessService.일차하향평가_승인_시_상위평가를_승인한다(
             evaluationPeriodId,
             employeeId,
             updatedBy,
@@ -235,6 +236,7 @@ export class StepApprovalController {
    * 2차 하향평가 단계 승인 상태를 평가자별로 변경한다 (부분 승인 지원)
    * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
    * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
+   * approveSubsequentSteps 옵션이 true인 경우 1차 하향평가와 자기평가도 함께 승인합니다.
    *
    * 각 2차 평가자별로 개별적으로 승인 상태를 관리할 수 있습니다.
    */
@@ -273,6 +275,15 @@ export class StepApprovalController {
           evaluatorId,
           updatedBy,
         );
+
+        // 상위 평가 자동 승인 옵션이 활성화된 경우 (1차 하향평가와 자기평가 승인)
+        if (dto.approveSubsequentSteps) {
+          await this.stepApprovalBusinessService.이차하향평가_승인_시_상위평가들을_승인한다(
+            evaluationPeriodId,
+            employeeId,
+            updatedBy,
+          );
+        }
       }
 
       // 단계 승인 상태 변경 (평가자별 부분 승인 지원)

@@ -292,6 +292,49 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             throw error;
         }
     }
+    async 일차하향평가_승인_시_상위평가를_승인한다(evaluationPeriodId, employeeId, updatedBy) {
+        this.logger.log(`1차 하향평가 승인 시 상위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        try {
+            await this.자기평가_확인상태를_변경한다({
+                evaluationPeriodId,
+                employeeId,
+                status: 'approved',
+                updatedBy,
+            });
+            await this.자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+            this.logger.log(`자기평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        }
+        catch (error) {
+            this.logger.error(`1차 하향평가 승인 시 상위 평가 자동 승인 실패 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+            throw error;
+        }
+    }
+    async 이차하향평가_승인_시_상위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy) {
+        this.logger.log(`2차 하향평가 승인 시 상위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        try {
+            await this.일차하향평가_확인상태를_변경한다({
+                evaluationPeriodId,
+                employeeId,
+                status: 'approved',
+                updatedBy,
+            });
+            await this.일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+            this.logger.log(`1차 하향평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+            await this.자기평가_확인상태를_변경한다({
+                evaluationPeriodId,
+                employeeId,
+                status: 'approved',
+                updatedBy,
+            });
+            await this.자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+            this.logger.log(`자기평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+            this.logger.log(`2차 하향평가 승인 시 상위 평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        }
+        catch (error) {
+            this.logger.error(`2차 하향평가 승인 시 상위 평가 자동 승인 실패 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+            throw error;
+        }
+    }
 };
 exports.StepApprovalBusinessService = StepApprovalBusinessService;
 exports.StepApprovalBusinessService = StepApprovalBusinessService = StepApprovalBusinessService_1 = __decorate([

@@ -106,7 +106,7 @@ let StepApprovalController = class StepApprovalController {
             if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.APPROVED) {
                 await this.stepApprovalBusinessService.일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
                 if (dto.approveSubsequentSteps) {
-                    await this.stepApprovalBusinessService.일차하향평가_승인_시_하위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy);
+                    await this.stepApprovalBusinessService.일차하향평가_승인_시_상위평가를_승인한다(evaluationPeriodId, employeeId, updatedBy);
                 }
             }
             await this.stepApprovalBusinessService.일차하향평가_확인상태를_변경한다({
@@ -130,6 +130,9 @@ let StepApprovalController = class StepApprovalController {
         else {
             if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.APPROVED) {
                 await this.stepApprovalBusinessService.이차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, evaluatorId, updatedBy);
+                if (dto.approveSubsequentSteps) {
+                    await this.stepApprovalBusinessService.이차하향평가_승인_시_상위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy);
+                }
             }
             approval =
                 await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다({

@@ -48,4 +48,6 @@ export declare class StepApprovalBusinessService {
     }): Promise<import('@domain/sub/secondary-evaluation-step-approval').SecondaryEvaluationStepApproval>;
     자기평가_승인_시_하위평가들을_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
     일차하향평가_승인_시_하위평가들을_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
+    일차하향평가_승인_시_상위평가를_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
+    이차하향평가_승인_시_상위평가들을_승인한다(evaluationPeriodId: string, employeeId: string, updatedBy: string): Promise<void>;
 }
