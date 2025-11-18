@@ -1,3 +1,4 @@
+import { PeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 export declare class RequestPeerEvaluationDto {
     evaluatorId: string;
     evaluateeId: string;
@@ -50,7 +51,7 @@ export declare class PeerEvaluationFilterDto {
     evaluatorId?: string;
     evaluateeId?: string;
     periodId?: string;
-    status?: string;
+    status?: PeerEvaluationStatus;
     page?: number;
     limit?: number;
 }

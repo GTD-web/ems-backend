@@ -14,6 +14,7 @@ const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 const decorators_1 = require("../../decorators");
+const peer_evaluation_types_1 = require("../../../../domain/core/peer-evaluation/peer-evaluation.types");
 class RequestPeerEvaluationDto {
     evaluatorId;
     evaluateeId;
@@ -430,11 +431,11 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '평가 상태',
-        example: 'DRAFT',
-        enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
+        example: 'pending',
+        enum: peer_evaluation_types_1.PeerEvaluationStatus,
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(['DRAFT', 'SUBMITTED', 'COMPLETED']),
+    (0, class_validator_1.IsEnum)(peer_evaluation_types_1.PeerEvaluationStatus),
     __metadata("design:type", String)
 ], PeerEvaluationFilterDto.prototype, "status", void 0);
 __decorate([

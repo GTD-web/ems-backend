@@ -270,6 +270,15 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
         }
     }
     async scheduledSync() {
+        const scheduledSyncEnabledValue = this.configService.get('SCHEDULED_SYNC_ENABLED', 'true');
+        const scheduledSyncEnabled = scheduledSyncEnabledValue === 'false' ||
+            scheduledSyncEnabledValue === false
+            ? false
+            : true;
+        if (!scheduledSyncEnabled) {
+            this.logger.debug('스케줄된 직원 동기화가 비활성화되어 있습니다.');
+            return;
+        }
         this.logger.log('스케줄된 직원 동기화를 시작합니다...');
         await this.syncEmployees();
     }
@@ -417,7 +426,12 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         lastSyncAt: syncStartTime,
                         updatedBy: this.systemUserId,
                     });
-                    existingEmployee.isAccessible = preservedIsAccessible;
+                    if (this.configService.get('NODE_ENV') === 'development') {
+                        existingEmployee.isAccessible = true;
+                    }
+                    else {
+                        existingEmployee.isAccessible = preservedIsAccessible;
+                    }
                     return { success: true, employee: existingEmployee, isNew: false };
                 }
                 return { success: false };
@@ -427,6 +441,20 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                 newEmployee.lastSyncAt = syncStartTime;
                 newEmployee.createdBy = this.systemUserId;
                 newEmployee.updatedBy = this.systemUserId;
+                if (this.configService.get('NODE_ENV') === 'development') {
+                    newEmployee.isAccessible = true;
+                    if (mappedData.email?.endsWith('@lumir.space')) {
+                        newEmployee.roles = ['admin', 'user', 'evaluator'];
+                        this.logger.debug(`개발환경: ${mappedData.email}에 admin 권한 및 접근 권한 부여`);
+                    }
+                    else {
+                        newEmployee.roles = ['user'];
+                        this.logger.debug(`개발환경: ${mappedData.email}에 user 권한 및 접근 권한 부여`);
+                    }
+                }
+                else {
+                    newEmployee.isAccessible = true;
+                }
                 return { success: true, employee: newEmployee, isNew: true };
             }
         }
@@ -581,7 +609,12 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                     lastSyncAt: employee.lastSyncAt,
                     updatedBy: this.systemUserId,
                 });
-                existingEmployee.isAccessible = preservedIsAccessible;
+                if (this.configService.get('NODE_ENV') === 'development') {
+                    existingEmployee.isAccessible = true;
+                }
+                else {
+                    existingEmployee.isAccessible = preservedIsAccessible;
+                }
                 await this.employeeService.save(existingEmployee);
                 return { success: true };
             }
