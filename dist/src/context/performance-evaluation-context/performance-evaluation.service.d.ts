@@ -1,7 +1,7 @@
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { GetEmployeeSelfEvaluationsQuery, GetWbsSelfEvaluationDetailQuery } from './handlers/self-evaluation';
-import type { SubmitAllWbsSelfEvaluationsResponse, SubmitAllWbsSelfEvaluationsToEvaluatorResponse, ResetAllWbsSelfEvaluationsResponse, SubmitWbsSelfEvaluationsByProjectResponse, SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse, ResetWbsSelfEvaluationsByProjectResponse, ResetAllWbsSelfEvaluationsToEvaluatorResponse, ResetWbsSelfEvaluationsToEvaluatorByProjectResponse, ClearAllWbsSelfEvaluationsResponse, ClearWbsSelfEvaluationsByProjectResponse } from './handlers/self-evaluation';
+import type { SubmitAllWbsSelfEvaluationsResponse, SubmitAllWbsSelfEvaluationsToEvaluatorResponse, SubmitAllWbsSelfEvaluationsForApprovalResponse, ResetAllWbsSelfEvaluationsResponse, SubmitWbsSelfEvaluationsByProjectResponse, SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse, ResetWbsSelfEvaluationsByProjectResponse, ResetAllWbsSelfEvaluationsToEvaluatorResponse, ResetWbsSelfEvaluationsToEvaluatorByProjectResponse, ClearAllWbsSelfEvaluationsResponse, ClearWbsSelfEvaluationsByProjectResponse } from './handlers/self-evaluation';
 import { GetPeerEvaluationDetailQuery, GetPeerEvaluationListQuery, GetEvaluatorAssignedEvaluateesQuery, type PeerEvaluationQuestionDetail } from './handlers/peer-evaluation';
 import { GetDownwardEvaluationDetailQuery, GetDownwardEvaluationListQuery } from './handlers/downward-evaluation';
 import { GetFinalEvaluationByEmployeePeriodQuery, GetFinalEvaluationListQuery, GetFinalEvaluationQuery } from './handlers/final-evaluation';
@@ -22,6 +22,7 @@ export declare class PerformanceEvaluationService implements IPerformanceEvaluat
     피평가자가_1차평가자에게_자기평가를_제출한다(evaluationId: string, submittedBy?: string): Promise<WbsSelfEvaluationResponseDto>;
     직원의_전체_WBS자기평가를_제출한다(employeeId: string, periodId: string, submittedBy?: string): Promise<SubmitAllWbsSelfEvaluationsResponse>;
     직원의_전체_자기평가를_1차평가자에게_제출한다(employeeId: string, periodId: string, submittedBy?: string): Promise<SubmitAllWbsSelfEvaluationsToEvaluatorResponse>;
+    직원의_전체_자기평가를_승인시_제출한다(employeeId: string, periodId: string, submittedBy?: string): Promise<SubmitAllWbsSelfEvaluationsForApprovalResponse>;
     WBS자기평가를_초기화한다(evaluationId: string, resetBy?: string): Promise<WbsSelfEvaluationResponseDto>;
     직원의_전체_WBS자기평가를_초기화한다(employeeId: string, periodId: string, resetBy?: string): Promise<ResetAllWbsSelfEvaluationsResponse>;
     프로젝트별_WBS자기평가를_제출한다(employeeId: string, periodId: string, projectId: string, submittedBy?: string): Promise<SubmitWbsSelfEvaluationsByProjectResponse>;

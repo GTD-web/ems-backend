@@ -40,20 +40,12 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
     async 자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, approvedBy) {
         this.logger.log(`자기평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
         try {
-            await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자에게_제출한다(employeeId, evaluationPeriodId, approvedBy);
-            this.logger.log(`피평가자 → 1차 평가자 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+            await this.performanceEvaluationService.직원의_전체_자기평가를_승인시_제출한다(employeeId, evaluationPeriodId, approvedBy);
+            this.logger.log(`자기평가 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
         }
         catch (error) {
-            this.logger.warn(`피평가자 → 1차 평가자 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+            this.logger.warn(`자기평가 승인 시 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
         }
-        try {
-            await this.performanceEvaluationService.직원의_전체_WBS자기평가를_제출한다(employeeId, evaluationPeriodId, approvedBy);
-            this.logger.log(`1차 평가자 → 관리자 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
-        }
-        catch (error) {
-            this.logger.warn(`1차 평가자 → 관리자 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
-        }
-        this.logger.log(`자기평가 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
     }
     async 일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, approvedBy) {
         this.logger.log(`1차 하향평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);

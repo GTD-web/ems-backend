@@ -11,6 +11,7 @@ export declare class WbsSelfEvaluationService {
     생성한다(createData: CreateWbsSelfEvaluationData, manager?: EntityManager): Promise<WbsSelfEvaluation>;
     수정한다(id: string, updateData: UpdateWbsSelfEvaluationData, updatedBy: string, manager?: EntityManager): Promise<WbsSelfEvaluation>;
     피평가자가_1차평가자에게_제출한다(wbsSelfEvaluation: WbsSelfEvaluation, submittedBy: string, manager?: EntityManager): Promise<WbsSelfEvaluation>;
+    일차평가자가_관리자에게_제출한다(wbsSelfEvaluation: WbsSelfEvaluation, submittedBy: string, manager?: EntityManager): Promise<WbsSelfEvaluation>;
     피평가자가_1차평가자에게_제출한_것을_취소한다(id: string, resetBy: string, manager?: EntityManager): Promise<WbsSelfEvaluation>;
     삭제한다(id: string, deletedBy: string, manager?: EntityManager): Promise<void>;
     조회한다(id: string, manager?: EntityManager): Promise<WbsSelfEvaluation | null>;

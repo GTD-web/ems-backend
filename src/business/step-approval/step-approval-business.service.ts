@@ -51,46 +51,23 @@ export class StepApprovalBusinessService {
     );
 
     try {
-      // 1. 피평가자 → 1차 평가자 제출 상태 변경
-      await this.performanceEvaluationService.직원의_전체_자기평가를_1차평가자에게_제출한다(
+      // 승인 시 submittedToEvaluator와 submittedToManager를 모두 true로 설정
+      await this.performanceEvaluationService.직원의_전체_자기평가를_승인시_제출한다(
         employeeId,
         evaluationPeriodId,
         approvedBy,
       );
 
       this.logger.log(
-        `피평가자 → 1차 평가자 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+        `자기평가 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
       );
     } catch (error) {
       // 이미 제출된 상태일 수 있으므로 에러를 무시하고 계속 진행
       this.logger.warn(
-        `피평가자 → 1차 평가자 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+        `자기평가 승인 시 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
         error,
       );
     }
-
-    try {
-      // 2. 1차 평가자 → 관리자 제출 상태 변경
-      await this.performanceEvaluationService.직원의_전체_WBS자기평가를_제출한다(
-        employeeId,
-        evaluationPeriodId,
-        approvedBy,
-      );
-
-      this.logger.log(
-        `1차 평가자 → 관리자 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
-      );
-    } catch (error) {
-      // 이미 제출된 상태일 수 있으므로 에러를 무시하고 계속 진행
-      this.logger.warn(
-        `1차 평가자 → 관리자 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
-        error,
-      );
-    }
-
-    this.logger.log(
-      `자기평가 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
-    );
   }
 
   /**

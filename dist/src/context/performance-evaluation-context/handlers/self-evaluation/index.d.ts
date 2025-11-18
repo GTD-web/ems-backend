@@ -5,6 +5,8 @@ export { SubmitWbsSelfEvaluationCommand, SubmitWbsSelfEvaluationHandler, } from 
 export { SubmitWbsSelfEvaluationToEvaluatorCommand, SubmitWbsSelfEvaluationToEvaluatorHandler, } from './commands/submit-wbs-self-evaluation-to-evaluator.handler';
 export { SubmitAllWbsSelfEvaluationsByEmployeePeriodCommand, SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler, } from './commands/submit-all-wbs-self-evaluations.handler';
 export { SubmitAllWbsSelfEvaluationsToEvaluatorCommand, SubmitAllWbsSelfEvaluationsToEvaluatorHandler, } from './commands/submit-all-wbs-self-evaluations-to-evaluator.handler';
+export { SubmitAllWbsSelfEvaluationsForApprovalCommand, SubmitAllWbsSelfEvaluationsForApprovalHandler, } from './commands/submit-all-wbs-self-evaluations-for-approval.handler';
+export type { SubmitAllWbsSelfEvaluationsForApprovalResponse, SubmittedWbsSelfEvaluationForApprovalDetail, FailedWbsSelfEvaluationForApproval, } from './commands/submit-all-wbs-self-evaluations-for-approval.handler';
 export type { SubmitAllWbsSelfEvaluationsToEvaluatorResponse, SubmittedWbsSelfEvaluationToEvaluatorDetail, FailedWbsSelfEvaluationToEvaluator, } from './commands/submit-all-wbs-self-evaluations-to-evaluator.handler';
 export type { SubmitAllWbsSelfEvaluationsResponse, SubmittedWbsSelfEvaluationDetail, FailedWbsSelfEvaluation, } from './commands/submit-all-wbs-self-evaluations.handler';
 export { ResetWbsSelfEvaluationCommand, ResetWbsSelfEvaluationHandler, } from './commands/reset-wbs-self-evaluation.handler';
