@@ -211,9 +211,7 @@ let EvaluationLineMappingService = EvaluationLineMappingService_1 = class Evalua
             if (!mapping) {
                 throw new evaluation_line_mapping_exceptions_1.EvaluationLineMappingNotFoundException(id);
             }
-            mapping.deletedAt = new Date();
-            mapping.수정자를_설정한다(deletedBy);
-            await repository.save(mapping);
+            await repository.delete(id);
             this.logger.log(`평가 라인 맵핑 삭제 완료 - ID: ${id}, 삭제자: ${deletedBy}`);
         }, '삭제한다');
     }
@@ -244,9 +242,7 @@ let EvaluationLineMappingService = EvaluationLineMappingService_1 = class Evalua
                 where: [{ employeeId }, { evaluatorId: employeeId }],
             });
             for (const mapping of mappings) {
-                mapping.deletedAt = new Date();
-                mapping.수정자를_설정한다(deletedBy);
-                await repository.save(mapping);
+                await repository.delete(mapping.id);
             }
             this.logger.log(`직원 맵핑 전체 삭제 완료 - 직원 ID: ${employeeId}, 삭제자: ${deletedBy}, 삭제된 맵핑 수: ${mappings.length}`);
         }, '직원_맵핑_전체삭제한다');
@@ -258,9 +254,7 @@ let EvaluationLineMappingService = EvaluationLineMappingService_1 = class Evalua
                 where: { wbsItemId },
             });
             for (const mapping of mappings) {
-                mapping.deletedAt = new Date();
-                mapping.수정자를_설정한다(deletedBy);
-                await repository.save(mapping);
+                await repository.delete(mapping.id);
             }
             this.logger.log(`WBS 항목 맵핑 전체 삭제 완료 - WBS 항목 ID: ${wbsItemId}, 삭제자: ${deletedBy}, 삭제된 맵핑 수: ${mappings.length}`);
         }, 'WBS항목_맵핑_전체삭제한다');
