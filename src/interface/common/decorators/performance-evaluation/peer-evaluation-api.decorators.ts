@@ -1,35 +1,32 @@
 import {
   applyDecorators,
-  Post,
-  Get,
-  Put,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Post,
+  Put,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBody,
+  ApiResponse,
 } from '@nestjs/swagger';
 import { PeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 import {
-  RequestPeerEvaluationDto,
-  RequestPeerEvaluationToMultipleEvaluatorsDto,
-  RequestMultiplePeerEvaluationsDto,
-  RequestPartLeaderPeerEvaluationsDto,
-  CreatePeerEvaluationBodyDto,
-  UpdatePeerEvaluationDto,
-  PeerEvaluationFilterDto,
-  PeerEvaluationResponseDto,
+  AssignedEvaluateeDto,
   BulkPeerEvaluationRequestResponseDto,
   PeerEvaluationBasicDto,
-  PeerEvaluationListResponseDto,
   PeerEvaluationDetailResponseDto,
-  GetEvaluatorAssignedEvaluateesQueryDto,
-  AssignedEvaluateeDto,
+  PeerEvaluationListResponseDto,
+  PeerEvaluationResponseDto,
+  RequestMultiplePeerEvaluationsDto,
+  RequestPartLeaderPeerEvaluationsDto,
+  RequestPeerEvaluationDto,
+  RequestPeerEvaluationToMultipleEvaluatorsDto,
+  UpdatePeerEvaluationDto,
   UpsertPeerEvaluationAnswersDto,
   UpsertPeerEvaluationAnswersResponseDto,
 } from '../../dto/performance-evaluation/peer-evaluation.dto';
@@ -522,20 +519,6 @@ export function GetPeerEvaluations() {
 }
 
 /**
- * 평가자의 동료평가 목록 조회 API 데코레이터 (특정 평가자)
- * @deprecated GET /?evaluatorId={evaluatorId} 사용을 권장합니다.
- */
-export function GetEvaluatorPeerEvaluations() {
-  return applyDecorators(
-    Get('evaluator/:evaluatorId'),
-    HttpCode(HttpStatus.OK),
-    ApiOperation({
-      summary: '평가자의 동료평가 목록 조회',
-      deprecated: true,
-      description: `특정 평가자의 동료평가 목록을 상세 정보와 함께 페이지네이션 형태로 조회합니다.
-
-**⚠️ Deprecated**: 이 엔드포인트는 사용 중단 예정입니다. 대신 \`GET /?evaluatorId={evaluatorId}\`를 사용하세요.
-
 **동작:**
 - 평가자에게 할당된 모든 동료평가 목록 조회
 - 다양한 필터 조건 지원 (피평가자, 평가기간, 상태)

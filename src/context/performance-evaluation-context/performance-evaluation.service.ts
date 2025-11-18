@@ -749,6 +749,7 @@ export class PerformanceEvaluationService
     periodId: string,
     evaluationType: DownwardEvaluationType,
     submittedBy: string,
+    forceSubmit: boolean = false, // 강제 제출 옵션 (승인 시 필수 항목 검증 건너뛰기)
   ): Promise<{
     submittedCount: number;
     skippedCount: number;
@@ -763,6 +764,7 @@ export class PerformanceEvaluationService
       periodId,
       evaluationType,
       submittedBy,
+      forceSubmit,
     );
 
     return await this.commandBus.execute(command);

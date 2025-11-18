@@ -126,6 +126,23 @@ export class WbsSelfEvaluationBusinessService {
       updatedBy: requestedBy,
     });
 
+    // 3. 활동 내역 기록
+    try {
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
+        evaluationPeriodId,
+        employeeId,
+        step: 'self',
+        status: 'revision_requested' as StepApprovalStatus,
+        revisionComment,
+        updatedBy: requestedBy,
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
+      this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+        error: error.message,
+      });
+    }
+
     this.logger.log(
       `자기평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
     );

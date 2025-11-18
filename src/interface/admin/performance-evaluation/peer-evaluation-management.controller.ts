@@ -1,26 +1,22 @@
 import { PeerEvaluationBusinessService } from '@business/peer-evaluation/peer-evaluation-business.service';
-import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
-import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { EvaluationQuestionManagementService } from '@context/evaluation-question-management-context/evaluation-question-management.service';
-import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
-import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
+import { PeerEvaluationDetailResult } from '@context/performance-evaluation-context/handlers/peer-evaluation';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
-import { v4 as uuidv4 } from 'uuid';
+import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
+import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
 import {
-  RequestPeerEvaluation,
-  RequestPeerEvaluationToMultipleEvaluators,
-  RequestMultiplePeerEvaluations,
-  RequestPartLeaderPeerEvaluations,
-  SubmitPeerEvaluation,
-  GetPeerEvaluations,
-  GetEvaluatorPeerEvaluations,
-  GetEvaluateePeerEvaluations,
-  GetAllPeerEvaluations,
-  GetPeerEvaluationDetail,
-  GetEvaluatorAssignedEvaluatees,
   CancelPeerEvaluation,
   CancelPeerEvaluationsByPeriod,
-  UpsertPeerEvaluationAnswers,
+  GetEvaluatorAssignedEvaluatees,
+  GetPeerEvaluationDetail,
+  GetPeerEvaluations,
+  RequestMultiplePeerEvaluations,
+  RequestPartLeaderPeerEvaluations,
+  RequestPeerEvaluation,
+  RequestPeerEvaluationToMultipleEvaluators,
+  SubmitPeerEvaluation,
+  UpsertPeerEvaluationAnswers
 } from '@interface/common/decorators/performance-evaluation/peer-evaluation-api.decorators';
 import {
   AssignedEvaluateeDto,
@@ -30,12 +26,11 @@ import {
   PeerEvaluationListResponseDto,
   PeerEvaluationResponseDto,
   RequestMultiplePeerEvaluationsDto,
+  RequestPartLeaderPeerEvaluationsDto,
   RequestPeerEvaluationDto,
   RequestPeerEvaluationToMultipleEvaluatorsDto,
-  RequestPartLeaderPeerEvaluationsDto,
-  CreatePeerEvaluationBodyDto,
   UpsertPeerEvaluationAnswersDto,
-  UpsertPeerEvaluationAnswersResponseDto,
+  UpsertPeerEvaluationAnswersResponseDto
 } from '@interface/common/dto/performance-evaluation/peer-evaluation.dto';
 import { Body, Controller, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -157,8 +152,9 @@ export class PeerEvaluationManagementController {
   @RequestPartLeaderPeerEvaluations()
   async requestPartLeaderPeerEvaluations(
     @Body() dto: RequestPartLeaderPeerEvaluationsDto,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<BulkPeerEvaluationRequestResponseDto> {
-    const requestedBy = dto.requestedBy || uuidv4(); // TODO: 추후 요청자 ID로 변경
+    const requestedBy = user.id;
 
     // 1. 파트장 목록 결정
     let evaluatorIds: string[];
@@ -307,61 +303,6 @@ export class PeerEvaluationManagementController {
     });
   }
 
-  /**
-   * 평가자의 동료평가 목록 조회
-   * @deprecated GET /?evaluatorId={evaluatorId} 사용을 권장합니다.
-   */
-  @GetEvaluatorPeerEvaluations()
-  async getEvaluatorPeerEvaluations(
-    @ParseUUID('evaluatorId') evaluatorId: string,
-    @Query() filter: PeerEvaluationFilterDto,
-  ): Promise<PeerEvaluationListResponseDto> {
-    return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
-      evaluatorId,
-      evaluateeId: filter.evaluateeId,
-      periodId: filter.periodId,
-      status: filter.status,
-      page: filter.page || 1,
-      limit: filter.limit || 10,
-    });
-  }
-
-  /**
-   * 피평가자의 동료평가 목록 조회
-   * @deprecated GET /?evaluateeId={evaluateeId} 사용을 권장합니다.
-   */
-  @GetEvaluateePeerEvaluations()
-  async getEvaluateePeerEvaluations(
-    @ParseUUID('evaluateeId') evaluateeId: string,
-    @Query() filter: PeerEvaluationFilterDto,
-  ): Promise<PeerEvaluationListResponseDto> {
-    return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
-      evaluatorId: filter.evaluatorId,
-      evaluateeId,
-      periodId: filter.periodId,
-      status: filter.status,
-      page: filter.page || 1,
-      limit: filter.limit || 10,
-    });
-  }
-
-  /**
-   * 모든 평가자의 동료평가 목록 조회
-   * @deprecated GET / 사용을 권장합니다.
-   */
-  @GetAllPeerEvaluations()
-  async getAllPeerEvaluations(
-    @Query() filter: PeerEvaluationFilterDto,
-  ): Promise<PeerEvaluationListResponseDto> {
-    return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
-      evaluatorId: undefined,
-      evaluateeId: filter.evaluateeId,
-      periodId: filter.periodId,
-      status: filter.status,
-      page: filter.page || 1,
-      limit: filter.limit || 10,
-    });
-  }
 
   /**
    * 동료평가 상세정보 조회

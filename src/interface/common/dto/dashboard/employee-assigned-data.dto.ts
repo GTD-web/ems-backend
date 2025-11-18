@@ -156,12 +156,22 @@ export class EmployeeInfoDto implements EmployeeInfo {
   })
   departmentName?: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: '직원 상태',
-    example: 'ACTIVE',
-    enum: ['ACTIVE', 'INACTIVE', 'LEAVE', 'RESIGNED'],
+    enum: ['재직중', '휴직중', '퇴사'],
+    example: '재직중',
+    nullable: true,
   })
-  status: string;
+  status?: '재직중' | '휴직중' | '퇴사';
+
+  @ApiPropertyOptional({
+    description: '입사일',
+    type: 'string',
+    format: 'date',
+    example: '2024-01-01',
+    nullable: true,
+  })
+  hireDate?: Date | null;
 }
 
 /**

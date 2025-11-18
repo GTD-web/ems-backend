@@ -20,7 +20,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../src/app.module';
 import { SSOService } from '../src/domain/common/sso';
-import type { ISSOService } from '../src/domain/common/sso/interfaces';
 import { Logger } from '@nestjs/common';
 
 async function fetchSSOMockData() {
@@ -85,6 +84,8 @@ async function fetchSSOMockData() {
       const employees = await ssoService.모든직원정보를조회한다({
         includeEmptyDepartments: true,
       });
+
+      
       logger.log(`모든 직원 정보 조회 완료: ${employees.length}명`);
     } catch (error) {
       logger.error(`모든 직원 정보 조회 실패: ${error.message}`);

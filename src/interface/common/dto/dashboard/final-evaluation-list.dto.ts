@@ -41,6 +41,23 @@ export class EmployeeInfoDto {
     nullable: true,
   })
   rankName: string | null;
+
+  @ApiPropertyOptional({
+    description: '직원 상태',
+    enum: ['재직중', '휴직중', '퇴사'],
+    example: '재직중',
+    nullable: true,
+  })
+  status?: '재직중' | '휴직중' | '퇴사';
+
+  @ApiPropertyOptional({
+    description: '입사일',
+    type: 'string',
+    format: 'date',
+    example: '2024-01-01',
+    nullable: true,
+  })
+  hireDate?: Date | null;
 }
 
 /**

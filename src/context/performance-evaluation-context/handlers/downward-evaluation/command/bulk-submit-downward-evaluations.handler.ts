@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { DownwardEvaluationService } from '@domain/core/downward-evaluation/downward-evaluation.service';
 import {
@@ -10,6 +10,11 @@ import {
 } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
+import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { Employee } from '@domain/common/employee/employee.entity';
 
 /**
  * 피평가자의 모든 하향평가 일괄 제출 커맨드
@@ -21,6 +26,7 @@ export class BulkSubmitDownwardEvaluationsCommand {
     public readonly periodId: string,
     public readonly evaluationType: DownwardEvaluationType,
     public readonly submittedBy: string = '시스템',
+    public readonly forceSubmit: boolean = false, // 강제 제출 옵션 (승인 시 필수 항목 검증 건너뛰기)
   ) {}
 }
 
@@ -37,6 +43,14 @@ export class BulkSubmitDownwardEvaluationsHandler
   constructor(
     @InjectRepository(DownwardEvaluation)
     private readonly downwardEvaluationRepository: Repository<DownwardEvaluation>,
+    @InjectRepository(EvaluationLineMapping)
+    private readonly evaluationLineMappingRepository: Repository<EvaluationLineMapping>,
+    @InjectRepository(EvaluationLine)
+    private readonly evaluationLineRepository: Repository<EvaluationLine>,
+    @InjectRepository(EvaluationWbsAssignment)
+    private readonly wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
+    @InjectRepository(Employee)
+    private readonly employeeRepository: Repository<Employee>,
     private readonly downwardEvaluationService: DownwardEvaluationService,
     private readonly transactionManager: TransactionManagerService,
   ) {}
@@ -51,7 +65,7 @@ export class BulkSubmitDownwardEvaluationsHandler
     skippedIds: string[];
     failedItems: Array<{ evaluationId: string; error: string }>;
   }> {
-    const { evaluatorId, evaluateeId, periodId, evaluationType, submittedBy } =
+    const { evaluatorId, evaluateeId, periodId, evaluationType, submittedBy, forceSubmit } =
       command;
 
     this.logger.log('피평가자의 모든 하향평가 일괄 제출 핸들러 실행', {
@@ -59,9 +73,21 @@ export class BulkSubmitDownwardEvaluationsHandler
       evaluateeId,
       periodId,
       evaluationType,
+      forceSubmit,
     });
 
     return await this.transactionManager.executeTransaction(async () => {
+      // 강제 제출 모드인 경우, 할당된 WBS에 대한 하향평가가 없으면 생성
+      if (forceSubmit) {
+        await this.할당된_WBS에_대한_하향평가를_생성한다(
+          evaluatorId,
+          evaluateeId,
+          periodId,
+          evaluationType,
+          submittedBy,
+        );
+      }
+
       // 해당 평가자가 담당하는 피평가자의 모든 하향평가 조회
       const evaluations = await this.downwardEvaluationRepository.find({
         where: {
@@ -104,19 +130,26 @@ export class BulkSubmitDownwardEvaluationsHandler
             continue;
           }
 
-          // 필수 항목 검증
-          if (
-            !evaluation.downwardEvaluationContent ||
-            !evaluation.downwardEvaluationScore
-          ) {
-            failedItems.push({
-              evaluationId: evaluation.id,
-              error: '평가 내용과 점수는 필수 입력 항목입니다.',
-            });
-            this.logger.warn(
-              `필수 항목 누락으로 제출 실패: ${evaluation.id}`,
+          // 필수 항목 검증 (강제 제출 모드가 아닐 때만)
+          if (!forceSubmit) {
+            if (
+              !evaluation.downwardEvaluationContent ||
+              !evaluation.downwardEvaluationScore
+            ) {
+              failedItems.push({
+                evaluationId: evaluation.id,
+                error: '평가 내용과 점수는 필수 입력 항목입니다.',
+              });
+              this.logger.warn(
+                `필수 항목 누락으로 제출 실패: ${evaluation.id}`,
+              );
+              continue;
+            }
+          } else {
+            // 강제 제출 모드: 필수 항목이 없어도 제출 (승인 시 사용)
+            this.logger.debug(
+              `강제 제출 모드: 필수 항목 검증 건너뛰고 제출 처리: ${evaluation.id}`,
             );
-            continue;
           }
 
           // 하향평가 완료 처리
@@ -156,6 +189,138 @@ export class BulkSubmitDownwardEvaluationsHandler
 
       return result;
     });
+  }
+
+  /**
+   * 할당된 WBS에 대한 하향평가를 생성한다 (강제 제출 시 사용)
+   * 1차 평가자의 경우: EvaluationWbsAssignment에서 피평가자에게 할당된 전체 WBS 조회
+   * 2차 평가자의 경우: EvaluationLineMapping에서 해당 평가자에게 할당된 WBS 목록 조회
+   * 각 WBS에 대한 하향평가가 없으면 생성합니다.
+   */
+  private async 할당된_WBS에_대한_하향평가를_생성한다(
+    evaluatorId: string,
+    evaluateeId: string,
+    periodId: string,
+    evaluationType: DownwardEvaluationType,
+    createdBy: string,
+  ): Promise<void> {
+    this.logger.log(
+      `할당된 WBS에 대한 하향평가 생성 시작 - 평가자: ${evaluatorId}, 피평가자: ${evaluateeId}, 평가유형: ${evaluationType}`,
+    );
+
+    // 승인자 정보 조회
+    const approver = await this.employeeRepository.findOne({
+      where: { id: createdBy, deletedAt: IsNull() },
+      select: ['id', 'name'],
+    });
+    const approverName = approver?.name || '관리자';
+
+    let assignedWbsIds: string[] = [];
+
+    if (evaluationType === DownwardEvaluationType.SECONDARY) {
+      // 2차 평가자의 경우: EvaluationLineMapping에서 할당된 WBS 조회
+      const secondaryLine = await this.evaluationLineRepository.findOne({
+        where: {
+          evaluatorType: EvaluatorType.SECONDARY,
+          deletedAt: IsNull(),
+        },
+      });
+
+      if (!secondaryLine) {
+        this.logger.warn('2차 평가라인을 찾을 수 없습니다.');
+        return;
+      }
+
+      // 해당 평가자에게 할당된 WBS 매핑 조회
+      const assignedMappings = await this.evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .select(['mapping.wbsItemId'])
+        .leftJoin(
+          EvaluationLine,
+          'line',
+          'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+        )
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId: periodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId: evaluateeId })
+        .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+        .andWhere('line.evaluatorType = :evaluatorType', {
+          evaluatorType: EvaluatorType.SECONDARY,
+        })
+        .andWhere('mapping.deletedAt IS NULL')
+        .andWhere('mapping.wbsItemId IS NOT NULL')
+        .getRawMany();
+
+      assignedWbsIds = assignedMappings
+        .map((m) => m.mapping_wbsItemId)
+        .filter((id) => id !== null);
+    } else {
+      // 1차 평가자의 경우: EvaluationWbsAssignment에서 피평가자에게 할당된 전체 WBS 조회
+      const wbsAssignments = await this.wbsAssignmentRepository.find({
+        where: {
+          periodId,
+          employeeId: evaluateeId,
+          deletedAt: IsNull(),
+        },
+        select: ['wbsItemId'],
+      });
+
+      assignedWbsIds = wbsAssignments
+        .map((assignment) => assignment.wbsItemId)
+        .filter((id) => id !== null && id !== undefined);
+    }
+
+    if (assignedWbsIds.length === 0) {
+      this.logger.debug('할당된 WBS가 없습니다.');
+      return;
+    }
+
+    // 각 WBS에 대한 하향평가가 있는지 확인하고 없으면 생성
+    for (const wbsId of assignedWbsIds) {
+      const existingEvaluation = await this.downwardEvaluationRepository.findOne({
+        where: {
+          evaluatorId,
+          employeeId: evaluateeId,
+          periodId,
+          wbsId,
+          evaluationType,
+          deletedAt: null as any,
+        },
+      });
+
+      if (!existingEvaluation) {
+        try {
+          // 하향평가 생성 (승인 처리 메시지 포함)
+          const approvalMessage = `${approverName}님에 따라 하향평가가 승인 처리되었습니다.`;
+          await this.downwardEvaluationService.생성한다({
+            employeeId: evaluateeId,
+            evaluatorId,
+            wbsId,
+            periodId,
+            evaluationType,
+            downwardEvaluationContent: approvalMessage,
+            evaluationDate: new Date(),
+            isCompleted: false,
+            createdBy,
+          });
+
+          this.logger.debug(
+            `할당된 WBS에 대한 하향평가 생성 완료 - WBS ID: ${wbsId}, 평가유형: ${evaluationType}`,
+          );
+        } catch (error) {
+          // 중복 생성 시도 등의 에러는 무시 (이미 존재할 수 있음)
+          this.logger.warn(
+            `할당된 WBS에 대한 하향평가 생성 실패 - WBS ID: ${wbsId}, 평가유형: ${evaluationType}`,
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      }
+    }
+
+    this.logger.log(
+      `할당된 WBS에 대한 하향평가 생성 완료 - 평가자: ${evaluatorId}, 피평가자: ${evaluateeId}, 평가유형: ${evaluationType}`,
+    );
   }
 }
 

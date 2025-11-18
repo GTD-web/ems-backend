@@ -13,6 +13,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.WbsAssignmentBusinessService = void 0;
 const common_1 = require("@nestjs/common");
 const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
 const employee_service_1 = require("../../domain/common/employee/employee.service");
 const project_service_1 = require("../../domain/common/project/project.service");
 const evaluation_line_service_1 = require("../../domain/core/evaluation-line/evaluation-line.service");
@@ -22,14 +23,16 @@ const evaluation_line_types_1 = require("../../domain/core/evaluation-line/evalu
 const wbs_item_types_1 = require("../../domain/common/wbs-item/wbs-item.types");
 let WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = class WbsAssignmentBusinessService {
     evaluationCriteriaManagementService;
+    activityLogContextService;
     employeeService;
     projectService;
     evaluationLineService;
     evaluationLineMappingService;
     evaluationWbsAssignmentService;
     logger = new common_1.Logger(WbsAssignmentBusinessService_1.name);
-    constructor(evaluationCriteriaManagementService, employeeService, projectService, evaluationLineService, evaluationLineMappingService, evaluationWbsAssignmentService) {
+    constructor(evaluationCriteriaManagementService, activityLogContextService, employeeService, projectService, evaluationLineService, evaluationLineMappingService, evaluationWbsAssignmentService) {
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
+        this.activityLogContextService = activityLogContextService;
         this.employeeService = employeeService;
         this.projectService = projectService;
         this.evaluationLineService = evaluationLineService;
@@ -72,6 +75,28 @@ let WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = class WbsAss
             createdLines: wbsEvaluationLineResult.createdLines,
             createdMappings: wbsEvaluationLineResult.createdMappings,
         });
+        try {
+            await this.activityLogContextService.활동내역을_기록한다({
+                periodId: params.periodId,
+                employeeId: params.employeeId,
+                activityType: 'wbs_assignment',
+                activityAction: 'created',
+                activityTitle: 'WBS 할당',
+                relatedEntityType: 'wbs_assignment',
+                relatedEntityId: assignment.id,
+                performedBy: params.assignedBy,
+                activityMetadata: {
+                    wbsItemId: params.wbsItemId,
+                    projectId: params.projectId,
+                },
+            });
+        }
+        catch (error) {
+            this.logger.warn('WBS 할당 생성 활동 내역 기록 실패', {
+                assignmentId: assignment.id,
+                error: error.message,
+            });
+        }
         this.logger.log('WBS 할당, 평가기준 생성, 평가라인 구성 완료', {
             assignmentId: assignment.id,
         });
@@ -99,6 +124,28 @@ let WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = class WbsAss
                 wbsItemId,
             });
             await this.evaluationCriteriaManagementService.WBS_항목의_평가기준을_전체삭제한다(wbsItemId, params.cancelledBy);
+        }
+        try {
+            await this.activityLogContextService.활동내역을_기록한다({
+                periodId,
+                employeeId,
+                activityType: 'wbs_assignment',
+                activityAction: 'cancelled',
+                activityTitle: 'WBS 할당 취소',
+                relatedEntityType: 'wbs_assignment',
+                relatedEntityId: params.assignmentId,
+                performedBy: params.cancelledBy,
+                activityMetadata: {
+                    wbsItemId,
+                    projectId: assignment.projectId,
+                },
+            });
+        }
+        catch (error) {
+            this.logger.warn('WBS 할당 취소 활동 내역 기록 실패', {
+                assignmentId: params.assignmentId,
+                error: error.message,
+            });
         }
         this.logger.log('WBS 할당 취소, 평가라인 매핑 삭제 및 평가기준 정리 완료', {
             assignmentId: params.assignmentId,
@@ -157,6 +204,30 @@ let WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = class WbsAss
         }));
         await Promise.all(params.assignments.map(async (assignment) => {
             await this.평가라인을_자동으로_구성한다(assignment.employeeId, assignment.wbsItemId, assignment.projectId, assignment.periodId, params.assignedBy);
+        }));
+        await Promise.all(assignments.map(async (assignment) => {
+            try {
+                await this.activityLogContextService.활동내역을_기록한다({
+                    periodId: assignment.periodId,
+                    employeeId: assignment.employeeId,
+                    activityType: 'wbs_assignment',
+                    activityAction: 'created',
+                    activityTitle: 'WBS 할당',
+                    relatedEntityType: 'wbs_assignment',
+                    relatedEntityId: assignment.id,
+                    performedBy: params.assignedBy,
+                    activityMetadata: {
+                        wbsItemId: assignment.wbsItemId,
+                        projectId: assignment.projectId,
+                    },
+                });
+            }
+            catch (error) {
+                this.logger.warn('WBS 대량 할당 활동 내역 기록 실패', {
+                    assignmentId: assignment.id,
+                    error: error.message,
+                });
+            }
         }));
         this.logger.log('WBS 대량 할당, 평가기준 생성, 평가라인 구성 완료', {
             count: assignments.length,
@@ -475,6 +546,7 @@ exports.WbsAssignmentBusinessService = WbsAssignmentBusinessService;
 exports.WbsAssignmentBusinessService = WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
+        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
         employee_service_1.EmployeeService,
         project_service_1.ProjectService,
         evaluation_line_service_1.EvaluationLineService,

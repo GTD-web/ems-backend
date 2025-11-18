@@ -395,11 +395,15 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             if (existingEmployee) {
                 const needsUpdate = this.업데이트가_필요한가(existingEmployee, mappedData, forceSync);
                 if (needsUpdate) {
+                    const preservedIsAccessible = existingEmployee.isAccessible;
                     Object.assign(existingEmployee, {
                         employeeNumber: mappedData.employeeNumber,
                         name: mappedData.name,
                         email: mappedData.email,
                         phoneNumber: mappedData.phoneNumber,
+                        dateOfBirth: mappedData.dateOfBirth,
+                        gender: mappedData.gender,
+                        hireDate: mappedData.hireDate,
                         managerId: mappedData.managerId,
                         status: mappedData.status,
                         departmentId: mappedData.departmentId,
@@ -413,6 +417,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         lastSyncAt: syncStartTime,
                         updatedBy: this.systemUserId,
                     });
+                    existingEmployee.isAccessible = preservedIsAccessible;
                     return { success: true, employee: existingEmployee, isNew: false };
                 }
                 return { success: false };
@@ -457,6 +462,32 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             (existingEmployee.departmentId !== mappedData.departmentId ||
                 existingEmployee.departmentName !== mappedData.departmentName ||
                 existingEmployee.departmentCode !== mappedData.departmentCode)) {
+            return true;
+        }
+        if (existingEmployee.status !== mappedData.status) {
+            return true;
+        }
+        if (mappedData.hireDate) {
+            const existingHireDate = existingEmployee.hireDate
+                ? new Date(existingEmployee.hireDate)
+                : null;
+            const mappedHireDate = new Date(mappedData.hireDate);
+            if (!existingHireDate ||
+                existingHireDate.getTime() !== mappedHireDate.getTime()) {
+                return true;
+            }
+        }
+        if (mappedData.dateOfBirth) {
+            const existingDateOfBirth = existingEmployee.dateOfBirth
+                ? new Date(existingEmployee.dateOfBirth)
+                : null;
+            const mappedDateOfBirth = new Date(mappedData.dateOfBirth);
+            if (!existingDateOfBirth ||
+                existingDateOfBirth.getTime() !== mappedDateOfBirth.getTime()) {
+                return true;
+            }
+        }
+        if (mappedData.gender && existingEmployee.gender !== mappedData.gender) {
             return true;
         }
         return false;
@@ -525,6 +556,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                 existingEmployee = await this.employeeService.findByExternalId(employee.externalId);
             }
             if (existingEmployee) {
+                const preservedIsAccessible = existingEmployee.isAccessible;
                 Object.assign(existingEmployee, {
                     employeeNumber: employee.employeeNumber,
                     name: employee.name,
@@ -549,6 +581,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                     lastSyncAt: employee.lastSyncAt,
                     updatedBy: this.systemUserId,
                 });
+                existingEmployee.isAccessible = preservedIsAccessible;
                 await this.employeeService.save(existingEmployee);
                 return { success: true };
             }

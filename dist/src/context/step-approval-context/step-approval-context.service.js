@@ -18,18 +18,21 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const employee_evaluation_step_approval_1 = require("../../domain/sub/employee-evaluation-step-approval");
+const secondary_evaluation_step_approval_1 = require("../../domain/sub/secondary-evaluation-step-approval");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 const evaluation_line_mapping_entity_1 = require("../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity");
 let StepApprovalContextService = StepApprovalContextService_1 = class StepApprovalContextService {
     stepApprovalService;
+    secondaryStepApprovalService;
     revisionRequestService;
     mappingRepository;
     evaluationLineMappingRepository;
     dataSource;
     logger = new common_1.Logger(StepApprovalContextService_1.name);
-    constructor(stepApprovalService, revisionRequestService, mappingRepository, evaluationLineMappingRepository, dataSource) {
+    constructor(stepApprovalService, secondaryStepApprovalService, revisionRequestService, mappingRepository, evaluationLineMappingRepository, dataSource) {
         this.stepApprovalService = stepApprovalService;
+        this.secondaryStepApprovalService = secondaryStepApprovalService;
         this.revisionRequestService = revisionRequestService;
         this.mappingRepository = mappingRepository;
         this.evaluationLineMappingRepository = evaluationLineMappingRepository;
@@ -258,23 +261,28 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
         if (!isSecondaryEvaluator) {
             throw new common_1.NotFoundException(`해당 평가자는 2차 평가자가 아닙니다. (평가기간 ID: ${request.evaluationPeriodId}, 직원 ID: ${request.employeeId}, 평가자 ID: ${request.evaluatorId})`);
         }
-        let stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
-        if (!stepApproval) {
-            this.logger.log(`단계 승인 정보가 없어 새로 생성합니다. - 맵핑 ID: ${mapping.id}`);
-            stepApproval = await this.stepApprovalService.생성한다({
+        let secondaryApproval = await this.secondaryStepApprovalService.맵핑ID와_평가자ID로_조회한다(mapping.id, request.evaluatorId);
+        if (!secondaryApproval) {
+            this.logger.log(`2차 평가자별 단계 승인 정보가 없어 새로 생성합니다. - 맵핑 ID: ${mapping.id}, 평가자 ID: ${request.evaluatorId}`);
+            secondaryApproval = await this.secondaryStepApprovalService.생성한다({
                 evaluationPeriodEmployeeMappingId: mapping.id,
+                evaluatorId: request.evaluatorId,
+                status: request.status,
                 createdBy: request.updatedBy,
             });
         }
-        this.stepApprovalService.단계_상태를_변경한다(stepApproval, 'secondary', request.status, request.updatedBy);
-        await this.stepApprovalService.저장한다(stepApproval);
+        let revisionRequestId = null;
         if (request.status === employee_evaluation_step_approval_1.StepApprovalStatus.REVISION_REQUESTED) {
             if (!request.revisionComment || request.revisionComment.trim() === '') {
                 throw new common_1.NotFoundException('재작성 요청 코멘트는 필수입니다.');
             }
-            await this.재작성요청을_평가자별로_생성한다(request.evaluationPeriodId, request.employeeId, request.evaluatorId, request.revisionComment, request.updatedBy);
+            const revisionRequest = await this.재작성요청을_평가자별로_생성한다(request.evaluationPeriodId, request.employeeId, request.evaluatorId, request.revisionComment, request.updatedBy);
+            revisionRequestId = revisionRequest.id;
         }
+        this.secondaryStepApprovalService.상태를_변경한다(secondaryApproval, request.status, request.updatedBy, revisionRequestId);
+        const savedApproval = await this.secondaryStepApprovalService.저장한다(secondaryApproval);
         this.logger.log(`2차 하향평가 확인 상태 변경 완료 - 직원: ${request.employeeId}, 평가자: ${request.evaluatorId}`);
+        return savedApproval;
     }
     async 평가자가_2차평가자인지_확인한다(evaluationPeriodId, employeeId, evaluatorId) {
         const lineMapping = await this.evaluationLineMappingRepository
@@ -295,7 +303,7 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
     }
     async 재작성요청을_평가자별로_생성한다(evaluationPeriodId, employeeId, evaluatorId, comment, requestedBy) {
         this.logger.log(`재작성 요청 생성 시작 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`);
-        await this.dataSource.transaction(async (manager) => {
+        const newRequest = await this.dataSource.transaction(async (manager) => {
             const existingRequests = await manager
                 .createQueryBuilder(evaluation_revision_request_1.EvaluationRevisionRequest, 'request')
                 .where('request.evaluationPeriodId = :evaluationPeriodId', {
@@ -337,7 +345,7 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
                     recipientType: evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR,
                 },
             ];
-            const newRequest = new evaluation_revision_request_1.EvaluationRevisionRequest({
+            const request = new evaluation_revision_request_1.EvaluationRevisionRequest({
                 evaluationPeriodId,
                 employeeId,
                 step: 'secondary',
@@ -346,18 +354,20 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
                 recipients,
                 createdBy: requestedBy,
             });
-            await manager.save(evaluation_revision_request_1.EvaluationRevisionRequest, newRequest);
+            return await manager.save(evaluation_revision_request_1.EvaluationRevisionRequest, request);
         });
         this.logger.log(`재작성 요청 생성 완료 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`);
+        return newRequest;
     }
 };
 exports.StepApprovalContextService = StepApprovalContextService;
 exports.StepApprovalContextService = StepApprovalContextService = StepApprovalContextService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __param(2, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
-    __param(3, (0, typeorm_1.InjectRepository)(evaluation_line_mapping_entity_1.EvaluationLineMapping)),
-    __param(4, (0, typeorm_1.InjectDataSource)()),
+    __param(3, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
+    __param(4, (0, typeorm_1.InjectRepository)(evaluation_line_mapping_entity_1.EvaluationLineMapping)),
+    __param(5, (0, typeorm_1.InjectDataSource)()),
     __metadata("design:paramtypes", [employee_evaluation_step_approval_1.EmployeeEvaluationStepApprovalService,
+        secondary_evaluation_step_approval_1.SecondaryEvaluationStepApprovalService,
         evaluation_revision_request_1.EvaluationRevisionRequestService,
         typeorm_2.Repository,
         typeorm_2.Repository,

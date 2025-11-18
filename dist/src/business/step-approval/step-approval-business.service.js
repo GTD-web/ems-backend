@@ -16,18 +16,22 @@ const performance_evaluation_service_1 = require("../../context/performance-eval
 const step_approval_context_service_1 = require("../../context/step-approval-context/step-approval-context.service");
 const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
 const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const revision_request_context_service_1 = require("../../context/revision-request-context/revision-request-context.service");
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
+const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepApprovalBusinessService {
     performanceEvaluationService;
     stepApprovalContextService;
     activityLogContextService;
     evaluationCriteriaManagementService;
+    revisionRequestContextService;
     logger = new common_1.Logger(StepApprovalBusinessService_1.name);
-    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService) {
+    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService, revisionRequestContextService) {
         this.performanceEvaluationService = performanceEvaluationService;
         this.stepApprovalContextService = stepApprovalContextService;
         this.activityLogContextService = activityLogContextService;
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
+        this.revisionRequestContextService = revisionRequestContextService;
     }
     async 자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, approvedBy) {
         this.logger.log(`자기평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
@@ -54,16 +58,28 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             this.logger.warn(`1차 평가자를 찾을 수 없습니다 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
             return;
         }
-        const result = await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(primaryEvaluatorId, employeeId, evaluationPeriodId, downward_evaluation_types_1.DownwardEvaluationType.PRIMARY, approvedBy);
+        const result = await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(primaryEvaluatorId, employeeId, evaluationPeriodId, downward_evaluation_types_1.DownwardEvaluationType.PRIMARY, approvedBy, true);
         if (result.submittedCount === 0 && result.skippedCount === 0) {
             this.logger.debug(`1차 하향평가가 없어 제출 상태 변경을 건너뜀 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${primaryEvaluatorId}`);
             return;
+        }
+        try {
+            await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(evaluationPeriodId, employeeId, 'primary', primaryEvaluatorId, evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR, '1차 하향평가 승인으로 인한 재작성 완료 처리');
+            this.logger.log(`1차 하향평가 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${primaryEvaluatorId}`);
+        }
+        catch (error) {
+            this.logger.warn('1차 하향평가 승인 시 재작성 요청 완료 처리 실패', {
+                evaluatorId: primaryEvaluatorId,
+                employeeId,
+                evaluationPeriodId,
+                error: error.message,
+            });
         }
         this.logger.log(`1차 하향평가 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${primaryEvaluatorId}, 제출: ${result.submittedCount}, 건너뜀: ${result.skippedCount}`);
     }
     async 이차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, evaluatorId, approvedBy) {
         this.logger.log(`2차 하향평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`);
-        const result = await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, employeeId, evaluationPeriodId, downward_evaluation_types_1.DownwardEvaluationType.SECONDARY, approvedBy);
+        const result = await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, employeeId, evaluationPeriodId, downward_evaluation_types_1.DownwardEvaluationType.SECONDARY, approvedBy, true);
         if (result.submittedCount === 0 && result.skippedCount === 0) {
             this.logger.debug(`2차 하향평가가 없어 제출 상태 변경을 건너뜀 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`);
             return;
@@ -163,6 +179,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
         }
     }
     async 일차하향평가_확인상태를_변경한다(params) {
+        this.logger.log(`1차 하향평가 단계 승인 상태를 변경한다 - 직원: ${params.employeeId}, 평가기간: ${params.evaluationPeriodId}, 상태: ${params.status}`);
         await this.stepApprovalContextService.일차하향평가_확인상태를_변경한다({
             evaluationPeriodId: params.evaluationPeriodId,
             employeeId: params.employeeId,
@@ -187,7 +204,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
         }
     }
     async 이차하향평가_확인상태를_변경한다(params) {
-        await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+        const approval = await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
             evaluationPeriodId: params.evaluationPeriodId,
             employeeId: params.employeeId,
             evaluatorId: params.evaluatorId,
@@ -211,6 +228,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
                 error: error.message,
             });
         }
+        return approval;
     }
     async 자기평가_승인_시_하위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy) {
         this.logger.log(`자기평가 승인 시 하위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
@@ -274,6 +292,49 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             throw error;
         }
     }
+    async 일차하향평가_승인_시_상위평가를_승인한다(evaluationPeriodId, employeeId, updatedBy) {
+        this.logger.log(`1차 하향평가 승인 시 상위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        try {
+            await this.자기평가_확인상태를_변경한다({
+                evaluationPeriodId,
+                employeeId,
+                status: 'approved',
+                updatedBy,
+            });
+            await this.자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+            this.logger.log(`자기평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        }
+        catch (error) {
+            this.logger.error(`1차 하향평가 승인 시 상위 평가 자동 승인 실패 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+            throw error;
+        }
+    }
+    async 이차하향평가_승인_시_상위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy) {
+        this.logger.log(`2차 하향평가 승인 시 상위 평가 자동 승인 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        try {
+            await this.일차하향평가_확인상태를_변경한다({
+                evaluationPeriodId,
+                employeeId,
+                status: 'approved',
+                updatedBy,
+            });
+            await this.일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+            this.logger.log(`1차 하향평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+            await this.자기평가_확인상태를_변경한다({
+                evaluationPeriodId,
+                employeeId,
+                status: 'approved',
+                updatedBy,
+            });
+            await this.자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
+            this.logger.log(`자기평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+            this.logger.log(`2차 하향평가 승인 시 상위 평가 자동 승인 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        }
+        catch (error) {
+            this.logger.error(`2차 하향평가 승인 시 상위 평가 자동 승인 실패 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+            throw error;
+        }
+    }
 };
 exports.StepApprovalBusinessService = StepApprovalBusinessService;
 exports.StepApprovalBusinessService = StepApprovalBusinessService = StepApprovalBusinessService_1 = __decorate([
@@ -281,6 +342,7 @@ exports.StepApprovalBusinessService = StepApprovalBusinessService = StepApproval
     __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
         step_approval_context_service_1.StepApprovalContextService,
         evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
-        evaluation_criteria_management_service_1.EvaluationCriteriaManagementService])
+        evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
+        revision_request_context_service_1.RevisionRequestContextService])
 ], StepApprovalBusinessService);
 //# sourceMappingURL=step-approval-business.service.js.map

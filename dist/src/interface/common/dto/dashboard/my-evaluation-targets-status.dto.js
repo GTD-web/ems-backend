@@ -13,12 +13,21 @@ exports.MyEvaluationTargetStatusResponseDto = exports.MyTargetSelfEvaluationDto 
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 class MyEvaluationStatusDetailDto {
+    status;
     assignedWbsCount;
     completedEvaluationCount;
     totalScore;
     grade;
 }
 exports.MyEvaluationStatusDetailDto = MyEvaluationStatusDetailDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가 상태 (할당수 = 완료수 = 0: none, 할당수 > 완료수: in_progress, 할당수 = 완료수 > 0: complete)',
+        enum: ['none', 'in_progress', 'complete'],
+        example: 'in_progress',
+    }),
+    __metadata("design:type", String)
+], MyEvaluationStatusDetailDto.prototype, "status", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '평가 대상 WBS 수',
@@ -52,6 +61,7 @@ __decorate([
 class MyDownwardEvaluationStatusDto {
     isPrimary;
     isSecondary;
+    status;
     primaryStatus;
     secondaryStatus;
 }
@@ -70,6 +80,14 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], MyDownwardEvaluationStatusDto.prototype, "isSecondary", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '1차와 2차 평가의 통합 상태 (none, in_progress, complete)',
+        enum: ['none', 'in_progress', 'complete'],
+        example: 'in_progress',
+    }),
+    __metadata("design:type", String)
+], MyDownwardEvaluationStatusDto.prototype, "status", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '1차 평가 현황 (1차 평가자인 경우에만 제공)',

@@ -21,10 +21,13 @@ import {
  * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
  *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
  *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
- * 2. 하향평가 진행 상태가 none이면 → none
- * 3. 하향평가 진행 상태가 in_progress이면 → in_progress
- * 4. 하향평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
- * 5. 하향평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
+ * 2. 2차 평가자인 경우, 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+ * 3. 하향평가 진행 상태가 none이면 → none (승인 상태와 무관하게 진행 상태 우선)
+ * 4. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태와 무관하게 진행 상태 우선)
+ * 5. 하향평가 진행 상태가 complete일 때만 승인 상태 반환:
+ *    - 승인 상태가 approved이면 → approved
+ *    - 승인 상태가 pending이면 → pending
+ *    - 승인 상태가 없으면 → pending (기본값)
  */
 export function 하향평가_통합_상태를_계산한다(
   downwardStatus: DownwardEvaluationStatus,
@@ -33,6 +36,7 @@ export function 하향평가_통합_상태를_계산한다(
     | 'approved'
     | 'revision_requested'
     | 'revision_completed',
+  evaluationType?: 'primary' | 'secondary',
 ):
   | DownwardEvaluationStatus
   | 'pending'
@@ -48,19 +52,31 @@ export function 하향평가_통합_상태를_계산한다(
     return 'revision_completed';
   }
 
-  // 2. 하향평가 진행 상태가 none이면 → none
+  // 2. 2차 평가자인 경우, 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+  if (evaluationType === 'secondary' && approvalStatus === 'approved') {
+    return 'approved';
+  }
+
+  // 3. 하향평가 진행 상태가 none이면 → none (승인 상태와 무관하게 진행 상태 우선)
   if (downwardStatus === 'none') {
     return 'none';
   }
 
-  // 3. 하향평가 진행 상태가 in_progress이면 → in_progress
+  // 4. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태와 무관하게 진행 상태 우선)
   if (downwardStatus === 'in_progress') {
     return 'in_progress';
   }
 
-  // 4. 하향평가 진행 상태가 complete이면 승인 상태 반환 (pending, approved 등)
+  // 5. 하향평가 진행 상태가 complete일 때만 승인 상태 반환
   // downwardStatus === 'complete'
-  return approvalStatus;
+  // 승인 상태가 approved이면 → approved
+  if (approvalStatus === 'approved') {
+    return 'approved';
+  }
+
+  // 승인 상태가 pending이면 → pending
+  // 승인 상태가 없으면 기본값으로 pending 반환
+  return approvalStatus || 'pending';
 }
 
 /**
@@ -101,16 +117,23 @@ export function 이차평가_전체_상태를_계산한다(
   }
 
   // 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환
-  // revision_requested가 하나라도 있으면 최우선 (제출 여부 무관)
-  if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
-    return 'revision_requested';
-  }
-  // revision_completed가 하나라도 있으면 (제출 여부 무관)
+  // revision_completed가 하나라도 있으면 우선 반환 (완료된 것이 우선)
+  // revision_requested + revision_completed 혼합 시 revision_completed 반환
   if (evaluatorStatuses.some((s) => s === 'revision_completed')) {
     return 'revision_completed';
   }
+  // revision_requested가 하나라도 있으면 반환 (제출 여부 무관)
+  if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
+    return 'revision_requested';
+  }
 
-  // 3. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
+  // 3. pending이 하나라도 있으면 pending 반환 (in_progress + pending 등)
+  // pending은 승인 대기 상태이므로 우선적으로 반환
+  if (evaluatorStatuses.some((s) => s === 'pending')) {
+    return 'pending';
+  }
+
+  // 4. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
   const hasInProgress = evaluatorStatuses.some(
     (s) => s === 'in_progress' || s === 'complete',
   );
@@ -121,7 +144,7 @@ export function 이차평가_전체_상태를_계산한다(
     return 'in_progress';
   }
 
-  // 4. 모두 complete 이상인 경우 (none, in_progress 없음)
+  // 5. 모두 complete 이상인 경우 (none, in_progress 없음)
   const allCompleteOrAbove = evaluatorStatuses.every(
     (s) => s === 'complete' || s === 'pending' || s === 'approved',
   );
@@ -135,11 +158,16 @@ export function 이차평가_전체_상태를_계산한다(
     if (evaluatorStatuses.every((s) => s === 'approved')) {
       return 'approved';
     }
-    // 혼합 상태 (pending + approved 등) → in_progress 반환 (진행중)
+    // 혼합 상태 (pending + approved 등) → pending 반환 (하나라도 pending이면 pending)
+    // pending이 하나라도 있으면 전체 상태는 pending
+    if (evaluatorStatuses.some((s) => s === 'pending')) {
+      return 'pending';
+    }
+    // 그 외 혼합 상태 → in_progress 반환 (진행중)
     return 'in_progress';
   }
 
-  // 5. 기본값: in_progress
+  // 6. 기본값: in_progress
   return 'in_progress';
 }
 

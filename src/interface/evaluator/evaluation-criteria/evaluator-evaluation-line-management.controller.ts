@@ -1,4 +1,5 @@
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { EvaluationLineBusinessService } from '@business/evaluation-line/evaluation-line-business.service';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import {
@@ -25,6 +26,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class EvaluatorEvaluationLineManagementController {
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
+    private readonly evaluationLineBusinessService: EvaluationLineBusinessService,
   ) {}
 
   /**
@@ -38,7 +40,7 @@ export class EvaluatorEvaluationLineManagementController {
     @Body() dto: ConfigureSecondaryEvaluatorDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ConfigureEvaluatorResponseDto> {
-    return await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
+    return await this.evaluationLineBusinessService.이차_평가자를_구성한다(
       employeeId,
       wbsItemId,
       periodId,

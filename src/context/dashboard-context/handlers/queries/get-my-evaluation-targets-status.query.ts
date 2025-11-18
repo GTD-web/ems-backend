@@ -354,13 +354,16 @@ export class GetMyEvaluationTargetsStatusHandler
   ): Promise<{
     isPrimary: boolean;
     isSecondary: boolean;
+    status: 'none' | 'in_progress' | 'complete';
     primaryStatus: {
+      status: 'none' | 'in_progress' | 'complete';
       assignedWbsCount: number;
       completedEvaluationCount: number;
       totalScore: number | null;
       grade: string | null;
     } | null;
     secondaryStatus: {
+      status: 'none' | 'in_progress' | 'complete';
       assignedWbsCount: number;
       completedEvaluationCount: number;
       totalScore: number | null;
@@ -380,12 +383,14 @@ export class GetMyEvaluationTargetsStatusHandler
     });
 
     let primaryStatus: {
+      status: 'none' | 'in_progress' | 'complete';
       assignedWbsCount: number;
       completedEvaluationCount: number;
       totalScore: number | null;
       grade: string | null;
     } | null = null;
     let secondaryStatus: {
+      status: 'none' | 'in_progress' | 'complete';
       assignedWbsCount: number;
       completedEvaluationCount: number;
       totalScore: number | null;
@@ -440,7 +445,18 @@ export class GetMyEvaluationTargetsStatusHandler
         }
       }
 
+      // 상태 계산: 할당수 = 완료수 = 0 → "none", 할당수 > 완료수 > 0 → "in_progress", 할당수 = 완료수 (그리고 할당수 > 0) → "complete"
+      let status: 'none' | 'in_progress' | 'complete';
+      if (assignedWbsCount === 0) {
+        status = 'none';
+      } else if (assignedWbsCount === completedEvaluationCount) {
+        status = 'complete';
+      } else {
+        status = 'in_progress';
+      }
+
       primaryStatus = {
+        status,
         assignedWbsCount,
         completedEvaluationCount,
         totalScore,
@@ -496,7 +512,18 @@ export class GetMyEvaluationTargetsStatusHandler
         }
       }
 
+      // 상태 계산: 할당수 = 완료수 = 0 → "none", 할당수 > 완료수 > 0 → "in_progress", 할당수 = 완료수 (그리고 할당수 > 0) → "complete"
+      let status: 'none' | 'in_progress' | 'complete';
+      if (assignedWbsCount === 0) {
+        status = 'none';
+      } else if (assignedWbsCount === completedEvaluationCount) {
+        status = 'complete';
+      } else {
+        status = 'in_progress';
+      }
+
       secondaryStatus = {
+        status,
         assignedWbsCount,
         completedEvaluationCount,
         totalScore,
@@ -504,9 +531,33 @@ export class GetMyEvaluationTargetsStatusHandler
       };
     }
 
+    // 통합 상태 계산: 1차와 2차 상태를 통합
+    // 우선순위: complete > in_progress > none
+    const primaryStatusValue = primaryStatus?.status || 'none';
+    const secondaryStatusValue = secondaryStatus?.status || 'none';
+
+    let integratedStatus: 'none' | 'in_progress' | 'complete';
+    if (
+      primaryStatusValue === 'complete' ||
+      secondaryStatusValue === 'complete'
+    ) {
+      // 둘 중 하나라도 complete이면 complete
+      integratedStatus = 'complete';
+    } else if (
+      primaryStatusValue === 'in_progress' ||
+      secondaryStatusValue === 'in_progress'
+    ) {
+      // 둘 중 하나라도 in_progress이면 in_progress
+      integratedStatus = 'in_progress';
+    } else {
+      // 둘 다 none이면 none
+      integratedStatus = 'none';
+    }
+
     return {
       isPrimary,
       isSecondary,
+      status: integratedStatus,
       primaryStatus,
       secondaryStatus,
     };

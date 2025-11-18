@@ -1,4 +1,16 @@
 /**
+ * 직원 상태 enum
+ */
+export enum EmployeeStatus {
+  /** 재직중 */
+  ACTIVE = '재직중',
+  /** 휴직 */
+  ON_LEAVE = '휴직',
+  /** 퇴사 */
+  TERMINATED = '퇴사',
+}
+
+/**
  * SSO 조직 정보 조회 서비스 인터페이스
  */
 export interface ISSOOrganizationService {
@@ -80,6 +92,14 @@ export interface EmployeeInfo {
   email: string;
   phoneNumber?: string;
   isTerminated: boolean;
+  /** 직원 상태 */
+  status?: EmployeeStatus;
+  /** 입사일 */
+  hireDate?: string;
+  /** 생년월일 */
+  dateOfBirth?: string;
+  /** 성별 (예: MALE, FEMALE) */
+  gender?: string;
   department?: DepartmentInfo;
   position?: PositionInfo;
   jobTitle?: JobTitleInfo;
@@ -93,6 +113,10 @@ export interface DepartmentInfo {
   departmentCode: string;
   departmentName: string;
   parentDepartmentId?: string;
+  /** 부서 타입 (예: TEAM, DEPARTMENT 등) */
+  type?: string;
+  /** 부서 순서 */
+  order?: number;
 }
 
 /**
@@ -102,6 +126,10 @@ export interface PositionInfo {
   id: string;
   positionName: string;
   positionLevel: number;
+  /** 직책 코드 */
+  positionCode?: string;
+  /** 관리 권한 보유 여부 */
+  hasManagementAuthority?: boolean;
 }
 
 /**
@@ -111,6 +139,8 @@ export interface JobTitleInfo {
   id: string;
   jobTitleName: string;
   jobTitleLevel: number;
+  /** 직급 코드 */
+  jobTitleCode?: string;
 }
 
 /**
@@ -134,6 +164,10 @@ export interface DepartmentNode {
   employeeCount: number;
   employees: EmployeeInfo[];
   children: DepartmentNode[];
+  /** 부서 타입 (예: TEAM, DEPARTMENT 등) */
+  type?: string;
+  /** 부서 순서 */
+  order?: number;
 }
 
 /**

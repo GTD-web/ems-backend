@@ -15,6 +15,7 @@ var SSOServiceImpl_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SSOServiceImpl = void 0;
 const common_1 = require("@nestjs/common");
+const interfaces_1 = require("./interfaces");
 const json_storage_util_1 = require("./utils/json-storage.util");
 let SSOServiceImpl = SSOServiceImpl_1 = class SSOServiceImpl {
     config;
@@ -413,22 +414,44 @@ let SSOServiceImpl = SSOServiceImpl_1 = class SSOServiceImpl {
         }
     }
     mapToEmployeeInfo(data) {
-        const isTerminated = data.status !== '재직중' &&
-            data.status !== 'ACTIVE' &&
-            data.status !== 'active';
+        const mapStatusToEnum = (status) => {
+            if (!status)
+                return undefined;
+            if (status === '재직중' || status === 'ACTIVE' || status === 'active') {
+                return interfaces_1.EmployeeStatus.ACTIVE;
+            }
+            if (status === '휴직' || status === 'ON_LEAVE' || status === 'on_leave') {
+                return interfaces_1.EmployeeStatus.ON_LEAVE;
+            }
+            if (status === '퇴사' || status === 'TERMINATED' || status === 'terminated') {
+                return interfaces_1.EmployeeStatus.TERMINATED;
+            }
+            return undefined;
+        };
+        const employeeStatus = mapStatusToEnum(data.status);
+        const isTerminated = data.isTerminated !== undefined
+            ? data.isTerminated
+            : employeeStatus === interfaces_1.EmployeeStatus.TERMINATED ||
+                (employeeStatus !== interfaces_1.EmployeeStatus.ACTIVE && employeeStatus !== interfaces_1.EmployeeStatus.ON_LEAVE);
         return {
             id: data.id,
             employeeNumber: data.employeeNumber,
             name: data.name,
             email: data.email,
             phoneNumber: data.phoneNumber || undefined,
-            isTerminated: data.isTerminated !== undefined ? data.isTerminated : isTerminated,
+            isTerminated,
+            status: employeeStatus,
+            hireDate: data.hireDate,
+            dateOfBirth: data.dateOfBirth,
+            gender: data.gender,
             department: data.department
                 ? {
                     id: data.department.id,
                     departmentCode: data.department.departmentCode,
                     departmentName: data.department.departmentName,
                     parentDepartmentId: data.department.parentDepartmentId,
+                    type: data.department.type,
+                    order: data.department.order,
                 }
                 : undefined,
             position: data.position
@@ -436,6 +459,8 @@ let SSOServiceImpl = SSOServiceImpl_1 = class SSOServiceImpl {
                     id: data.position.id,
                     positionName: data.position.positionTitle || data.position.positionName,
                     positionLevel: data.position.level || data.position.positionLevel,
+                    positionCode: data.position.positionCode,
+                    hasManagementAuthority: data.position.hasManagementAuthority,
                 }
                 : undefined,
             jobTitle: data.rank
@@ -443,12 +468,14 @@ let SSOServiceImpl = SSOServiceImpl_1 = class SSOServiceImpl {
                     id: data.rank.id,
                     jobTitleName: data.rank.rankName,
                     jobTitleLevel: data.rank.level,
+                    jobTitleCode: data.rank.rankCode,
                 }
                 : data.jobTitle
                     ? {
                         id: data.jobTitle.id,
                         jobTitleName: data.jobTitle.jobTitleName,
                         jobTitleLevel: data.jobTitle.jobTitleLevel,
+                        jobTitleCode: data.jobTitle.jobTitleCode,
                     }
                     : undefined,
         };
@@ -468,6 +495,8 @@ let SSOServiceImpl = SSOServiceImpl_1 = class SSOServiceImpl {
             children: Array.isArray(childDepartments)
                 ? childDepartments.map((child) => this.mapToDepartmentNode(child))
                 : [],
+            type: data.type,
+            order: data.order,
         };
     }
 };

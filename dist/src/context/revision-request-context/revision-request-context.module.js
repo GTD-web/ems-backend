@@ -12,6 +12,7 @@ const typeorm_1 = require("@nestjs/typeorm");
 const revision_request_context_service_1 = require("./revision-request-context.service");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 const employee_evaluation_step_approval_1 = require("../../domain/sub/employee-evaluation-step-approval");
+const secondary_evaluation_step_approval_1 = require("../../domain/sub/secondary-evaluation-step-approval");
 const employee_entity_1 = require("../../domain/common/employee/employee.entity");
 const evaluation_period_entity_1 = require("../../domain/core/evaluation-period/evaluation-period.entity");
 const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
@@ -28,6 +29,7 @@ exports.RevisionRequestContextModule = RevisionRequestContextModule = __decorate
             ]),
             evaluation_revision_request_1.EvaluationRevisionRequestModule,
             employee_evaluation_step_approval_1.EmployeeEvaluationStepApprovalModule,
+            secondary_evaluation_step_approval_1.SecondaryEvaluationStepApprovalModule,
         ],
         providers: [revision_request_context_service_1.RevisionRequestContextService],
         exports: [revision_request_context_service_1.RevisionRequestContextService],

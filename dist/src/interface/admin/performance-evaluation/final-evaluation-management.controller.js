@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FinalEvaluationManagementController = void 0;
 const performance_evaluation_service_1 = require("../../../context/performance-evaluation-context/performance-evaluation.service");
+const final_evaluation_business_service_1 = require("../../../business/final-evaluation/final-evaluation-business.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const common_1 = require("@nestjs/common");
@@ -23,12 +24,14 @@ const final_evaluation_api_decorators_1 = require("../../common/decorators/perfo
 const final_evaluation_dto_1 = require("../../common/dto/performance-evaluation/final-evaluation.dto");
 let FinalEvaluationManagementController = class FinalEvaluationManagementController {
     performanceEvaluationService;
-    constructor(performanceEvaluationService) {
+    finalEvaluationBusinessService;
+    constructor(performanceEvaluationService, finalEvaluationBusinessService) {
         this.performanceEvaluationService = performanceEvaluationService;
+        this.finalEvaluationBusinessService = finalEvaluationBusinessService;
     }
     async upsertFinalEvaluation(employeeId, periodId, dto, user) {
         const actionBy = user.id;
-        const evaluationId = await this.performanceEvaluationService.최종평가를_저장한다(employeeId, periodId, dto.evaluationGrade, dto.jobGrade, dto.jobDetailedGrade, dto.finalComments, actionBy);
+        const evaluationId = await this.finalEvaluationBusinessService.최종평가를_저장한다(employeeId, periodId, dto.evaluationGrade, dto.jobGrade, dto.jobDetailedGrade, dto.finalComments, actionBy);
         return {
             id: evaluationId,
             message: '최종평가가 성공적으로 저장되었습니다.',
@@ -112,6 +115,7 @@ exports.FinalEvaluationManagementController = FinalEvaluationManagementControlle
     (0, swagger_1.ApiTags)('C-6. 관리자 - 성과평가 - 최종평가'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/performance-evaluation/final-evaluations'),
-    __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService])
+    __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
+        final_evaluation_business_service_1.FinalEvaluationBusinessService])
 ], FinalEvaluationManagementController);
 //# sourceMappingURL=final-evaluation-management.controller.js.map

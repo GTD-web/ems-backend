@@ -35,15 +35,14 @@ import { TransactionManagerService } from './transaction-manager.service';
         }
 
         return {
-          type: 'postgres',
+          type: 'postgres' as const,
           host,
           port,
           username,
           password,
           database,
           autoLoadEntities: true,
-          dropSchema: isTest,
-          synchronize: configService.get<boolean>('DB_SYNCHRONIZE', isDevelopment || isTest),
+          synchronize: isDevelopment && !isTest, // 개발 환경에서만 스키마 자동 동기화
           logging: configService.get<boolean>('DB_LOGGING', isDevelopment && !isTest),
           ssl: needsSSL ? { rejectUnauthorized: false } : false,
           extra: {

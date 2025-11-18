@@ -128,6 +128,7 @@ class EmployeeInfoDto {
     departmentId;
     departmentName;
     status;
+    hireDate;
 }
 exports.EmployeeInfoDto = EmployeeInfoDto;
 __decorate([
@@ -182,13 +183,24 @@ __decorate([
     __metadata("design:type", String)
 ], EmployeeInfoDto.prototype, "departmentName", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
+    (0, swagger_1.ApiPropertyOptional)({
         description: '직원 상태',
-        example: 'ACTIVE',
-        enum: ['ACTIVE', 'INACTIVE', 'LEAVE', 'RESIGNED'],
+        enum: ['재직중', '휴직중', '퇴사'],
+        example: '재직중',
+        nullable: true,
     }),
     __metadata("design:type", String)
 ], EmployeeInfoDto.prototype, "status", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '입사일',
+        type: 'string',
+        format: 'date',
+        example: '2024-01-01',
+        nullable: true,
+    }),
+    __metadata("design:type", Object)
+], EmployeeInfoDto.prototype, "hireDate", void 0);
 class WbsEvaluationCriterionDto {
     criterionId;
     criteria;

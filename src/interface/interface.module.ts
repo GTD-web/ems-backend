@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { AuditLogInterceptor } from './common/interceptors/audit-log.interceptor';
 import { UserInterfaceModule } from './user/user-interface.module';
 import { EvaluatorInterfaceModule } from './evaluator/evaluator-interface.module';
+import { PublicInterfaceModule } from './public/public-interface.module';
 
 /**
  * 인터페이스 모듈
@@ -17,6 +18,7 @@ import { EvaluatorInterfaceModule } from './evaluator/evaluator-interface.module
  * - 관리자 인터페이스
  * - 사용자 인터페이스
  * - 평가자 인터페이스
+ * - Public 인터페이스 (인증 불필요)
  *
  * JWT 인증 가드와 Audit 로그 인터셉터를 전역으로 적용합니다.
  */
@@ -29,6 +31,7 @@ import { EvaluatorInterfaceModule } from './evaluator/evaluator-interface.module
     AdminInterfaceModule, // 관리자 인터페이스 모듈
     UserInterfaceModule, // 사용자 인터페이스 모듈
     EvaluatorInterfaceModule, // 평가자 인터페이스 모듈
+    PublicInterfaceModule, // Public 인터페이스 모듈 (크론 작업 등)
   ],
   controllers: [],
   providers: [

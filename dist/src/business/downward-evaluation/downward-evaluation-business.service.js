@@ -23,10 +23,12 @@ const evaluation_period_management_service_1 = require("../../context/evaluation
 const revision_request_context_service_1 = require("../../context/revision-request-context/revision-request-context.service");
 const step_approval_context_service_1 = require("../../context/step-approval-context/step-approval-context.service");
 const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
+const downward_evaluation_1 = require("../../context/performance-evaluation-context/handlers/downward-evaluation");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
 const wbs_self_evaluation_entity_1 = require("../../domain/core/wbs-self-evaluation/wbs-self-evaluation.entity");
 const downward_evaluation_entity_1 = require("../../domain/core/downward-evaluation/downward-evaluation.entity");
+const employee_evaluation_step_approval_1 = require("../../domain/sub/employee-evaluation-step-approval");
 let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = class DownwardEvaluationBusinessService {
     performanceEvaluationService;
     evaluationCriteriaManagementService;
@@ -57,7 +59,34 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
             params.downwardEvaluationScore !== null) {
             await this.evaluationPeriodManagementContextService.평가_점수를_검증한다(params.periodId, params.downwardEvaluationScore);
         }
+        const existingEvaluations = await this.performanceEvaluationService.하향평가_목록을_조회한다(new downward_evaluation_1.GetDownwardEvaluationListQuery(params.evaluatorId, params.evaluateeId, params.periodId, params.wbsId, 'primary', undefined, 1, 1));
+        const isNewEvaluation = !existingEvaluations || existingEvaluations.items?.length === 0;
         const evaluationId = await this.performanceEvaluationService.하향평가를_저장한다(params.evaluatorId, params.evaluateeId, params.periodId, params.wbsId, params.selfEvaluationId, 'primary', params.downwardEvaluationContent, params.downwardEvaluationScore, params.actionBy);
+        if (isNewEvaluation) {
+            try {
+                await this.activityLogContextService.활동내역을_기록한다({
+                    periodId: params.periodId,
+                    employeeId: params.evaluateeId,
+                    activityType: 'downward_evaluation',
+                    activityAction: 'created',
+                    activityTitle: '1차 하향평가 생성',
+                    relatedEntityType: 'downward_evaluation',
+                    relatedEntityId: evaluationId,
+                    performedBy: params.actionBy,
+                    activityMetadata: {
+                        evaluatorId: params.evaluatorId,
+                        evaluationType: 'primary',
+                        wbsId: params.wbsId,
+                    },
+                });
+            }
+            catch (error) {
+                this.logger.warn('1차 하향평가 생성 활동 내역 기록 실패', {
+                    evaluationId,
+                    error: error.message,
+                });
+            }
+        }
         this.logger.log('1차 하향평가 저장 완료', { evaluationId });
         return evaluationId;
     }
@@ -71,7 +100,34 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
             params.downwardEvaluationScore !== null) {
             await this.evaluationPeriodManagementContextService.평가_점수를_검증한다(params.periodId, params.downwardEvaluationScore);
         }
+        const existingEvaluations = await this.performanceEvaluationService.하향평가_목록을_조회한다(new downward_evaluation_1.GetDownwardEvaluationListQuery(params.evaluatorId, params.evaluateeId, params.periodId, params.wbsId, 'secondary', undefined, 1, 1));
+        const isNewEvaluation = !existingEvaluations || existingEvaluations.items?.length === 0;
         const evaluationId = await this.performanceEvaluationService.하향평가를_저장한다(params.evaluatorId, params.evaluateeId, params.periodId, params.wbsId, params.selfEvaluationId, 'secondary', params.downwardEvaluationContent, params.downwardEvaluationScore, params.actionBy);
+        if (isNewEvaluation) {
+            try {
+                await this.activityLogContextService.활동내역을_기록한다({
+                    periodId: params.periodId,
+                    employeeId: params.evaluateeId,
+                    activityType: 'downward_evaluation',
+                    activityAction: 'created',
+                    activityTitle: '2차 하향평가 생성',
+                    relatedEntityType: 'downward_evaluation',
+                    relatedEntityId: evaluationId,
+                    performedBy: params.actionBy,
+                    activityMetadata: {
+                        evaluatorId: params.evaluatorId,
+                        evaluationType: 'secondary',
+                        wbsId: params.wbsId,
+                    },
+                });
+            }
+            catch (error) {
+                this.logger.warn('2차 하향평가 생성 활동 내역 기록 실패', {
+                    evaluationId,
+                    error: error.message,
+                });
+            }
+        }
         this.logger.log('2차 하향평가 저장 완료', { evaluationId });
         return evaluationId;
     }
@@ -115,6 +171,21 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
             revisionComment,
             updatedBy: requestedBy,
         });
+        try {
+            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
+                evaluationPeriodId,
+                employeeId,
+                step: 'primary',
+                status: 'revision_requested',
+                revisionComment,
+                updatedBy: requestedBy,
+            });
+        }
+        catch (error) {
+            this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+                error: error.message,
+            });
+        }
         this.logger.log(`1차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
     }
     async 이차_하향평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId, employeeId, evaluatorId, revisionComment, requestedBy) {
@@ -125,7 +196,7 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
         catch (error) {
             this.logger.warn(`2차 하향평가 초기화 실패 (하향평가가 없을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`, error);
         }
-        await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+        const approval = await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
             evaluationPeriodId,
             employeeId,
             evaluatorId,
@@ -133,7 +204,24 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
             revisionComment,
             updatedBy: requestedBy,
         });
+        try {
+            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
+                evaluationPeriodId,
+                employeeId,
+                step: 'secondary',
+                status: 'revision_requested',
+                revisionComment,
+                updatedBy: requestedBy,
+                evaluatorId,
+            });
+        }
+        catch (error) {
+            this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+                error: error.message,
+            });
+        }
         this.logger.log(`2차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`);
+        return approval;
     }
     async 피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, evaluateeId, periodId, evaluationType, submittedBy) {
         this.logger.log('하향평가 일괄 제출 시작', {
@@ -163,6 +251,31 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
                 evaluationType,
                 error: error.message,
             });
+        }
+        if (evaluationType === downward_evaluation_types_1.DownwardEvaluationType.SECONDARY &&
+            result.submittedCount > 0) {
+            try {
+                await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+                    evaluationPeriodId: periodId,
+                    employeeId: evaluateeId,
+                    evaluatorId: evaluatorId,
+                    status: employee_evaluation_step_approval_1.StepApprovalStatus.REVISION_COMPLETED,
+                    updatedBy: submittedBy,
+                });
+                this.logger.log('2차 평가 일괄 제출 시 개별 승인 상태를 revision_completed로 설정 완료', {
+                    evaluatorId,
+                    evaluateeId,
+                    periodId,
+                });
+            }
+            catch (error) {
+                this.logger.warn('2차 평가 개별 승인 상태 설정 실패', {
+                    evaluatorId,
+                    evaluateeId,
+                    periodId,
+                    error: error.message,
+                });
+            }
         }
         try {
             const evaluationTypeText = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY

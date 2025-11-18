@@ -48,7 +48,7 @@ export declare class PerformanceEvaluationService implements IPerformanceEvaluat
     일차_하향평가를_제출한다(evaluateeId: string, periodId: string, wbsId: string, evaluatorId: string, submittedBy: string): Promise<void>;
     이차_하향평가를_제출한다(evaluateeId: string, periodId: string, wbsId: string, evaluatorId: string, submittedBy: string): Promise<void>;
     하향평가를_제출한다(evaluationId: string, submittedBy?: string): Promise<void>;
-    피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId: string, evaluateeId: string, periodId: string, evaluationType: DownwardEvaluationType, submittedBy: string): Promise<{
+    피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId: string, evaluateeId: string, periodId: string, evaluationType: DownwardEvaluationType, submittedBy: string, forceSubmit?: boolean): Promise<{
         submittedCount: number;
         skippedCount: number;
         failedCount: number;

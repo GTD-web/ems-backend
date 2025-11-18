@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const step_approval_context_service_1 = require("./step-approval-context.service");
 const employee_evaluation_step_approval_1 = require("../../domain/sub/employee-evaluation-step-approval");
+const secondary_evaluation_step_approval_1 = require("../../domain/sub/secondary-evaluation-step-approval");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 const evaluation_line_mapping_entity_1 = require("../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity");
@@ -25,6 +26,7 @@ exports.StepApprovalContextModule = StepApprovalContextModule = __decorate([
                 evaluation_line_mapping_entity_1.EvaluationLineMapping,
             ]),
             employee_evaluation_step_approval_1.EmployeeEvaluationStepApprovalModule,
+            secondary_evaluation_step_approval_1.SecondaryEvaluationStepApprovalModule,
             evaluation_revision_request_1.EvaluationRevisionRequestModule,
         ],
         providers: [step_approval_context_service_1.StepApprovalContextService],

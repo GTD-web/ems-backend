@@ -14,6 +14,7 @@ import { PeerEvaluation } from '@domain/core/peer-evaluation/peer-evaluation.ent
 import { FinalEvaluation } from '@domain/core/final-evaluation/final-evaluation.entity';
 import { EmployeeEvaluationPeriodStatusDto } from '../../../interfaces/dashboard-context.interface';
 import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
+import { SecondaryEvaluationStepApproval } from '@domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity';
 import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
 export declare class GetEmployeeEvaluationPeriodStatusQuery implements IQuery {
@@ -37,8 +38,9 @@ export declare class GetEmployeeEvaluationPeriodStatusHandler implements IQueryH
     private readonly finalEvaluationRepository;
     private readonly revisionRequestRepository;
     private readonly revisionRequestRecipientRepository;
+    private readonly secondaryStepApprovalRepository;
     private readonly stepApprovalService;
     private readonly logger;
-    constructor(mappingRepository: Repository<EvaluationPeriodEmployeeMapping>, periodRepository: Repository<EvaluationPeriod>, employeeRepository: Repository<Employee>, projectAssignmentRepository: Repository<EvaluationProjectAssignment>, wbsAssignmentRepository: Repository<EvaluationWbsAssignment>, wbsCriteriaRepository: Repository<WbsEvaluationCriteria>, evaluationLineRepository: Repository<EvaluationLine>, evaluationLineMappingRepository: Repository<EvaluationLineMapping>, wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>, downwardEvaluationRepository: Repository<DownwardEvaluation>, peerEvaluationRepository: Repository<PeerEvaluation>, finalEvaluationRepository: Repository<FinalEvaluation>, revisionRequestRepository: Repository<EvaluationRevisionRequest>, revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>, stepApprovalService: EmployeeEvaluationStepApprovalService);
+    constructor(mappingRepository: Repository<EvaluationPeriodEmployeeMapping>, periodRepository: Repository<EvaluationPeriod>, employeeRepository: Repository<Employee>, projectAssignmentRepository: Repository<EvaluationProjectAssignment>, wbsAssignmentRepository: Repository<EvaluationWbsAssignment>, wbsCriteriaRepository: Repository<WbsEvaluationCriteria>, evaluationLineRepository: Repository<EvaluationLine>, evaluationLineMappingRepository: Repository<EvaluationLineMapping>, wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>, downwardEvaluationRepository: Repository<DownwardEvaluation>, peerEvaluationRepository: Repository<PeerEvaluation>, finalEvaluationRepository: Repository<FinalEvaluation>, revisionRequestRepository: Repository<EvaluationRevisionRequest>, revisionRequestRecipientRepository: Repository<EvaluationRevisionRequestRecipient>, secondaryStepApprovalRepository: Repository<SecondaryEvaluationStepApproval>, stepApprovalService: EmployeeEvaluationStepApprovalService);
     execute(query: GetEmployeeEvaluationPeriodStatusQuery): Promise<EmployeeEvaluationPeriodStatusDto | null>;
 }

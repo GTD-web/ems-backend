@@ -1,5 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
+import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { EmployeeService } from '@domain/common/employee/employee.service';
 import { ProjectService } from '@domain/common/project/project.service';
 import { EvaluationLineService } from '@domain/core/evaluation-line/evaluation-line.service';
@@ -27,6 +28,7 @@ export class WbsAssignmentBusinessService {
 
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
+    private readonly activityLogContextService: EvaluationActivityLogContextService,
     private readonly employeeService: EmployeeService,
     private readonly projectService: ProjectService,
     private readonly evaluationLineService: EvaluationLineService,
@@ -117,7 +119,31 @@ export class WbsAssignmentBusinessService {
       createdMappings: wbsEvaluationLineResult.createdMappings,
     });
 
-    // 5. 알림 발송 (추후 구현)
+    // 5. 활동 내역 기록
+    try {
+      await this.activityLogContextService.활동내역을_기록한다({
+        periodId: params.periodId,
+        employeeId: params.employeeId,
+        activityType: 'wbs_assignment',
+        activityAction: 'created',
+        activityTitle: 'WBS 할당',
+        relatedEntityType: 'wbs_assignment',
+        relatedEntityId: assignment.id,
+        performedBy: params.assignedBy,
+        activityMetadata: {
+          wbsItemId: params.wbsItemId,
+          projectId: params.projectId,
+        },
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 WBS 할당은 정상 처리
+      this.logger.warn('WBS 할당 생성 활동 내역 기록 실패', {
+        assignmentId: assignment.id,
+        error: error.message,
+      });
+    }
+
+    // 6. 알림 발송 (추후 구현)
     // TODO: WBS 할당 알림 발송
     // await this.notificationService.send({
     //   type: 'WBS_ASSIGNED',
@@ -209,7 +235,31 @@ export class WbsAssignmentBusinessService {
       );
     }
 
-    // 6. 알림 발송 (추후 구현)
+    // 6. 활동 내역 기록
+    try {
+      await this.activityLogContextService.활동내역을_기록한다({
+        periodId,
+        employeeId,
+        activityType: 'wbs_assignment',
+        activityAction: 'cancelled',
+        activityTitle: 'WBS 할당 취소',
+        relatedEntityType: 'wbs_assignment',
+        relatedEntityId: params.assignmentId,
+        performedBy: params.cancelledBy,
+        activityMetadata: {
+          wbsItemId,
+          projectId: assignment.projectId,
+        },
+      });
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 WBS 할당 취소는 정상 처리
+      this.logger.warn('WBS 할당 취소 활동 내역 기록 실패', {
+        assignmentId: params.assignmentId,
+        error: error.message,
+      });
+    }
+
+    // 7. 알림 발송 (추후 구현)
     // TODO: WBS 할당 취소 알림 발송
     // await this.notificationService.send({
     //   type: 'WBS_ASSIGNMENT_CANCELLED',
@@ -267,7 +317,7 @@ export class WbsAssignmentBusinessService {
       return;
     }
 
-    // 2. 기존 취소 메서드 호출
+    // 2. 기존 취소 메서드 호출 (활동 내역 기록 포함)
     await this.WBS_할당을_취소한다({
       assignmentId: assignmentDetail.id,
       cancelledBy: params.cancelledBy,
@@ -349,7 +399,35 @@ export class WbsAssignmentBusinessService {
       }),
     );
 
-    // 4. 각 직원에게 알림 발송 (추후 구현)
+    // 4. 각 할당에 대해 활동 내역 기록
+    await Promise.all(
+      assignments.map(async (assignment) => {
+        try {
+          await this.activityLogContextService.활동내역을_기록한다({
+            periodId: assignment.periodId,
+            employeeId: assignment.employeeId,
+            activityType: 'wbs_assignment',
+            activityAction: 'created',
+            activityTitle: 'WBS 할당',
+            relatedEntityType: 'wbs_assignment',
+            relatedEntityId: assignment.id,
+            performedBy: params.assignedBy,
+            activityMetadata: {
+              wbsItemId: assignment.wbsItemId,
+              projectId: assignment.projectId,
+            },
+          });
+        } catch (error) {
+          // 활동 내역 기록 실패 시에도 WBS 할당은 정상 처리
+          this.logger.warn('WBS 대량 할당 활동 내역 기록 실패', {
+            assignmentId: assignment.id,
+            error: error.message,
+          });
+        }
+      }),
+    );
+
+    // 5. 각 직원에게 알림 발송 (추후 구현)
     // TODO: 대량 할당 알림 발송
     // const uniqueEmployeeIds = [
     //   ...new Set(params.assignments.map((a) => a.employeeId)),

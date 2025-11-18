@@ -20,8 +20,10 @@ import { FinalEvaluation } from '../../domain/core/final-evaluation/final-evalua
 import { Deliverable } from '../../domain/core/deliverable/deliverable.entity';
 import { EvaluationRevisionRequest } from '../../domain/sub/evaluation-revision-request/evaluation-revision-request.entity';
 import { EvaluationRevisionRequestRecipient } from '../../domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
+import { SecondaryEvaluationStepApproval } from '../../domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity';
 import { QUERY_HANDLERS } from './handlers/queries';
 import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evaluation-step-approval';
+import { SecondaryEvaluationStepApprovalModule } from '@domain/sub/secondary-evaluation-step-approval';
 
 /**
  * 대시보드 컨텍스트 모듈
@@ -33,6 +35,7 @@ import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evalu
   imports: [
     CqrsModule,
     EmployeeEvaluationStepApprovalModule,
+    SecondaryEvaluationStepApprovalModule,
     TypeOrmModule.forFeature([
       EvaluationPeriod,
       EvaluationPeriodEmployeeMapping,
@@ -52,6 +55,7 @@ import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evalu
       Deliverable,
       EvaluationRevisionRequest,
       EvaluationRevisionRequestRecipient,
+      SecondaryEvaluationStepApproval,
     ]),
   ],
   providers: [DashboardService, ...QUERY_HANDLERS],

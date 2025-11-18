@@ -23,7 +23,8 @@ export declare class EmployeeInfoDto implements EmployeeInfo {
     phoneNumber?: string;
     departmentId: string;
     departmentName?: string;
-    status: string;
+    status?: '재직중' | '휴직중' | '퇴사';
+    hireDate?: Date | null;
 }
 export declare class WbsEvaluationCriterionDto implements WbsEvaluationCriterion {
     criterionId: string;

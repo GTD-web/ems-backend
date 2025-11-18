@@ -684,11 +684,17 @@ export class EmployeeSyncService implements OnModuleInit {
 
         if (needsUpdate) {
           // 기존 직원 업데이트
+          // isAccessible 필드는 동기화 시 변경하지 않음 (수동 설정 값 보존)
+          const preservedIsAccessible = existingEmployee.isAccessible;
+
           Object.assign(existingEmployee, {
             employeeNumber: mappedData.employeeNumber,
             name: mappedData.name,
             email: mappedData.email,
             phoneNumber: mappedData.phoneNumber,
+            dateOfBirth: mappedData.dateOfBirth,
+            gender: mappedData.gender,
+            hireDate: mappedData.hireDate,
             managerId: mappedData.managerId,
             status: mappedData.status,
             departmentId: mappedData.departmentId,
@@ -706,6 +712,8 @@ export class EmployeeSyncService implements OnModuleInit {
           // 개발환경에서는 접근 가능하도록 설정
           if (this.configService.get<string>('NODE_ENV') === 'development') {
             existingEmployee.isAccessible = true;
+          } else {
+            existingEmployee.isAccessible = preservedIsAccessible;
           }
 
           return { success: true, employee: existingEmployee, isNew: false };
@@ -823,6 +831,46 @@ export class EmployeeSyncService implements OnModuleInit {
       return true;
     }
 
+    // 상태가 변경된 경우
+    if (existingEmployee.status !== mappedData.status) {
+      return true;
+    }
+
+    // 입사일이 변경된 경우
+    if (mappedData.hireDate) {
+      const existingHireDate = existingEmployee.hireDate
+        ? new Date(existingEmployee.hireDate)
+        : null;
+      const mappedHireDate = new Date(mappedData.hireDate);
+
+      if (
+        !existingHireDate ||
+        existingHireDate.getTime() !== mappedHireDate.getTime()
+      ) {
+        return true;
+      }
+    }
+
+    // 생년월일이 변경된 경우
+    if (mappedData.dateOfBirth) {
+      const existingDateOfBirth = existingEmployee.dateOfBirth
+        ? new Date(existingEmployee.dateOfBirth)
+        : null;
+      const mappedDateOfBirth = new Date(mappedData.dateOfBirth);
+
+      if (
+        !existingDateOfBirth ||
+        existingDateOfBirth.getTime() !== mappedDateOfBirth.getTime()
+      ) {
+        return true;
+      }
+    }
+
+    // 성별이 변경된 경우
+    if (mappedData.gender && existingEmployee.gender !== mappedData.gender) {
+      return true;
+    }
+
     return false;
   }
 
@@ -934,7 +982,10 @@ export class EmployeeSyncService implements OnModuleInit {
 
       if (existingEmployee) {
         // 기존 엔티티에 새 데이터 덮어쓰기
-        // 주의: roles는 SSO 로그인 시에만 업데이트되므로 동기화에서 제외
+
+        // isAccessible 필드는 동기화 시 변경하지 않음 (수동 설정 값 보존)
+        const preservedIsAccessible = existingEmployee.isAccessible;
+
         Object.assign(existingEmployee, {
           employeeNumber: employee.employeeNumber,
           name: employee.name,
@@ -964,6 +1015,8 @@ export class EmployeeSyncService implements OnModuleInit {
         // 개발환경에서는 접근 가능하도록 설정
         if (this.configService.get<string>('NODE_ENV') === 'development') {
           existingEmployee.isAccessible = true;
+        } else {
+          existingEmployee.isAccessible = preservedIsAccessible;
         }
 
         await this.employeeService.save(existingEmployee);
