@@ -35,6 +35,22 @@ async function 평가자별_2차평가_단계승인_상태를_조회한다(evalu
                 .orderBy('request.requestedAt', 'DESC')
                 .getOne();
         }
+        if (secondaryApproval.status === 'revision_completed' &&
+            !recipient &&
+            !secondaryApproval.revisionRequestId) {
+            return {
+                evaluatorId,
+                status: 'pending',
+                revisionRequestId: null,
+                revisionComment: null,
+                isCompleted: false,
+                completedAt: null,
+                responseComment: null,
+                requestedAt: null,
+                approvedBy: null,
+                approvedAt: null,
+            };
+        }
         return {
             evaluatorId,
             status: secondaryApproval.status,

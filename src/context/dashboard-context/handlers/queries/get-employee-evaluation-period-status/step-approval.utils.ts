@@ -91,6 +91,26 @@ export async function 평가자별_2차평가_단계승인_상태를_조회한�
         .getOne();
     }
 
+    // revision_completed 상태인데 실제 재작성 요청이 없으면 pending으로 반환
+    if (
+      secondaryApproval.status === 'revision_completed' &&
+      !recipient &&
+      !secondaryApproval.revisionRequestId
+    ) {
+      return {
+        evaluatorId,
+        status: 'pending' as StepApprovalStatus,
+        revisionRequestId: null,
+        revisionComment: null,
+        isCompleted: false,
+        completedAt: null,
+        responseComment: null,
+        requestedAt: null,
+        approvedBy: null,
+        approvedAt: null,
+      };
+    }
+
     // secondary_evaluation_step_approval 테이블의 상태를 그대로 반환
     // stepApproval.secondaryEvaluationStatuses는 실제 데이터베이스 값을 반영해야 함
     return {

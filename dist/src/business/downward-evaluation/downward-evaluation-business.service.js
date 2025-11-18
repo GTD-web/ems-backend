@@ -28,7 +28,6 @@ const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revis
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
 const wbs_self_evaluation_entity_1 = require("../../domain/core/wbs-self-evaluation/wbs-self-evaluation.entity");
 const downward_evaluation_entity_1 = require("../../domain/core/downward-evaluation/downward-evaluation.entity");
-const employee_evaluation_step_approval_1 = require("../../domain/sub/employee-evaluation-step-approval");
 let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = class DownwardEvaluationBusinessService {
     performanceEvaluationService;
     evaluationCriteriaManagementService;
@@ -231,16 +230,16 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
             evaluationType,
         });
         const result = await this.performanceEvaluationService.피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, evaluateeId, periodId, evaluationType, submittedBy);
+        const step = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
+            ? 'primary'
+            : 'secondary';
+        const recipientType = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
+            ? evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR
+            : evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR;
+        const responseComment = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
+            ? '1차 하향평가 일괄 제출로 인한 재작성 완료 처리'
+            : '2차 하향평가 일괄 제출로 인한 재작성 완료 처리';
         try {
-            const step = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
-                ? 'primary'
-                : 'secondary';
-            const recipientType = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
-                ? evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR
-                : evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR;
-            const responseComment = evaluationType === downward_evaluation_types_1.DownwardEvaluationType.PRIMARY
-                ? '1차 하향평가 일괄 제출로 인한 재작성 완료 처리'
-                : '2차 하향평가 일괄 제출로 인한 재작성 완료 처리';
             await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(periodId, evaluateeId, step, evaluatorId, recipientType, responseComment);
         }
         catch (error) {
@@ -255,18 +254,6 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
         if (evaluationType === downward_evaluation_types_1.DownwardEvaluationType.SECONDARY &&
             result.submittedCount > 0) {
             try {
-                await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
-                    evaluationPeriodId: periodId,
-                    employeeId: evaluateeId,
-                    evaluatorId: evaluatorId,
-                    status: employee_evaluation_step_approval_1.StepApprovalStatus.REVISION_COMPLETED,
-                    updatedBy: submittedBy,
-                });
-                this.logger.log('2차 평가 일괄 제출 시 개별 승인 상태를 revision_completed로 설정 완료', {
-                    evaluatorId,
-                    evaluateeId,
-                    periodId,
-                });
             }
             catch (error) {
                 this.logger.warn('2차 평가 개별 승인 상태 설정 실패', {

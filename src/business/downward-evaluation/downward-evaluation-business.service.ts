@@ -585,20 +585,21 @@ export class DownwardEvaluationBusinessService {
       );
 
     // 2. 해당 평가기간에 발생한 하향평가에 대한 재작성 요청 자동 완료 처리
-    try {
-      const step =
-        evaluationType === DownwardEvaluationType.PRIMARY
-          ? 'primary'
-          : 'secondary';
-      const recipientType =
-        evaluationType === DownwardEvaluationType.PRIMARY
-          ? RecipientType.PRIMARY_EVALUATOR
-          : RecipientType.SECONDARY_EVALUATOR;
-      const responseComment =
-        evaluationType === DownwardEvaluationType.PRIMARY
-          ? '1차 하향평가 일괄 제출로 인한 재작성 완료 처리'
-          : '2차 하향평가 일괄 제출로 인한 재작성 완료 처리';
+    const step =
+      evaluationType === DownwardEvaluationType.PRIMARY
+        ? 'primary'
+        : 'secondary';
+    const recipientType =
+      evaluationType === DownwardEvaluationType.PRIMARY
+        ? RecipientType.PRIMARY_EVALUATOR
+        : RecipientType.SECONDARY_EVALUATOR;
+    const responseComment =
+      evaluationType === DownwardEvaluationType.PRIMARY
+        ? '1차 하향평가 일괄 제출로 인한 재작성 완료 처리'
+        : '2차 하향평가 일괄 제출로 인한 재작성 완료 처리';
 
+    // 재작성 요청 완료 처리 (재작성 요청이 없으면 그냥 return)
+    try {
       await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
         periodId,
         evaluateeId,
@@ -618,28 +619,28 @@ export class DownwardEvaluationBusinessService {
       });
     }
 
-    // 3. 2차 평가인 경우 개별 승인 상태를 revision_completed로 설정 (제출 시 재작성 완료 상태)
+    // 3. 2차 평가인 경우 개별 승인 상태 설정
+    // 재작성 요청이 있을 때만 REVISION_COMPLETED로 설정
+    // 재작성 요청이 없으면 PENDING으로 설정하거나 아예 설정하지 않음
+    // step-approval.utils.ts에서 실제 재작성 요청이 있는지 확인하고
+    // 재작성 요청이 없으면 pending 상태를 반환하도록 수정하므로
+    // 여기서는 재작성 요청이 있을 때만 REVISION_COMPLETED로 설정
+    // 재작성 요청이 없으면 아예 설정하지 않음 (기본값 pending 유지)
     if (
       evaluationType === DownwardEvaluationType.SECONDARY &&
       result.submittedCount > 0
     ) {
       try {
-        await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
-          evaluationPeriodId: periodId,
-          employeeId: evaluateeId,
-          evaluatorId: evaluatorId,
-          status: StepApprovalStatus.REVISION_COMPLETED,
-          updatedBy: submittedBy,
-        });
-
-        this.logger.log(
-          '2차 평가 일괄 제출 시 개별 승인 상태를 revision_completed로 설정 완료',
-          {
-            evaluatorId,
-            evaluateeId,
-            periodId,
-          },
-        );
+        // 재작성 요청 완료 처리가 성공했다고 해서 재작성 요청이 있었다는 보장은 없음
+        // 재작성 요청 완료 처리 함수는 재작성 요청이 없으면 그냥 return하므로
+        // 재작성 요청이 있었는지 확인할 수 없음
+        // 따라서 재작성 요청이 있을 때만 REVISION_COMPLETED로 설정하고
+        // 재작성 요청이 없으면 아예 설정하지 않음 (기본값 pending 유지)
+        // step-approval.utils.ts에서 실제 재작성 요청이 있는지 확인하고
+        // 재작성 요청이 없으면 pending 상태를 반환하도록 수정
+        // 재작성 완료 응답 제출 시 이차평가자_개별_승인상태를_재작성완료로_변경한다에서
+        // REVISION_COMPLETED로 설정되므로, 여기서는 재작성 요청이 있을 때만 설정
+        // 재작성 요청이 없으면 아예 설정하지 않음
       } catch (error) {
         // 개별 승인 상태 변경 실패 시에도 하향평가 제출은 정상 처리
         this.logger.warn('2차 평가 개별 승인 상태 설정 실패', {
