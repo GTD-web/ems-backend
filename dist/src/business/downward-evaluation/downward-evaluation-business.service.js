@@ -8,10 +8,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var DownwardEvaluationBusinessService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DownwardEvaluationBusinessService = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 const performance_evaluation_service_1 = require("../../context/performance-evaluation-context/performance-evaluation.service");
 const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
 const evaluation_period_management_service_1 = require("../../context/evaluation-period-management-context/evaluation-period-management.service");
@@ -21,6 +26,8 @@ const evaluation_activity_log_context_service_1 = require("../../context/evaluat
 const downward_evaluation_1 = require("../../context/performance-evaluation-context/handlers/downward-evaluation");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
+const wbs_self_evaluation_entity_1 = require("../../domain/core/wbs-self-evaluation/wbs-self-evaluation.entity");
+const downward_evaluation_entity_1 = require("../../domain/core/downward-evaluation/downward-evaluation.entity");
 const employee_evaluation_step_approval_1 = require("../../domain/sub/employee-evaluation-step-approval");
 let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = class DownwardEvaluationBusinessService {
     performanceEvaluationService;
@@ -29,14 +36,18 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
     revisionRequestContextService;
     stepApprovalContextService;
     activityLogContextService;
+    wbsSelfEvaluationRepository;
+    downwardEvaluationRepository;
     logger = new common_1.Logger(DownwardEvaluationBusinessService_1.name);
-    constructor(performanceEvaluationService, evaluationCriteriaManagementService, evaluationPeriodManagementContextService, revisionRequestContextService, stepApprovalContextService, activityLogContextService) {
+    constructor(performanceEvaluationService, evaluationCriteriaManagementService, evaluationPeriodManagementContextService, revisionRequestContextService, stepApprovalContextService, activityLogContextService, wbsSelfEvaluationRepository, downwardEvaluationRepository) {
         this.performanceEvaluationService = performanceEvaluationService;
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
         this.evaluationPeriodManagementContextService = evaluationPeriodManagementContextService;
         this.revisionRequestContextService = revisionRequestContextService;
         this.stepApprovalContextService = stepApprovalContextService;
         this.activityLogContextService = activityLogContextService;
+        this.wbsSelfEvaluationRepository = wbsSelfEvaluationRepository;
+        this.downwardEvaluationRepository = downwardEvaluationRepository;
     }
     async 일차_하향평가를_저장한다(params) {
         this.logger.log('1차 하향평가 저장 비즈니스 로직 시작', {
@@ -120,16 +131,23 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
         this.logger.log('2차 하향평가 저장 완료', { evaluationId });
         return evaluationId;
     }
-    async 일차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy) {
-        this.logger.log(`1차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`);
+    async 일차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy, approveAllBelow = false) {
+        this.logger.log(`1차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}, 하위승인: ${approveAllBelow}`);
         await this.performanceEvaluationService.일차_하향평가를_제출한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy);
         await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(periodId, evaluateeId, 'primary', evaluatorId, evaluation_revision_request_1.RecipientType.PRIMARY_EVALUATOR, '1차 하향평가 제출로 인한 재작성 완료 처리');
+        if (approveAllBelow) {
+            await this.자기평가를_자동_제출한다(evaluateeId, periodId, wbsId, submittedBy);
+        }
         this.logger.log(`1차 하향평가 제출 및 재작성 요청 완료 처리 완료 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`);
     }
-    async 이차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy) {
-        this.logger.log(`2차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`);
+    async 이차_하향평가를_제출하고_재작성요청을_완료한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy, approveAllBelow = false) {
+        this.logger.log(`2차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}, 하위승인: ${approveAllBelow}`);
         await this.performanceEvaluationService.이차_하향평가를_제출한다(evaluateeId, periodId, wbsId, evaluatorId, submittedBy);
         await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(periodId, evaluateeId, 'secondary', evaluatorId, evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR, '2차 하향평가 제출로 인한 재작성 완료 처리');
+        if (approveAllBelow) {
+            await this.일차_하향평가를_자동_제출한다(evaluateeId, periodId, wbsId, submittedBy);
+            await this.자기평가를_자동_제출한다(evaluateeId, periodId, wbsId, submittedBy);
+        }
         this.logger.log(`2차 하향평가 제출 및 재작성 요청 완료 처리 완료 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`);
     }
     async 일차_하향평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId, employeeId, revisionComment, requestedBy) {
@@ -234,7 +252,8 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
                 error: error.message,
             });
         }
-        if (evaluationType === downward_evaluation_types_1.DownwardEvaluationType.SECONDARY && result.submittedCount > 0) {
+        if (evaluationType === downward_evaluation_types_1.DownwardEvaluationType.SECONDARY &&
+            result.submittedCount > 0) {
             try {
                 await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
                     evaluationPeriodId: periodId,
@@ -297,15 +316,78 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
         });
         return result;
     }
+    async 자기평가를_자동_제출한다(employeeId, periodId, wbsId, submittedBy) {
+        try {
+            this.logger.log(`자기평가 자동 제출 시작 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`);
+            const selfEvaluation = await this.wbsSelfEvaluationRepository.findOne({
+                where: {
+                    employeeId,
+                    periodId,
+                    wbsItemId: wbsId,
+                    deletedAt: (0, typeorm_2.IsNull)(),
+                },
+            });
+            if (!selfEvaluation) {
+                this.logger.warn(`자기평가를 찾을 수 없습니다 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`);
+                return;
+            }
+            if (selfEvaluation.submittedToManager) {
+                this.logger.log(`자기평가가 이미 제출되어 있습니다 - 자기평가 ID: ${selfEvaluation.id}`);
+                return;
+            }
+            await this.performanceEvaluationService.WBS자기평가를_제출한다(selfEvaluation.id, submittedBy);
+            this.logger.log(`자기평가 자동 제출 완료 - 자기평가 ID: ${selfEvaluation.id}`);
+        }
+        catch (error) {
+            this.logger.error(`자기평가 자동 제출 실패 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`, error);
+        }
+    }
+    async 일차_하향평가를_자동_제출한다(evaluateeId, periodId, wbsId, submittedBy) {
+        try {
+            this.logger.log(`1차 하향평가 자동 제출 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`);
+            const primaryEvaluatorId = await this.stepApprovalContextService.일차평가자를_조회한다(periodId, evaluateeId);
+            if (!primaryEvaluatorId) {
+                this.logger.warn(`1차 평가자를 찾을 수 없습니다 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}`);
+                return;
+            }
+            const downwardEvaluation = await this.downwardEvaluationRepository.findOne({
+                where: {
+                    employeeId: evaluateeId,
+                    evaluatorId: primaryEvaluatorId,
+                    periodId,
+                    wbsId,
+                    evaluationType: downward_evaluation_types_1.DownwardEvaluationType.PRIMARY,
+                    deletedAt: (0, typeorm_2.IsNull)(),
+                },
+            });
+            if (!downwardEvaluation) {
+                this.logger.warn(`1차 하향평가를 찾을 수 없습니다 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`);
+                return;
+            }
+            if (downwardEvaluation.isCompleted) {
+                this.logger.log(`1차 하향평가가 이미 제출되어 있습니다 - 하향평가 ID: ${downwardEvaluation.id}`);
+                return;
+            }
+            await this.performanceEvaluationService.일차_하향평가를_제출한다(evaluateeId, periodId, wbsId, primaryEvaluatorId, submittedBy);
+            this.logger.log(`1차 하향평가 자동 제출 완료 - 하향평가 ID: ${downwardEvaluation.id}`);
+        }
+        catch (error) {
+            this.logger.error(`1차 하향평가 자동 제출 실패 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`, error);
+        }
+    }
 };
 exports.DownwardEvaluationBusinessService = DownwardEvaluationBusinessService;
 exports.DownwardEvaluationBusinessService = DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = __decorate([
     (0, common_1.Injectable)(),
+    __param(6, (0, typeorm_1.InjectRepository)(wbs_self_evaluation_entity_1.WbsSelfEvaluation)),
+    __param(7, (0, typeorm_1.InjectRepository)(downward_evaluation_entity_1.DownwardEvaluation)),
     __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
         evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
         evaluation_period_management_service_1.EvaluationPeriodManagementContextService,
         revision_request_context_service_1.RevisionRequestContextService,
         step_approval_context_service_1.StepApprovalContextService,
-        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService])
+        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
+        typeorm_2.Repository,
+        typeorm_2.Repository])
 ], DownwardEvaluationBusinessService);
 //# sourceMappingURL=downward-evaluation-business.service.js.map

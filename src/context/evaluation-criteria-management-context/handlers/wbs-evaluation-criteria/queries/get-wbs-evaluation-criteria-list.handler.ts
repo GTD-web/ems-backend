@@ -9,7 +9,7 @@ import { WbsEvaluationCriteriaFilter } from '@domain/core/wbs-evaluation-criteri
 import {
   WbsEvaluationCriteriaListResponseDto,
   EvaluationPeriodManualSettingsDto,
-} from '@/interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
+} from '@interface/common/dto/evaluation-criteria/wbs-evaluation-criteria.dto';
 
 /**
  * WBS 평가기준 목록 조회 쿼리

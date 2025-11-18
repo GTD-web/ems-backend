@@ -8,7 +8,7 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { StepApprovalStatusEnum } from './update-step-approval.dto';
-import { ToBoolean } from '@/interface/common/decorators';
+import { ToBoolean } from '@interface/common/decorators';
 
 /**
  * 2차 평가 단계 승인 상태 업데이트 DTO

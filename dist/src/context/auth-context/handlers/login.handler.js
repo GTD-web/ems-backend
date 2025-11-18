@@ -38,7 +38,9 @@ let LoginHandler = LoginHandler_1 = class LoginHandler {
             if (error instanceof common_1.ForbiddenException) {
                 throw error;
             }
-            const errorMessage = error?.message || error?.details || '로그인 처리 중 오류가 발생했습니다.';
+            const errorMessage = error?.message ||
+                error?.details ||
+                '로그인 처리 중 오류가 발생했습니다.';
             const errorCode = error?.code;
             const errorStatus = error?.status;
             if (errorCode) {
@@ -47,7 +49,8 @@ let LoginHandler = LoginHandler_1 = class LoginHandler {
                     case 'AUTHENTICATION_FAILED':
                     case 'INVALID_CREDENTIALS':
                     case 'AUTHENTICATION_ERROR':
-                        const authErrorMessage = errorMessage && errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+                        const authErrorMessage = errorMessage &&
+                            errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
                             ? errorMessage
                             : '이메일 또는 패스워드가 올바르지 않습니다.';
                         this.logger.warn(`로그인 실패: ${email} - ${authErrorMessage}`);
@@ -65,7 +68,8 @@ let LoginHandler = LoginHandler_1 = class LoginHandler {
             }
             if (errorStatus) {
                 if (errorStatus === 401) {
-                    const authErrorMessage = errorMessage && errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+                    const authErrorMessage = errorMessage &&
+                        errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
                         ? errorMessage
                         : '이메일 또는 패스워드가 올바르지 않습니다.';
                     this.logger.warn(`로그인 실패: ${email} - ${authErrorMessage}`);

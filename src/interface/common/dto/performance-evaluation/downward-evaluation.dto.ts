@@ -132,6 +132,21 @@ export class SubmitDownwardEvaluationDto {
 }
 
 /**
+ * 하향평가 제출 쿼리 DTO
+ */
+export class SubmitDownwardEvaluationQueryDto {
+  @ApiPropertyOptional({
+    description: '하위 단계 자동 승인 여부 (기본값: false)',
+    example: false,
+    type: Boolean,
+  })
+  @IsOptional()
+  @ToBoolean(false)
+  @IsBoolean()
+  approveAllBelow?: boolean;
+}
+
+/**
  * 하향평가 필터 DTO
  */
 export class DownwardEvaluationFilterDto {

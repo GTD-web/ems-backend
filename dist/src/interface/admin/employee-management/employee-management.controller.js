@@ -76,6 +76,9 @@ let EmployeeManagementController = class EmployeeManagementController {
     async updateEmployeeAccessibility(employeeId, isAccessible, user) {
         return await this.organizationManagementService.직원접근가능여부변경(employeeId, isAccessible, user.id);
     }
+    async syncEmployees(forceSync) {
+        return await this.employeeSyncService.syncEmployees(forceSync);
+    }
 };
 exports.EmployeeManagementController = EmployeeManagementController;
 __decorate([
@@ -137,6 +140,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Boolean, Object]),
     __metadata("design:returntype", Promise)
 ], EmployeeManagementController.prototype, "updateEmployeeAccessibility", null);
+__decorate([
+    (0, employee_management_api_decorators_1.SyncEmployees)(),
+    __param(0, (0, common_1.Query)('forceSync', new common_1.DefaultValuePipe(false), common_1.ParseBoolPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Boolean]),
+    __metadata("design:returntype", Promise)
+], EmployeeManagementController.prototype, "syncEmployees", null);
 exports.EmployeeManagementController = EmployeeManagementController = __decorate([
     (0, swagger_1.ApiTags)('A-1. 관리자 - 조직 관리'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),

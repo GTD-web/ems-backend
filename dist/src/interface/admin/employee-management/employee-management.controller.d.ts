@@ -1,7 +1,8 @@
-import { DepartmentHierarchyDto, DepartmentHierarchyWithEmployeesDto, EmployeeSyncService, OrganizationManagementService } from '@/context/organization-management-context';
-import { EmployeeDto } from '@/domain/common/employee/employee.types';
-import { ExcludeEmployeeFromListDto, GetEmployeesQueryDto, GetPartLeadersQueryDto, PartLeadersResponseDto } from '@/interface/common/dto/employee-management/employee-management.dto';
-import type { AuthenticatedUser } from '@/interface/common/guards';
+import { DepartmentHierarchyDto, DepartmentHierarchyWithEmployeesDto, EmployeeSyncService, OrganizationManagementService } from '@context/organization-management-context';
+import { EmployeeDto } from '@domain/common/employee/employee.types';
+import { ExcludeEmployeeFromListDto, GetEmployeesQueryDto, GetPartLeadersQueryDto, PartLeadersResponseDto } from '@interface/common/dto/employee-management/employee-management.dto';
+import type { AuthenticatedUser } from '@interface/common/guards';
+import type { EmployeeSyncResult } from '@domain/common/employee/employee.types';
 export declare class EmployeeManagementController {
     private readonly organizationManagementService;
     private readonly employeeSyncService;
@@ -14,4 +15,5 @@ export declare class EmployeeManagementController {
     excludeEmployeeFromList(employeeId: string, excludeData: ExcludeEmployeeFromListDto, user: AuthenticatedUser): Promise<EmployeeDto>;
     includeEmployeeInList(employeeId: string, user: AuthenticatedUser): Promise<EmployeeDto>;
     updateEmployeeAccessibility(employeeId: string, isAccessible: boolean, user: AuthenticatedUser): Promise<EmployeeDto>;
+    syncEmployees(forceSync: boolean): Promise<EmployeeSyncResult>;
 }

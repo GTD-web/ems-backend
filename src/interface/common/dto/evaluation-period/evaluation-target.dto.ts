@@ -1,4 +1,3 @@
-import { ToBooleanStrict } from '@/interface/common/decorators';
 import {
   EvaluationPeriodPhase,
   EvaluationPeriodStatus,
@@ -6,9 +5,7 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsArray,
-  IsBoolean,
   IsNotEmpty,
-  IsOptional,
   IsString,
   IsUUID,
   MaxLength,

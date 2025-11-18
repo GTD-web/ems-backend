@@ -521,7 +521,11 @@ export class EmployeeService {
    * @returns 업데이트된 직원 엔티티
    */
   async updateRoles(id: string, roles: string[]): Promise<Employee | null> {
-    const employee = await this.findById(id);
+    // Entity를 조회해야 save가 가능함 (DTO가 아닌)
+    const employee = await this.employeeRepository.findOne({
+      where: { id, deletedAt: IsNull() },
+    });
+    
     if (!employee) {
       return null;
     }
