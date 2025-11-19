@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AuditLog } from '@domain/common/audit-log/audit-log.entity';
 
 export class AuditLogResponseDto {
   @ApiProperty({ description: 'Audit 로그 ID' })
@@ -74,4 +75,20 @@ export class AuditLogListResponseDto {
 
   @ApiProperty({ description: '페이지 크기' })
   limit: number;
+
+  /**
+   * Audit 로그 목록을 응답 DTO로 변환한다
+   */
+  static 응답DTO로_변환한다(
+    items: AuditLog[],
+    total: number,
+    query: { page: number; limit: number },
+  ): AuditLogListResponseDto {
+    const dto = new AuditLogListResponseDto();
+    dto.items = items.map((item) => item.DTO로_변환한다());
+    dto.total = total;
+    dto.page = query.page;
+    dto.limit = query.limit;
+    return dto;
+  }
 }
