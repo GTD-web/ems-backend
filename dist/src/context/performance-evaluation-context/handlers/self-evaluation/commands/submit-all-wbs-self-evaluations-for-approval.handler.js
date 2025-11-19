@@ -53,7 +53,6 @@ let SubmitAllWbsSelfEvaluationsForApprovalHandler = SubmitAllWbsSelfEvaluationsF
                 employeeId,
                 periodId,
             });
-            console.log('🚀 ~ SubmitAllWbsSelfEvaluationsForApprovalHandler ~ execute ~ evaluations:', evaluations);
             if (evaluations.length === 0) {
                 throw new common_1.BadRequestException('제출할 자기평가가 존재하지 않습니다.');
             }
@@ -99,7 +98,6 @@ let SubmitAllWbsSelfEvaluationsForApprovalHandler = SubmitAllWbsSelfEvaluationsF
                     if (!evaluation.피평가자가_1차평가자에게_제출했는가()) {
                         await this.wbsSelfEvaluationService.피평가자가_1차평가자에게_제출한다(evaluation, submittedBy);
                         const updatedEvaluation = await this.wbsSelfEvaluationService.조회한다(evaluation.id);
-                        console.log('🚀 ~ SubmitAllWbsSelfEvaluationsForApprovalHandler ~ execute ~ updatedEvaluation:', updatedEvaluation);
                         if (updatedEvaluation) {
                             evaluation = updatedEvaluation;
                         }
@@ -107,7 +105,6 @@ let SubmitAllWbsSelfEvaluationsForApprovalHandler = SubmitAllWbsSelfEvaluationsF
                     if (!evaluation.일차평가자가_관리자에게_제출했는가()) {
                         await this.wbsSelfEvaluationService.일차평가자가_관리자에게_제출한다(evaluation, submittedBy);
                         const updatedEvaluation = await this.wbsSelfEvaluationService.조회한다(evaluation.id);
-                        console.log('🚀 ~ SubmitAllWbsSelfEvaluationsForApprovalHandler ~ execute ~ updatedEvaluation:', updatedEvaluation);
                         if (updatedEvaluation) {
                             evaluation = updatedEvaluation;
                         }

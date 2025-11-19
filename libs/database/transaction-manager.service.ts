@@ -74,15 +74,19 @@ export class TransactionManagerService {
 
   /**
    * HTTP 예외(비즈니스 예외)인지 확인한다
-   * 
+   *
    * @param error 확인할 에러 객체
    * @returns HTTP 예외인 경우 true
    */
   private isHttpException(error: any): boolean {
     return (
       (error.response && error.status) ||
-      (typeof error.statusCode === 'number' && error.statusCode >= 400 && error.statusCode < 600) ||
-      (error.name && error.name.includes('Exception') && typeof error.getStatus === 'function')
+      (typeof error.statusCode === 'number' &&
+        error.statusCode >= 400 &&
+        error.statusCode < 600) ||
+      (error.name &&
+        error.name.includes('Exception') &&
+        typeof error.getStatus === 'function')
     );
   }
 
@@ -300,7 +304,6 @@ export class TransactionManagerService {
           const result = await operation(queryRunner.manager);
 
           await queryRunner.commitTransaction();
-          this.logger.debug('트랜잭션이 성공적으로 커밋되었습니다.');
 
           return result;
         } catch (error) {
