@@ -27,7 +27,6 @@ let DeliverableService = DeliverableService_1 = class DeliverableService {
     }
     async 생성한다(createData) {
         this.logger.log(`산출물 생성 시작 - 이름: ${createData.name}`);
-        await this.중복_검사를_수행한다(createData.name);
         this.유효성을_검사한다(createData);
         try {
             const deliverable = new deliverable_entity_1.Deliverable(createData);

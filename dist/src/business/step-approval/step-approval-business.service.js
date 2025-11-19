@@ -46,6 +46,18 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
         catch (error) {
             this.logger.warn(`자기평가 승인 시 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
         }
+        try {
+            await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(evaluationPeriodId, employeeId, 'self', employeeId, evaluation_revision_request_1.RecipientType.EVALUATEE, '자기평가 승인으로 인한 재작성 완료 처리');
+            this.logger.log(`자기평가 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        }
+        catch (error) {
+            this.logger.warn('자기평가 승인 시 재작성 요청 완료 처리 실패 (승인은 계속 진행)', {
+                employeeId,
+                evaluationPeriodId,
+                error: error.message,
+                errorStack: error.stack,
+            });
+        }
     }
     async 일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, approvedBy) {
         this.logger.log(`1차 하향평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
@@ -79,6 +91,18 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
         if (result.submittedCount === 0 && result.skippedCount === 0) {
             this.logger.debug(`2차 하향평가가 없어 제출 상태 변경을 건너뜀 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`);
             return;
+        }
+        try {
+            await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(evaluationPeriodId, employeeId, 'secondary', evaluatorId, evaluation_revision_request_1.RecipientType.SECONDARY_EVALUATOR, '2차 하향평가 승인으로 인한 재작성 완료 처리');
+            this.logger.log(`2차 하향평가 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`);
+        }
+        catch (error) {
+            this.logger.warn('2차 하향평가 승인 시 재작성 요청 완료 처리 실패', {
+                evaluatorId,
+                employeeId,
+                evaluationPeriodId,
+                error: error.message,
+            });
         }
         this.logger.log(`2차 하향평가 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}, 제출: ${result.submittedCount}, 건너뜀: ${result.skippedCount}`);
     }
@@ -123,6 +147,17 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
         }
         catch (error) {
             this.logger.warn(`평가기준 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+        }
+        try {
+            await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(evaluationPeriodId, employeeId, 'criteria', employeeId, evaluation_revision_request_1.RecipientType.EVALUATEE, '평가기준 설정 승인으로 인한 재작성 완료 처리');
+            this.logger.log(`평가기준 설정 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        }
+        catch (error) {
+            this.logger.warn('평가기준 설정 승인 시 재작성 요청 완료 처리 실패', {
+                employeeId,
+                evaluationPeriodId,
+                error: error.message,
+            });
         }
         this.logger.log(`평가기준 설정 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
     }

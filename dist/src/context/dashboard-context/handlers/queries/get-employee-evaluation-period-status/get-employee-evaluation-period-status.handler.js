@@ -181,27 +181,21 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             const selfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_상태를_계산한다)(totalMappingCount, completedMappingCount);
             const selfEvaluationApprovalStatus = await (0, step_approval_utils_1.자기평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
             let finalSelfEvaluationStatus;
-            if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
-                if (selfEvaluationApprovalStatus.isCompleted) {
-                    const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
-                    if (stepApprovalStatus === 'approved') {
-                        finalSelfEvaluationStatus = 'approved';
-                    }
-                    else {
-                        finalSelfEvaluationStatus = 'revision_completed';
-                    }
-                }
-                else {
-                    finalSelfEvaluationStatus = 'revision_requested';
-                }
+            const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
+            if (stepApprovalStatus === 'approved') {
+                finalSelfEvaluationStatus = 'approved';
+            }
+            else if (stepApprovalStatus === 'revision_completed') {
+                finalSelfEvaluationStatus = 'revision_completed';
             }
             else {
-                const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
-                if (stepApprovalStatus === 'approved') {
-                    finalSelfEvaluationStatus = 'approved';
-                }
-                else if (stepApprovalStatus === 'revision_completed') {
-                    finalSelfEvaluationStatus = 'revision_completed';
+                if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
+                    if (selfEvaluationApprovalStatus.isCompleted) {
+                        finalSelfEvaluationStatus = 'revision_completed';
+                    }
+                    else {
+                        finalSelfEvaluationStatus = 'revision_requested';
+                    }
                 }
                 else {
                     finalSelfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_통합_상태를_계산한다)(selfEvaluationStatus, stepApprovalStatus ?? 'pending');

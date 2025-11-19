@@ -312,7 +312,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           this.revisionRequestRecipientRepository,
         );
 
-      // 14-2. 자기평가 통합 상태 계산 (재작성 요청 상태 우선)
+      // 14-2. 자기평가 통합 상태 계산 (승인 상태 우선, 재작성 요청 상태는 승인 전에만 적용)
       let finalSelfEvaluationStatus:
         | SelfEvaluationStatus
         | 'pending'
@@ -320,29 +320,26 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         | 'revision_requested'
         | 'revision_completed';
 
-      // 재작성 요청이 있으면 그 상태를 사용
-      if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
-        if (selfEvaluationApprovalStatus.isCompleted) {
-          // 재작성 완료 후 승인 상태 확인
-          // 재작성 완료 후 승인을 받으면 approved 상태가 되어야 함
-          const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
-          if (stepApprovalStatus === 'approved') {
-            finalSelfEvaluationStatus = 'approved';
-          } else {
+      // stepApproval 상태 확인 (승인 상태가 최우선)
+      const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
+
+      // 승인 상태가 approved이면 재작성 요청 여부와 관계없이 approved 반환
+      if (stepApprovalStatus === 'approved') {
+        finalSelfEvaluationStatus = 'approved';
+      } else if (stepApprovalStatus === 'revision_completed') {
+        finalSelfEvaluationStatus = 'revision_completed';
+      } else {
+        // 승인 상태가 approved가 아닌 경우에만 재작성 요청 상태 확인
+        if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
+          if (selfEvaluationApprovalStatus.isCompleted) {
+            // 재작성 완료 후 승인 대기 중
             finalSelfEvaluationStatus = 'revision_completed';
+          } else {
+            // 재작성 요청 중
+            finalSelfEvaluationStatus = 'revision_requested';
           }
         } else {
-          finalSelfEvaluationStatus = 'revision_requested';
-        }
-      } else {
-        // 재작성 요청이 없으면 stepApproval 상태 확인
-        const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
-        if (stepApprovalStatus === 'approved') {
-          finalSelfEvaluationStatus = 'approved';
-        } else if (stepApprovalStatus === 'revision_completed') {
-          finalSelfEvaluationStatus = 'revision_completed';
-        } else {
-          // 통합 상태 계산 (진행 상태와 승인 상태 통합)
+          // 재작성 요청이 없으면 통합 상태 계산 (진행 상태와 승인 상태 통합)
           finalSelfEvaluationStatus = 자기평가_통합_상태를_계산한다(
             selfEvaluationStatus,
             stepApprovalStatus ?? 'pending',

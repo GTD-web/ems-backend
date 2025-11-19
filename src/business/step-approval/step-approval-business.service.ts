@@ -70,6 +70,7 @@ export class StepApprovalBusinessService {
     }
 
     // 2. 해당 평가기간에 발생한 자기평가에 대한 재작성 요청 자동 완료 처리
+    // 재작성 요청이 없거나 완료 처리에 실패해도 승인은 정상적으로 진행되어야 함
     try {
       // 피평가자에게 요청된 재작성 요청 완료 처리
       await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
@@ -85,12 +86,18 @@ export class StepApprovalBusinessService {
         `자기평가 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
       );
     } catch (error) {
-      // 재작성 요청 완료 처리 실패 시에도 자기평가 제출은 정상 처리
-      this.logger.warn('자기평가 승인 시 재작성 요청 완료 처리 실패', {
-        employeeId,
-        evaluationPeriodId,
-        error: error.message,
-      });
+      // 재작성 요청 완료 처리 실패 시에도 자기평가 승인은 정상 처리되어야 함
+      // 재작성 요청이 없거나 이미 완료된 경우도 정상적인 상황일 수 있음
+      this.logger.warn(
+        '자기평가 승인 시 재작성 요청 완료 처리 실패 (승인은 계속 진행)',
+        {
+          employeeId,
+          evaluationPeriodId,
+          error: error.message,
+          errorStack: error.stack,
+        },
+      );
+      // 예외를 다시 throw하지 않음 - 승인은 정상적으로 진행되어야 함
     }
   }
 

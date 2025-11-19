@@ -325,9 +325,6 @@ let EvaluationPeriodValidationService = EvaluationPeriodValidationService_1 = cl
     async 평가기간시작비즈니스규칙검증한다(id, manager) {
     }
     async 평가기간삭제비즈니스규칙검증한다(evaluationPeriod) {
-        if (evaluationPeriod.활성화된_상태인가()) {
-            throw new evaluation_period_exceptions_1.EvaluationPeriodBusinessRuleViolationException('활성 상태인 평가 기간은 삭제할 수 없습니다.');
-        }
     }
     async 수동허용설정변경비즈니스규칙검증한다(evaluationPeriod) {
         if (evaluationPeriod.완료된_상태인가()) {
