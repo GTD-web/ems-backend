@@ -326,10 +326,6 @@ export class WbsSelfEvaluationService {
     manager?: EntityManager,
   ): Promise<WbsSelfEvaluation[]> {
     return this.executeSafeDomainOperation(async () => {
-      this.logger.debug(
-        `WBS 자가평가 필터 조회 - 필터: ${JSON.stringify(filter)}`,
-      );
-
       const repository = this.transactionManager.getRepository(
         WbsSelfEvaluation,
         this.wbsSelfEvaluationRepository,

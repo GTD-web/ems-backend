@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PartLeadersResponseDto = exports.EmployeeResponseDto = exports.GetPartLeadersQueryDto = exports.GetEmployeesQueryDto = exports.UpdateEmployeeAccessibilityQueryDto = exports.IncludeEmployeeInListDto = exports.ExcludeEmployeeFromListDto = void 0;
+exports.PartLeadersResponseDto = exports.GetPartLeadersQueryDto = exports.EmployeeResponseDto = exports.GetEmployeesQueryDto = exports.UpdateEmployeeAccessibilityQueryDto = exports.IncludeEmployeeInListDto = exports.ExcludeEmployeeFromListDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
@@ -47,21 +47,10 @@ __decorate([
     __metadata("design:type", String)
 ], UpdateEmployeeAccessibilityQueryDto.prototype, "isAccessible", void 0);
 class GetEmployeesQueryDto {
-    includeExcluded;
     departmentId;
+    includeExcluded;
 }
 exports.GetEmployeesQueryDto = GetEmployeesQueryDto;
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '제외된 직원 포함 여부',
-        example: false,
-        default: false,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_transformer_1.Type)(() => Boolean),
-    __metadata("design:type", Boolean)
-], GetEmployeesQueryDto.prototype, "includeExcluded", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '부서 ID',
@@ -71,21 +60,16 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], GetEmployeesQueryDto.prototype, "departmentId", void 0);
-class GetPartLeadersQueryDto {
-    forceRefresh;
-}
-exports.GetPartLeadersQueryDto = GetPartLeadersQueryDto;
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: 'SSO에서 강제로 최신 데이터를 가져올지 여부',
+        description: '제외된 직원 포함 여부 (기본값: false)',
         example: false,
-        default: false,
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     (0, class_transformer_1.Type)(() => Boolean),
     __metadata("design:type", Boolean)
-], GetPartLeadersQueryDto.prototype, "forceRefresh", void 0);
+], GetEmployeesQueryDto.prototype, "includeExcluded", void 0);
 class EmployeeResponseDto {
     id;
     employeeNumber;
@@ -233,6 +217,20 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], EmployeeResponseDto.prototype, "isAccessible", void 0);
+class GetPartLeadersQueryDto {
+    forceRefresh;
+}
+exports.GetPartLeadersQueryDto = GetPartLeadersQueryDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'SSO에서 강제로 최신 데이터를 가져올지 여부 (기본값: false)',
+        example: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Type)(() => Boolean),
+    __metadata("design:type", Boolean)
+], GetPartLeadersQueryDto.prototype, "forceRefresh", void 0);
 class PartLeadersResponseDto {
     partLeaders;
     count;
@@ -247,7 +245,7 @@ __decorate([
 ], PartLeadersResponseDto.prototype, "partLeaders", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: '파트장 인원수',
+        description: '파트장 수',
         example: 5,
     }),
     __metadata("design:type", Number)

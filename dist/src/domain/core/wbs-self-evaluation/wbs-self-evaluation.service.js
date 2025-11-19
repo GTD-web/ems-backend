@@ -152,7 +152,6 @@ let WbsSelfEvaluationService = WbsSelfEvaluationService_1 = class WbsSelfEvaluat
     }
     async 필터_조회한다(filter, manager) {
         return this.executeSafeDomainOperation(async () => {
-            this.logger.debug(`WBS 자가평가 필터 조회 - 필터: ${JSON.stringify(filter)}`);
             const repository = this.transactionManager.getRepository(wbs_self_evaluation_entity_1.WbsSelfEvaluation, this.wbsSelfEvaluationRepository, manager);
             let queryBuilder = repository.createQueryBuilder('evaluation');
             if (filter.periodId) {
