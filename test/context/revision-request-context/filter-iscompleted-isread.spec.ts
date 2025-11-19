@@ -27,7 +27,7 @@ import * as path from 'path';
 
 /**
  * 재작성 요청 Context 서비스 - isCompleted/isRead 필터링 검증 테스트
- * 
+ *
  * isCompleted와 isRead 필터가 올바르게 동작하는지 엄격하게 검증합니다.
  */
 describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () => {
@@ -195,7 +195,6 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
       name: `2024년 상반기 평가-${uniqueSuffix}`,
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -204,8 +203,7 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
       maxSelfEvaluationRate: 120,
       createdBy: adminId,
     });
-    const savedPeriod =
-      await evaluationPeriodRepository.save(evaluationPeriod);
+    const savedPeriod = await evaluationPeriodRepository.save(evaluationPeriod);
     evaluationPeriodId = savedPeriod.id;
 
     // 3. 피평가자 직원 생성
@@ -271,7 +269,8 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
   describe('내_재작성요청목록을_조회한다 - isCompleted 필터링 검증', () => {
     it('isCompleted=false로 필터링 시 false인 항목만 반환되어야 한다', async () => {
       let error: any;
-      const testName = 'isCompleted=false로 필터링 시 false인 항목만 반환되어야 한다';
+      const testName =
+        'isCompleted=false로 필터링 시 false인 항목만 반환되어야 한다';
 
       try {
         // Given - 다양한 상태의 재작성 요청 생성
@@ -347,9 +346,12 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
         await recipientRepository.save(incompleteRecipient2);
 
         // When - isCompleted=false로 필터링
-        const result = await service.내_재작성요청목록을_조회한다(recipientId1, {
-          isCompleted: false,
-        });
+        const result = await service.내_재작성요청목록을_조회한다(
+          recipientId1,
+          {
+            isCompleted: false,
+          },
+        );
 
         // Then - 모든 결과가 isCompleted=false여야 함
         expect(result.length).toBe(2); // 미완료 요청 2개만 반환되어야 함
@@ -359,9 +361,7 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
         });
 
         // 완료된 요청이 포함되지 않았는지 확인
-        const completedRequestIds = result.map(
-          (item) => item.request.id,
-        );
+        const completedRequestIds = result.map((item) => item.request.id);
         expect(completedRequestIds).not.toContain(savedCompletedRequest.id);
 
         // 테스트 결과 저장 (성공)
@@ -399,7 +399,8 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
 
     it('isCompleted=true로 필터링 시 true인 항목만 반환되어야 한다', async () => {
       let error: any;
-      const testName = 'isCompleted=true로 필터링 시 true인 항목만 반환되어야 한다';
+      const testName =
+        'isCompleted=true로 필터링 시 true인 항목만 반환되어야 한다';
 
       try {
         // Given - 다양한 상태의 재작성 요청 생성
@@ -477,9 +478,12 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
         await recipientRepository.save(completedRecipient2);
 
         // When - isCompleted=true로 필터링
-        const result = await service.내_재작성요청목록을_조회한다(recipientId1, {
-          isCompleted: true,
-        });
+        const result = await service.내_재작성요청목록을_조회한다(
+          recipientId1,
+          {
+            isCompleted: true,
+          },
+        );
 
         // Then - 모든 결과가 isCompleted=true여야 함
         expect(result.length).toBe(2); // 완료된 요청 2개만 반환되어야 함
@@ -529,7 +533,8 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
   describe('내_재작성요청목록을_조회한다 - isRead 필터링 검증', () => {
     it('isRead=false로 필터링 시 false인 항목만 반환되어야 한다', async () => {
       let error: any;
-      const testName = 'isRead=false로 필터링 시 false인 항목만 반환되어야 한다';
+      const testName =
+        'isRead=false로 필터링 시 false인 항목만 반환되어야 한다';
 
       try {
         // Given - 다양한 상태의 재작성 요청 생성
@@ -604,9 +609,12 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
         await recipientRepository.save(unreadRecipient2);
 
         // When - isRead=false로 필터링
-        const result = await service.내_재작성요청목록을_조회한다(recipientId1, {
-          isRead: false,
-        });
+        const result = await service.내_재작성요청목록을_조회한다(
+          recipientId1,
+          {
+            isRead: false,
+          },
+        );
 
         // Then - 모든 결과가 isRead=false여야 함
         expect(result.length).toBe(2); // 읽지 않은 요청 2개만 반환되어야 함
@@ -728,9 +736,12 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
         await recipientRepository.save(readRecipient2);
 
         // When - isRead=true로 필터링
-        const result = await service.내_재작성요청목록을_조회한다(recipientId1, {
-          isRead: true,
-        });
+        const result = await service.내_재작성요청목록을_조회한다(
+          recipientId1,
+          {
+            isRead: true,
+          },
+        );
 
         // Then - 모든 결과가 isRead=true여야 함
         expect(result.length).toBe(2); // 읽은 요청 2개만 반환되어야 함
@@ -900,10 +911,13 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
         await recipientRepository.save(recipient5);
 
         // When - isRead=false와 isCompleted=false로 필터링
-        const result = await service.내_재작성요청목록을_조회한다(recipientId1, {
-          isRead: false,
-          isCompleted: false,
-        });
+        const result = await service.내_재작성요청목록을_조회한다(
+          recipientId1,
+          {
+            isRead: false,
+            isCompleted: false,
+          },
+        );
 
         // Then - 두 조건을 모두 만족하는 항목만 반환되어야 함
         expect(result.length).toBe(2); // 읽지 않음 + 미완료 요청 2개만 반환되어야 함
@@ -1213,4 +1227,3 @@ describe('재작성 요청 Context - isCompleted/isRead 필터링 검증', () =>
     });
   });
 });
-

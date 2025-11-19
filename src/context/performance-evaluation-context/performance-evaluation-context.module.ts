@@ -18,6 +18,9 @@ import { Employee } from '../../domain/common/employee/employee.entity';
 import { Department } from '../../domain/common/department/department.entity';
 import { WbsItem } from '../../domain/common/wbs-item/wbs-item.entity';
 import { EvaluationQuestion } from '../../domain/sub/evaluation-question/evaluation-question.entity';
+import { EvaluationLineMapping } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
+import { EvaluationLine } from '../../domain/core/evaluation-line/evaluation-line.entity';
+import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 
 import { PerformanceEvaluationService } from './performance-evaluation.service';
 
@@ -44,6 +47,9 @@ import { QueryHandlers } from './handlers/query-handlers';
       Department,
       WbsItem,
       EvaluationQuestion,
+      EvaluationLineMapping,
+      EvaluationLine,
+      EvaluationWbsAssignment,
     ]),
   ],
   providers: [

@@ -13,30 +13,28 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProjectAssignmentManagementController = void 0;
+const project_assignment_business_service_1 = require("../../../business/project-assignment/project-assignment-business.service");
 const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
-const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
+const project_assignment_api_decorators_1 = require("../../common/decorators/evaluation-criteria/project-assignment-api.decorators");
+const project_assignment_dto_1 = require("../../common/dto/evaluation-criteria/project-assignment.dto");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const project_assignment_dto_1 = require("../../common/dto/evaluation-criteria/project-assignment.dto");
-const project_assignment_api_decorators_1 = require("../../common/decorators/evaluation-criteria/project-assignment-api.decorators");
 let ProjectAssignmentManagementController = class ProjectAssignmentManagementController {
     evaluationCriteriaManagementService;
-    constructor(evaluationCriteriaManagementService) {
+    projectAssignmentBusinessService;
+    constructor(evaluationCriteriaManagementService, projectAssignmentBusinessService) {
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
+        this.projectAssignmentBusinessService = projectAssignmentBusinessService;
     }
     async createProjectAssignment(createDto, user) {
         const assignedBy = user.id;
-        return await this.evaluationCriteriaManagementService.프로젝트를_할당한다({
+        return await this.projectAssignmentBusinessService.프로젝트를_할당한다({
             employeeId: createDto.employeeId,
             projectId: createDto.projectId,
             periodId: createDto.periodId,
             assignedBy: assignedBy,
         }, assignedBy);
-    }
-    async cancelProjectAssignment(id, user) {
-        const cancelledBy = user.id;
-        return await this.evaluationCriteriaManagementService.프로젝트_할당을_취소한다(id, cancelledBy);
     }
     async getProjectAssignmentList(filter) {
         return await this.evaluationCriteriaManagementService.프로젝트_할당_목록을_조회한다({
@@ -89,20 +87,16 @@ let ProjectAssignmentManagementController = class ProjectAssignmentManagementCon
     }
     async bulkCreateProjectAssignments(bulkCreateDto, user) {
         const assignedBy = user.id;
-        return await this.evaluationCriteriaManagementService.프로젝트를_대량으로_할당한다(bulkCreateDto.assignments.map((assignment) => ({
+        return await this.projectAssignmentBusinessService.프로젝트를_대량으로_할당한다(bulkCreateDto.assignments.map((assignment) => ({
             employeeId: assignment.employeeId,
             projectId: assignment.projectId,
             periodId: assignment.periodId,
             assignedBy,
         })), assignedBy);
     }
-    async changeProjectAssignmentOrder(id, queryDto, user) {
-        const updatedBy = user.id;
-        return await this.evaluationCriteriaManagementService.프로젝트_할당_순서를_변경한다(id, queryDto.direction, updatedBy);
-    }
     async cancelProjectAssignmentByProject(projectId, bodyDto, user) {
         const cancelledBy = user.id;
-        return await this.evaluationCriteriaManagementService.프로젝트_할당을_프로젝트_ID로_취소한다(bodyDto.employeeId, projectId, bodyDto.periodId, cancelledBy);
+        return await this.projectAssignmentBusinessService.프로젝트_할당을_프로젝트_ID로_취소한다(bodyDto.employeeId, projectId, bodyDto.periodId, cancelledBy);
     }
     async changeProjectAssignmentOrderByProject(projectId, bodyDto, user) {
         const updatedBy = user.id;
@@ -118,14 +112,6 @@ __decorate([
     __metadata("design:paramtypes", [project_assignment_dto_1.CreateProjectAssignmentDto, Object]),
     __metadata("design:returntype", Promise)
 ], ProjectAssignmentManagementController.prototype, "createProjectAssignment", null);
-__decorate([
-    (0, project_assignment_api_decorators_1.CancelProjectAssignment)(),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], ProjectAssignmentManagementController.prototype, "cancelProjectAssignment", null);
 __decorate([
     (0, project_assignment_api_decorators_1.GetProjectAssignmentList)(),
     __param(0, (0, common_1.Query)()),
@@ -179,15 +165,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProjectAssignmentManagementController.prototype, "bulkCreateProjectAssignments", null);
 __decorate([
-    (0, project_assignment_api_decorators_1.ChangeProjectAssignmentOrder)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseId)()),
-    __param(1, (0, common_1.Query)()),
-    __param(2, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, project_assignment_dto_1.ChangeProjectAssignmentOrderQueryDto, Object]),
-    __metadata("design:returntype", Promise)
-], ProjectAssignmentManagementController.prototype, "changeProjectAssignmentOrder", null);
-__decorate([
     (0, project_assignment_api_decorators_1.CancelProjectAssignmentByProject)(),
     __param(0, (0, common_1.Param)('projectId', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
@@ -209,6 +186,7 @@ exports.ProjectAssignmentManagementController = ProjectAssignmentManagementContr
     (0, swagger_1.ApiTags)('B-1. 관리자 - 평가 설정 - 프로젝트 할당'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/evaluation-criteria/project-assignments'),
-    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService])
+    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
+        project_assignment_business_service_1.ProjectAssignmentBusinessService])
 ], ProjectAssignmentManagementController);
 //# sourceMappingURL=project-assignment-management.controller.js.map

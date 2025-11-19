@@ -8,6 +8,7 @@ const submit_wbs_self_evaluation_handler_1 = require("./self-evaluation/commands
 const submit_wbs_self_evaluation_to_evaluator_handler_1 = require("./self-evaluation/commands/submit-wbs-self-evaluation-to-evaluator.handler");
 const submit_all_wbs_self_evaluations_handler_1 = require("./self-evaluation/commands/submit-all-wbs-self-evaluations.handler");
 const submit_all_wbs_self_evaluations_to_evaluator_handler_1 = require("./self-evaluation/commands/submit-all-wbs-self-evaluations-to-evaluator.handler");
+const submit_all_wbs_self_evaluations_for_approval_handler_1 = require("./self-evaluation/commands/submit-all-wbs-self-evaluations-for-approval.handler");
 const reset_wbs_self_evaluation_handler_1 = require("./self-evaluation/commands/reset-wbs-self-evaluation.handler");
 const reset_wbs_self_evaluation_to_evaluator_handler_1 = require("./self-evaluation/commands/reset-wbs-self-evaluation-to-evaluator.handler");
 const reset_all_wbs_self_evaluations_handler_1 = require("./self-evaluation/commands/reset-all-wbs-self-evaluations.handler");
@@ -32,6 +33,7 @@ exports.CommandHandlers = [
     submit_wbs_self_evaluation_to_evaluator_handler_1.SubmitWbsSelfEvaluationToEvaluatorHandler,
     submit_all_wbs_self_evaluations_handler_1.SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler,
     submit_all_wbs_self_evaluations_to_evaluator_handler_1.SubmitAllWbsSelfEvaluationsToEvaluatorHandler,
+    submit_all_wbs_self_evaluations_for_approval_handler_1.SubmitAllWbsSelfEvaluationsForApprovalHandler,
     reset_wbs_self_evaluation_handler_1.ResetWbsSelfEvaluationHandler,
     reset_wbs_self_evaluation_to_evaluator_handler_1.ResetWbsSelfEvaluationToEvaluatorHandler,
     reset_all_wbs_self_evaluations_handler_1.ResetAllWbsSelfEvaluationsByEmployeePeriodHandler,

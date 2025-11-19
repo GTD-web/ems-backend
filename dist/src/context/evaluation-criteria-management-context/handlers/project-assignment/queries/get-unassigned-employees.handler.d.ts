@@ -2,7 +2,7 @@ import { IQueryHandler } from '@nestjs/cqrs';
 import { Repository } from 'typeorm';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
-import { EmployeeInfoDto } from '@/interface/common/dto/evaluation-criteria/project-assignment.dto';
+import { EmployeeInfoDto } from '@interface/common/dto/evaluation-criteria/project-assignment.dto';
 export declare class GetUnassignedEmployeesQuery {
     readonly periodId: string;
     readonly projectId?: string | undefined;

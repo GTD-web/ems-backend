@@ -612,8 +612,6 @@ export class EvaluationPeriodValidationService {
     }
   }
 
-
-
   /**
    * 평가 기간 업데이트 비즈니스 규칙을 검증한다
    */
@@ -703,14 +701,12 @@ export class EvaluationPeriodValidationService {
 
   /**
    * 평가 기간 삭제 비즈니스 규칙을 검증한다
+   *
+   * 주의: 진행 중인 평가 기간도 삭제 가능하도록 변경됨
    */
   async 평가기간삭제비즈니스규칙검증한다(evaluationPeriod: any): Promise<void> {
-    // 활성 상태인 평가 기간은 삭제할 수 없음
-    if (evaluationPeriod.활성화된_상태인가()) {
-      throw new EvaluationPeriodBusinessRuleViolationException(
-        '활성 상태인 평가 기간은 삭제할 수 없습니다.',
-      );
-    }
+    // 진행 중인 평가 기간도 삭제 가능하도록 변경
+    // 필요시 추가 검증 로직을 여기에 추가할 수 있음
   }
 
   /**

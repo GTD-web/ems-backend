@@ -14,6 +14,7 @@ import {
   EvaluationPeriodPhase,
 } from '@domain/core/evaluation-period/evaluation-period.types';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
+import { RevisionRequestStepType } from '@/domain/sub/evaluation-revision-request';
 
 /**
  * EvaluationActivityLogContextService 테스트
@@ -125,7 +126,6 @@ describe('EvaluationActivityLogContextService', () => {
       name: '2024년 상반기 평가',
       description: '테스트용 평가기간',
       startDate: new Date('2024-01-01'),
-      endDate: new Date('2024-06-30'),
       status: EvaluationPeriodStatus.IN_PROGRESS,
       currentPhase: EvaluationPeriodPhase.SELF_EVALUATION,
       criteriaSettingEnabled: true,
@@ -167,9 +167,6 @@ describe('EvaluationActivityLogContextService', () => {
     const mapping = mappingRepository.create({
       evaluationPeriodId: evaluationPeriodId,
       employeeId: employeeId,
-      isSelfEvaluationEditable: true,
-      isPrimaryEvaluationEditable: true,
-      isSecondaryEvaluationEditable: true,
       createdBy: systemAdminId,
     });
     const savedMapping = await mappingRepository.save(mapping);
@@ -388,7 +385,8 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.평가기간_피평가자_활동내역을_조회한다(params);
+      const result =
+        await service.평가기간_피평가자_활동내역을_조회한다(params);
 
       // Then
       expect(result).toBeDefined();
@@ -410,11 +408,14 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.평가기간_피평가자_활동내역을_조회한다(params);
+      const result =
+        await service.평가기간_피평가자_활동내역을_조회한다(params);
 
       // Then
       expect(result.items.length).toBe(2);
-      expect(result.items.every((item) => item.activityType === 'deliverable')).toBe(true);
+      expect(
+        result.items.every((item) => item.activityType === 'deliverable'),
+      ).toBe(true);
     });
 
     it('기간으로 필터링하여 조회한다', async () => {
@@ -432,7 +433,8 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.평가기간_피평가자_활동내역을_조회한다(params);
+      const result =
+        await service.평가기간_피평가자_활동내역을_조회한다(params);
 
       // Then
       expect(result.items.length).toBeGreaterThan(0);
@@ -462,8 +464,10 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const page1 = await service.평가기간_피평가자_활동내역을_조회한다(params1);
-      const page2 = await service.평가기간_피평가자_활동내역을_조회한다(params2);
+      const page1 =
+        await service.평가기간_피평가자_활동내역을_조회한다(params1);
+      const page2 =
+        await service.평가기간_피평가자_활동내역을_조회한다(params2);
 
       // Then
       expect(page1.items.length).toBe(2);
@@ -491,7 +495,8 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.단계승인_상태변경_활동내역을_기록한다(params);
+      const result =
+        await service.단계승인_상태변경_활동내역을_기록한다(params);
 
       // Then
       expect(result).toBeDefined();
@@ -517,7 +522,8 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.단계승인_상태변경_활동내역을_기록한다(params);
+      const result =
+        await service.단계승인_상태변경_활동내역을_기록한다(params);
 
       // Then
       expect(result.activityTitle).toBe('자기평가 승인');
@@ -535,7 +541,8 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.단계승인_상태변경_활동내역을_기록한다(params);
+      const result =
+        await service.단계승인_상태변경_활동내역을_기록한다(params);
 
       // Then
       expect(result.activityTitle).toBe('1차 하향평가 승인');
@@ -554,7 +561,8 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.단계승인_상태변경_활동내역을_기록한다(params);
+      const result =
+        await service.단계승인_상태변경_활동내역을_기록한다(params);
 
       // Then
       expect(result.activityTitle).toBe('2차 하향평가 승인');
@@ -574,12 +582,15 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.단계승인_상태변경_활동내역을_기록한다(params);
+      const result =
+        await service.단계승인_상태변경_활동내역을_기록한다(params);
 
       // Then
       expect(result.activityTitle).toBe('평가기준 설정 재작성 요청');
       expect(result.activityAction).toBe('revision_requested');
-      expect(result.activityMetadata?.revisionComment).toBe('평가기준을 다시 작성해주세요.');
+      expect(result.activityMetadata?.revisionComment).toBe(
+        '평가기준을 다시 작성해주세요.',
+      );
     });
 
     it('자기평가 재작성 요청 활동 내역을 기록한다', async () => {
@@ -594,7 +605,8 @@ describe('EvaluationActivityLogContextService', () => {
       };
 
       // When
-      const result = await service.단계승인_상태변경_활동내역을_기록한다(params);
+      const result =
+        await service.단계승인_상태변경_활동내역을_기록한다(params);
 
       // Then
       expect(result.activityTitle).toBe('자기평가 재작성 요청');
@@ -629,7 +641,7 @@ describe('EvaluationActivityLogContextService', () => {
       const params = {
         evaluationPeriodId,
         employeeId,
-        step: 'criteria',
+        step: 'criteria' as RevisionRequestStepType,
         requestId,
         performedBy: performerId,
         responseComment: '재작성 완료했습니다.',
@@ -648,7 +660,9 @@ describe('EvaluationActivityLogContextService', () => {
       expect(result.relatedEntityId).toBe(requestId);
       expect(result.performedBy).toBe(performerId);
       expect(result.activityMetadata?.step).toBe('criteria');
-      expect(result.activityMetadata?.responseComment).toBe('재작성 완료했습니다.');
+      expect(result.activityMetadata?.responseComment).toBe(
+        '재작성 완료했습니다.',
+      );
       expect(result.activityMetadata?.allCompleted).toBe(true);
     });
 
@@ -658,7 +672,7 @@ describe('EvaluationActivityLogContextService', () => {
       const params = {
         evaluationPeriodId,
         employeeId,
-        step: 'self',
+        step: 'self' as RevisionRequestStepType,
         requestId,
         performedBy: performerId,
         responseComment: '자기평가 재작성 완료',
@@ -679,7 +693,7 @@ describe('EvaluationActivityLogContextService', () => {
       const params = {
         evaluationPeriodId,
         employeeId,
-        step: 'primary',
+        step: 'primary' as RevisionRequestStepType,
         requestId,
         performedBy: performerId,
         responseComment: '1차 하향평가 재작성 완료',
@@ -699,7 +713,7 @@ describe('EvaluationActivityLogContextService', () => {
       const params = {
         evaluationPeriodId,
         employeeId,
-        step: 'secondary',
+        step: 'secondary' as RevisionRequestStepType,
         requestId,
         performedBy: performerId,
         responseComment: '2차 하향평가 재작성 완료',
@@ -714,4 +728,3 @@ describe('EvaluationActivityLogContextService', () => {
     });
   });
 });
-

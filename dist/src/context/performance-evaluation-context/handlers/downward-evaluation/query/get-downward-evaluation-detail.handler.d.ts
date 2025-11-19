@@ -52,8 +52,8 @@ export interface DownwardEvaluationDetailResult {
         performanceResult: string | null;
         selfEvaluationContent: string | null;
         selfEvaluationScore: number | null;
-        isCompleted: boolean;
-        completedAt: Date | null;
+        submittedToManager: boolean;
+        submittedToManagerAt: Date | null;
         evaluationDate: Date;
     } | null;
 }

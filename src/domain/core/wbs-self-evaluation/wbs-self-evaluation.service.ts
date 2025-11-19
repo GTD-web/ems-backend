@@ -187,6 +187,43 @@ export class WbsSelfEvaluationService {
   }
 
   /**
+   * 1차 평가자가 관리자에게 제출한다
+   * 엔티티를 파라미터로 받아 처리합니다.
+   * 관리자에게 제출할 때는 평가자에게도 자동으로 제출한 것으로 처리됩니다.
+   */
+  async 일차평가자가_관리자에게_제출한다(
+    wbsSelfEvaluation: WbsSelfEvaluation,
+    submittedBy: string,
+    manager?: EntityManager,
+  ): Promise<WbsSelfEvaluation> {
+    return this.executeSafeDomainOperation(async () => {
+      this.logger.log(
+        `1차 평가자가 관리자에게 자기평가 제출 시작 - ID: ${wbsSelfEvaluation.id}`,
+      );
+
+      const repository = this.transactionManager.getRepository(
+        WbsSelfEvaluation,
+        this.wbsSelfEvaluationRepository,
+        manager,
+      );
+
+      // 1차 평가자가 관리자에게 제출
+      // (관리자에게 제출할 때는 평가자에게도 자동으로 제출한 것으로 처리됨)
+      wbsSelfEvaluation.일차평가자가_관리자에게_제출한다();
+      // 메타데이터 업데이트 (updatedBy 설정, updatedAt은 @UpdateDateColumn이 자동 처리)
+      wbsSelfEvaluation.수정자를_설정한다(submittedBy);
+
+      // TypeORM 변경 감지를 위해 명시적으로 저장
+      const saved = await repository.save(wbsSelfEvaluation);
+
+      this.logger.log(
+        `1차 평가자가 관리자에게 자기평가 제출 완료 - ID: ${wbsSelfEvaluation.id}`,
+      );
+      return saved;
+    }, '일차평가자가_관리자에게_제출한다');
+  }
+
+  /**
    * 피평가자가 1차 평가자에게 제출한 것을 취소한다
    */
   async 피평가자가_1차평가자에게_제출한_것을_취소한다(
@@ -289,10 +326,6 @@ export class WbsSelfEvaluationService {
     manager?: EntityManager,
   ): Promise<WbsSelfEvaluation[]> {
     return this.executeSafeDomainOperation(async () => {
-      this.logger.debug(
-        `WBS 자가평가 필터 조회 - 필터: ${JSON.stringify(filter)}`,
-      );
-
       const repository = this.transactionManager.getRepository(
         WbsSelfEvaluation,
         this.wbsSelfEvaluationRepository,

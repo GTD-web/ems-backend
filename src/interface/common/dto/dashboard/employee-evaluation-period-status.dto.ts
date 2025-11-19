@@ -302,10 +302,23 @@ export class CriteriaSubmissionInfoDto {
 export class CriteriaSetupDto {
   @ApiProperty({
     description: '평가기준 설정 상태 (계산된 상태)',
-    enum: ['none', 'in_progress', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    enum: [
+      'none',
+      'in_progress',
+      'pending',
+      'approved',
+      'revision_requested',
+      'revision_completed',
+    ],
     example: 'none',
   })
-  status: 'none' | 'in_progress' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+  status:
+    | 'none'
+    | 'in_progress'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: '평가항목 설정 정보',
@@ -419,10 +432,25 @@ export class PrimaryDownwardEvaluationDto {
 
   @ApiProperty({
     description: '1차 하향평가 통합 상태 (진행 상태 + 승인 상태)',
-    enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    enum: [
+      'complete',
+      'in_progress',
+      'none',
+      'pending',
+      'approved',
+      'revision_requested',
+      'revision_completed',
+    ],
     example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+  status:
+    | 'complete'
+    | 'in_progress'
+    | 'none'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: '평가 대상 WBS 수',
@@ -470,10 +498,25 @@ export class SecondaryEvaluatorDto {
 
   @ApiProperty({
     description: '2차 하향평가 통합 상태 (진행 상태 + 승인 상태)',
-    enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    enum: [
+      'complete',
+      'in_progress',
+      'none',
+      'pending',
+      'approved',
+      'revision_requested',
+      'revision_completed',
+    ],
     example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+  status:
+    | 'complete'
+    | 'in_progress'
+    | 'none'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: '평가 대상 WBS 수',
@@ -500,10 +543,25 @@ export class SecondaryEvaluatorDto {
 export class SecondaryDownwardEvaluationDto {
   @ApiProperty({
     description: '2차 평가 전체 통합 상태 (모든 평가자 통합)',
-    enum: ['complete', 'in_progress', 'none', 'pending', 'approved', 'revision_requested', 'revision_completed'],
+    enum: [
+      'complete',
+      'in_progress',
+      'none',
+      'pending',
+      'approved',
+      'revision_requested',
+      'revision_completed',
+    ],
     example: 'complete',
   })
-  status: 'complete' | 'in_progress' | 'none' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+  status:
+    | 'complete'
+    | 'in_progress'
+    | 'none'
+    | 'pending'
+    | 'approved'
+    | 'revision_requested'
+    | 'revision_completed';
 
   @ApiProperty({
     description: '2차 평가자 목록',
@@ -827,6 +885,20 @@ export class StepApprovalInfoDto {
         evaluatorName: '홍길동',
         evaluatorEmployeeNumber: 'EMP001',
         evaluatorEmail: 'hong@example.com',
+        status: 'approved',
+        approvedBy: '123e4567-e89b-12d3-a456-426614174004',
+        approvedAt: '2024-01-15T10:00:00Z',
+        revisionRequestId: null,
+        revisionComment: null,
+        isRevisionCompleted: false,
+        revisionCompletedAt: null,
+        responseComment: null,
+      },
+      {
+        evaluatorId: '123e4567-e89b-12d3-a456-426614174005',
+        evaluatorName: '김철수',
+        evaluatorEmployeeNumber: 'EMP002',
+        evaluatorEmail: 'kim@example.com',
         status: 'pending',
         approvedBy: null,
         approvedAt: null,
@@ -834,6 +906,7 @@ export class StepApprovalInfoDto {
         revisionComment: null,
         isRevisionCompleted: false,
         revisionCompletedAt: null,
+        responseComment: null,
       },
     ],
   })

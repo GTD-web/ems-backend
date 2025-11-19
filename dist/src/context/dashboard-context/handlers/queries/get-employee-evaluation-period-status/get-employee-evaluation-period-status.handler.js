@@ -31,6 +31,7 @@ const downward_evaluation_entity_1 = require("../../../../../domain/core/downwar
 const peer_evaluation_entity_1 = require("../../../../../domain/core/peer-evaluation/peer-evaluation.entity");
 const final_evaluation_entity_1 = require("../../../../../domain/core/final-evaluation/final-evaluation.entity");
 const employee_evaluation_step_approval_1 = require("../../../../../domain/sub/employee-evaluation-step-approval");
+const secondary_evaluation_step_approval_entity_1 = require("../../../../../domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity");
 const evaluation_revision_request_entity_1 = require("../../../../../domain/sub/evaluation-revision-request/evaluation-revision-request.entity");
 const evaluation_revision_request_recipient_entity_1 = require("../../../../../domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity");
 const step_approval_utils_1 = require("./step-approval.utils");
@@ -67,9 +68,10 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
     finalEvaluationRepository;
     revisionRequestRepository;
     revisionRequestRecipientRepository;
+    secondaryStepApprovalRepository;
     stepApprovalService;
     logger = new common_1.Logger(GetEmployeeEvaluationPeriodStatusHandler_1.name);
-    constructor(mappingRepository, periodRepository, employeeRepository, projectAssignmentRepository, wbsAssignmentRepository, wbsCriteriaRepository, evaluationLineRepository, evaluationLineMappingRepository, wbsSelfEvaluationRepository, downwardEvaluationRepository, peerEvaluationRepository, finalEvaluationRepository, revisionRequestRepository, revisionRequestRecipientRepository, stepApprovalService) {
+    constructor(mappingRepository, periodRepository, employeeRepository, projectAssignmentRepository, wbsAssignmentRepository, wbsCriteriaRepository, evaluationLineRepository, evaluationLineMappingRepository, wbsSelfEvaluationRepository, downwardEvaluationRepository, peerEvaluationRepository, finalEvaluationRepository, revisionRequestRepository, revisionRequestRecipientRepository, secondaryStepApprovalRepository, stepApprovalService) {
         this.mappingRepository = mappingRepository;
         this.periodRepository = periodRepository;
         this.employeeRepository = employeeRepository;
@@ -84,11 +86,11 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
         this.finalEvaluationRepository = finalEvaluationRepository;
         this.revisionRequestRepository = revisionRequestRepository;
         this.revisionRequestRecipientRepository = revisionRequestRecipientRepository;
+        this.secondaryStepApprovalRepository = secondaryStepApprovalRepository;
         this.stepApprovalService = stepApprovalService;
     }
     async execute(query) {
         const { evaluationPeriodId, employeeId, includeUnregistered } = query;
-        this.logger.debug(`직원의 평가기간 현황 조회 시작 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
         try {
             const queryBuilder = this.mappingRepository
                 .createQueryBuilder('mapping')
@@ -179,27 +181,21 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             const selfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_상태를_계산한다)(totalMappingCount, completedMappingCount);
             const selfEvaluationApprovalStatus = await (0, step_approval_utils_1.자기평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
             let finalSelfEvaluationStatus;
-            if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
-                if (selfEvaluationApprovalStatus.isCompleted) {
-                    const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
-                    if (stepApprovalStatus === 'approved') {
-                        finalSelfEvaluationStatus = 'approved';
-                    }
-                    else {
-                        finalSelfEvaluationStatus = 'revision_completed';
-                    }
-                }
-                else {
-                    finalSelfEvaluationStatus = 'revision_requested';
-                }
+            const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
+            if (stepApprovalStatus === 'approved') {
+                finalSelfEvaluationStatus = 'approved';
+            }
+            else if (stepApprovalStatus === 'revision_completed') {
+                finalSelfEvaluationStatus = 'revision_completed';
             }
             else {
-                const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
-                if (stepApprovalStatus === 'approved') {
-                    finalSelfEvaluationStatus = 'approved';
-                }
-                else if (stepApprovalStatus === 'revision_completed') {
-                    finalSelfEvaluationStatus = 'revision_completed';
+                if (selfEvaluationApprovalStatus.revisionRequestId !== null) {
+                    if (selfEvaluationApprovalStatus.isCompleted) {
+                        finalSelfEvaluationStatus = 'revision_completed';
+                    }
+                    else {
+                        finalSelfEvaluationStatus = 'revision_requested';
+                    }
                 }
                 else {
                     finalSelfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_통합_상태를_계산한다)(selfEvaluationStatus, stepApprovalStatus ?? 'pending');
@@ -266,7 +262,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             }
             const validSecondaryEvaluators = secondary.evaluators.filter((e) => e.evaluator && e.evaluator.id);
             const secondaryEvaluatorIds = validSecondaryEvaluators.map((e) => e.evaluator.id);
-            const secondaryEvaluationStatuses = await (0, step_approval_utils_1.평가자들별_2차평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, secondaryEvaluatorIds, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
+            const secondaryEvaluationStatuses = await (0, step_approval_utils_1.평가자들별_2차평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, secondaryEvaluatorIds, result.mapping_id, this.revisionRequestRepository, this.revisionRequestRecipientRepository, this.secondaryStepApprovalRepository);
             const secondaryEvaluationStatusesWithEvaluatorInfo = validSecondaryEvaluators
                 .map((evaluatorInfo) => {
                 if (!evaluatorInfo.evaluator || !evaluatorInfo.evaluator.id) {
@@ -276,33 +272,9 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 let finalStatus;
                 let approvedBy = null;
                 let approvedAt = null;
-                if (statusInfo && statusInfo.revisionRequestId !== null) {
-                    if (statusInfo.isCompleted) {
-                        finalStatus = 'revision_completed';
-                    }
-                    else if (statusInfo.status === 'revision_requested') {
-                        finalStatus = 'revision_requested';
-                    }
-                    else {
-                        finalStatus = 'revision_requested';
-                    }
-                }
-                else {
-                    const stepApprovalStatus = stepApproval?.secondaryEvaluationStatus;
-                    if (stepApprovalStatus === 'approved') {
-                        finalStatus = 'approved';
-                        approvedBy =
-                            stepApproval?.secondaryEvaluationApprovedBy ?? null;
-                        approvedAt =
-                            stepApproval?.secondaryEvaluationApprovedAt ?? null;
-                    }
-                    else if (stepApprovalStatus === 'revision_completed') {
-                        finalStatus = 'revision_completed';
-                    }
-                    else {
-                        finalStatus = 'pending';
-                    }
-                }
+                finalStatus = statusInfo?.status ?? 'pending';
+                approvedBy = statusInfo?.approvedBy ?? null;
+                approvedAt = statusInfo?.approvedAt ?? null;
                 return {
                     evaluatorId: evaluatorInfo.evaluator.id,
                     evaluatorName: evaluatorInfo.evaluator.name || '알 수 없음',
@@ -383,7 +355,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     hasSecondaryEvaluator,
                 },
                 criteriaSetup: {
-                    status: (0, evaluation_criteria_utils_1.평가기준설정_상태를_계산한다)(evaluationCriteriaStatus, wbsCriteriaStatus, evaluationLineStatus, stepApproval?.criteriaSettingStatus ?? null, result.mapping_iscriteriasubmitted || false),
+                    status: (0, evaluation_criteria_utils_1.평가기준설정_상태를_계산한다)(evaluationCriteriaStatus, wbsCriteriaStatus, stepApproval?.criteriaSettingStatus ?? null, result.mapping_iscriteriasubmitted || false),
                     evaluationCriteria: {
                         status: evaluationCriteriaStatus,
                         assignedProjectCount: projectCount,
@@ -392,11 +364,6 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     wbsCriteria: {
                         status: wbsCriteriaStatus,
                         wbsWithCriteriaCount,
-                    },
-                    evaluationLine: {
-                        status: evaluationLineStatus,
-                        hasPrimaryEvaluator,
-                        hasSecondaryEvaluator,
                     },
                     criteriaSubmission: {
                         isSubmitted: result.mapping_iscriteriasubmitted || false,
@@ -433,7 +400,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                             const approvalInfo = secondaryEvaluationStatusesWithEvaluatorInfo.find((s) => s.evaluatorId === evaluatorInfo.evaluator.id);
                             return {
                                 evaluator: evaluatorInfo.evaluator,
-                                status: (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending'),
+                                status: (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending', 'secondary'),
                                 assignedWbsCount: evaluatorInfo.assignedWbsCount,
                                 completedEvaluationCount: evaluatorInfo.completedEvaluationCount,
                                 isSubmitted: evaluatorInfo.isSubmitted,
@@ -441,7 +408,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                         }),
                         status: (0, downward_evaluation_utils_1.이차평가_전체_상태를_계산한다)(secondary.evaluators.map((evaluatorInfo) => {
                             const approvalInfo = secondaryEvaluationStatusesWithEvaluatorInfo.find((s) => s.evaluatorId === evaluatorInfo.evaluator.id);
-                            return (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending');
+                            return (0, downward_evaluation_utils_1.하향평가_통합_상태를_계산한다)(evaluatorInfo.status, approvalInfo?.status ?? 'pending', 'secondary');
                         })),
                         isSubmitted: secondary.isSubmitted,
                         totalScore: secondary.totalScore,
@@ -507,7 +474,9 @@ exports.GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodSt
     __param(11, (0, typeorm_1.InjectRepository)(final_evaluation_entity_1.FinalEvaluation)),
     __param(12, (0, typeorm_1.InjectRepository)(evaluation_revision_request_entity_1.EvaluationRevisionRequest)),
     __param(13, (0, typeorm_1.InjectRepository)(evaluation_revision_request_recipient_entity_1.EvaluationRevisionRequestRecipient)),
+    __param(14, (0, typeorm_1.InjectRepository)(secondary_evaluation_step_approval_entity_1.SecondaryEvaluationStepApproval)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

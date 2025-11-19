@@ -42,16 +42,6 @@ let StepApprovalController = class StepApprovalController {
             statuses: Object.values(update_step_approval_dto_2.StepApprovalStatusEnum),
         };
     }
-    async updateStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
-        await this.stepApprovalContextService.단계별_확인상태를_변경한다({
-            evaluationPeriodId,
-            employeeId,
-            step: dto.step,
-            status: dto.status,
-            revisionComment: dto.revisionComment,
-            updatedBy,
-        });
-    }
     async updateCriteriaStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
         if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {
             if (!dto.revisionComment || dto.revisionComment.trim() === '') {
@@ -106,7 +96,7 @@ let StepApprovalController = class StepApprovalController {
             if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.APPROVED) {
                 await this.stepApprovalBusinessService.일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, updatedBy);
                 if (dto.approveSubsequentSteps) {
-                    await this.stepApprovalBusinessService.일차하향평가_승인_시_하위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy);
+                    await this.stepApprovalBusinessService.일차하향평가_승인_시_상위평가를_승인한다(evaluationPeriodId, employeeId, updatedBy);
                 }
             }
             await this.stepApprovalBusinessService.일차하향평가_확인상태를_변경한다({
@@ -119,25 +109,43 @@ let StepApprovalController = class StepApprovalController {
         }
     }
     async updateSecondaryStepApproval(evaluationPeriodId, employeeId, evaluatorId, dto, updatedBy) {
+        let approval;
         if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {
             if (!dto.revisionComment || dto.revisionComment.trim() === '') {
                 throw new common_1.BadRequestException('재작성 요청 코멘트는 필수입니다.');
             }
-            await this.downwardEvaluationBusinessService.이차_하향평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId, employeeId, evaluatorId, dto.revisionComment, updatedBy);
+            approval =
+                await this.downwardEvaluationBusinessService.이차_하향평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId, employeeId, evaluatorId, dto.revisionComment, updatedBy);
         }
         else {
             if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.APPROVED) {
                 await this.stepApprovalBusinessService.이차_하향평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, evaluatorId, updatedBy);
+                if (dto.approveSubsequentSteps) {
+                    await this.stepApprovalBusinessService.이차하향평가_승인_시_상위평가들을_승인한다(evaluationPeriodId, employeeId, updatedBy);
+                }
             }
-            await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다({
-                evaluationPeriodId,
-                employeeId,
-                evaluatorId,
-                status: dto.status,
-                revisionComment: dto.revisionComment,
-                updatedBy,
-            });
+            approval =
+                await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다({
+                    evaluationPeriodId,
+                    employeeId,
+                    evaluatorId,
+                    status: dto.status,
+                    revisionComment: dto.revisionComment,
+                    updatedBy,
+                });
         }
+        const dto_result = approval.DTO로_변환한다();
+        return {
+            id: dto_result.id,
+            evaluationPeriodEmployeeMappingId: dto_result.evaluationPeriodEmployeeMappingId,
+            evaluatorId: dto_result.evaluatorId,
+            status: dto_result.status,
+            approvedBy: dto_result.approvedBy,
+            approvedAt: dto_result.approvedAt,
+            revisionRequestId: dto_result.revisionRequestId,
+            createdAt: dto_result.createdAt,
+            updatedAt: dto_result.updatedAt,
+        };
     }
 };
 exports.StepApprovalController = StepApprovalController;
@@ -147,16 +155,6 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], StepApprovalController.prototype, "getStepApprovalEnums", null);
-__decorate([
-    (0, step_approval_api_decorators_1.UpdateStepApproval)(),
-    __param(0, (0, common_1.Param)('evaluationPeriodId', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Param)('employeeId', common_1.ParseUUIDPipe)),
-    __param(2, (0, common_1.Body)()),
-    __param(3, (0, current_user_decorator_1.CurrentUser)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, Object, String]),
-    __metadata("design:returntype", Promise)
-], StepApprovalController.prototype, "updateStepApproval", null);
 __decorate([
     (0, step_approval_api_decorators_1.UpdateCriteriaStepApproval)(),
     __param(0, (0, common_1.Param)('evaluationPeriodId', common_1.ParseUUIDPipe)),

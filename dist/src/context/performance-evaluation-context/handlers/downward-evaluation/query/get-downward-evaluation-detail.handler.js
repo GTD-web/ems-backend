@@ -90,8 +90,8 @@ let GetDownwardEvaluationDetailHandler = GetDownwardEvaluationDetailHandler_1 = 
             'selfEvaluation.performanceResult AS selfevaluation_performanceresult',
             'selfEvaluation.selfEvaluationContent AS selfevaluation_selfevaluationcontent',
             'selfEvaluation.selfEvaluationScore AS selfevaluation_selfevaluationscore',
-            'selfEvaluation.isCompleted AS selfevaluation_iscompleted',
-            'selfEvaluation.completedAt AS selfevaluation_completedat',
+            'selfEvaluation.submittedToManager AS selfevaluation_submittedtomanager',
+            'selfEvaluation.submittedToManagerAt AS selfevaluation_submittedtomanagerat',
             'selfEvaluation.evaluationDate AS selfevaluation_evaluationdate',
         ])
             .where('evaluation.id = :evaluationId', { evaluationId })
@@ -157,8 +157,8 @@ let GetDownwardEvaluationDetailHandler = GetDownwardEvaluationDetailHandler_1 = 
                     performanceResult: result.selfevaluation_performanceresult,
                     selfEvaluationContent: result.selfevaluation_selfevaluationcontent,
                     selfEvaluationScore: result.selfevaluation_selfevaluationscore,
-                    isCompleted: result.selfevaluation_iscompleted,
-                    completedAt: result.selfevaluation_completedat,
+                    submittedToManager: result.selfevaluation_submittedtomanager,
+                    submittedToManagerAt: result.selfevaluation_submittedtomanagerat,
                     evaluationDate: result.selfevaluation_evaluationdate,
                 }
                 : null,

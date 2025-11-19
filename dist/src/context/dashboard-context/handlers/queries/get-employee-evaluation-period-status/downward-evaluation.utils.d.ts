@@ -6,7 +6,7 @@ import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { DownwardEvaluationStatus } from '../../../interfaces/dashboard-context.interface';
-export declare function 하향평가_통합_상태를_계산한다(downwardStatus: DownwardEvaluationStatus, approvalStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed'): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
+export declare function 하향평가_통합_상태를_계산한다(downwardStatus: DownwardEvaluationStatus, approvalStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed', evaluationType?: 'primary' | 'secondary'): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
 export declare function 이차평가_전체_상태를_계산한다(evaluatorStatuses: Array<DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed'>): DownwardEvaluationStatus | 'pending' | 'approved' | 'revision_requested' | 'revision_completed';
 export declare function 하향평가_상태를_조회한다(evaluationPeriodId: string, employeeId: string, evaluationLineRepository: Repository<EvaluationLine>, evaluationLineMappingRepository: Repository<EvaluationLineMapping>, downwardEvaluationRepository: Repository<DownwardEvaluation>, wbsAssignmentRepository: Repository<EvaluationWbsAssignment>, periodRepository: Repository<EvaluationPeriod>, employeeRepository?: Repository<any>): Promise<{
     primary: {

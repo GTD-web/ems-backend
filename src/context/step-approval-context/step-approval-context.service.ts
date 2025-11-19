@@ -6,6 +6,10 @@ import {
   StepApprovalStatus,
 } from '@domain/sub/employee-evaluation-step-approval';
 import {
+  SecondaryEvaluationStepApprovalService,
+  SecondaryEvaluationStepApproval,
+} from '@domain/sub/secondary-evaluation-step-approval';
+import {
   EvaluationRevisionRequestService,
   EvaluationRevisionRequest,
   EvaluationRevisionRequestRecipient,
@@ -31,6 +35,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
 
   constructor(
     private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
+    private readonly secondaryStepApprovalService: SecondaryEvaluationStepApprovalService,
     private readonly revisionRequestService: EvaluationRevisionRequestService,
     @InjectRepository(EvaluationPeriodEmployeeMapping)
     private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
@@ -432,7 +437,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
    */
   async 이차하향평가_확인상태를_변경한다(
     request: UpdateSecondaryStepApprovalRequest,
-  ): Promise<void> {
+  ): Promise<SecondaryEvaluationStepApproval> {
     this.logger.log(
       `2차 하향평가 확인 상태 변경 시작 - 평가기간: ${request.evaluationPeriodId}, 직원: ${request.employeeId}, 평가자: ${request.evaluatorId}, 상태: ${request.status}`,
     );
@@ -465,50 +470,60 @@ export class StepApprovalContextService implements IStepApprovalContext {
       );
     }
 
-    // 3. 단계 승인 정보 조회 또는 생성
-    let stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
-      mapping.id,
-    );
-
-    if (!stepApproval) {
-      this.logger.log(
-        `단계 승인 정보가 없어 새로 생성합니다. - 맵핑 ID: ${mapping.id}`,
+    // 3. 2차 평가자별 단계 승인 정보 조회 또는 생성
+    let secondaryApproval =
+      await this.secondaryStepApprovalService.맵핑ID와_평가자ID로_조회한다(
+        mapping.id,
+        request.evaluatorId,
       );
-      stepApproval = await this.stepApprovalService.생성한다({
+
+    if (!secondaryApproval) {
+      this.logger.log(
+        `2차 평가자별 단계 승인 정보가 없어 새로 생성합니다. - 맵핑 ID: ${mapping.id}, 평가자 ID: ${request.evaluatorId}`,
+      );
+      secondaryApproval = await this.secondaryStepApprovalService.생성한다({
         evaluationPeriodEmployeeMappingId: mapping.id,
+        evaluatorId: request.evaluatorId,
+        status: request.status,
         createdBy: request.updatedBy,
       });
     }
 
-    // 4. 단계 상태 변경 (2차 평가)
-    this.stepApprovalService.단계_상태를_변경한다(
-      stepApproval,
-      'secondary',
-      request.status,
-      request.updatedBy,
-    );
-
-    // 5. 저장
-    await this.stepApprovalService.저장한다(stepApproval);
-
-    // 6. revision_requested인 경우 특정 평가자에게만 재작성 요청 생성
+    // 4. 재작성 요청 ID 조회 (revision_requested인 경우)
+    let revisionRequestId: string | null = null;
     if (request.status === StepApprovalStatus.REVISION_REQUESTED) {
       if (!request.revisionComment || request.revisionComment.trim() === '') {
         throw new NotFoundException('재작성 요청 코멘트는 필수입니다.');
       }
 
-      await this.재작성요청을_평가자별로_생성한다(
+      // 재작성 요청 생성
+      const revisionRequest = await this.재작성요청을_평가자별로_생성한다(
         request.evaluationPeriodId,
         request.employeeId,
         request.evaluatorId,
         request.revisionComment,
         request.updatedBy,
       );
+      revisionRequestId = revisionRequest.id;
     }
+
+    // 5. 2차 평가자별 단계 승인 상태 변경
+    this.secondaryStepApprovalService.상태를_변경한다(
+      secondaryApproval,
+      request.status,
+      request.updatedBy,
+      revisionRequestId,
+    );
+
+    // 6. 저장
+    const savedApproval =
+      await this.secondaryStepApprovalService.저장한다(secondaryApproval);
 
     this.logger.log(
       `2차 하향평가 확인 상태 변경 완료 - 직원: ${request.employeeId}, 평가자: ${request.evaluatorId}`,
     );
+
+    return savedApproval;
   }
 
   /**
@@ -551,13 +566,13 @@ export class StepApprovalContextService implements IStepApprovalContext {
     evaluatorId: string,
     comment: string,
     requestedBy: string,
-  ): Promise<void> {
+  ): Promise<EvaluationRevisionRequest> {
     this.logger.log(
       `재작성 요청 생성 시작 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
     );
 
     // 트랜잭션으로 처리하여 동시성 문제 방지
-    await this.dataSource.transaction(async (manager) => {
+    const newRequest = await this.dataSource.transaction(async (manager) => {
       // SELECT FOR UPDATE를 사용하여 락을 걸고 기존 미완료 재작성 요청 확인
       // leftJoinAndSelect는 FOR UPDATE와 호환되지 않으므로 먼저 request만 조회
       const existingRequests = await manager
@@ -620,7 +635,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
       ];
 
       // 재작성 요청 생성 (트랜잭션 내에서)
-      const newRequest = new EvaluationRevisionRequest({
+      const request = new EvaluationRevisionRequest({
         evaluationPeriodId,
         employeeId,
         step: 'secondary',
@@ -629,11 +644,13 @@ export class StepApprovalContextService implements IStepApprovalContext {
         recipients,
         createdBy: requestedBy,
       });
-      await manager.save(EvaluationRevisionRequest, newRequest);
+      return await manager.save(EvaluationRevisionRequest, request);
     });
 
     this.logger.log(
       `재작성 요청 생성 완료 (평가자별) - 직원: ${employeeId}, 평가자: ${evaluatorId}`,
     );
+
+    return newRequest;
   }
 }

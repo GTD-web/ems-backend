@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationLineManagementController = void 0;
 const evaluation_criteria_management_service_1 = require("../../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
+const evaluation_line_business_service_1 = require("../../../business/evaluation-line/evaluation-line-business.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
@@ -21,8 +22,10 @@ const evaluation_line_dto_1 = require("../../common/dto/evaluation-criteria/eval
 const evaluation_line_api_decorators_1 = require("../../common/decorators/evaluation-criteria/evaluation-line-api.decorators");
 let EvaluationLineManagementController = class EvaluationLineManagementController {
     evaluationCriteriaManagementService;
-    constructor(evaluationCriteriaManagementService) {
+    evaluationLineBusinessService;
+    constructor(evaluationCriteriaManagementService, evaluationLineBusinessService) {
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
+        this.evaluationLineBusinessService = evaluationLineBusinessService;
     }
     async getEvaluatorEmployees(periodId, evaluatorId) {
         return await this.evaluationCriteriaManagementService.특정_평가자가_평가해야_하는_피평가자_목록을_조회한다(periodId, evaluatorId);
@@ -36,20 +39,20 @@ let EvaluationLineManagementController = class EvaluationLineManagementControlle
         };
     }
     async configurePrimaryEvaluator(employeeId, periodId, dto, user) {
-        return await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(employeeId, periodId, dto.evaluatorId, user.id);
+        return await this.evaluationLineBusinessService.일차_평가자를_구성한다(employeeId, periodId, dto.evaluatorId, user.id);
     }
     async configureSecondaryEvaluator(employeeId, wbsItemId, periodId, dto, user) {
-        return await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(employeeId, wbsItemId, periodId, dto.evaluatorId, user.id);
+        return await this.evaluationLineBusinessService.이차_평가자를_구성한다(employeeId, wbsItemId, periodId, dto.evaluatorId, user.id);
     }
     async getEvaluatorsByPeriod(periodId, query) {
         const type = query.type || 'all';
         return await this.evaluationCriteriaManagementService.평가기간의_평가자_목록을_조회한다(periodId, type);
     }
     async batchConfigurePrimaryEvaluator(periodId, dto, user) {
-        return await this.evaluationCriteriaManagementService.여러_피평가자의_일차_평가자를_일괄_구성한다(periodId, dto.assignments, user.id);
+        return await this.evaluationLineBusinessService.여러_피평가자의_일차_평가자를_일괄_구성한다(periodId, dto.assignments, user.id);
     }
     async batchConfigureSecondaryEvaluator(periodId, dto, user) {
-        return await this.evaluationCriteriaManagementService.여러_피평가자의_이차_평가자를_일괄_구성한다(periodId, dto.assignments, user.id);
+        return await this.evaluationLineBusinessService.여러_피평가자의_이차_평가자를_일괄_구성한다(periodId, dto.assignments, user.id);
     }
 };
 exports.EvaluationLineManagementController = EvaluationLineManagementController;
@@ -120,6 +123,7 @@ exports.EvaluationLineManagementController = EvaluationLineManagementController 
     (0, swagger_1.ApiTags)('B-4. 관리자 - 평가 설정 - 평가라인'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/evaluation-criteria/evaluation-lines'),
-    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService])
+    __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
+        evaluation_line_business_service_1.EvaluationLineBusinessService])
 ], EvaluationLineManagementController);
 //# sourceMappingURL=evaluation-line-management.controller.js.map

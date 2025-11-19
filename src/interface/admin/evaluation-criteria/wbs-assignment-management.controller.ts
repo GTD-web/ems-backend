@@ -1,37 +1,10 @@
+import { WbsAssignmentBusinessService } from '@business/wbs-assignment/wbs-assignment-business.service';
+import { WbsAssignmentListResult } from '@context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import {
-  Body,
-  Controller,
-  NotFoundException,
-  Param,
-  ParseUUIDPipe,
-  Query,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { WbsAssignmentBusinessService } from '@business/wbs-assignment/wbs-assignment-business.service';
-import { WbsAssignmentListResult } from '@context/evaluation-criteria-management-context/handlers/wbs-assignment/queries/get-wbs-assignment-list.handler';
-import {
-  BulkCreateWbsAssignmentDto,
-  CancelWbsAssignmentByWbsDto,
-  ChangeWbsAssignmentOrderByWbsDto,
-  ChangeWbsAssignmentOrderQueryDto,
-  CreateAndAssignWbsDto,
-  CreateWbsAssignmentDto,
-  EmployeeWbsAssignmentsResponseDto,
-  GetUnassignedWbsItemsDto,
-  ProjectWbsAssignmentsResponseDto,
-  UnassignedWbsItemsResponseDto,
-  UpdateWbsItemTitleDto,
-  WbsAssignmentDetailResponseDto,
-  WbsAssignmentFilterDto,
-  WbsItemAssignmentsResponseDto,
-} from '@interface/common/dto/evaluation-criteria/wbs-assignment.dto';
-import {
   BulkCreateWbsAssignments,
-  CancelWbsAssignment,
   CancelWbsAssignmentByWbs,
-  ChangeWbsAssignmentOrder,
   ChangeWbsAssignmentOrderByWbs,
   CreateAndAssignWbs,
   CreateWbsAssignment,
@@ -44,8 +17,32 @@ import {
   ResetEmployeeWbsAssignments,
   ResetPeriodWbsAssignments,
   ResetProjectWbsAssignments,
-  UpdateWbsItemTitle,
+  UpdateWbsItemTitle
 } from '@interface/common/decorators/evaluation-criteria/wbs-assignment-api.decorators';
+import {
+  BulkCreateWbsAssignmentDto,
+  CancelWbsAssignmentByWbsDto,
+  ChangeWbsAssignmentOrderByWbsDto,
+  CreateAndAssignWbsDto,
+  CreateWbsAssignmentDto,
+  EmployeeWbsAssignmentsResponseDto,
+  GetUnassignedWbsItemsDto,
+  ProjectWbsAssignmentsResponseDto,
+  UnassignedWbsItemsResponseDto,
+  UpdateWbsItemTitleDto,
+  WbsAssignmentDetailResponseDto,
+  WbsAssignmentFilterDto,
+  WbsItemAssignmentsResponseDto
+} from '@interface/common/dto/evaluation-criteria/wbs-assignment.dto';
+import {
+  Body,
+  Controller,
+  NotFoundException,
+  Param,
+  ParseUUIDPipe,
+  Query,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 /**
  * WBS 할당 관리 컨트롤러
@@ -78,21 +75,7 @@ export class WbsAssignmentManagementController {
     });
   }
 
-  /**
-   * WBS 할당 취소 (Deprecated)
-   * @deprecated WBS ID 기반 엔드포인트를 사용하세요. cancelWbsAssignmentByWbs
-   */
-  @CancelWbsAssignment()
-  async cancelWbsAssignment(
-    @Param('id', ParseUUIDPipe) id: string,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
-    const cancelledBy = user.id;
-    return await this.wbsAssignmentBusinessService.WBS_할당을_취소한다({
-      assignmentId: id,
-      cancelledBy,
-    });
-  }
+
 
   /**
    * WBS 할당 취소 (WBS ID 기반)
@@ -300,23 +283,7 @@ export class WbsAssignmentManagementController {
     );
   }
 
-  /**
-   * WBS 할당 순서 변경 (Deprecated)
-   * @deprecated WBS ID 기반 엔드포인트를 사용하세요. changeWbsAssignmentOrderByWbs
-   */
-  @ChangeWbsAssignmentOrder()
-  async changeWbsAssignmentOrder(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Query() queryDto: ChangeWbsAssignmentOrderQueryDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<any> {
-    const updatedBy = user.id;
-    return await this.wbsAssignmentBusinessService.WBS_할당_순서를_변경한다({
-      assignmentId: id,
-      direction: queryDto.direction,
-      updatedBy,
-    });
-  }
+
 
   /**
    * WBS 할당 순서 변경 (WBS ID 기반)

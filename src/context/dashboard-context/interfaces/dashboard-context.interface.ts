@@ -189,15 +189,6 @@ export interface EmployeeEvaluationPeriodStatusDto {
       /** 평가기준이 설정된 WBS 수 */
       wbsWithCriteriaCount: number;
     };
-    /** 평가라인 지정 정보 */
-    evaluationLine: {
-      /** 평가라인 지정 완료 상태 */
-      status: EvaluationLineStatus;
-      /** PRIMARY 라인 평가자 지정 여부 */
-      hasPrimaryEvaluator: boolean;
-      /** SECONDARY 라인 평가자 지정 여부 */
-      hasSecondaryEvaluator: boolean;
-    };
     /** 평가기준 제출 상태 */
     criteriaSubmission: {
       /** 평가기준 제출 여부 */

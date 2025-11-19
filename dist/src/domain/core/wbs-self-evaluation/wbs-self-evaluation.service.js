@@ -100,6 +100,17 @@ let WbsSelfEvaluationService = WbsSelfEvaluationService_1 = class WbsSelfEvaluat
             return saved;
         }, '피평가자가_1차평가자에게_제출한다');
     }
+    async 일차평가자가_관리자에게_제출한다(wbsSelfEvaluation, submittedBy, manager) {
+        return this.executeSafeDomainOperation(async () => {
+            this.logger.log(`1차 평가자가 관리자에게 자기평가 제출 시작 - ID: ${wbsSelfEvaluation.id}`);
+            const repository = this.transactionManager.getRepository(wbs_self_evaluation_entity_1.WbsSelfEvaluation, this.wbsSelfEvaluationRepository, manager);
+            wbsSelfEvaluation.일차평가자가_관리자에게_제출한다();
+            wbsSelfEvaluation.수정자를_설정한다(submittedBy);
+            const saved = await repository.save(wbsSelfEvaluation);
+            this.logger.log(`1차 평가자가 관리자에게 자기평가 제출 완료 - ID: ${wbsSelfEvaluation.id}`);
+            return saved;
+        }, '일차평가자가_관리자에게_제출한다');
+    }
     async 피평가자가_1차평가자에게_제출한_것을_취소한다(id, resetBy, manager) {
         return this.executeSafeDomainOperation(async () => {
             this.logger.log(`피평가자가 1차 평가자에게 제출한 것을 취소 시작 - ID: ${id}`);
@@ -141,7 +152,6 @@ let WbsSelfEvaluationService = WbsSelfEvaluationService_1 = class WbsSelfEvaluat
     }
     async 필터_조회한다(filter, manager) {
         return this.executeSafeDomainOperation(async () => {
-            this.logger.debug(`WBS 자가평가 필터 조회 - 필터: ${JSON.stringify(filter)}`);
             const repository = this.transactionManager.getRepository(wbs_self_evaluation_entity_1.WbsSelfEvaluation, this.wbsSelfEvaluationRepository, manager);
             let queryBuilder = repository.createQueryBuilder('evaluation');
             if (filter.periodId) {

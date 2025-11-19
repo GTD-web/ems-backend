@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { FinalEvaluation } from '@domain/core/final-evaluation/final-evaluation.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
-import type { FinalEvaluationDetailDto } from '@/interface/common/dto/performance-evaluation/final-evaluation.dto';
+import type { FinalEvaluationDetailDto } from '@interface/common/dto/performance-evaluation/final-evaluation.dto';
 
 /**
  * 최종평가 조회 쿼리

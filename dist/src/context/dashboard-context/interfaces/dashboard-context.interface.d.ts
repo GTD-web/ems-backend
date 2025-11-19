@@ -63,11 +63,6 @@ export interface EmployeeEvaluationPeriodStatusDto {
             status: WbsCriteriaStatus;
             wbsWithCriteriaCount: number;
         };
-        evaluationLine: {
-            status: EvaluationLineStatus;
-            hasPrimaryEvaluator: boolean;
-            hasSecondaryEvaluator: boolean;
-        };
         criteriaSubmission: {
             isSubmitted: boolean;
             submittedAt?: Date | null;

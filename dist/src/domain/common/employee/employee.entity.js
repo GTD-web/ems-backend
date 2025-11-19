@@ -82,7 +82,7 @@ let Employee = class Employee extends base_entity_1.BaseEntity {
         this.externalUpdatedAt = externalUpdatedAt || new Date();
         this.status = status || '재직중';
         this.isExcludedFromList = false;
-        this.isAccessible = false;
+        this.isAccessible = true;
     }
     DTO로_변환한다() {
         return {
@@ -388,7 +388,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({
         type: 'boolean',
-        default: false,
+        default: true,
         comment: '시스템 접근 가능 여부 (2중 보안용)',
     }),
     __metadata("design:type", Boolean)

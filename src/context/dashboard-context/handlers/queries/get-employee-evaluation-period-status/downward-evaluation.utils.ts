@@ -21,10 +21,13 @@ import {
  * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
  *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
  *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
- * 2. 하향평가 진행 상태가 none이면 → none
- * 3. 하향평가 진행 상태가 in_progress이면 → in_progress
- * 4. 하향평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
- * 5. 하향평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
+ * 2. 2차 평가자인 경우, 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+ * 3. 하향평가 진행 상태가 none이면 → none (승인 상태와 무관하게 진행 상태 우선)
+ * 4. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태와 무관하게 진행 상태 우선)
+ * 5. 하향평가 진행 상태가 complete일 때만 승인 상태 반환:
+ *    - 승인 상태가 approved이면 → approved
+ *    - 승인 상태가 pending이면 → pending
+ *    - 승인 상태가 없으면 → pending (기본값)
  */
 export function 하향평가_통합_상태를_계산한다(
   downwardStatus: DownwardEvaluationStatus,
@@ -33,6 +36,7 @@ export function 하향평가_통합_상태를_계산한다(
     | 'approved'
     | 'revision_requested'
     | 'revision_completed',
+  evaluationType?: 'primary' | 'secondary',
 ):
   | DownwardEvaluationStatus
   | 'pending'
@@ -48,19 +52,31 @@ export function 하향평가_통합_상태를_계산한다(
     return 'revision_completed';
   }
 
-  // 2. 하향평가 진행 상태가 none이면 → none
+  // 2. 2차 평가자인 경우, 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+  if (evaluationType === 'secondary' && approvalStatus === 'approved') {
+    return 'approved';
+  }
+
+  // 3. 하향평가 진행 상태가 none이면 → none (승인 상태와 무관하게 진행 상태 우선)
   if (downwardStatus === 'none') {
     return 'none';
   }
 
-  // 3. 하향평가 진행 상태가 in_progress이면 → in_progress
+  // 4. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태와 무관하게 진행 상태 우선)
   if (downwardStatus === 'in_progress') {
     return 'in_progress';
   }
 
-  // 4. 하향평가 진행 상태가 complete이면 승인 상태 반환 (pending, approved 등)
+  // 5. 하향평가 진행 상태가 complete일 때만 승인 상태 반환
   // downwardStatus === 'complete'
-  return approvalStatus;
+  // 승인 상태가 approved이면 → approved
+  if (approvalStatus === 'approved') {
+    return 'approved';
+  }
+
+  // 승인 상태가 pending이면 → pending
+  // 승인 상태가 없으면 기본값으로 pending 반환
+  return approvalStatus || 'pending';
 }
 
 /**
@@ -101,16 +117,23 @@ export function 이차평가_전체_상태를_계산한다(
   }
 
   // 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환
-  // revision_requested가 하나라도 있으면 최우선 (제출 여부 무관)
-  if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
-    return 'revision_requested';
-  }
-  // revision_completed가 하나라도 있으면 (제출 여부 무관)
+  // revision_completed가 하나라도 있으면 우선 반환 (완료된 것이 우선)
+  // revision_requested + revision_completed 혼합 시 revision_completed 반환
   if (evaluatorStatuses.some((s) => s === 'revision_completed')) {
     return 'revision_completed';
   }
+  // revision_requested가 하나라도 있으면 반환 (제출 여부 무관)
+  if (evaluatorStatuses.some((s) => s === 'revision_requested')) {
+    return 'revision_requested';
+  }
 
-  // 3. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
+  // 3. pending이 하나라도 있으면 pending 반환 (in_progress + pending 등)
+  // pending은 승인 대기 상태이므로 우선적으로 반환
+  if (evaluatorStatuses.some((s) => s === 'pending')) {
+    return 'pending';
+  }
+
+  // 4. 하나라도 none이 아니고 in_progress 이상인 상태가 있는 경우
   const hasInProgress = evaluatorStatuses.some(
     (s) => s === 'in_progress' || s === 'complete',
   );
@@ -121,7 +144,7 @@ export function 이차평가_전체_상태를_계산한다(
     return 'in_progress';
   }
 
-  // 4. 모두 complete 이상인 경우 (none, in_progress 없음)
+  // 5. 모두 complete 이상인 경우 (none, in_progress 없음)
   const allCompleteOrAbove = evaluatorStatuses.every(
     (s) => s === 'complete' || s === 'pending' || s === 'approved',
   );
@@ -135,11 +158,16 @@ export function 이차평가_전체_상태를_계산한다(
     if (evaluatorStatuses.every((s) => s === 'approved')) {
       return 'approved';
     }
-    // 혼합 상태 (pending + approved 등) → in_progress 반환 (진행중)
+    // 혼합 상태 (pending + approved 등) → pending 반환 (하나라도 pending이면 pending)
+    // pending이 하나라도 있으면 전체 상태는 pending
+    if (evaluatorStatuses.some((s) => s === 'pending')) {
+      return 'pending';
+    }
+    // 그 외 혼합 상태 → in_progress 반환 (진행중)
     return 'in_progress';
   }
 
-  // 5. 기본값: in_progress
+  // 6. 기본값: in_progress
   return 'in_progress';
 }
 
@@ -380,13 +408,24 @@ export async function 하향평가_상태를_조회한다(
   let secondaryGrade: string | null = null;
 
   // 모든 2차 평가자의 평가가 완료되었는지 확인
+  // 할당된 것보다 완료한 것이 많아도 완료 처리
   const allSecondaryEvaluationsCompleted = secondaryStatuses.every(
     (status) =>
       status.assignedWbsCount > 0 &&
-      status.completedEvaluationCount === status.assignedWbsCount,
+      status.completedEvaluationCount >= status.assignedWbsCount,
   );
 
-  if (secondaryEvaluators.length > 0 && allSecondaryEvaluationsCompleted) {
+  // 모든 2차 평가자가 제출했는지 확인
+  const allSecondaryEvaluationsSubmitted = secondaryStatuses.every(
+    (status) => status.isSubmitted,
+  );
+
+  // 모든 평가자가 완료되고 제출했을 때만 스코어 계산
+  if (
+    secondaryEvaluators.length > 0 &&
+    allSecondaryEvaluationsCompleted &&
+    allSecondaryEvaluationsSubmitted
+  ) {
     secondaryTotalScore = await 가중치_기반_2차_하향평가_점수를_계산한다(
       evaluationPeriodId,
       employeeId,
@@ -546,10 +585,11 @@ export async function 평가자별_하향평가_상태를_조회한다(
   }
 
   // 6. 제출 여부 계산
-  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수와 같으면 제출 완료
+  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수 이상이면 제출 완료
+  // 할당된 것보다 완료한 것이 많아도 제출 처리
   const isSubmitted =
     assignedWbsCount > 0 &&
-    completedEvaluationCount === assignedWbsCount &&
+    completedEvaluationCount >= assignedWbsCount &&
     completedEvaluationCount > 0;
 
   return {
@@ -582,13 +622,15 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
 }> {
   // 1. 평가자에게 할당된 WBS 수 조회
   let assignedWbsCount: number;
-  
+
   if (evaluationType === DownwardEvaluationType.SECONDARY) {
     // 2차 평가자의 경우: EvaluationLineMapping에서 해당 평가자에게 할당된 WBS 수 조회
     if (!evaluationLineMappingRepository || !evaluationLineRepository) {
-      throw new Error('evaluationLineMappingRepository와 evaluationLineRepository가 필요합니다.');
+      throw new Error(
+        'evaluationLineMappingRepository와 evaluationLineRepository가 필요합니다.',
+      );
     }
-    
+
     // SECONDARY 평가라인 조회
     const secondaryLine = await evaluationLineRepository.findOne({
       where: {
@@ -596,7 +638,7 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
         deletedAt: IsNull(),
       },
     });
-    
+
     if (!secondaryLine) {
       assignedWbsCount = 0;
     } else {
@@ -620,7 +662,7 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
         .andWhere('mapping.deletedAt IS NULL')
         .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
         .getRawMany();
-      
+
       assignedWbsCount = assignedMappings.length;
     }
   } else {
@@ -690,10 +732,11 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
   }
 
   // 6. 제출 여부 계산
-  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수와 같으면 제출 완료
+  // 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수 이상이면 제출 완료
+  // 할당된 것보다 완료한 것이 많아도 제출 처리
   const isSubmitted =
     assignedWbsCount > 0 &&
-    completedEvaluationCount === assignedWbsCount &&
+    completedEvaluationCount >= assignedWbsCount &&
     completedEvaluationCount > 0;
 
   return {

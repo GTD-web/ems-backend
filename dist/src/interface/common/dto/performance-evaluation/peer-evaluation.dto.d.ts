@@ -1,9 +1,11 @@
+import { PeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 export declare class RequestPeerEvaluationDto {
     evaluatorId: string;
     evaluateeId: string;
     periodId: string;
     requestDeadline?: Date;
     questionIds?: string[];
+    comment?: string;
     requestedBy?: string;
 }
 export declare class RequestPeerEvaluationToMultipleEvaluatorsDto {
@@ -12,6 +14,7 @@ export declare class RequestPeerEvaluationToMultipleEvaluatorsDto {
     periodId: string;
     requestDeadline?: Date;
     questionIds?: string[];
+    comment?: string;
     requestedBy?: string;
 }
 export declare class RequestMultiplePeerEvaluationsDto {
@@ -20,6 +23,7 @@ export declare class RequestMultiplePeerEvaluationsDto {
     periodId: string;
     requestDeadline?: Date;
     questionIds?: string[];
+    comment?: string;
     requestedBy?: string;
 }
 export declare class RequestPartLeaderPeerEvaluationsDto {
@@ -28,6 +32,7 @@ export declare class RequestPartLeaderPeerEvaluationsDto {
     evaluateeIds?: string[];
     requestDeadline?: Date;
     questionIds?: string[];
+    comment?: string;
     requestedBy?: string;
 }
 export declare class CreatePeerEvaluationBodyDto {
@@ -46,7 +51,7 @@ export declare class PeerEvaluationFilterDto {
     evaluatorId?: string;
     evaluateeId?: string;
     periodId?: string;
-    status?: string;
+    status?: PeerEvaluationStatus;
     page?: number;
     limit?: number;
 }
@@ -119,6 +124,7 @@ export declare class AssignedEvaluateeDto {
     requestDeadline?: Date;
     mappedDate: Date;
     isActive: boolean;
+    comment?: string;
     evaluatee: EmployeeInfoDto | null;
     evaluateeDepartment: DepartmentInfoDto | null;
     mappedBy: EmployeeInfoDto | null;
@@ -150,6 +156,7 @@ export declare class PeerEvaluationDetailResponseDto {
     requestDeadline?: Date;
     mappedDate: Date;
     isActive: boolean;
+    comment?: string;
     createdAt: Date;
     updatedAt: Date;
     deletedAt?: Date;

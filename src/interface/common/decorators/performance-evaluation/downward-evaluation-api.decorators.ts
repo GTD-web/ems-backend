@@ -257,11 +257,14 @@ export function SubmitPrimaryDownwardEvaluation() {
 - 평가 상태를 완료(isCompleted: true)로 변경
 - 제출 일시(completedAt) 기록
 - 제출 후 평가 내용은 변경 불가
+- approveAllBelow=true일 경우 자기평가도 함께 제출
 
 **테스트 케이스:**
 - 저장된 1차 하향평가를 제출할 수 있어야 함
 - 제출 시 isCompleted가 true로 변경
 - submittedBy 없이도 제출 가능
+- approveAllBelow=true일 경우 자기평가도 함께 제출됨
+- approveAllBelow=false일 경우 자기평가는 제출되지 않음
 - 존재하지 않는 평가를 제출하면 404 에러
 - 이미 제출된 평가를 재제출하면 409 에러
 - 잘못된 형식의 evaluateeId로 요청 시 400 에러
@@ -288,6 +291,14 @@ export function SubmitPrimaryDownwardEvaluation() {
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440003',
+    }),
+    ApiQuery({
+      name: 'approveAllBelow',
+      required: false,
+      description:
+        '하위 단계 자동 승인 여부 (기본값: false). true일 경우 자기평가도 함께 제출됩니다.',
+      type: String,
+      example: 'false',
     }),
     ApiBody({
       type: SubmitDownwardEvaluationDto,
@@ -337,10 +348,13 @@ export function SubmitSecondaryDownwardEvaluation() {
 - 제출 일시(completedAt) 기록
 - 1차 하향평가와 독립적으로 제출
 - 제출 후 평가 내용은 변경 불가
+- approveAllBelow=true일 경우 1차 하향평가와 자기평가도 함께 제출
 
 **테스트 케이스:**
 - 저장된 2차 하향평가를 제출할 수 있어야 함
 - 1차와 2차 하향평가를 독립적으로 제출 가능
+- approveAllBelow=true일 경우 1차 하향평가와 자기평가도 함께 제출됨
+- approveAllBelow=false일 경우 1차 하향평가와 자기평가는 제출되지 않음
 - 존재하지 않는 2차 평가를 제출하면 404 에러
 - 이미 제출된 2차 평가를 재제출하면 409 에러`,
     }),
@@ -364,6 +378,14 @@ export function SubmitSecondaryDownwardEvaluation() {
       type: 'string',
       format: 'uuid',
       example: '550e8400-e29b-41d4-a716-446655440003',
+    }),
+    ApiQuery({
+      name: 'approveAllBelow',
+      required: false,
+      description:
+        '하위 단계 자동 승인 여부 (기본값: false). true일 경우 1차 하향평가와 자기평가도 함께 제출됩니다.',
+      type: String,
+      example: 'false',
     }),
     ApiBody({
       type: SubmitDownwardEvaluationDto,

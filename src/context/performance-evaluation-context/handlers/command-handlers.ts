@@ -6,6 +6,7 @@ import { SubmitWbsSelfEvaluationHandler } from './self-evaluation/commands/submi
 import { SubmitWbsSelfEvaluationToEvaluatorHandler } from './self-evaluation/commands/submit-wbs-self-evaluation-to-evaluator.handler';
 import { SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler } from './self-evaluation/commands/submit-all-wbs-self-evaluations.handler';
 import { SubmitAllWbsSelfEvaluationsToEvaluatorHandler } from './self-evaluation/commands/submit-all-wbs-self-evaluations-to-evaluator.handler';
+import { SubmitAllWbsSelfEvaluationsForApprovalHandler } from './self-evaluation/commands/submit-all-wbs-self-evaluations-for-approval.handler';
 import { ResetWbsSelfEvaluationHandler } from './self-evaluation/commands/reset-wbs-self-evaluation.handler';
 import { ResetWbsSelfEvaluationToEvaluatorHandler } from './self-evaluation/commands/reset-wbs-self-evaluation-to-evaluator.handler';
 import { ResetAllWbsSelfEvaluationsByEmployeePeriodHandler } from './self-evaluation/commands/reset-all-wbs-self-evaluations.handler';
@@ -55,9 +56,7 @@ import {
 } from './final-evaluation';
 
 // 평가 수정 가능 상태
-import {
-  UpdatePeriodAllEvaluationEditableStatusHandler,
-} from './evaluation-editable-status';
+import { UpdatePeriodAllEvaluationEditableStatusHandler } from './evaluation-editable-status';
 
 // 산출물
 import {
@@ -77,6 +76,7 @@ export const CommandHandlers = [
   SubmitWbsSelfEvaluationToEvaluatorHandler,
   SubmitAllWbsSelfEvaluationsByEmployeePeriodHandler,
   SubmitAllWbsSelfEvaluationsToEvaluatorHandler,
+  SubmitAllWbsSelfEvaluationsForApprovalHandler,
   ResetWbsSelfEvaluationHandler,
   ResetWbsSelfEvaluationToEvaluatorHandler,
   ResetAllWbsSelfEvaluationsByEmployeePeriodHandler,
@@ -108,8 +108,8 @@ export const CommandHandlers = [
   UpsertDownwardEvaluationHandler,
   SubmitDownwardEvaluationHandler,
   ResetDownwardEvaluationHandler,
-      BulkSubmitDownwardEvaluationsHandler,
-      BulkResetDownwardEvaluationsHandler,
+  BulkSubmitDownwardEvaluationsHandler,
+  BulkResetDownwardEvaluationsHandler,
 
   // 최종평가 커맨드 핸들러
   CreateFinalEvaluationHandler,

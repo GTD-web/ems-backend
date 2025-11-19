@@ -62,6 +62,11 @@ let PerformanceEvaluationService = class PerformanceEvaluationService {
         const result = await this.commandBus.execute(command);
         return result;
     }
+    async 직원의_전체_자기평가를_승인시_제출한다(employeeId, periodId, submittedBy) {
+        const command = new self_evaluation_1.SubmitAllWbsSelfEvaluationsForApprovalCommand(employeeId, periodId, submittedBy || '시스템');
+        const result = await this.commandBus.execute(command);
+        return result;
+    }
     async WBS자기평가를_초기화한다(evaluationId, resetBy) {
         const command = new self_evaluation_1.ResetWbsSelfEvaluationCommand(evaluationId, resetBy || '시스템');
         const result = await this.commandBus.execute(command);
@@ -177,8 +182,8 @@ let PerformanceEvaluationService = class PerformanceEvaluationService {
         const command = new downward_evaluation_1.SubmitDownwardEvaluationCommand(evaluationId, submittedBy || '시스템');
         await this.commandBus.execute(command);
     }
-    async 피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, evaluateeId, periodId, evaluationType, submittedBy) {
-        const command = new downward_evaluation_1.BulkSubmitDownwardEvaluationsCommand(evaluatorId, evaluateeId, periodId, evaluationType, submittedBy);
+    async 피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId, evaluateeId, periodId, evaluationType, submittedBy, forceSubmit = false) {
+        const command = new downward_evaluation_1.BulkSubmitDownwardEvaluationsCommand(evaluatorId, evaluateeId, periodId, evaluationType, submittedBy, forceSubmit);
         return await this.commandBus.execute(command);
     }
     async 피평가자의_모든_하향평가를_일괄_초기화한다(evaluatorId, evaluateeId, periodId, evaluationType, resetBy) {

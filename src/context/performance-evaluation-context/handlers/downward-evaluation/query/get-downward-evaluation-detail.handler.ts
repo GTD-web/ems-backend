@@ -73,8 +73,8 @@ export interface DownwardEvaluationDetailResult {
     performanceResult: string | null;
     selfEvaluationContent: string | null;
     selfEvaluationScore: number | null;
-    isCompleted: boolean;
-    completedAt: Date | null;
+    submittedToManager: boolean;
+    submittedToManagerAt: Date | null;
     evaluationDate: Date;
   } | null;
 }
@@ -178,8 +178,8 @@ export class GetDownwardEvaluationDetailHandler
         'selfEvaluation.performanceResult AS selfevaluation_performanceresult',
         'selfEvaluation.selfEvaluationContent AS selfevaluation_selfevaluationcontent',
         'selfEvaluation.selfEvaluationScore AS selfevaluation_selfevaluationscore',
-        'selfEvaluation.isCompleted AS selfevaluation_iscompleted',
-        'selfEvaluation.completedAt AS selfevaluation_completedat',
+        'selfEvaluation.submittedToManager AS selfevaluation_submittedtomanager',
+        'selfEvaluation.submittedToManagerAt AS selfevaluation_submittedtomanagerat',
         'selfEvaluation.evaluationDate AS selfevaluation_evaluationdate',
       ])
       .where('evaluation.id = :evaluationId', { evaluationId })
@@ -253,8 +253,8 @@ export class GetDownwardEvaluationDetailHandler
             performanceResult: result.selfevaluation_performanceresult,
             selfEvaluationContent: result.selfevaluation_selfevaluationcontent,
             selfEvaluationScore: result.selfevaluation_selfevaluationscore,
-            isCompleted: result.selfevaluation_iscompleted,
-            completedAt: result.selfevaluation_completedat,
+            submittedToManager: result.selfevaluation_submittedtomanager,
+            submittedToManagerAt: result.selfevaluation_submittedtomanagerat,
             evaluationDate: result.selfevaluation_evaluationdate,
           }
         : null,

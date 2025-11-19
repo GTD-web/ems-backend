@@ -391,7 +391,7 @@ export class EvaluationLineMappingService
   }
 
   /**
-   * 평가 라인 맵핑을 삭제한다
+   * 평가 라인 맵핑을 삭제한다 (하드 삭제)
    */
   async 삭제한다(
     id: string,
@@ -410,9 +410,7 @@ export class EvaluationLineMappingService
         throw new EvaluationLineMappingNotFoundException(id);
       }
 
-      mapping.deletedAt = new Date();
-      mapping.수정자를_설정한다(deletedBy);
-      await repository.save(mapping);
+      await repository.delete(id);
 
       this.logger.log(
         `평가 라인 맵핑 삭제 완료 - ID: ${id}, 삭제자: ${deletedBy}`,
@@ -457,7 +455,7 @@ export class EvaluationLineMappingService
   }
 
   /**
-   * 직원의 모든 맵핑을 삭제한다
+   * 직원의 모든 맵핑을 삭제한다 (하드 삭제)
    */
   async 직원_맵핑_전체삭제한다(
     employeeId: string,
@@ -476,9 +474,7 @@ export class EvaluationLineMappingService
       });
 
       for (const mapping of mappings) {
-        mapping.deletedAt = new Date();
-        mapping.수정자를_설정한다(deletedBy);
-        await repository.save(mapping);
+        await repository.delete(mapping.id);
       }
 
       this.logger.log(
@@ -488,7 +484,7 @@ export class EvaluationLineMappingService
   }
 
   /**
-   * WBS 항목의 모든 맵핑을 삭제한다
+   * WBS 항목의 모든 맵핑을 삭제한다 (하드 삭제)
    */
   async WBS항목_맵핑_전체삭제한다(
     wbsItemId: string,
@@ -507,9 +503,7 @@ export class EvaluationLineMappingService
       });
 
       for (const mapping of mappings) {
-        mapping.deletedAt = new Date();
-        mapping.수정자를_설정한다(deletedBy);
-        await repository.save(mapping);
+        await repository.delete(mapping.id);
       }
 
       this.logger.log(

@@ -51,7 +51,8 @@ export function WBS평가기준_상태를_계산한다(
 
 /**
  * 평가기준 설정 진행 상태를 계산한다 (제출 및 승인 상태 제외)
- * - 3개 항목(evaluationCriteria, wbsCriteria, evaluationLine)의 상태를 조합하여 계산
+ * - 2개 항목(evaluationCriteria, wbsCriteria)의 상태를 조합하여 계산
+ * - 평가라인은 제외됨
  * 
  * 계산 로직:
  * 1. 모두 none이면 → none
@@ -61,13 +62,11 @@ export function WBS평가기준_상태를_계산한다(
 export function 평가기준설정_진행_상태를_계산한다(
   evaluationCriteriaStatus: EvaluationCriteriaStatus,
   wbsCriteriaStatus: WbsCriteriaStatus,
-  evaluationLineStatus: EvaluationLineStatus,
 ): 'none' | 'in_progress' | 'complete' {
   // 1. 모두 none이면 → none
   if (
     evaluationCriteriaStatus === 'none' &&
-    wbsCriteriaStatus === 'none' &&
-    evaluationLineStatus === 'none'
+    wbsCriteriaStatus === 'none'
   ) {
     return 'none';
   }
@@ -75,8 +74,7 @@ export function 평가기준설정_진행_상태를_계산한다(
   // 2. 모두 complete인지 확인
   const allComplete =
     evaluationCriteriaStatus === 'complete' &&
-    wbsCriteriaStatus === 'complete' &&
-    evaluationLineStatus === 'complete';
+    wbsCriteriaStatus === 'complete';
 
   // 3. 모두 complete이면 → complete
   if (allComplete) {
@@ -91,6 +89,7 @@ export function 평가기준설정_진행_상태를_계산한다(
  * 평가기준 설정 통합 상태를 계산한다
  * - 평가기준 설정 진행 상태, 제출 상태, 승인 상태를 통합하여 계산
  * - 1차 평가 제출 승인 상태 통합 로직과 동일한 방식
+ * - 평가라인은 제외됨
  * 
  * 계산 로직:
  * 1. 평가기준 설정 진행 상태가 none이면 → none
@@ -106,15 +105,13 @@ export function 평가기준설정_진행_상태를_계산한다(
 export function 평가기준설정_상태를_계산한다(
   evaluationCriteriaStatus: EvaluationCriteriaStatus,
   wbsCriteriaStatus: WbsCriteriaStatus,
-  evaluationLineStatus: EvaluationLineStatus,
   approvalStatus: 'pending' | 'approved' | 'revision_requested' | 'revision_completed' | null,
   isSubmitted: boolean,
 ): 'none' | 'in_progress' | 'pending' | 'approved' | 'revision_requested' | 'revision_completed' {
-  // 1. 평가기준 설정 진행 상태 계산
+  // 1. 평가기준 설정 진행 상태 계산 (평가라인 제외)
   const progressStatus = 평가기준설정_진행_상태를_계산한다(
     evaluationCriteriaStatus,
     wbsCriteriaStatus,
-    evaluationLineStatus,
   );
 
   // 2. 평가기준 설정 진행 상태가 none이면 → none

@@ -3,7 +3,7 @@ import {
   EmployeeSelfEvaluationsResponseDto,
   WbsSelfEvaluationBasicDto,
   WbsSelfEvaluationResponseDto,
-} from '@/interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
+} from '@interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 import {
   GetDownwardEvaluationDetailQuery,
   GetDownwardEvaluationListQuery,
@@ -85,6 +85,16 @@ export interface IPerformanceEvaluationService {
    */
   WBS자기평가_상세정보를_조회한다(
     query: GetWbsSelfEvaluationDetailQuery,
+  ): Promise<any>;
+
+  /**
+   * 직원의 전체 WBS 자기평가를 승인 시 제출한다
+   * 승인 시 submittedToEvaluator와 submittedToManager를 모두 true로 설정합니다.
+   */
+  직원의_전체_자기평가를_승인시_제출한다(
+    employeeId: string,
+    periodId: string,
+    submittedBy?: string,
   ): Promise<any>;
 
   // ==================== 동료평가 관련 메서드 ====================

@@ -12,9 +12,9 @@ import { DownwardEvaluationBusinessService } from '@business/downward-evaluation
 import { StepApprovalBusinessService } from '@business/step-approval/step-approval-business.service';
 import { UpdateStepApprovalDto } from '@interface/common/dto/step-approval/update-step-approval.dto';
 import { UpdateSecondaryStepApprovalDto } from '@interface/common/dto/step-approval/update-secondary-step-approval.dto';
+import { UpdateSecondaryStepApprovalResponseDto } from '@interface/common/dto/step-approval/update-secondary-step-approval-response.dto';
 import { StepApprovalEnumsResponseDto } from '@interface/common/dto/step-approval/step-approval-enums.dto';
 import {
-  UpdateStepApproval,
   UpdateCriteriaStepApproval,
   UpdateSelfStepApproval,
   UpdatePrimaryStepApproval,
@@ -51,27 +51,6 @@ export class StepApprovalController {
       steps: Object.values(StepTypeEnum),
       statuses: Object.values(StepApprovalStatusEnum),
     };
-  }
-
-  /**
-   * 단계 승인 상태를 변경한다 (Deprecated)
-   * @deprecated 단계별 엔드포인트를 사용하세요. updateCriteriaStepApproval, updateSelfStepApproval, updatePrimaryStepApproval, updateSecondaryStepApproval
-   */
-  @UpdateStepApproval()
-  async updateStepApproval(
-    @Param('evaluationPeriodId', ParseUUIDPipe) evaluationPeriodId: string,
-    @Param('employeeId', ParseUUIDPipe) employeeId: string,
-    @Body() dto: UpdateStepApprovalDto & { step: StepTypeEnum },
-    @CurrentUser('id') updatedBy: string,
-  ): Promise<void> {
-    await this.stepApprovalContextService.단계별_확인상태를_변경한다({
-      evaluationPeriodId,
-      employeeId,
-      step: dto.step as any,
-      status: dto.status as any,
-      revisionComment: dto.revisionComment,
-      updatedBy,
-    });
   }
 
   /**
@@ -179,6 +158,7 @@ export class StepApprovalController {
    * 1차 하향평가 단계 승인 상태를 변경한다
    * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
    * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
+   * approveSubsequentSteps 옵션이 true인 경우 자기평가도 함께 승인합니다.
    */
   @UpdatePrimaryStepApproval()
   async updatePrimaryStepApproval(
@@ -209,9 +189,9 @@ export class StepApprovalController {
           updatedBy,
         );
 
-        // 하위 평가 자동 승인 옵션이 활성화된 경우
+        // 상위 평가 자동 승인 옵션이 활성화된 경우 (자기평가 승인)
         if (dto.approveSubsequentSteps) {
-          await this.stepApprovalBusinessService.일차하향평가_승인_시_하위평가들을_승인한다(
+          await this.stepApprovalBusinessService.일차하향평가_승인_시_상위평가를_승인한다(
             evaluationPeriodId,
             employeeId,
             updatedBy,
@@ -231,9 +211,12 @@ export class StepApprovalController {
   }
 
   /**
-   * 2차 하향평가 단계 승인 상태를 평가자별로 변경한다
+   * 2차 하향평가 단계 승인 상태를 평가자별로 변경한다 (부분 승인 지원)
    * 재작성 요청 생성 시 제출 상태 초기화를 함께 처리합니다.
    * 승인(APPROVED) 처리 시 제출 상태도 자동으로 변경합니다.
+   * approveSubsequentSteps 옵션이 true인 경우 1차 하향평가와 자기평가도 함께 승인합니다.
+   *
+   * 각 2차 평가자별로 개별적으로 승인 상태를 관리할 수 있습니다.
    */
   @UpdateSecondaryStepApproval()
   async updateSecondaryStepApproval(
@@ -242,7 +225,9 @@ export class StepApprovalController {
     @Param('evaluatorId', ParseUUIDPipe) evaluatorId: string,
     @Body() dto: UpdateSecondaryStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
-  ): Promise<void> {
+  ): Promise<UpdateSecondaryStepApprovalResponseDto> {
+    let approval;
+
     // 재작성 요청 생성 시 제출 상태 초기화를 함께 처리
     if (dto.status === StepApprovalStatusEnum.REVISION_REQUESTED) {
       if (!dto.revisionComment || dto.revisionComment.trim() === '') {
@@ -250,13 +235,15 @@ export class StepApprovalController {
       }
 
       // 비즈니스 서비스를 통해 제출 상태 초기화 및 재작성 요청 생성
-      await this.downwardEvaluationBusinessService.이차_하향평가_재작성요청_생성_및_제출상태_초기화(
-        evaluationPeriodId,
-        employeeId,
-        evaluatorId,
-        dto.revisionComment,
-        updatedBy,
-      );
+      // 내부에서 이미 stepApprovalContextService.이차하향평가_확인상태를_변경한다를 호출함
+      approval =
+        await this.downwardEvaluationBusinessService.이차_하향평가_재작성요청_생성_및_제출상태_초기화(
+          evaluationPeriodId,
+          employeeId,
+          evaluatorId,
+          dto.revisionComment,
+          updatedBy,
+        );
     } else {
       // 승인 상태로 변경 시 제출 상태도 함께 변경
       if (dto.status === StepApprovalStatusEnum.APPROVED) {
@@ -266,17 +253,45 @@ export class StepApprovalController {
           evaluatorId,
           updatedBy,
         );
+
+        // 상위 평가 자동 승인 옵션이 활성화된 경우 (1차 하향평가와 자기평가 승인)
+        if (dto.approveSubsequentSteps) {
+          await this.stepApprovalBusinessService.이차하향평가_승인_시_상위평가들을_승인한다(
+            evaluationPeriodId,
+            employeeId,
+            updatedBy,
+          );
+        }
       }
 
-      // 단계 승인 상태 변경
-      await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다({
-        evaluationPeriodId,
-        employeeId,
-        evaluatorId,
-        status: dto.status as any,
-        revisionComment: dto.revisionComment,
-        updatedBy,
-      });
+      // 단계 승인 상태 변경 (평가자별 부분 승인 지원)
+      // secondary_evaluation_step_approval 테이블에 평가자별로 개별 상태 저장
+      approval =
+        await this.stepApprovalBusinessService.이차하향평가_확인상태를_변경한다(
+          {
+            evaluationPeriodId,
+            employeeId,
+            evaluatorId,
+            status: dto.status as any,
+            revisionComment: dto.revisionComment,
+            updatedBy,
+          },
+        );
     }
+
+    // 응답 DTO로 변환
+    const dto_result = approval.DTO로_변환한다();
+    return {
+      id: dto_result.id,
+      evaluationPeriodEmployeeMappingId:
+        dto_result.evaluationPeriodEmployeeMappingId,
+      evaluatorId: dto_result.evaluatorId,
+      status: dto_result.status as StepApprovalStatusEnum,
+      approvedBy: dto_result.approvedBy,
+      approvedAt: dto_result.approvedAt,
+      revisionRequestId: dto_result.revisionRequestId,
+      createdAt: dto_result.createdAt,
+      updatedAt: dto_result.updatedAt,
+    };
   }
 }

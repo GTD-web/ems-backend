@@ -78,8 +78,9 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
         }
     }
     mapSSODepartmentToDto(ssoDepartment, order = 0) {
+        const name = ssoDepartment.departmentName || ssoDepartment.departmentCode || '미분류';
         return {
-            name: ssoDepartment.departmentName,
+            name: name,
             code: ssoDepartment.departmentCode,
             externalId: ssoDepartment.id,
             order: order,
@@ -268,6 +269,14 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
         }
     }
     async scheduledSync() {
+        const scheduledSyncEnabledValue = this.configService.get('SCHEDULED_SYNC_ENABLED', 'true');
+        const scheduledSyncEnabled = scheduledSyncEnabledValue === 'false' || scheduledSyncEnabledValue === false
+            ? false
+            : true;
+        if (!scheduledSyncEnabled) {
+            this.logger.debug('스케줄된 부서 동기화가 비활성화되어 있습니다.');
+            return;
+        }
         this.logger.log('스케줄된 부서 동기화를 시작합니다...');
         await this.syncDepartments();
     }

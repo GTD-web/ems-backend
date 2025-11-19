@@ -32,9 +32,6 @@ export class DeliverableService {
   async 생성한다(createData: CreateDeliverableData): Promise<Deliverable> {
     this.logger.log(`산출물 생성 시작 - 이름: ${createData.name}`);
 
-    // 중복 검사
-    await this.중복_검사를_수행한다(createData.name);
-
     // 유효성 검사
     this.유효성을_검사한다(createData);
 
@@ -407,5 +404,4 @@ export class DeliverableService {
       throw error;
     }
   }
-
 }

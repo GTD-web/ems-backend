@@ -1,12 +1,18 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
 import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { GetDownwardEvaluationListQuery } from '@context/performance-evaluation-context/handlers/downward-evaluation';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
+import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 
 /**
  * 하향평가 비즈니스 서비스
@@ -29,6 +35,10 @@ export class DownwardEvaluationBusinessService {
     private readonly revisionRequestContextService: RevisionRequestContextService,
     private readonly stepApprovalContextService: StepApprovalContextService,
     private readonly activityLogContextService: EvaluationActivityLogContextService,
+    @InjectRepository(WbsSelfEvaluation)
+    private readonly wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>,
+    @InjectRepository(DownwardEvaluation)
+    private readonly downwardEvaluationRepository: Repository<DownwardEvaluation>,
     // private readonly notificationService: NotificationService, // TODO: 알림 서비스 추가 시 주입
   ) {}
 
@@ -71,7 +81,24 @@ export class DownwardEvaluationBusinessService {
       );
     }
 
-    // 3. 하향평가 저장 (컨텍스트 호출)
+    // 3. 기존 하향평가 존재 여부 확인 (생성인지 수정인지 구분)
+    const existingEvaluations =
+      await this.performanceEvaluationService.하향평가_목록을_조회한다(
+        new GetDownwardEvaluationListQuery(
+          params.evaluatorId,
+          params.evaluateeId,
+          params.periodId,
+          params.wbsId,
+          'primary',
+          undefined,
+          1,
+          1,
+        ),
+      );
+    const isNewEvaluation =
+      !existingEvaluations || existingEvaluations.items?.length === 0;
+
+    // 4. 하향평가 저장 (컨텍스트 호출)
     const evaluationId =
       await this.performanceEvaluationService.하향평가를_저장한다(
         params.evaluatorId,
@@ -85,7 +112,34 @@ export class DownwardEvaluationBusinessService {
         params.actionBy,
       );
 
-    // 4. 알림 발송 (추후 구현)
+    // 5. 초기 생성 시에만 활동 내역 기록
+    if (isNewEvaluation) {
+      try {
+        await this.activityLogContextService.활동내역을_기록한다({
+          periodId: params.periodId,
+          employeeId: params.evaluateeId,
+          activityType: 'downward_evaluation',
+          activityAction: 'created',
+          activityTitle: '1차 하향평가 생성',
+          relatedEntityType: 'downward_evaluation',
+          relatedEntityId: evaluationId,
+          performedBy: params.actionBy,
+          activityMetadata: {
+            evaluatorId: params.evaluatorId,
+            evaluationType: 'primary',
+            wbsId: params.wbsId,
+          },
+        });
+      } catch (error) {
+        // 활동 내역 기록 실패 시에도 하향평가 저장은 정상 처리
+        this.logger.warn('1차 하향평가 생성 활동 내역 기록 실패', {
+          evaluationId,
+          error: error.message,
+        });
+      }
+    }
+
+    // 6. 알림 발송 (추후 구현)
     // TODO: 1차 하향평가 저장 알림 발송
     // await this.notificationService.send({
     //   type: 'PRIMARY_DOWNWARD_EVALUATION_SAVED',
@@ -141,7 +195,24 @@ export class DownwardEvaluationBusinessService {
       );
     }
 
-    // 3. 하향평가 저장 (컨텍스트 호출)
+    // 3. 기존 하향평가 존재 여부 확인 (생성인지 수정인지 구분)
+    const existingEvaluations =
+      await this.performanceEvaluationService.하향평가_목록을_조회한다(
+        new GetDownwardEvaluationListQuery(
+          params.evaluatorId,
+          params.evaluateeId,
+          params.periodId,
+          params.wbsId,
+          'secondary',
+          undefined,
+          1,
+          1,
+        ),
+      );
+    const isNewEvaluation =
+      !existingEvaluations || existingEvaluations.items?.length === 0;
+
+    // 4. 하향평가 저장 (컨텍스트 호출)
     const evaluationId =
       await this.performanceEvaluationService.하향평가를_저장한다(
         params.evaluatorId,
@@ -155,7 +226,34 @@ export class DownwardEvaluationBusinessService {
         params.actionBy,
       );
 
-    // 4. 알림 발송 (추후 구현)
+    // 5. 초기 생성 시에만 활동 내역 기록
+    if (isNewEvaluation) {
+      try {
+        await this.activityLogContextService.활동내역을_기록한다({
+          periodId: params.periodId,
+          employeeId: params.evaluateeId,
+          activityType: 'downward_evaluation',
+          activityAction: 'created',
+          activityTitle: '2차 하향평가 생성',
+          relatedEntityType: 'downward_evaluation',
+          relatedEntityId: evaluationId,
+          performedBy: params.actionBy,
+          activityMetadata: {
+            evaluatorId: params.evaluatorId,
+            evaluationType: 'secondary',
+            wbsId: params.wbsId,
+          },
+        });
+      } catch (error) {
+        // 활동 내역 기록 실패 시에도 하향평가 저장은 정상 처리
+        this.logger.warn('2차 하향평가 생성 활동 내역 기록 실패', {
+          evaluationId,
+          error: error.message,
+        });
+      }
+    }
+
+    // 6. 알림 발송 (추후 구현)
     // TODO: 2차 하향평가 저장 알림 발송
     // await this.notificationService.send({
     //   type: 'SECONDARY_DOWNWARD_EVALUATION_SAVED',
@@ -176,6 +274,8 @@ export class DownwardEvaluationBusinessService {
    * 1차 하향평가를 제출하고 재작성 요청을 자동 완료 처리한다
    * 특정 피평가자에 대한 1차 하향평가를 제출하고,
    * 해당 평가기간에 발생한 1차 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
+   *
+   * @param approveAllBelow true일 경우 자기평가도 함께 제출합니다.
    */
   async 일차_하향평가를_제출하고_재작성요청을_완료한다(
     evaluateeId: string,
@@ -183,9 +283,10 @@ export class DownwardEvaluationBusinessService {
     wbsId: string,
     evaluatorId: string,
     submittedBy: string,
+    approveAllBelow = false,
   ): Promise<void> {
     this.logger.log(
-      `1차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+      `1차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}, 하위승인: ${approveAllBelow}`,
     );
 
     // 1. 1차 하향평가 제출
@@ -208,6 +309,16 @@ export class DownwardEvaluationBusinessService {
       '1차 하향평가 제출로 인한 재작성 완료 처리',
     );
 
+    // 3. 하위 단계 자동 승인: 자기평가 제출
+    if (approveAllBelow) {
+      await this.자기평가를_자동_제출한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        submittedBy,
+      );
+    }
+
     this.logger.log(
       `1차 하향평가 제출 및 재작성 요청 완료 처리 완료 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
     );
@@ -217,6 +328,8 @@ export class DownwardEvaluationBusinessService {
    * 2차 하향평가를 제출하고 재작성 요청을 자동 완료 처리한다
    * 특정 피평가자에 대한 2차 하향평가를 제출하고,
    * 해당 평가기간에 발생한 2차 하향평가에 대한 재작성 요청이 존재하면 자동 완료 처리합니다.
+   *
+   * @param approveAllBelow true일 경우 1차 하향평가와 자기평가도 함께 제출합니다.
    */
   async 이차_하향평가를_제출하고_재작성요청을_완료한다(
     evaluateeId: string,
@@ -224,9 +337,10 @@ export class DownwardEvaluationBusinessService {
     wbsId: string,
     evaluatorId: string,
     submittedBy: string,
+    approveAllBelow = false,
   ): Promise<void> {
     this.logger.log(
-      `2차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
+      `2차 하향평가 제출 및 재작성 요청 완료 처리 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}, 하위승인: ${approveAllBelow}`,
     );
 
     // 1. 2차 하향평가 제출
@@ -248,6 +362,25 @@ export class DownwardEvaluationBusinessService {
       RecipientType.SECONDARY_EVALUATOR,
       '2차 하향평가 제출로 인한 재작성 완료 처리',
     );
+
+    // 3. 하위 단계 자동 승인: 1차 하향평가와 자기평가 제출
+    if (approveAllBelow) {
+      // 3-1. 1차 하향평가 자동 제출
+      await this.일차_하향평가를_자동_제출한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        submittedBy,
+      );
+
+      // 3-2. 자기평가 자동 제출
+      await this.자기평가를_자동_제출한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        submittedBy,
+      );
+    }
 
     this.logger.log(
       `2차 하향평가 제출 및 재작성 요청 완료 처리 완료 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가자: ${evaluatorId}`,
@@ -313,6 +446,25 @@ export class DownwardEvaluationBusinessService {
       updatedBy: requestedBy,
     });
 
+    // 4. 활동 내역 기록
+    try {
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
+        {
+          evaluationPeriodId,
+          employeeId,
+          step: 'primary',
+          status: 'revision_requested' as StepApprovalStatus,
+          revisionComment,
+          updatedBy: requestedBy,
+        },
+      );
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
+      this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+        error: error.message,
+      });
+    }
+
     this.logger.log(
       `1차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
     );
@@ -334,7 +486,9 @@ export class DownwardEvaluationBusinessService {
     evaluatorId: string,
     revisionComment: string,
     requestedBy: string,
-  ): Promise<void> {
+  ): Promise<
+    import('@domain/sub/secondary-evaluation-step-approval').SecondaryEvaluationStepApproval
+  > {
     this.logger.log(
       `2차 하향평가 재작성 요청 생성 및 제출 상태 초기화 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`,
     );
@@ -357,18 +511,41 @@ export class DownwardEvaluationBusinessService {
     }
 
     // 2. 재작성 요청 생성
-    await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
-      evaluationPeriodId,
-      employeeId,
-      evaluatorId,
-      status: 'revision_requested' as any,
-      revisionComment,
-      updatedBy: requestedBy,
-    });
+    const approval =
+      await this.stepApprovalContextService.이차하향평가_확인상태를_변경한다({
+        evaluationPeriodId,
+        employeeId,
+        evaluatorId,
+        status: 'revision_requested' as any,
+        revisionComment,
+        updatedBy: requestedBy,
+      });
+
+    // 3. 활동 내역 기록
+    try {
+      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
+        {
+          evaluationPeriodId,
+          employeeId,
+          step: 'secondary',
+          status: 'revision_requested' as StepApprovalStatus,
+          revisionComment,
+          updatedBy: requestedBy,
+          evaluatorId,
+        },
+      );
+    } catch (error) {
+      // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
+      this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
+        error: error.message,
+      });
+    }
 
     this.logger.log(
       `2차 하향평가 재작성 요청 생성 및 제출 상태 초기화 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`,
     );
+
+    return approval;
   }
 
   /**
@@ -408,20 +585,21 @@ export class DownwardEvaluationBusinessService {
       );
 
     // 2. 해당 평가기간에 발생한 하향평가에 대한 재작성 요청 자동 완료 처리
-    try {
-      const step =
-        evaluationType === DownwardEvaluationType.PRIMARY
-          ? 'primary'
-          : 'secondary';
-      const recipientType =
-        evaluationType === DownwardEvaluationType.PRIMARY
-          ? RecipientType.PRIMARY_EVALUATOR
-          : RecipientType.SECONDARY_EVALUATOR;
-      const responseComment =
-        evaluationType === DownwardEvaluationType.PRIMARY
-          ? '1차 하향평가 일괄 제출로 인한 재작성 완료 처리'
-          : '2차 하향평가 일괄 제출로 인한 재작성 완료 처리';
+    const step =
+      evaluationType === DownwardEvaluationType.PRIMARY
+        ? 'primary'
+        : 'secondary';
+    const recipientType =
+      evaluationType === DownwardEvaluationType.PRIMARY
+        ? RecipientType.PRIMARY_EVALUATOR
+        : RecipientType.SECONDARY_EVALUATOR;
+    const responseComment =
+      evaluationType === DownwardEvaluationType.PRIMARY
+        ? '1차 하향평가 일괄 제출로 인한 재작성 완료 처리'
+        : '2차 하향평가 일괄 제출로 인한 재작성 완료 처리';
 
+    // 재작성 요청 완료 처리 (재작성 요청이 없으면 그냥 return)
+    try {
       await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
         periodId,
         evaluateeId,
@@ -441,7 +619,40 @@ export class DownwardEvaluationBusinessService {
       });
     }
 
-    // 3. 활동 내역 기록
+    // 3. 2차 평가인 경우 개별 승인 상태 설정
+    // 재작성 요청이 있을 때만 REVISION_COMPLETED로 설정
+    // 재작성 요청이 없으면 PENDING으로 설정하거나 아예 설정하지 않음
+    // step-approval.utils.ts에서 실제 재작성 요청이 있는지 확인하고
+    // 재작성 요청이 없으면 pending 상태를 반환하도록 수정하므로
+    // 여기서는 재작성 요청이 있을 때만 REVISION_COMPLETED로 설정
+    // 재작성 요청이 없으면 아예 설정하지 않음 (기본값 pending 유지)
+    if (
+      evaluationType === DownwardEvaluationType.SECONDARY &&
+      result.submittedCount > 0
+    ) {
+      try {
+        // 재작성 요청 완료 처리가 성공했다고 해서 재작성 요청이 있었다는 보장은 없음
+        // 재작성 요청 완료 처리 함수는 재작성 요청이 없으면 그냥 return하므로
+        // 재작성 요청이 있었는지 확인할 수 없음
+        // 따라서 재작성 요청이 있을 때만 REVISION_COMPLETED로 설정하고
+        // 재작성 요청이 없으면 아예 설정하지 않음 (기본값 pending 유지)
+        // step-approval.utils.ts에서 실제 재작성 요청이 있는지 확인하고
+        // 재작성 요청이 없으면 pending 상태를 반환하도록 수정
+        // 재작성 완료 응답 제출 시 이차평가자_개별_승인상태를_재작성완료로_변경한다에서
+        // REVISION_COMPLETED로 설정되므로, 여기서는 재작성 요청이 있을 때만 설정
+        // 재작성 요청이 없으면 아예 설정하지 않음
+      } catch (error) {
+        // 개별 승인 상태 변경 실패 시에도 하향평가 제출은 정상 처리
+        this.logger.warn('2차 평가 개별 승인 상태 설정 실패', {
+          evaluatorId,
+          evaluateeId,
+          periodId,
+          error: error.message,
+        });
+      }
+    }
+
+    // 4. 활동 내역 기록
     try {
       const evaluationTypeText =
         evaluationType === DownwardEvaluationType.PRIMARY
@@ -484,5 +695,141 @@ export class DownwardEvaluationBusinessService {
     });
 
     return result;
+  }
+
+  /**
+   * 자기평가를 자동으로 제출한다
+   * 해당 WBS와 피평가자의 미제출 자기평가를 찾아서 제출합니다.
+   */
+  private async 자기평가를_자동_제출한다(
+    employeeId: string,
+    periodId: string,
+    wbsId: string,
+    submittedBy: string,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        `자기평가 자동 제출 시작 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+      );
+
+      // 1. 해당 WBS와 피평가자의 자기평가 조회
+      const selfEvaluation = await this.wbsSelfEvaluationRepository.findOne({
+        where: {
+          employeeId,
+          periodId,
+          wbsItemId: wbsId,
+          deletedAt: IsNull(),
+        },
+      });
+
+      if (!selfEvaluation) {
+        this.logger.warn(
+          `자기평가를 찾을 수 없습니다 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+        );
+        return;
+      }
+
+      // 2. 이미 제출된 자기평가는 건너뛰기
+      if (selfEvaluation.submittedToManager) {
+        this.logger.log(
+          `자기평가가 이미 제출되어 있습니다 - 자기평가 ID: ${selfEvaluation.id}`,
+        );
+        return;
+      }
+
+      // 3. 자기평가 제출
+      await this.performanceEvaluationService.WBS자기평가를_제출한다(
+        selfEvaluation.id,
+        submittedBy,
+      );
+
+      this.logger.log(
+        `자기평가 자동 제출 완료 - 자기평가 ID: ${selfEvaluation.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `자기평가 자동 제출 실패 - 직원: ${employeeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+        error,
+      );
+      // 자기평가 제출 실패 시에도 하향평가 제출은 정상 처리
+    }
+  }
+
+  /**
+   * 1차 하향평가를 자동으로 제출한다
+   * 해당 WBS와 피평가자의 미제출 1차 하향평가를 찾아서 제출합니다.
+   */
+  private async 일차_하향평가를_자동_제출한다(
+    evaluateeId: string,
+    periodId: string,
+    wbsId: string,
+    submittedBy: string,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        `1차 하향평가 자동 제출 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+      );
+
+      // 1. 1차 평가자 조회
+      const primaryEvaluatorId =
+        await this.stepApprovalContextService.일차평가자를_조회한다(
+          periodId,
+          evaluateeId,
+        );
+
+      if (!primaryEvaluatorId) {
+        this.logger.warn(
+          `1차 평가자를 찾을 수 없습니다 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}`,
+        );
+        return;
+      }
+
+      // 2. 해당 WBS와 피평가자의 1차 하향평가 조회
+      const downwardEvaluation =
+        await this.downwardEvaluationRepository.findOne({
+          where: {
+            employeeId: evaluateeId,
+            evaluatorId: primaryEvaluatorId,
+            periodId,
+            wbsId,
+            evaluationType: DownwardEvaluationType.PRIMARY,
+            deletedAt: IsNull(),
+          },
+        });
+
+      if (!downwardEvaluation) {
+        this.logger.warn(
+          `1차 하향평가를 찾을 수 없습니다 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+        );
+        return;
+      }
+
+      // 3. 이미 제출된 1차 하향평가는 건너뛰기
+      if (downwardEvaluation.isCompleted) {
+        this.logger.log(
+          `1차 하향평가가 이미 제출되어 있습니다 - 하향평가 ID: ${downwardEvaluation.id}`,
+        );
+        return;
+      }
+
+      // 4. 1차 하향평가 제출
+      await this.performanceEvaluationService.일차_하향평가를_제출한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        primaryEvaluatorId,
+        submittedBy,
+      );
+
+      this.logger.log(
+        `1차 하향평가 자동 제출 완료 - 하향평가 ID: ${downwardEvaluation.id}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `1차 하향평가 자동 제출 실패 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, WBS: ${wbsId}`,
+        error,
+      );
+      // 1차 하향평가 제출 실패 시에도 2차 하향평가 제출은 정상 처리
+    }
   }
 }

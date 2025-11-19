@@ -1,14 +1,14 @@
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { GetEmployeeSelfEvaluationsQuery, GetWbsSelfEvaluationDetailQuery } from './handlers/self-evaluation';
-import type { SubmitAllWbsSelfEvaluationsResponse, SubmitAllWbsSelfEvaluationsToEvaluatorResponse, ResetAllWbsSelfEvaluationsResponse, SubmitWbsSelfEvaluationsByProjectResponse, SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse, ResetWbsSelfEvaluationsByProjectResponse, ResetAllWbsSelfEvaluationsToEvaluatorResponse, ResetWbsSelfEvaluationsToEvaluatorByProjectResponse, ClearAllWbsSelfEvaluationsResponse, ClearWbsSelfEvaluationsByProjectResponse } from './handlers/self-evaluation';
+import type { SubmitAllWbsSelfEvaluationsResponse, SubmitAllWbsSelfEvaluationsToEvaluatorResponse, SubmitAllWbsSelfEvaluationsForApprovalResponse, ResetAllWbsSelfEvaluationsResponse, SubmitWbsSelfEvaluationsByProjectResponse, SubmitWbsSelfEvaluationsToEvaluatorByProjectResponse, ResetWbsSelfEvaluationsByProjectResponse, ResetAllWbsSelfEvaluationsToEvaluatorResponse, ResetWbsSelfEvaluationsToEvaluatorByProjectResponse, ClearAllWbsSelfEvaluationsResponse, ClearWbsSelfEvaluationsByProjectResponse } from './handlers/self-evaluation';
 import { GetPeerEvaluationDetailQuery, GetPeerEvaluationListQuery, GetEvaluatorAssignedEvaluateesQuery, type PeerEvaluationQuestionDetail } from './handlers/peer-evaluation';
 import { GetDownwardEvaluationDetailQuery, GetDownwardEvaluationListQuery } from './handlers/downward-evaluation';
 import { GetFinalEvaluationByEmployeePeriodQuery, GetFinalEvaluationListQuery, GetFinalEvaluationQuery } from './handlers/final-evaluation';
 import { type BulkDeliverableData } from './handlers/deliverable/command';
 import { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 import { DeliverableType } from '@domain/core/deliverable/deliverable.types';
-import { EmployeeSelfEvaluationsResponseDto, WbsSelfEvaluationBasicDto, WbsSelfEvaluationResponseDto } from '@/interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
+import { EmployeeSelfEvaluationsResponseDto, WbsSelfEvaluationBasicDto, WbsSelfEvaluationResponseDto } from '@interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
 import { IPerformanceEvaluationService } from './interfaces/performance-evaluation.interface';
 export declare class PerformanceEvaluationService implements IPerformanceEvaluationService {
@@ -22,6 +22,7 @@ export declare class PerformanceEvaluationService implements IPerformanceEvaluat
     피평가자가_1차평가자에게_자기평가를_제출한다(evaluationId: string, submittedBy?: string): Promise<WbsSelfEvaluationResponseDto>;
     직원의_전체_WBS자기평가를_제출한다(employeeId: string, periodId: string, submittedBy?: string): Promise<SubmitAllWbsSelfEvaluationsResponse>;
     직원의_전체_자기평가를_1차평가자에게_제출한다(employeeId: string, periodId: string, submittedBy?: string): Promise<SubmitAllWbsSelfEvaluationsToEvaluatorResponse>;
+    직원의_전체_자기평가를_승인시_제출한다(employeeId: string, periodId: string, submittedBy?: string): Promise<SubmitAllWbsSelfEvaluationsForApprovalResponse>;
     WBS자기평가를_초기화한다(evaluationId: string, resetBy?: string): Promise<WbsSelfEvaluationResponseDto>;
     직원의_전체_WBS자기평가를_초기화한다(employeeId: string, periodId: string, resetBy?: string): Promise<ResetAllWbsSelfEvaluationsResponse>;
     프로젝트별_WBS자기평가를_제출한다(employeeId: string, periodId: string, projectId: string, submittedBy?: string): Promise<SubmitWbsSelfEvaluationsByProjectResponse>;
@@ -48,7 +49,7 @@ export declare class PerformanceEvaluationService implements IPerformanceEvaluat
     일차_하향평가를_제출한다(evaluateeId: string, periodId: string, wbsId: string, evaluatorId: string, submittedBy: string): Promise<void>;
     이차_하향평가를_제출한다(evaluateeId: string, periodId: string, wbsId: string, evaluatorId: string, submittedBy: string): Promise<void>;
     하향평가를_제출한다(evaluationId: string, submittedBy?: string): Promise<void>;
-    피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId: string, evaluateeId: string, periodId: string, evaluationType: DownwardEvaluationType, submittedBy: string): Promise<{
+    피평가자의_모든_하향평가를_일괄_제출한다(evaluatorId: string, evaluateeId: string, periodId: string, evaluationType: DownwardEvaluationType, submittedBy: string, forceSubmit?: boolean): Promise<{
         submittedCount: number;
         skippedCount: number;
         failedCount: number;

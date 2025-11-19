@@ -14,12 +14,14 @@ const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 const decorators_1 = require("../../decorators");
+const peer_evaluation_types_1 = require("../../../../domain/core/peer-evaluation/peer-evaluation.types");
 class RequestPeerEvaluationDto {
     evaluatorId;
     evaluateeId;
     periodId;
     requestDeadline;
     questionIds;
+    comment;
     requestedBy;
 }
 exports.RequestPeerEvaluationDto = RequestPeerEvaluationDto;
@@ -71,6 +73,15 @@ __decorate([
     __metadata("design:type", Array)
 ], RequestPeerEvaluationDto.prototype, "questionIds", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+        example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RequestPeerEvaluationDto.prototype, "comment", void 0);
+__decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
@@ -81,6 +92,7 @@ class RequestPeerEvaluationToMultipleEvaluatorsDto {
     periodId;
     requestDeadline;
     questionIds;
+    comment;
     requestedBy;
 }
 exports.RequestPeerEvaluationToMultipleEvaluatorsDto = RequestPeerEvaluationToMultipleEvaluatorsDto;
@@ -137,6 +149,15 @@ __decorate([
     __metadata("design:type", Array)
 ], RequestPeerEvaluationToMultipleEvaluatorsDto.prototype, "questionIds", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+        example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RequestPeerEvaluationToMultipleEvaluatorsDto.prototype, "comment", void 0);
+__decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
@@ -147,6 +168,7 @@ class RequestMultiplePeerEvaluationsDto {
     periodId;
     requestDeadline;
     questionIds;
+    comment;
     requestedBy;
 }
 exports.RequestMultiplePeerEvaluationsDto = RequestMultiplePeerEvaluationsDto;
@@ -203,6 +225,15 @@ __decorate([
     __metadata("design:type", Array)
 ], RequestMultiplePeerEvaluationsDto.prototype, "questionIds", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+        example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RequestMultiplePeerEvaluationsDto.prototype, "comment", void 0);
+__decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
@@ -213,6 +244,7 @@ class RequestPartLeaderPeerEvaluationsDto {
     evaluateeIds;
     requestDeadline;
     questionIds;
+    comment;
     requestedBy;
 }
 exports.RequestPartLeaderPeerEvaluationsDto = RequestPartLeaderPeerEvaluationsDto;
@@ -273,6 +305,15 @@ __decorate([
     (0, class_validator_1.IsUUID)('4', { each: true }),
     __metadata("design:type", Array)
 ], RequestPartLeaderPeerEvaluationsDto.prototype, "questionIds", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+        example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RequestPartLeaderPeerEvaluationsDto.prototype, "comment", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
@@ -390,11 +431,11 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '평가 상태',
-        example: 'DRAFT',
-        enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
+        example: 'pending',
+        enum: peer_evaluation_types_1.PeerEvaluationStatus,
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(['DRAFT', 'SUBMITTED', 'COMPLETED']),
+    (0, class_validator_1.IsEnum)(peer_evaluation_types_1.PeerEvaluationStatus),
     __metadata("design:type", String)
 ], PeerEvaluationFilterDto.prototype, "status", void 0);
 __decorate([
@@ -788,6 +829,7 @@ class AssignedEvaluateeDto {
     requestDeadline;
     mappedDate;
     isActive;
+    comment;
     evaluatee;
     evaluateeDepartment;
     mappedBy;
@@ -857,6 +899,13 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], AssignedEvaluateeDto.prototype, "isActive", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '동료평가 요청 코멘트',
+        example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+    }),
+    __metadata("design:type", String)
+], AssignedEvaluateeDto.prototype, "comment", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '피평가자 정보',
@@ -1008,6 +1057,7 @@ class PeerEvaluationDetailResponseDto {
     requestDeadline;
     mappedDate;
     isActive;
+    comment;
     createdAt;
     updatedAt;
     deletedAt;
@@ -1078,6 +1128,13 @@ __decorate([
     }),
     __metadata("design:type", Boolean)
 ], PeerEvaluationDetailResponseDto.prototype, "isActive", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '동료평가 요청 코멘트',
+        example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+    }),
+    __metadata("design:type", String)
+], PeerEvaluationDetailResponseDto.prototype, "comment", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '생성 일시',

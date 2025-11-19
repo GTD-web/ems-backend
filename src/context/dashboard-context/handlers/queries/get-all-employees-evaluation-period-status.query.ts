@@ -130,10 +130,6 @@ export class GetAllEmployeesEvaluationPeriodStatusHandler
           status !== null,
       );
 
-      this.logger.debug(
-        `평가기간의 모든 피평가자 현황 조회 완료 - 평가기간: ${evaluationPeriodId}, 성공: ${results.length}/${mappings.length}`,
-      );
-
       return results;
     } catch (error) {
       this.logger.error(

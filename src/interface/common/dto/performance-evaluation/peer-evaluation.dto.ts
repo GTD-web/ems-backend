@@ -19,6 +19,7 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ToBoolean } from '@interface/common/decorators';
+import { PeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 
 /**
  * 동료평가 요청(할당) DTO
@@ -65,6 +66,14 @@ export class RequestPeerEvaluationDto {
   @IsOptional()
   @IsUUID('4', { each: true })
   questionIds?: string[];
+
+  @ApiPropertyOptional({
+    description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+    example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+  })
+  @IsOptional()
+  @IsString()
+  comment?: string;
 
   // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
@@ -123,6 +132,14 @@ export class RequestPeerEvaluationToMultipleEvaluatorsDto {
   @IsUUID('4', { each: true })
   questionIds?: string[];
 
+  @ApiPropertyOptional({
+    description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+    example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+  })
+  @IsOptional()
+  @IsString()
+  comment?: string;
+
   // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
   @IsUUID()
@@ -179,6 +196,14 @@ export class RequestMultiplePeerEvaluationsDto {
   @IsOptional()
   @IsUUID('4', { each: true })
   questionIds?: string[];
+
+  @ApiPropertyOptional({
+    description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+    example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+  })
+  @IsOptional()
+  @IsString()
+  comment?: string;
 
   // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
@@ -243,6 +268,14 @@ export class RequestPartLeaderPeerEvaluationsDto {
   @IsOptional()
   @IsUUID('4', { each: true })
   questionIds?: string[];
+
+  @ApiPropertyOptional({
+    description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+    example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+  })
+  @IsOptional()
+  @IsString()
+  comment?: string;
 
   // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
   @IsOptional()
@@ -353,12 +386,12 @@ export class PeerEvaluationFilterDto {
 
   @ApiPropertyOptional({
     description: '평가 상태',
-    example: 'DRAFT',
-    enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
+    example: 'pending',
+    enum: PeerEvaluationStatus,
   })
   @IsOptional()
-  @IsEnum(['DRAFT', 'SUBMITTED', 'COMPLETED'])
-  status?: string;
+  @IsEnum(PeerEvaluationStatus)
+  status?: PeerEvaluationStatus;
 
   @ApiPropertyOptional({
     description: '페이지 번호 (1부터 시작)',
@@ -739,6 +772,12 @@ export class AssignedEvaluateeDto {
   })
   isActive: boolean;
 
+  @ApiPropertyOptional({
+    description: '동료평가 요청 코멘트',
+    example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+  })
+  comment?: string;
+
   @ApiProperty({
     description: '피평가자 정보',
     type: EmployeeInfoDto,
@@ -907,6 +946,12 @@ export class PeerEvaluationDetailResponseDto {
     example: true,
   })
   isActive: boolean;
+
+  @ApiPropertyOptional({
+    description: '동료평가 요청 코멘트',
+    example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+  })
+  comment?: string;
 
   @ApiProperty({
     description: '생성 일시',

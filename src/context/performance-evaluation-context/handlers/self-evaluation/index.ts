@@ -32,6 +32,15 @@ export {
   SubmitAllWbsSelfEvaluationsToEvaluatorCommand,
   SubmitAllWbsSelfEvaluationsToEvaluatorHandler,
 } from './commands/submit-all-wbs-self-evaluations-to-evaluator.handler';
+export {
+  SubmitAllWbsSelfEvaluationsForApprovalCommand,
+  SubmitAllWbsSelfEvaluationsForApprovalHandler,
+} from './commands/submit-all-wbs-self-evaluations-for-approval.handler';
+export type {
+  SubmitAllWbsSelfEvaluationsForApprovalResponse,
+  SubmittedWbsSelfEvaluationForApprovalDetail,
+  FailedWbsSelfEvaluationForApproval,
+} from './commands/submit-all-wbs-self-evaluations-for-approval.handler';
 export type {
   SubmitAllWbsSelfEvaluationsToEvaluatorResponse,
   SubmittedWbsSelfEvaluationToEvaluatorDetail,

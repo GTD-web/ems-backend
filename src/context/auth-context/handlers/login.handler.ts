@@ -48,7 +48,9 @@ export class LoginHandler {
 
       // 외부 서버에서 던진 에러 메시지 추출
       const errorMessage =
-        error?.message || error?.details || '로그인 처리 중 오류가 발생했습니다.';
+        error?.message ||
+        error?.details ||
+        '로그인 처리 중 오류가 발생했습니다.';
       const errorCode = error?.code;
       const errorStatus = error?.status;
 
@@ -61,7 +63,8 @@ export class LoginHandler {
           case 'AUTHENTICATION_ERROR':
             // 외부 서버에서 온 에러 메시지를 사용하거나 기본 메시지 사용
             const authErrorMessage =
-              errorMessage && errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+              errorMessage &&
+              errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
                 ? errorMessage
                 : '이메일 또는 패스워드가 올바르지 않습니다.';
             this.logger.warn(`로그인 실패: ${email} - ${authErrorMessage}`);
@@ -91,7 +94,8 @@ export class LoginHandler {
       if (errorStatus) {
         if (errorStatus === 401) {
           const authErrorMessage =
-            errorMessage && errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
+            errorMessage &&
+            errorMessage !== '로그인 처리 중 오류가 발생했습니다.'
               ? errorMessage
               : '이메일 또는 패스워드가 올바르지 않습니다.';
           this.logger.warn(`로그인 실패: ${email} - ${authErrorMessage}`);

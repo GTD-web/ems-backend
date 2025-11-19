@@ -1,6 +1,7 @@
 import { Repository } from 'typeorm';
 import { EvaluationRevisionRequestService, EvaluationRevisionRequest, type RevisionRequestStepType, RecipientType } from '@domain/sub/evaluation-revision-request';
 import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval';
+import { SecondaryEvaluationStepApprovalService } from '@domain/sub/secondary-evaluation-step-approval';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
@@ -8,11 +9,12 @@ import type { IRevisionRequestContext, RevisionRequestWithDetailsDto, GetRevisio
 export declare class RevisionRequestContextService implements IRevisionRequestContext {
     private readonly revisionRequestService;
     private readonly stepApprovalService;
+    private readonly secondaryStepApprovalService;
     private readonly employeeRepository;
     private readonly evaluationPeriodRepository;
     private readonly mappingRepository;
     private readonly logger;
-    constructor(revisionRequestService: EvaluationRevisionRequestService, stepApprovalService: EmployeeEvaluationStepApprovalService, employeeRepository: Repository<Employee>, evaluationPeriodRepository: Repository<EvaluationPeriod>, mappingRepository: Repository<EvaluationPeriodEmployeeMapping>);
+    constructor(revisionRequestService: EvaluationRevisionRequestService, stepApprovalService: EmployeeEvaluationStepApprovalService, secondaryStepApprovalService: SecondaryEvaluationStepApprovalService, employeeRepository: Repository<Employee>, evaluationPeriodRepository: Repository<EvaluationPeriod>, mappingRepository: Repository<EvaluationPeriodEmployeeMapping>);
     전체_재작성요청목록을_조회한다(filter?: GetRevisionRequestsFilter): Promise<RevisionRequestWithDetailsDto[]>;
     내_재작성요청목록을_조회한다(recipientId: string, filter?: GetRevisionRequestsFilter): Promise<RevisionRequestWithDetailsDto[]>;
     읽지않은_재작성요청수를_조회한다(recipientId: string): Promise<number>;
@@ -28,4 +30,5 @@ export declare class RevisionRequestContextService implements IRevisionRequestCo
     private 모든_2차평가자의_재작성요청이_완료했는가;
     private 단계_승인_상태를_조회한다;
     private 단계_승인_상태를_재작성완료로_변경한다;
+    private 이차평가자_개별_승인상태를_재작성완료로_변경한다;
 }

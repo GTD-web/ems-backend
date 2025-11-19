@@ -7,11 +7,13 @@ import {
   GetEmployeeEvaluationPeriodStatusQuery,
 } from '@context/dashboard-context/handlers/queries/get-employee-evaluation-period-status';
 import { EmployeeEvaluationStepApprovalModule } from '@domain/sub/employee-evaluation-step-approval';
+import { SecondaryEvaluationStepApprovalModule } from '@domain/sub/secondary-evaluation-step-approval';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { EmployeeEvaluationStepApproval } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.entity';
+import { SecondaryEvaluationStepApproval } from '@domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.entity';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
@@ -29,7 +31,7 @@ import { EvaluationRevisionRequest } from '@domain/sub/evaluation-revision-reque
 import { EvaluationRevisionRequestRecipient } from '@domain/sub/evaluation-revision-request/evaluation-revision-request-recipient.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
-import { RecipientType } from '@/domain/sub/evaluation-revision-request';
+import { RecipientType } from '@domain/sub/evaluation-revision-request';
 
 /**
  * Dashboard Context - StepApproval 통합 테스트
@@ -48,6 +50,7 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
   let departmentRepository: Repository<Department>;
   let mappingRepository: Repository<EvaluationPeriodEmployeeMapping>;
   let stepApprovalRepository: Repository<EmployeeEvaluationStepApproval>;
+  let secondaryStepApprovalRepository: Repository<SecondaryEvaluationStepApproval>;
   let evaluationLineRepository: Repository<EvaluationLine>;
   let evaluationLineMappingRepository: Repository<EvaluationLineMapping>;
   let revisionRequestRepository: Repository<EvaluationRevisionRequest>;
@@ -71,12 +74,14 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
       imports: [
         DatabaseModule,
         EmployeeEvaluationStepApprovalModule,
+        SecondaryEvaluationStepApprovalModule,
         TypeOrmModule.forFeature([
           EvaluationPeriodEmployeeMapping,
           EvaluationPeriod,
           Employee,
           Department,
           EmployeeEvaluationStepApproval,
+          SecondaryEvaluationStepApproval,
           EvaluationProjectAssignment,
           EvaluationWbsAssignment,
           WbsEvaluationCriteria,
@@ -107,6 +112,9 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
     );
     stepApprovalRepository = dataSource.getRepository(
       EmployeeEvaluationStepApproval,
+    );
+    secondaryStepApprovalRepository = dataSource.getRepository(
+      SecondaryEvaluationStepApproval,
     );
     evaluationLineRepository = dataSource.getRepository(EvaluationLine);
     evaluationLineMappingRepository = dataSource.getRepository(
@@ -1296,6 +1304,255 @@ describe('GetEmployeeEvaluationPeriodStatusHandler - StepApproval Integration', 
           'revision_completed',
         ]).toContain(status.status);
         expect(typeof status.isRevisionCompleted).toBe('boolean');
+      });
+    });
+
+    describe('부분 승인 기능 검증 - secondary_evaluation_step_approval 테이블 사용', () => {
+      it('평가자별로 개별 승인 상태를 가질 수 있어야 한다 (부분 승인)', async () => {
+        // Given
+        await 이차평가자_포함_테스트데이터를_생성한다();
+
+        const now = new Date();
+        const stepApproval = stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          criteriaSettingStatus: StepApprovalStatus.PENDING,
+          selfEvaluationStatus: StepApprovalStatus.PENDING,
+          primaryEvaluationStatus: StepApprovalStatus.PENDING,
+          secondaryEvaluationStatus: StepApprovalStatus.PENDING,
+          createdBy: systemAdminId,
+        });
+        await stepApprovalRepository.save(stepApproval);
+
+        // 평가자 1만 승인 상태로 설정
+        const secondaryApproval1 = secondaryStepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId1,
+          status: StepApprovalStatus.APPROVED,
+          approvedBy: adminId,
+          approvedAt: now,
+          createdBy: adminId,
+        });
+        await secondaryStepApprovalRepository.save(secondaryApproval1);
+
+        // 평가자 2는 pending 상태 (승인 안됨)
+
+        // When
+        const query = new GetEmployeeEvaluationPeriodStatusQuery(
+          evaluationPeriodId,
+          employeeId,
+        );
+        const result = await handler.execute(query);
+
+        // Then
+        expect(result).toBeDefined();
+        expect(result!.stepApproval).toBeDefined();
+        expect(result!.stepApproval.secondaryEvaluationStatuses.length).toBe(2);
+
+        // 평가자 1은 approved 상태
+        const status1 = result!.stepApproval.secondaryEvaluationStatuses.find(
+          (s) => s.evaluatorId === secondaryEvaluatorId1,
+        );
+        expect(status1).toBeDefined();
+        expect(status1!.status).toBe('approved');
+        expect(status1!.approvedBy).toBe(adminId);
+        expect(status1!.approvedAt).toBeInstanceOf(Date);
+
+        // 평가자 2는 pending 상태
+        const status2 = result!.stepApproval.secondaryEvaluationStatuses.find(
+          (s) => s.evaluatorId === secondaryEvaluatorId2,
+        );
+        expect(status2).toBeDefined();
+        expect(status2!.status).toBe('pending');
+        expect(status2!.approvedBy).toBeNull();
+        expect(status2!.approvedAt).toBeNull();
+
+        // 통합 상태는 pending (모든 평가자가 승인되지 않았으므로)
+        expect(result!.stepApproval.secondaryEvaluationStatus).toBe('pending');
+      });
+
+      it('모든 평가자가 승인되면 통합 상태가 approved가 되어야 한다', async () => {
+        // Given
+        await 이차평가자_포함_테스트데이터를_생성한다();
+
+        const now = new Date();
+        const stepApproval = stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          criteriaSettingStatus: StepApprovalStatus.PENDING,
+          selfEvaluationStatus: StepApprovalStatus.PENDING,
+          primaryEvaluationStatus: StepApprovalStatus.PENDING,
+          secondaryEvaluationStatus: StepApprovalStatus.PENDING,
+          createdBy: systemAdminId,
+        });
+        await stepApprovalRepository.save(stepApproval);
+
+        // 모든 평가자 승인
+        const secondaryApproval1 = secondaryStepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId1,
+          status: StepApprovalStatus.APPROVED,
+          approvedBy: adminId,
+          approvedAt: now,
+          createdBy: adminId,
+        });
+        await secondaryStepApprovalRepository.save(secondaryApproval1);
+
+        const secondaryApproval2 = secondaryStepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId2,
+          status: StepApprovalStatus.APPROVED,
+          approvedBy: adminId,
+          approvedAt: now,
+          createdBy: adminId,
+        });
+        await secondaryStepApprovalRepository.save(secondaryApproval2);
+
+        // When
+        const query = new GetEmployeeEvaluationPeriodStatusQuery(
+          evaluationPeriodId,
+          employeeId,
+        );
+        const result = await handler.execute(query);
+
+        // Then
+        expect(result).toBeDefined();
+        expect(result!.stepApproval).toBeDefined();
+
+        // 모든 평가자가 approved 상태
+        result!.stepApproval.secondaryEvaluationStatuses.forEach((status) => {
+          expect(status.status).toBe('approved');
+          expect(status.approvedBy).toBe(adminId);
+          expect(status.approvedAt).toBeInstanceOf(Date);
+        });
+
+        // 통합 상태는 approved
+        expect(result!.stepApproval.secondaryEvaluationStatus).toBe('approved');
+      });
+
+      it('재작성 요청이 있는 평가자와 승인된 평가자가 함께 있을 수 있어야 한다', async () => {
+        // Given
+        await 이차평가자_포함_테스트데이터를_생성한다();
+
+        const now = new Date();
+        const stepApproval = stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          criteriaSettingStatus: StepApprovalStatus.PENDING,
+          selfEvaluationStatus: StepApprovalStatus.PENDING,
+          primaryEvaluationStatus: StepApprovalStatus.PENDING,
+          secondaryEvaluationStatus: StepApprovalStatus.PENDING,
+          createdBy: systemAdminId,
+        });
+        await stepApprovalRepository.save(stepApproval);
+
+        // 평가자 1은 승인 상태
+        const secondaryApproval1 = secondaryStepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId1,
+          status: StepApprovalStatus.APPROVED,
+          approvedBy: adminId,
+          approvedAt: now,
+          createdBy: adminId,
+        });
+        await secondaryStepApprovalRepository.save(secondaryApproval1);
+
+        // 평가자 2에게 재작성 요청 생성
+        const revisionRequest = revisionRequestRepository.create({
+          evaluationPeriodId: evaluationPeriodId,
+          employeeId: employeeId,
+          step: 'secondary',
+          comment: '재작성 요청합니다.',
+          requestedBy: adminId,
+          requestedAt: now,
+          createdBy: adminId,
+        });
+        const savedRevisionRequest =
+          await revisionRequestRepository.save(revisionRequest);
+
+        const recipient = recipientRepository.create({
+          revisionRequestId: savedRevisionRequest.id,
+          recipientId: secondaryEvaluatorId2,
+          recipientType: RecipientType.SECONDARY_EVALUATOR,
+          isCompleted: false,
+          createdBy: adminId,
+        });
+        await recipientRepository.save(recipient);
+
+        // When
+        const query = new GetEmployeeEvaluationPeriodStatusQuery(
+          evaluationPeriodId,
+          employeeId,
+        );
+        const result = await handler.execute(query);
+
+        // Then
+        expect(result).toBeDefined();
+        expect(result!.stepApproval).toBeDefined();
+
+        // 평가자 1은 approved 상태
+        const status1 = result!.stepApproval.secondaryEvaluationStatuses.find(
+          (s) => s.evaluatorId === secondaryEvaluatorId1,
+        );
+        expect(status1).toBeDefined();
+        expect(status1!.status).toBe('approved');
+        expect(status1!.revisionRequestId).toBeNull();
+
+        // 평가자 2는 revision_requested 상태
+        const status2 = result!.stepApproval.secondaryEvaluationStatuses.find(
+          (s) => s.evaluatorId === secondaryEvaluatorId2,
+        );
+        expect(status2).toBeDefined();
+        expect(status2!.status).toBe('revision_requested');
+        expect(status2!.revisionRequestId).toBe(savedRevisionRequest.id);
+        expect(status2!.revisionComment).toBe('재작성 요청합니다.');
+
+        // 통합 상태는 revision_requested (재작성 요청이 하나라도 있으면)
+        expect(result!.stepApproval.secondaryEvaluationStatus).toBe(
+          'revision_requested',
+        );
+      });
+
+      it('secondary_evaluation_step_approval 테이블에서 승인 정보를 올바르게 조회해야 한다', async () => {
+        // Given
+        await 이차평가자_포함_테스트데이터를_생성한다();
+
+        const approvedAt = new Date('2024-01-15T10:00:00Z');
+        const stepApproval = stepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          criteriaSettingStatus: StepApprovalStatus.PENDING,
+          selfEvaluationStatus: StepApprovalStatus.PENDING,
+          primaryEvaluationStatus: StepApprovalStatus.PENDING,
+          secondaryEvaluationStatus: StepApprovalStatus.PENDING,
+          createdBy: systemAdminId,
+        });
+        await stepApprovalRepository.save(stepApproval);
+
+        // 평가자 1 승인 정보 생성
+        const secondaryApproval1 = secondaryStepApprovalRepository.create({
+          evaluationPeriodEmployeeMappingId: mappingId,
+          evaluatorId: secondaryEvaluatorId1,
+          status: StepApprovalStatus.APPROVED,
+          approvedBy: adminId,
+          approvedAt: approvedAt,
+          createdBy: adminId,
+        });
+        await secondaryStepApprovalRepository.save(secondaryApproval1);
+
+        // When
+        const query = new GetEmployeeEvaluationPeriodStatusQuery(
+          evaluationPeriodId,
+          employeeId,
+        );
+        const result = await handler.execute(query);
+
+        // Then
+        expect(result).toBeDefined();
+        const status1 = result!.stepApproval.secondaryEvaluationStatuses.find(
+          (s) => s.evaluatorId === secondaryEvaluatorId1,
+        );
+        expect(status1).toBeDefined();
+        expect(status1!.status).toBe('approved');
+        expect(status1!.approvedBy).toBe(adminId);
+        expect(status1!.approvedAt).toBeInstanceOf(Date);
+        expect(status1!.approvedAt!.getTime()).toBe(approvedAt.getTime());
       });
     });
   });

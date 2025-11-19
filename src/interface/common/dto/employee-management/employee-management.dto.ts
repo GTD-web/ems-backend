@@ -51,37 +51,21 @@ export class UpdateEmployeeAccessibilityQueryDto {
  */
 export class GetEmployeesQueryDto {
   @ApiPropertyOptional({
-    description: '제외된 직원 포함 여부',
-    example: false,
-    default: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  @Type(() => Boolean)
-  includeExcluded?: boolean;
-
-  @ApiPropertyOptional({
     description: '부서 ID',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsOptional()
   @IsUUID()
   departmentId?: string;
-}
 
-/**
- * 파트장 목록 조회 쿼리 DTO
- */
-export class GetPartLeadersQueryDto {
   @ApiPropertyOptional({
-    description: 'SSO에서 강제로 최신 데이터를 가져올지 여부',
+    description: '제외된 직원 포함 여부 (기본값: false)',
     example: false,
-    default: false,
   })
   @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
-  forceRefresh?: boolean;
+  includeExcluded?: boolean;
 }
 
 /**
@@ -200,7 +184,21 @@ export class EmployeeResponseDto {
 }
 
 /**
- * 파트장 목록 조회 응답 DTO
+ * 파트장 목록 조회 쿼리 DTO
+ */
+export class GetPartLeadersQueryDto {
+  @ApiPropertyOptional({
+    description: 'SSO에서 강제로 최신 데이터를 가져올지 여부 (기본값: false)',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  forceRefresh?: boolean;
+}
+
+/**
+ * 파트장 목록 응답 DTO
  */
 export class PartLeadersResponseDto {
   @ApiProperty({
@@ -210,7 +208,7 @@ export class PartLeadersResponseDto {
   partLeaders!: EmployeeResponseDto[];
 
   @ApiProperty({
-    description: '파트장 인원수',
+    description: '파트장 수',
     example: 5,
   })
   count!: number;

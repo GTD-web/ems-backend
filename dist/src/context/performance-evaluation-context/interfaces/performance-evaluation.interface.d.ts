@@ -1,4 +1,4 @@
-import { EmployeeSelfEvaluationsResponseDto, WbsSelfEvaluationBasicDto, WbsSelfEvaluationResponseDto } from '@/interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
+import { EmployeeSelfEvaluationsResponseDto, WbsSelfEvaluationBasicDto, WbsSelfEvaluationResponseDto } from '@interface/common/dto/performance-evaluation/wbs-self-evaluation.dto';
 import { GetDownwardEvaluationDetailQuery, GetDownwardEvaluationListQuery } from '../handlers/downward-evaluation';
 import { GetFinalEvaluationByEmployeePeriodQuery, GetFinalEvaluationListQuery, GetFinalEvaluationQuery } from '../handlers/final-evaluation';
 import { GetPeerEvaluationDetailQuery, GetPeerEvaluationListQuery } from '../handlers/peer-evaluation';
@@ -10,6 +10,7 @@ export interface IPerformanceEvaluationService {
     WBS자기평가를_제출한다(evaluationId: string, submittedBy?: string): Promise<WbsSelfEvaluationResponseDto>;
     직원의_자기평가_목록을_조회한다(query: GetEmployeeSelfEvaluationsQuery): Promise<EmployeeSelfEvaluationsResponseDto>;
     WBS자기평가_상세정보를_조회한다(query: GetWbsSelfEvaluationDetailQuery): Promise<any>;
+    직원의_전체_자기평가를_승인시_제출한다(employeeId: string, periodId: string, submittedBy?: string): Promise<any>;
     동료평가를_생성한다(evaluatorId: string, evaluateeId: string, periodId: string, projectId: string, requestDeadline?: Date, evaluationContent?: string, score?: number, createdBy?: string): Promise<string>;
     동료평가를_수정한다(evaluationId: string, evaluationContent?: string, score?: number, updatedBy?: string): Promise<void>;
     동료평가를_제출한다(evaluationId: string, submittedBy?: string): Promise<void>;

@@ -14,11 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PeerEvaluationManagementController = void 0;
 const peer_evaluation_business_service_1 = require("../../../business/peer-evaluation/peer-evaluation-business.service");
-const employee_sync_service_1 = require("../../../context/organization-management-context/employee-sync.service");
 const evaluation_question_management_service_1 = require("../../../context/evaluation-question-management-context/evaluation-question-management.service");
-const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
+const employee_sync_service_1 = require("../../../context/organization-management-context/employee-sync.service");
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
-const uuid_1 = require("uuid");
+const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decorator");
 const peer_evaluation_api_decorators_1 = require("../../common/decorators/performance-evaluation/peer-evaluation-api.decorators");
 const peer_evaluation_dto_1 = require("../../common/dto/performance-evaluation/peer-evaluation.dto");
 const common_1 = require("@nestjs/common");
@@ -87,8 +86,8 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
             count: result.summary.success,
         };
     }
-    async requestPartLeaderPeerEvaluations(dto) {
-        const requestedBy = dto.requestedBy || (0, uuid_1.v4)();
+    async requestPartLeaderPeerEvaluations(dto, user) {
+        const requestedBy = user.id;
         let evaluatorIds;
         let evaluateeIds;
         if (dto.evaluatorIds && dto.evaluatorIds.length > 0) {
@@ -180,36 +179,6 @@ let PeerEvaluationManagementController = class PeerEvaluationManagementControlle
             limit: filter.limit || 10,
         });
     }
-    async getEvaluatorPeerEvaluations(evaluatorId, filter) {
-        return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
-            evaluatorId,
-            evaluateeId: filter.evaluateeId,
-            periodId: filter.periodId,
-            status: filter.status,
-            page: filter.page || 1,
-            limit: filter.limit || 10,
-        });
-    }
-    async getEvaluateePeerEvaluations(evaluateeId, filter) {
-        return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
-            evaluatorId: filter.evaluatorId,
-            evaluateeId,
-            periodId: filter.periodId,
-            status: filter.status,
-            page: filter.page || 1,
-            limit: filter.limit || 10,
-        });
-    }
-    async getAllPeerEvaluations(filter) {
-        return await this.peerEvaluationBusinessService.동료평가_목록을_조회한다({
-            evaluatorId: undefined,
-            evaluateeId: filter.evaluateeId,
-            periodId: filter.periodId,
-            status: filter.status,
-            page: filter.page || 1,
-            limit: filter.limit || 10,
-        });
-    }
     async getPeerEvaluationDetail(id) {
         return await this.peerEvaluationBusinessService.동료평가_상세정보를_조회한다({
             evaluationId: id,
@@ -286,8 +255,9 @@ __decorate([
 __decorate([
     (0, peer_evaluation_api_decorators_1.RequestPartLeaderPeerEvaluations)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestPartLeaderPeerEvaluationsDto]),
+    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestPartLeaderPeerEvaluationsDto, Object]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "requestPartLeaderPeerEvaluations", null);
 __decorate([
@@ -305,29 +275,6 @@ __decorate([
     __metadata("design:paramtypes", [peer_evaluation_dto_1.PeerEvaluationFilterDto]),
     __metadata("design:returntype", Promise)
 ], PeerEvaluationManagementController.prototype, "getPeerEvaluations", null);
-__decorate([
-    (0, peer_evaluation_api_decorators_1.GetEvaluatorPeerEvaluations)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluatorId')),
-    __param(1, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, peer_evaluation_dto_1.PeerEvaluationFilterDto]),
-    __metadata("design:returntype", Promise)
-], PeerEvaluationManagementController.prototype, "getEvaluatorPeerEvaluations", null);
-__decorate([
-    (0, peer_evaluation_api_decorators_1.GetEvaluateePeerEvaluations)(),
-    __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluateeId')),
-    __param(1, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, peer_evaluation_dto_1.PeerEvaluationFilterDto]),
-    __metadata("design:returntype", Promise)
-], PeerEvaluationManagementController.prototype, "getEvaluateePeerEvaluations", null);
-__decorate([
-    (0, peer_evaluation_api_decorators_1.GetAllPeerEvaluations)(),
-    __param(0, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [peer_evaluation_dto_1.PeerEvaluationFilterDto]),
-    __metadata("design:returntype", Promise)
-], PeerEvaluationManagementController.prototype, "getAllPeerEvaluations", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.GetPeerEvaluationDetail)(),
     __param(0, (0, parse_uuid_decorator_1.ParseUUID)('id')),

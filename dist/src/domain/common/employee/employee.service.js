@@ -278,7 +278,9 @@ let EmployeeService = class EmployeeService {
         return this.employeeRepository.save(employee);
     }
     async updateRoles(id, roles) {
-        const employee = await this.findById(id);
+        const employee = await this.employeeRepository.findOne({
+            where: { id, deletedAt: (0, typeorm_2.IsNull)() },
+        });
         if (!employee) {
             return null;
         }

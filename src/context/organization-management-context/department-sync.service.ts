@@ -123,8 +123,11 @@ export class DepartmentSyncService implements OnModuleInit {
     ssoDepartment: DepartmentInfo,
     order: number = 0,
   ): CreateDepartmentDto {
+    // departmentName이 없는 경우 기본값 설정
+    const name = ssoDepartment.departmentName || ssoDepartment.departmentCode || '미분류';
+    
     return {
-      name: ssoDepartment.departmentName,
+      name: name,
       code: ssoDepartment.departmentCode,
       externalId: ssoDepartment.id,
       order: order,
@@ -394,6 +397,23 @@ export class DepartmentSyncService implements OnModuleInit {
    */
   @Cron(CronExpression.EVERY_10_MINUTES)
   async scheduledSync(): Promise<void> {
+    // 개발환경에서는 스케줄 동기화 비활성화 가능
+    const scheduledSyncEnabledValue = this.configService.get<string | boolean>(
+      'SCHEDULED_SYNC_ENABLED',
+      'true', // 기본값: 활성화 (프로덕션 환경)
+    );
+    
+    // 문자열 "false" 또는 boolean false 모두 처리
+    const scheduledSyncEnabled = 
+      scheduledSyncEnabledValue === 'false' || scheduledSyncEnabledValue === false 
+        ? false 
+        : true;
+    
+    if (!scheduledSyncEnabled) {
+      this.logger.debug('스케줄된 부서 동기화가 비활성화되어 있습니다.');
+      return;
+    }
+
     this.logger.log('스케줄된 부서 동기화를 시작합니다...');
     await this.syncDepartments();
   }

@@ -1,34 +1,32 @@
 import {
   applyDecorators,
-  Post,
-  Get,
-  Put,
   Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Post,
+  Put,
 } from '@nestjs/common';
 import {
+  ApiBody,
   ApiOperation,
-  ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBody,
+  ApiResponse,
 } from '@nestjs/swagger';
+import { PeerEvaluationStatus } from '@domain/core/peer-evaluation/peer-evaluation.types';
 import {
-  RequestPeerEvaluationDto,
-  RequestPeerEvaluationToMultipleEvaluatorsDto,
-  RequestMultiplePeerEvaluationsDto,
-  RequestPartLeaderPeerEvaluationsDto,
-  CreatePeerEvaluationBodyDto,
-  UpdatePeerEvaluationDto,
-  PeerEvaluationFilterDto,
-  PeerEvaluationResponseDto,
+  AssignedEvaluateeDto,
   BulkPeerEvaluationRequestResponseDto,
   PeerEvaluationBasicDto,
-  PeerEvaluationListResponseDto,
   PeerEvaluationDetailResponseDto,
-  GetEvaluatorAssignedEvaluateesQueryDto,
-  AssignedEvaluateeDto,
+  PeerEvaluationListResponseDto,
+  PeerEvaluationResponseDto,
+  RequestMultiplePeerEvaluationsDto,
+  RequestPartLeaderPeerEvaluationsDto,
+  RequestPeerEvaluationDto,
+  RequestPeerEvaluationToMultipleEvaluatorsDto,
+  UpdatePeerEvaluationDto,
   UpsertPeerEvaluationAnswersDto,
   UpsertPeerEvaluationAnswersResponseDto,
 } from '../../dto/performance-evaluation/peer-evaluation.dto';
@@ -49,6 +47,7 @@ export function RequestPeerEvaluation() {
 - 평가 상태는 PENDING으로 생성됨
 - questionIds 제공 시 해당 질문들에 대해 작성 요청 (질문 매핑 자동 생성)
 - questionIds 생략 시 질문 없이 요청만 생성
+- comment 제공 시 평가자에게 전달할 메시지 저장
 - 평가자는 할당된 목록을 조회하여 평가 작성 가능
 
 **테스트 케이스:**
@@ -116,6 +115,7 @@ export function RequestPeerEvaluationToMultipleEvaluators() {
 - 모든 평가 상태는 PENDING으로 생성됨
 - questionIds 제공 시 모든 평가자에게 동일한 질문들에 대해 작성 요청
 - questionIds 생략 시 질문 없이 요청만 생성
+- comment 제공 시 모든 평가자에게 동일한 메시지 저장
 - 각 평가자는 자신에게 할당된 평가를 조회 가능
 
 **테스트 케이스:**
@@ -184,6 +184,7 @@ export function RequestMultiplePeerEvaluations() {
 - 모든 평가 상태는 PENDING으로 생성됨
 - questionIds 제공 시 모든 피평가자에 대해 동일한 질문들에 대해 작성 요청
 - questionIds 생략 시 질문 없이 요청만 생성
+- comment 제공 시 평가자에게 전달할 메시지 저장
 - 평가자는 자신에게 할당된 모든 평가를 조회 가능
 
 **테스트 케이스:**
@@ -254,6 +255,7 @@ export function RequestPartLeaderPeerEvaluations() {
 - 모든 평가 상태는 PENDING으로 생성됨
 - questionIds 제공 시 모든 평가자에게 동일한 질문들에 대해 작성 요청
 - questionIds 생략 시 "파트장 평가 질문" 그룹의 질문들을 자동으로 사용 (그룹이 없으면 질문 없이 생성)
+- comment 제공 시 모든 평가자에게 동일한 메시지 저장
 
 **사용 예시:**
 1. 모든 파트장 간 평가: evaluatorIds, evaluateeIds 생략
@@ -439,7 +441,7 @@ export function GetPeerEvaluations() {
 - 하나만 제공하면 해당 기준으로 필터링
 - 모두 제공하지 않으면 전체 동료평가 목록 조회
 - 페이지네이션 지원 (기본값: page=1, limit=10)
-- 상세 정보 포함 (평가기간, 평가자, 피평가자, 부서, 매핑자, 질문 목록)
+- 상세 정보 포함 (평가기간, 평가자, 피평가자, 부서, 매핑자, 질문 목록, 요청 코멘트)
 
 **응답 구조:**
 - evaluations: 평가 상세 목록 배열 (상세 조회와 동일한 구조)
@@ -481,8 +483,8 @@ export function GetPeerEvaluations() {
       name: 'status',
       description: '평가 상태',
       required: false,
-      enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
-      example: 'DRAFT',
+      enum: PeerEvaluationStatus,
+      example: 'pending',
     }),
     ApiQuery({
       name: 'page',
@@ -517,20 +519,6 @@ export function GetPeerEvaluations() {
 }
 
 /**
- * 평가자의 동료평가 목록 조회 API 데코레이터 (특정 평가자)
- * @deprecated GET /?evaluatorId={evaluatorId} 사용을 권장합니다.
- */
-export function GetEvaluatorPeerEvaluations() {
-  return applyDecorators(
-    Get('evaluator/:evaluatorId'),
-    HttpCode(HttpStatus.OK),
-    ApiOperation({
-      summary: '평가자의 동료평가 목록 조회',
-      deprecated: true,
-      description: `특정 평가자의 동료평가 목록을 상세 정보와 함께 페이지네이션 형태로 조회합니다.
-
-**⚠️ Deprecated**: 이 엔드포인트는 사용 중단 예정입니다. 대신 \`GET /?evaluatorId={evaluatorId}\`를 사용하세요.
-
 **동작:**
 - 평가자에게 할당된 모든 동료평가 목록 조회
 - 다양한 필터 조건 지원 (피평가자, 평가기간, 상태)
@@ -576,8 +564,8 @@ export function GetEvaluatorPeerEvaluations() {
       name: 'status',
       description: '평가 상태',
       required: false,
-      enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
-      example: 'DRAFT',
+      enum: PeerEvaluationStatus,
+      example: 'pending',
     }),
     ApiQuery({
       name: 'page',
@@ -676,8 +664,8 @@ export function GetEvaluateePeerEvaluations() {
       name: 'status',
       description: '평가 상태',
       required: false,
-      enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
-      example: 'DRAFT',
+      enum: PeerEvaluationStatus,
+      example: 'pending',
     }),
     ApiQuery({
       name: 'page',
@@ -767,8 +755,8 @@ export function GetAllPeerEvaluations() {
       name: 'status',
       description: '평가 상태',
       required: false,
-      enum: ['DRAFT', 'SUBMITTED', 'COMPLETED'],
-      example: 'DRAFT',
+      enum: PeerEvaluationStatus,
+      example: 'pending',
     }),
     ApiQuery({
       name: 'page',
@@ -821,6 +809,7 @@ export function GetPeerEvaluationDetail() {
 - 매핑자의 직원 정보를 객체로 포함
 - 평가 상태 및 완료 여부 정보 포함
 - 할당된 평가질문 목록 포함 (표시 순서대로 정렬)
+- 요청 시 작성된 코멘트 포함
 - ID 중복 제거: 객체로 제공되는 정보의 ID는 별도 필드로 제공하지 않음
 
 **테스트 케이스:**
@@ -883,6 +872,7 @@ export function GetEvaluatorAssignedEvaluatees() {
 - 피평가자 직원 정보 및 부서 정보 포함
 - 평가 진행 상태 정보 포함 (status, isCompleted, completedAt)
 - 요청 마감일 정보 포함 (requestDeadline)
+- 요청 시 작성된 코멘트 포함
 - 요청자(mappedBy) 정보 포함 (동료평가를 요청한 관리자 정보)
 - 기본적으로 완료되지 않은 평가만 조회 (includeCompleted=false)
 - periodId로 특정 평가기간 필터링 가능

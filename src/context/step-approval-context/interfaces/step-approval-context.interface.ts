@@ -91,7 +91,7 @@ export interface IStepApprovalContext {
    */
   이차하향평가_확인상태를_변경한다(
     request: UpdateSecondaryStepApprovalRequest,
-  ): Promise<void>;
+  ): Promise<import('@domain/sub/secondary-evaluation-step-approval').SecondaryEvaluationStepApproval>;
 }
 
 
