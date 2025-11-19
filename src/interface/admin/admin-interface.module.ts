@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { DomainContextModule } from '../../context/domain-context.module';
 import { BusinessModule } from '../../business/business.module';
 import { AuthContextModule } from '../../context/auth-context/auth-context.module';
@@ -45,6 +46,7 @@ import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
  */
 @Module({
   imports: [
+    CqrsModule, // CQRS 모듈 (AuditLogController에서 QueryBus 사용)
     DomainContextModule, // 도메인 컨텍스트 모듈 주입
     AuthContextModule, // 인증 컨텍스트 모듈 주입
     EvaluationPeriodManagementContextModule, // 평가 기간 관리 컨텍스트 모듈 주입

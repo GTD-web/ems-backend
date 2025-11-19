@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminInterfaceModule = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const domain_context_module_1 = require("../../context/domain-context.module");
 const business_module_1 = require("../../business/business.module");
 const auth_context_module_1 = require("../../context/auth-context/auth-context.module");
@@ -51,6 +52,7 @@ exports.AdminInterfaceModule = AdminInterfaceModule;
 exports.AdminInterfaceModule = AdminInterfaceModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            cqrs_1.CqrsModule,
             domain_context_module_1.DomainContextModule,
             auth_context_module_1.AuthContextModule,
             evaluation_period_management_context_module_1.EvaluationPeriodManagementContextModule,

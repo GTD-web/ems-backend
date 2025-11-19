@@ -12,7 +12,9 @@ import {
   ApiBearerAuth,
   ApiQuery,
 } from '@nestjs/swagger';
-import { AuditLogContextService } from '@context/audit-log-context/audit-log-context.service';
+import { QueryBus } from '@nestjs/cqrs';
+import { audit로그목록을조회한다 } from '@context/audit-log-context/handlers/queries/get-audit-log-list.handler';
+import { audit로그상세를조회한다 } from '@context/audit-log-context/handlers/queries/get-audit-log-detail.handler';
 import { AuditLogListResponseDto } from '@interface/common/dto/audit-log/audit-log-response.dto';
 import { GetAuditLogListQueryDto } from '@interface/common/dto/audit-log/get-audit-log-list-query.dto';
 import { AuditLogResponseDto } from '@interface/common/dto/audit-log/audit-log-response.dto';
@@ -21,9 +23,7 @@ import { AuditLogResponseDto } from '@interface/common/dto/audit-log/audit-log-r
 @ApiBearerAuth('Bearer')
 @Controller('admin/audit-logs')
 export class AuditLogController {
-  constructor(
-    private readonly auditLogContextService: AuditLogContextService,
-  ) {}
+  constructor(private readonly queryBus: QueryBus) {}
 
   /**
    * Audit 로그 목록을 조회한다
@@ -85,7 +85,7 @@ export class AuditLogController {
     description: '페이지 크기 (기본값: 10)',
   })
   async getAuditLogs(
-    @Query() query: GetAuditLogListQueryDto,
+    @Query() queryDto: GetAuditLogListQueryDto,
   ): Promise<AuditLogListResponseDto> {
     const {
       userId,
@@ -98,7 +98,7 @@ export class AuditLogController {
       endDate,
       page = 1,
       limit = 10,
-    } = query;
+    } = queryDto;
 
     const filter = {
       userId,
@@ -113,11 +113,12 @@ export class AuditLogController {
       endDate: endDate ? new Date(endDate) : undefined,
     };
 
-    return await this.auditLogContextService.audit로그목록을_조회한다(
+    const query = new audit로그목록을조회한다(
       filter,
       parseInt(page.toString(), 10),
       parseInt(limit.toString(), 10),
     );
+    return await this.queryBus.execute(query);
   }
 
   /**
@@ -136,8 +137,8 @@ export class AuditLogController {
   async getAuditLogDetail(
     @Param('id') id: string,
   ): Promise<AuditLogResponseDto> {
-    const auditLog =
-      await this.auditLogContextService.audit로그상세를_조회한다(id);
+    const query = new audit로그상세를조회한다(id);
+    const auditLog = await this.queryBus.execute(query);
 
     if (!auditLog) {
       throw new NotFoundException('Audit 로그를 찾을 수 없습니다.');

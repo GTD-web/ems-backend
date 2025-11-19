@@ -1,4 +1,64 @@
 {
-  "timestamp": "2025-11-15T09:42:35.891Z",
-  "testResults": []
+  "timestamp": "2025-11-19T05:46:47.720Z",
+  "testResults": [
+    {
+      "testName": "isCompleted=false로 요청했을 때 false로 필터링되어야 한다",
+      "result": {
+        "requestParams": {
+          "isCompleted": false
+        },
+        "passed": false,
+        "error": "expected 200 \"OK\", got 500 \"Internal Server Error\""
+      }
+    },
+    {
+      "testName": "isCompleted=true로 요청했을 때 true로 필터링되어야 한다",
+      "result": {
+        "requestParams": {
+          "isCompleted": true
+        },
+        "passed": false,
+        "error": "expected 200 \"OK\", got 500 \"Internal Server Error\""
+      }
+    },
+    {
+      "testName": "isCompleted 파라미터 없이 요청했을 때 모든 상태의 요청이 반환되어야 한다",
+      "result": {
+        "requestParams": {},
+        "passed": false,
+        "error": "expected 200 \"OK\", got 500 \"Internal Server Error\""
+      }
+    },
+    {
+      "testName": "isRead=false와 isCompleted=false를 함께 사용할 때도 올바르게 필터링되어야 한다",
+      "result": {
+        "requestParams": {
+          "isRead": false,
+          "isCompleted": false
+        },
+        "passed": false,
+        "error": "expected 200 \"OK\", got 500 \"Internal Server Error\""
+      }
+    },
+    {
+      "testName": "isCompleted=false로 요청했을 때 false로 필터링되어야 한다",
+      "result": {
+        "requestParams": {
+          "isCompleted": false
+        },
+        "passed": false,
+        "error": "expected 200 \"OK\", got 500 \"Internal Server Error\""
+      }
+    },
+    {
+      "testName": "isCompleted=true로 요청했을 때 true로 필터링되어야 한다",
+      "result": {
+        "requestParams": {
+          "isCompleted": true
+        },
+        "passed": false,
+        "error": "expected 200 \"OK\", got 500 \"Internal Server Error\""
+      }
+    }
+  ]
 }

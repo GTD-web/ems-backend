@@ -12,7 +12,6 @@ const cqrs_1 = require("@nestjs/cqrs");
 const typeorm_1 = require("@nestjs/typeorm");
 const common_domain_module_1 = require("../../domain/common/common-domain.module");
 const audit_log_entity_1 = require("../../domain/common/audit-log/audit-log.entity");
-const audit_log_context_service_1 = require("./audit-log-context.service");
 const handlers_1 = require("./handlers");
 let AuditLogContextModule = class AuditLogContextModule {
 };
@@ -25,12 +24,11 @@ exports.AuditLogContextModule = AuditLogContextModule = __decorate([
             typeorm_1.TypeOrmModule.forFeature([audit_log_entity_1.AuditLog]),
         ],
         providers: [
-            audit_log_context_service_1.AuditLogContextService,
             handlers_1.CreateAuditLogHandler,
             handlers_1.GetAuditLogListHandler,
             handlers_1.GetAuditLogDetailHandler,
         ],
-        exports: [audit_log_context_service_1.AuditLogContextService],
+        exports: [],
     })
 ], AuditLogContextModule);
 //# sourceMappingURL=audit-log-context.module.js.map

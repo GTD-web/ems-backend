@@ -12,19 +12,19 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetAuditLogDetailHandler = exports.GetAuditLogDetailQuery = void 0;
+exports.GetAuditLogDetailHandler = exports.audit로그상세를조회한다 = void 0;
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const audit_log_entity_1 = require("../../../../domain/common/audit-log/audit-log.entity");
-class GetAuditLogDetailQuery {
+class audit로그상세를조회한다 {
     id;
     constructor(id) {
         this.id = id;
     }
 }
-exports.GetAuditLogDetailQuery = GetAuditLogDetailQuery;
+exports.audit로그상세를조회한다 = audit로그상세를조회한다;
 let GetAuditLogDetailHandler = class GetAuditLogDetailHandler {
     auditLogRepository;
     constructor(auditLogRepository) {
@@ -40,7 +40,7 @@ let GetAuditLogDetailHandler = class GetAuditLogDetailHandler {
 exports.GetAuditLogDetailHandler = GetAuditLogDetailHandler;
 exports.GetAuditLogDetailHandler = GetAuditLogDetailHandler = __decorate([
     (0, common_1.Injectable)(),
-    (0, cqrs_1.QueryHandler)(GetAuditLogDetailQuery),
+    (0, cqrs_1.QueryHandler)(audit로그상세를조회한다),
     __param(0, (0, typeorm_1.InjectRepository)(audit_log_entity_1.AuditLog)),
     __metadata("design:paramtypes", [typeorm_2.Repository])
 ], GetAuditLogDetailHandler);

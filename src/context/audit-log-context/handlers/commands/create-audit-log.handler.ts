@@ -1,26 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { AuditLog } from '@domain/common/audit-log/audit-log.entity';
 import { AuditLogService } from '@domain/common/audit-log/audit-log.service';
 import {
   CreateAuditLogDto,
   CreateAuditLogResult,
 } from '../../interfaces/audit-log-context.interface';
 
-export class CreateAuditLogCommand {
+export class audit로그를생성한다 {
   constructor(public readonly data: CreateAuditLogDto) {}
 }
 
 @Injectable()
-@CommandHandler(CreateAuditLogCommand)
+@CommandHandler(audit로그를생성한다) 
 export class CreateAuditLogHandler
-  implements ICommandHandler<CreateAuditLogCommand, CreateAuditLogResult>
+  implements ICommandHandler<audit로그를생성한다, CreateAuditLogResult>
 {
   constructor(private readonly auditLogService: AuditLogService) {}
 
-  async execute(command: CreateAuditLogCommand): Promise<CreateAuditLogResult> {
+  async execute(command: audit로그를생성한다): Promise<CreateAuditLogResult> {
     const auditLog = await this.auditLogService.생성한다(command.data);
     return {
       id: auditLog.id,

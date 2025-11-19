@@ -12,13 +12,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GetAuditLogListHandler = exports.GetAuditLogListQuery = void 0;
+exports.GetAuditLogListHandler = exports.audit로그목록을조회한다 = void 0;
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const audit_log_entity_1 = require("../../../../domain/common/audit-log/audit-log.entity");
-class GetAuditLogListQuery {
+class audit로그목록을조회한다 {
     filter;
     page;
     limit;
@@ -28,7 +28,7 @@ class GetAuditLogListQuery {
         this.limit = limit;
     }
 }
-exports.GetAuditLogListQuery = GetAuditLogListQuery;
+exports.audit로그목록을조회한다 = audit로그목록을조회한다;
 let GetAuditLogListHandler = class GetAuditLogListHandler {
     auditLogRepository;
     constructor(auditLogRepository) {
@@ -91,7 +91,7 @@ let GetAuditLogListHandler = class GetAuditLogListHandler {
 exports.GetAuditLogListHandler = GetAuditLogListHandler;
 exports.GetAuditLogListHandler = GetAuditLogListHandler = __decorate([
     (0, common_1.Injectable)(),
-    (0, cqrs_1.QueryHandler)(GetAuditLogListQuery),
+    (0, cqrs_1.QueryHandler)(audit로그목록을조회한다),
     __param(0, (0, typeorm_1.InjectRepository)(audit_log_entity_1.AuditLog)),
     __metadata("design:paramtypes", [typeorm_2.Repository])
 ], GetAuditLogListHandler);

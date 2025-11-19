@@ -5,10 +5,11 @@ import {
   CallHandler,
   Logger,
 } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { Request, Response } from 'express';
 import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { AuditLogContextService } from '@context/audit-log-context/audit-log-context.service';
+import { audit로그를생성한다 } from '@context/audit-log-context/handlers/commands/create-audit-log.handler';
 
 /**
  * Audit 로그 인터셉터
@@ -28,9 +29,7 @@ export class AuditLogInterceptor implements NestInterceptor {
     '/evaluator/api-docs',
   ];
 
-  constructor(
-    private readonly auditLogContextService: AuditLogContextService,
-  ) {}
+  constructor(private readonly commandBus: CommandBus) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest<Request>();
@@ -66,7 +65,7 @@ export class AuditLogInterceptor implements NestInterceptor {
         const duration = endTime.getTime() - startTime.getTime();
 
         try {
-          await this.auditLogContextService.audit로그를생성한다({
+          const command = new audit로그를생성한다({
             requestMethod,
             requestUrl,
             requestPath,
@@ -85,6 +84,7 @@ export class AuditLogInterceptor implements NestInterceptor {
             duration,
             requestId,
           });
+          await this.commandBus.execute(command);
         } catch (error) {
           // Audit 로깅 실패 시에도 메인 요청은 정상 처리
           this.logger.error('Audit 로그 생성 실패', error);
@@ -96,7 +96,7 @@ export class AuditLogInterceptor implements NestInterceptor {
         const duration = endTime.getTime() - startTime.getTime();
 
         try {
-          await this.auditLogContextService.audit로그를생성한다({
+          const command = new audit로그를생성한다({
             requestMethod,
             requestUrl,
             requestPath,
@@ -115,6 +115,7 @@ export class AuditLogInterceptor implements NestInterceptor {
             duration,
             requestId,
           });
+          await this.commandBus.execute(command);
         } catch (logError) {
           // Audit 로깅 실패 시에도 메인 요청은 정상 처리
           this.logger.error('Audit 로그 생성 실패', logError);

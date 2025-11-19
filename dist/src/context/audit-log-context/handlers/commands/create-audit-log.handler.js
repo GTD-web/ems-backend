@@ -9,17 +9,17 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateAuditLogHandler = exports.CreateAuditLogCommand = void 0;
+exports.CreateAuditLogHandler = exports.audit로그를생성한다 = void 0;
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
 const audit_log_service_1 = require("../../../../domain/common/audit-log/audit-log.service");
-class CreateAuditLogCommand {
+class audit로그를생성한다 {
     data;
     constructor(data) {
         this.data = data;
     }
 }
-exports.CreateAuditLogCommand = CreateAuditLogCommand;
+exports.audit로그를생성한다 = audit로그를생성한다;
 let CreateAuditLogHandler = class CreateAuditLogHandler {
     auditLogService;
     constructor(auditLogService) {
@@ -36,7 +36,7 @@ let CreateAuditLogHandler = class CreateAuditLogHandler {
 exports.CreateAuditLogHandler = CreateAuditLogHandler;
 exports.CreateAuditLogHandler = CreateAuditLogHandler = __decorate([
     (0, common_1.Injectable)(),
-    (0, cqrs_1.CommandHandler)(CreateAuditLogCommand),
+    (0, cqrs_1.CommandHandler)(audit로그를생성한다),
     __metadata("design:paramtypes", [audit_log_service_1.AuditLogService])
 ], CreateAuditLogHandler);
 //# sourceMappingURL=create-audit-log.handler.js.map

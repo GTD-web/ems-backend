@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { CqrsModule } from '@nestjs/cqrs';
 import { AdminInterfaceModule } from './admin/admin-interface.module';
 import { CommonDomainModule } from '@domain/common/common-domain.module';
 import { AuthContextModule } from '@context/auth-context';
@@ -24,6 +25,7 @@ import { PublicInterfaceModule } from './public/public-interface.module';
  */
 @Module({
   imports: [
+    CqrsModule, // CQRS 모듈 (AuditLogInterceptor에서 CommandBus 사용)
     CommonDomainModule, // SSO 서비스 사용을 위한 도메인 모듈
     AuthContextModule, // Auth Context 모듈 (JWT 인증 가드에서 사용)
     AuditLogContextModule, // Audit 로그 컨텍스트 모듈

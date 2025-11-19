@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.InterfaceModule = void 0;
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
+const cqrs_1 = require("@nestjs/cqrs");
 const admin_interface_module_1 = require("./admin/admin-interface.module");
 const common_domain_module_1 = require("../domain/common/common-domain.module");
 const auth_context_1 = require("../context/auth-context");
@@ -25,6 +26,7 @@ exports.InterfaceModule = InterfaceModule;
 exports.InterfaceModule = InterfaceModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            cqrs_1.CqrsModule,
             common_domain_module_1.CommonDomainModule,
             auth_context_1.AuthContextModule,
             audit_log_context_module_1.AuditLogContextModule,

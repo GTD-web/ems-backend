@@ -12,10 +12,11 @@ var AuditLogInterceptor_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuditLogInterceptor = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const operators_1 = require("rxjs/operators");
-const audit_log_context_service_1 = require("../../../context/audit-log-context/audit-log-context.service");
+const create_audit_log_handler_1 = require("../../../context/audit-log-context/handlers/commands/create-audit-log.handler");
 let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
-    auditLogContextService;
+    commandBus;
     logger = new common_1.Logger(AuditLogInterceptor_1.name);
     excludePaths = [
         '/health',
@@ -23,8 +24,8 @@ let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
         '/user/api-docs',
         '/evaluator/api-docs',
     ];
-    constructor(auditLogContextService) {
-        this.auditLogContextService = auditLogContextService;
+    constructor(commandBus) {
+        this.commandBus = commandBus;
     }
     intercept(context, next) {
         const request = context.switchToHttp().getRequest();
@@ -49,7 +50,7 @@ let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
             const endTime = new Date();
             const duration = endTime.getTime() - startTime.getTime();
             try {
-                await this.auditLogContextService.audit로그를생성한다({
+                const command = new create_audit_log_handler_1.audit로그를생성한다({
                     requestMethod,
                     requestUrl,
                     requestPath,
@@ -68,6 +69,7 @@ let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
                     duration,
                     requestId,
                 });
+                await this.commandBus.execute(command);
             }
             catch (error) {
                 this.logger.error('Audit 로그 생성 실패', error);
@@ -76,7 +78,7 @@ let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
             const endTime = new Date();
             const duration = endTime.getTime() - startTime.getTime();
             try {
-                await this.auditLogContextService.audit로그를생성한다({
+                const command = new create_audit_log_handler_1.audit로그를생성한다({
                     requestMethod,
                     requestUrl,
                     requestPath,
@@ -95,6 +97,7 @@ let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
                     duration,
                     requestId,
                 });
+                await this.commandBus.execute(command);
             }
             catch (logError) {
                 this.logger.error('Audit 로그 생성 실패', logError);
@@ -151,6 +154,6 @@ let AuditLogInterceptor = AuditLogInterceptor_1 = class AuditLogInterceptor {
 exports.AuditLogInterceptor = AuditLogInterceptor;
 exports.AuditLogInterceptor = AuditLogInterceptor = AuditLogInterceptor_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [audit_log_context_service_1.AuditLogContextService])
+    __metadata("design:paramtypes", [cqrs_1.CommandBus])
 ], AuditLogInterceptor);
 //# sourceMappingURL=audit-log.interceptor.js.map

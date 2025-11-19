@@ -15,17 +15,19 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuditLogController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const audit_log_context_service_1 = require("../../../context/audit-log-context/audit-log-context.service");
+const cqrs_1 = require("@nestjs/cqrs");
+const get_audit_log_list_handler_1 = require("../../../context/audit-log-context/handlers/queries/get-audit-log-list.handler");
+const get_audit_log_detail_handler_1 = require("../../../context/audit-log-context/handlers/queries/get-audit-log-detail.handler");
 const audit_log_response_dto_1 = require("../../common/dto/audit-log/audit-log-response.dto");
 const get_audit_log_list_query_dto_1 = require("../../common/dto/audit-log/get-audit-log-list-query.dto");
 const audit_log_response_dto_2 = require("../../common/dto/audit-log/audit-log-response.dto");
 let AuditLogController = class AuditLogController {
-    auditLogContextService;
-    constructor(auditLogContextService) {
-        this.auditLogContextService = auditLogContextService;
+    queryBus;
+    constructor(queryBus) {
+        this.queryBus = queryBus;
     }
-    async getAuditLogs(query) {
-        const { userId, userEmail, employeeNumber, requestMethod, requestUrl, responseStatusCode, startDate, endDate, page = 1, limit = 10, } = query;
+    async getAuditLogs(queryDto) {
+        const { userId, userEmail, employeeNumber, requestMethod, requestUrl, responseStatusCode, startDate, endDate, page = 1, limit = 10, } = queryDto;
         const filter = {
             userId,
             userEmail,
@@ -38,10 +40,12 @@ let AuditLogController = class AuditLogController {
             startDate: startDate ? new Date(startDate) : undefined,
             endDate: endDate ? new Date(endDate) : undefined,
         };
-        return await this.auditLogContextService.audit로그목록을_조회한다(filter, parseInt(page.toString(), 10), parseInt(limit.toString(), 10));
+        const query = new get_audit_log_list_handler_1.audit로그목록을조회한다(filter, parseInt(page.toString(), 10), parseInt(limit.toString(), 10));
+        return await this.queryBus.execute(query);
     }
     async getAuditLogDetail(id) {
-        const auditLog = await this.auditLogContextService.audit로그상세를_조회한다(id);
+        const query = new get_audit_log_detail_handler_1.audit로그상세를조회한다(id);
+        const auditLog = await this.queryBus.execute(query);
         if (!auditLog) {
             throw new common_1.NotFoundException('Audit 로그를 찾을 수 없습니다.');
         }
@@ -131,6 +135,6 @@ exports.AuditLogController = AuditLogController = __decorate([
     (0, swagger_1.ApiTags)('A-0-5. 관리자 - 감사 로그'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/audit-logs'),
-    __metadata("design:paramtypes", [audit_log_context_service_1.AuditLogContextService])
+    __metadata("design:paramtypes", [cqrs_1.QueryBus])
 ], AuditLogController);
 //# sourceMappingURL=audit-log.controller.js.map

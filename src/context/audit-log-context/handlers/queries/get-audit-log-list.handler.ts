@@ -8,7 +8,7 @@ import {
   AuditLogListResult,
 } from '../../interfaces/audit-log-context.interface';
 
-export class GetAuditLogListQuery {
+export class audit로그목록을조회한다 {
   constructor(
     public readonly filter: AuditLogFilter,
     public readonly page: number = 1,
@@ -17,16 +17,16 @@ export class GetAuditLogListQuery {
 }
 
 @Injectable()
-@QueryHandler(GetAuditLogListQuery)
+@QueryHandler(audit로그목록을조회한다)
 export class GetAuditLogListHandler
-  implements IQueryHandler<GetAuditLogListQuery, AuditLogListResult>
+  implements IQueryHandler<audit로그목록을조회한다, AuditLogListResult>
 {
   constructor(
     @InjectRepository(AuditLog)
     private readonly auditLogRepository: Repository<AuditLog>,
   ) {}
 
-  async execute(query: GetAuditLogListQuery): Promise<AuditLogListResult> {
+  async execute(query: audit로그목록을조회한다): Promise<AuditLogListResult> {
     const queryBuilder =
       this.auditLogRepository.createQueryBuilder('auditLog');
 
