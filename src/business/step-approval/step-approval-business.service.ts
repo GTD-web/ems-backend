@@ -68,6 +68,30 @@ export class StepApprovalBusinessService {
         error,
       );
     }
+
+    // 2. 해당 평가기간에 발생한 자기평가에 대한 재작성 요청 자동 완료 처리
+    try {
+      // 피평가자에게 요청된 재작성 요청 완료 처리
+      await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'self',
+        employeeId,
+        RecipientType.EVALUATEE,
+        '자기평가 승인으로 인한 재작성 완료 처리',
+      );
+
+      this.logger.log(
+        `자기평가 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+      );
+    } catch (error) {
+      // 재작성 요청 완료 처리 실패 시에도 자기평가 제출은 정상 처리
+      this.logger.warn('자기평가 승인 시 재작성 요청 완료 처리 실패', {
+        employeeId,
+        evaluationPeriodId,
+        error: error.message,
+      });
+    }
   }
 
   /**
@@ -191,6 +215,30 @@ export class StepApprovalBusinessService {
       return;
     }
 
+    // 2. 해당 평가기간에 발생한 2차 하향평가에 대한 재작성 요청 자동 완료 처리
+    try {
+      await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'secondary',
+        evaluatorId,
+        RecipientType.SECONDARY_EVALUATOR,
+        '2차 하향평가 승인으로 인한 재작성 완료 처리',
+      );
+
+      this.logger.log(
+        `2차 하향평가 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}`,
+      );
+    } catch (error) {
+      // 재작성 요청 완료 처리 실패 시에도 하향평가 제출은 정상 처리
+      this.logger.warn('2차 하향평가 승인 시 재작성 요청 완료 처리 실패', {
+        evaluatorId,
+        employeeId,
+        evaluationPeriodId,
+        error: error.message,
+      });
+    }
+
     this.logger.log(
       `2차 하향평가 승인 시 제출 상태 변경 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}, 평가자: ${evaluatorId}, 제출: ${result.submittedCount}, 건너뜀: ${result.skippedCount}`,
     );
@@ -300,6 +348,30 @@ export class StepApprovalBusinessService {
         `평가기준 제출 상태 변경 실패 (이미 제출되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
         error,
       );
+    }
+
+    // 2. 해당 평가기간에 발생한 평가기준 설정에 대한 재작성 요청 자동 완료 처리
+    try {
+      // 피평가자에게 요청된 재작성 요청 완료 처리
+      await this.revisionRequestContextService.제출자에게_요청된_재작성요청을_완료처리한다(
+        evaluationPeriodId,
+        employeeId,
+        'criteria',
+        employeeId,
+        RecipientType.EVALUATEE,
+        '평가기준 설정 승인으로 인한 재작성 완료 처리',
+      );
+
+      this.logger.log(
+        `평가기준 설정 승인 시 재작성 요청 완료 처리 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`,
+      );
+    } catch (error) {
+      // 재작성 요청 완료 처리 실패 시에도 평가기준 제출은 정상 처리
+      this.logger.warn('평가기준 설정 승인 시 재작성 요청 완료 처리 실패', {
+        employeeId,
+        evaluationPeriodId,
+        error: error.message,
+      });
     }
 
     this.logger.log(
