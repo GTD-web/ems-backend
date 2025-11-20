@@ -1,6 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber, IsDateString } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsDateString,
+  IsArray,
+} from 'class-validator';
 import { Type } from 'class-transformer';
+import { OptionalToArray } from '@interface/common/decorators';
 
 export class GetAuditLogListQueryDto {
   @ApiPropertyOptional({ description: '사용자 ID' })
@@ -19,23 +26,39 @@ export class GetAuditLogListQueryDto {
   employeeNumber?: string;
 
   @ApiPropertyOptional({
-    description: 'HTTP 메서드',
+    description: 'HTTP 메서드 (단일 값 또는 배열)',
     enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    type: [String],
+    example: ['GET', 'POST'],
   })
   @IsOptional()
-  @IsString()
-  requestMethod?: string;
+  @OptionalToArray()
+  @IsArray()
+  @IsString({ each: true })
+  requestMethod?: string[];
 
-  @ApiPropertyOptional({ description: '요청 URL (부분 일치)' })
+  @ApiPropertyOptional({
+    description: '요청 URL 또는 호스트 (부분 일치, 단일 값 또는 배열)',
+    type: [String],
+    example: ['/admin', '/api'],
+  })
   @IsOptional()
-  @IsString()
-  requestUrl?: string;
+  @OptionalToArray()
+  @IsArray()
+  @IsString({ each: true })
+  requestUrl?: string[];
 
-  @ApiPropertyOptional({ description: '응답 상태 코드' })
+  @ApiPropertyOptional({
+    description: '응답 상태 코드 (단일 값 또는 배열)',
+    type: [Number],
+    example: [200, 201, 404],
+  })
   @IsOptional()
+  @OptionalToArray()
   @Type(() => Number)
-  @IsNumber()
-  responseStatusCode?: number;
+  @IsArray()
+  @IsNumber({}, { each: true })
+  responseStatusCode?: number[];
 
   @ApiPropertyOptional({
     description: '시작 날짜 (ISO 8601)',

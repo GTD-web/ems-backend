@@ -3,8 +3,10 @@ import { QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditLog } from '@domain/common/audit-log/audit-log.entity';
-import { AuditLogFilter } from '../../interfaces/audit-log-context.interface';
-import { AuditLogListResponseDto } from '@interface/common/dto/audit-log/audit-log-response.dto';
+import {
+  AuditLogFilter,
+  AuditLogListResult,
+} from '../../interfaces/audit-log-context.interface';
 
 export class audit로그목록을조회한다 {
   constructor(
@@ -17,16 +19,14 @@ export class audit로그목록을조회한다 {
 @Injectable()
 @QueryHandler(audit로그목록을조회한다)
 export class GetAuditLogListHandler
-  implements IQueryHandler<audit로그목록을조회한다, AuditLogListResponseDto>
+  implements IQueryHandler<audit로그목록을조회한다, AuditLogListResult>
 {
   constructor(
     @InjectRepository(AuditLog)
     private readonly auditLogRepository: Repository<AuditLog>,
   ) {}
 
-  async execute(
-    query: audit로그목록을조회한다,
-  ): Promise<AuditLogListResponseDto> {
+  async execute(query: audit로그목록을조회한다): Promise<AuditLogListResult> {
     const queryBuilder = this.auditLogRepository.createQueryBuilder('auditLog');
 
     if (query.filter.userId) {
@@ -47,23 +47,33 @@ export class GetAuditLogListHandler
       });
     }
 
-    if (query.filter.requestMethod) {
-      queryBuilder.andWhere('auditLog.requestMethod = :requestMethod', {
-        requestMethod: query.filter.requestMethod,
+    if (query.filter.requestMethod && query.filter.requestMethod.length > 0) {
+      queryBuilder.andWhere('auditLog.requestMethod IN (:...requestMethods)', {
+        requestMethods: query.filter.requestMethod,
       });
     }
 
-    if (query.filter.requestUrl) {
-      queryBuilder.andWhere('auditLog.requestUrl LIKE :requestUrl', {
-        requestUrl: `%${query.filter.requestUrl}%`,
+    if (query.filter.requestUrl && query.filter.requestUrl.length > 0) {
+      // 여러 URL에 대해 OR 조건으로 LIKE 검색
+      const urlConditions = query.filter.requestUrl
+        .map((url, index) => `auditLog.requestUrl LIKE :requestUrl${index}`)
+        .join(' OR ');
+      queryBuilder.andWhere(`(${urlConditions})`, {
+        ...query.filter.requestUrl.reduce((acc, url, index) => {
+          acc[`requestUrl${index}`] = `%${url}%`;
+          return acc;
+        }, {} as Record<string, string>),
       });
     }
 
-    if (query.filter.responseStatusCode) {
+    if (
+      query.filter.responseStatusCode &&
+      query.filter.responseStatusCode.length > 0
+    ) {
       queryBuilder.andWhere(
-        'auditLog.responseStatusCode = :responseStatusCode',
+        'auditLog.responseStatusCode IN (:...responseStatusCodes)',
         {
-          responseStatusCode: query.filter.responseStatusCode,
+          responseStatusCodes: query.filter.responseStatusCode,
         },
       );
     }
@@ -87,6 +97,11 @@ export class GetAuditLogListHandler
 
     const [items, total] = await queryBuilder.getManyAndCount();
 
-    return AuditLogListResponseDto.응답DTO로_변환한다(items, total, query);
+    return {
+      items: items.map((item) => item.DTO로_변환한다()),
+      total,
+      page: query.page,
+      limit: query.limit,
+    };
   }
 }

@@ -34,14 +34,18 @@ let AuditLogController = class AuditLogController {
             employeeNumber,
             requestMethod,
             requestUrl,
-            responseStatusCode: responseStatusCode
-                ? parseInt(responseStatusCode.toString(), 10)
-                : undefined,
+            responseStatusCode,
             startDate: startDate ? new Date(startDate) : undefined,
             endDate: endDate ? new Date(endDate) : undefined,
         };
-        const query = new get_audit_log_list_handler_1.audit로그목록을조회한다(filter, parseInt(page.toString(), 10), parseInt(limit.toString(), 10));
-        return await this.queryBus.execute(query);
+        const cqrsQuery = new get_audit_log_list_handler_1.audit로그목록을조회한다(filter, parseInt(page.toString(), 10), parseInt(limit.toString(), 10));
+        const result = await this.queryBus.execute(cqrsQuery);
+        const responseDto = new audit_log_response_dto_1.AuditLogListResponseDto();
+        responseDto.items = result.items;
+        responseDto.total = result.total;
+        responseDto.page = result.page;
+        responseDto.limit = result.limit;
+        return responseDto;
     }
     async getAuditLogDetail(id) {
         const query = new get_audit_log_detail_handler_1.audit로그상세를조회한다(id);
@@ -78,17 +82,23 @@ __decorate([
     (0, swagger_1.ApiQuery)({
         name: 'requestMethod',
         required: false,
-        description: 'HTTP 메서드 (GET, POST, PUT, DELETE 등)',
+        description: 'HTTP 메서드 (단일 값 또는 배열, 예: GET 또는 GET,POST)',
+        type: [String],
+        isArray: true,
     }),
     (0, swagger_1.ApiQuery)({
         name: 'requestUrl',
         required: false,
-        description: '요청 URL (부분 일치)',
+        description: '요청 URL 또는 호스트 (부분 일치, 단일 값 또는 배열, 예: /admin 또는 /admin,/api)',
+        type: [String],
+        isArray: true,
     }),
     (0, swagger_1.ApiQuery)({
         name: 'responseStatusCode',
         required: false,
-        description: '응답 상태 코드',
+        description: '응답 상태 코드 (단일 값 또는 배열, 예: 200 또는 200,201,404)',
+        type: [Number],
+        isArray: true,
     }),
     (0, swagger_1.ApiQuery)({
         name: 'startDate',

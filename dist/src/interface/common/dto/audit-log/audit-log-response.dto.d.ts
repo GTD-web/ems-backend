@@ -1,3 +1,4 @@
+import { AuditLog } from '@domain/common/audit-log/audit-log.entity';
 export declare class AuditLogResponseDto {
     id: string;
     requestMethod: string;
@@ -24,4 +25,8 @@ export declare class AuditLogListResponseDto {
     total: number;
     page: number;
     limit: number;
+    static 응답DTO로_변환한다(items: AuditLog[], total: number, query: {
+        page: number;
+        limit: number;
+    }): AuditLogListResponseDto;
 }

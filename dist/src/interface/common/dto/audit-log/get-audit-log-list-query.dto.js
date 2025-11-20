@@ -13,6 +13,7 @@ exports.GetAuditLogListQueryDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
+const decorators_1 = require("../../decorators");
 class GetAuditLogListQueryDto {
     userId;
     userEmail;
@@ -46,25 +47,41 @@ __decorate([
 ], GetAuditLogListQueryDto.prototype, "employeeNumber", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: 'HTTP 메서드',
+        description: 'HTTP 메서드 (단일 값 또는 배열)',
         enum: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+        type: [String],
+        example: ['GET', 'POST'],
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    (0, decorators_1.OptionalToArray)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
 ], GetAuditLogListQueryDto.prototype, "requestMethod", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: '요청 URL (부분 일치)' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '요청 URL 또는 호스트 (부분 일치, 단일 값 또는 배열)',
+        type: [String],
+        example: ['/admin', '/api'],
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    (0, decorators_1.OptionalToArray)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
 ], GetAuditLogListQueryDto.prototype, "requestUrl", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: '응답 상태 코드' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '응답 상태 코드 (단일 값 또는 배열)',
+        type: [Number],
+        example: [200, 201, 404],
+    }),
     (0, class_validator_1.IsOptional)(),
+    (0, decorators_1.OptionalToArray)(),
     (0, class_transformer_1.Type)(() => Number),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsNumber)({}, { each: true }),
+    __metadata("design:type", Array)
 ], GetAuditLogListQueryDto.prototype, "responseStatusCode", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({

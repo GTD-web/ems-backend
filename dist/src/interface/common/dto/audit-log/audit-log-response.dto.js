@@ -114,6 +114,14 @@ class AuditLogListResponseDto {
     total;
     page;
     limit;
+    static 응답DTO로_변환한다(items, total, query) {
+        const dto = new AuditLogListResponseDto();
+        dto.items = items.map((item) => item.DTO로_변환한다());
+        dto.total = total;
+        dto.page = query.page;
+        dto.limit = query.limit;
+        return dto;
+    }
 }
 exports.AuditLogListResponseDto = AuditLogListResponseDto;
 __decorate([

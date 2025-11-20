@@ -38,9 +38,9 @@ export interface AuditLogFilter {
   userId?: string;
   userEmail?: string;
   employeeNumber?: string;
-  requestMethod?: string;
-  requestUrl?: string;
-  responseStatusCode?: number;
+  requestMethod?: string[];
+  requestUrl?: string[];
+  responseStatusCode?: number[];
   startDate?: Date;
   endDate?: Date;
 }

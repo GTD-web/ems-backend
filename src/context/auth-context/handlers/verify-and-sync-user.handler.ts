@@ -38,19 +38,45 @@ export class VerifyAndSyncUserHandler {
       // 1. 토큰 검증 (valid: false이면 UnauthorizedException 발생)
       const verifyResult = await this.ssoService.토큰을검증한다(accessToken);
 
-      // 2. Employee 정보 조회 (시스템에 등록된 직원만 인증 허용)
+      // 2. Employee 정보 조회 또는 생성
       const requestedEmployeeNumber = verifyResult.user_info.employee_number;
-      const employee = await this.employeeService.findByEmployeeNumber(
+      let employee = await this.employeeService.findByEmployeeNumber(
         requestedEmployeeNumber,
       );
 
+      // Employee가 없으면 기본 정보로 자동 생성
       if (!employee) {
-        this.logger.warn(
-          `시스템에 등록되지 않은 직원의 토큰 검증 시도: ${requestedEmployeeNumber}`,
+        this.logger.log(
+          `시스템에 등록되지 않은 직원 발견. 기본 정보로 자동 생성합니다: ${requestedEmployeeNumber}`,
         );
-        throw new UnauthorizedException(
-          '시스템에 등록되지 않은 사용자입니다. 관리자에게 문의하세요.',
-        );
+
+        try {
+          // 토큰 검증 결과의 기본 정보로 Employee 생성
+          employee = await this.employeeService.create({
+            employeeNumber: requestedEmployeeNumber,
+            name: verifyResult.user_info.name,
+            email: verifyResult.user_info.email,
+            externalId: verifyResult.user_info.id,
+            status: '재직중', // 기본값
+            externalCreatedAt: new Date(),
+            externalUpdatedAt: new Date(),
+            lastSyncAt: new Date(),
+            isExcludedFromList: false,
+            isAccessible: true, // 자동 생성 시 접근 가능하도록 설정
+          });
+
+          this.logger.log(
+            `직원 자동 생성 완료: ${employee.employeeNumber} (${employee.name})`,
+          );
+        } catch (error) {
+          this.logger.error(
+            `직원 자동 생성 실패: ${requestedEmployeeNumber}`,
+            error,
+          );
+          throw new UnauthorizedException(
+            '직원 정보 생성 중 오류가 발생했습니다. 관리자에게 문의하세요.',
+          );
+        }
       }
 
       // 3. 사번 일치 검증 (대소문자, 공백 등 고려)

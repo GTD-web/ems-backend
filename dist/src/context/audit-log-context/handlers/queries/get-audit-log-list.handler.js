@@ -51,19 +51,26 @@ let GetAuditLogListHandler = class GetAuditLogListHandler {
                 employeeNumber: query.filter.employeeNumber,
             });
         }
-        if (query.filter.requestMethod) {
-            queryBuilder.andWhere('auditLog.requestMethod = :requestMethod', {
-                requestMethod: query.filter.requestMethod,
+        if (query.filter.requestMethod && query.filter.requestMethod.length > 0) {
+            queryBuilder.andWhere('auditLog.requestMethod IN (:...requestMethods)', {
+                requestMethods: query.filter.requestMethod,
             });
         }
-        if (query.filter.requestUrl) {
-            queryBuilder.andWhere('auditLog.requestUrl LIKE :requestUrl', {
-                requestUrl: `%${query.filter.requestUrl}%`,
+        if (query.filter.requestUrl && query.filter.requestUrl.length > 0) {
+            const urlConditions = query.filter.requestUrl
+                .map((url, index) => `auditLog.requestUrl LIKE :requestUrl${index}`)
+                .join(' OR ');
+            queryBuilder.andWhere(`(${urlConditions})`, {
+                ...query.filter.requestUrl.reduce((acc, url, index) => {
+                    acc[`requestUrl${index}`] = `%${url}%`;
+                    return acc;
+                }, {}),
             });
         }
-        if (query.filter.responseStatusCode) {
-            queryBuilder.andWhere('auditLog.responseStatusCode = :responseStatusCode', {
-                responseStatusCode: query.filter.responseStatusCode,
+        if (query.filter.responseStatusCode &&
+            query.filter.responseStatusCode.length > 0) {
+            queryBuilder.andWhere('auditLog.responseStatusCode IN (:...responseStatusCodes)', {
+                responseStatusCodes: query.filter.responseStatusCode,
             });
         }
         if (query.filter.startDate) {
