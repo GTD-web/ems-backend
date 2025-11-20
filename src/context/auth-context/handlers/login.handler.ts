@@ -122,19 +122,55 @@ export class LoginHandler {
       `로그인 성공: ${loginResult.email} (${loginResult.employeeNumber})`,
     );
 
-    // 2. Employee 조회 (시스템에 등록된 직원만 로그인 가능)
-    const employee = await this.employeeService.findByEmployeeNumber(
+    // 2. Employee 조회 또는 생성
+    let employee = await this.employeeService.findByEmployeeNumber(
       loginResult.employeeNumber,
     );
 
-    // Employee가 없으면 로그인 거부
+    // Employee가 없으면 SSO 정보로 자동 생성
     if (!employee) {
-      this.logger.warn(
-        `시스템에 등록되지 않은 직원의 로그인 시도: ${loginResult.employeeNumber} (${loginResult.email})`,
+      this.logger.log(
+        `시스템에 등록되지 않은 직원 발견. 자동 생성합니다: ${loginResult.employeeNumber} (${loginResult.email})`,
       );
-      throw new ForbiddenException(
-        '시스템에 등록되지 않은 사용자입니다. 관리자에게 문의하세요.',
-      );
+      
+      try {
+        // SSO 로그인 결과로부터 Employee 생성
+        employee = await this.employeeService.create({
+          employeeNumber: loginResult.employeeNumber,
+          name: loginResult.name,
+          email: loginResult.email,
+          phoneNumber: loginResult.phoneNumber || undefined,
+          dateOfBirth: loginResult.dateOfBirth
+            ? new Date(loginResult.dateOfBirth)
+            : undefined,
+          gender: loginResult.gender as any,
+          hireDate: loginResult.hireDate
+            ? new Date(loginResult.hireDate)
+            : undefined,
+          status: loginResult.status === '재직중' || loginResult.status === '휴직중' || loginResult.status === '퇴사'
+            ? loginResult.status
+            : '재직중',
+          externalId: loginResult.id,
+          externalCreatedAt: new Date(),
+          externalUpdatedAt: new Date(),
+          lastSyncAt: new Date(),
+          roles: loginResult.systemRoles?.['EMS-PROD'] || [],
+          isExcludedFromList: false,
+          isAccessible: true, // 자동 생성 시 접근 가능하도록 설정
+        });
+
+        this.logger.log(
+          `직원 자동 생성 완료: ${employee.employeeNumber} (${employee.name})`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `직원 자동 생성 실패: ${loginResult.employeeNumber}`,
+          error,
+        );
+        throw new InternalServerErrorException(
+          '직원 정보 생성 중 오류가 발생했습니다. 관리자에게 문의하세요.',
+        );
+      }
     }
 
     // 3. 역할 정보 추출 (systemRoles['EMS-PROD'])

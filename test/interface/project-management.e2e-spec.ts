@@ -1,0 +1,785 @@
+import { BaseE2ETest } from '../base-e2e.spec';
+import { ProjectStatus } from '../../src/domain/common/project/project.types';
+import { SSOService } from '../../src/domain/common/sso/sso.module';
+import type { ISSOService } from '../../src/domain/common/sso/interfaces';
+
+/**
+ * 프로젝트 관리 API E2E 테스트
+ *
+ * 프로젝트 CRUD 및 PM 목록 조회 기능을 테스트합니다.
+ */
+describe('프로젝트 관리 API E2E 테스트 (POST /admin/projects, GET, PUT, DELETE)', () => {
+  let testSuite: BaseE2ETest;
+  let createdProjectIds: string[] = [];
+
+  // PM 목록 조회를 위한 SSO 모킹 데이터 (UUID 형식 사용)
+  const MOCK_MANAGER_ID_1 = '11111111-1111-1111-1111-111111111111';
+  const MOCK_MANAGER_ID_2 = '22222222-2222-2222-2222-222222222222';
+  const MOCK_EMPLOYEE_ID_3 = '33333333-3333-3333-3333-333333333333';
+  const MOCK_DEPT_ID_1 = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  const MOCK_DEPT_ID_2 = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+
+  const mockEmployeesWithManagers = [
+    {
+      id: MOCK_MANAGER_ID_1,
+      employeeNumber: 'EMP001',
+      name: '김철수',
+      email: 'kim@company.com',
+      isTerminated: false,
+      department: {
+        id: MOCK_DEPT_ID_1,
+        departmentCode: 'DEV',
+        departmentName: '개발팀',
+      },
+      position: {
+        id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+        positionName: '팀장',
+        positionLevel: 3,
+        positionCode: 'TL',
+        hasManagementAuthority: true, // PM 권한 있음
+      },
+      jobTitle: {
+        id: 'dddddddd-dddd-dddd-dddd-dddddddddddd',
+        jobTitleName: '과장',
+        jobTitleLevel: 3,
+        jobTitleCode: 'M3',
+      },
+    },
+    {
+      id: MOCK_MANAGER_ID_2,
+      employeeNumber: 'EMP002',
+      name: '이영희',
+      email: 'lee@company.com',
+      isTerminated: false,
+      department: {
+        id: MOCK_DEPT_ID_2,
+        departmentCode: 'PLAN',
+        departmentName: '기획팀',
+      },
+      position: {
+        id: 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+        positionName: '파트장',
+        positionLevel: 4,
+        positionCode: 'PL',
+        hasManagementAuthority: true, // PM 권한 있음
+      },
+      jobTitle: {
+        id: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+        jobTitleName: '차장',
+        jobTitleLevel: 4,
+        jobTitleCode: 'M4',
+      },
+    },
+    {
+      id: MOCK_EMPLOYEE_ID_3,
+      employeeNumber: 'EMP003',
+      name: '박민수',
+      email: 'park@company.com',
+      isTerminated: false,
+      department: {
+        id: MOCK_DEPT_ID_1,
+        departmentCode: 'DEV',
+        departmentName: '개발팀',
+      },
+      position: {
+        id: '44444444-4444-4444-4444-444444444444',
+        positionName: '사원',
+        positionLevel: 1,
+        positionCode: 'EMP',
+        hasManagementAuthority: false, // PM 권한 없음
+      },
+      jobTitle: {
+        id: '55555555-5555-5555-5555-555555555555',
+        jobTitleName: '사원',
+        jobTitleLevel: 1,
+        jobTitleCode: 'M1',
+      },
+    },
+  ];
+
+  beforeAll(async () => {
+    testSuite = new BaseE2ETest();
+    await testSuite.initializeApp();
+
+    // SSO 서비스 모킹 업데이트 (PM 목록 조회를 위한 데이터 포함)
+    const ssoService = testSuite.app.get<ISSOService>(SSOService);
+    (ssoService.여러직원정보를조회한다 as jest.Mock).mockResolvedValue(
+      mockEmployeesWithManagers,
+    );
+  });
+
+  afterAll(async () => {
+    await testSuite.closeApp();
+  });
+
+  beforeEach(async () => {
+    await testSuite.cleanupBeforeTest();
+    createdProjectIds = [];
+  });
+
+  afterEach(async () => {
+    // 생성된 프로젝트 정리
+    for (const projectId of createdProjectIds) {
+      try {
+        await testSuite.request().delete(`/admin/projects/${projectId}`);
+      } catch (error) {
+        // 이미 삭제된 경우 무시
+      }
+    }
+    await testSuite.cleanupAfterTest();
+  });
+
+  describe('프로젝트 생성 (POST /admin/projects)', () => {
+    it('기본 프로젝트를 생성할 수 있다', async () => {
+      // Given
+      const projectData = {
+        name: 'EMS 프로젝트',
+        projectCode: 'EMS-2024',
+        status: ProjectStatus.ACTIVE,
+        startDate: '2024-01-01',
+        endDate: '2024-12-31',
+      };
+
+      // When
+      const response = await testSuite
+        .request()
+        .post('/admin/projects')
+        .send(projectData)
+        .expect(201);
+
+      // Then
+      expect(response.body).toMatchObject({
+        name: projectData.name,
+        projectCode: projectData.projectCode,
+        status: projectData.status,
+      });
+      expect(response.body.id).toBeDefined();
+      expect(response.body.createdAt).toBeDefined();
+
+      createdProjectIds.push(response.body.id);
+    });
+
+    it('PM을 포함하여 프로젝트를 생성할 수 있다', async () => {
+      // Given
+      const projectData = {
+        name: 'PM 포함 프로젝트',
+        projectCode: 'PM-2024',
+        status: ProjectStatus.ACTIVE,
+        managerId: MOCK_MANAGER_ID_1, // PM 설정
+      };
+
+      console.log(
+        'Sending project data:',
+        JSON.stringify(projectData, null, 2),
+      );
+
+      // When
+      const response = await testSuite
+        .request()
+        .post('/admin/projects')
+        .send(projectData);
+
+      // 디버깅: 응답 출력
+      console.log('Response status:', response.status);
+      console.log('Response body:', JSON.stringify(response.body, null, 2));
+
+      expect(response.status).toBe(201);
+
+      // Then
+      expect(response.body).toMatchObject({
+        name: projectData.name,
+        projectCode: projectData.projectCode,
+        managerId: projectData.managerId,
+      });
+
+      createdProjectIds.push(response.body.id);
+    });
+
+    it('필수 필드가 없으면 400 에러를 반환한다', async () => {
+      // Given - name 필드 누락
+      const invalidData = {
+        projectCode: 'INVALID-2024',
+        status: ProjectStatus.ACTIVE,
+      };
+
+      // When & Then
+      await testSuite
+        .request()
+        .post('/admin/projects')
+        .send(invalidData)
+        .expect(400);
+    });
+
+    it('유효하지 않은 상태 값으로 400 에러를 반환한다', async () => {
+      // Given
+      const invalidData = {
+        name: '테스트 프로젝트',
+        status: 'INVALID_STATUS',
+      };
+
+      // When & Then
+      await testSuite
+        .request()
+        .post('/admin/projects')
+        .send(invalidData)
+        .expect(400);
+    });
+
+    it('잘못된 매니저 ID 형식으로 400 에러를 반환한다', async () => {
+      // Given - UUID가 아닌 managerId
+      const invalidData = {
+        name: '테스트 프로젝트',
+        status: ProjectStatus.ACTIVE,
+        managerId: 'invalid-uuid',
+      };
+
+      // When & Then
+      await testSuite
+        .request()
+        .post('/admin/projects')
+        .send(invalidData)
+        .expect(400);
+    });
+  });
+
+  describe('프로젝트 목록 조회 (GET /admin/projects)', () => {
+    beforeEach(async () => {
+      // 테스트 데이터 생성
+      const projects = [
+        {
+          name: '프로젝트 A',
+          projectCode: 'PROJ-A',
+          status: ProjectStatus.ACTIVE,
+          managerId: MOCK_MANAGER_ID_1,
+        },
+        {
+          name: '프로젝트 B',
+          projectCode: 'PROJ-B',
+          status: ProjectStatus.COMPLETED,
+          managerId: MOCK_MANAGER_ID_2,
+        },
+        {
+          name: '프로젝트 C',
+          projectCode: 'PROJ-C',
+          status: ProjectStatus.ACTIVE,
+        },
+      ];
+
+      for (const project of projects) {
+        const response = await testSuite
+          .request()
+          .post('/admin/projects')
+          .send(project);
+        createdProjectIds.push(response.body.id);
+      }
+    });
+
+    it('기본 페이징으로 프로젝트 목록을 조회할 수 있다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects')
+        .expect(200);
+
+      // Then
+      expect(response.body).toHaveProperty('projects');
+      expect(response.body).toHaveProperty('total');
+      expect(response.body).toHaveProperty('page');
+      expect(response.body).toHaveProperty('limit');
+      expect(response.body.projects).toBeInstanceOf(Array);
+      expect(response.body.total).toBeGreaterThanOrEqual(3);
+    });
+
+    it('상태로 필터링하여 조회할 수 있다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects')
+        .query({ status: ProjectStatus.ACTIVE })
+        .expect(200);
+
+      // Then
+      expect(response.body.projects.length).toBeGreaterThanOrEqual(2);
+      response.body.projects.forEach((project: any) => {
+        expect(project.status).toBe(ProjectStatus.ACTIVE);
+      });
+    });
+
+    it('매니저 ID로 필터링하여 조회할 수 있다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects')
+        .query({ managerId: MOCK_MANAGER_ID_1 })
+        .expect(200);
+
+      // Then
+      expect(response.body.projects.length).toBeGreaterThanOrEqual(1);
+      response.body.projects.forEach((project: any) => {
+        expect(project.managerId).toBe(MOCK_MANAGER_ID_1);
+      });
+    });
+
+    it('페이징을 적용하여 조회할 수 있다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects')
+        .query({ page: 1, limit: 2 })
+        .expect(200);
+
+      // Then
+      expect(response.body.page).toBe(1);
+      expect(response.body.limit).toBe(2);
+      expect(response.body.projects.length).toBeLessThanOrEqual(2);
+    });
+
+    it('정렬을 적용하여 조회할 수 있다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects')
+        .query({ sortBy: 'name', sortOrder: 'ASC' })
+        .expect(200);
+
+      // Then
+      expect(response.body.projects.length).toBeGreaterThan(0);
+      // 이름순 정렬 확인
+      const names = response.body.projects.map((p: any) => p.name);
+      const sortedNames = [...names].sort();
+      expect(names).toEqual(sortedNames);
+    });
+  });
+
+  describe('프로젝트 상세 조회 (GET /admin/projects/:id)', () => {
+    let projectId: string;
+
+    beforeEach(async () => {
+      // 테스트 데이터 생성
+      const response = await testSuite.request().post('/admin/projects').send({
+        name: '상세 조회 테스트 프로젝트',
+        projectCode: 'DETAIL-2024',
+        status: ProjectStatus.ACTIVE,
+        managerId: MOCK_MANAGER_ID_1,
+      });
+      projectId = response.body.id;
+      createdProjectIds.push(projectId);
+    });
+
+    it('유효한 ID로 프로젝트 상세를 조회할 수 있다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get(`/admin/projects/${projectId}`)
+        .expect(200);
+
+      // Then
+      expect(response.body.id).toBe(projectId);
+      expect(response.body.name).toBe('상세 조회 테스트 프로젝트');
+      expect(response.body.managerId).toBe(MOCK_MANAGER_ID_1);
+    });
+
+    it('존재하지 않는 ID로 조회 시 404 에러를 반환한다', async () => {
+      // Given
+      const nonExistentId = '00000000-0000-0000-0000-000000000999';
+
+      // When & Then
+      await testSuite
+        .request()
+        .get(`/admin/projects/${nonExistentId}`)
+        .expect(404);
+    });
+
+    it('잘못된 UUID 형식으로 조회 시 400 에러를 반환한다', async () => {
+      // When & Then
+      await testSuite.request().get('/admin/projects/invalid-uuid').expect(400);
+    });
+  });
+
+  describe('프로젝트 수정 (PUT /admin/projects/:id)', () => {
+    let projectId: string;
+
+    beforeEach(async () => {
+      // 테스트 데이터 생성
+      const response = await testSuite.request().post('/admin/projects').send({
+        name: '수정 테스트 프로젝트',
+        projectCode: 'UPDATE-2024',
+        status: ProjectStatus.ACTIVE,
+        managerId: MOCK_MANAGER_ID_1,
+      });
+      projectId = response.body.id;
+      createdProjectIds.push(projectId);
+    });
+
+    it('프로젝트 기본 정보를 수정할 수 있다', async () => {
+      // Given
+      const updateData = {
+        name: '수정된 프로젝트명',
+        projectCode: 'UPDATED-2024',
+      };
+
+      // When
+      const response = await testSuite
+        .request()
+        .put(`/admin/projects/${projectId}`)
+        .send(updateData)
+        .expect(200);
+
+      // Then
+      expect(response.body.name).toBe(updateData.name);
+      expect(response.body.projectCode).toBe(updateData.projectCode);
+    });
+
+    it('PM을 변경할 수 있다', async () => {
+      // Given
+      const updateData = {
+        managerId: MOCK_MANAGER_ID_2, // PM 변경
+      };
+
+      // When
+      const response = await testSuite
+        .request()
+        .put(`/admin/projects/${projectId}`)
+        .send(updateData)
+        .expect(200);
+
+      // Then
+      expect(response.body.managerId).toBe(MOCK_MANAGER_ID_2);
+    });
+
+    it('프로젝트 상태를 변경할 수 있다', async () => {
+      // Given
+      const updateData = {
+        status: ProjectStatus.COMPLETED,
+      };
+
+      // When
+      const response = await testSuite
+        .request()
+        .put(`/admin/projects/${projectId}`)
+        .send(updateData)
+        .expect(200);
+
+      // Then
+      expect(response.body.status).toBe(ProjectStatus.COMPLETED);
+    });
+
+    it('일부 필드만 수정할 수 있다', async () => {
+      // Given
+      const originalData = await testSuite
+        .request()
+        .get(`/admin/projects/${projectId}`);
+
+      const updateData = {
+        name: '부분 수정된 이름',
+      };
+
+      // When
+      const response = await testSuite
+        .request()
+        .put(`/admin/projects/${projectId}`)
+        .send(updateData)
+        .expect(200);
+
+      // Then
+      expect(response.body.name).toBe(updateData.name);
+      expect(response.body.projectCode).toBe(originalData.body.projectCode); // 변경되지 않음
+      expect(response.body.status).toBe(originalData.body.status); // 변경되지 않음
+    });
+
+    it('존재하지 않는 ID로 수정 시 404 에러를 반환한다', async () => {
+      // Given
+      const nonExistentId = '00000000-0000-0000-0000-000000000999';
+      const updateData = { name: '수정' };
+
+      // When & Then
+      await testSuite
+        .request()
+        .put(`/admin/projects/${nonExistentId}`)
+        .send(updateData)
+        .expect(404);
+    });
+  });
+
+  describe('프로젝트 삭제 (DELETE /admin/projects/:id)', () => {
+    let projectId: string;
+
+    beforeEach(async () => {
+      // 테스트 데이터 생성
+      const response = await testSuite.request().post('/admin/projects').send({
+        name: '삭제 테스트 프로젝트',
+        projectCode: 'DELETE-2024',
+        status: ProjectStatus.ACTIVE,
+      });
+      projectId = response.body.id;
+      createdProjectIds.push(projectId);
+    });
+
+    it('프로젝트를 삭제할 수 있다', async () => {
+      // When
+      await testSuite
+        .request()
+        .delete(`/admin/projects/${projectId}`)
+        .expect(204);
+
+      // Then - 삭제 후 조회 시 404
+      await testSuite.request().get(`/admin/projects/${projectId}`).expect(404);
+    });
+
+    it('삭제된 프로젝트는 목록에서 제외된다', async () => {
+      // When
+      await testSuite
+        .request()
+        .delete(`/admin/projects/${projectId}`)
+        .expect(204);
+
+      // Then
+      const response = await testSuite.request().get('/admin/projects');
+
+      const deletedProject = response.body.projects.find(
+        (p: any) => p.id === projectId,
+      );
+      expect(deletedProject).toBeUndefined();
+    });
+
+    it('존재하지 않는 ID로 삭제 시 404 에러를 반환한다', async () => {
+      // Given
+      const nonExistentId = '00000000-0000-0000-0000-000000000999';
+
+      // When & Then
+      await testSuite
+        .request()
+        .delete(`/admin/projects/${nonExistentId}`)
+        .expect(404);
+    });
+
+    it('이미 삭제된 프로젝트 삭제 시 404 에러를 반환한다', async () => {
+      // Given - 먼저 삭제
+      await testSuite.request().delete(`/admin/projects/${projectId}`);
+
+      // When & Then - 다시 삭제 시도
+      await testSuite
+        .request()
+        .delete(`/admin/projects/${projectId}`)
+        .expect(404);
+    });
+  });
+
+  describe('PM 목록 조회 (GET /admin/projects/managers)', () => {
+    it('관리 권한이 있는 직원 목록을 조회할 수 있다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .expect(200);
+
+      // Then
+      expect(response.body).toHaveProperty('managers');
+      expect(response.body).toHaveProperty('total');
+      expect(response.body.managers).toBeInstanceOf(Array);
+      expect(response.body.total).toBe(2); // hasManagementAuthority: true인 직원 2명
+
+      // 모든 PM이 관리 권한을 가지고 있는지 확인
+      response.body.managers.forEach((manager: any) => {
+        expect(manager.hasManagementAuthority).toBe(true);
+      });
+    });
+
+    it('PM 목록에 부서, 직책, 직급 정보가 포함된다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .expect(200);
+
+      // Then
+      const manager = response.body.managers[0];
+      expect(manager).toHaveProperty('id');
+      expect(manager).toHaveProperty('employeeNumber');
+      expect(manager).toHaveProperty('name');
+      expect(manager).toHaveProperty('email');
+      expect(manager).toHaveProperty('departmentName');
+      expect(manager).toHaveProperty('departmentCode');
+      expect(manager).toHaveProperty('positionName');
+      expect(manager).toHaveProperty('positionLevel');
+      expect(manager).toHaveProperty('jobTitleName');
+    });
+
+    it('부서 ID로 PM을 필터링할 수 있다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .query({ departmentId: MOCK_DEPT_ID_1 })
+        .expect(200);
+
+      // Then
+      expect(response.body.managers.length).toBe(1);
+      expect(response.body.managers[0].departmentCode).toBe('DEV');
+    });
+
+    it('검색어로 PM을 필터링할 수 있다 (이름)', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .query({ search: '김철수' })
+        .expect(200);
+
+      // Then
+      expect(response.body.managers.length).toBe(1);
+      expect(response.body.managers[0].name).toBe('김철수');
+    });
+
+    it('검색어로 PM을 필터링할 수 있다 (이메일)', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .query({ search: 'lee@company.com' })
+        .expect(200);
+
+      // Then
+      expect(response.body.managers.length).toBe(1);
+      expect(response.body.managers[0].email).toBe('lee@company.com');
+    });
+
+    it('검색어로 PM을 필터링할 수 있다 (사번)', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .query({ search: 'EMP001' })
+        .expect(200);
+
+      // Then
+      expect(response.body.managers.length).toBe(1);
+      expect(response.body.managers[0].employeeNumber).toBe('EMP001');
+    });
+
+    it('관리 권한이 없는 직원은 PM 목록에 포함되지 않는다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .expect(200);
+
+      // Then
+      const hasNonManager = response.body.managers.some(
+        (manager: any) => manager.id === 'emp-003',
+      );
+      expect(hasNonManager).toBe(false);
+    });
+
+    it('조건에 맞는 PM이 없으면 빈 배열을 반환한다', async () => {
+      // When
+      const response = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .query({ search: '존재하지않는직원' })
+        .expect(200);
+
+      // Then
+      expect(response.body.managers).toEqual([]);
+      expect(response.body.total).toBe(0);
+    });
+  });
+
+  describe('통합 시나리오 테스트', () => {
+    it('프로젝트 생성 → 조회 → 수정 → 삭제 전체 플로우를 테스트한다', async () => {
+      // 1. 프로젝트 생성
+      const createResponse = await testSuite
+        .request()
+        .post('/admin/projects')
+        .send({
+          name: '통합 테스트 프로젝트',
+          projectCode: 'INTEGRATION-2024',
+          status: ProjectStatus.ACTIVE,
+          managerId: MOCK_MANAGER_ID_1,
+        })
+        .expect(201);
+
+      const projectId = createResponse.body.id;
+      createdProjectIds.push(projectId);
+
+      // 2. 상세 조회
+      const detailResponse = await testSuite
+        .request()
+        .get(`/admin/projects/${projectId}`)
+        .expect(200);
+
+      expect(detailResponse.body.name).toBe('통합 테스트 프로젝트');
+      expect(detailResponse.body.managerId).toBe(MOCK_MANAGER_ID_1);
+
+      // 3. 프로젝트 수정 (PM 변경)
+      const updateResponse = await testSuite
+        .request()
+        .put(`/admin/projects/${projectId}`)
+        .send({
+          name: '수정된 통합 테스트 프로젝트',
+          managerId: MOCK_MANAGER_ID_2,
+          status: ProjectStatus.COMPLETED,
+        })
+        .expect(200);
+
+      expect(updateResponse.body.name).toBe('수정된 통합 테스트 프로젝트');
+      expect(updateResponse.body.managerId).toBe(MOCK_MANAGER_ID_2);
+      expect(updateResponse.body.status).toBe(ProjectStatus.COMPLETED);
+
+      // 4. 목록에서 확인
+      const listResponse = await testSuite
+        .request()
+        .get('/admin/projects')
+        .query({ status: ProjectStatus.COMPLETED });
+
+      const project = listResponse.body.projects.find(
+        (p: any) => p.id === projectId,
+      );
+      expect(project).toBeDefined();
+      expect(project.name).toBe('수정된 통합 테스트 프로젝트');
+
+      // 5. 삭제
+      await testSuite
+        .request()
+        .delete(`/admin/projects/${projectId}`)
+        .expect(204);
+
+      // 6. 삭제 후 조회 시 404
+      await testSuite.request().get(`/admin/projects/${projectId}`).expect(404);
+    });
+
+    it('PM 목록에서 PM을 선택하여 프로젝트를 생성할 수 있다', async () => {
+      // 1. PM 목록 조회
+      const managersResponse = await testSuite
+        .request()
+        .get('/admin/projects/managers')
+        .expect(200);
+
+      expect(managersResponse.body.managers.length).toBeGreaterThan(0);
+      const selectedManager = managersResponse.body.managers[0];
+
+      // 2. 선택한 PM으로 프로젝트 생성
+      const projectResponse = await testSuite
+        .request()
+        .post('/admin/projects')
+        .send({
+          name: 'PM 선택 프로젝트',
+          projectCode: 'PM-SELECT-2024',
+          status: ProjectStatus.ACTIVE,
+          managerId: selectedManager.id,
+        })
+        .expect(201);
+
+      expect(projectResponse.body.managerId).toBe(selectedManager.id);
+      createdProjectIds.push(projectResponse.body.id);
+
+      // 3. 생성된 프로젝트 확인
+      const detailResponse = await testSuite
+        .request()
+        .get(`/admin/projects/${projectResponse.body.id}`)
+        .expect(200);
+
+      expect(detailResponse.body.managerId).toBe(selectedManager.id);
+    });
+  });
+});

@@ -12,6 +12,7 @@ import { StepApprovalContextModule } from './step-approval-context/step-approval
 import { RevisionRequestContextModule } from './revision-request-context/revision-request-context.module';
 import { AuditLogContextModule } from './audit-log-context/audit-log-context.module';
 import { EvaluationActivityLogContextModule } from './evaluation-activity-log-context/evaluation-activity-log-context.module';
+import { ProjectModule } from '../domain/common/project/project.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { EvaluationActivityLogContextModule } from './evaluation-activity-log-co
     RevisionRequestContextModule,
     AuditLogContextModule,
     EvaluationActivityLogContextModule,
+    ProjectModule, // 프로젝트 모듈 추가
   ],
   providers: [],
   exports: [
@@ -44,6 +46,7 @@ import { EvaluationActivityLogContextModule } from './evaluation-activity-log-co
     RevisionRequestContextModule,
     AuditLogContextModule,
     EvaluationActivityLogContextModule,
+    ProjectModule, // 프로젝트 모듈 export
   ],
 })
 export class DomainContextModule {}
