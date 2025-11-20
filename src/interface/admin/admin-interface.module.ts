@@ -11,6 +11,7 @@ import { EvaluationQuestionManagementContextModule } from '../../context/evaluat
 import { SeedDataContextModule } from '../../context/seed-data-context/seed-data-context.module';
 import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
 import { EmployeeModule } from '../../domain/common/employee/employee.module';
+import { ProjectModule } from '../../domain/common/project/project.module';
 import { AuthController } from './auth/auth.controller';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
@@ -34,6 +35,7 @@ import { RevisionRequestContextModule } from '../../context/revision-request-con
 import { AuditLogContextModule } from '../../context/audit-log-context/audit-log-context.module';
 import { AuditLogController } from './audit-log/audit-log.controller';
 import { EvaluationActivityLogController } from './evaluation-activity-log/evaluation-activity-log.controller';
+import { ProjectManagementController } from './project/project-management.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
 
@@ -60,6 +62,7 @@ import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
     BusinessModule, // 비즈니스 레이어 모듈 주입
     EvaluationPeriodModule, // 평가 기간 모듈 주입
     EmployeeModule, // 직원 모듈 주입
+    ProjectModule, // 프로젝트 모듈 주입
   ],
   controllers: [
     AuthController, // 인증 컨트롤러
@@ -67,6 +70,7 @@ import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
     EvaluationPeriodManagementController, // 평가 기간 관리 컨트롤러
     EvaluationTargetController, // 평가 대상 관리 컨트롤러
     EmployeeManagementController, // 직원 관리 컨트롤러
+    ProjectManagementController, // 프로젝트 관리 컨트롤러
     ProjectAssignmentManagementController, // 프로젝트 할당 관리 컨트롤러
     WbsAssignmentManagementController, // WBS 할당 관리 컨트롤러
     EvaluationLineManagementController, // 평가라인 관리 컨트롤러

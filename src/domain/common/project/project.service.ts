@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Project } from './project.entity';
@@ -40,7 +44,7 @@ export class ProjectService {
       });
 
       if (existingProject) {
-        throw new Error(
+        throw new BadRequestException(
           `프로젝트 코드 ${data.projectCode}는 이미 사용 중입니다.`,
         );
       }
@@ -68,7 +72,9 @@ export class ProjectService {
     });
 
     if (!project) {
-      throw new Error(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
+      throw new NotFoundException(
+        `ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`,
+      );
     }
 
     // 프로젝트 코드 중복 검사 (코드가 변경되는 경우)
@@ -78,7 +84,7 @@ export class ProjectService {
       });
 
       if (existingProject && existingProject.id !== id) {
-        throw new Error(
+        throw new BadRequestException(
           `프로젝트 코드 ${data.projectCode}는 이미 사용 중입니다.`,
         );
       }
@@ -100,7 +106,9 @@ export class ProjectService {
     });
 
     if (!project) {
-      throw new Error(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
+      throw new NotFoundException(
+        `ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`,
+      );
     }
 
     project.삭제한다(deletedBy);
@@ -364,7 +372,9 @@ export class ProjectService {
     });
 
     if (!project) {
-      throw new Error(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
+      throw new NotFoundException(
+        `ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`,
+      );
     }
 
     project.status = status;

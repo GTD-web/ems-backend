@@ -319,10 +319,16 @@ export class BaseE2ETest {
     this.app.useGlobalPipes(
       new ValidationPipe({
         transform: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
       }),
     );
 
     this.dataSource = moduleFixture.get<DataSource>(DataSource);
+
+    // 테스트 환경에서 데이터베이스 스키마 동기화
+    await this.dataSource.synchronize(true);
 
     await this.app.init();
   }
