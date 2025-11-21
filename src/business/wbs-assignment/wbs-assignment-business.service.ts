@@ -917,7 +917,7 @@ export class WbsAssignmentBusinessService {
     console.log('🔍 프로젝트 정보:', {
       id: project.id,
       name: project.name,
-      managerId: project.managerId,
+      managerId: project.manager?.id,
     });
 
     // 3. 1차 평가자 구성 (기존 할당된 평가자 우선, 없으면 담당 평가자)
@@ -955,9 +955,9 @@ export class WbsAssignmentBusinessService {
 
     // 4. 2차 평가자 구성 (프로젝트 PM) - Upsert 방식
     // 제약 조건 제거: PM이 있으면 항상 2차 평가자로 구성
-    if (project.managerId) {
+    if (project.manager?.id) {
       this.logger.log('2차 평가자(프로젝트 PM) 구성', {
-        evaluatorId: project.managerId,
+        evaluatorId: project.manager.id,
         employeeId,
       });
 
@@ -965,11 +965,11 @@ export class WbsAssignmentBusinessService {
         employeeId,
         wbsItemId,
         periodId,
-        project.managerId,
+        project.manager.id,
         createdBy,
       );
     } else {
-      this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {
+      this.logger.warn('프로젝트 PM(manager)이 설정되지 않았습니다', {
         projectId,
       });
     }
@@ -979,7 +979,7 @@ export class WbsAssignmentBusinessService {
       wbsItemId,
       primaryEvaluator: employee.managerId,
       secondaryEvaluator:
-        project.managerId !== employee.managerId ? project.managerId : null,
+        project.manager?.id !== employee.managerId ? project.manager?.id : null,
     });
   }
 

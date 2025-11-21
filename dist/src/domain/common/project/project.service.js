@@ -29,63 +29,255 @@ let ProjectService = class ProjectService {
                 where: { projectCode: data.projectCode, deletedAt: (0, typeorm_2.IsNull)() },
             });
             if (existingProject) {
-                throw new Error(`프로젝트 코드 ${data.projectCode}는 이미 사용 중입니다.`);
+                throw new common_1.BadRequestException(`프로젝트 코드 ${data.projectCode}는 이미 사용 중입니다.`);
             }
         }
         const project = project_entity_1.Project.생성한다(data, createdBy);
         const savedProject = await this.projectRepository.save(project);
-        return savedProject.DTO로_변환한다();
+        const result = await this.ID로_조회한다(savedProject.id);
+        if (!result) {
+            throw new common_1.NotFoundException(`생성된 프로젝트를 찾을 수 없습니다.`);
+        }
+        return result;
     }
     async 수정한다(id, data, updatedBy) {
         const project = await this.projectRepository.findOne({
             where: { id, deletedAt: (0, typeorm_2.IsNull)() },
         });
         if (!project) {
-            throw new Error(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
+            throw new common_1.NotFoundException(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
         }
         if (data.projectCode && data.projectCode !== project.projectCode) {
             const existingProject = await this.projectRepository.findOne({
                 where: { projectCode: data.projectCode, deletedAt: (0, typeorm_2.IsNull)() },
             });
             if (existingProject && existingProject.id !== id) {
-                throw new Error(`프로젝트 코드 ${data.projectCode}는 이미 사용 중입니다.`);
+                throw new common_1.BadRequestException(`프로젝트 코드 ${data.projectCode}는 이미 사용 중입니다.`);
             }
         }
         project.업데이트한다(data, updatedBy);
-        const savedProject = await this.projectRepository.save(project);
-        return savedProject.DTO로_변환한다();
+        await this.projectRepository.save(project);
+        const result = await this.ID로_조회한다(id);
+        if (!result) {
+            throw new common_1.NotFoundException(`수정된 프로젝트를 찾을 수 없습니다.`);
+        }
+        return result;
     }
     async 삭제한다(id, deletedBy) {
         const project = await this.projectRepository.findOne({
             where: { id, deletedAt: (0, typeorm_2.IsNull)() },
         });
         if (!project) {
-            throw new Error(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
+            throw new common_1.NotFoundException(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
         }
         project.삭제한다(deletedBy);
         await this.projectRepository.save(project);
     }
     async ID로_조회한다(id) {
-        const project = await this.projectRepository.findOne({
-            where: { id, deletedAt: (0, typeorm_2.IsNull)() },
-        });
-        return project ? project.DTO로_변환한다() : null;
+        const result = await this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoin('employee', 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
+            .select([
+            'project.id AS id',
+            'project.name AS name',
+            'project.projectCode AS "projectCode"',
+            'project.status AS status',
+            'project.startDate AS "startDate"',
+            'project.endDate AS "endDate"',
+            'project.createdAt AS "createdAt"',
+            'project.updatedAt AS "updatedAt"',
+            'project.deletedAt AS "deletedAt"',
+            'manager.externalId AS manager_id',
+            'manager.name AS manager_name',
+            'manager.email AS manager_email',
+            'manager.phoneNumber AS manager_phone_number',
+            'manager.departmentName AS manager_department_name',
+            'manager.rankName AS manager_rank_name',
+        ])
+            .where('project.id = :id', { id })
+            .andWhere('project.deletedAt IS NULL')
+            .getRawOne();
+        if (!result) {
+            return null;
+        }
+        return {
+            id: result.id,
+            name: result.name,
+            projectCode: result.projectCode,
+            status: result.status,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            deletedAt: result.deletedAt,
+            manager: result.manager_id
+                ? {
+                    id: result.manager_id,
+                    name: result.manager_name,
+                    email: result.manager_email,
+                    phoneNumber: result.manager_phone_number,
+                    departmentName: result.manager_department_name,
+                    rankName: result.manager_rank_name,
+                }
+                : undefined,
+            get isDeleted() {
+                return result.deletedAt !== null && result.deletedAt !== undefined;
+            },
+            get isActive() {
+                return result.status === 'ACTIVE';
+            },
+            get isCompleted() {
+                return result.status === 'COMPLETED';
+            },
+            get isCancelled() {
+                return result.status === 'CANCELLED';
+            },
+        };
     }
     async 프로젝트코드로_조회한다(projectCode) {
-        const project = await this.projectRepository.findOne({
-            where: { projectCode, deletedAt: (0, typeorm_2.IsNull)() },
-        });
-        return project ? project.DTO로_변환한다() : null;
+        const result = await this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoin('employee', 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
+            .select([
+            'project.id AS id',
+            'project.name AS name',
+            'project.projectCode AS "projectCode"',
+            'project.status AS status',
+            'project.startDate AS "startDate"',
+            'project.endDate AS "endDate"',
+            'project.createdAt AS "createdAt"',
+            'project.updatedAt AS "updatedAt"',
+            'project.deletedAt AS "deletedAt"',
+            'manager.externalId AS manager_id',
+            'manager.name AS manager_name',
+            'manager.email AS manager_email',
+            'manager.phoneNumber AS manager_phone_number',
+            'manager.departmentName AS manager_department_name',
+            'manager.rankName AS manager_rank_name',
+        ])
+            .where('project.projectCode = :projectCode', { projectCode })
+            .andWhere('project.deletedAt IS NULL')
+            .getRawOne();
+        if (!result) {
+            return null;
+        }
+        return {
+            id: result.id,
+            name: result.name,
+            projectCode: result.projectCode,
+            status: result.status,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            deletedAt: result.deletedAt,
+            manager: result.manager_id
+                ? {
+                    id: result.manager_id,
+                    name: result.manager_name,
+                    email: result.manager_email,
+                    phoneNumber: result.manager_phone_number,
+                    departmentName: result.manager_department_name,
+                    rankName: result.manager_rank_name,
+                }
+                : undefined,
+            get isDeleted() {
+                return result.deletedAt !== null && result.deletedAt !== undefined;
+            },
+            get isActive() {
+                return result.status === 'ACTIVE';
+            },
+            get isCompleted() {
+                return result.status === 'COMPLETED';
+            },
+            get isCancelled() {
+                return result.status === 'CANCELLED';
+            },
+        };
     }
     async 프로젝트명으로_조회한다(name) {
-        const project = await this.projectRepository.findOne({
-            where: { name, deletedAt: (0, typeorm_2.IsNull)() },
-        });
-        return project ? project.DTO로_변환한다() : null;
+        const result = await this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoin('employee', 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
+            .select([
+            'project.id AS id',
+            'project.name AS name',
+            'project.projectCode AS "projectCode"',
+            'project.status AS status',
+            'project.startDate AS "startDate"',
+            'project.endDate AS "endDate"',
+            'project.createdAt AS "createdAt"',
+            'project.updatedAt AS "updatedAt"',
+            'project.deletedAt AS "deletedAt"',
+            'manager.externalId AS manager_id',
+            'manager.name AS manager_name',
+            'manager.email AS manager_email',
+            'manager.phoneNumber AS manager_phone_number',
+            'manager.departmentName AS manager_department_name',
+            'manager.rankName AS manager_rank_name',
+        ])
+            .where('project.name = :name', { name })
+            .andWhere('project.deletedAt IS NULL')
+            .getRawOne();
+        if (!result) {
+            return null;
+        }
+        return {
+            id: result.id,
+            name: result.name,
+            projectCode: result.projectCode,
+            status: result.status,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            deletedAt: result.deletedAt,
+            manager: result.manager_id
+                ? {
+                    id: result.manager_id,
+                    name: result.manager_name,
+                    email: result.manager_email,
+                    phoneNumber: result.manager_phone_number,
+                    departmentName: result.manager_department_name,
+                    rankName: result.manager_rank_name,
+                }
+                : undefined,
+            get isDeleted() {
+                return result.deletedAt !== null && result.deletedAt !== undefined;
+            },
+            get isActive() {
+                return result.status === 'ACTIVE';
+            },
+            get isCompleted() {
+                return result.status === 'COMPLETED';
+            },
+            get isCancelled() {
+                return result.status === 'CANCELLED';
+            },
+        };
     }
     async 필터_조회한다(filter) {
-        const queryBuilder = this.projectRepository.createQueryBuilder('project');
-        queryBuilder.where('project.deletedAt IS NULL');
+        const queryBuilder = this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoin('employee', 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
+            .select([
+            'project.id AS id',
+            'project.name AS name',
+            'project.projectCode AS "projectCode"',
+            'project.status AS status',
+            'project.startDate AS "startDate"',
+            'project.endDate AS "endDate"',
+            'project.createdAt AS "createdAt"',
+            'project.updatedAt AS "updatedAt"',
+            'project.deletedAt AS "deletedAt"',
+            'manager.externalId AS manager_id',
+            'manager.name AS manager_name',
+            'manager.email AS manager_email',
+            'manager.phoneNumber AS manager_phone_number',
+            'manager.departmentName AS manager_department_name',
+            'manager.rankName AS manager_rank_name',
+        ])
+            .where('project.deletedAt IS NULL');
         if (filter.status) {
             queryBuilder.andWhere('project.status = :status', {
                 status: filter.status,
@@ -116,13 +308,97 @@ let ProjectService = class ProjectService {
                 endDateTo: filter.endDateTo,
             });
         }
-        const projects = await queryBuilder.getMany();
-        return projects.map((project) => project.DTO로_변환한다());
+        const results = await queryBuilder.getRawMany();
+        return results.map((result) => ({
+            id: result.id,
+            name: result.name,
+            projectCode: result.projectCode,
+            status: result.status,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            deletedAt: result.deletedAt,
+            manager: result.manager_id
+                ? {
+                    id: result.manager_id,
+                    name: result.manager_name,
+                    email: result.manager_email,
+                    phoneNumber: result.manager_phone_number,
+                    departmentName: result.manager_department_name,
+                    rankName: result.manager_rank_name,
+                }
+                : undefined,
+            get isDeleted() {
+                return result.deletedAt !== null && result.deletedAt !== undefined;
+            },
+            get isActive() {
+                return result.status === 'ACTIVE';
+            },
+            get isCompleted() {
+                return result.status === 'COMPLETED';
+            },
+            get isCancelled() {
+                return result.status === 'CANCELLED';
+            },
+        }));
     }
     async 목록_조회한다(options = {}) {
         const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'DESC', filter = {}, } = options;
-        const queryBuilder = this.projectRepository.createQueryBuilder('project');
-        queryBuilder.where('project.deletedAt IS NULL');
+        const countQueryBuilder = this.projectRepository.createQueryBuilder('project');
+        countQueryBuilder.where('project.deletedAt IS NULL');
+        if (filter.status) {
+            countQueryBuilder.andWhere('project.status = :status', {
+                status: filter.status,
+            });
+        }
+        if (filter.managerId) {
+            countQueryBuilder.andWhere('project.managerId = :managerId', {
+                managerId: filter.managerId,
+            });
+        }
+        if (filter.startDateFrom) {
+            countQueryBuilder.andWhere('project.startDate >= :startDateFrom', {
+                startDateFrom: filter.startDateFrom,
+            });
+        }
+        if (filter.startDateTo) {
+            countQueryBuilder.andWhere('project.startDate <= :startDateTo', {
+                startDateTo: filter.startDateTo,
+            });
+        }
+        if (filter.endDateFrom) {
+            countQueryBuilder.andWhere('project.endDate >= :endDateFrom', {
+                endDateFrom: filter.endDateFrom,
+            });
+        }
+        if (filter.endDateTo) {
+            countQueryBuilder.andWhere('project.endDate <= :endDateTo', {
+                endDateTo: filter.endDateTo,
+            });
+        }
+        const total = await countQueryBuilder.getCount();
+        const queryBuilder = this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoin('employee', 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
+            .select([
+            'project.id AS id',
+            'project.name AS name',
+            'project.projectCode AS "projectCode"',
+            'project.status AS status',
+            'project.startDate AS "startDate"',
+            'project.endDate AS "endDate"',
+            'project.createdAt AS "createdAt"',
+            'project.updatedAt AS "updatedAt"',
+            'project.deletedAt AS "deletedAt"',
+            'manager.externalId AS manager_id',
+            'manager.name AS manager_name',
+            'manager.email AS manager_email',
+            'manager.phoneNumber AS manager_phone_number',
+            'manager.departmentName AS manager_department_name',
+            'manager.rankName AS manager_rank_name',
+        ])
+            .where('project.deletedAt IS NULL');
         if (filter.status) {
             queryBuilder.andWhere('project.status = :status', {
                 status: filter.status,
@@ -155,35 +431,223 @@ let ProjectService = class ProjectService {
         }
         queryBuilder.orderBy(`project.${sortBy}`, sortOrder);
         const offset = (page - 1) * limit;
-        queryBuilder.skip(offset).take(limit);
-        const [projects, total] = await queryBuilder.getManyAndCount();
+        queryBuilder.offset(offset).limit(limit);
+        const results = await queryBuilder.getRawMany();
+        const projects = results.map((result) => ({
+            id: result.id,
+            name: result.name,
+            projectCode: result.projectCode,
+            status: result.status,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            deletedAt: result.deletedAt,
+            manager: result.manager_id
+                ? {
+                    id: result.manager_id,
+                    name: result.manager_name,
+                    email: result.manager_email,
+                    phoneNumber: result.manager_phone_number,
+                    departmentName: result.manager_department_name,
+                    rankName: result.manager_rank_name,
+                }
+                : undefined,
+            get isDeleted() {
+                return result.deletedAt !== null && result.deletedAt !== undefined;
+            },
+            get isActive() {
+                return result.status === 'ACTIVE';
+            },
+            get isCompleted() {
+                return result.status === 'COMPLETED';
+            },
+            get isCancelled() {
+                return result.status === 'CANCELLED';
+            },
+        }));
         return {
-            projects: projects.map((project) => project.DTO로_변환한다()),
+            projects,
             total,
             page,
             limit,
         };
     }
     async 전체_조회한다() {
-        const projects = await this.projectRepository.find({
-            where: { deletedAt: (0, typeorm_2.IsNull)() },
-            order: { name: 'ASC' },
-        });
-        return projects.map((project) => project.DTO로_변환한다());
+        const results = await this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoin('employee', 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
+            .select([
+            'project.id AS id',
+            'project.name AS name',
+            'project.projectCode AS "projectCode"',
+            'project.status AS status',
+            'project.startDate AS "startDate"',
+            'project.endDate AS "endDate"',
+            'project.createdAt AS "createdAt"',
+            'project.updatedAt AS "updatedAt"',
+            'project.deletedAt AS "deletedAt"',
+            'manager.externalId AS manager_id',
+            'manager.name AS manager_name',
+            'manager.email AS manager_email',
+            'manager.phoneNumber AS manager_phone_number',
+            'manager.departmentName AS manager_department_name',
+            'manager.rankName AS manager_rank_name',
+        ])
+            .where('project.deletedAt IS NULL')
+            .orderBy('project.name', 'ASC')
+            .getRawMany();
+        return results.map((result) => ({
+            id: result.id,
+            name: result.name,
+            projectCode: result.projectCode,
+            status: result.status,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            deletedAt: result.deletedAt,
+            manager: result.manager_id
+                ? {
+                    id: result.manager_id,
+                    name: result.manager_name,
+                    email: result.manager_email,
+                    phoneNumber: result.manager_phone_number,
+                    departmentName: result.manager_department_name,
+                    rankName: result.manager_rank_name,
+                }
+                : undefined,
+            get isDeleted() {
+                return result.deletedAt !== null && result.deletedAt !== undefined;
+            },
+            get isActive() {
+                return result.status === 'ACTIVE';
+            },
+            get isCompleted() {
+                return result.status === 'COMPLETED';
+            },
+            get isCancelled() {
+                return result.status === 'CANCELLED';
+            },
+        }));
     }
     async 활성_조회한다() {
-        const projects = await this.projectRepository.find({
-            where: { status: project_types_1.ProjectStatus.ACTIVE, deletedAt: (0, typeorm_2.IsNull)() },
-            order: { name: 'ASC' },
-        });
-        return projects.map((project) => project.DTO로_변환한다());
+        const results = await this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoin('employee', 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
+            .select([
+            'project.id AS id',
+            'project.name AS name',
+            'project.projectCode AS "projectCode"',
+            'project.status AS status',
+            'project.startDate AS "startDate"',
+            'project.endDate AS "endDate"',
+            'project.createdAt AS "createdAt"',
+            'project.updatedAt AS "updatedAt"',
+            'project.deletedAt AS "deletedAt"',
+            'manager.externalId AS manager_id',
+            'manager.name AS manager_name',
+            'manager.email AS manager_email',
+            'manager.phoneNumber AS manager_phone_number',
+            'manager.departmentName AS manager_department_name',
+            'manager.rankName AS manager_rank_name',
+        ])
+            .where('project.deletedAt IS NULL')
+            .andWhere('project.status = :status', { status: project_types_1.ProjectStatus.ACTIVE })
+            .orderBy('project.name', 'ASC')
+            .getRawMany();
+        return results.map((result) => ({
+            id: result.id,
+            name: result.name,
+            projectCode: result.projectCode,
+            status: result.status,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            deletedAt: result.deletedAt,
+            manager: result.manager_id
+                ? {
+                    id: result.manager_id,
+                    name: result.manager_name,
+                    email: result.manager_email,
+                    phoneNumber: result.manager_phone_number,
+                    departmentName: result.manager_department_name,
+                    rankName: result.manager_rank_name,
+                }
+                : undefined,
+            get isDeleted() {
+                return result.deletedAt !== null && result.deletedAt !== undefined;
+            },
+            get isActive() {
+                return result.status === 'ACTIVE';
+            },
+            get isCompleted() {
+                return result.status === 'COMPLETED';
+            },
+            get isCancelled() {
+                return result.status === 'CANCELLED';
+            },
+        }));
     }
     async 매니저별_조회한다(managerId) {
-        const projects = await this.projectRepository.find({
-            where: { managerId, deletedAt: (0, typeorm_2.IsNull)() },
-            order: { name: 'ASC' },
-        });
-        return projects.map((project) => project.DTO로_변환한다());
+        const results = await this.projectRepository
+            .createQueryBuilder('project')
+            .leftJoin('employee', 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
+            .select([
+            'project.id AS id',
+            'project.name AS name',
+            'project.projectCode AS "projectCode"',
+            'project.status AS status',
+            'project.startDate AS "startDate"',
+            'project.endDate AS "endDate"',
+            'project.createdAt AS "createdAt"',
+            'project.updatedAt AS "updatedAt"',
+            'project.deletedAt AS "deletedAt"',
+            'manager.externalId AS manager_id',
+            'manager.name AS manager_name',
+            'manager.email AS manager_email',
+            'manager.phoneNumber AS manager_phone_number',
+            'manager.departmentName AS manager_department_name',
+            'manager.rankName AS manager_rank_name',
+        ])
+            .where('project.deletedAt IS NULL')
+            .andWhere('project.managerId = :managerId', { managerId })
+            .orderBy('project.name', 'ASC')
+            .getRawMany();
+        return results.map((result) => ({
+            id: result.id,
+            name: result.name,
+            projectCode: result.projectCode,
+            status: result.status,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            createdAt: result.createdAt,
+            updatedAt: result.updatedAt,
+            deletedAt: result.deletedAt,
+            manager: result.manager_id
+                ? {
+                    id: result.manager_id,
+                    name: result.manager_name,
+                    email: result.manager_email,
+                    phoneNumber: result.manager_phone_number,
+                    departmentName: result.manager_department_name,
+                    rankName: result.manager_rank_name,
+                }
+                : undefined,
+            get isDeleted() {
+                return result.deletedAt !== null && result.deletedAt !== undefined;
+            },
+            get isActive() {
+                return result.status === 'ACTIVE';
+            },
+            get isCompleted() {
+                return result.status === 'COMPLETED';
+            },
+            get isCancelled() {
+                return result.status === 'CANCELLED';
+            },
+        }));
     }
     async 존재하는가(id) {
         const count = await this.projectRepository.count({
@@ -206,7 +670,7 @@ let ProjectService = class ProjectService {
             where: { id, deletedAt: (0, typeorm_2.IsNull)() },
         });
         if (!project) {
-            throw new Error(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
+            throw new common_1.NotFoundException(`ID ${id}에 해당하는 프로젝트를 찾을 수 없습니다.`);
         }
         project.status = status;
         project.수정자를_설정한다(updatedBy);

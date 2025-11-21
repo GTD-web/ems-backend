@@ -91,27 +91,7 @@ export class GetAvailableProjectsHandler
       status: status as any,
     });
 
-    // 매니저 정보가 있는 프로젝트들의 매니저 ID 수집
-    const managerIds = allProjects
-      .filter((project) => project.managerId)
-      .map((project) => project.managerId!);
-
-    // 매니저 정보 조회
-    const managers = await Promise.all(
-      managerIds.map(async (managerId) => {
-        const manager = await this.employeeService.ID로_조회한다(managerId);
-        return manager ? { id: managerId, manager } : null;
-      }),
-    );
-
-    // 매니저 정보를 Map으로 변환
-    const managerMap = new Map<string, EmployeeDto>(
-      managers
-        .filter((item) => item !== null)
-        .map((item) => [item!.id, item!.manager]),
-    );
-
-    // 프로젝트 목록에 매니저 정보 포함
+    // 프로젝트 목록에 매니저 정보 포함 (이미 service에서 join되어 있음)
     let projectsWithManager = allProjects.map((project) => ({
       id: project.id,
       name: project.name,
@@ -119,15 +99,7 @@ export class GetAvailableProjectsHandler
       status: project.status,
       startDate: project.startDate,
       endDate: project.endDate,
-      manager: project.managerId
-        ? {
-            id: project.managerId,
-            name: managerMap.get(project.managerId)?.name || '',
-            email: managerMap.get(project.managerId)?.email,
-            phoneNumber: managerMap.get(project.managerId)?.phoneNumber,
-            departmentName: managerMap.get(project.managerId)?.departmentName,
-          }
-        : null,
+      manager: project.manager || null,
     }));
 
     // 검색 필터링

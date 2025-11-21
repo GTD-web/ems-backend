@@ -234,6 +234,47 @@ export class GetProjectListQueryDto {
 }
 
 /**
+ * 프로젝트 매니저 정보 DTO
+ */
+export class ManagerInfoDto {
+  @ApiProperty({
+    description: '매니저 ID (UUID)',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
+  id: string;
+
+  @ApiProperty({
+    description: '매니저 이름',
+    example: '홍길동',
+  })
+  name: string;
+
+  @ApiPropertyOptional({
+    description: '이메일',
+    example: 'hong@example.com',
+  })
+  email?: string;
+
+  @ApiPropertyOptional({
+    description: '전화번호',
+    example: '010-1234-5678',
+  })
+  phoneNumber?: string;
+
+  @ApiPropertyOptional({
+    description: '부서명',
+    example: '개발팀',
+  })
+  departmentName?: string;
+
+  @ApiPropertyOptional({
+    description: '직책명',
+    example: '팀장',
+  })
+  rankName?: string;
+}
+
+/**
  * 프로젝트 응답 DTO
  */
 export class ProjectResponseDto {
@@ -275,16 +316,10 @@ export class ProjectResponseDto {
   endDate?: Date;
 
   @ApiPropertyOptional({
-    description: '프로젝트 매니저 ID (UUID)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    description: '프로젝트 매니저 정보',
+    type: ManagerInfoDto,
   })
-  managerId?: string;
-
-  @ApiPropertyOptional({
-    description: '프로젝트 매니저 이름',
-    example: '홍길동',
-  })
-  managerName?: string;
+  manager?: ManagerInfoDto;
 
   @ApiProperty({
     description: '생성일시',

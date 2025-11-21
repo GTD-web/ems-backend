@@ -20,6 +20,7 @@ const evaluation_question_management_context_module_1 = require("../../context/e
 const seed_data_context_module_1 = require("../../context/seed-data-context/seed-data-context.module");
 const evaluation_period_module_1 = require("../../domain/core/evaluation-period/evaluation-period.module");
 const employee_module_1 = require("../../domain/common/employee/employee.module");
+const project_module_1 = require("../../domain/common/project/project.module");
 const auth_controller_1 = require("./auth/auth.controller");
 const dashboard_controller_1 = require("./dashboard/dashboard.controller");
 const evaluation_period_management_controller_1 = require("./evaluation-period/evaluation-period-management.controller");
@@ -43,6 +44,7 @@ const revision_request_context_module_1 = require("../../context/revision-reques
 const audit_log_context_module_1 = require("../../context/audit-log-context/audit-log-context.module");
 const audit_log_controller_1 = require("./audit-log/audit-log.controller");
 const evaluation_activity_log_controller_1 = require("./evaluation-activity-log/evaluation-activity-log.controller");
+const project_management_controller_1 = require("./project/project-management.controller");
 const core_1 = require("@nestjs/core");
 const guards_1 = require("../common/guards");
 let AdminInterfaceModule = class AdminInterfaceModule {
@@ -66,6 +68,7 @@ exports.AdminInterfaceModule = AdminInterfaceModule = __decorate([
             business_module_1.BusinessModule,
             evaluation_period_module_1.EvaluationPeriodModule,
             employee_module_1.EmployeeModule,
+            project_module_1.ProjectModule,
         ],
         controllers: [
             auth_controller_1.AuthController,
@@ -73,6 +76,7 @@ exports.AdminInterfaceModule = AdminInterfaceModule = __decorate([
             evaluation_period_management_controller_1.EvaluationPeriodManagementController,
             evaluation_target_controller_1.EvaluationTargetController,
             employee_management_controller_1.EmployeeManagementController,
+            project_management_controller_1.ProjectManagementController,
             project_assignment_management_controller_1.ProjectAssignmentManagementController,
             wbs_assignment_management_controller_1.WbsAssignmentManagementController,
             evaluation_line_management_controller_1.EvaluationLineManagementController,

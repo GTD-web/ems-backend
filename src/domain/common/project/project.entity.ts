@@ -96,7 +96,6 @@ export class Project extends BaseEntity<ProjectDto> implements IProject {
       status: this.status,
       startDate: this.startDate,
       endDate: this.endDate,
-      managerId: this.managerId,
 
       // 계산된 필드들
       get isDeleted() {

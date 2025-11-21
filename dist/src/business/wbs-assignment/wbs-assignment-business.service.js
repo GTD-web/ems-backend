@@ -404,7 +404,7 @@ let WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = class WbsAss
         console.log('🔍 프로젝트 정보:', {
             id: project.id,
             name: project.name,
-            managerId: project.managerId,
+            managerId: project.manager?.id,
         });
         const existingPrimaryEvaluator = await this.기존_1차_평가자를_조회한다(employeeId, periodId);
         let primaryEvaluatorId = existingPrimaryEvaluator;
@@ -429,15 +429,15 @@ let WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = class WbsAss
                 hasManagerId: !!employee.managerId,
             });
         }
-        if (project.managerId) {
+        if (project.manager?.id) {
             this.logger.log('2차 평가자(프로젝트 PM) 구성', {
-                evaluatorId: project.managerId,
+                evaluatorId: project.manager.id,
                 employeeId,
             });
-            await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(employeeId, wbsItemId, periodId, project.managerId, createdBy);
+            await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(employeeId, wbsItemId, periodId, project.manager.id, createdBy);
         }
         else {
-            this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {
+            this.logger.warn('프로젝트 PM(manager)이 설정되지 않았습니다', {
                 projectId,
             });
         }
@@ -445,7 +445,7 @@ let WbsAssignmentBusinessService = WbsAssignmentBusinessService_1 = class WbsAss
             employeeId,
             wbsItemId,
             primaryEvaluator: employee.managerId,
-            secondaryEvaluator: project.managerId !== employee.managerId ? project.managerId : null,
+            secondaryEvaluator: project.manager?.id !== employee.managerId ? project.manager?.id : null,
         });
     }
     async 평가라인_매핑을_삭제한다(employeeId, wbsItemId, periodId, deletedBy) {
