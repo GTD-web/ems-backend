@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { 평가활동내역을생성한다 } from '@context/evaluation-activity-log-context/handlers';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import type { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
 
@@ -20,7 +21,7 @@ export class EvaluationCriteriaBusinessService {
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   /**
@@ -74,15 +75,21 @@ export class EvaluationCriteriaBusinessService {
 
     // 3. 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId: evaluationPeriodId,
-        employeeId,
-        activityType: 'evaluation_criteria',
-        activityAction: 'submitted',
-        activityTitle: '평가기준 제출',
-        relatedEntityType: 'evaluation_criteria',
-        performedBy: submittedBy,
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          evaluationPeriodId,
+          employeeId,
+          'evaluation_criteria',
+          'submitted',
+          '평가기준 제출',
+          undefined, // activityDescription
+          'evaluation_criteria',
+          undefined, // relatedEntityId
+          submittedBy,
+          undefined, // performedByName
+          undefined, // activityMetadata
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 제출은 정상 처리
       this.logger.warn('평가기준 제출 활동 내역 기록 실패', {

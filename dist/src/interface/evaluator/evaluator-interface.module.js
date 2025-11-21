@@ -9,11 +9,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluatorInterfaceModule = void 0;
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
+const cqrs_1 = require("@nestjs/cqrs");
 const business_module_1 = require("../../business/business.module");
 const audit_log_context_module_1 = require("../../context/audit-log-context/audit-log-context.module");
 const auth_context_module_1 = require("../../context/auth-context/auth-context.module");
 const dashboard_context_module_1 = require("../../context/dashboard-context/dashboard-context.module");
 const domain_context_module_1 = require("../../context/domain-context.module");
+const evaluation_activity_log_context_module_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.module");
 const evaluation_criteria_management_context_module_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module");
 const evaluation_period_management_context_module_1 = require("../../context/evaluation-period-management-context/evaluation-period-management-context.module");
 const evaluation_question_management_context_module_1 = require("../../context/evaluation-question-management-context/evaluation-question-management-context.module");
@@ -45,6 +47,7 @@ exports.EvaluatorInterfaceModule = EvaluatorInterfaceModule;
 exports.EvaluatorInterfaceModule = EvaluatorInterfaceModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            cqrs_1.CqrsModule,
             domain_context_module_1.DomainContextModule,
             auth_context_module_1.AuthContextModule,
             evaluation_period_management_context_module_1.EvaluationPeriodManagementContextModule,
@@ -57,6 +60,7 @@ exports.EvaluatorInterfaceModule = EvaluatorInterfaceModule = __decorate([
             step_approval_context_module_1.StepApprovalContextModule,
             revision_request_context_module_1.RevisionRequestContextModule,
             audit_log_context_module_1.AuditLogContextModule,
+            evaluation_activity_log_context_module_1.EvaluationActivityLogContextModule,
             business_module_1.BusinessModule,
             evaluation_period_module_1.EvaluationPeriodModule,
             employee_module_1.EmployeeModule,

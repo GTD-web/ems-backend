@@ -1,8 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import {
+  평가활동내역을생성한다,
+  단계승인활동내역을생성한다,
+} from '@context/evaluation-activity-log-context/handlers';
 import type {
   SubmitAllWbsSelfEvaluationsResponse,
   SubmitAllWbsSelfEvaluationsToEvaluatorResponse,
@@ -27,7 +31,7 @@ export class WbsSelfEvaluationBusinessService {
     private readonly performanceEvaluationService: PerformanceEvaluationService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
     private readonly stepApprovalContextService: StepApprovalContextService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   /**
@@ -66,15 +70,19 @@ export class WbsSelfEvaluationBusinessService {
 
     // 3. 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId,
-        employeeId,
-        activityType: 'wbs_self_evaluation',
-        activityAction: 'submitted',
-        activityTitle: 'WBS 자기평가 제출',
-        relatedEntityType: 'wbs_self_evaluation',
-        performedBy: submittedBy,
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          periodId,
+          employeeId,
+          'wbs_self_evaluation',
+          'submitted',
+          'WBS 자기평가 제출',
+          undefined, // activityDescription
+          'wbs_self_evaluation',
+          undefined, // relatedEntityId
+          submittedBy,
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 평가 제출은 정상 처리
       this.logger.warn('활동 내역 기록 실패', {
@@ -128,14 +136,16 @@ export class WbsSelfEvaluationBusinessService {
 
     // 3. 활동 내역 기록
     try {
-      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
-        evaluationPeriodId,
-        employeeId,
-        step: 'self',
-        status: 'revision_requested' as StepApprovalStatus,
-        revisionComment,
-        updatedBy: requestedBy,
-      });
+      await this.commandBus.execute(
+        new 단계승인활동내역을생성한다(
+          evaluationPeriodId,
+          employeeId,
+          'self',
+          'revision_requested' as StepApprovalStatus,
+          requestedBy,
+          revisionComment,
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
       this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
@@ -171,15 +181,19 @@ export class WbsSelfEvaluationBusinessService {
 
     // 2. 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId,
-        employeeId,
-        activityType: 'wbs_self_evaluation',
-        activityAction: 'submitted',
-        activityTitle: 'WBS 자기평가 제출 (1차 평가자)',
-        relatedEntityType: 'wbs_self_evaluation',
-        performedBy: submittedBy,
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          periodId,
+          employeeId,
+          'wbs_self_evaluation',
+          'submitted',
+          'WBS 자기평가 제출 (1차 평가자)',
+          undefined, // activityDescription
+          'wbs_self_evaluation',
+          undefined, // relatedEntityId
+          submittedBy,
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 평가 제출은 정상 처리
       this.logger.warn('활동 내역 기록 실패', {
@@ -219,15 +233,19 @@ export class WbsSelfEvaluationBusinessService {
 
     // 2. 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId,
-        employeeId,
-        activityType: 'wbs_self_evaluation',
-        activityAction: 'cancelled',
-        activityTitle: 'WBS 자기평가 제출 취소 (1차 평가자)',
-        relatedEntityType: 'wbs_self_evaluation',
-        performedBy: resetBy,
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          periodId,
+          employeeId,
+          'wbs_self_evaluation',
+          'cancelled',
+          'WBS 자기평가 제출 취소 (1차 평가자)',
+          undefined, // activityDescription
+          'wbs_self_evaluation',
+          undefined, // relatedEntityId
+          resetBy,
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 평가 취소는 정상 처리
       this.logger.warn('활동 내역 기록 실패', {

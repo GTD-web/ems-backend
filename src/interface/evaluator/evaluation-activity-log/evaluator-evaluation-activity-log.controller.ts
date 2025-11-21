@@ -1,4 +1,4 @@
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { QueryBus } from '@nestjs/cqrs';
 import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -7,6 +7,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { 평가활동내역목록을조회한다 } from '@context/evaluation-activity-log-context/handlers';
 import { EvaluationActivityLogListResponseDto } from '@interface/common/dto/evaluation-activity-log/evaluation-activity-log-response.dto';
 import { GetEvaluationActivityLogListQueryDto } from '@interface/common/dto/evaluation-activity-log/get-evaluation-activity-log-list-query.dto';
 
@@ -18,9 +19,7 @@ import { GetEvaluationActivityLogListQueryDto } from '@interface/common/dto/eval
 @ApiBearerAuth('Bearer')
 @Controller('evaluator/evaluation-activity-logs')
 export class EvaluatorEvaluationActivityLogController {
-  constructor(
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
-  ) {}
+  constructor(private readonly queryBus: QueryBus) {}
 
   /**
    * 평가기간 피평가자 기준 활동 내역을 조회한다
@@ -70,18 +69,17 @@ export class EvaluatorEvaluationActivityLogController {
     const endDateValue =
       query.endDate && query.endDate.trim() !== '' ? query.endDate : undefined;
 
-    const result =
-      await this.activityLogContextService.평가기간_피평가자_활동내역을_조회한다(
-        {
-          periodId,
-          employeeId,
-          activityType: query.activityType,
-          startDate: startDateValue ? new Date(startDateValue) : undefined,
-          endDate: endDateValue ? new Date(endDateValue) : undefined,
-          page: query.page || 1,
-          limit: query.limit || 20,
-        },
-      );
+    const result = await this.queryBus.execute(
+      new 평가활동내역목록을조회한다(
+        periodId,
+        employeeId,
+        query.activityType,
+        startDateValue ? new Date(startDateValue) : undefined,
+        endDateValue ? new Date(endDateValue) : undefined,
+        query.page || 1,
+        query.limit || 20,
+      ),
+    );
 
     return {
       items: result.items,

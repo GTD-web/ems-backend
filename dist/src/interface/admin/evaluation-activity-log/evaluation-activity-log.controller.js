@@ -13,30 +13,23 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationActivityLogController = void 0;
-const evaluation_activity_log_context_service_1 = require("../../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
+const cqrs_1 = require("@nestjs/cqrs");
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
+const handlers_1 = require("../../../context/evaluation-activity-log-context/handlers");
 const evaluation_activity_log_response_dto_1 = require("../../common/dto/evaluation-activity-log/evaluation-activity-log-response.dto");
 const get_evaluation_activity_log_list_query_dto_1 = require("../../common/dto/evaluation-activity-log/get-evaluation-activity-log-list-query.dto");
 let EvaluationActivityLogController = class EvaluationActivityLogController {
-    activityLogContextService;
-    constructor(activityLogContextService) {
-        this.activityLogContextService = activityLogContextService;
+    queryBus;
+    constructor(queryBus) {
+        this.queryBus = queryBus;
     }
     async getEvaluationActivityLogs(periodId, employeeId, query) {
         const startDateValue = query.startDate && query.startDate.trim() !== ''
             ? query.startDate
             : undefined;
         const endDateValue = query.endDate && query.endDate.trim() !== '' ? query.endDate : undefined;
-        const result = await this.activityLogContextService.평가기간_피평가자_활동내역을_조회한다({
-            periodId,
-            employeeId,
-            activityType: query.activityType,
-            startDate: startDateValue ? new Date(startDateValue) : undefined,
-            endDate: endDateValue ? new Date(endDateValue) : undefined,
-            page: query.page || 1,
-            limit: query.limit || 20,
-        });
+        const result = await this.queryBus.execute(new handlers_1.평가활동내역목록을조회한다(periodId, employeeId, query.activityType, startDateValue ? new Date(startDateValue) : undefined, endDateValue ? new Date(endDateValue) : undefined, query.page || 1, query.limit || 20));
         return {
             items: result.items,
             total: result.total,
@@ -88,6 +81,6 @@ exports.EvaluationActivityLogController = EvaluationActivityLogController = __de
     (0, swagger_1.ApiTags)('A-0-6. 관리자 - 평가 활동 내역'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('admin/evaluation-activity-logs'),
-    __metadata("design:paramtypes", [evaluation_activity_log_context_service_1.EvaluationActivityLogContextService])
+    __metadata("design:paramtypes", [cqrs_1.QueryBus])
 ], EvaluationActivityLogController);
 //# sourceMappingURL=evaluation-activity-log.controller.js.map

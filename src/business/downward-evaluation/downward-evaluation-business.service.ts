@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
@@ -6,7 +7,10 @@ import { EvaluationCriteriaManagementService } from '@context/evaluation-criteri
 import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import {
+  평가활동내역을생성한다,
+  단계승인활동내역을생성한다,
+} from '@context/evaluation-activity-log-context/handlers';
 import { GetDownwardEvaluationListQuery } from '@context/performance-evaluation-context/handlers/downward-evaluation';
 import { RecipientType } from '@domain/sub/evaluation-revision-request';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
@@ -34,7 +38,7 @@ export class DownwardEvaluationBusinessService {
     private readonly evaluationPeriodManagementContextService: EvaluationPeriodManagementContextService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
     private readonly stepApprovalContextService: StepApprovalContextService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
     @InjectRepository(WbsSelfEvaluation)
     private readonly wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>,
     @InjectRepository(DownwardEvaluation)
@@ -115,21 +119,25 @@ export class DownwardEvaluationBusinessService {
     // 5. 초기 생성 시에만 활동 내역 기록
     if (isNewEvaluation) {
       try {
-        await this.activityLogContextService.활동내역을_기록한다({
-          periodId: params.periodId,
-          employeeId: params.evaluateeId,
-          activityType: 'downward_evaluation',
-          activityAction: 'created',
-          activityTitle: '1차 하향평가 생성',
-          relatedEntityType: 'downward_evaluation',
-          relatedEntityId: evaluationId,
-          performedBy: params.actionBy,
-          activityMetadata: {
-            evaluatorId: params.evaluatorId,
-            evaluationType: 'primary',
-            wbsId: params.wbsId,
-          },
-        });
+        await this.commandBus.execute(
+          new 평가활동내역을생성한다(
+            params.periodId,
+            params.evaluateeId,
+            'downward_evaluation',
+            'created',
+            '1차 하향평가 생성',
+            undefined, // activityDescription
+            'downward_evaluation',
+            evaluationId,
+            params.actionBy,
+            undefined, // performedByName
+            {
+              evaluatorId: params.evaluatorId,
+              evaluationType: 'primary',
+              wbsId: params.wbsId,
+            },
+          ),
+        );
       } catch (error) {
         // 활동 내역 기록 실패 시에도 하향평가 저장은 정상 처리
         this.logger.warn('1차 하향평가 생성 활동 내역 기록 실패', {
@@ -229,21 +237,25 @@ export class DownwardEvaluationBusinessService {
     // 5. 초기 생성 시에만 활동 내역 기록
     if (isNewEvaluation) {
       try {
-        await this.activityLogContextService.활동내역을_기록한다({
-          periodId: params.periodId,
-          employeeId: params.evaluateeId,
-          activityType: 'downward_evaluation',
-          activityAction: 'created',
-          activityTitle: '2차 하향평가 생성',
-          relatedEntityType: 'downward_evaluation',
-          relatedEntityId: evaluationId,
-          performedBy: params.actionBy,
-          activityMetadata: {
-            evaluatorId: params.evaluatorId,
-            evaluationType: 'secondary',
-            wbsId: params.wbsId,
-          },
-        });
+        await this.commandBus.execute(
+          new 평가활동내역을생성한다(
+            params.periodId,
+            params.evaluateeId,
+            'downward_evaluation',
+            'created',
+            '2차 하향평가 생성',
+            undefined, // activityDescription
+            'downward_evaluation',
+            evaluationId,
+            params.actionBy,
+            undefined, // performedByName
+            {
+              evaluatorId: params.evaluatorId,
+              evaluationType: 'secondary',
+              wbsId: params.wbsId,
+            },
+          ),
+        );
       } catch (error) {
         // 활동 내역 기록 실패 시에도 하향평가 저장은 정상 처리
         this.logger.warn('2차 하향평가 생성 활동 내역 기록 실패', {
@@ -448,15 +460,15 @@ export class DownwardEvaluationBusinessService {
 
     // 4. 활동 내역 기록
     try {
-      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
-        {
+      await this.commandBus.execute(
+        new 단계승인활동내역을생성한다(
           evaluationPeriodId,
           employeeId,
-          step: 'primary',
-          status: 'revision_requested' as StepApprovalStatus,
+          'primary',
+          'revision_requested' as StepApprovalStatus,
+          requestedBy,
           revisionComment,
-          updatedBy: requestedBy,
-        },
+        ),
       );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
@@ -523,16 +535,16 @@ export class DownwardEvaluationBusinessService {
 
     // 3. 활동 내역 기록
     try {
-      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
-        {
+      await this.commandBus.execute(
+        new 단계승인활동내역을생성한다(
           evaluationPeriodId,
           employeeId,
-          step: 'secondary',
-          status: 'revision_requested' as StepApprovalStatus,
+          'secondary',
+          'revision_requested' as StepApprovalStatus,
+          requestedBy,
           revisionComment,
-          updatedBy: requestedBy,
           evaluatorId,
-        },
+        ),
       );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
@@ -660,24 +672,29 @@ export class DownwardEvaluationBusinessService {
           : '2차 하향평가';
       const activityTitle = `${evaluationTypeText} 일괄 제출`;
 
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId,
-        employeeId: evaluateeId,
-        activityType: 'downward_evaluation',
-        activityAction: 'submitted',
-        activityTitle,
-        relatedEntityType: 'downward_evaluation',
-        performedBy: submittedBy,
-        activityMetadata: {
-          evaluatorId,
-          evaluationType,
-          submittedCount: result.submittedCount,
-          skippedCount: result.skippedCount,
-          failedCount: result.failedCount,
-          submittedIds: result.submittedIds,
-          bulkOperation: true,
-        },
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          periodId,
+          evaluateeId,
+          'downward_evaluation',
+          'submitted',
+          activityTitle,
+          undefined, // activityDescription
+          'downward_evaluation',
+          undefined, // relatedEntityId
+          submittedBy,
+          undefined, // performedByName
+          {
+            evaluatorId,
+            evaluationType,
+            submittedCount: result.submittedCount,
+            skippedCount: result.skippedCount,
+            failedCount: result.failedCount,
+            submittedIds: result.submittedIds,
+            bulkOperation: true,
+          },
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 하향평가 제출은 정상 처리
       this.logger.warn('활동 내역 기록 실패', {

@@ -1,10 +1,10 @@
+import { CommandBus } from '@nestjs/cqrs';
 import { Repository } from 'typeorm';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
@@ -14,11 +14,11 @@ export declare class DownwardEvaluationBusinessService {
     private readonly evaluationPeriodManagementContextService;
     private readonly revisionRequestContextService;
     private readonly stepApprovalContextService;
-    private readonly activityLogContextService;
+    private readonly commandBus;
     private readonly wbsSelfEvaluationRepository;
     private readonly downwardEvaluationRepository;
     private readonly logger;
-    constructor(performanceEvaluationService: PerformanceEvaluationService, evaluationCriteriaManagementService: EvaluationCriteriaManagementService, evaluationPeriodManagementContextService: EvaluationPeriodManagementContextService, revisionRequestContextService: RevisionRequestContextService, stepApprovalContextService: StepApprovalContextService, activityLogContextService: EvaluationActivityLogContextService, wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>, downwardEvaluationRepository: Repository<DownwardEvaluation>);
+    constructor(performanceEvaluationService: PerformanceEvaluationService, evaluationCriteriaManagementService: EvaluationCriteriaManagementService, evaluationPeriodManagementContextService: EvaluationPeriodManagementContextService, revisionRequestContextService: RevisionRequestContextService, stepApprovalContextService: StepApprovalContextService, commandBus: CommandBus, wbsSelfEvaluationRepository: Repository<WbsSelfEvaluation>, downwardEvaluationRepository: Repository<DownwardEvaluation>);
     일차_하향평가를_저장한다(params: {
         evaluatorId: string;
         evaluateeId: string;

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
 import { StepApprovalContextModule } from '@context/step-approval-context/step-approval-context.module';
@@ -10,6 +11,7 @@ import { WbsSelfEvaluationBusinessService } from './wbs-self-evaluation-business
  */
 @Module({
   imports: [
+    CqrsModule,
     PerformanceEvaluationContextModule,
     RevisionRequestContextModule,
     StepApprovalContextModule,

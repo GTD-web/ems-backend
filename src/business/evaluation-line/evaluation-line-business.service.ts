@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { 평가활동내역을생성한다 } from '@context/evaluation-activity-log-context/handlers';
 
 /**
  * 평가라인 구성 비즈니스 서비스
@@ -15,7 +16,7 @@ export class EvaluationLineBusinessService {
 
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   /**
@@ -55,20 +56,24 @@ export class EvaluationLineBusinessService {
 
     // 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId,
-        employeeId,
-        activityType: 'evaluation_line',
-        activityAction: 'updated',
-        activityTitle: '1차 평가자 구성',
-        relatedEntityType: 'evaluation_line_mapping',
-        relatedEntityId: result.mapping.id,
-        performedBy: createdBy,
-        activityMetadata: {
-          evaluatorId,
-          evaluatorType: 'primary',
-        },
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          periodId,
+          employeeId,
+          'evaluation_line',
+          'updated',
+          '1차 평가자 구성',
+          undefined, // activityDescription
+          'evaluation_line_mapping',
+          result.mapping.id,
+          createdBy,
+          undefined, // performedByName
+          {
+            evaluatorId,
+            evaluatorType: 'primary',
+          },
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 평가라인 구성은 정상 처리
       this.logger.warn('1차 평가자 구성 활동 내역 기록 실패', {
@@ -128,21 +133,25 @@ export class EvaluationLineBusinessService {
 
     // 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId,
-        employeeId,
-        activityType: 'evaluation_line',
-        activityAction: 'updated',
-        activityTitle: '2차 평가자 구성',
-        relatedEntityType: 'evaluation_line_mapping',
-        relatedEntityId: result.mapping.id,
-        performedBy: createdBy,
-        activityMetadata: {
-          evaluatorId,
-          evaluatorType: 'secondary',
-          wbsItemId,
-        },
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          periodId,
+          employeeId,
+          'evaluation_line',
+          'updated',
+          '2차 평가자 구성',
+          undefined, // activityDescription
+          'evaluation_line_mapping',
+          result.mapping.id,
+          createdBy,
+          undefined, // performedByName
+          {
+            evaluatorId,
+            evaluatorType: 'secondary',
+            wbsItemId,
+          },
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 평가라인 구성은 정상 처리
       this.logger.warn('2차 평가자 구성 활동 내역 기록 실패', {
@@ -212,20 +221,24 @@ export class EvaluationLineBusinessService {
         .filter((r) => r.status === 'success' && r.mapping)
         .map(async (r) => {
           try {
-            await this.activityLogContextService.활동내역을_기록한다({
-              periodId,
-              employeeId: r.employeeId,
-              activityType: 'evaluation_line',
-              activityAction: 'updated',
-              activityTitle: '1차 평가자 구성',
-              relatedEntityType: 'evaluation_line_mapping',
-              relatedEntityId: r.mapping!.id,
-              performedBy: createdBy,
-              activityMetadata: {
-                evaluatorId: r.evaluatorId,
-                evaluatorType: 'primary',
-              },
-            });
+            await this.commandBus.execute(
+              new 평가활동내역을생성한다(
+                periodId,
+                r.employeeId,
+                'evaluation_line',
+                'updated',
+                '1차 평가자 구성',
+                undefined, // activityDescription
+                'evaluation_line_mapping',
+                r.mapping!.id,
+                createdBy,
+                undefined, // performedByName
+                {
+                  evaluatorId: r.evaluatorId,
+                  evaluatorType: 'primary',
+                },
+              ),
+            );
           } catch (error) {
             // 활동 내역 기록 실패 시에도 평가라인 구성은 정상 처리
             this.logger.warn('1차 평가자 일괄 구성 활동 내역 기록 실패', {
@@ -301,21 +314,25 @@ export class EvaluationLineBusinessService {
         .filter((r) => r.status === 'success' && r.mapping)
         .map(async (r) => {
           try {
-            await this.activityLogContextService.활동내역을_기록한다({
-              periodId,
-              employeeId: r.employeeId,
-              activityType: 'evaluation_line',
-              activityAction: 'updated',
-              activityTitle: '2차 평가자 구성',
-              relatedEntityType: 'evaluation_line_mapping',
-              relatedEntityId: r.mapping!.id,
-              performedBy: createdBy,
-              activityMetadata: {
-                evaluatorId: r.evaluatorId,
-                evaluatorType: 'secondary',
-                wbsItemId: r.wbsItemId,
-              },
-            });
+            await this.commandBus.execute(
+              new 평가활동내역을생성한다(
+                periodId,
+                r.employeeId,
+                'evaluation_line',
+                'updated',
+                '2차 평가자 구성',
+                undefined, // activityDescription
+                'evaluation_line_mapping',
+                r.mapping!.id,
+                createdBy,
+                undefined, // performedByName
+                {
+                  evaluatorId: r.evaluatorId,
+                  evaluatorType: 'secondary',
+                  wbsItemId: r.wbsItemId,
+                },
+              ),
+            );
           } catch (error) {
             // 활동 내역 기록 실패 시에도 평가라인 구성은 정상 처리
             this.logger.warn('2차 평가자 일괄 구성 활동 내역 기록 실패', {

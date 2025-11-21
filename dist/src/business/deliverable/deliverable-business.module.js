@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeliverableBusinessModule = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const performance_evaluation_context_module_1 = require("../../context/performance-evaluation-context/performance-evaluation-context.module");
 const evaluation_activity_log_context_module_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.module");
 const evaluation_wbs_assignment_module_1 = require("../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.module");
@@ -19,6 +20,7 @@ exports.DeliverableBusinessModule = DeliverableBusinessModule;
 exports.DeliverableBusinessModule = DeliverableBusinessModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            cqrs_1.CqrsModule,
             performance_evaluation_context_module_1.PerformanceEvaluationContextModule,
             evaluation_activity_log_context_module_1.EvaluationActivityLogContextModule,
             evaluation_wbs_assignment_module_1.EvaluationWbsAssignmentModule,

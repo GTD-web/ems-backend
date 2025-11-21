@@ -12,20 +12,21 @@ var DeliverableBusinessService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DeliverableBusinessService = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const performance_evaluation_service_1 = require("../../context/performance-evaluation-context/performance-evaluation.service");
-const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
+const handlers_1 = require("../../context/evaluation-activity-log-context/handlers");
 const evaluation_wbs_assignment_service_1 = require("../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service");
 const deliverable_service_1 = require("../../domain/core/deliverable/deliverable.service");
 const deliverable_exceptions_1 = require("../../domain/core/deliverable/deliverable.exceptions");
 let DeliverableBusinessService = DeliverableBusinessService_1 = class DeliverableBusinessService {
     performanceEvaluationService;
-    activityLogContextService;
+    commandBus;
     evaluationWbsAssignmentService;
     deliverableService;
     logger = new common_1.Logger(DeliverableBusinessService_1.name);
-    constructor(performanceEvaluationService, activityLogContextService, evaluationWbsAssignmentService, deliverableService) {
+    constructor(performanceEvaluationService, commandBus, evaluationWbsAssignmentService, deliverableService) {
         this.performanceEvaluationService = performanceEvaluationService;
-        this.activityLogContextService = activityLogContextService;
+        this.commandBus = commandBus;
         this.evaluationWbsAssignmentService = evaluationWbsAssignmentService;
         this.deliverableService = deliverableService;
     }
@@ -38,21 +39,11 @@ let DeliverableBusinessService = DeliverableBusinessService_1 = class Deliverabl
         try {
             const periodId = await this.평가기간을_조회한다(data.employeeId, data.wbsItemId);
             if (periodId) {
-                await this.activityLogContextService.활동내역을_기록한다({
-                    periodId,
-                    employeeId: data.employeeId,
-                    activityType: 'deliverable',
-                    activityAction: 'created',
-                    activityTitle: '산출물 생성',
-                    relatedEntityType: 'deliverable',
-                    relatedEntityId: deliverable.id,
-                    performedBy: data.createdBy,
-                    activityMetadata: {
-                        deliverableName: data.name,
-                        deliverableType: data.type,
-                        wbsItemId: data.wbsItemId,
-                    },
-                });
+                await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, data.employeeId, 'deliverable', 'created', '산출물 생성', undefined, 'deliverable', deliverable.id, data.createdBy, undefined, {
+                    deliverableName: data.name,
+                    deliverableType: data.type,
+                    wbsItemId: data.wbsItemId,
+                }));
             }
         }
         catch (error) {
@@ -78,21 +69,11 @@ let DeliverableBusinessService = DeliverableBusinessService_1 = class Deliverabl
             if (employeeId && wbsItemId) {
                 const periodId = await this.평가기간을_조회한다(employeeId, wbsItemId);
                 if (periodId) {
-                    await this.activityLogContextService.활동내역을_기록한다({
-                        periodId,
-                        employeeId,
-                        activityType: 'deliverable',
-                        activityAction: 'updated',
-                        activityTitle: '산출물 수정',
-                        relatedEntityType: 'deliverable',
-                        relatedEntityId: deliverable.id,
-                        performedBy: data.updatedBy,
-                        activityMetadata: {
-                            deliverableName: deliverable.name,
-                            deliverableType: deliverable.type,
-                            wbsItemId,
-                        },
-                    });
+                    await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, employeeId, 'deliverable', 'updated', '산출물 수정', undefined, 'deliverable', deliverable.id, data.updatedBy, undefined, {
+                        deliverableName: deliverable.name,
+                        deliverableType: deliverable.type,
+                        wbsItemId,
+                    }));
                 }
             }
         }
@@ -116,21 +97,11 @@ let DeliverableBusinessService = DeliverableBusinessService_1 = class Deliverabl
             if (existingDeliverable.employeeId && existingDeliverable.wbsItemId) {
                 const periodId = await this.평가기간을_조회한다(existingDeliverable.employeeId, existingDeliverable.wbsItemId);
                 if (periodId) {
-                    await this.activityLogContextService.활동내역을_기록한다({
-                        periodId,
-                        employeeId: existingDeliverable.employeeId,
-                        activityType: 'deliverable',
-                        activityAction: 'deleted',
-                        activityTitle: '산출물 삭제',
-                        relatedEntityType: 'deliverable',
-                        relatedEntityId: id,
-                        performedBy: deletedBy,
-                        activityMetadata: {
-                            deliverableName: existingDeliverable.name,
-                            deliverableType: existingDeliverable.type,
-                            wbsItemId: existingDeliverable.wbsItemId,
-                        },
-                    });
+                    await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, existingDeliverable.employeeId, 'deliverable', 'deleted', '산출물 삭제', undefined, 'deliverable', id, deletedBy, undefined, {
+                        deliverableName: existingDeliverable.name,
+                        deliverableType: existingDeliverable.type,
+                        wbsItemId: existingDeliverable.wbsItemId,
+                    }));
                 }
             }
         }
@@ -152,21 +123,12 @@ let DeliverableBusinessService = DeliverableBusinessService_1 = class Deliverabl
                 if (result.createdIds.length > 0) {
                     const periodId = await this.평가기간을_조회한다(deliverableData.employeeId, deliverableData.wbsItemId);
                     if (periodId) {
-                        await this.activityLogContextService.활동내역을_기록한다({
-                            periodId,
-                            employeeId: deliverableData.employeeId,
-                            activityType: 'deliverable',
-                            activityAction: 'created',
-                            activityTitle: '산출물 생성',
-                            relatedEntityType: 'deliverable',
-                            performedBy: data.createdBy,
-                            activityMetadata: {
-                                deliverableName: deliverableData.name,
-                                deliverableType: deliverableData.type,
-                                wbsItemId: deliverableData.wbsItemId,
-                                bulkOperation: true,
-                            },
-                        });
+                        await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, deliverableData.employeeId, 'deliverable', 'created', '산출물 생성', undefined, 'deliverable', undefined, data.createdBy, undefined, {
+                            deliverableName: deliverableData.name,
+                            deliverableType: deliverableData.type,
+                            wbsItemId: deliverableData.wbsItemId,
+                            bulkOperation: true,
+                        }));
                     }
                 }
             }
@@ -191,22 +153,12 @@ let DeliverableBusinessService = DeliverableBusinessService_1 = class Deliverabl
                 if (deliverable && deliverable.employeeId && deliverable.wbsItemId) {
                     const periodId = await this.평가기간을_조회한다(deliverable.employeeId, deliverable.wbsItemId);
                     if (periodId) {
-                        await this.activityLogContextService.활동내역을_기록한다({
-                            periodId,
-                            employeeId: deliverable.employeeId,
-                            activityType: 'deliverable',
-                            activityAction: 'deleted',
-                            activityTitle: '산출물 삭제',
-                            relatedEntityType: 'deliverable',
-                            relatedEntityId: deliverable.id,
-                            performedBy: data.deletedBy,
-                            activityMetadata: {
-                                deliverableName: deliverable.name,
-                                deliverableType: deliverable.type,
-                                wbsItemId: deliverable.wbsItemId,
-                                bulkOperation: true,
-                            },
-                        });
+                        await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, deliverable.employeeId, 'deliverable', 'deleted', '산출물 삭제', undefined, 'deliverable', deliverable.id, data.deletedBy, undefined, {
+                            deliverableName: deliverable.name,
+                            deliverableType: deliverable.type,
+                            wbsItemId: deliverable.wbsItemId,
+                            bulkOperation: true,
+                        }));
                     }
                 }
             }
@@ -256,7 +208,7 @@ exports.DeliverableBusinessService = DeliverableBusinessService;
 exports.DeliverableBusinessService = DeliverableBusinessService = DeliverableBusinessService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
-        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
+        cqrs_1.CommandBus,
         evaluation_wbs_assignment_service_1.EvaluationWbsAssignmentService,
         deliverable_service_1.DeliverableService])
 ], DeliverableBusinessService);

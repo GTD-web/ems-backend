@@ -12,16 +12,17 @@ var FinalEvaluationBusinessService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FinalEvaluationBusinessService = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const performance_evaluation_service_1 = require("../../context/performance-evaluation-context/performance-evaluation.service");
-const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
+const handlers_1 = require("../../context/evaluation-activity-log-context/handlers");
 const final_evaluation_1 = require("../../context/performance-evaluation-context/handlers/final-evaluation");
 let FinalEvaluationBusinessService = FinalEvaluationBusinessService_1 = class FinalEvaluationBusinessService {
     performanceEvaluationService;
-    activityLogContextService;
+    commandBus;
     logger = new common_1.Logger(FinalEvaluationBusinessService_1.name);
-    constructor(performanceEvaluationService, activityLogContextService) {
+    constructor(performanceEvaluationService, commandBus) {
         this.performanceEvaluationService = performanceEvaluationService;
-        this.activityLogContextService = activityLogContextService;
+        this.commandBus = commandBus;
     }
     async 최종평가를_저장한다(employeeId, periodId, evaluationGrade, jobGrade, jobDetailedGrade, finalComments, actionBy) {
         this.logger.log('최종평가 저장 시작', {
@@ -33,21 +34,11 @@ let FinalEvaluationBusinessService = FinalEvaluationBusinessService_1 = class Fi
         const isNewEvaluation = !existingEvaluation;
         const evaluationId = await this.performanceEvaluationService.최종평가를_저장한다(employeeId, periodId, evaluationGrade, jobGrade, jobDetailedGrade, finalComments, actionBy);
         try {
-            await this.activityLogContextService.활동내역을_기록한다({
-                periodId,
-                employeeId,
-                activityType: 'final_evaluation',
-                activityAction: isNewEvaluation ? 'created' : 'updated',
-                activityTitle: isNewEvaluation ? '최종평가 생성' : '최종평가 수정',
-                relatedEntityType: 'final_evaluation',
-                relatedEntityId: evaluationId,
-                performedBy: actionBy,
-                activityMetadata: {
-                    evaluationGrade,
-                    jobGrade,
-                    jobDetailedGrade,
-                },
-            });
+            await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, employeeId, 'final_evaluation', isNewEvaluation ? 'created' : 'updated', isNewEvaluation ? '최종평가 생성' : '최종평가 수정', undefined, 'final_evaluation', evaluationId, actionBy, undefined, {
+                evaluationGrade,
+                jobGrade,
+                jobDetailedGrade,
+            }));
         }
         catch (error) {
             this.logger.warn('최종평가 저장 활동 내역 기록 실패', {
@@ -68,6 +59,6 @@ exports.FinalEvaluationBusinessService = FinalEvaluationBusinessService;
 exports.FinalEvaluationBusinessService = FinalEvaluationBusinessService = FinalEvaluationBusinessService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
-        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService])
+        cqrs_1.CommandBus])
 ], FinalEvaluationBusinessService);
 //# sourceMappingURL=final-evaluation-business.service.js.map

@@ -15,6 +15,7 @@ var DownwardEvaluationBusinessService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DownwardEvaluationBusinessService = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const performance_evaluation_service_1 = require("../../context/performance-evaluation-context/performance-evaluation.service");
@@ -22,7 +23,7 @@ const evaluation_criteria_management_service_1 = require("../../context/evaluati
 const evaluation_period_management_service_1 = require("../../context/evaluation-period-management-context/evaluation-period-management.service");
 const revision_request_context_service_1 = require("../../context/revision-request-context/revision-request-context.service");
 const step_approval_context_service_1 = require("../../context/step-approval-context/step-approval-context.service");
-const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
+const handlers_1 = require("../../context/evaluation-activity-log-context/handlers");
 const downward_evaluation_1 = require("../../context/performance-evaluation-context/handlers/downward-evaluation");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
@@ -34,17 +35,17 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
     evaluationPeriodManagementContextService;
     revisionRequestContextService;
     stepApprovalContextService;
-    activityLogContextService;
+    commandBus;
     wbsSelfEvaluationRepository;
     downwardEvaluationRepository;
     logger = new common_1.Logger(DownwardEvaluationBusinessService_1.name);
-    constructor(performanceEvaluationService, evaluationCriteriaManagementService, evaluationPeriodManagementContextService, revisionRequestContextService, stepApprovalContextService, activityLogContextService, wbsSelfEvaluationRepository, downwardEvaluationRepository) {
+    constructor(performanceEvaluationService, evaluationCriteriaManagementService, evaluationPeriodManagementContextService, revisionRequestContextService, stepApprovalContextService, commandBus, wbsSelfEvaluationRepository, downwardEvaluationRepository) {
         this.performanceEvaluationService = performanceEvaluationService;
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
         this.evaluationPeriodManagementContextService = evaluationPeriodManagementContextService;
         this.revisionRequestContextService = revisionRequestContextService;
         this.stepApprovalContextService = stepApprovalContextService;
-        this.activityLogContextService = activityLogContextService;
+        this.commandBus = commandBus;
         this.wbsSelfEvaluationRepository = wbsSelfEvaluationRepository;
         this.downwardEvaluationRepository = downwardEvaluationRepository;
     }
@@ -63,21 +64,11 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
         const evaluationId = await this.performanceEvaluationService.하향평가를_저장한다(params.evaluatorId, params.evaluateeId, params.periodId, params.wbsId, params.selfEvaluationId, 'primary', params.downwardEvaluationContent, params.downwardEvaluationScore, params.actionBy);
         if (isNewEvaluation) {
             try {
-                await this.activityLogContextService.활동내역을_기록한다({
-                    periodId: params.periodId,
-                    employeeId: params.evaluateeId,
-                    activityType: 'downward_evaluation',
-                    activityAction: 'created',
-                    activityTitle: '1차 하향평가 생성',
-                    relatedEntityType: 'downward_evaluation',
-                    relatedEntityId: evaluationId,
-                    performedBy: params.actionBy,
-                    activityMetadata: {
-                        evaluatorId: params.evaluatorId,
-                        evaluationType: 'primary',
-                        wbsId: params.wbsId,
-                    },
-                });
+                await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(params.periodId, params.evaluateeId, 'downward_evaluation', 'created', '1차 하향평가 생성', undefined, 'downward_evaluation', evaluationId, params.actionBy, undefined, {
+                    evaluatorId: params.evaluatorId,
+                    evaluationType: 'primary',
+                    wbsId: params.wbsId,
+                }));
             }
             catch (error) {
                 this.logger.warn('1차 하향평가 생성 활동 내역 기록 실패', {
@@ -104,21 +95,11 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
         const evaluationId = await this.performanceEvaluationService.하향평가를_저장한다(params.evaluatorId, params.evaluateeId, params.periodId, params.wbsId, params.selfEvaluationId, 'secondary', params.downwardEvaluationContent, params.downwardEvaluationScore, params.actionBy);
         if (isNewEvaluation) {
             try {
-                await this.activityLogContextService.활동내역을_기록한다({
-                    periodId: params.periodId,
-                    employeeId: params.evaluateeId,
-                    activityType: 'downward_evaluation',
-                    activityAction: 'created',
-                    activityTitle: '2차 하향평가 생성',
-                    relatedEntityType: 'downward_evaluation',
-                    relatedEntityId: evaluationId,
-                    performedBy: params.actionBy,
-                    activityMetadata: {
-                        evaluatorId: params.evaluatorId,
-                        evaluationType: 'secondary',
-                        wbsId: params.wbsId,
-                    },
-                });
+                await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(params.periodId, params.evaluateeId, 'downward_evaluation', 'created', '2차 하향평가 생성', undefined, 'downward_evaluation', evaluationId, params.actionBy, undefined, {
+                    evaluatorId: params.evaluatorId,
+                    evaluationType: 'secondary',
+                    wbsId: params.wbsId,
+                }));
             }
             catch (error) {
                 this.logger.warn('2차 하향평가 생성 활동 내역 기록 실패', {
@@ -171,14 +152,7 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
             updatedBy: requestedBy,
         });
         try {
-            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
-                evaluationPeriodId,
-                employeeId,
-                step: 'primary',
-                status: 'revision_requested',
-                revisionComment,
-                updatedBy: requestedBy,
-            });
+            await this.commandBus.execute(new handlers_1.단계승인활동내역을생성한다(evaluationPeriodId, employeeId, 'primary', 'revision_requested', requestedBy, revisionComment));
         }
         catch (error) {
             this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
@@ -204,15 +178,7 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
             updatedBy: requestedBy,
         });
         try {
-            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
-                evaluationPeriodId,
-                employeeId,
-                step: 'secondary',
-                status: 'revision_requested',
-                revisionComment,
-                updatedBy: requestedBy,
-                evaluatorId,
-            });
+            await this.commandBus.execute(new handlers_1.단계승인활동내역을생성한다(evaluationPeriodId, employeeId, 'secondary', 'revision_requested', requestedBy, revisionComment, evaluatorId));
         }
         catch (error) {
             this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
@@ -269,24 +235,15 @@ let DownwardEvaluationBusinessService = DownwardEvaluationBusinessService_1 = cl
                 ? '1차 하향평가'
                 : '2차 하향평가';
             const activityTitle = `${evaluationTypeText} 일괄 제출`;
-            await this.activityLogContextService.활동내역을_기록한다({
-                periodId,
-                employeeId: evaluateeId,
-                activityType: 'downward_evaluation',
-                activityAction: 'submitted',
-                activityTitle,
-                relatedEntityType: 'downward_evaluation',
-                performedBy: submittedBy,
-                activityMetadata: {
-                    evaluatorId,
-                    evaluationType,
-                    submittedCount: result.submittedCount,
-                    skippedCount: result.skippedCount,
-                    failedCount: result.failedCount,
-                    submittedIds: result.submittedIds,
-                    bulkOperation: true,
-                },
-            });
+            await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, evaluateeId, 'downward_evaluation', 'submitted', activityTitle, undefined, 'downward_evaluation', undefined, submittedBy, undefined, {
+                evaluatorId,
+                evaluationType,
+                submittedCount: result.submittedCount,
+                skippedCount: result.skippedCount,
+                failedCount: result.failedCount,
+                submittedIds: result.submittedIds,
+                bulkOperation: true,
+            }));
         }
         catch (error) {
             this.logger.warn('활동 내역 기록 실패', {
@@ -373,7 +330,7 @@ exports.DownwardEvaluationBusinessService = DownwardEvaluationBusinessService = 
         evaluation_period_management_service_1.EvaluationPeriodManagementContextService,
         revision_request_context_service_1.RevisionRequestContextService,
         step_approval_context_service_1.StepApprovalContextService,
-        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
+        cqrs_1.CommandBus,
         typeorm_2.Repository,
         typeorm_2.Repository])
 ], DownwardEvaluationBusinessService);

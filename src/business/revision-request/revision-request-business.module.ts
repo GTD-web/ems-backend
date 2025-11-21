@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
 import { EvaluationActivityLogContextModule } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.module';
 import { RevisionRequestBusinessService } from './revision-request-business.service';
@@ -10,6 +11,7 @@ import { RevisionRequestBusinessService } from './revision-request-business.serv
  */
 @Module({
   imports: [
+    CqrsModule,
     RevisionRequestContextModule,
     EvaluationActivityLogContextModule,
   ],

@@ -1,16 +1,16 @@
+import { CommandBus } from '@nestjs/cqrs';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 import { EvaluationWbsAssignmentService } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
 import { DeliverableService } from '@domain/core/deliverable/deliverable.service';
 import type { Deliverable } from '@domain/core/deliverable/deliverable.entity';
 import type { DeliverableType } from '@domain/core/deliverable/deliverable.types';
 export declare class DeliverableBusinessService {
     private readonly performanceEvaluationService;
-    private readonly activityLogContextService;
+    private readonly commandBus;
     private readonly evaluationWbsAssignmentService;
     private readonly deliverableService;
     private readonly logger;
-    constructor(performanceEvaluationService: PerformanceEvaluationService, activityLogContextService: EvaluationActivityLogContextService, evaluationWbsAssignmentService: EvaluationWbsAssignmentService, deliverableService: DeliverableService);
+    constructor(performanceEvaluationService: PerformanceEvaluationService, commandBus: CommandBus, evaluationWbsAssignmentService: EvaluationWbsAssignmentService, deliverableService: DeliverableService);
     산출물을_생성한다(data: {
         name: string;
         type: DeliverableType;

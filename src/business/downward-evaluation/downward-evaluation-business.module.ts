@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DownwardEvaluationBusinessService } from './downward-evaluation-business.service';
 import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
@@ -17,6 +18,7 @@ import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-ev
  */
 @Module({
   imports: [
+    CqrsModule,
     TypeOrmModule.forFeature([WbsSelfEvaluation, DownwardEvaluation]),
     PerformanceEvaluationContextModule,
     EvaluationCriteriaManagementContextModule,

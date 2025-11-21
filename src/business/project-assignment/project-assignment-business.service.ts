@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { 평가활동내역을생성한다 } from '@context/evaluation-activity-log-context/handlers';
 import type {
   EvaluationProjectAssignmentDto,
   CreateEvaluationProjectAssignmentData,
@@ -21,7 +22,7 @@ export class ProjectAssignmentBusinessService {
 
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   /**
@@ -38,26 +39,31 @@ export class ProjectAssignmentBusinessService {
     });
 
     // 프로젝트 할당 생성
-    const assignment = await this.evaluationCriteriaManagementService.프로젝트를_할당한다(
-      data,
-      assignedBy,
-    );
+    const assignment =
+      await this.evaluationCriteriaManagementService.프로젝트를_할당한다(
+        data,
+        assignedBy,
+      );
 
     // 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId: data.periodId,
-        employeeId: data.employeeId,
-        activityType: 'project_assignment',
-        activityAction: 'created',
-        activityTitle: '프로젝트 할당',
-        relatedEntityType: 'project_assignment',
-        relatedEntityId: assignment.id,
-        performedBy: assignedBy,
-        activityMetadata: {
-          projectId: data.projectId,
-        },
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          data.periodId,
+          data.employeeId,
+          'project_assignment',
+          'created',
+          '프로젝트 할당',
+          undefined, // activityDescription
+          'project_assignment',
+          assignment.id,
+          assignedBy,
+          undefined, // performedByName
+          {
+            projectId: data.projectId,
+          },
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 프로젝트 할당은 정상 처리
       this.logger.warn('프로젝트 할당 생성 활동 내역 기록 실패', {
@@ -100,19 +106,23 @@ export class ProjectAssignmentBusinessService {
         );
 
         if (assignmentData) {
-          await this.activityLogContextService.활동내역을_기록한다({
-            periodId: assignmentData.periodId,
-            employeeId: assignmentData.employeeId,
-            activityType: 'project_assignment',
-            activityAction: 'created',
-            activityTitle: '프로젝트 할당',
-            relatedEntityType: 'project_assignment',
-            relatedEntityId: assignment.id,
-            performedBy: assignedBy,
-            activityMetadata: {
-              projectId: assignmentData.projectId,
-            },
-          });
+          await this.commandBus.execute(
+            new 평가활동내역을생성한다(
+              assignmentData.periodId,
+              assignmentData.employeeId,
+              'project_assignment',
+              'created',
+              '프로젝트 할당',
+              undefined, // activityDescription
+              'project_assignment',
+              assignment.id,
+              assignedBy,
+              undefined, // performedByName
+              {
+                projectId: assignmentData.projectId,
+              },
+            ),
+          );
         }
       } catch (error) {
         // 활동 내역 기록 실패 시에도 프로젝트 할당은 정상 처리
@@ -146,7 +156,9 @@ export class ProjectAssignmentBusinessService {
       );
 
     if (!assignment) {
-      throw new Error(`프로젝트 할당 ID ${id}에 해당하는 할당을 찾을 수 없습니다.`);
+      throw new Error(
+        `프로젝트 할당 ID ${id}에 해당하는 할당을 찾을 수 없습니다.`,
+      );
     }
 
     // 프로젝트 할당 취소
@@ -157,19 +169,23 @@ export class ProjectAssignmentBusinessService {
 
     // 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId: assignment.periodId,
-        employeeId: assignment.employeeId,
-        activityType: 'project_assignment',
-        activityAction: 'cancelled',
-        activityTitle: '프로젝트 할당 취소',
-        relatedEntityType: 'project_assignment',
-        relatedEntityId: id,
-        performedBy: cancelledBy,
-        activityMetadata: {
-          projectId: assignment.projectId,
-        },
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          assignment.periodId,
+          assignment.employeeId,
+          'project_assignment',
+          'cancelled',
+          '프로젝트 할당 취소',
+          undefined, // activityDescription
+          'project_assignment',
+          id,
+          cancelledBy,
+          undefined, // performedByName
+          {
+            projectId: assignment.projectId,
+          },
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 프로젝트 할당 취소는 정상 처리
       this.logger.warn('프로젝트 할당 취소 활동 내역 기록 실패', {
@@ -198,13 +214,15 @@ export class ProjectAssignmentBusinessService {
 
     // 할당 목록 조회하여 할당 ID 찾기 (활동 내역 기록을 위해 취소 전에 조회)
     const assignmentList =
-      await this.evaluationCriteriaManagementService.프로젝트_할당_목록을_조회한다({
-        employeeId,
-        projectId,
-        periodId,
-        page: 1,
-        limit: 1,
-      });
+      await this.evaluationCriteriaManagementService.프로젝트_할당_목록을_조회한다(
+        {
+          employeeId,
+          projectId,
+          periodId,
+          page: 1,
+          limit: 1,
+        },
+      );
 
     const assignmentId =
       assignmentList.assignments && assignmentList.assignments.length > 0
@@ -222,19 +240,23 @@ export class ProjectAssignmentBusinessService {
     // 활동 내역 기록 (할당이 있었던 경우에만)
     if (assignmentId) {
       try {
-        await this.activityLogContextService.활동내역을_기록한다({
-          periodId,
-          employeeId,
-          activityType: 'project_assignment',
-          activityAction: 'cancelled',
-          activityTitle: '프로젝트 할당 취소',
-          relatedEntityType: 'project_assignment',
-          relatedEntityId: assignmentId,
-          performedBy: cancelledBy,
-          activityMetadata: {
-            projectId,
-          },
-        });
+        await this.commandBus.execute(
+          new 평가활동내역을생성한다(
+            periodId,
+            employeeId,
+            'project_assignment',
+            'cancelled',
+            '프로젝트 할당 취소',
+            undefined, // activityDescription
+            'project_assignment',
+            assignmentId,
+            cancelledBy,
+            undefined, // performedByName
+            {
+              projectId,
+            },
+          ),
+        );
       } catch (error) {
         // 활동 내역 기록 실패 시에도 프로젝트 할당 취소는 정상 처리
         this.logger.warn('프로젝트 할당 취소 활동 내역 기록 실패', {
@@ -251,4 +273,3 @@ export class ProjectAssignmentBusinessService {
     });
   }
 }
-

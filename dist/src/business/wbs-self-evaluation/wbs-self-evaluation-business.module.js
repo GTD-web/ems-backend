@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.WbsSelfEvaluationBusinessModule = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const performance_evaluation_context_module_1 = require("../../context/performance-evaluation-context/performance-evaluation-context.module");
 const revision_request_context_module_1 = require("../../context/revision-request-context/revision-request-context.module");
 const step_approval_context_module_1 = require("../../context/step-approval-context/step-approval-context.module");
@@ -19,6 +20,7 @@ exports.WbsSelfEvaluationBusinessModule = WbsSelfEvaluationBusinessModule;
 exports.WbsSelfEvaluationBusinessModule = WbsSelfEvaluationBusinessModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            cqrs_1.CqrsModule,
             performance_evaluation_context_module_1.PerformanceEvaluationContextModule,
             revision_request_context_module_1.RevisionRequestContextModule,
             step_approval_context_module_1.StepApprovalContextModule,

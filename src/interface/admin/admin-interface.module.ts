@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { DomainContextModule } from '../../context/domain-context.module';
 import { BusinessModule } from '../../business/business.module';
 import { AuthContextModule } from '../../context/auth-context/auth-context.module';
@@ -12,6 +13,7 @@ import { SeedDataContextModule } from '../../context/seed-data-context/seed-data
 import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
 import { EmployeeModule } from '../../domain/common/employee/employee.module';
 import { ProjectModule } from '../../domain/common/project/project.module';
+import { EvaluationActivityLogContextModule } from '../../context/evaluation-activity-log-context/evaluation-activity-log-context.module';
 import { AuthController } from './auth/auth.controller';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
@@ -47,6 +49,7 @@ import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
  */
 @Module({
   imports: [
+    CqrsModule, // CQRS 모듈 주입
     DomainContextModule, // 도메인 컨텍스트 모듈 주입
     AuthContextModule, // 인증 컨텍스트 모듈 주입
     EvaluationPeriodManagementContextModule, // 평가 기간 관리 컨텍스트 모듈 주입
@@ -59,6 +62,7 @@ import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
     StepApprovalContextModule, // 단계 승인 컨텍스트 모듈 주입
     RevisionRequestContextModule, // 재작성 요청 컨텍스트 모듈 주입
     AuditLogContextModule, // Audit 로그 컨텍스트 모듈 주입
+    EvaluationActivityLogContextModule, // 평가 활동 내역 컨텍스트 모듈 주입
     BusinessModule, // 비즈니스 레이어 모듈 주입
     EvaluationPeriodModule, // 평가 기간 모듈 주입
     EmployeeModule, // 직원 모듈 주입

@@ -1,10 +1,10 @@
+import { CommandBus } from '@nestjs/cqrs';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
 export declare class EvaluationLineBusinessService {
     private readonly evaluationCriteriaManagementService;
-    private readonly activityLogContextService;
+    private readonly commandBus;
     private readonly logger;
-    constructor(evaluationCriteriaManagementService: EvaluationCriteriaManagementService, activityLogContextService: EvaluationActivityLogContextService);
+    constructor(evaluationCriteriaManagementService: EvaluationCriteriaManagementService, commandBus: CommandBus);
     일차_평가자를_구성한다(employeeId: string, periodId: string, evaluatorId: string, createdBy: string): Promise<{
         message: string;
         createdLines: number;

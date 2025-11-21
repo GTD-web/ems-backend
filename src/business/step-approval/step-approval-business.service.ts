@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { StepApprovalContextService } from '@context/step-approval-context/step-approval-context.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { 단계승인활동내역을생성한다 } from '@context/evaluation-activity-log-context/handlers';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
 import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
@@ -26,7 +27,7 @@ export class StepApprovalBusinessService {
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
     private readonly stepApprovalContextService: StepApprovalContextService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
     private readonly revisionRequestContextService: RevisionRequestContextService,
     private readonly employeeSyncService: EmployeeSyncService,
@@ -300,15 +301,15 @@ export class StepApprovalBusinessService {
 
     // 3. 활동 내역 기록
     try {
-      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
-        {
+      await this.commandBus.execute(
+        new 단계승인활동내역을생성한다(
           evaluationPeriodId,
           employeeId,
-          step: 'criteria',
-          status: 'revision_requested' as StepApprovalStatus,
-          revisionComment,
+          'criteria',
+          'revision_requested' as StepApprovalStatus,
           updatedBy,
-        },
+          revisionComment,
+        ),
       );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
@@ -407,15 +408,15 @@ export class StepApprovalBusinessService {
 
     // 2. 활동 내역 기록
     try {
-      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
-        {
-          evaluationPeriodId: params.evaluationPeriodId,
-          employeeId: params.employeeId,
-          step: 'criteria',
-          status: params.status,
-          revisionComment: params.revisionComment,
-          updatedBy: params.updatedBy,
-        },
+      await this.commandBus.execute(
+        new 단계승인활동내역을생성한다(
+          params.evaluationPeriodId,
+          params.employeeId,
+          'criteria',
+          params.status,
+          params.updatedBy,
+          params.revisionComment,
+        ),
       );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
@@ -446,15 +447,15 @@ export class StepApprovalBusinessService {
 
     // 2. 활동 내역 기록
     try {
-      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
-        {
-          evaluationPeriodId: params.evaluationPeriodId,
-          employeeId: params.employeeId,
-          step: 'self',
-          status: params.status,
-          revisionComment: params.revisionComment,
-          updatedBy: params.updatedBy,
-        },
+      await this.commandBus.execute(
+        new 단계승인활동내역을생성한다(
+          params.evaluationPeriodId,
+          params.employeeId,
+          'self',
+          params.status,
+          params.updatedBy,
+          params.revisionComment,
+        ),
       );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
@@ -489,15 +490,15 @@ export class StepApprovalBusinessService {
 
     // 2. 활동 내역 기록
     try {
-      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
-        {
-          evaluationPeriodId: params.evaluationPeriodId,
-          employeeId: params.employeeId,
-          step: 'primary',
-          status: params.status,
-          revisionComment: params.revisionComment,
-          updatedBy: params.updatedBy,
-        },
+      await this.commandBus.execute(
+        new 단계승인활동내역을생성한다(
+          params.evaluationPeriodId,
+          params.employeeId,
+          'primary',
+          params.status,
+          params.updatedBy,
+          params.revisionComment,
+        ),
       );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리
@@ -531,16 +532,16 @@ export class StepApprovalBusinessService {
 
     // 2. 활동 내역 기록
     try {
-      await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다(
-        {
-          evaluationPeriodId: params.evaluationPeriodId,
-          employeeId: params.employeeId,
-          step: 'secondary',
-          status: params.status,
-          revisionComment: params.revisionComment,
-          updatedBy: params.updatedBy,
-          evaluatorId: params.evaluatorId,
-        },
+      await this.commandBus.execute(
+        new 단계승인활동내역을생성한다(
+          params.evaluationPeriodId,
+          params.employeeId,
+          'secondary',
+          params.status,
+          params.updatedBy,
+          params.revisionComment,
+          params.evaluatorId,
+        ),
       );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 단계 승인은 정상 처리

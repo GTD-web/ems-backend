@@ -12,19 +12,20 @@ var EvaluationCriteriaBusinessService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationCriteriaBusinessService = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
 const revision_request_context_service_1 = require("../../context/revision-request-context/revision-request-context.service");
-const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
+const handlers_1 = require("../../context/evaluation-activity-log-context/handlers");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 let EvaluationCriteriaBusinessService = EvaluationCriteriaBusinessService_1 = class EvaluationCriteriaBusinessService {
     evaluationCriteriaManagementService;
     revisionRequestContextService;
-    activityLogContextService;
+    commandBus;
     logger = new common_1.Logger(EvaluationCriteriaBusinessService_1.name);
-    constructor(evaluationCriteriaManagementService, revisionRequestContextService, activityLogContextService) {
+    constructor(evaluationCriteriaManagementService, revisionRequestContextService, commandBus) {
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
         this.revisionRequestContextService = revisionRequestContextService;
-        this.activityLogContextService = activityLogContextService;
+        this.commandBus = commandBus;
     }
     async 평가기준을_제출하고_재작성요청을_완료한다(evaluationPeriodId, employeeId, submittedBy) {
         this.logger.log(`평가기준 제출 및 재작성 요청 완료 처리 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
@@ -37,15 +38,7 @@ let EvaluationCriteriaBusinessService = EvaluationCriteriaBusinessService_1 = cl
             this.logger.debug(`재작성 요청 자동 완료 처리 실패 (재작성 요청이 없거나 이미 완료되었을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
         }
         try {
-            await this.activityLogContextService.활동내역을_기록한다({
-                periodId: evaluationPeriodId,
-                employeeId,
-                activityType: 'evaluation_criteria',
-                activityAction: 'submitted',
-                activityTitle: '평가기준 제출',
-                relatedEntityType: 'evaluation_criteria',
-                performedBy: submittedBy,
-            });
+            await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(evaluationPeriodId, employeeId, 'evaluation_criteria', 'submitted', '평가기준 제출', undefined, 'evaluation_criteria', undefined, submittedBy, undefined, undefined));
         }
         catch (error) {
             this.logger.warn('평가기준 제출 활동 내역 기록 실패', {
@@ -61,6 +54,6 @@ exports.EvaluationCriteriaBusinessService = EvaluationCriteriaBusinessService = 
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
         revision_request_context_service_1.RevisionRequestContextService,
-        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService])
+        cqrs_1.CommandBus])
 ], EvaluationCriteriaBusinessService);
 //# sourceMappingURL=evaluation-criteria-business.service.js.map

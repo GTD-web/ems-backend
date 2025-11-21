@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CqrsModule } from '@nestjs/cqrs';
 import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
 import { EvaluationActivityLogContextModule } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.module';
 import { FinalEvaluationBusinessService } from './final-evaluation-business.service';
@@ -8,6 +9,7 @@ import { FinalEvaluationBusinessService } from './final-evaluation-business.serv
  */
 @Module({
   imports: [
+    CqrsModule,
     PerformanceEvaluationContextModule,
     EvaluationActivityLogContextModule,
   ],

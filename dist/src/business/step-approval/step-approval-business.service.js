@@ -12,9 +12,10 @@ var StepApprovalBusinessService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StepApprovalBusinessService = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const performance_evaluation_service_1 = require("../../context/performance-evaluation-context/performance-evaluation.service");
 const step_approval_context_service_1 = require("../../context/step-approval-context/step-approval-context.service");
-const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
+const handlers_1 = require("../../context/evaluation-activity-log-context/handlers");
 const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
 const revision_request_context_service_1 = require("../../context/revision-request-context/revision-request-context.service");
 const employee_sync_service_1 = require("../../context/organization-management-context/employee-sync.service");
@@ -24,15 +25,15 @@ const get_employee_self_evaluations_handler_1 = require("../../context/performan
 let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepApprovalBusinessService {
     performanceEvaluationService;
     stepApprovalContextService;
-    activityLogContextService;
+    commandBus;
     evaluationCriteriaManagementService;
     revisionRequestContextService;
     employeeSyncService;
     logger = new common_1.Logger(StepApprovalBusinessService_1.name);
-    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService, revisionRequestContextService, employeeSyncService) {
+    constructor(performanceEvaluationService, stepApprovalContextService, commandBus, evaluationCriteriaManagementService, revisionRequestContextService, employeeSyncService) {
         this.performanceEvaluationService = performanceEvaluationService;
         this.stepApprovalContextService = stepApprovalContextService;
-        this.activityLogContextService = activityLogContextService;
+        this.commandBus = commandBus;
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
         this.revisionRequestContextService = revisionRequestContextService;
         this.employeeSyncService = employeeSyncService;
@@ -123,14 +124,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             updatedBy,
         });
         try {
-            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
-                evaluationPeriodId,
-                employeeId,
-                step: 'criteria',
-                status: 'revision_requested',
-                revisionComment,
-                updatedBy,
-            });
+            await this.commandBus.execute(new handlers_1.단계승인활동내역을생성한다(evaluationPeriodId, employeeId, 'criteria', 'revision_requested', updatedBy, revisionComment));
         }
         catch (error) {
             this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
@@ -170,14 +164,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             updatedBy: params.updatedBy,
         });
         try {
-            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
-                evaluationPeriodId: params.evaluationPeriodId,
-                employeeId: params.employeeId,
-                step: 'criteria',
-                status: params.status,
-                revisionComment: params.revisionComment,
-                updatedBy: params.updatedBy,
-            });
+            await this.commandBus.execute(new handlers_1.단계승인활동내역을생성한다(params.evaluationPeriodId, params.employeeId, 'criteria', params.status, params.updatedBy, params.revisionComment));
         }
         catch (error) {
             this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
@@ -194,14 +181,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             updatedBy: params.updatedBy,
         });
         try {
-            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
-                evaluationPeriodId: params.evaluationPeriodId,
-                employeeId: params.employeeId,
-                step: 'self',
-                status: params.status,
-                revisionComment: params.revisionComment,
-                updatedBy: params.updatedBy,
-            });
+            await this.commandBus.execute(new handlers_1.단계승인활동내역을생성한다(params.evaluationPeriodId, params.employeeId, 'self', params.status, params.updatedBy, params.revisionComment));
         }
         catch (error) {
             this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
@@ -219,14 +199,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             updatedBy: params.updatedBy,
         });
         try {
-            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
-                evaluationPeriodId: params.evaluationPeriodId,
-                employeeId: params.employeeId,
-                step: 'primary',
-                status: params.status,
-                revisionComment: params.revisionComment,
-                updatedBy: params.updatedBy,
-            });
+            await this.commandBus.execute(new handlers_1.단계승인활동내역을생성한다(params.evaluationPeriodId, params.employeeId, 'primary', params.status, params.updatedBy, params.revisionComment));
         }
         catch (error) {
             this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
@@ -244,15 +217,7 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             updatedBy: params.updatedBy,
         });
         try {
-            await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
-                evaluationPeriodId: params.evaluationPeriodId,
-                employeeId: params.employeeId,
-                step: 'secondary',
-                status: params.status,
-                revisionComment: params.revisionComment,
-                updatedBy: params.updatedBy,
-                evaluatorId: params.evaluatorId,
-            });
+            await this.commandBus.execute(new handlers_1.단계승인활동내역을생성한다(params.evaluationPeriodId, params.employeeId, 'secondary', params.status, params.updatedBy, params.revisionComment, params.evaluatorId));
         }
         catch (error) {
             this.logger.warn('단계 승인 상태 변경 활동 내역 기록 실패', {
@@ -385,7 +350,7 @@ exports.StepApprovalBusinessService = StepApprovalBusinessService = StepApproval
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
         step_approval_context_service_1.StepApprovalContextService,
-        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
+        cqrs_1.CommandBus,
         evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
         revision_request_context_service_1.RevisionRequestContextService,
         employee_sync_service_1.EmployeeSyncService])

@@ -103,7 +103,9 @@ let LoginHandler = LoginHandler_1 = class LoginHandler {
                     hireDate: loginResult.hireDate
                         ? new Date(loginResult.hireDate)
                         : undefined,
-                    status: loginResult.status === '재직중' || loginResult.status === '휴직중' || loginResult.status === '퇴사'
+                    status: loginResult.status === '재직중' ||
+                        loginResult.status === '휴직중' ||
+                        loginResult.status === '퇴사'
                         ? loginResult.status
                         : '재직중',
                     externalId: loginResult.id,

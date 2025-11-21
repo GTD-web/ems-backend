@@ -12,15 +12,16 @@ var EvaluationLineBusinessService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationLineBusinessService = void 0;
 const common_1 = require("@nestjs/common");
+const cqrs_1 = require("@nestjs/cqrs");
 const evaluation_criteria_management_service_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management.service");
-const evaluation_activity_log_context_service_1 = require("../../context/evaluation-activity-log-context/evaluation-activity-log-context.service");
+const handlers_1 = require("../../context/evaluation-activity-log-context/handlers");
 let EvaluationLineBusinessService = EvaluationLineBusinessService_1 = class EvaluationLineBusinessService {
     evaluationCriteriaManagementService;
-    activityLogContextService;
+    commandBus;
     logger = new common_1.Logger(EvaluationLineBusinessService_1.name);
-    constructor(evaluationCriteriaManagementService, activityLogContextService) {
+    constructor(evaluationCriteriaManagementService, commandBus) {
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
-        this.activityLogContextService = activityLogContextService;
+        this.commandBus = commandBus;
     }
     async 일차_평가자를_구성한다(employeeId, periodId, evaluatorId, createdBy) {
         this.logger.log('1차 평가자 구성 시작', {
@@ -30,20 +31,10 @@ let EvaluationLineBusinessService = EvaluationLineBusinessService_1 = class Eval
         });
         const result = await this.evaluationCriteriaManagementService.일차_평가자를_구성한다(employeeId, periodId, evaluatorId, createdBy);
         try {
-            await this.activityLogContextService.활동내역을_기록한다({
-                periodId,
-                employeeId,
-                activityType: 'evaluation_line',
-                activityAction: 'updated',
-                activityTitle: '1차 평가자 구성',
-                relatedEntityType: 'evaluation_line_mapping',
-                relatedEntityId: result.mapping.id,
-                performedBy: createdBy,
-                activityMetadata: {
-                    evaluatorId,
-                    evaluatorType: 'primary',
-                },
-            });
+            await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, employeeId, 'evaluation_line', 'updated', '1차 평가자 구성', undefined, 'evaluation_line_mapping', result.mapping.id, createdBy, undefined, {
+                evaluatorId,
+                evaluatorType: 'primary',
+            }));
         }
         catch (error) {
             this.logger.warn('1차 평가자 구성 활동 내역 기록 실패', {
@@ -69,21 +60,11 @@ let EvaluationLineBusinessService = EvaluationLineBusinessService_1 = class Eval
         });
         const result = await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(employeeId, wbsItemId, periodId, evaluatorId, createdBy);
         try {
-            await this.activityLogContextService.활동내역을_기록한다({
-                periodId,
-                employeeId,
-                activityType: 'evaluation_line',
-                activityAction: 'updated',
-                activityTitle: '2차 평가자 구성',
-                relatedEntityType: 'evaluation_line_mapping',
-                relatedEntityId: result.mapping.id,
-                performedBy: createdBy,
-                activityMetadata: {
-                    evaluatorId,
-                    evaluatorType: 'secondary',
-                    wbsItemId,
-                },
-            });
+            await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, employeeId, 'evaluation_line', 'updated', '2차 평가자 구성', undefined, 'evaluation_line_mapping', result.mapping.id, createdBy, undefined, {
+                evaluatorId,
+                evaluatorType: 'secondary',
+                wbsItemId,
+            }));
         }
         catch (error) {
             this.logger.warn('2차 평가자 구성 활동 내역 기록 실패', {
@@ -112,20 +93,10 @@ let EvaluationLineBusinessService = EvaluationLineBusinessService_1 = class Eval
             .filter((r) => r.status === 'success' && r.mapping)
             .map(async (r) => {
             try {
-                await this.activityLogContextService.활동내역을_기록한다({
-                    periodId,
-                    employeeId: r.employeeId,
-                    activityType: 'evaluation_line',
-                    activityAction: 'updated',
-                    activityTitle: '1차 평가자 구성',
-                    relatedEntityType: 'evaluation_line_mapping',
-                    relatedEntityId: r.mapping.id,
-                    performedBy: createdBy,
-                    activityMetadata: {
-                        evaluatorId: r.evaluatorId,
-                        evaluatorType: 'primary',
-                    },
-                });
+                await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, r.employeeId, 'evaluation_line', 'updated', '1차 평가자 구성', undefined, 'evaluation_line_mapping', r.mapping.id, createdBy, undefined, {
+                    evaluatorId: r.evaluatorId,
+                    evaluatorType: 'primary',
+                }));
             }
             catch (error) {
                 this.logger.warn('1차 평가자 일괄 구성 활동 내역 기록 실패', {
@@ -154,21 +125,11 @@ let EvaluationLineBusinessService = EvaluationLineBusinessService_1 = class Eval
             .filter((r) => r.status === 'success' && r.mapping)
             .map(async (r) => {
             try {
-                await this.activityLogContextService.활동내역을_기록한다({
-                    periodId,
-                    employeeId: r.employeeId,
-                    activityType: 'evaluation_line',
-                    activityAction: 'updated',
-                    activityTitle: '2차 평가자 구성',
-                    relatedEntityType: 'evaluation_line_mapping',
-                    relatedEntityId: r.mapping.id,
-                    performedBy: createdBy,
-                    activityMetadata: {
-                        evaluatorId: r.evaluatorId,
-                        evaluatorType: 'secondary',
-                        wbsItemId: r.wbsItemId,
-                    },
-                });
+                await this.commandBus.execute(new handlers_1.평가활동내역을생성한다(periodId, r.employeeId, 'evaluation_line', 'updated', '2차 평가자 구성', undefined, 'evaluation_line_mapping', r.mapping.id, createdBy, undefined, {
+                    evaluatorId: r.evaluatorId,
+                    evaluatorType: 'secondary',
+                    wbsItemId: r.wbsItemId,
+                }));
             }
             catch (error) {
                 this.logger.warn('2차 평가자 일괄 구성 활동 내역 기록 실패', {
@@ -193,6 +154,6 @@ exports.EvaluationLineBusinessService = EvaluationLineBusinessService;
 exports.EvaluationLineBusinessService = EvaluationLineBusinessService = EvaluationLineBusinessService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
-        evaluation_activity_log_context_service_1.EvaluationActivityLogContextService])
+        cqrs_1.CommandBus])
 ], EvaluationLineBusinessService);
 //# sourceMappingURL=evaluation-line-business.service.js.map

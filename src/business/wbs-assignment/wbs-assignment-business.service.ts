@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { EvaluationCriteriaManagementService } from '@context/evaluation-criteria-management-context/evaluation-criteria-management.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { 평가활동내역을생성한다 } from '@context/evaluation-activity-log-context/handlers';
 import { EmployeeService } from '@domain/common/employee/employee.service';
 import { ProjectService } from '@domain/common/project/project.service';
 import { EvaluationLineService } from '@domain/core/evaluation-line/evaluation-line.service';
@@ -28,7 +29,7 @@ export class WbsAssignmentBusinessService {
 
   constructor(
     private readonly evaluationCriteriaManagementService: EvaluationCriteriaManagementService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
     private readonly employeeService: EmployeeService,
     private readonly projectService: ProjectService,
     private readonly evaluationLineService: EvaluationLineService,
@@ -121,20 +122,24 @@ export class WbsAssignmentBusinessService {
 
     // 5. 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId: params.periodId,
-        employeeId: params.employeeId,
-        activityType: 'wbs_assignment',
-        activityAction: 'created',
-        activityTitle: 'WBS 할당',
-        relatedEntityType: 'wbs_assignment',
-        relatedEntityId: assignment.id,
-        performedBy: params.assignedBy,
-        activityMetadata: {
-          wbsItemId: params.wbsItemId,
-          projectId: params.projectId,
-        },
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          params.periodId,
+          params.employeeId,
+          'wbs_assignment',
+          'created',
+          'WBS 할당',
+          undefined, // activityDescription
+          'wbs_assignment',
+          assignment.id,
+          params.assignedBy,
+          undefined, // performedByName
+          {
+            wbsItemId: params.wbsItemId,
+            projectId: params.projectId,
+          },
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 WBS 할당은 정상 처리
       this.logger.warn('WBS 할당 생성 활동 내역 기록 실패', {
@@ -237,20 +242,24 @@ export class WbsAssignmentBusinessService {
 
     // 6. 활동 내역 기록
     try {
-      await this.activityLogContextService.활동내역을_기록한다({
-        periodId,
-        employeeId,
-        activityType: 'wbs_assignment',
-        activityAction: 'cancelled',
-        activityTitle: 'WBS 할당 취소',
-        relatedEntityType: 'wbs_assignment',
-        relatedEntityId: params.assignmentId,
-        performedBy: params.cancelledBy,
-        activityMetadata: {
-          wbsItemId,
-          projectId: assignment.projectId,
-        },
-      });
+      await this.commandBus.execute(
+        new 평가활동내역을생성한다(
+          periodId,
+          employeeId,
+          'wbs_assignment',
+          'cancelled',
+          'WBS 할당 취소',
+          undefined, // activityDescription
+          'wbs_assignment',
+          params.assignmentId,
+          params.cancelledBy,
+          undefined, // performedByName
+          {
+            wbsItemId,
+            projectId: assignment.projectId,
+          },
+        ),
+      );
     } catch (error) {
       // 활동 내역 기록 실패 시에도 WBS 할당 취소는 정상 처리
       this.logger.warn('WBS 할당 취소 활동 내역 기록 실패', {
@@ -403,20 +412,24 @@ export class WbsAssignmentBusinessService {
     await Promise.all(
       assignments.map(async (assignment) => {
         try {
-          await this.activityLogContextService.활동내역을_기록한다({
-            periodId: assignment.periodId,
-            employeeId: assignment.employeeId,
-            activityType: 'wbs_assignment',
-            activityAction: 'created',
-            activityTitle: 'WBS 할당',
-            relatedEntityType: 'wbs_assignment',
-            relatedEntityId: assignment.id,
-            performedBy: params.assignedBy,
-            activityMetadata: {
-              wbsItemId: assignment.wbsItemId,
-              projectId: assignment.projectId,
-            },
-          });
+          await this.commandBus.execute(
+            new 평가활동내역을생성한다(
+              assignment.periodId,
+              assignment.employeeId,
+              'wbs_assignment',
+              'created',
+              'WBS 할당',
+              undefined, // activityDescription
+              'wbs_assignment',
+              assignment.id,
+              params.assignedBy,
+              undefined, // performedByName
+              {
+                wbsItemId: assignment.wbsItemId,
+                projectId: assignment.projectId,
+              },
+            ),
+          );
         } catch (error) {
           // 활동 내역 기록 실패 시에도 WBS 할당은 정상 처리
           this.logger.warn('WBS 대량 할당 활동 내역 기록 실패', {

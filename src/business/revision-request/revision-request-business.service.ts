@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { RevisionRequestContextService } from '@context/revision-request-context/revision-request-context.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { 재작성완료활동내역을생성한다 } from '@context/evaluation-activity-log-context/handlers';
 import type { RevisionRequestStepType } from '@domain/sub/evaluation-revision-request';
 
 /**
@@ -16,7 +17,7 @@ export class RevisionRequestBusinessService {
 
   constructor(
     private readonly revisionRequestContextService: RevisionRequestContextService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
   ) {}
 
   /**
@@ -58,15 +59,17 @@ export class RevisionRequestBusinessService {
           );
       }
 
-      await this.activityLogContextService.재작성완료_활동내역을_기록한다({
-        evaluationPeriodId: request.evaluationPeriodId,
-        employeeId: request.employeeId,
-        step: request.step,
-        requestId,
-        performedBy: recipientId,
-        responseComment,
-        allCompleted,
-      });
+      await this.commandBus.execute(
+        new 재작성완료활동내역을생성한다(
+          request.evaluationPeriodId,
+          request.employeeId,
+          request.step,
+          requestId,
+          recipientId,
+          responseComment,
+          allCompleted,
+        ),
+      );
 
       this.logger.log('재작성 완료 활동 내역 기록 완료');
     } catch (error) {
@@ -124,15 +127,17 @@ export class RevisionRequestBusinessService {
           );
       }
 
-      await this.activityLogContextService.재작성완료_활동내역을_기록한다({
-        evaluationPeriodId: request.evaluationPeriodId,
-        employeeId: request.employeeId,
-        step: request.step,
-        requestId: request.id,
-        performedBy: evaluatorId,
-        responseComment,
-        allCompleted,
-      });
+      await this.commandBus.execute(
+        new 재작성완료활동내역을생성한다(
+          request.evaluationPeriodId,
+          request.employeeId,
+          request.step,
+          request.id,
+          evaluatorId,
+          responseComment,
+          allCompleted,
+        ),
+      );
 
       this.logger.log('재작성 완료 활동 내역 기록 완료');
     } catch (error) {

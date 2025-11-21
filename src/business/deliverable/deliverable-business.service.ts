@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandBus } from '@nestjs/cqrs';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
-import { EvaluationActivityLogContextService } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.service';
+import { 평가활동내역을생성한다 } from '@context/evaluation-activity-log-context/handlers';
 import { EvaluationWbsAssignmentService } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
 import { DeliverableService } from '@domain/core/deliverable/deliverable.service';
 import { DeliverableNotFoundException } from '@domain/core/deliverable/deliverable.exceptions';
@@ -21,7 +22,7 @@ export class DeliverableBusinessService {
 
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
-    private readonly activityLogContextService: EvaluationActivityLogContextService,
+    private readonly commandBus: CommandBus,
     private readonly evaluationWbsAssignmentService: EvaluationWbsAssignmentService,
     private readonly deliverableService: DeliverableService,
   ) {}
@@ -54,21 +55,25 @@ export class DeliverableBusinessService {
         data.wbsItemId,
       );
       if (periodId) {
-        await this.activityLogContextService.활동내역을_기록한다({
-          periodId,
-          employeeId: data.employeeId,
-          activityType: 'deliverable',
-          activityAction: 'created',
-          activityTitle: '산출물 생성',
-          relatedEntityType: 'deliverable',
-          relatedEntityId: deliverable.id,
-          performedBy: data.createdBy,
-          activityMetadata: {
-            deliverableName: data.name,
-            deliverableType: data.type,
-            wbsItemId: data.wbsItemId,
-          },
-        });
+        await this.commandBus.execute(
+          new 평가활동내역을생성한다(
+            periodId,
+            data.employeeId,
+            'deliverable',
+            'created',
+            '산출물 생성',
+            undefined, // activityDescription
+            'deliverable',
+            deliverable.id,
+            data.createdBy,
+            undefined, // performedByName
+            {
+              deliverableName: data.name,
+              deliverableType: data.type,
+              wbsItemId: data.wbsItemId,
+            },
+          ),
+        );
       }
     } catch (error) {
       // 활동 내역 기록 실패 시에도 산출물 생성은 정상 처리
@@ -118,21 +123,25 @@ export class DeliverableBusinessService {
       if (employeeId && wbsItemId) {
         const periodId = await this.평가기간을_조회한다(employeeId, wbsItemId);
         if (periodId) {
-          await this.activityLogContextService.활동내역을_기록한다({
-            periodId,
-            employeeId,
-            activityType: 'deliverable',
-            activityAction: 'updated',
-            activityTitle: '산출물 수정',
-            relatedEntityType: 'deliverable',
-            relatedEntityId: deliverable.id,
-            performedBy: data.updatedBy,
-            activityMetadata: {
-              deliverableName: deliverable.name,
-              deliverableType: deliverable.type,
-              wbsItemId,
-            },
-          });
+          await this.commandBus.execute(
+            new 평가활동내역을생성한다(
+              periodId,
+              employeeId,
+              'deliverable',
+              'updated',
+              '산출물 수정',
+              undefined, // activityDescription
+              'deliverable',
+              deliverable.id,
+              data.updatedBy,
+              undefined, // performedByName
+              {
+                deliverableName: deliverable.name,
+                deliverableType: deliverable.type,
+                wbsItemId,
+              },
+            ),
+          );
         }
       }
     } catch (error) {
@@ -171,21 +180,25 @@ export class DeliverableBusinessService {
           existingDeliverable.wbsItemId,
         );
         if (periodId) {
-          await this.activityLogContextService.활동내역을_기록한다({
-            periodId,
-            employeeId: existingDeliverable.employeeId,
-            activityType: 'deliverable',
-            activityAction: 'deleted',
-            activityTitle: '산출물 삭제',
-            relatedEntityType: 'deliverable',
-            relatedEntityId: id,
-            performedBy: deletedBy,
-            activityMetadata: {
-              deliverableName: existingDeliverable.name,
-              deliverableType: existingDeliverable.type,
-              wbsItemId: existingDeliverable.wbsItemId,
-            },
-          });
+          await this.commandBus.execute(
+            new 평가활동내역을생성한다(
+              periodId,
+              existingDeliverable.employeeId,
+              'deliverable',
+              'deleted',
+              '산출물 삭제',
+              undefined, // activityDescription
+              'deliverable',
+              id,
+              deletedBy,
+              undefined, // performedByName
+              {
+                deliverableName: existingDeliverable.name,
+                deliverableType: existingDeliverable.type,
+                wbsItemId: existingDeliverable.wbsItemId,
+              },
+            ),
+          );
         }
       }
     } catch (error) {
@@ -238,21 +251,26 @@ export class DeliverableBusinessService {
             deliverableData.wbsItemId,
           );
           if (periodId) {
-            await this.activityLogContextService.활동내역을_기록한다({
-              periodId,
-              employeeId: deliverableData.employeeId,
-              activityType: 'deliverable',
-              activityAction: 'created',
-              activityTitle: '산출물 생성',
-              relatedEntityType: 'deliverable',
-              performedBy: data.createdBy,
-              activityMetadata: {
-                deliverableName: deliverableData.name,
-                deliverableType: deliverableData.type,
-                wbsItemId: deliverableData.wbsItemId,
-                bulkOperation: true,
-              },
-            });
+            await this.commandBus.execute(
+              new 평가활동내역을생성한다(
+                periodId,
+                deliverableData.employeeId,
+                'deliverable',
+                'created',
+                '산출물 생성',
+                undefined, // activityDescription
+                'deliverable',
+                undefined, // relatedEntityId (벌크 생성 시 개별 ID 없음)
+                data.createdBy,
+                undefined, // performedByName
+                {
+                  deliverableName: deliverableData.name,
+                  deliverableType: deliverableData.type,
+                  wbsItemId: deliverableData.wbsItemId,
+                  bulkOperation: true,
+                },
+              ),
+            );
           }
         }
       }
@@ -302,22 +320,26 @@ export class DeliverableBusinessService {
             deliverable.wbsItemId,
           );
           if (periodId) {
-            await this.activityLogContextService.활동내역을_기록한다({
-              periodId,
-              employeeId: deliverable.employeeId,
-              activityType: 'deliverable',
-              activityAction: 'deleted',
-              activityTitle: '산출물 삭제',
-              relatedEntityType: 'deliverable',
-              relatedEntityId: deliverable.id,
-              performedBy: data.deletedBy,
-              activityMetadata: {
-                deliverableName: deliverable.name,
-                deliverableType: deliverable.type,
-                wbsItemId: deliverable.wbsItemId,
-                bulkOperation: true,
-              },
-            });
+            await this.commandBus.execute(
+              new 평가활동내역을생성한다(
+                periodId,
+                deliverable.employeeId,
+                'deliverable',
+                'deleted',
+                '산출물 삭제',
+                undefined, // activityDescription
+                'deliverable',
+                deliverable.id,
+                data.deletedBy,
+                undefined, // performedByName
+                {
+                  deliverableName: deliverable.name,
+                  deliverableType: deliverable.type,
+                  wbsItemId: deliverable.wbsItemId,
+                  bulkOperation: true,
+                },
+              ),
+            );
           }
         }
       }
