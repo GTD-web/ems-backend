@@ -48,7 +48,6 @@ let Project = Project_1 = class Project extends base_entity_1.BaseEntity {
             status: this.status,
             startDate: this.startDate,
             endDate: this.endDate,
-            managerId: this.managerId,
             get isDeleted() {
                 return this.deletedAt !== null && this.deletedAt !== undefined;
             },

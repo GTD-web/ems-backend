@@ -57,7 +57,7 @@ export class ProjectManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<ProjectResponseDto> {
     const createdBy = user.id;
-    return await this.projectService.생성한다(
+    const project = await this.projectService.생성한다(
       {
         name: createDto.name,
         projectCode: createDto.projectCode,
@@ -68,6 +68,22 @@ export class ProjectManagementController {
       },
       createdBy,
     );
+
+    return {
+      id: project.id,
+      name: project.name,
+      projectCode: project.projectCode,
+      status: project.status,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      manager: project.manager,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      deletedAt: project.deletedAt,
+      isActive: project.isActive,
+      isCompleted: project.isCompleted,
+      isCancelled: project.isCancelled,
+    };
   }
 
   /**
@@ -95,7 +111,21 @@ export class ProjectManagementController {
     const totalPages = Math.ceil(result.total / result.limit);
 
     return {
-      projects: result.projects,
+      projects: result.projects.map((project) => ({
+        id: project.id,
+        name: project.name,
+        projectCode: project.projectCode,
+        status: project.status,
+        startDate: project.startDate,
+        endDate: project.endDate,
+        manager: project.manager,
+        createdAt: project.createdAt,
+        updatedAt: project.updatedAt,
+        deletedAt: project.deletedAt,
+        isActive: project.isActive,
+        isCompleted: project.isCompleted,
+        isCancelled: project.isCancelled,
+      })),
       total: result.total,
       page: result.page,
       limit: result.limit,
@@ -177,7 +207,21 @@ export class ProjectManagementController {
       );
     }
 
-    return project;
+    return {
+      id: project.id,
+      name: project.name,
+      projectCode: project.projectCode,
+      status: project.status,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      manager: project.manager,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      deletedAt: project.deletedAt,
+      isActive: project.isActive,
+      isCompleted: project.isCompleted,
+      isCancelled: project.isCancelled,
+    };
   }
 
   /**
@@ -192,7 +236,7 @@ export class ProjectManagementController {
   ): Promise<ProjectResponseDto> {
     const updatedBy = user.id;
 
-    return await this.projectService.수정한다(
+    const project = await this.projectService.수정한다(
       id,
       {
         name: updateDto.name,
@@ -204,6 +248,22 @@ export class ProjectManagementController {
       },
       updatedBy,
     );
+
+    return {
+      id: project.id,
+      name: project.name,
+      projectCode: project.projectCode,
+      status: project.status,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      manager: project.manager,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+      deletedAt: project.deletedAt,
+      isActive: project.isActive,
+      isCompleted: project.isCompleted,
+      isCancelled: project.isCancelled,
+    };
   }
 
   /**
@@ -218,4 +278,3 @@ export class ProjectManagementController {
     await this.projectService.삭제한다(id, deletedBy);
   }
 }
-
