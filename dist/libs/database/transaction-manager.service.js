@@ -54,8 +54,12 @@ let TransactionManagerService = TransactionManagerService_1 = class TransactionM
     }
     isHttpException(error) {
         return ((error.response && error.status) ||
-            (typeof error.statusCode === 'number' && error.statusCode >= 400 && error.statusCode < 600) ||
-            (error.name && error.name.includes('Exception') && typeof error.getStatus === 'function'));
+            (typeof error.statusCode === 'number' &&
+                error.statusCode >= 400 &&
+                error.statusCode < 600) ||
+            (error.name &&
+                error.name.includes('Exception') &&
+                typeof error.getStatus === 'function'));
     }
     handleDatabaseError(error, context) {
         if (this.isHttpException(error)) {
@@ -148,7 +152,6 @@ let TransactionManagerService = TransactionManagerService_1 = class TransactionM
                 await queryRunner.startTransaction();
                 const result = await operation(queryRunner.manager);
                 await queryRunner.commitTransaction();
-                this.logger.debug('트랜잭션이 성공적으로 커밋되었습니다.');
                 return result;
             }
             catch (error) {

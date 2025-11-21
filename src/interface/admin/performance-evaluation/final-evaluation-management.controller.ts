@@ -42,6 +42,7 @@ export class FinalEvaluationManagementController {
 
   /**
    * 최종평가 저장 (Upsert: 없으면 생성, 있으면 수정)
+   * 저장 시 자동으로 확정 처리됩니다.
    */
   @UpsertFinalEvaluation()
   async upsertFinalEvaluation(
@@ -52,6 +53,7 @@ export class FinalEvaluationManagementController {
   ): Promise<FinalEvaluationResponseDto> {
     const actionBy = user.id;
 
+    // 최종평가 저장
     const evaluationId =
       await this.finalEvaluationBusinessService.최종평가를_저장한다(
         employeeId,
@@ -63,9 +65,15 @@ export class FinalEvaluationManagementController {
         actionBy,
       );
 
+    // 저장 후 자동 확정 처리
+    await this.performanceEvaluationService.최종평가를_확정한다(
+      evaluationId,
+      actionBy,
+    );
+
     return {
       id: evaluationId,
-      message: '최종평가가 성공적으로 저장되었습니다.',
+      message: '최종평가가 성공적으로 저장 및 확정되었습니다.',
     };
   }
 
