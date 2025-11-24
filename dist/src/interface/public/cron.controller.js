@@ -8,52 +8,66 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 var CronController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CronController = void 0;
 const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
-const config_1 = require("@nestjs/config");
 const public_decorator_1 = require("../common/decorators/public.decorator");
 const evaluation_period_auto_phase_service_1 = require("../../domain/core/evaluation-period/evaluation-period-auto-phase.service");
+const evaluation_period_service_1 = require("../../domain/core/evaluation-period/evaluation-period.service");
+const evaluation_period_types_1 = require("../../domain/core/evaluation-period/evaluation-period.types");
 const employee_sync_service_1 = require("../../context/organization-management-context/employee-sync.service");
 const department_sync_service_1 = require("../../context/organization-management-context/department-sync.service");
 let CronController = CronController_1 = class CronController {
     evaluationPeriodAutoPhaseService;
+    evaluationPeriodService;
     employeeSyncService;
     departmentSyncService;
-    configService;
     logger = new common_1.Logger(CronController_1.name);
-    constructor(evaluationPeriodAutoPhaseService, employeeSyncService, departmentSyncService, configService) {
+    constructor(evaluationPeriodAutoPhaseService, evaluationPeriodService, employeeSyncService, departmentSyncService) {
         this.evaluationPeriodAutoPhaseService = evaluationPeriodAutoPhaseService;
+        this.evaluationPeriodService = evaluationPeriodService;
         this.employeeSyncService = employeeSyncService;
         this.departmentSyncService = departmentSyncService;
-        this.configService = configService;
     }
-    validateCronSecret(authHeader) {
-        const cronSecret = this.configService.get('CRON_SECRET');
-        if (!cronSecret) {
-            this.logger.warn('CRON_SECRET이 설정되지 않았습니다. 보안을 위해 설정을 권장합니다.');
-            return;
-        }
-        const expectedAuth = `Bearer ${cronSecret}`;
-        if (authHeader !== expectedAuth) {
-            this.logger.warn(`잘못된 크론 시크릿: ${authHeader}`);
-            throw new common_1.UnauthorizedException('Invalid cron secret');
-        }
-    }
-    async triggerEvaluationPeriodAutoPhase(authHeader) {
-        this.validateCronSecret(authHeader);
-        const isVercel = !!this.configService.get('VERCEL');
-        if (!isVercel) {
-            this.logger.warn('이 엔드포인트는 Vercel 환경에서만 사용됩니다.');
-            return { message: 'Vercel 환경이 아닙니다.' };
-        }
+    async triggerEvaluationPeriodAutoPhase() {
         try {
+            const now = new Date();
+            const nowUTC = now.toISOString();
+            this.logger.log(`[평가기간 자동 단계 변경] 현재 서버 시간 (UTC): ${nowUTC}`);
+            const activePeriods = await this.evaluationPeriodService.전체_조회한다();
+            const inProgressPeriods = activePeriods.filter((period) => period.status === evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS);
+            this.logger.log(`[평가기간 자동 단계 변경] 진행 중인 평가기간 수: ${inProgressPeriods.length}개`);
+            for (const period of inProgressPeriods) {
+                const periodInfo = {
+                    id: period.id,
+                    name: period.name,
+                    startDate: period.startDate?.toISOString() || 'N/A',
+                    currentPhase: period.currentPhase || 'N/A',
+                    evaluationSetupDeadline: period.evaluationSetupDeadline?.toISOString() || 'N/A',
+                    performanceDeadline: period.performanceDeadline?.toISOString() || 'N/A',
+                    selfEvaluationDeadline: period.selfEvaluationDeadline?.toISOString() || 'N/A',
+                    peerEvaluationDeadline: period.peerEvaluationDeadline?.toISOString() || 'N/A',
+                };
+                this.logger.log(`[평가기간 자동 단계 변경] 평가기간 정보 - ID: ${periodInfo.id}, 이름: ${periodInfo.name}, 시작일: ${periodInfo.startDate}, 현재 단계: ${periodInfo.currentPhase}, 평가설정 마감일: ${periodInfo.evaluationSetupDeadline}, 업무수행 마감일: ${periodInfo.performanceDeadline}, 자기평가 마감일: ${periodInfo.selfEvaluationDeadline}, 동료평가 마감일: ${periodInfo.peerEvaluationDeadline}`);
+            }
             const count = await this.evaluationPeriodAutoPhaseService.autoPhaseTransition();
+            if (count > 0) {
+                this.logger.log(`[평가기간 자동 단계 변경] ${count}개 평가기간의 단계가 전이되었습니다.`);
+                const updatedPeriods = await this.evaluationPeriodService.전체_조회한다();
+                const updatedInProgressPeriods = updatedPeriods.filter((period) => period.status === evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS);
+                for (const period of updatedInProgressPeriods) {
+                    if (inProgressPeriods.find((p) => p.id === period.id)?.currentPhase !==
+                        period.currentPhase) {
+                        const beforePhase = inProgressPeriods.find((p) => p.id === period.id)?.currentPhase;
+                        this.logger.log(`[평가기간 자동 단계 변경] 평가기간 ${period.id} (${period.name}) 단계 변경됨: ${beforePhase} → ${period.currentPhase}`);
+                    }
+                }
+            }
+            else {
+                this.logger.log(`[평가기간 자동 단계 변경] 전이된 평가기간이 없습니다.`);
+            }
             return {
                 success: true,
                 message: `평가기간 자동 단계 변경 완료: ${count}개 평가기간 전이됨`,
@@ -65,13 +79,7 @@ let CronController = CronController_1 = class CronController {
             throw error;
         }
     }
-    async triggerEmployeeSync(authHeader) {
-        this.validateCronSecret(authHeader);
-        const isVercel = !!this.configService.get('VERCEL');
-        if (!isVercel) {
-            this.logger.warn('이 엔드포인트는 Vercel 환경에서만 사용됩니다.');
-            return { message: 'Vercel 환경이 아닙니다.' };
-        }
+    async triggerEmployeeSync() {
         try {
             await this.employeeSyncService.scheduledSync();
             return {
@@ -84,13 +92,7 @@ let CronController = CronController_1 = class CronController {
             throw error;
         }
     }
-    async triggerDepartmentSync(authHeader) {
-        this.validateCronSecret(authHeader);
-        const isVercel = !!this.configService.get('VERCEL');
-        if (!isVercel) {
-            this.logger.warn('이 엔드포인트는 Vercel 환경에서만 사용됩니다.');
-            return { message: 'Vercel 환경이 아닙니다.' };
-        }
+    async triggerDepartmentSync() {
         try {
             await this.departmentSyncService.scheduledSync();
             return {
@@ -120,9 +122,8 @@ __decorate([
         status: 401,
         description: '인증 실패 (잘못된 크론 시크릿)',
     }),
-    __param(0, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], CronController.prototype, "triggerEvaluationPeriodAutoPhase", null);
 __decorate([
@@ -140,9 +141,8 @@ __decorate([
         status: 401,
         description: '인증 실패 (잘못된 크론 시크릿)',
     }),
-    __param(0, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], CronController.prototype, "triggerEmployeeSync", null);
 __decorate([
@@ -160,9 +160,8 @@ __decorate([
         status: 401,
         description: '인증 실패 (잘못된 크론 시크릿)',
     }),
-    __param(0, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], CronController.prototype, "triggerDepartmentSync", null);
 exports.CronController = CronController = CronController_1 = __decorate([
@@ -170,8 +169,8 @@ exports.CronController = CronController = CronController_1 = __decorate([
     (0, common_1.Controller)('cron'),
     (0, public_decorator_1.Public)(),
     __metadata("design:paramtypes", [evaluation_period_auto_phase_service_1.EvaluationPeriodAutoPhaseService,
+        evaluation_period_service_1.EvaluationPeriodService,
         employee_sync_service_1.EmployeeSyncService,
-        department_sync_service_1.DepartmentSyncService,
-        config_1.ConfigService])
+        department_sync_service_1.DepartmentSyncService])
 ], CronController);
 //# sourceMappingURL=cron.controller.js.map
