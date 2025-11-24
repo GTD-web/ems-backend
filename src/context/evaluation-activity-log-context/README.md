@@ -323,7 +323,7 @@ evaluation-activity-log-context/
 └── evaluation-activity-log-context.service.ts  ← 하나의 파일
 ```
 
-**CQRS 방식 (7개 파일):**
+**CQRS 방식 (6개 핵심 파일 + 인터페이스):**
 ```
 evaluation-activity-log-context/
 ├── handlers/
@@ -334,9 +334,13 @@ evaluation-activity-log-context/
 │   ├── queries/
 │   │   └── get-evaluation-activity-log-list.handler.ts
 │   └── index.ts
+├── interfaces/
+│   └── evaluation-activity-log-context.interface.ts
 ├── evaluation-activity-log-context.module.ts
-└── evaluation-activity-log-context.service.ts  ← 아직 필요할 수도 있음
+└── README.md
 ```
+
+**기존 Service는 완전히 제거되었습니다.** 모든 기능이 Command/Query Handler로 대체되었습니다.
 
 **고려사항:**
 - 간단한 CRUD 작업에는 오버엔지니어링일 수 있음
