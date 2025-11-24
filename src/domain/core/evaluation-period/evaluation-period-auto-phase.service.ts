@@ -3,12 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { EvaluationPeriod } from './evaluation-period.entity';
-import { EvaluationPeriodPhase, EvaluationPeriodStatus } from './evaluation-period.types';
+import {
+  EvaluationPeriodPhase,
+  EvaluationPeriodStatus,
+} from './evaluation-period.types';
 import { EvaluationPeriodService } from './evaluation-period.service';
 
 /**
  * 평가기간 자동 단계 변경 서비스
- * 
+ *
  * 평가기간의 단계별 마감일을 기반으로 자동으로 단계를 변경합니다.
  */
 @Injectable()
@@ -27,10 +30,10 @@ export class EvaluationPeriodAutoPhaseService {
   @Cron(CronExpression.EVERY_HOUR)
   async autoPhaseTransition(): Promise<number> {
     this.logger.log('평가기간 자동 단계 변경을 시작합니다...');
-    
+
     try {
       const now = new Date();
-      
+
       // 현재 진행 중인 평가기간들을 조회
       const activePeriods = await this.evaluationPeriodRepository.find({
         where: {
@@ -48,7 +51,9 @@ export class EvaluationPeriodAutoPhaseService {
         }
       }
 
-      this.logger.log(`평가기간 자동 단계 변경이 완료되었습니다. 전이된 평가기간 수: ${transitionedCount}개`);
+      this.logger.log(
+        `평가기간 자동 단계 변경이 완료되었습니다. 전이된 평가기간 수: ${transitionedCount}개`,
+      );
       return transitionedCount;
     } catch (error) {
       this.logger.error('평가기간 자동 단계 변경 중 오류 발생:', error);
@@ -58,15 +63,20 @@ export class EvaluationPeriodAutoPhaseService {
 
   /**
    * 특정 평가기간의 단계 전이를 확인하고 실행합니다.
-   * 
+   *
    * @param period 평가기간 엔티티
    * @param now 현재 시간
    */
-  private async checkAndTransitionPhase(period: EvaluationPeriod, now: Date): Promise<boolean> {
+  private async checkAndTransitionPhase(
+    period: EvaluationPeriod,
+    now: Date,
+  ): Promise<boolean> {
     const currentPhase = period.currentPhase;
-    
+
     if (!currentPhase) {
-      this.logger.warn(`평가기간 ${period.id}의 현재 단계가 설정되지 않았습니다.`);
+      this.logger.warn(
+        `평가기간 ${period.id}의 현재 단계가 설정되지 않았습니다.`,
+      );
       return false;
     }
 
@@ -77,48 +87,60 @@ export class EvaluationPeriodAutoPhaseService {
     }
 
     // 다음 단계의 마감일이 지났는지 확인
-    const shouldTransition = this.shouldTransitionToNextPhase(period, nextPhase, now);
-    
+    const shouldTransition = this.shouldTransitionToNextPhase(
+      period,
+      nextPhase,
+      now,
+    );
+
     if (shouldTransition) {
       try {
         this.logger.log(
-          `평가기간 ${period.id} 단계 변경: ${currentPhase} → ${nextPhase}`
+          `평가기간 ${period.id} 단계 변경: ${currentPhase} → ${nextPhase}`,
         );
-        
+
         await this.evaluationPeriodService.단계_변경한다(
           period.id,
           nextPhase,
           'SYSTEM_AUTO_PHASE', // 시스템 자동 변경
         );
-        
+
         this.logger.log(
-          `평가기간 ${period.id} 단계 변경 완료: ${currentPhase} → ${nextPhase}`
+          `평가기간 ${period.id} 단계 변경 완료: ${currentPhase} → ${nextPhase}`,
         );
         return true;
       } catch (error) {
         this.logger.error(
           `평가기간 ${period.id} 단계 변경 실패: ${error.message}`,
-          error.stack
+          error.stack,
         );
         return false;
       }
     }
-    
+
     return false;
   }
 
   /**
    * 현재 단계에서 다음 단계를 반환합니다.
-   * 
+   *
    * @param currentPhase 현재 단계
    * @returns 다음 단계 또는 null (더 이상 전이할 단계가 없는 경우)
    */
-  private getNextPhase(currentPhase: EvaluationPeriodPhase): EvaluationPeriodPhase | null {
-    const phaseSequence: Record<EvaluationPeriodPhase, EvaluationPeriodPhase | null> = {
+  private getNextPhase(
+    currentPhase: EvaluationPeriodPhase,
+  ): EvaluationPeriodPhase | null {
+    const phaseSequence: Record<
+      EvaluationPeriodPhase,
+      EvaluationPeriodPhase | null
+    > = {
       [EvaluationPeriodPhase.WAITING]: EvaluationPeriodPhase.EVALUATION_SETUP,
-      [EvaluationPeriodPhase.EVALUATION_SETUP]: EvaluationPeriodPhase.PERFORMANCE,
-      [EvaluationPeriodPhase.PERFORMANCE]: EvaluationPeriodPhase.SELF_EVALUATION,
-      [EvaluationPeriodPhase.SELF_EVALUATION]: EvaluationPeriodPhase.PEER_EVALUATION,
+      [EvaluationPeriodPhase.EVALUATION_SETUP]:
+        EvaluationPeriodPhase.PERFORMANCE,
+      [EvaluationPeriodPhase.PERFORMANCE]:
+        EvaluationPeriodPhase.SELF_EVALUATION,
+      [EvaluationPeriodPhase.SELF_EVALUATION]:
+        EvaluationPeriodPhase.PEER_EVALUATION,
       [EvaluationPeriodPhase.PEER_EVALUATION]: EvaluationPeriodPhase.CLOSURE,
       [EvaluationPeriodPhase.CLOSURE]: null, // 종결 단계는 더 이상 전이하지 않음
     };
@@ -128,7 +150,7 @@ export class EvaluationPeriodAutoPhaseService {
 
   /**
    * 다음 단계로 전이해야 하는지 확인합니다.
-   * 
+   *
    * @param period 평가기간 엔티티
    * @param nextPhase 다음 단계
    * @param now 현재 시간
@@ -141,22 +163,25 @@ export class EvaluationPeriodAutoPhaseService {
   ): boolean {
     // 현재 단계의 마감일을 확인 (현재 단계가 끝나야 다음 단계로 전이)
     const currentPhase = period.currentPhase;
-    const currentPhaseDeadline = this.getPhaseDeadline(period, currentPhase as EvaluationPeriodPhase);
-    
+    const currentPhaseDeadline = this.getPhaseDeadline(
+      period,
+      currentPhase as EvaluationPeriodPhase,
+    );
+
     if (!currentPhaseDeadline) {
       // 마감일이 설정되지 않은 경우, 전이하지 않음
       this.logger.debug(
-        `평가기간 ${period.id}의 ${currentPhase} 단계 마감일이 설정되지 않았습니다.`
+        `평가기간 ${period.id}의 ${currentPhase} 단계 마감일이 설정되지 않았습니다.`,
       );
       return false;
     }
 
     // 현재 시간이 현재 단계의 마감일을 지났는지 확인
     const shouldTransition = now >= currentPhaseDeadline;
-    
+
     if (shouldTransition) {
       this.logger.debug(
-        `평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${currentPhaseDeadline.toISOString()}, 현재: ${now.toISOString()})`
+        `평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${currentPhaseDeadline.toISOString()}, 현재: ${now.toISOString()})`,
       );
     }
 
@@ -165,12 +190,15 @@ export class EvaluationPeriodAutoPhaseService {
 
   /**
    * 특정 단계의 마감일을 반환합니다.
-   * 
+   *
    * @param period 평가기간 엔티티
    * @param phase 단계
    * @returns 마감일 또는 null
    */
-  private getPhaseDeadline(period: EvaluationPeriod, phase: EvaluationPeriodPhase): Date | null {
+  private getPhaseDeadline(
+    period: EvaluationPeriod,
+    phase: EvaluationPeriodPhase,
+  ): Date | null {
     switch (phase) {
       case EvaluationPeriodPhase.EVALUATION_SETUP:
         return period.evaluationSetupDeadline || null;
@@ -189,13 +217,15 @@ export class EvaluationPeriodAutoPhaseService {
 
   /**
    * 수동으로 단계 전이를 실행합니다.
-   * 
+   *
    * @param periodId 평가기간 ID
    * @returns 전이된 평가기간 정보
    */
-  async manualPhaseTransition(periodId: string): Promise<EvaluationPeriod | null> {
+  async manualPhaseTransition(
+    periodId: string,
+  ): Promise<EvaluationPeriod | null> {
     this.logger.log(`평가기간 ${periodId} 수동 단계 전이를 시작합니다...`);
-    
+
     try {
       const period = await this.evaluationPeriodRepository.findOne({
         where: { id: periodId },
@@ -207,12 +237,14 @@ export class EvaluationPeriodAutoPhaseService {
       }
 
       if (period.status !== EvaluationPeriodStatus.IN_PROGRESS) {
-        this.logger.warn(`평가기간 ${periodId}가 진행 중 상태가 아닙니다. (현재 상태: ${period.status})`);
+        this.logger.warn(
+          `평가기간 ${periodId}가 진행 중 상태가 아닙니다. (현재 상태: ${period.status})`,
+        );
         return null;
       }
 
       await this.checkAndTransitionPhase(period, new Date());
-      
+
       // 업데이트된 평가기간 정보 반환
       return await this.evaluationPeriodRepository.findOne({
         where: { id: periodId },
@@ -225,12 +257,12 @@ export class EvaluationPeriodAutoPhaseService {
 
   /**
    * 모든 진행 중인 평가기간의 단계 전이를 확인합니다.
-   * 
+   *
    * @returns 전이된 평가기간 수
    */
   async checkAllActivePeriods(): Promise<number> {
     this.logger.log('모든 진행 중인 평가기간의 단계 전이를 확인합니다...');
-    
+
     const now = new Date();
     const activePeriods = await this.evaluationPeriodRepository.find({
       where: {
@@ -243,27 +275,29 @@ export class EvaluationPeriodAutoPhaseService {
     for (const period of activePeriods) {
       const beforePhase = period.currentPhase;
       await this.checkAndTransitionPhase(period, now);
-      
+
       // 실제로 전이되었는지 확인
       const updatedPeriod = await this.evaluationPeriodRepository.findOne({
         where: { id: period.id },
       });
-      
+
       if (updatedPeriod && updatedPeriod.currentPhase !== beforePhase) {
         transitionedCount++;
       }
     }
 
-    this.logger.log(`총 ${transitionedCount}개의 평가기간이 단계 전이되었습니다.`);
+    this.logger.log(
+      `총 ${transitionedCount}개의 평가기간이 단계 전이되었습니다.`,
+    );
     return transitionedCount;
   }
 
   /**
    * 일정 수정 후 상태와 단계를 자동으로 조정합니다.
-   * 
+   *
    * - 시작일이 현재 시간보다 이전이고 상태가 WAITING이면 IN_PROGRESS로 변경
    * - 현재 단계에 맞게 마감일을 확인하고 필요시 다음 단계로 전이
-   * 
+   *
    * @param periodId 평가기간 ID
    * @param changedBy 변경자 ID
    * @returns 조정된 평가기간 정보
