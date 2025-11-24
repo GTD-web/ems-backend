@@ -87,39 +87,10 @@ let LoginHandler = LoginHandler_1 = class LoginHandler {
                 : '로그인 처리 중 오류가 발생했습니다.');
         }
         this.logger.log(`로그인 성공: ${loginResult.email} (${loginResult.employeeNumber})`);
-        let employee = await this.employeeService.findByEmployeeNumber(loginResult.employeeNumber);
+        const employee = await this.employeeService.findByEmployeeNumber(loginResult.employeeNumber);
         if (!employee) {
-            this.logger.log(`시스템에 등록되지 않은 직원 발견. 자동 생성합니다: ${loginResult.employeeNumber} (${loginResult.email})`);
-            try {
-                employee = await this.employeeService.create({
-                    employeeNumber: loginResult.employeeNumber,
-                    name: loginResult.name,
-                    email: loginResult.email,
-                    phoneNumber: loginResult.phoneNumber || undefined,
-                    dateOfBirth: loginResult.dateOfBirth
-                        ? new Date(loginResult.dateOfBirth)
-                        : undefined,
-                    gender: loginResult.gender,
-                    hireDate: loginResult.hireDate
-                        ? new Date(loginResult.hireDate)
-                        : undefined,
-                    status: loginResult.status === '재직중' || loginResult.status === '휴직중' || loginResult.status === '퇴사'
-                        ? loginResult.status
-                        : '재직중',
-                    externalId: loginResult.id,
-                    externalCreatedAt: new Date(),
-                    externalUpdatedAt: new Date(),
-                    lastSyncAt: new Date(),
-                    roles: loginResult.systemRoles?.['EMS-PROD'] || [],
-                    isExcludedFromList: false,
-                    isAccessible: true,
-                });
-                this.logger.log(`직원 자동 생성 완료: ${employee.employeeNumber} (${employee.name})`);
-            }
-            catch (error) {
-                this.logger.error(`직원 자동 생성 실패: ${loginResult.employeeNumber}`, error);
-                throw new common_1.InternalServerErrorException('직원 정보 생성 중 오류가 발생했습니다. 관리자에게 문의하세요.');
-            }
+            this.logger.warn(`시스템에 등록되지 않은 직원의 로그인 시도: ${loginResult.employeeNumber} (${loginResult.email})`);
+            throw new common_1.ForbiddenException('시스템에 등록되지 않은 사용자입니다. 관리자에게 문의하세요.');
         }
         const roles = loginResult.systemRoles?.['EMS-PROD'] || [];
         this.logger.log(`로그인 결과의 systemRoles: ${JSON.stringify(loginResult.systemRoles)}`);

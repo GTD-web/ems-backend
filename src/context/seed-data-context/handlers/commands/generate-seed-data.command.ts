@@ -44,6 +44,9 @@ export class GenerateSeedDataHandler
     this.logger.log(
       `설정 확인 - useRealDepartments: ${config.useRealDepartments}, useRealEmployees: ${config.useRealEmployees}`,
     );
+    this.logger.log(
+      `stateDistribution.excludedFromList: ${config.stateDistribution?.excludedFromList ?? '(undefined)'}`,
+    );
     console.log(
       `시드 데이터 생성 시작 - 시나리오: ${config.scenario}, 삭제: ${config.clearExisting}`,
     );

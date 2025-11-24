@@ -39,7 +39,9 @@ export declare class EmployeeService {
     saveMany(employees: Employee[]): Promise<Employee[]>;
     findByEmail(email: string): Promise<Employee | null>;
     findByDepartmentId(departmentId: string): Promise<Employee[]>;
-    findByStatus(status: EmployeeStatus): Promise<Employee[]>;
+    findByStatus(status: EmployeeStatus, options?: {
+        includeExcluded?: boolean;
+    }): Promise<Employee[]>;
     findByGender(gender: EmployeeGender): Promise<Employee[]>;
     findByPositionId(positionId: string): Promise<Employee[]>;
     findByRankId(rankId: string): Promise<Employee[]>;

@@ -58,12 +58,22 @@ let RegisterEvaluationTargetHandler = RegisterEvaluationTargetHandler_1 = class 
             if (!employee) {
                 throw new common_1.NotFoundException(`직원을 찾을 수 없습니다: ${employeeId}`);
             }
-            const result = await this.evaluationPeriodEmployeeMappingService.평가대상자를_등록한다({
+            if (employee.status !== '재직중') {
+                throw new common_1.BadRequestException(`재직중인 직원만 평가 대상자로 등록할 수 있습니다. 현재 상태: ${employee.status}`);
+            }
+            let result = await this.evaluationPeriodEmployeeMappingService.평가대상자를_등록한다({
                 evaluationPeriodId,
                 employeeId,
                 createdBy,
             });
-            this.logger.log(`평가 대상자 등록 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
+            if (employee.isExcludedFromList) {
+                this.logger.log(`직원이 조회 제외 목록에 있어 평가 대상에서도 제외 처리 - 직원: ${employeeId}`);
+                result = await this.evaluationPeriodEmployeeMappingService.평가대상에서_제외한다(evaluationPeriodId, employeeId, {
+                    excludeReason: '조회 제외 목록에 있는 직원',
+                    excludedBy: createdBy,
+                });
+            }
+            this.logger.log(`평가 대상자 등록 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 제외 여부: ${result.isExcluded}`);
             return result;
         }
         catch (error) {

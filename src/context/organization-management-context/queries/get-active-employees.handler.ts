@@ -6,7 +6,9 @@ import type { EmployeeDto } from '../../../domain/common/employee/employee.types
 /**
  * 활성 직원 목록 조회 쿼리
  */
-export class GetActiveEmployeesQuery implements IQuery {}
+export class GetActiveEmployeesQuery implements IQuery {
+  constructor(public readonly includeExcluded: boolean = false) {}
+}
 
 /**
  * 활성 직원 목록 조회 쿼리 핸들러
@@ -19,7 +21,9 @@ export class GetActiveEmployeesQueryHandler
   constructor(private readonly employeeService: EmployeeService) {}
 
   async execute(query: GetActiveEmployeesQuery): Promise<EmployeeDto[]> {
-    const employees = await this.employeeService.findByStatus('재직중');
+    const employees = await this.employeeService.findByStatus('재직중', {
+      includeExcluded: query.includeExcluded,
+    });
     return employees.map((emp) => emp.DTO로_변환한다());
   }
 }

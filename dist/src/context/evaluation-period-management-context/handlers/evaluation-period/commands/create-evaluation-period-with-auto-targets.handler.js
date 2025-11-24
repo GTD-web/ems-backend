@@ -40,8 +40,8 @@ let CreateEvaluationPeriodWithAutoTargetsHandler = CreateEvaluationPeriodWithAut
         try {
             const evaluationPeriod = await this.commandBus.execute(new create_evaluation_period_handler_1.CreateEvaluationPeriodCommand(createData, createdBy));
             this.logger.log(`평가기간 생성 완료 - ID: ${evaluationPeriod.id}, 이름: ${evaluationPeriod.name}`);
-            const activeEmployees = await this.queryBus.execute(new get_active_employees_handler_1.GetActiveEmployeesQuery());
-            this.logger.log(`활성 직원 수: ${activeEmployees.length}명`);
+            const activeEmployees = await this.queryBus.execute(new get_active_employees_handler_1.GetActiveEmployeesQuery(true));
+            this.logger.log(`활성 직원 수: ${activeEmployees.length}명 (조회 제외된 직원 포함)`);
             let registeredTargetsCount = 0;
             let autoAssignedEvaluatorsCount = 0;
             const warnings = [];
