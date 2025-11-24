@@ -10,7 +10,7 @@ export declare class EvaluationTargetController {
     registerEvaluationTarget(evaluationPeriodId: string, employeeId: string, user: AuthenticatedUser): Promise<EvaluationTargetMappingResponseDto>;
     excludeEvaluationTarget(evaluationPeriodId: string, employeeId: string, dto: ExcludeEvaluationTargetDto, user: AuthenticatedUser): Promise<EvaluationTargetMappingResponseDto>;
     includeEvaluationTarget(evaluationPeriodId: string, employeeId: string, user: AuthenticatedUser): Promise<EvaluationTargetMappingResponseDto>;
-    getEvaluationTargets(evaluationPeriodId: string, includeExcluded: boolean): Promise<EvaluationTargetsResponseDto>;
+    getEvaluationTargets(evaluationPeriodId: string, includeExcluded?: boolean): Promise<EvaluationTargetsResponseDto>;
     getExcludedEvaluationTargets(evaluationPeriodId: string): Promise<EvaluationTargetsResponseDto>;
     getEmployeeEvaluationPeriods(employeeId: string): Promise<EmployeeEvaluationPeriodsResponseDto>;
     checkEvaluationTarget(evaluationPeriodId: string, employeeId: string): Promise<EvaluationTargetStatusResponseDto>;

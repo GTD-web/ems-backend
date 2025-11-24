@@ -24,6 +24,15 @@ export class SeedDataScenario {
       inProgress: number;
       completed: number;
     };
+    stateDistribution?: {
+      excludedFromList?: number;
+      selfEvaluationProgress?: {
+        notStarted: number;
+        inProgress: number;
+        completed: number;
+      };
+      [key: string]: any;
+    };
   }): Promise<{
     seedResponse: any;
     evaluationPeriodId?: string;
@@ -50,8 +59,11 @@ export class SeedDataScenario {
       `📤 시드 데이터 생성 요청 - useRealDepartments: ${requestBody.useRealDepartments}, useRealEmployees: ${requestBody.useRealEmployees}`,
     );
 
-    // 자기평가 완료률 옵션이 제공된 경우 추가
-    if (config.selfEvaluationProgress) {
+    // stateDistribution 처리
+    if (config.stateDistribution) {
+      requestBody.stateDistribution = config.stateDistribution;
+    } else if (config.selfEvaluationProgress) {
+      // 하위 호환성: selfEvaluationProgress만 제공된 경우
       requestBody.stateDistribution = {
         selfEvaluationProgress: config.selfEvaluationProgress,
       };

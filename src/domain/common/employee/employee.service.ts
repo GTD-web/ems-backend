@@ -525,7 +525,7 @@ export class EmployeeService {
     const employee = await this.employeeRepository.findOne({
       where: { id, deletedAt: IsNull() },
     });
-    
+
     if (!employee) {
       return null;
     }
@@ -660,11 +660,27 @@ export class EmployeeService {
   /**
    * 상태별 직원 엔티티를 조회한다
    * @param status 직원 상태
+   * @param options.includeExcluded 조회 제외된 직원 포함 여부 (기본값: false)
    * @returns 직원 엔티티 목록
    */
-  async findByStatus(status: EmployeeStatus): Promise<Employee[]> {
+  async findByStatus(
+    status: EmployeeStatus,
+    options: { includeExcluded?: boolean } = {},
+  ): Promise<Employee[]> {
+    const { includeExcluded = false } = options;
+
+    const where: any = {
+      status,
+      deletedAt: IsNull(),
+    };
+
+    // 조회 제외된 직원을 포함하지 않는 경우에만 필터 적용
+    if (!includeExcluded) {
+      where.isExcludedFromList = false;
+    }
+
     return this.employeeRepository.find({
-      where: { status },
+      where,
       order: { name: 'ASC' },
     });
   }

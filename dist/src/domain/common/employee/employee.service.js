@@ -358,9 +358,17 @@ let EmployeeService = class EmployeeService {
             order: { name: 'ASC' },
         });
     }
-    async findByStatus(status) {
+    async findByStatus(status, options = {}) {
+        const { includeExcluded = false } = options;
+        const where = {
+            status,
+            deletedAt: (0, typeorm_2.IsNull)(),
+        };
+        if (!includeExcluded) {
+            where.isExcludedFromList = false;
+        }
         return this.employeeRepository.find({
-            where: { status },
+            where,
             order: { name: 'ASC' },
         });
     }

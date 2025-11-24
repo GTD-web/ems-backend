@@ -3,11 +3,13 @@ import { EvaluationPeriodBusinessService } from '@business/evaluation-period/eva
 import type { EvaluationPeriodDto } from '../../../domain/core/evaluation-period/evaluation-period.types';
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { ChangeEvaluationPeriodPhaseApiDto, CreateEvaluationPeriodApiDto, ManualPermissionSettingDto, PaginationQueryDto, UpdateEvaluationPeriodBasicApiDto, UpdateEvaluationPeriodScheduleApiDto, UpdateEvaluationPeriodStartDateApiDto, UpdateEvaluationSetupDeadlineApiDto, UpdateGradeRangesApiDto, UpdateManualSettingPermissionsApiDto, UpdatePeerEvaluationDeadlineApiDto, UpdatePerformanceDeadlineApiDto, UpdateSelfEvaluationDeadlineApiDto } from '@interface/common/dto/evaluation-period/evaluation-management.dto';
+import type { GradeRangeResponseDto } from '@interface/common/dto/evaluation-period/evaluation-period-response.dto';
 export declare class EvaluationPeriodManagementController {
     private readonly evaluationPeriodBusinessService;
     private readonly evaluationPeriodManagementService;
     private readonly logger;
     constructor(evaluationPeriodBusinessService: EvaluationPeriodBusinessService, evaluationPeriodManagementService: EvaluationPeriodManagementContextService);
+    getDefaultGradeRanges(): Promise<GradeRangeResponseDto[]>;
     getActiveEvaluationPeriods(): Promise<EvaluationPeriodDto[]>;
     getEvaluationPeriods(query: PaginationQueryDto): Promise<{
         items: EvaluationPeriodDto[];

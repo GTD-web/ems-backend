@@ -65,7 +65,8 @@ let GetUnassignedEmployeesHandler = class GetUnassignedEmployeesHandler {
             'department.name AS department_name',
         ])
             .where('employee.deletedAt IS NULL')
-            .andWhere('employee.status = :status', { status: '재직중' });
+            .andWhere('employee.status = :status', { status: '재직중' })
+            .andWhere('employee.isExcludedFromList = :isExcluded', { isExcluded: false });
         if (assignedEmployeeIds.length > 0) {
             unassignedEmployeesQuery.andWhere('employee.id NOT IN (:...assignedIds)', {
                 assignedIds: assignedEmployeeIds,

@@ -27,6 +27,7 @@ import {
   CreateEvaluationPeriod,
   DeleteEvaluationPeriod,
   GetActiveEvaluationPeriods,
+  GetDefaultGradeRanges,
   GetEvaluationPeriodDetail,
   GetEvaluationPeriods,
   StartEvaluationPeriod,
@@ -58,6 +59,8 @@ import {
   UpdatePerformanceDeadlineApiDto,
   UpdateSelfEvaluationDeadlineApiDto,
 } from '@interface/common/dto/evaluation-period/evaluation-management.dto';
+import { DEFAULT_GRADE_RANGES } from '@interface/common/constants/default-grade-ranges.constant';
+import type { GradeRangeResponseDto } from '@interface/common/dto/evaluation-period/evaluation-period-response.dto';
 
 /**
  * 관리자용 평가 관리 컨트롤러
@@ -79,6 +82,14 @@ export class EvaluationPeriodManagementController {
   ) {}
 
   // ==================== GET: 조회 ====================
+
+  /**
+   * 기본 등급 구간을 조회합니다.
+   */
+  @GetDefaultGradeRanges()
+  async getDefaultGradeRanges(): Promise<GradeRangeResponseDto[]> {
+    return DEFAULT_GRADE_RANGES as unknown as GradeRangeResponseDto[];
+  }
 
   /**
    * 활성화된 평가 기간 목록을 조회합니다.

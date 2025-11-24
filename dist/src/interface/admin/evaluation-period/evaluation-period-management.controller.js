@@ -22,6 +22,7 @@ const parse_uuid_decorator_1 = require("../../common/decorators/parse-uuid.decor
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
 const evaluation_period_api_decorators_1 = require("../../common/decorators/evaluation-period/evaluation-period-api.decorators");
 const evaluation_management_dto_1 = require("../../common/dto/evaluation-period/evaluation-management.dto");
+const default_grade_ranges_constant_1 = require("../../common/constants/default-grade-ranges.constant");
 let EvaluationPeriodManagementController = EvaluationPeriodManagementController_1 = class EvaluationPeriodManagementController {
     evaluationPeriodBusinessService;
     evaluationPeriodManagementService;
@@ -29,6 +30,9 @@ let EvaluationPeriodManagementController = EvaluationPeriodManagementController_
     constructor(evaluationPeriodBusinessService, evaluationPeriodManagementService) {
         this.evaluationPeriodBusinessService = evaluationPeriodBusinessService;
         this.evaluationPeriodManagementService = evaluationPeriodManagementService;
+    }
+    async getDefaultGradeRanges() {
+        return default_grade_ranges_constant_1.DEFAULT_GRADE_RANGES;
     }
     async getActiveEvaluationPeriods() {
         return await this.evaluationPeriodManagementService.활성평가기간_조회한다();
@@ -184,6 +188,12 @@ let EvaluationPeriodManagementController = EvaluationPeriodManagementController_
     }
 };
 exports.EvaluationPeriodManagementController = EvaluationPeriodManagementController;
+__decorate([
+    (0, evaluation_period_api_decorators_1.GetDefaultGradeRanges)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], EvaluationPeriodManagementController.prototype, "getDefaultGradeRanges", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.GetActiveEvaluationPeriods)(),
     __metadata("design:type", Function),

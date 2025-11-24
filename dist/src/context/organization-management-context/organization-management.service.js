@@ -58,8 +58,8 @@ let OrganizationManagementService = class OrganizationManagementService {
     async 상위부서조회(departmentId) {
         return await this.queryBus.execute(new queries_1.GetParentDepartmentQuery(departmentId));
     }
-    async 활성직원목록조회() {
-        return await this.queryBus.execute(new queries_1.GetActiveEmployeesQuery());
+    async 활성직원목록조회(includeExcluded = false) {
+        return await this.queryBus.execute(new queries_1.GetActiveEmployeesQuery(includeExcluded));
     }
     async 직원조회제외(employeeId, excludeReason, excludedBy) {
         return await this.commandBus.execute(new commands_1.ExcludeEmployeeFromListCommand(employeeId, excludeReason, excludedBy));

@@ -11,9 +11,46 @@ import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import {
   EvaluationPeriodListResponseDto,
   EvaluationPeriodResponseDto,
+  GradeRangeResponseDto,
 } from '../../dto/evaluation-period/evaluation-period-response.dto';
 
 // ==================== GET 엔드포인트 데코레이터 ====================
+
+/**
+ * 기본 등급 구간 조회 엔드포인트 데코레이터
+ */
+export function GetDefaultGradeRanges() {
+  return applyDecorators(
+    Get('default-grade-ranges'),
+    ApiOperation({
+      summary: '기본 등급 구간 조회',
+      description: `평가 기간 생성 시 참고할 수 있는 기본 등급 구간 설정을 조회합니다.
+
+**동작:**
+- 7개 등급(S, A+, A, B+, B, C, D)의 기본 점수 구간을 반환합니다.
+- 프론트엔드에서 평가 기간 생성 시 이 값을 기본값으로 사용할 수 있습니다.
+
+**등급 구간:**
+- S: 121점 이상
+- A+: 111-120점
+- A: 101-110점
+- B+: 91-100점
+- B: 81-90점
+- C: 71-80점
+- D: 70점 이하
+
+**테스트 케이스:**
+- 기본 조회: 7개 등급 구간을 올바른 순서로 반환
+- 구간 겹침 없음: 모든 등급 구간이 겹치지 않음
+- 전체 범위 커버: 0점부터 1000점까지 모든 점수 범위를 커버`,
+    }),
+    ApiResponse({
+      status: 200,
+      description: '기본 등급 구간 설정',
+      type: [GradeRangeResponseDto],
+    }),
+  );
+}
 
 /**
  * 활성 평가 기간 조회 엔드포인트 데코레이터

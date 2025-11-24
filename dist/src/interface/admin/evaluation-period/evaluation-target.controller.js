@@ -42,7 +42,7 @@ let EvaluationTargetController = class EvaluationTargetController {
     async includeEvaluationTarget(evaluationPeriodId, employeeId, user) {
         return await this.evaluationPeriodManagementService.평가대상에_포함한다(evaluationPeriodId, employeeId, user.id);
     }
-    async getEvaluationTargets(evaluationPeriodId, includeExcluded) {
+    async getEvaluationTargets(evaluationPeriodId, includeExcluded = false) {
         const targets = await this.evaluationPeriodManagementService.평가기간의_평가대상자_조회한다(evaluationPeriodId, includeExcluded);
         return {
             evaluationPeriodId,
@@ -137,7 +137,7 @@ __decorate([
 __decorate([
     (0, evaluation_target_api_decorators_1.GetEvaluationTargets)(),
     __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluationPeriodId')),
-    __param(1, (0, common_1.Query)('includeExcluded', common_1.ParseBoolPipe)),
+    __param(1, (0, common_1.Query)('includeExcluded', new common_1.ParseBoolPipe({ optional: true }))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Boolean]),
     __metadata("design:returntype", Promise)
