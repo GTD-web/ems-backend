@@ -25,45 +25,6 @@ let EvaluatorPeerEvaluationManagementController = class EvaluatorPeerEvaluationM
     constructor(peerEvaluationBusinessService) {
         this.peerEvaluationBusinessService = peerEvaluationBusinessService;
     }
-    async requestEvaluatorsPeerEvaluations(dto, user) {
-        const requestedBy = user.id;
-        const evaluatorIds = dto.evaluatorIds;
-        const evaluateeIds = dto.evaluateeIds;
-        const allResults = [];
-        let successCount = 0;
-        let failedCount = 0;
-        for (const evaluatorId of evaluatorIds) {
-            const targetEvaluateeIds = evaluateeIds.filter((id) => id !== evaluatorId);
-            if (targetEvaluateeIds.length > 0) {
-                const result = await this.peerEvaluationBusinessService.여러_피평가자에_대한_동료평가를_요청한다({
-                    evaluatorId,
-                    evaluateeIds: targetEvaluateeIds,
-                    periodId: dto.periodId,
-                    requestDeadline: dto.requestDeadline,
-                    questionIds: dto.questionIds,
-                    requestedBy,
-                });
-                allResults.push(...result.results);
-                successCount += result.summary.success;
-                failedCount += result.summary.failed;
-            }
-        }
-        const uniqueEvaluatorIds = new Set([...evaluatorIds, ...evaluateeIds]);
-        const evaluatorCount = uniqueEvaluatorIds.size;
-        return {
-            results: allResults,
-            summary: {
-                total: allResults.length,
-                success: successCount,
-                failed: failedCount,
-            },
-            message: failedCount > 0
-                ? `평가자 ${evaluatorCount}명에 대해 ${allResults.length}건 중 ${successCount}건의 동료평가 요청이 생성되었습니다. (실패: ${failedCount}건)`
-                : `평가자 ${evaluatorCount}명에 대해 ${successCount}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
-            ids: allResults.filter((r) => r.success).map((r) => r.evaluationId),
-            count: successCount,
-        };
-    }
     async getEvaluatorAssignedEvaluatees(evaluatorId, query) {
         return await this.peerEvaluationBusinessService.평가자에게_할당된_피평가자_목록을_조회한다({
             evaluatorId,
@@ -101,14 +62,6 @@ let EvaluatorPeerEvaluationManagementController = class EvaluatorPeerEvaluationM
     }
 };
 exports.EvaluatorPeerEvaluationManagementController = EvaluatorPeerEvaluationManagementController;
-__decorate([
-    (0, peer_evaluation_api_decorators_1.RequestEvaluatorsPeerEvaluations)(),
-    __param(0, (0, common_1.Body)()),
-    __param(1, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [peer_evaluation_dto_1.RequestEvaluatorsPeerEvaluationsDto, Object]),
-    __metadata("design:returntype", Promise)
-], EvaluatorPeerEvaluationManagementController.prototype, "requestEvaluatorsPeerEvaluations", null);
 __decorate([
     (0, peer_evaluation_api_decorators_1.GetEvaluatorAssignedEvaluatees)(),
     __param(0, (0, parse_uuid_decorator_1.ParseUUID)('evaluatorId')),
