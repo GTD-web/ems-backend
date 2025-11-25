@@ -316,6 +316,12 @@ export class ProjectResponseDto {
   endDate?: Date;
 
   @ApiPropertyOptional({
+    description: '프로젝트 매니저 ID',
+    example: '11111111-1111-1111-1111-111111111111',
+  })
+  managerId?: string;
+
+  @ApiPropertyOptional({
     description: '프로젝트 매니저 정보',
     type: ManagerInfoDto,
   })

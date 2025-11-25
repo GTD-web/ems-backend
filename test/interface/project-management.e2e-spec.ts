@@ -375,7 +375,14 @@ describe('프로젝트 관리 API E2E 테스트 (POST /admin/projects, GET, PUT,
       // Then
       expect(response.body.id).toBe(projectId);
       expect(response.body.name).toBe('상세 조회 테스트 프로젝트');
+      // managerId 필드가 포함되어야 함
+      expect(response.body).toHaveProperty('managerId');
+      expect(response.body.managerId).toBe(MOCK_MANAGER_ID_1);
       // manager 정보는 Employee 테이블에 해당 externalId가 있을 때만 포함됨
+      if (response.body.manager) {
+        expect(response.body.manager.id).toBe(MOCK_MANAGER_ID_1);
+        expect(response.body.manager.name).toBeDefined();
+      }
     });
 
     it('존재하지 않는 ID로 조회 시 404 에러를 반환한다', async () => {
