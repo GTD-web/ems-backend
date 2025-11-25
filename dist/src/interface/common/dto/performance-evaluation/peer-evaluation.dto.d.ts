@@ -35,6 +35,15 @@ export declare class RequestPartLeaderPeerEvaluationsDto {
     comment?: string;
     requestedBy?: string;
 }
+export declare class RequestEvaluatorsPeerEvaluationsDto {
+    periodId: string;
+    evaluatorIds: string[];
+    evaluateeIds: string[];
+    requestDeadline?: Date;
+    questionIds?: string[];
+    comment?: string;
+    requestedBy?: string;
+}
 export declare class CreatePeerEvaluationBodyDto {
     evaluatorId?: string;
     peerEvaluationContent?: string;

@@ -284,6 +284,76 @@ export class RequestPartLeaderPeerEvaluationsDto {
 }
 
 /**
+ * 평가자들 간 동료평가 요청 DTO (다대다)
+ */
+export class RequestEvaluatorsPeerEvaluationsDto {
+  @ApiProperty({
+    description: '평가기간 ID',
+    example: '550e8400-e29b-41d4-a716-446655440003',
+  })
+  @IsUUID()
+  periodId: string;
+
+  @ApiProperty({
+    description: '평가자 ID 목록 (평가를 수행할 직원들)',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440000',
+      '550e8400-e29b-41d4-a716-446655440001',
+    ],
+  })
+  @ArrayNotEmpty()
+  @IsUUID('4', { each: true })
+  evaluatorIds: string[];
+
+  @ApiProperty({
+    description: '피평가자 ID 목록 (평가를 받을 직원들)',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440002',
+      '550e8400-e29b-41d4-a716-446655440003',
+    ],
+  })
+  @ArrayNotEmpty()
+  @IsUUID('4', { each: true })
+  evaluateeIds: string[];
+
+  @ApiPropertyOptional({
+    description: '요청 마감일 (ISO 8601 형식)',
+    example: '2024-12-31T23:59:59Z',
+    type: String,
+  })
+  @IsOptional()
+  @Type(() => Date)
+  requestDeadline?: Date;
+
+  @ApiPropertyOptional({
+    description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',
+    type: [String],
+    example: [
+      '550e8400-e29b-41d4-a716-446655440010',
+      '550e8400-e29b-41d4-a716-446655440011',
+    ],
+  })
+  @IsOptional()
+  @IsUUID('4', { each: true })
+  questionIds?: string[];
+
+  @ApiPropertyOptional({
+    description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+    example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+  })
+  @IsOptional()
+  @IsString()
+  comment?: string;
+
+  // Swagger에 표시하지 않기 위해 @Api 데코레이터 제거
+  @IsOptional()
+  @IsUUID()
+  requestedBy?: string;
+}
+
+/**
  * 동료평가 생성 Body DTO
  */
 export class CreatePeerEvaluationBodyDto {
