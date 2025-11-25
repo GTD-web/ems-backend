@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminInterfaceModule = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
 const domain_context_module_1 = require("../../context/domain-context.module");
 const business_module_1 = require("../../business/business.module");
 const auth_context_module_1 = require("../../context/auth-context/auth-context.module");
@@ -20,7 +21,9 @@ const evaluation_question_management_context_module_1 = require("../../context/e
 const seed_data_context_module_1 = require("../../context/seed-data-context/seed-data-context.module");
 const evaluation_period_module_1 = require("../../domain/core/evaluation-period/evaluation-period.module");
 const employee_module_1 = require("../../domain/common/employee/employee.module");
+const department_module_1 = require("../../domain/common/department/department.module");
 const project_module_1 = require("../../domain/common/project/project.module");
+const employee_entity_1 = require("../../domain/common/employee/employee.entity");
 const auth_controller_1 = require("./auth/auth.controller");
 const dashboard_controller_1 = require("./dashboard/dashboard.controller");
 const evaluation_period_management_controller_1 = require("./evaluation-period/evaluation-period-management.controller");
@@ -53,6 +56,7 @@ exports.AdminInterfaceModule = AdminInterfaceModule;
 exports.AdminInterfaceModule = AdminInterfaceModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            typeorm_1.TypeOrmModule.forFeature([employee_entity_1.Employee]),
             domain_context_module_1.DomainContextModule,
             auth_context_module_1.AuthContextModule,
             evaluation_period_management_context_module_1.EvaluationPeriodManagementContextModule,
@@ -68,6 +72,7 @@ exports.AdminInterfaceModule = AdminInterfaceModule = __decorate([
             business_module_1.BusinessModule,
             evaluation_period_module_1.EvaluationPeriodModule,
             employee_module_1.EmployeeModule,
+            department_module_1.DepartmentModule,
             project_module_1.ProjectModule,
         ],
         controllers: [

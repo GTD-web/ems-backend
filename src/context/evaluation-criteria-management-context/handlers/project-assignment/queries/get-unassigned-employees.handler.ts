@@ -63,7 +63,7 @@ export class GetUnassignedEmployeesHandler
       .leftJoin(
         Department,
         'department',
-        'department.externalId = employee.departmentId AND department.deletedAt IS NULL',
+        'department.id::text = employee.departmentId AND department.deletedAt IS NULL',
       )
       .select([
         'employee.id AS employee_id',
@@ -73,7 +73,7 @@ export class GetUnassignedEmployeesHandler
         'employee.phoneNumber AS employee_phonenumber',
         'employee.status AS employee_status',
         'employee.departmentId AS employee_departmentid',
-        'department.name AS department_name',
+        'COALESCE(department.name, employee.departmentName) AS department_name',
       ])
       .where('employee.deletedAt IS NULL')
       .andWhere('employee.status = :status', { status: '재직중' })

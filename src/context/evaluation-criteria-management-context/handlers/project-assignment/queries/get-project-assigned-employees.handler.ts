@@ -45,7 +45,7 @@ export class GetProjectAssignedEmployeesHandler
       .leftJoin(
         Department,
         'department',
-        'department.externalId = employee.departmentId AND department.deletedAt IS NULL',
+        'department.id::text = employee.departmentId AND department.deletedAt IS NULL',
       )
       .select([
         // 직원 정보만 선택
@@ -56,7 +56,7 @@ export class GetProjectAssignedEmployeesHandler
         'employee.phoneNumber AS employee_phonenumber',
         'employee.status AS employee_status',
         'employee.departmentId AS employee_departmentid',
-        'department.name AS department_name',
+        'COALESCE(department.name, employee.departmentName) AS department_name',
       ])
       .where('assignment.deletedAt IS NULL')
       .andWhere('assignment.projectId = :projectId', { projectId })

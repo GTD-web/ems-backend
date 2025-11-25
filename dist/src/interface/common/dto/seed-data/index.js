@@ -18,4 +18,9 @@ __exportStar(require("./seed-data-config.dto"), exports);
 __exportStar(require("./real-data-seed-config.dto"), exports);
 __exportStar(require("./seed-data-result.dto"), exports);
 __exportStar(require("./get-seed-data-status.dto"), exports);
+__exportStar(require("./add-new-employees.dto"), exports);
+__exportStar(require("./add-new-employees-result.dto"), exports);
+__exportStar(require("./remove-new-employees.dto"), exports);
+__exportStar(require("./remove-new-employees-result.dto"), exports);
+__exportStar(require("./remove-all-new-employees-result.dto"), exports);
 //# sourceMappingURL=index.js.map

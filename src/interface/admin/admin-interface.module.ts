@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { DomainContextModule } from '../../context/domain-context.module';
 import { BusinessModule } from '../../business/business.module';
 import { AuthContextModule } from '../../context/auth-context/auth-context.module';
@@ -11,7 +12,9 @@ import { EvaluationQuestionManagementContextModule } from '../../context/evaluat
 import { SeedDataContextModule } from '../../context/seed-data-context/seed-data-context.module';
 import { EvaluationPeriodModule } from '../../domain/core/evaluation-period/evaluation-period.module';
 import { EmployeeModule } from '../../domain/common/employee/employee.module';
+import { DepartmentModule } from '../../domain/common/department/department.module';
 import { ProjectModule } from '../../domain/common/project/project.module';
+import { Employee } from '../../domain/common/employee/employee.entity';
 import { AuthController } from './auth/auth.controller';
 import { DashboardController } from './dashboard/dashboard.controller';
 import { EvaluationPeriodManagementController } from './evaluation-period/evaluation-period-management.controller';
@@ -47,6 +50,7 @@ import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
  */
 @Module({
   imports: [
+    TypeOrmModule.forFeature([Employee]), // 엔티티 주입
     DomainContextModule, // 도메인 컨텍스트 모듈 주입
     AuthContextModule, // 인증 컨텍스트 모듈 주입
     EvaluationPeriodManagementContextModule, // 평가 기간 관리 컨텍스트 모듈 주입
@@ -62,6 +66,7 @@ import { RolesGuard, ROLES_GUARD_OPTIONS } from '../common/guards';
     BusinessModule, // 비즈니스 레이어 모듈 주입
     EvaluationPeriodModule, // 평가 기간 모듈 주입
     EmployeeModule, // 직원 모듈 주입
+    DepartmentModule, // 부서 모듈 주입
     ProjectModule, // 프로젝트 모듈 주입
   ],
   controllers: [
