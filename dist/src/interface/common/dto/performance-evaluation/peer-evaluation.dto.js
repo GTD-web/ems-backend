@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpsertPeerEvaluationAnswersResponseDto = exports.UpsertPeerEvaluationAnswersDto = exports.PeerEvaluationAnswerItemDto = exports.PeerEvaluationListResponseDto = exports.PeerEvaluationDetailResponseDto = exports.EvaluationPeriodInfoDto = exports.EvaluationQuestionInDetailDto = exports.AssignedEvaluateeDto = exports.GetEvaluatorAssignedEvaluateesQueryDto = exports.DepartmentInfoDto = exports.EmployeeInfoDto = exports.PeerEvaluationBasicDto = exports.BulkPeerEvaluationRequestResponseDto = exports.BulkRequestSummary = exports.PeerEvaluationRequestResult = exports.PeerEvaluationResponseDto = exports.PeerEvaluationFilterDto = exports.SubmitPeerEvaluationDto = exports.UpdatePeerEvaluationDto = exports.CreatePeerEvaluationBodyDto = exports.RequestPartLeaderPeerEvaluationsDto = exports.RequestMultiplePeerEvaluationsDto = exports.RequestPeerEvaluationToMultipleEvaluatorsDto = exports.RequestPeerEvaluationDto = void 0;
+exports.UpsertPeerEvaluationAnswersResponseDto = exports.UpsertPeerEvaluationAnswersDto = exports.PeerEvaluationAnswerItemDto = exports.PeerEvaluationListResponseDto = exports.PeerEvaluationDetailResponseDto = exports.EvaluationPeriodInfoDto = exports.EvaluationQuestionInDetailDto = exports.AssignedEvaluateeDto = exports.GetEvaluatorAssignedEvaluateesQueryDto = exports.DepartmentInfoDto = exports.EmployeeInfoDto = exports.PeerEvaluationBasicDto = exports.BulkPeerEvaluationRequestResponseDto = exports.BulkRequestSummary = exports.PeerEvaluationRequestResult = exports.PeerEvaluationResponseDto = exports.PeerEvaluationFilterDto = exports.SubmitPeerEvaluationDto = exports.UpdatePeerEvaluationDto = exports.CreatePeerEvaluationBodyDto = exports.RequestEvaluatorsPeerEvaluationsDto = exports.RequestPartLeaderPeerEvaluationsDto = exports.RequestMultiplePeerEvaluationsDto = exports.RequestPeerEvaluationToMultipleEvaluatorsDto = exports.RequestPeerEvaluationDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
@@ -319,6 +319,87 @@ __decorate([
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], RequestPartLeaderPeerEvaluationsDto.prototype, "requestedBy", void 0);
+class RequestEvaluatorsPeerEvaluationsDto {
+    periodId;
+    evaluatorIds;
+    evaluateeIds;
+    requestDeadline;
+    questionIds;
+    comment;
+    requestedBy;
+}
+exports.RequestEvaluatorsPeerEvaluationsDto = RequestEvaluatorsPeerEvaluationsDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가기간 ID',
+        example: '550e8400-e29b-41d4-a716-446655440003',
+    }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], RequestEvaluatorsPeerEvaluationsDto.prototype, "periodId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가자 ID 목록 (평가를 수행할 직원들)',
+        type: [String],
+        example: [
+            '550e8400-e29b-41d4-a716-446655440000',
+            '550e8400-e29b-41d4-a716-446655440001',
+        ],
+    }),
+    (0, class_validator_1.ArrayNotEmpty)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], RequestEvaluatorsPeerEvaluationsDto.prototype, "evaluatorIds", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '피평가자 ID 목록 (평가를 받을 직원들)',
+        type: [String],
+        example: [
+            '550e8400-e29b-41d4-a716-446655440002',
+            '550e8400-e29b-41d4-a716-446655440003',
+        ],
+    }),
+    (0, class_validator_1.ArrayNotEmpty)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], RequestEvaluatorsPeerEvaluationsDto.prototype, "evaluateeIds", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '요청 마감일 (ISO 8601 형식)',
+        example: '2024-12-31T23:59:59Z',
+        type: String,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", Date)
+], RequestEvaluatorsPeerEvaluationsDto.prototype, "requestDeadline", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '평가 질문 ID 목록 (해당 질문들에 대해 작성 요청)',
+        type: [String],
+        example: [
+            '550e8400-e29b-41d4-a716-446655440010',
+            '550e8400-e29b-41d4-a716-446655440011',
+        ],
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)('4', { each: true }),
+    __metadata("design:type", Array)
+], RequestEvaluatorsPeerEvaluationsDto.prototype, "questionIds", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '동료평가 요청 코멘트 (평가자에게 전달할 메시지)',
+        example: '이번 프로젝트에 대한 평가를 부탁드립니다.',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RequestEvaluatorsPeerEvaluationsDto.prototype, "comment", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], RequestEvaluatorsPeerEvaluationsDto.prototype, "requestedBy", void 0);
 class CreatePeerEvaluationBodyDto {
     evaluatorId;
     peerEvaluationContent;
