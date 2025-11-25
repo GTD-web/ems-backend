@@ -8,12 +8,15 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   GetEvaluatorAssignedEvaluatees,
   GetPeerEvaluationDetail,
+  RequestEvaluatorsPeerEvaluations,
   SubmitPeerEvaluation,
   UpsertPeerEvaluationAnswers,
 } from '@interface/common/decorators/performance-evaluation/peer-evaluation-api.decorators';
 import {
   AssignedEvaluateeDto,
+  BulkPeerEvaluationRequestResponseDto,
   GetEvaluatorAssignedEvaluateesQueryDto,
+  RequestEvaluatorsPeerEvaluationsDto,
   UpsertPeerEvaluationAnswersDto,
   UpsertPeerEvaluationAnswersResponseDto,
 } from '@interface/common/dto/performance-evaluation/peer-evaluation.dto';
@@ -30,6 +33,72 @@ export class EvaluatorPeerEvaluationManagementController {
   constructor(
     private readonly peerEvaluationBusinessService: PeerEvaluationBusinessService,
   ) {}
+
+  /**
+   * 평가자들 간 동료평가 요청 (다대다)
+   */
+  @RequestEvaluatorsPeerEvaluations()
+  async requestEvaluatorsPeerEvaluations(
+    @Body() dto: RequestEvaluatorsPeerEvaluationsDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<BulkPeerEvaluationRequestResponseDto> {
+    const requestedBy = user.id;
+
+    // evaluatorIds와 evaluateeIds는 필수이므로 그대로 사용
+    const evaluatorIds = dto.evaluatorIds;
+    const evaluateeIds = dto.evaluateeIds;
+
+    // 각 평가자가 지정된 피평가자들을 평가하도록 요청 생성
+    const allResults: any[] = [];
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const evaluatorId of evaluatorIds) {
+      // 각 평가자가 자신을 제외한 모든 피평가자를 평가
+      const targetEvaluateeIds = evaluateeIds.filter(
+        (id) => id !== evaluatorId,
+      );
+
+      if (targetEvaluateeIds.length > 0) {
+        const result =
+          await this.peerEvaluationBusinessService.여러_피평가자에_대한_동료평가를_요청한다(
+            {
+              evaluatorId,
+              evaluateeIds: targetEvaluateeIds,
+              periodId: dto.periodId,
+              requestDeadline: dto.requestDeadline,
+              questionIds: dto.questionIds,
+              requestedBy,
+            },
+          );
+
+        allResults.push(...result.results);
+        successCount += result.summary.success;
+        failedCount += result.summary.failed;
+      }
+    }
+
+    // 고유한 평가자 수 계산 (evaluators와 evaluatees 합집합)
+    const uniqueEvaluatorIds = new Set([...evaluatorIds, ...evaluateeIds]);
+    const evaluatorCount = uniqueEvaluatorIds.size;
+
+    return {
+      results: allResults,
+      summary: {
+        total: allResults.length,
+        success: successCount,
+        failed: failedCount,
+      },
+      message:
+        failedCount > 0
+          ? `평가자 ${evaluatorCount}명에 대해 ${allResults.length}건 중 ${successCount}건의 동료평가 요청이 생성되었습니다. (실패: ${failedCount}건)`
+          : `평가자 ${evaluatorCount}명에 대해 ${successCount}건의 동료평가 요청이 성공적으로 생성되었습니다.`,
+      // 하위 호환성을 위한 필드
+      ids: allResults.filter((r) => r.success).map((r) => r.evaluationId!),
+      count: successCount,
+    };
+  }
+
   /**
    * 평가자에게 할당된 피평가자 목록 조회
    */
