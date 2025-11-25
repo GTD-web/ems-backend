@@ -29,7 +29,7 @@ let EvaluatorEvaluationPeriodManagementController = class EvaluatorEvaluationPer
         this.evaluationPeriodManagementService = evaluationPeriodManagementService;
     }
     async getDefaultGradeRanges() {
-        return default_grade_ranges_constant_1.DEFAULT_GRADE_RANGES;
+        return (0, default_grade_ranges_constant_1.getDefaultGradeRanges)();
     }
     async getActiveEvaluationPeriods() {
         return await this.evaluationPeriodManagementService.활성평가기간_조회한다();

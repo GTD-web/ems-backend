@@ -55,6 +55,9 @@ export declare class UpdatePeerEvaluationDeadlineApiDto {
 export declare class UpdateGradeRangesApiDto {
     gradeRanges: CreateGradeRangeApiDto[];
 }
+export declare class UpdateDefaultGradeRangesApiDto {
+    gradeRanges: CreateGradeRangeApiDto[];
+}
 export declare class ManualPermissionSettingDto {
     allowManualSetting: boolean;
 }

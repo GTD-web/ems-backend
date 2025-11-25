@@ -1,11 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DEFAULT_GRADE_RANGES = void 0;
-exports.DEFAULT_GRADE_RANGES = [
+exports.getDefaultGradeRanges = getDefaultGradeRanges;
+exports.setDefaultGradeRanges = setDefaultGradeRanges;
+let defaultGradeRanges = [
     {
         grade: 'S',
         minRange: 121,
-        maxRange: 1000,
+        maxRange: 200,
     },
     {
         grade: 'A+',
@@ -38,4 +40,11 @@ exports.DEFAULT_GRADE_RANGES = [
         maxRange: 70,
     },
 ];
+function getDefaultGradeRanges() {
+    return [...defaultGradeRanges];
+}
+function setDefaultGradeRanges(ranges) {
+    defaultGradeRanges = [...ranges];
+}
+exports.DEFAULT_GRADE_RANGES = getDefaultGradeRanges();
 //# sourceMappingURL=default-grade-ranges.constant.js.map

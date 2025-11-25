@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ApiResponseDto = exports.ChangeEvaluationPeriodPhaseApiDto = exports.UpdateManualSettingPermissionsApiDto = exports.ManualPermissionSettingDto = exports.UpdateGradeRangesApiDto = exports.UpdatePeerEvaluationDeadlineApiDto = exports.UpdateSelfEvaluationDeadlineApiDto = exports.UpdatePerformanceDeadlineApiDto = exports.UpdateEvaluationSetupDeadlineApiDto = exports.UpdateEvaluationPeriodStartDateApiDto = exports.UpdateEvaluationPeriodScheduleApiDto = exports.UpdateEvaluationPeriodBasicApiDto = exports.CreateEvaluationPeriodApiDto = exports.CreateGradeRangeApiDto = exports.PaginationResponseDto = exports.PaginationQueryDto = void 0;
+exports.ApiResponseDto = exports.ChangeEvaluationPeriodPhaseApiDto = exports.UpdateManualSettingPermissionsApiDto = exports.ManualPermissionSettingDto = exports.UpdateDefaultGradeRangesApiDto = exports.UpdateGradeRangesApiDto = exports.UpdatePeerEvaluationDeadlineApiDto = exports.UpdateSelfEvaluationDeadlineApiDto = exports.UpdatePerformanceDeadlineApiDto = exports.UpdateEvaluationSetupDeadlineApiDto = exports.UpdateEvaluationPeriodStartDateApiDto = exports.UpdateEvaluationPeriodScheduleApiDto = exports.UpdateEvaluationPeriodBasicApiDto = exports.CreateEvaluationPeriodApiDto = exports.CreateGradeRangeApiDto = exports.PaginationResponseDto = exports.PaginationQueryDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
@@ -116,7 +116,7 @@ __decorate([
     }),
     (0, class_validator_1.IsNumber)({}, { message: '최소 범위는 숫자여야 합니다.' }),
     (0, class_validator_1.Min)(0, { message: '최소 범위는 0 이상이어야 합니다.' }),
-    (0, class_validator_1.Max)(1000, { message: '최소 범위는 1000 이하여야 합니다.' }),
+    (0, class_validator_1.Max)(200, { message: '최소 범위는 200 이하여야 합니다.' }),
     __metadata("design:type", Number)
 ], CreateGradeRangeApiDto.prototype, "minRange", void 0);
 __decorate([
@@ -126,7 +126,7 @@ __decorate([
     }),
     (0, class_validator_1.IsNumber)({}, { message: '최대 범위는 숫자여야 합니다.' }),
     (0, class_validator_1.Min)(0, { message: '최대 범위는 0 이상이어야 합니다.' }),
-    (0, class_validator_1.Max)(1000, { message: '최대 범위는 1000 이하여야 합니다.' }),
+    (0, class_validator_1.Max)(200, { message: '최대 범위는 200 이하여야 합니다.' }),
     __metadata("design:type", Number)
 ], CreateGradeRangeApiDto.prototype, "maxRange", void 0);
 class CreateEvaluationPeriodApiDto {
@@ -375,6 +375,21 @@ __decorate([
     (0, class_transformer_1.Type)(() => CreateGradeRangeApiDto),
     __metadata("design:type", Array)
 ], UpdateGradeRangesApiDto.prototype, "gradeRanges", void 0);
+class UpdateDefaultGradeRangesApiDto {
+    gradeRanges;
+}
+exports.UpdateDefaultGradeRangesApiDto = UpdateDefaultGradeRangesApiDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '기본 등급 구간 목록',
+        type: [CreateGradeRangeApiDto],
+    }),
+    (0, class_validator_1.IsArray)({ message: '등급 구간 목록은 배열이어야 합니다.' }),
+    (0, class_validator_1.ArrayNotEmpty)({ message: '등급 구간 목록은 최소 1개 이상이어야 합니다.' }),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => CreateGradeRangeApiDto),
+    __metadata("design:type", Array)
+], UpdateDefaultGradeRangesApiDto.prototype, "gradeRanges", void 0);
 class ManualPermissionSettingDto {
     allowManualSetting;
 }
