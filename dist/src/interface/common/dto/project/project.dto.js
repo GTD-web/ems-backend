@@ -330,6 +330,7 @@ class ProjectResponseDto {
     status;
     startDate;
     endDate;
+    managerId;
     manager;
     createdAt;
     updatedAt;
@@ -382,6 +383,13 @@ __decorate([
     }),
     __metadata("design:type", Date)
 ], ProjectResponseDto.prototype, "endDate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '프로젝트 매니저 ID',
+        example: '11111111-1111-1111-1111-111111111111',
+    }),
+    __metadata("design:type", String)
+], ProjectResponseDto.prototype, "managerId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: '프로젝트 매니저 정보',

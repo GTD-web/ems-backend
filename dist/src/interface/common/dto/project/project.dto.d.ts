@@ -42,6 +42,7 @@ export declare class ProjectResponseDto {
     status: ProjectStatus;
     startDate?: Date;
     endDate?: Date;
+    managerId?: string;
     manager?: ManagerInfoDto;
     createdAt: Date;
     updatedAt: Date;

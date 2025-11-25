@@ -52,7 +52,7 @@ export async function getProjectsWithWbs(
     .leftJoin(
       Employee,
       'manager',
-      'manager.id::text = project.managerId AND manager.deletedAt IS NULL',
+      'manager.externalId = project.managerId AND manager.deletedAt IS NULL',
     )
     .select([
       'assignment.id AS assignment_id',
@@ -66,7 +66,7 @@ export async function getProjectsWithWbs(
       'project.startDate AS project_start_date',
       'project.endDate AS project_end_date',
       'project.managerId AS project_manager_id',
-      'manager.id AS manager_id',
+      'manager.externalId AS manager_id',
       'manager.name AS manager_name',
     ])
     .where('assignment.periodId = :periodId', {

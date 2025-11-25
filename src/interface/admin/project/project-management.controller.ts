@@ -214,6 +214,7 @@ export class ProjectManagementController {
       status: project.status,
       startDate: project.startDate,
       endDate: project.endDate,
+      managerId: project.managerId,
       manager: project.manager,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,

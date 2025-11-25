@@ -21,6 +21,7 @@ export interface ProjectDto {
     status: ProjectStatus;
     startDate?: Date;
     endDate?: Date;
+    managerId?: string;
     manager?: ManagerInfo;
     readonly isDeleted: boolean;
     readonly isActive: boolean;

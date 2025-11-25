@@ -55,6 +55,8 @@ export interface ProjectDto {
   endDate?: Date;
 
   // 조인된 정보 필드들
+  /** 프로젝트 매니저 ID */
+  managerId?: string;
   /** 프로젝트 매니저 정보 */
   manager?: ManagerInfo;
 

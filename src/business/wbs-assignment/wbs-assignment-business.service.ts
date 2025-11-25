@@ -955,21 +955,30 @@ export class WbsAssignmentBusinessService {
 
     // 4. 2차 평가자 구성 (프로젝트 PM) - Upsert 방식
     // 제약 조건 제거: PM이 있으면 항상 2차 평가자로 구성
-    if (project.manager?.id) {
-      this.logger.log('2차 평가자(프로젝트 PM) 구성', {
-        evaluatorId: project.manager.id,
-        employeeId,
-      });
+    const projectManagerId = project.managerId || project.manager?.id;
+    if (projectManagerId) {
+      // PM이 관리자와 같은 경우 2차 평가자로 설정하지 않음
+      if (projectManagerId !== employee.managerId) {
+        this.logger.log('2차 평가자(프로젝트 PM) 구성', {
+          evaluatorId: projectManagerId,
+          employeeId,
+        });
 
-      await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
-        employeeId,
-        wbsItemId,
-        periodId,
-        project.manager.id,
-        createdBy,
-      );
+        await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
+          employeeId,
+          wbsItemId,
+          periodId,
+          projectManagerId,
+          createdBy,
+        );
+      } else {
+        this.logger.log('프로젝트 PM이 관리자와 동일하여 2차 평가자로 설정하지 않습니다', {
+          projectId,
+          managerId: projectManagerId,
+        });
+      }
     } else {
-      this.logger.warn('프로젝트 PM(manager)이 설정되지 않았습니다', {
+      this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {
         projectId,
       });
     }
@@ -979,7 +988,9 @@ export class WbsAssignmentBusinessService {
       wbsItemId,
       primaryEvaluator: employee.managerId,
       secondaryEvaluator:
-        project.manager?.id !== employee.managerId ? project.manager?.id : null,
+        projectManagerId && projectManagerId !== employee.managerId
+          ? projectManagerId
+          : null,
     });
   }
 

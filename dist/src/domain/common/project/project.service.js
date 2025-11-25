@@ -87,6 +87,7 @@ let ProjectService = class ProjectService {
             'project.createdAt AS "createdAt"',
             'project.updatedAt AS "updatedAt"',
             'project.deletedAt AS "deletedAt"',
+            'project.managerId AS "managerId"',
             'manager.externalId AS manager_id',
             'manager.name AS manager_name',
             'manager.email AS manager_email',
@@ -110,6 +111,7 @@ let ProjectService = class ProjectService {
             createdAt: result.createdAt,
             updatedAt: result.updatedAt,
             deletedAt: result.deletedAt,
+            managerId: result.managerId,
             manager: result.manager_id
                 ? {
                     id: result.manager_id,

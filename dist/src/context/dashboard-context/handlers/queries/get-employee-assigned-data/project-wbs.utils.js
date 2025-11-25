@@ -10,7 +10,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
     const projectAssignments = await projectAssignmentRepository
         .createQueryBuilder('assignment')
         .leftJoin(project_entity_1.Project, 'project', 'project.id = assignment.projectId AND project.deletedAt IS NULL')
-        .leftJoin(employee_entity_1.Employee, 'manager', 'manager.id::text = project.managerId AND manager.deletedAt IS NULL')
+        .leftJoin(employee_entity_1.Employee, 'manager', 'manager.externalId = project.managerId AND manager.deletedAt IS NULL')
         .select([
         'assignment.id AS assignment_id',
         'assignment.projectId AS assignment_project_id',
@@ -23,7 +23,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
         'project.startDate AS project_start_date',
         'project.endDate AS project_end_date',
         'project.managerId AS project_manager_id',
-        'manager.id AS manager_id',
+        'manager.externalId AS manager_id',
         'manager.name AS manager_name',
     ])
         .where('assignment.periodId = :periodId', {
