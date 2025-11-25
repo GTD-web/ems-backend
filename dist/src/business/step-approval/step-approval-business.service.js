@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var StepApprovalBusinessService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StepApprovalBusinessService = void 0;
@@ -21,6 +24,8 @@ const employee_sync_service_1 = require("../../context/organization-management-c
 const downward_evaluation_types_1 = require("../../domain/core/downward-evaluation/downward-evaluation.types");
 const evaluation_revision_request_1 = require("../../domain/sub/evaluation-revision-request");
 const get_employee_self_evaluations_handler_1 = require("../../context/performance-evaluation-context/handlers/self-evaluation/queries/get-employee-self-evaluations.handler");
+const wbs_self_evaluation_business_service_1 = require("../wbs-self-evaluation/wbs-self-evaluation-business.service");
+const downward_evaluation_business_service_1 = require("../downward-evaluation/downward-evaluation-business.service");
 let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepApprovalBusinessService {
     performanceEvaluationService;
     stepApprovalContextService;
@@ -28,14 +33,18 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
     evaluationCriteriaManagementService;
     revisionRequestContextService;
     employeeSyncService;
+    wbsSelfEvaluationBusinessService;
+    downwardEvaluationBusinessService;
     logger = new common_1.Logger(StepApprovalBusinessService_1.name);
-    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService, revisionRequestContextService, employeeSyncService) {
+    constructor(performanceEvaluationService, stepApprovalContextService, activityLogContextService, evaluationCriteriaManagementService, revisionRequestContextService, employeeSyncService, wbsSelfEvaluationBusinessService, downwardEvaluationBusinessService) {
         this.performanceEvaluationService = performanceEvaluationService;
         this.stepApprovalContextService = stepApprovalContextService;
         this.activityLogContextService = activityLogContextService;
         this.evaluationCriteriaManagementService = evaluationCriteriaManagementService;
         this.revisionRequestContextService = revisionRequestContextService;
         this.employeeSyncService = employeeSyncService;
+        this.wbsSelfEvaluationBusinessService = wbsSelfEvaluationBusinessService;
+        this.downwardEvaluationBusinessService = downwardEvaluationBusinessService;
     }
     async 자기평가_승인_시_제출상태_변경(evaluationPeriodId, employeeId, approvedBy) {
         this.logger.log(`자기평가 승인 시 제출 상태 변경 시작 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
@@ -122,6 +131,35 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
             revisionComment,
             updatedBy,
         });
+        try {
+            await this.wbsSelfEvaluationBusinessService.자기평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId, employeeId, revisionComment, updatedBy);
+            this.logger.log(`자기평가 재작성 요청 생성 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        }
+        catch (error) {
+            this.logger.warn(`자기평가 재작성 요청 생성 실패 (자기평가가 없을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+        }
+        try {
+            await this.downwardEvaluationBusinessService.일차_하향평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId, employeeId, revisionComment, updatedBy);
+            this.logger.log(`1차 하향평가 재작성 요청 생성 완료 - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`);
+        }
+        catch (error) {
+            this.logger.warn(`1차 하향평가 재작성 요청 생성 실패 (1차 하향평가가 없을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+        }
+        try {
+            const secondaryEvaluators = await this.stepApprovalContextService.이차평가자들을_조회한다(evaluationPeriodId, employeeId);
+            for (const evaluatorId of secondaryEvaluators) {
+                try {
+                    await this.downwardEvaluationBusinessService.이차_하향평가_재작성요청_생성_및_제출상태_초기화(evaluationPeriodId, employeeId, evaluatorId, revisionComment, updatedBy);
+                    this.logger.log(`2차 하향평가 재작성 요청 생성 완료 - 직원: ${employeeId}, 평가자: ${evaluatorId}, 평가기간: ${evaluationPeriodId}`);
+                }
+                catch (error) {
+                    this.logger.warn(`2차 하향평가 재작성 요청 생성 실패 - 직원: ${employeeId}, 평가자: ${evaluatorId}`, error);
+                }
+            }
+        }
+        catch (error) {
+            this.logger.warn(`2차 하향평가 재작성 요청 생성 실패 (2차 평가자가 없을 수 있음) - 직원: ${employeeId}, 평가기간: ${evaluationPeriodId}`, error);
+        }
         try {
             await this.activityLogContextService.단계승인_상태변경_활동내역을_기록한다({
                 evaluationPeriodId,
@@ -383,11 +421,15 @@ let StepApprovalBusinessService = StepApprovalBusinessService_1 = class StepAppr
 exports.StepApprovalBusinessService = StepApprovalBusinessService;
 exports.StepApprovalBusinessService = StepApprovalBusinessService = StepApprovalBusinessService_1 = __decorate([
     (0, common_1.Injectable)(),
+    __param(6, (0, common_1.Inject)((0, common_1.forwardRef)(() => wbs_self_evaluation_business_service_1.WbsSelfEvaluationBusinessService))),
+    __param(7, (0, common_1.Inject)((0, common_1.forwardRef)(() => downward_evaluation_business_service_1.DownwardEvaluationBusinessService))),
     __metadata("design:paramtypes", [performance_evaluation_service_1.PerformanceEvaluationService,
         step_approval_context_service_1.StepApprovalContextService,
         evaluation_activity_log_context_service_1.EvaluationActivityLogContextService,
         evaluation_criteria_management_service_1.EvaluationCriteriaManagementService,
         revision_request_context_service_1.RevisionRequestContextService,
-        employee_sync_service_1.EmployeeSyncService])
+        employee_sync_service_1.EmployeeSyncService,
+        wbs_self_evaluation_business_service_1.WbsSelfEvaluationBusinessService,
+        downward_evaluation_business_service_1.DownwardEvaluationBusinessService])
 ], StepApprovalBusinessService);
 //# sourceMappingURL=step-approval-business.service.js.map

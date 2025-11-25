@@ -4,6 +4,8 @@ import { SeedDataScenario } from '../seed-data.scenario';
 import { EvaluationTargetScenario } from '../evaluation-target.scenario';
 import { EvaluationPeriodScenario } from '../evaluation-period.scenario';
 import { WbsAssignmentScenario } from '../wbs-assignment/wbs-assignment.scenario';
+import { WbsSelfEvaluationScenario } from '../performance-evaluation/wbs-self-evaluation/wbs-self-evaluation.scenario';
+import { DownwardEvaluationScenario } from '../performance-evaluation/downward-evaluation/downward-evaluation.scenario';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -1670,6 +1672,222 @@ describe('평가기준 제출 및 재작성 요청 시나리오', () => {
                 dashboardStatus.criteriaSetup.criteriaSubmission.submittedAt,
               submittedBy:
                 dashboardStatus.criteriaSetup.criteriaSubmission.submittedBy,
+            },
+            passed: true,
+          },
+        });
+      } catch (e) {
+        error = e;
+        // 테스트 결과 저장 (실패)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            passed: false,
+            error: extractErrorMessage(error),
+          },
+        });
+        throw e;
+      }
+    });
+  });
+
+  describe('시나리오 4: 평가기준 재작성 요청 시 하위 평가들도 함께 revision_requested로 변경', () => {
+    it('평가기준 재작성 요청 시 자기평가, 1차 하향평가, 2차 하향평가도 함께 revision_requested로 변경되는지 확인', async () => {
+      let dashboardStatus: any;
+      let error: any;
+      const testName =
+        '평가기준 재작성 요청 시 하위 평가들도 함께 revision_requested로 변경';
+
+      try {
+        // Given - 평가기준 제출 및 하위 평가들 제출
+        // 1. 평가기준 제출
+        await stepApprovalScenario.평가기준을_제출한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+        });
+
+        // 2. 자기평가 생성 및 제출 (1차 평가자에게, 관리자에게)
+        const wbsSelfEvaluationScenario = new WbsSelfEvaluationScenario(
+          testSuite,
+        );
+        await wbsSelfEvaluationScenario.WBS자기평가를_저장한다({
+          periodId: evaluationPeriodId,
+          employeeId: evaluateeId,
+          wbsItemId: testWbsItemIds[0],
+          selfEvaluationContent: '자기평가 내용',
+          selfEvaluationScore: 80,
+        });
+
+        await wbsSelfEvaluationScenario.직원의_전체_WBS자기평가를_1차평가자에게_제출한다(
+          {
+            employeeId: evaluateeId,
+            periodId: evaluationPeriodId,
+          },
+        );
+
+        await wbsSelfEvaluationScenario.직원의_전체_WBS자기평가를_관리자에게_제출한다(
+          {
+            employeeId: evaluateeId,
+            periodId: evaluationPeriodId,
+          },
+        );
+
+        // 3. 1차 하향평가 생성 및 제출
+        const downwardEvaluationScenario = new DownwardEvaluationScenario(
+          testSuite,
+        );
+        await downwardEvaluationScenario.일차하향평가를_저장한다({
+          evaluatorId: primaryEvaluatorId,
+          evaluateeId: evaluateeId,
+          periodId: evaluationPeriodId,
+          wbsId: testWbsItemIds[0],
+          downwardEvaluationContent: '1차 하향평가 내용',
+          downwardEvaluationScore: 85,
+        });
+
+        await downwardEvaluationScenario.피평가자의_모든_하향평가를_일괄_제출한다(
+          {
+            evaluatorId: primaryEvaluatorId,
+            evaluateeId: evaluateeId,
+            periodId: evaluationPeriodId,
+            evaluationType: 'primary',
+          },
+        );
+
+        // 4. 2차 하향평가 생성 및 제출 (2차 평가자가 있는 경우)
+        // 대시보드 API로 2차 평가자 확인
+        let secondaryEvaluatorId: string | null = null;
+        try {
+          const dashboardStatusBefore =
+            await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다(
+              {
+                evaluationPeriodId,
+                employeeId: evaluateeId,
+              },
+            );
+
+          // 2차 평가자가 있는지 확인
+          if (
+            dashboardStatusBefore.downwardEvaluation.secondary.evaluators &&
+            dashboardStatusBefore.downwardEvaluation.secondary.evaluators
+              .length > 0
+          ) {
+            const evaluatorId =
+              dashboardStatusBefore.downwardEvaluation.secondary.evaluators[0]
+                .evaluator.id;
+            secondaryEvaluatorId = evaluatorId;
+
+            await downwardEvaluationScenario.이차하향평가를_저장한다({
+              evaluatorId: evaluatorId,
+              evaluateeId: evaluateeId,
+              periodId: evaluationPeriodId,
+              wbsId: testWbsItemIds[0],
+              downwardEvaluationContent: '2차 하향평가 내용',
+              downwardEvaluationScore: 90,
+            });
+
+            await downwardEvaluationScenario.피평가자의_모든_하향평가를_일괄_제출한다(
+              {
+                evaluatorId: evaluatorId,
+                evaluateeId: evaluateeId,
+                periodId: evaluationPeriodId,
+                evaluationType: 'secondary',
+              },
+            );
+          }
+        } catch (error) {
+          // 2차 평가자가 없을 수도 있으므로 에러를 무시하고 계속 진행
+          console.log('2차 평가자가 없어 2차 하향평가 생성 건너뜀');
+        }
+
+        // When - 평가기준 재작성 요청 생성
+        await stepApprovalScenario.평가기준설정_단계승인_상태를_변경한다({
+          evaluationPeriodId,
+          employeeId: evaluateeId,
+          status: 'revision_requested',
+          revisionComment: '평가기준 재작성 요청 코멘트입니다.',
+        });
+
+        // Then - 하위 평가들도 함께 revision_requested로 변경되었는지 확인
+        dashboardStatus =
+          await stepApprovalScenario.평가기준_제출상태를_대시보드에서_조회한다({
+            evaluationPeriodId,
+            employeeId: evaluateeId,
+          });
+
+        // 1. 평가기준 설정 상태 확인
+        expect(dashboardStatus.criteriaSetup.status).toBe('revision_requested');
+        expect(
+          dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+        ).toBe(false);
+        expect(dashboardStatus.stepApproval.criteriaSettingStatus).toBe(
+          'revision_requested',
+        );
+
+        // 2. 자기평가 상태 확인
+        expect(dashboardStatus.selfEvaluation.status).toBe(
+          'revision_requested',
+        );
+        expect(dashboardStatus.selfEvaluation.isSubmittedToManager).toBe(false);
+        expect(dashboardStatus.stepApproval.selfEvaluationStatus).toBe(
+          'revision_requested',
+        );
+
+        // 3. 1차 하향평가 상태 확인
+        expect(dashboardStatus.downwardEvaluation.primary.status).toBe(
+          'revision_requested',
+        );
+        expect(dashboardStatus.downwardEvaluation.primary.isSubmitted).toBe(
+          false,
+        );
+        expect(dashboardStatus.stepApproval.primaryEvaluationStatus).toBe(
+          'revision_requested',
+        );
+
+        // 4. 2차 하향평가 상태 확인 (2차 평가자가 있는 경우)
+        if (secondaryEvaluatorId) {
+          expect(dashboardStatus.downwardEvaluation.secondary.status).toBe(
+            'revision_requested',
+          );
+          expect(dashboardStatus.downwardEvaluation.secondary.isSubmitted).toBe(
+            false,
+          );
+          // 2차 평가자별 상태 확인
+          const secondaryStatus =
+            dashboardStatus.stepApproval.secondaryEvaluationStatuses.find(
+              (s: any) => s.evaluatorId === secondaryEvaluatorId,
+            );
+          expect(secondaryStatus).toBeDefined();
+          expect(secondaryStatus.status).toBe('revision_requested');
+        }
+
+        // 테스트 결과 저장 (성공)
+        testResults.push({
+          testName,
+          result: {
+            employeeId: evaluateeId,
+            criteriaSetupStatus: dashboardStatus.criteriaSetup.status,
+            selfEvaluationStatus: dashboardStatus.selfEvaluation.status,
+            primaryEvaluationStatus:
+              dashboardStatus.downwardEvaluation.primary.status,
+            secondaryEvaluationStatus:
+              dashboardStatus.downwardEvaluation.secondary?.status,
+            criteriaSubmission: {
+              isSubmitted:
+                dashboardStatus.criteriaSetup.criteriaSubmission.isSubmitted,
+            },
+            selfEvaluation: {
+              isSubmittedToManager:
+                dashboardStatus.selfEvaluation.isSubmittedToManager,
+            },
+            primaryEvaluation: {
+              isSubmitted:
+                dashboardStatus.downwardEvaluation.primary.isSubmitted,
+            },
+            secondaryEvaluation: {
+              isSubmitted:
+                dashboardStatus.downwardEvaluation.secondary?.isSubmitted,
             },
             passed: true,
           },
