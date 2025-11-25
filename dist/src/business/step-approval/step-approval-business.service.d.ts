@@ -6,6 +6,8 @@ import { RevisionRequestContextService } from '@context/revision-request-context
 import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval';
 import { SecondaryEvaluationStepApproval } from '@/domain/sub/secondary-evaluation-step-approval';
+import { WbsSelfEvaluationBusinessService } from '@business/wbs-self-evaluation/wbs-self-evaluation-business.service';
+import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
 export declare class StepApprovalBusinessService {
     private readonly performanceEvaluationService;
     private readonly stepApprovalContextService;
@@ -13,8 +15,10 @@ export declare class StepApprovalBusinessService {
     private readonly evaluationCriteriaManagementService;
     private readonly revisionRequestContextService;
     private readonly employeeSyncService;
+    private readonly wbsSelfEvaluationBusinessService;
+    private readonly downwardEvaluationBusinessService;
     private readonly logger;
-    constructor(performanceEvaluationService: PerformanceEvaluationService, stepApprovalContextService: StepApprovalContextService, activityLogContextService: EvaluationActivityLogContextService, evaluationCriteriaManagementService: EvaluationCriteriaManagementService, revisionRequestContextService: RevisionRequestContextService, employeeSyncService: EmployeeSyncService);
+    constructor(performanceEvaluationService: PerformanceEvaluationService, stepApprovalContextService: StepApprovalContextService, activityLogContextService: EvaluationActivityLogContextService, evaluationCriteriaManagementService: EvaluationCriteriaManagementService, revisionRequestContextService: RevisionRequestContextService, employeeSyncService: EmployeeSyncService, wbsSelfEvaluationBusinessService: WbsSelfEvaluationBusinessService, downwardEvaluationBusinessService: DownwardEvaluationBusinessService);
     자기평가_승인_시_제출상태_변경(evaluationPeriodId: string, employeeId: string, approvedBy: string): Promise<void>;
     일차_하향평가_승인_시_제출상태_변경(evaluationPeriodId: string, employeeId: string, approvedBy: string): Promise<void>;
     이차_하향평가_승인_시_제출상태_변경(evaluationPeriodId: string, employeeId: string, evaluatorId: string, approvedBy: string): Promise<void>;

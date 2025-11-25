@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PerformanceEvaluationContextModule } from '@context/performance-evaluation-context/performance-evaluation-context.module';
 import { StepApprovalContextModule } from '@context/step-approval-context/step-approval-context.module';
 import { EvaluationActivityLogContextModule } from '@context/evaluation-activity-log-context/evaluation-activity-log-context.module';
 import { EvaluationCriteriaManagementContextModule } from '@context/evaluation-criteria-management-context/evaluation-criteria-management-context.module';
 import { RevisionRequestContextModule } from '@context/revision-request-context/revision-request-context.module';
 import { OrganizationManagementContextModule } from '@context/organization-management-context/organization-management-context.module';
+import { WbsSelfEvaluationBusinessModule } from '../wbs-self-evaluation/wbs-self-evaluation-business.module';
+import { DownwardEvaluationBusinessModule } from '../downward-evaluation/downward-evaluation-business.module';
 import { StepApprovalBusinessService } from './step-approval-business.service';
 
 /**
@@ -20,6 +22,8 @@ import { StepApprovalBusinessService } from './step-approval-business.service';
     EvaluationCriteriaManagementContextModule,
     RevisionRequestContextModule,
     OrganizationManagementContextModule,
+    forwardRef(() => WbsSelfEvaluationBusinessModule),
+    forwardRef(() => DownwardEvaluationBusinessModule),
   ],
   providers: [StepApprovalBusinessService],
   exports: [StepApprovalBusinessService],
