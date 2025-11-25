@@ -30,10 +30,28 @@ let VerifyAndSyncUserHandler = VerifyAndSyncUserHandler_1 = class VerifyAndSyncU
         try {
             const verifyResult = await this.ssoService.토큰을검증한다(accessToken);
             const requestedEmployeeNumber = verifyResult.user_info.employee_number;
-            const employee = await this.employeeService.findByEmployeeNumber(requestedEmployeeNumber);
+            let employee = await this.employeeService.findByEmployeeNumber(requestedEmployeeNumber);
             if (!employee) {
-                this.logger.warn(`시스템에 등록되지 않은 직원의 토큰 검증 시도: ${requestedEmployeeNumber}`);
-                throw new common_1.UnauthorizedException('시스템에 등록되지 않은 사용자입니다. 관리자에게 문의하세요.');
+                this.logger.log(`시스템에 등록되지 않은 직원 발견. 기본 정보로 자동 생성합니다: ${requestedEmployeeNumber}`);
+                try {
+                    employee = await this.employeeService.create({
+                        employeeNumber: requestedEmployeeNumber,
+                        name: verifyResult.user_info.name,
+                        email: verifyResult.user_info.email,
+                        externalId: verifyResult.user_info.id,
+                        status: '재직중',
+                        externalCreatedAt: new Date(),
+                        externalUpdatedAt: new Date(),
+                        lastSyncAt: new Date(),
+                        isExcludedFromList: false,
+                        isAccessible: true,
+                    });
+                    this.logger.log(`직원 자동 생성 완료: ${employee.employeeNumber} (${employee.name})`);
+                }
+                catch (error) {
+                    this.logger.error(`직원 자동 생성 실패: ${requestedEmployeeNumber}`, error);
+                    throw new common_1.UnauthorizedException('직원 정보 생성 중 오류가 발생했습니다. 관리자에게 문의하세요.');
+                }
             }
             if (employee.employeeNumber !== requestedEmployeeNumber) {
                 this.logger.warn(`사번 불일치: 요청된 사번(${requestedEmployeeNumber})과 조회된 사번(${employee.employeeNumber})이 일치하지 않습니다.`);

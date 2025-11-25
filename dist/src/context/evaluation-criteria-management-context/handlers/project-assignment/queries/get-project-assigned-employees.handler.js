@@ -39,7 +39,7 @@ let GetProjectAssignedEmployeesHandler = class GetProjectAssignedEmployeesHandle
         const results = await this.projectAssignmentRepository
             .createQueryBuilder('assignment')
             .leftJoin(employee_entity_1.Employee, 'employee', 'employee.id = assignment.employeeId AND employee.deletedAt IS NULL')
-            .leftJoin(department_entity_1.Department, 'department', 'department.externalId = employee.departmentId AND department.deletedAt IS NULL')
+            .leftJoin(department_entity_1.Department, 'department', 'department.id::text = employee.departmentId AND department.deletedAt IS NULL')
             .select([
             'employee.id AS employee_id',
             'employee.employeeNumber AS employee_employeenumber',
@@ -48,7 +48,7 @@ let GetProjectAssignedEmployeesHandler = class GetProjectAssignedEmployeesHandle
             'employee.phoneNumber AS employee_phonenumber',
             'employee.status AS employee_status',
             'employee.departmentId AS employee_departmentid',
-            'department.name AS department_name',
+            'COALESCE(department.name, employee.departmentName) AS department_name',
         ])
             .where('assignment.deletedAt IS NULL')
             .andWhere('assignment.projectId = :projectId', { projectId })
