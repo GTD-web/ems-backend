@@ -15,18 +15,6 @@ export interface DeliverableInfo {
 }
 
 /**
- * 선택 가능한 2차 평가자 정보
- */
-export interface SelectableSecondaryEvaluator {
-  id: string;
-  name: string;
-  email?: string;
-  phoneNumber?: string;
-  departmentName?: string;
-  rankName?: string;
-}
-
-/**
  * 할당된 프로젝트 정보 (WBS 목록 포함)
  */
 export interface AssignedProjectWithWbs {
@@ -38,7 +26,6 @@ export interface AssignedProjectWithWbs {
     id: string;
     name: string;
   } | null;
-  selectableSecondaryEvaluators: SelectableSecondaryEvaluator[];
   wbsList: AssignedWbsInfo[];
 }
 

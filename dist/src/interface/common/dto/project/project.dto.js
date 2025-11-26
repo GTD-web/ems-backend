@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SetSecondaryEvaluatorsResponseDto = exports.ProjectManagerListResponseDto = exports.ProjectManagerDto = exports.GetProjectManagersQueryDto = exports.ProjectListResponseDto = exports.ProjectResponseDto = exports.SetSecondaryEvaluatorsDto = exports.SelectableSecondaryEvaluatorInfoDto = exports.ManagerInfoDto = exports.GetProjectListQueryDto = exports.UpdateProjectDto = exports.CreateProjectDto = void 0;
+exports.ProjectManagerListResponseDto = exports.ProjectManagerDto = exports.GetProjectManagersQueryDto = exports.ProjectListResponseDto = exports.ProjectResponseDto = exports.ManagerInfoDto = exports.GetProjectListQueryDto = exports.UpdateProjectDto = exports.CreateProjectDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
@@ -323,74 +323,6 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], ManagerInfoDto.prototype, "rankName", void 0);
-class SelectableSecondaryEvaluatorInfoDto {
-    id;
-    name;
-    email;
-    phoneNumber;
-    departmentName;
-    rankName;
-}
-exports.SelectableSecondaryEvaluatorInfoDto = SelectableSecondaryEvaluatorInfoDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '평가자 ID (UUID)',
-        example: '550e8400-e29b-41d4-a716-446655440000',
-    }),
-    __metadata("design:type", String)
-], SelectableSecondaryEvaluatorInfoDto.prototype, "id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '평가자 이름',
-        example: '김철수',
-    }),
-    __metadata("design:type", String)
-], SelectableSecondaryEvaluatorInfoDto.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '이메일',
-        example: 'kim@example.com',
-    }),
-    __metadata("design:type", String)
-], SelectableSecondaryEvaluatorInfoDto.prototype, "email", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '전화번호',
-        example: '010-1234-5678',
-    }),
-    __metadata("design:type", String)
-], SelectableSecondaryEvaluatorInfoDto.prototype, "phoneNumber", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '부서명',
-        example: '개발팀',
-    }),
-    __metadata("design:type", String)
-], SelectableSecondaryEvaluatorInfoDto.prototype, "departmentName", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '직책명',
-        example: '과장',
-    }),
-    __metadata("design:type", String)
-], SelectableSecondaryEvaluatorInfoDto.prototype, "rankName", void 0);
-class SetSecondaryEvaluatorsDto {
-    evaluatorIds;
-}
-exports.SetSecondaryEvaluatorsDto = SetSecondaryEvaluatorsDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '2차 평가자 ID 목록 (직원 ID)',
-        type: [String],
-        example: [
-            '550e8400-e29b-41d4-a716-446655440000',
-            '650e8400-e29b-41d4-a716-446655440001',
-        ],
-    }),
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.IsUUID)('4', { each: true }),
-    __metadata("design:type", Array)
-], SetSecondaryEvaluatorsDto.prototype, "evaluatorIds", void 0);
 class ProjectResponseDto {
     id;
     name;
@@ -400,7 +332,6 @@ class ProjectResponseDto {
     endDate;
     managerId;
     manager;
-    selectableSecondaryEvaluators;
     createdAt;
     updatedAt;
     deletedAt;
@@ -466,13 +397,6 @@ __decorate([
     }),
     __metadata("design:type", ManagerInfoDto)
 ], ProjectResponseDto.prototype, "manager", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: '선택 가능한 2차 평가자 목록',
-        type: [SelectableSecondaryEvaluatorInfoDto],
-    }),
-    __metadata("design:type", Array)
-], ProjectResponseDto.prototype, "selectableSecondaryEvaluators", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '생성일시',
@@ -685,23 +609,4 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], ProjectManagerListResponseDto.prototype, "total", void 0);
-class SetSecondaryEvaluatorsResponseDto {
-    count;
-    evaluators;
-}
-exports.SetSecondaryEvaluatorsResponseDto = SetSecondaryEvaluatorsResponseDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '설정된 2차 평가자 수',
-        example: 3,
-    }),
-    __metadata("design:type", Number)
-], SetSecondaryEvaluatorsResponseDto.prototype, "count", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: '설정된 2차 평가자 목록',
-        type: [SelectableSecondaryEvaluatorInfoDto],
-    }),
-    __metadata("design:type", Array)
-], SetSecondaryEvaluatorsResponseDto.prototype, "evaluators", void 0);
 //# sourceMappingURL=project.dto.js.map

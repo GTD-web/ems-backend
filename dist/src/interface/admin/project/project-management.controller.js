@@ -51,7 +51,6 @@ let ProjectManagementController = class ProjectManagementController {
             isActive: project.isActive,
             isCompleted: project.isCompleted,
             isCancelled: project.isCancelled,
-            selectableSecondaryEvaluators: project.selectableSecondaryEvaluators,
         };
     }
     async getProjectList(query) {
@@ -85,7 +84,6 @@ let ProjectManagementController = class ProjectManagementController {
                 isActive: project.isActive,
                 isCompleted: project.isCompleted,
                 isCancelled: project.isCancelled,
-                selectableSecondaryEvaluators: project.selectableSecondaryEvaluators,
             })),
             total: result.total,
             page: result.page,
@@ -125,15 +123,6 @@ let ProjectManagementController = class ProjectManagementController {
             total: managerDtos.length,
         };
     }
-    async setSecondaryEvaluators(id, dto, user) {
-        const updatedBy = user.id;
-        await this.projectService.이차평가자_설정한다(id, dto.evaluatorIds, updatedBy);
-        const evaluators = await this.projectService.이차평가자_목록_조회한다(id);
-        return {
-            count: evaluators.length,
-            evaluators,
-        };
-    }
     async getProjectDetail(id) {
         const project = await this.projectService.ID로_조회한다(id);
         if (!project) {
@@ -154,7 +143,6 @@ let ProjectManagementController = class ProjectManagementController {
             isActive: project.isActive,
             isCompleted: project.isCompleted,
             isCancelled: project.isCancelled,
-            selectableSecondaryEvaluators: project.selectableSecondaryEvaluators,
         };
     }
     async updateProject(id, updateDto, user) {
@@ -181,7 +169,6 @@ let ProjectManagementController = class ProjectManagementController {
             isActive: project.isActive,
             isCompleted: project.isCompleted,
             isCancelled: project.isCancelled,
-            selectableSecondaryEvaluators: project.selectableSecondaryEvaluators,
         };
     }
     async deleteProject(id, user) {
@@ -212,15 +199,6 @@ __decorate([
     __metadata("design:paramtypes", [project_dto_1.GetProjectManagersQueryDto]),
     __metadata("design:returntype", Promise)
 ], ProjectManagementController.prototype, "getProjectManagers", null);
-__decorate([
-    (0, project_api_decorators_1.SetSecondaryEvaluators)(),
-    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
-    __param(1, (0, common_1.Body)()),
-    __param(2, (0, current_user_decorator_1.CurrentUser)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, project_dto_1.SetSecondaryEvaluatorsDto, Object]),
-    __metadata("design:returntype", Promise)
-], ProjectManagementController.prototype, "setSecondaryEvaluators", null);
 __decorate([
     (0, project_api_decorators_1.GetProjectDetail)(),
     __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),

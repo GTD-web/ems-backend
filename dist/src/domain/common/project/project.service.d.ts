@@ -1,11 +1,9 @@
 import { Repository } from 'typeorm';
 import { Project } from './project.entity';
-import { ProjectSecondaryEvaluator } from './project-secondary-evaluator.entity';
-import { CreateProjectDto, UpdateProjectDto, ProjectDto, ProjectFilter, ProjectListOptions, ProjectStatus, SelectableSecondaryEvaluatorInfo } from './project.types';
+import { CreateProjectDto, UpdateProjectDto, ProjectDto, ProjectFilter, ProjectListOptions, ProjectStatus } from './project.types';
 export declare class ProjectService {
     private readonly projectRepository;
-    private readonly secondaryEvaluatorRepository;
-    constructor(projectRepository: Repository<Project>, secondaryEvaluatorRepository: Repository<ProjectSecondaryEvaluator>);
+    constructor(projectRepository: Repository<Project>);
     생성한다(data: CreateProjectDto, createdBy: string): Promise<ProjectDto>;
     수정한다(id: string, data: UpdateProjectDto, updatedBy: string): Promise<ProjectDto>;
     삭제한다(id: string, deletedBy: string): Promise<void>;
@@ -27,6 +25,4 @@ export declare class ProjectService {
     상태_변경한다(id: string, status: ProjectStatus, updatedBy: string): Promise<ProjectDto>;
     완료_처리한다(id: string, updatedBy: string): Promise<ProjectDto>;
     취소_처리한다(id: string, updatedBy: string): Promise<ProjectDto>;
-    이차평가자_설정한다(projectId: string, evaluatorIds: string[], updatedBy: string): Promise<void>;
-    이차평가자_목록_조회한다(projectId: string): Promise<SelectableSecondaryEvaluatorInfo[]>;
 }

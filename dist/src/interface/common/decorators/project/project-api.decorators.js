@@ -6,7 +6,6 @@ exports.GetProjectDetail = GetProjectDetail;
 exports.UpdateProject = UpdateProject;
 exports.DeleteProject = DeleteProject;
 exports.GetProjectManagers = GetProjectManagers;
-exports.SetSecondaryEvaluators = SetSecondaryEvaluators;
 const common_1 = require("@nestjs/common");
 const common_2 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
@@ -190,40 +189,6 @@ function GetProjectManagers() {
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.SERVICE_UNAVAILABLE,
         description: 'SSO 서비스 연결 실패',
-    }));
-}
-function SetSecondaryEvaluators() {
-    return (0, common_1.applyDecorators)((0, common_2.Post)(':id/secondary-evaluators'), (0, common_2.HttpCode)(common_1.HttpStatus.OK), (0, swagger_1.ApiOperation)({
-        summary: '프로젝트 2차 평가자 설정',
-        description: `프로젝트의 2차 평가자로 설정 가능한 직원들을 지정합니다.
-
-**동작:**
-- 프로젝트에 2차 평가자 목록을 설정합니다
-- 기존 2차 평가자 목록은 새 목록으로 완전히 대체됩니다
-- 빈 배열로 설정하면 모든 2차 평가자가 제거됩니다
-- 설정된 2차 평가자는 프로젝트 조회 시 포함됩니다
-
-**테스트 케이스:**
-- 기본 설정: 여러 명의 2차 평가자 설정
-- 단일 평가자 설정: 한 명의 2차 평가자만 설정
-- 전체 교체: 기존 2차 평가자를 새 목록으로 완전히 교체
-- 전체 삭제: 빈 배열로 설정하여 모든 2차 평가자 제거
-- 존재하지 않는 프로젝트: 유효하지 않은 프로젝트 ID로 설정 시 404 에러
-- 잘못된 UUID 형식: UUID 형식이 아닌 평가자 ID 입력 시 400 에러`,
-    }), (0, swagger_1.ApiParam)({
-        name: 'id',
-        description: '프로젝트 ID (UUID)',
-        example: '550e8400-e29b-41d4-a716-446655440000',
-    }), (0, swagger_1.ApiBody)({ type: project_dto_1.SetSecondaryEvaluatorsDto }), (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.OK,
-        description: '2차 평가자가 성공적으로 설정되었습니다.',
-        type: project_dto_1.SetSecondaryEvaluatorsResponseDto,
-    }), (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.NOT_FOUND,
-        description: '프로젝트를 찾을 수 없습니다.',
-    }), (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.BAD_REQUEST,
-        description: '잘못된 요청 데이터입니다.',
     }));
 }
 //# sourceMappingURL=project-api.decorators.js.map

@@ -21,7 +21,6 @@ const typeorm_2 = require("typeorm");
 const evaluation_period_entity_1 = require("../../../../../domain/core/evaluation-period/evaluation-period.entity");
 const employee_entity_1 = require("../../../../../domain/common/employee/employee.entity");
 const department_entity_1 = require("../../../../../domain/common/department/department.entity");
-const project_secondary_evaluator_entity_1 = require("../../../../../domain/common/project/project-secondary-evaluator.entity");
 const evaluation_period_employee_mapping_entity_1 = require("../../../../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 const evaluation_project_assignment_entity_1 = require("../../../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity");
 const evaluation_wbs_assignment_entity_1 = require("../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity");
@@ -50,7 +49,6 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
     departmentRepository;
     mappingRepository;
     projectAssignmentRepository;
-    projectSecondaryEvaluatorRepository;
     wbsAssignmentRepository;
     wbsItemRepository;
     criteriaRepository;
@@ -60,13 +58,12 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
     evaluationLineMappingRepository;
     deliverableRepository;
     logger = new common_1.Logger(GetEmployeeAssignedDataHandler_1.name);
-    constructor(evaluationPeriodRepository, employeeRepository, departmentRepository, mappingRepository, projectAssignmentRepository, projectSecondaryEvaluatorRepository, wbsAssignmentRepository, wbsItemRepository, criteriaRepository, selfEvaluationRepository, downwardEvaluationRepository, evaluationLineRepository, evaluationLineMappingRepository, deliverableRepository) {
+    constructor(evaluationPeriodRepository, employeeRepository, departmentRepository, mappingRepository, projectAssignmentRepository, wbsAssignmentRepository, wbsItemRepository, criteriaRepository, selfEvaluationRepository, downwardEvaluationRepository, evaluationLineRepository, evaluationLineMappingRepository, deliverableRepository) {
         this.evaluationPeriodRepository = evaluationPeriodRepository;
         this.employeeRepository = employeeRepository;
         this.departmentRepository = departmentRepository;
         this.mappingRepository = mappingRepository;
         this.projectAssignmentRepository = projectAssignmentRepository;
-        this.projectSecondaryEvaluatorRepository = projectSecondaryEvaluatorRepository;
         this.wbsAssignmentRepository = wbsAssignmentRepository;
         this.wbsItemRepository = wbsItemRepository;
         this.criteriaRepository = criteriaRepository;
@@ -116,7 +113,7 @@ let GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler_1 = class Ge
         if (mapping.isExcluded) {
             throw new evaluation_period_employee_mapping_exceptions_1.ExcludedEvaluationTargetAccessException(evaluationPeriodId, employeeId);
         }
-        const projects = await (0, project_wbs_utils_1.getProjectsWithWbs)(evaluationPeriodId, employeeId, mapping, this.projectAssignmentRepository, this.projectSecondaryEvaluatorRepository, this.wbsAssignmentRepository, this.wbsItemRepository, this.criteriaRepository, this.selfEvaluationRepository, this.downwardEvaluationRepository, this.evaluationLineMappingRepository, this.deliverableRepository);
+        const projects = await (0, project_wbs_utils_1.getProjectsWithWbs)(evaluationPeriodId, employeeId, mapping, this.projectAssignmentRepository, this.wbsAssignmentRepository, this.wbsItemRepository, this.criteriaRepository, this.selfEvaluationRepository, this.downwardEvaluationRepository, this.evaluationLineMappingRepository, this.deliverableRepository);
         let completedPerformances = 0;
         const totalWbs = projects.reduce((sum, project) => {
             project.wbsList.forEach((wbs) => {
@@ -215,17 +212,15 @@ exports.GetEmployeeAssignedDataHandler = GetEmployeeAssignedDataHandler = GetEmp
     __param(2, (0, typeorm_1.InjectRepository)(department_entity_1.Department)),
     __param(3, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
     __param(4, (0, typeorm_1.InjectRepository)(evaluation_project_assignment_entity_1.EvaluationProjectAssignment)),
-    __param(5, (0, typeorm_1.InjectRepository)(project_secondary_evaluator_entity_1.ProjectSecondaryEvaluator)),
-    __param(6, (0, typeorm_1.InjectRepository)(evaluation_wbs_assignment_entity_1.EvaluationWbsAssignment)),
-    __param(7, (0, typeorm_1.InjectRepository)(wbs_item_entity_1.WbsItem)),
-    __param(8, (0, typeorm_1.InjectRepository)(wbs_evaluation_criteria_entity_1.WbsEvaluationCriteria)),
-    __param(9, (0, typeorm_1.InjectRepository)(wbs_self_evaluation_entity_1.WbsSelfEvaluation)),
-    __param(10, (0, typeorm_1.InjectRepository)(downward_evaluation_entity_1.DownwardEvaluation)),
-    __param(11, (0, typeorm_1.InjectRepository)(evaluation_line_entity_1.EvaluationLine)),
-    __param(12, (0, typeorm_1.InjectRepository)(evaluation_line_mapping_entity_1.EvaluationLineMapping)),
-    __param(13, (0, typeorm_1.InjectRepository)(deliverable_entity_1.Deliverable)),
+    __param(5, (0, typeorm_1.InjectRepository)(evaluation_wbs_assignment_entity_1.EvaluationWbsAssignment)),
+    __param(6, (0, typeorm_1.InjectRepository)(wbs_item_entity_1.WbsItem)),
+    __param(7, (0, typeorm_1.InjectRepository)(wbs_evaluation_criteria_entity_1.WbsEvaluationCriteria)),
+    __param(8, (0, typeorm_1.InjectRepository)(wbs_self_evaluation_entity_1.WbsSelfEvaluation)),
+    __param(9, (0, typeorm_1.InjectRepository)(downward_evaluation_entity_1.DownwardEvaluation)),
+    __param(10, (0, typeorm_1.InjectRepository)(evaluation_line_entity_1.EvaluationLine)),
+    __param(11, (0, typeorm_1.InjectRepository)(evaluation_line_mapping_entity_1.EvaluationLineMapping)),
+    __param(12, (0, typeorm_1.InjectRepository)(deliverable_entity_1.Deliverable)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,

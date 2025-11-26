@@ -5,7 +5,6 @@ import { Repository } from 'typeorm';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { Department } from '@domain/common/department/department.entity';
-import { ProjectSecondaryEvaluator } from '@domain/common/project/project-secondary-evaluator.entity';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
@@ -57,8 +56,6 @@ export class GetEmployeeAssignedDataHandler
     private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
     @InjectRepository(EvaluationProjectAssignment)
     private readonly projectAssignmentRepository: Repository<EvaluationProjectAssignment>,
-    @InjectRepository(ProjectSecondaryEvaluator)
-    private readonly projectSecondaryEvaluatorRepository: Repository<ProjectSecondaryEvaluator>,
     @InjectRepository(EvaluationWbsAssignment)
     private readonly wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
     @InjectRepository(WbsItem)
@@ -154,7 +151,6 @@ export class GetEmployeeAssignedDataHandler
       employeeId,
       mapping,
       this.projectAssignmentRepository,
-      this.projectSecondaryEvaluatorRepository,
       this.wbsAssignmentRepository,
       this.wbsItemRepository,
       this.criteriaRepository,

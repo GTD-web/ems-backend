@@ -277,64 +277,6 @@ export class ManagerInfoDto {
 }
 
 /**
- * 선택 가능한 2차 평가자 정보 DTO
- */
-export class SelectableSecondaryEvaluatorInfoDto {
-  @ApiProperty({
-    description: '평가자 ID (UUID)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
-  })
-  id: string;
-
-  @ApiProperty({
-    description: '평가자 이름',
-    example: '김철수',
-  })
-  name: string;
-
-  @ApiPropertyOptional({
-    description: '이메일',
-    example: 'kim@example.com',
-  })
-  email?: string;
-
-  @ApiPropertyOptional({
-    description: '전화번호',
-    example: '010-1234-5678',
-  })
-  phoneNumber?: string;
-
-  @ApiPropertyOptional({
-    description: '부서명',
-    example: '개발팀',
-  })
-  departmentName?: string;
-
-  @ApiPropertyOptional({
-    description: '직책명',
-    example: '과장',
-  })
-  rankName?: string;
-}
-
-/**
- * 프로젝트 2차 평가자 설정 DTO
- */
-export class SetSecondaryEvaluatorsDto {
-  @ApiProperty({
-    description: '2차 평가자 ID 목록 (직원 ID)',
-    type: [String],
-    example: [
-      '550e8400-e29b-41d4-a716-446655440000',
-      '650e8400-e29b-41d4-a716-446655440001',
-    ],
-  })
-  @IsArray()
-  @IsUUID('4', { each: true })
-  evaluatorIds: string[];
-}
-
-/**
  * 프로젝트 응답 DTO
  */
 export class ProjectResponseDto {
@@ -386,12 +328,6 @@ export class ProjectResponseDto {
     type: ManagerInfoDto,
   })
   manager?: ManagerInfoDto;
-
-  @ApiPropertyOptional({
-    description: '선택 가능한 2차 평가자 목록',
-    type: [SelectableSecondaryEvaluatorInfoDto],
-  })
-  selectableSecondaryEvaluators?: SelectableSecondaryEvaluatorInfoDto[];
 
   @ApiProperty({
     description: '생성일시',
@@ -568,21 +504,4 @@ export class ProjectManagerListResponseDto {
     example: 15,
   })
   total: number;
-}
-
-/**
- * 프로젝트 2차 평가자 설정 응답 DTO
- */
-export class SetSecondaryEvaluatorsResponseDto {
-  @ApiProperty({
-    description: '설정된 2차 평가자 수',
-    example: 3,
-  })
-  count: number;
-
-  @ApiProperty({
-    description: '설정된 2차 평가자 목록',
-    type: [SelectableSecondaryEvaluatorInfoDto],
-  })
-  evaluators: SelectableSecondaryEvaluatorInfoDto[];
 }

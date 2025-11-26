@@ -17,14 +17,11 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const project_entity_1 = require("./project.entity");
-const project_secondary_evaluator_entity_1 = require("./project-secondary-evaluator.entity");
 const project_types_1 = require("./project.types");
 let ProjectService = class ProjectService {
     projectRepository;
-    secondaryEvaluatorRepository;
-    constructor(projectRepository, secondaryEvaluatorRepository) {
+    constructor(projectRepository) {
         this.projectRepository = projectRepository;
-        this.secondaryEvaluatorRepository = secondaryEvaluatorRepository;
     }
     async 생성한다(data, createdBy) {
         if (data.projectCode) {
@@ -104,7 +101,6 @@ let ProjectService = class ProjectService {
         if (!result) {
             return null;
         }
-        const selectableSecondaryEvaluators = await this.이차평가자_목록_조회한다(id);
         return {
             id: result.id,
             name: result.name,
@@ -126,7 +122,6 @@ let ProjectService = class ProjectService {
                     rankName: result.manager_rank_name,
                 }
                 : undefined,
-            selectableSecondaryEvaluators,
             get isDeleted() {
                 return result.deletedAt !== null && result.deletedAt !== undefined;
             },
@@ -440,39 +435,6 @@ let ProjectService = class ProjectService {
         const offset = (page - 1) * limit;
         queryBuilder.offset(offset).limit(limit);
         const results = await queryBuilder.getRawMany();
-        const projectIds = results.map((result) => result.id);
-        const secondaryEvaluatorsMap = new Map();
-        if (projectIds.length > 0) {
-            const allEvaluators = await this.secondaryEvaluatorRepository
-                .createQueryBuilder('pse')
-                .leftJoin('employee', 'evaluator', 'evaluator.id = pse.evaluatorId AND evaluator.deletedAt IS NULL')
-                .select([
-                'pse.projectId AS project_id',
-                'evaluator.id AS id',
-                'evaluator.name AS name',
-                'evaluator.email AS email',
-                'evaluator.phoneNumber AS phone_number',
-                'evaluator.departmentName AS department_name',
-                'evaluator.rankName AS rank_name',
-            ])
-                .where('pse.projectId IN (:...projectIds)', { projectIds })
-                .andWhere('pse.deletedAt IS NULL')
-                .orderBy('evaluator.name', 'ASC')
-                .getRawMany();
-            for (const evaluator of allEvaluators) {
-                if (!secondaryEvaluatorsMap.has(evaluator.project_id)) {
-                    secondaryEvaluatorsMap.set(evaluator.project_id, []);
-                }
-                secondaryEvaluatorsMap.get(evaluator.project_id).push({
-                    id: evaluator.id,
-                    name: evaluator.name,
-                    email: evaluator.email,
-                    phoneNumber: evaluator.phone_number,
-                    departmentName: evaluator.department_name,
-                    rankName: evaluator.rank_name,
-                });
-            }
-        }
         const projects = results.map((result) => ({
             id: result.id,
             name: result.name,
@@ -493,7 +455,6 @@ let ProjectService = class ProjectService {
                     rankName: result.manager_rank_name,
                 }
                 : undefined,
-            selectableSecondaryEvaluators: secondaryEvaluatorsMap.get(result.id) || [],
             get isDeleted() {
                 return result.deletedAt !== null && result.deletedAt !== undefined;
             },
@@ -724,54 +685,11 @@ let ProjectService = class ProjectService {
     async 취소_처리한다(id, updatedBy) {
         return this.상태_변경한다(id, project_types_1.ProjectStatus.CANCELLED, updatedBy);
     }
-    async 이차평가자_설정한다(projectId, evaluatorIds, updatedBy) {
-        const exists = await this.존재하는가(projectId);
-        if (!exists) {
-            throw new common_1.NotFoundException(`ID ${projectId}에 해당하는 프로젝트를 찾을 수 없습니다.`);
-        }
-        await this.secondaryEvaluatorRepository
-            .createQueryBuilder()
-            .softDelete()
-            .where('projectId = :projectId', { projectId })
-            .andWhere('deletedAt IS NULL')
-            .execute();
-        if (evaluatorIds.length > 0) {
-            const newEvaluators = evaluatorIds.map((evaluatorId) => project_secondary_evaluator_entity_1.ProjectSecondaryEvaluator.생성한다(projectId, evaluatorId, updatedBy));
-            await this.secondaryEvaluatorRepository.save(newEvaluators);
-        }
-    }
-    async 이차평가자_목록_조회한다(projectId) {
-        const results = await this.secondaryEvaluatorRepository
-            .createQueryBuilder('pse')
-            .leftJoin('employee', 'evaluator', 'evaluator.id = pse.evaluatorId AND evaluator.deletedAt IS NULL')
-            .select([
-            'evaluator.id AS id',
-            'evaluator.name AS name',
-            'evaluator.email AS email',
-            'evaluator.phoneNumber AS phone_number',
-            'evaluator.departmentName AS department_name',
-            'evaluator.rankName AS rank_name',
-        ])
-            .where('pse.projectId = :projectId', { projectId })
-            .andWhere('pse.deletedAt IS NULL')
-            .orderBy('evaluator.name', 'ASC')
-            .getRawMany();
-        return results.map((result) => ({
-            id: result.id,
-            name: result.name,
-            email: result.email,
-            phoneNumber: result.phone_number,
-            departmentName: result.department_name,
-            rankName: result.rank_name,
-        }));
-    }
 };
 exports.ProjectService = ProjectService;
 exports.ProjectService = ProjectService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(project_entity_1.Project)),
-    __param(1, (0, typeorm_1.InjectRepository)(project_secondary_evaluator_entity_1.ProjectSecondaryEvaluator)),
-    __metadata("design:paramtypes", [typeorm_2.Repository,
-        typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository])
 ], ProjectService);
 //# sourceMappingURL=project.service.js.map

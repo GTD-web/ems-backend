@@ -10,14 +10,6 @@ export interface DeliverableInfo {
     isActive: boolean;
     createdAt: Date;
 }
-export interface SelectableSecondaryEvaluator {
-    id: string;
-    name: string;
-    email?: string;
-    phoneNumber?: string;
-    departmentName?: string;
-    rankName?: string;
-}
 export interface AssignedProjectWithWbs {
     projectId: string;
     projectName: string;
@@ -27,7 +19,6 @@ export interface AssignedProjectWithWbs {
         id: string;
         name: string;
     } | null;
-    selectableSecondaryEvaluators: SelectableSecondaryEvaluator[];
     wbsList: AssignedWbsInfo[];
 }
 export interface WbsEvaluationCriterion {

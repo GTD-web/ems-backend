@@ -28,24 +28,6 @@ export interface ManagerInfo {
 }
 
 /**
- * 선택 가능한 2차 평가자 정보
- */
-export interface SelectableSecondaryEvaluatorInfo {
-  /** 평가자 ID */
-  id: string;
-  /** 평가자 이름 */
-  name: string;
-  /** 이메일 */
-  email?: string;
-  /** 전화번호 */
-  phoneNumber?: string;
-  /** 부서명 */
-  departmentName?: string;
-  /** 직책명 */
-  rankName?: string;
-}
-
-/**
  * 프로젝트 DTO (평가 시스템용 간소화 버전)
  * 평가에 필요한 핵심 프로젝트 정보만 포함
  */
@@ -77,8 +59,6 @@ export interface ProjectDto {
   managerId?: string;
   /** 프로젝트 매니저 정보 */
   manager?: ManagerInfo;
-  /** 선택 가능한 2차 평가자 목록 */
-  selectableSecondaryEvaluators?: SelectableSecondaryEvaluatorInfo[];
 
   // 계산된 필드들 (읽기 전용)
   /** 삭제된 상태 여부 */

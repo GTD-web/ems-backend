@@ -469,47 +469,6 @@ export class ProjectManagerDto {
 }
 
 /**
- * 선택 가능한 2차 평가자 정보 DTO
- */
-export class SelectableSecondaryEvaluatorDto {
-  @ApiProperty({
-    description: '평가자 ID',
-    example: '123e4567-e89b-12d3-a456-426614174016',
-  })
-  id: string;
-
-  @ApiProperty({
-    description: '평가자 이름',
-    example: '김철수',
-  })
-  name: string;
-
-  @ApiPropertyOptional({
-    description: '이메일',
-    example: 'kim@example.com',
-  })
-  email?: string;
-
-  @ApiPropertyOptional({
-    description: '전화번호',
-    example: '010-1234-5678',
-  })
-  phoneNumber?: string;
-
-  @ApiPropertyOptional({
-    description: '부서명',
-    example: '개발팀',
-  })
-  departmentName?: string;
-
-  @ApiPropertyOptional({
-    description: '직책명',
-    example: '과장',
-  })
-  rankName?: string;
-}
-
-/**
  * 평가 점수 및 등급 정보 DTO
  * Context의 EvaluationScore 타입과 일치해야 함
  */
@@ -788,13 +747,6 @@ export class AssignedProjectWithWbsDto implements AssignedProjectWithWbs {
   })
   @Type(() => ProjectManagerDto)
   projectManager?: ProjectManagerDto | null;
-
-  @ApiProperty({
-    description: '프로젝트에서 선택 가능한 2차 평가자 목록',
-    type: [SelectableSecondaryEvaluatorDto],
-  })
-  @Type(() => SelectableSecondaryEvaluatorDto)
-  selectableSecondaryEvaluators: SelectableSecondaryEvaluatorDto[];
 
   @ApiProperty({
     description: '프로젝트에 할당된 WBS 목록',

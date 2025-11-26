@@ -8,7 +8,6 @@ import {
   UpdateProject,
   DeleteProject,
   GetProjectManagers,
-  SetSecondaryEvaluators,
 } from '@interface/common/decorators/project/project-api.decorators';
 import {
   CreateProjectDto,
@@ -19,8 +18,6 @@ import {
   ProjectListResponseDto,
   ProjectManagerListResponseDto,
   ProjectManagerDto,
-  SetSecondaryEvaluatorsDto,
-  SetSecondaryEvaluatorsResponseDto,
 } from '@interface/common/dto/project/project.dto';
 import {
   Body,
@@ -86,7 +83,6 @@ export class ProjectManagementController {
       isActive: project.isActive,
       isCompleted: project.isCompleted,
       isCancelled: project.isCancelled,
-      selectableSecondaryEvaluators: project.selectableSecondaryEvaluators,
     };
   }
 
@@ -129,7 +125,6 @@ export class ProjectManagementController {
         isActive: project.isActive,
         isCompleted: project.isCompleted,
         isCancelled: project.isCancelled,
-        selectableSecondaryEvaluators: project.selectableSecondaryEvaluators,
       })),
       total: result.total,
       page: result.page,
@@ -197,35 +192,6 @@ export class ProjectManagementController {
   }
 
   /**
-   * 프로젝트 2차 평가자 설정
-   * 프로젝트에서 2차 평가자로 지정 가능한 직원들을 설정합니다.
-   * 주의: 구체적인 경로는 :id 경로보다 먼저 정의해야 함
-   */
-  @SetSecondaryEvaluators()
-  async setSecondaryEvaluators(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: SetSecondaryEvaluatorsDto,
-    @CurrentUser() user: AuthenticatedUser,
-  ): Promise<SetSecondaryEvaluatorsResponseDto> {
-    const updatedBy = user.id;
-
-    // 2차 평가자 설정
-    await this.projectService.이차평가자_설정한다(
-      id,
-      dto.evaluatorIds,
-      updatedBy,
-    );
-
-    // 설정된 2차 평가자 목록 조회
-    const evaluators = await this.projectService.이차평가자_목록_조회한다(id);
-
-    return {
-      count: evaluators.length,
-      evaluators,
-    };
-  }
-
-  /**
    * 프로젝트 상세 조회
    * 주의: 파라미터 경로(:id)는 구체적인 경로들 뒤에 배치해야 함
    */
@@ -256,7 +222,6 @@ export class ProjectManagementController {
       isActive: project.isActive,
       isCompleted: project.isCompleted,
       isCancelled: project.isCancelled,
-      selectableSecondaryEvaluators: project.selectableSecondaryEvaluators,
     };
   }
 
@@ -299,7 +264,6 @@ export class ProjectManagementController {
       isActive: project.isActive,
       isCompleted: project.isCompleted,
       isCancelled: project.isCancelled,
-      selectableSecondaryEvaluators: project.selectableSecondaryEvaluators,
     };
   }
 
