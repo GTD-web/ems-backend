@@ -6,7 +6,7 @@ const project_entity_1 = require("../../../../../domain/common/project/project.e
 const employee_entity_1 = require("../../../../../domain/common/employee/employee.entity");
 const wbs_item_entity_1 = require("../../../../../domain/common/wbs-item/wbs-item.entity");
 const logger = new common_1.Logger('ProjectWbsUtils');
-async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, projectAssignmentRepository, wbsAssignmentRepository, wbsItemRepository, criteriaRepository, selfEvaluationRepository, downwardEvaluationRepository, evaluationLineMappingRepository, deliverableRepository) {
+async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, projectAssignmentRepository, projectSecondaryEvaluatorRepository, wbsAssignmentRepository, wbsItemRepository, criteriaRepository, selfEvaluationRepository, downwardEvaluationRepository, evaluationLineMappingRepository, deliverableRepository) {
     const projectAssignments = await projectAssignmentRepository
         .createQueryBuilder('assignment')
         .leftJoin(project_entity_1.Project, 'project', 'project.id = assignment.projectId AND project.deletedAt IS NULL')
@@ -40,6 +40,40 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
     const projectIds = [
         ...new Set(projectAssignments.map((row) => row.assignment_project_id || row.project_id)),
     ].filter((id) => !!id);
+    const secondaryEvaluatorsMap = new Map();
+    if (projectIds.length > 0) {
+        const secondaryEvaluators = await projectSecondaryEvaluatorRepository
+            .createQueryBuilder('pse')
+            .leftJoin(employee_entity_1.Employee, 'evaluator', 'evaluator.id = pse.evaluatorId AND evaluator.deletedAt IS NULL')
+            .select([
+            'pse.projectId AS project_id',
+            'evaluator.id AS evaluator_id',
+            'evaluator.name AS evaluator_name',
+            'evaluator.email AS evaluator_email',
+            'evaluator.phoneNumber AS evaluator_phone_number',
+            'evaluator.departmentName AS evaluator_department_name',
+            'evaluator.rankName AS evaluator_rank_name',
+        ])
+            .where('pse.projectId IN (:...projectIds)', { projectIds })
+            .andWhere('pse.deletedAt IS NULL')
+            .orderBy('evaluator.name', 'ASC')
+            .getRawMany();
+        for (const evaluator of secondaryEvaluators) {
+            if (!secondaryEvaluatorsMap.has(evaluator.project_id)) {
+                secondaryEvaluatorsMap.set(evaluator.project_id, []);
+            }
+            if (evaluator.evaluator_id) {
+                secondaryEvaluatorsMap.get(evaluator.project_id).push({
+                    id: evaluator.evaluator_id,
+                    name: evaluator.evaluator_name,
+                    email: evaluator.evaluator_email,
+                    phoneNumber: evaluator.evaluator_phone_number,
+                    departmentName: evaluator.evaluator_department_name,
+                    rankName: evaluator.evaluator_rank_name,
+                });
+            }
+        }
+    }
     const wbsAssignments = await wbsAssignmentRepository
         .createQueryBuilder('assignment')
         .leftJoin(wbs_item_entity_1.WbsItem, 'wbsItem', 'wbsItem.id = assignment.wbsItemId AND wbsItem.projectId = assignment.projectId AND wbsItem.deletedAt IS NULL')
@@ -361,6 +395,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
                 name: row.manager_name,
             }
             : null;
+        const selectableSecondaryEvaluators = secondaryEvaluatorsMap.get(projectId) || [];
         const projectWbsAssignments = wbsAssignments.filter((wbsRow) => (wbsRow.assignment_project_id || wbsRow.wbs_item_project_id) ===
             projectId);
         const wbsList = [];
@@ -412,6 +447,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             projectCode: row.project_project_code || '',
             assignedAt: row.assignment_assigned_date,
             projectManager,
+            selectableSecondaryEvaluators,
             wbsList,
         });
     }

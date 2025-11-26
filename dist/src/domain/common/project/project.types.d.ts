@@ -11,6 +11,14 @@ export interface ManagerInfo {
     departmentName?: string;
     rankName?: string;
 }
+export interface SelectableSecondaryEvaluatorInfo {
+    id: string;
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+    departmentName?: string;
+    rankName?: string;
+}
 export interface ProjectDto {
     id: string;
     createdAt: Date;
@@ -23,6 +31,7 @@ export interface ProjectDto {
     endDate?: Date;
     managerId?: string;
     manager?: ManagerInfo;
+    selectableSecondaryEvaluators?: SelectableSecondaryEvaluatorInfo[];
     readonly isDeleted: boolean;
     readonly isActive: boolean;
     readonly isCompleted: boolean;

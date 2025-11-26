@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EvaluatorAssignedEmployeesDataResponseDto = exports.EvaluateeAssignedDataDto = exports.EmployeeAssignedDataResponseDto = exports.AssignedProjectWithWbsDto = exports.AssignmentSummaryDto = exports.CriteriaSubmissionInfoDto = exports.SelfEvaluationSummaryDto = exports.SecondaryDownwardEvaluationDto = exports.SecondaryEvaluatorDto = exports.EvaluationScoreDto = exports.ProjectManagerDto = exports.AssignedWbsInfoDto = exports.WbsDownwardEvaluationDto = exports.DeliverableInfoDto = exports.WbsPerformanceDto = exports.WbsEvaluationCriterionDto = exports.EmployeeInfoDto = exports.EvaluationPeriodInfoDto = void 0;
+exports.EvaluatorAssignedEmployeesDataResponseDto = exports.EvaluateeAssignedDataDto = exports.EmployeeAssignedDataResponseDto = exports.AssignedProjectWithWbsDto = exports.AssignmentSummaryDto = exports.CriteriaSubmissionInfoDto = exports.SelfEvaluationSummaryDto = exports.SecondaryDownwardEvaluationDto = exports.SecondaryEvaluatorDto = exports.EvaluationScoreDto = exports.SelectableSecondaryEvaluatorDto = exports.ProjectManagerDto = exports.AssignedWbsInfoDto = exports.WbsDownwardEvaluationDto = exports.DeliverableInfoDto = exports.WbsPerformanceDto = exports.WbsEvaluationCriterionDto = exports.EmployeeInfoDto = exports.EvaluationPeriodInfoDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_transformer_1 = require("class-transformer");
 class EvaluationPeriodInfoDto {
@@ -552,6 +552,57 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], ProjectManagerDto.prototype, "name", void 0);
+class SelectableSecondaryEvaluatorDto {
+    id;
+    name;
+    email;
+    phoneNumber;
+    departmentName;
+    rankName;
+}
+exports.SelectableSecondaryEvaluatorDto = SelectableSecondaryEvaluatorDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가자 ID',
+        example: '123e4567-e89b-12d3-a456-426614174016',
+    }),
+    __metadata("design:type", String)
+], SelectableSecondaryEvaluatorDto.prototype, "id", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '평가자 이름',
+        example: '김철수',
+    }),
+    __metadata("design:type", String)
+], SelectableSecondaryEvaluatorDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '이메일',
+        example: 'kim@example.com',
+    }),
+    __metadata("design:type", String)
+], SelectableSecondaryEvaluatorDto.prototype, "email", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '전화번호',
+        example: '010-1234-5678',
+    }),
+    __metadata("design:type", String)
+], SelectableSecondaryEvaluatorDto.prototype, "phoneNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '부서명',
+        example: '개발팀',
+    }),
+    __metadata("design:type", String)
+], SelectableSecondaryEvaluatorDto.prototype, "departmentName", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: '직책명',
+        example: '과장',
+    }),
+    __metadata("design:type", String)
+], SelectableSecondaryEvaluatorDto.prototype, "rankName", void 0);
 class EvaluationScoreDto {
     totalScore;
     grade;
@@ -847,6 +898,7 @@ class AssignedProjectWithWbsDto {
     projectCode;
     assignedAt;
     projectManager;
+    selectableSecondaryEvaluators;
     wbsList;
 }
 exports.AssignedProjectWithWbsDto = AssignedProjectWithWbsDto;
@@ -889,6 +941,14 @@ __decorate([
     (0, class_transformer_1.Type)(() => ProjectManagerDto),
     __metadata("design:type", Object)
 ], AssignedProjectWithWbsDto.prototype, "projectManager", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '프로젝트에서 선택 가능한 2차 평가자 목록',
+        type: [SelectableSecondaryEvaluatorDto],
+    }),
+    (0, class_transformer_1.Type)(() => SelectableSecondaryEvaluatorDto),
+    __metadata("design:type", Array)
+], AssignedProjectWithWbsDto.prototype, "selectableSecondaryEvaluators", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: '프로젝트에 할당된 WBS 목록',

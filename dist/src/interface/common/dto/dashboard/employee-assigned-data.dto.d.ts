@@ -75,6 +75,14 @@ export declare class ProjectManagerDto {
     id: string;
     name: string;
 }
+export declare class SelectableSecondaryEvaluatorDto {
+    id: string;
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+    departmentName?: string;
+    rankName?: string;
+}
 export declare class EvaluationScoreDto implements EvaluationScore {
     totalScore: number | null;
     grade: string | null;
@@ -125,6 +133,7 @@ export declare class AssignedProjectWithWbsDto implements AssignedProjectWithWbs
     projectCode: string;
     assignedAt: Date;
     projectManager?: ProjectManagerDto | null;
+    selectableSecondaryEvaluators: SelectableSecondaryEvaluatorDto[];
     wbsList: AssignedWbsInfoDto[];
 }
 export declare class EmployeeAssignedDataResponseDto implements EmployeeAssignedDataResult {

@@ -16,6 +16,7 @@ const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/e
 const employee_entity_1 = require("../../domain/common/employee/employee.entity");
 const department_entity_1 = require("../../domain/common/department/department.entity");
 const project_entity_1 = require("../../domain/common/project/project.entity");
+const project_secondary_evaluator_entity_1 = require("../../domain/common/project/project-secondary-evaluator.entity");
 const wbs_item_entity_1 = require("../../domain/common/wbs-item/wbs-item.entity");
 const evaluation_project_assignment_entity_1 = require("../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity");
 const evaluation_wbs_assignment_entity_1 = require("../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity");
@@ -48,6 +49,7 @@ exports.DashboardContextModule = DashboardContextModule = __decorate([
                 employee_entity_1.Employee,
                 department_entity_1.Department,
                 project_entity_1.Project,
+                project_secondary_evaluator_entity_1.ProjectSecondaryEvaluator,
                 wbs_item_entity_1.WbsItem,
                 evaluation_project_assignment_entity_1.EvaluationProjectAssignment,
                 evaluation_wbs_assignment_entity_1.EvaluationWbsAssignment,

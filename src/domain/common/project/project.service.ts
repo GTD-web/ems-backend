@@ -4,8 +4,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, IsNull } from 'typeorm';
+import { Repository, IsNull, In } from 'typeorm';
 import { Project } from './project.entity';
+import { ProjectSecondaryEvaluator } from './project-secondary-evaluator.entity';
 import {
   CreateProjectDto,
   UpdateProjectDto,
@@ -13,6 +14,7 @@ import {
   ProjectFilter,
   ProjectListOptions,
   ProjectStatus,
+  SelectableSecondaryEvaluatorInfo,
 } from './project.types';
 
 /**
@@ -25,6 +27,8 @@ export class ProjectService {
   constructor(
     @InjectRepository(Project)
     private readonly projectRepository: Repository<Project>,
+    @InjectRepository(ProjectSecondaryEvaluator)
+    private readonly secondaryEvaluatorRepository: Repository<ProjectSecondaryEvaluator>,
   ) {}
 
   /**
@@ -166,6 +170,10 @@ export class ProjectService {
       return null;
     }
 
+    // 선택 가능한 2차 평가자 목록 조회
+    const selectableSecondaryEvaluators =
+      await this.이차평가자_목록_조회한다(id);
+
     return {
       id: result.id,
       name: result.name,
@@ -187,6 +195,7 @@ export class ProjectService {
             rankName: result.manager_rank_name,
           }
         : undefined,
+      selectableSecondaryEvaluators,
       get isDeleted() {
         return result.deletedAt !== null && result.deletedAt !== undefined;
       },
@@ -591,6 +600,51 @@ export class ProjectService {
 
     const results = await queryBuilder.getRawMany();
 
+    // 각 프로젝트의 2차 평가자 목록을 조회
+    const projectIds = results.map((result) => result.id);
+    const secondaryEvaluatorsMap = new Map<
+      string,
+      SelectableSecondaryEvaluatorInfo[]
+    >();
+
+    if (projectIds.length > 0) {
+      const allEvaluators = await this.secondaryEvaluatorRepository
+        .createQueryBuilder('pse')
+        .leftJoin(
+          'employee',
+          'evaluator',
+          'evaluator.id = pse.evaluatorId AND evaluator.deletedAt IS NULL',
+        )
+        .select([
+          'pse.projectId AS project_id',
+          'evaluator.id AS id',
+          'evaluator.name AS name',
+          'evaluator.email AS email',
+          'evaluator.phoneNumber AS phone_number',
+          'evaluator.departmentName AS department_name',
+          'evaluator.rankName AS rank_name',
+        ])
+        .where('pse.projectId IN (:...projectIds)', { projectIds })
+        .andWhere('pse.deletedAt IS NULL')
+        .orderBy('evaluator.name', 'ASC')
+        .getRawMany();
+
+      // 프로젝트별로 그룹화
+      for (const evaluator of allEvaluators) {
+        if (!secondaryEvaluatorsMap.has(evaluator.project_id)) {
+          secondaryEvaluatorsMap.set(evaluator.project_id, []);
+        }
+        secondaryEvaluatorsMap.get(evaluator.project_id)!.push({
+          id: evaluator.id,
+          name: evaluator.name,
+          email: evaluator.email,
+          phoneNumber: evaluator.phone_number,
+          departmentName: evaluator.department_name,
+          rankName: evaluator.rank_name,
+        });
+      }
+    }
+
     const projects: ProjectDto[] = results.map((result) => ({
       id: result.id,
       name: result.name,
@@ -611,6 +665,8 @@ export class ProjectService {
             rankName: result.manager_rank_name,
           }
         : undefined,
+      selectableSecondaryEvaluators:
+        secondaryEvaluatorsMap.get(result.id) || [],
       get isDeleted() {
         return result.deletedAt !== null && result.deletedAt !== undefined;
       },
@@ -921,5 +977,79 @@ export class ProjectService {
    */
   async 취소_처리한다(id: string, updatedBy: string): Promise<ProjectDto> {
     return this.상태_변경한다(id, ProjectStatus.CANCELLED, updatedBy);
+  }
+
+  /**
+   * 프로젝트의 2차 평가자를 설정한다 (기존 목록을 대체)
+   * @param projectId 프로젝트 ID
+   * @param evaluatorIds 2차 평가자 ID 목록
+   * @param updatedBy 설정자 ID
+   */
+  async 이차평가자_설정한다(
+    projectId: string,
+    evaluatorIds: string[],
+    updatedBy: string,
+  ): Promise<void> {
+    // 프로젝트 존재 확인
+    const exists = await this.존재하는가(projectId);
+    if (!exists) {
+      throw new NotFoundException(
+        `ID ${projectId}에 해당하는 프로젝트를 찾을 수 없습니다.`,
+      );
+    }
+
+    // 기존 2차 평가자 전체 삭제 (소프트 삭제)
+    await this.secondaryEvaluatorRepository
+      .createQueryBuilder()
+      .softDelete()
+      .where('projectId = :projectId', { projectId })
+      .andWhere('deletedAt IS NULL')
+      .execute();
+
+    // 새로운 2차 평가자 추가
+    if (evaluatorIds.length > 0) {
+      const newEvaluators = evaluatorIds.map((evaluatorId) =>
+        ProjectSecondaryEvaluator.생성한다(projectId, evaluatorId, updatedBy),
+      );
+      await this.secondaryEvaluatorRepository.save(newEvaluators);
+    }
+  }
+
+  /**
+   * 프로젝트의 선택 가능한 2차 평가자 목록을 조회한다
+   * @param projectId 프로젝트 ID
+   * @returns 선택 가능한 2차 평가자 정보 목록
+   */
+  async 이차평가자_목록_조회한다(
+    projectId: string,
+  ): Promise<SelectableSecondaryEvaluatorInfo[]> {
+    const results = await this.secondaryEvaluatorRepository
+      .createQueryBuilder('pse')
+      .leftJoin(
+        'employee',
+        'evaluator',
+        'evaluator.id = pse.evaluatorId AND evaluator.deletedAt IS NULL',
+      )
+      .select([
+        'evaluator.id AS id',
+        'evaluator.name AS name',
+        'evaluator.email AS email',
+        'evaluator.phoneNumber AS phone_number',
+        'evaluator.departmentName AS department_name',
+        'evaluator.rankName AS rank_name',
+      ])
+      .where('pse.projectId = :projectId', { projectId })
+      .andWhere('pse.deletedAt IS NULL')
+      .orderBy('evaluator.name', 'ASC')
+      .getRawMany();
+
+    return results.map((result) => ({
+      id: result.id,
+      name: result.name,
+      email: result.email,
+      phoneNumber: result.phone_number,
+      departmentName: result.department_name,
+      rankName: result.rank_name,
+    }));
   }
 }

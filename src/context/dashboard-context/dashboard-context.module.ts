@@ -7,6 +7,7 @@ import { EvaluationPeriodEmployeeMapping } from '../../domain/core/evaluation-pe
 import { Employee } from '../../domain/common/employee/employee.entity';
 import { Department } from '../../domain/common/department/department.entity';
 import { Project } from '../../domain/common/project/project.entity';
+import { ProjectSecondaryEvaluator } from '../../domain/common/project/project-secondary-evaluator.entity';
 import { WbsItem } from '../../domain/common/wbs-item/wbs-item.entity';
 import { EvaluationProjectAssignment } from '../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
@@ -42,6 +43,7 @@ import { SecondaryEvaluationStepApprovalModule } from '@domain/sub/secondary-eva
       Employee,
       Department,
       Project,
+      ProjectSecondaryEvaluator,
       WbsItem,
       EvaluationProjectAssignment,
       EvaluationWbsAssignment,

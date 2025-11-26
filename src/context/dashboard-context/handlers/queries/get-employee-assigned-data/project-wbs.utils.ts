@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { Project } from '@domain/common/project/project.entity';
+import { ProjectSecondaryEvaluator } from '@domain/common/project/project-secondary-evaluator.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
@@ -17,6 +18,7 @@ import {
   WbsPerformance,
   WbsDownwardEvaluationInfo,
   DeliverableInfo,
+  SelectableSecondaryEvaluator,
 } from './types';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 
@@ -33,6 +35,7 @@ export async function getProjectsWithWbs(
   employeeId: string,
   mapping: EvaluationPeriodEmployeeMapping,
   projectAssignmentRepository: Repository<EvaluationProjectAssignment>,
+  projectSecondaryEvaluatorRepository: Repository<ProjectSecondaryEvaluator>,
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   wbsItemRepository: Repository<WbsItem>,
   criteriaRepository: Repository<WbsEvaluationCriteria>,
@@ -90,6 +93,52 @@ export async function getProjectsWithWbs(
       ),
     ),
   ].filter((id): id is string => !!id);
+
+  // 2-1. 프로젝트별 선택 가능한 2차 평가자 조회
+  const secondaryEvaluatorsMap = new Map<
+    string,
+    SelectableSecondaryEvaluator[]
+  >();
+
+  if (projectIds.length > 0) {
+    const secondaryEvaluators = await projectSecondaryEvaluatorRepository
+      .createQueryBuilder('pse')
+      .leftJoin(
+        Employee,
+        'evaluator',
+        'evaluator.id = pse.evaluatorId AND evaluator.deletedAt IS NULL',
+      )
+      .select([
+        'pse.projectId AS project_id',
+        'evaluator.id AS evaluator_id',
+        'evaluator.name AS evaluator_name',
+        'evaluator.email AS evaluator_email',
+        'evaluator.phoneNumber AS evaluator_phone_number',
+        'evaluator.departmentName AS evaluator_department_name',
+        'evaluator.rankName AS evaluator_rank_name',
+      ])
+      .where('pse.projectId IN (:...projectIds)', { projectIds })
+      .andWhere('pse.deletedAt IS NULL')
+      .orderBy('evaluator.name', 'ASC')
+      .getRawMany();
+
+    // 프로젝트별로 그룹화
+    for (const evaluator of secondaryEvaluators) {
+      if (!secondaryEvaluatorsMap.has(evaluator.project_id)) {
+        secondaryEvaluatorsMap.set(evaluator.project_id, []);
+      }
+      if (evaluator.evaluator_id) {
+        secondaryEvaluatorsMap.get(evaluator.project_id)!.push({
+          id: evaluator.evaluator_id,
+          name: evaluator.evaluator_name,
+          email: evaluator.evaluator_email,
+          phoneNumber: evaluator.evaluator_phone_number,
+          departmentName: evaluator.evaluator_department_name,
+          rankName: evaluator.evaluator_rank_name,
+        });
+      }
+    }
+  }
 
   // 3. 모든 WBS 할당 조회 (한 번에 모든 프로젝트의 WBS 조회)
   const wbsAssignments = await wbsAssignmentRepository
@@ -506,6 +555,10 @@ export async function getProjectsWithWbs(
           }
         : null;
 
+    // 선택 가능한 2차 평가자 목록
+    const selectableSecondaryEvaluators =
+      secondaryEvaluatorsMap.get(projectId) || [];
+
     // 해당 프로젝트의 WBS 목록 필터링
     const projectWbsAssignments = wbsAssignments.filter(
       (wbsRow) =>
@@ -571,6 +624,7 @@ export async function getProjectsWithWbs(
       projectCode: row.project_project_code || '',
       assignedAt: row.assignment_assigned_date,
       projectManager,
+      selectableSecondaryEvaluators,
       wbsList,
     });
   }

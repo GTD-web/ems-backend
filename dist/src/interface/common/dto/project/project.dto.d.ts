@@ -35,6 +35,17 @@ export declare class ManagerInfoDto {
     departmentName?: string;
     rankName?: string;
 }
+export declare class SelectableSecondaryEvaluatorInfoDto {
+    id: string;
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+    departmentName?: string;
+    rankName?: string;
+}
+export declare class SetSecondaryEvaluatorsDto {
+    evaluatorIds: string[];
+}
 export declare class ProjectResponseDto {
     id: string;
     name: string;
@@ -44,6 +55,7 @@ export declare class ProjectResponseDto {
     endDate?: Date;
     managerId?: string;
     manager?: ManagerInfoDto;
+    selectableSecondaryEvaluators?: SelectableSecondaryEvaluatorInfoDto[];
     createdAt: Date;
     updatedAt: Date;
     deletedAt?: Date;
@@ -77,4 +89,8 @@ export declare class ProjectManagerDto {
 export declare class ProjectManagerListResponseDto {
     managers: ProjectManagerDto[];
     total: number;
+}
+export declare class SetSecondaryEvaluatorsResponseDto {
+    count: number;
+    evaluators: SelectableSecondaryEvaluatorInfoDto[];
 }
