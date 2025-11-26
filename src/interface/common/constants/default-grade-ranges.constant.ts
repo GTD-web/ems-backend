@@ -2,12 +2,20 @@
  * 평가 기간 기본 등급 구간 설정
  *
  * 프론트엔드에서 평가 기간 생성 시 참고할 수 있는 기본 등급 구간입니다.
+ * POST /admin/evaluation-periods/default-grade-ranges 엔드포인트를 통해 변경할 수 있습니다.
  */
-export const DEFAULT_GRADE_RANGES = [
+
+type GradeRange = {
+  grade: string;
+  minRange: number;
+  maxRange: number;
+};
+
+let defaultGradeRanges: GradeRange[] = [
   {
     grade: 'S',
     minRange: 121,
-    maxRange: 1000,
+    maxRange: 200,
   },
   {
     grade: 'A+',
@@ -39,5 +47,25 @@ export const DEFAULT_GRADE_RANGES = [
     minRange: 0,
     maxRange: 70,
   },
-] as const;
+];
+
+/**
+ * 기본 등급 구간을 조회합니다.
+ */
+export function getDefaultGradeRanges(): GradeRange[] {
+  return [...defaultGradeRanges];
+}
+
+/**
+ * 기본 등급 구간을 변경합니다.
+ */
+export function setDefaultGradeRanges(ranges: GradeRange[]): void {
+  defaultGradeRanges = [...ranges];
+}
+
+/**
+ * 기본 등급 구간 상수 (하위 호환성을 위해 유지)
+ * @deprecated getDefaultGradeRanges() 함수를 사용하세요.
+ */
+export const DEFAULT_GRADE_RANGES = getDefaultGradeRanges();
 

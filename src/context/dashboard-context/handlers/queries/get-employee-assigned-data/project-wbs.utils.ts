@@ -260,7 +260,9 @@ export async function getProjectsWithWbs(
       .select([
         'mapping.wbsItemId AS mapping_wbs_item_id',
         'mapping.evaluatorId AS mapping_evaluator_id',
+        'evaluator.id AS evaluator_id',
         'evaluator.name AS evaluator_name',
+        'evaluator.externalId AS evaluator_external_id',
       ])
       .leftJoin(
         Employee,
@@ -283,9 +285,21 @@ export async function getProjectsWithWbs(
       })
       .getRawMany();
 
+    logger.log('2차 평가자 매핑 조회 결과', {
+      count: secondaryEvaluatorMappings.length,
+      mappings: secondaryEvaluatorMappings,
+    });
+
     for (const row of secondaryEvaluatorMappings) {
       const wbsId = row.mapping_wbs_item_id;
       if (!wbsId || !row.mapping_evaluator_id) continue;
+
+      logger.log('2차 평가자 매핑 설정', {
+        wbsId,
+        evaluatorId: row.mapping_evaluator_id,
+        evaluatorName: row.evaluator_name,
+        evaluatorExternalId: row.evaluator_external_id,
+      });
 
       secondaryEvaluatorMap.set(wbsId, {
         evaluatorId: row.mapping_evaluator_id,
@@ -483,6 +497,15 @@ export async function getProjectsWithWbs(
       continue;
     }
 
+    // 프로젝트 매니저 정보
+    const projectManager =
+      row.manager_id && row.manager_name
+        ? {
+            id: row.manager_id,
+            name: row.manager_name,
+          }
+        : null;
+
     // 해당 프로젝트의 WBS 목록 필터링
     const projectWbsAssignments = wbsAssignments.filter(
       (wbsRow) =>
@@ -508,6 +531,26 @@ export async function getProjectsWithWbs(
       };
       const deliverables = deliverablesMap.get(wbsItemId) || [];
 
+      // secondaryDownwardEvaluation의 evaluatorName이 비어있고, 프로젝트 PM이 있으면 PM 이름으로 채움
+      let secondaryEval = downwardEvalData.secondary;
+      if (
+        secondaryEval &&
+        !secondaryEval.evaluatorName &&
+        projectManager &&
+        secondaryEval.evaluatorId === projectManager.id
+      ) {
+        logger.log('2차 평가자 이름을 프로젝트 PM으로 설정', {
+          wbsId: wbsItemId,
+          evaluatorId: secondaryEval.evaluatorId,
+          pmId: projectManager.id,
+          pmName: projectManager.name,
+        });
+        secondaryEval = {
+          ...secondaryEval,
+          evaluatorName: projectManager.name,
+        };
+      }
+
       wbsList.push({
         wbsId: wbsItemId,
         wbsName: wbsRow.wbs_item_title || '',
@@ -517,7 +560,7 @@ export async function getProjectsWithWbs(
         criteria,
         performance,
         primaryDownwardEvaluation: downwardEvalData.primary || null,
-        secondaryDownwardEvaluation: downwardEvalData.secondary || null,
+        secondaryDownwardEvaluation: secondaryEval || null,
         deliverables,
       });
     }
@@ -527,13 +570,7 @@ export async function getProjectsWithWbs(
       projectName: row.project_name || '',
       projectCode: row.project_project_code || '',
       assignedAt: row.assignment_assigned_date,
-      projectManager:
-        row.manager_id && row.manager_name
-          ? {
-              id: row.manager_id,
-              name: row.manager_name,
-            }
-          : null,
+      projectManager,
       wbsList,
     });
   }

@@ -32,7 +32,45 @@ let EvaluationPeriodManagementController = EvaluationPeriodManagementController_
         this.evaluationPeriodManagementService = evaluationPeriodManagementService;
     }
     async getDefaultGradeRanges() {
-        return default_grade_ranges_constant_1.DEFAULT_GRADE_RANGES;
+        return (0, default_grade_ranges_constant_1.getDefaultGradeRanges)();
+    }
+    async updateDefaultGradeRanges(updateData) {
+        const gradeRanges = updateData.gradeRanges.map((range) => ({
+            grade: range.grade,
+            minRange: range.minRange,
+            maxRange: range.maxRange,
+        }));
+        const grades = gradeRanges.map((r) => r.grade);
+        const uniqueGrades = new Set(grades);
+        if (grades.length !== uniqueGrades.size) {
+            throw new common_1.BadRequestException('중복된 등급이 있습니다.');
+        }
+        for (const range of gradeRanges) {
+            if (range.minRange < 0 || range.minRange > 200) {
+                throw new common_1.BadRequestException('최소 범위는 0-200 사이여야 합니다.');
+            }
+            if (range.maxRange < 0 || range.maxRange > 200) {
+                throw new common_1.BadRequestException('최대 범위는 0-200 사이여야 합니다.');
+            }
+            if (range.minRange >= range.maxRange) {
+                throw new common_1.BadRequestException('최소 범위는 최대 범위보다 작아야 합니다.');
+            }
+        }
+        const sortedRanges = [...gradeRanges].sort((a, b) => a.minRange - b.minRange);
+        for (let i = 0; i < sortedRanges.length - 1; i++) {
+            const current = sortedRanges[i];
+            const next = sortedRanges[i + 1];
+            if (current.maxRange > next.minRange) {
+                throw new common_1.BadRequestException('등급 구간이 겹칩니다.');
+            }
+        }
+        const minRange = Math.min(...gradeRanges.map((r) => r.minRange));
+        const maxRange = Math.max(...gradeRanges.map((r) => r.maxRange));
+        if (minRange > 0 || maxRange < 200) {
+            throw new common_1.BadRequestException('등급 구간이 0-200 범위를 모두 커버해야 합니다.');
+        }
+        (0, default_grade_ranges_constant_1.setDefaultGradeRanges)(gradeRanges);
+        return (0, default_grade_ranges_constant_1.getDefaultGradeRanges)();
     }
     async getActiveEvaluationPeriods() {
         return await this.evaluationPeriodManagementService.활성평가기간_조회한다();
@@ -194,6 +232,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], EvaluationPeriodManagementController.prototype, "getDefaultGradeRanges", null);
+__decorate([
+    (0, evaluation_period_api_decorators_1.UpdateDefaultGradeRanges)(),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [evaluation_management_dto_1.UpdateDefaultGradeRangesApiDto]),
+    __metadata("design:returntype", Promise)
+], EvaluationPeriodManagementController.prototype, "updateDefaultGradeRanges", null);
 __decorate([
     (0, evaluation_period_api_decorators_1.GetActiveEvaluationPeriods)(),
     __metadata("design:type", Function),

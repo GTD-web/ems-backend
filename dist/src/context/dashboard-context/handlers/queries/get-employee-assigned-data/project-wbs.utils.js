@@ -167,7 +167,9 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             .select([
             'mapping.wbsItemId AS mapping_wbs_item_id',
             'mapping.evaluatorId AS mapping_evaluator_id',
+            'evaluator.id AS evaluator_id',
             'evaluator.name AS evaluator_name',
+            'evaluator.externalId AS evaluator_external_id',
         ])
             .leftJoin(employee_entity_1.Employee, 'evaluator', 'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL')
             .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
@@ -181,10 +183,20 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             evaluatorType: 'secondary',
         })
             .getRawMany();
+        logger.log('2차 평가자 매핑 조회 결과', {
+            count: secondaryEvaluatorMappings.length,
+            mappings: secondaryEvaluatorMappings,
+        });
         for (const row of secondaryEvaluatorMappings) {
             const wbsId = row.mapping_wbs_item_id;
             if (!wbsId || !row.mapping_evaluator_id)
                 continue;
+            logger.log('2차 평가자 매핑 설정', {
+                wbsId,
+                evaluatorId: row.mapping_evaluator_id,
+                evaluatorName: row.evaluator_name,
+                evaluatorExternalId: row.evaluator_external_id,
+            });
             secondaryEvaluatorMap.set(wbsId, {
                 evaluatorId: row.mapping_evaluator_id,
                 evaluatorName: row.evaluator_name || '',
@@ -343,6 +355,12 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             logger.warn('프로젝트 ID가 없는 할당 발견', { row });
             continue;
         }
+        const projectManager = row.manager_id && row.manager_name
+            ? {
+                id: row.manager_id,
+                name: row.manager_name,
+            }
+            : null;
         const projectWbsAssignments = wbsAssignments.filter((wbsRow) => (wbsRow.assignment_project_id || wbsRow.wbs_item_project_id) ===
             projectId);
         const wbsList = [];
@@ -359,6 +377,22 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
                 secondary: null,
             };
             const deliverables = deliverablesMap.get(wbsItemId) || [];
+            let secondaryEval = downwardEvalData.secondary;
+            if (secondaryEval &&
+                !secondaryEval.evaluatorName &&
+                projectManager &&
+                secondaryEval.evaluatorId === projectManager.id) {
+                logger.log('2차 평가자 이름을 프로젝트 PM으로 설정', {
+                    wbsId: wbsItemId,
+                    evaluatorId: secondaryEval.evaluatorId,
+                    pmId: projectManager.id,
+                    pmName: projectManager.name,
+                });
+                secondaryEval = {
+                    ...secondaryEval,
+                    evaluatorName: projectManager.name,
+                };
+            }
             wbsList.push({
                 wbsId: wbsItemId,
                 wbsName: wbsRow.wbs_item_title || '',
@@ -368,7 +402,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
                 criteria,
                 performance,
                 primaryDownwardEvaluation: downwardEvalData.primary || null,
-                secondaryDownwardEvaluation: downwardEvalData.secondary || null,
+                secondaryDownwardEvaluation: secondaryEval || null,
                 deliverables,
             });
         }
@@ -377,12 +411,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             projectName: row.project_name || '',
             projectCode: row.project_project_code || '',
             assignedAt: row.assignment_assigned_date,
-            projectManager: row.manager_id && row.manager_name
-                ? {
-                    id: row.manager_id,
-                    name: row.manager_name,
-                }
-                : null,
+            projectManager,
             wbsList,
         });
     }

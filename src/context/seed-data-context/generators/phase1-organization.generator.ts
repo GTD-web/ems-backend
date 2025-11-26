@@ -526,6 +526,18 @@ export class Phase1OrganizationGenerator {
     const projects: Project[] = [];
     const now = new Date();
 
+    // Employee ID를 externalId로 매핑하기 위해 직원 정보 조회
+    const employees = await this.employeeRepository
+      .createQueryBuilder('employee')
+      .select(['employee.id', 'employee.externalId'])
+      .where('employee.id IN (:...ids)', { ids: employeeIds })
+      .andWhere('employee.deletedAt IS NULL')
+      .getMany();
+
+    const idToExternalIdMap = new Map(
+      employees.map((emp) => [emp.id, emp.externalId]),
+    );
+
     for (let i = 0; i < count; i++) {
       const project = new Project();
       project.name = `${faker.company.catchPhrase()} 프로젝트`;
@@ -558,15 +570,18 @@ export class Phase1OrganizationGenerator {
 
       if (nonSystemAdminEmployees.length > 0) {
         // 일반 직원이 있으면 그 중에서 선택
-        project.managerId =
+        const selectedEmployeeId =
           nonSystemAdminEmployees[
             Math.floor(Math.random() * nonSystemAdminEmployees.length)
           ];
+        // Employee의 externalId를 managerId로 설정 (Project.managerId는 Employee.externalId를 참조)
+        project.managerId = idToExternalIdMap.get(selectedEmployeeId);
       } else {
         // 일반 직원이 없으면 확률 기반으로 할당
         if (ProbabilityUtil.rollDice(dist.projectManagerAssignmentRatio)) {
-          project.managerId =
+          const selectedEmployeeId =
             employeeIds[Math.floor(Math.random() * employeeIds.length)];
+          project.managerId = idToExternalIdMap.get(selectedEmployeeId);
         }
       }
 

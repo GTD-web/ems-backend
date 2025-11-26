@@ -8,6 +8,8 @@ import {
   Min,
   Max,
   Matches,
+  IsArray,
+  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { DateToUTC, OptionalDateToUTC } from '@interface/common/decorators';

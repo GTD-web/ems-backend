@@ -59,7 +59,7 @@ import {
   UpdatePerformanceDeadlineApiDto,
   UpdateSelfEvaluationDeadlineApiDto,
 } from '@interface/common/dto/evaluation-period/evaluation-management.dto';
-import { DEFAULT_GRADE_RANGES } from '@interface/common/constants/default-grade-ranges.constant';
+import { getDefaultGradeRanges } from '@interface/common/constants/default-grade-ranges.constant';
 import type { GradeRangeResponseDto } from '@interface/common/dto/evaluation-period/evaluation-period-response.dto';
 
 /**
@@ -84,7 +84,7 @@ export class EvaluatorEvaluationPeriodManagementController {
    */
   @GetDefaultGradeRanges()
   async getDefaultGradeRanges(): Promise<GradeRangeResponseDto[]> {
-    return DEFAULT_GRADE_RANGES as unknown as GradeRangeResponseDto[];
+    return getDefaultGradeRanges() as unknown as GradeRangeResponseDto[];
   }
 
   /**

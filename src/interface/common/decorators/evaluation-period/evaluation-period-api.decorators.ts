@@ -7,12 +7,19 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger';
 import {
   EvaluationPeriodListResponseDto,
   EvaluationPeriodResponseDto,
   GradeRangeResponseDto,
 } from '../../dto/evaluation-period/evaluation-period-response.dto';
+import { UpdateDefaultGradeRangesApiDto } from '../../dto/evaluation-period/evaluation-management.dto';
 
 // ==================== GET 엔드포인트 데코레이터 ====================
 
@@ -42,7 +49,7 @@ export function GetDefaultGradeRanges() {
 **테스트 케이스:**
 - 기본 조회: 7개 등급 구간을 올바른 순서로 반환
 - 구간 겹침 없음: 모든 등급 구간이 겹치지 않음
-- 전체 범위 커버: 0점부터 1000점까지 모든 점수 범위를 커버`,
+- 전체 범위 커버: 0점부터 200점까지 모든 점수 범위를 커버`,
     }),
     ApiResponse({
       status: 200,
@@ -149,6 +156,47 @@ export function GetEvaluationPeriodDetail() {
     ApiResponse({
       status: 400,
       description: '잘못된 요청 (잘못된 UUID 형식 등)',
+    }),
+    ApiResponse({ status: 500, description: '서버 내부 오류' }),
+  );
+}
+
+/**
+ * 기본 등급 구간 변경 엔드포인트 데코레이터
+ */
+export function UpdateDefaultGradeRanges() {
+  return applyDecorators(
+    Post('default-grade-ranges'),
+    HttpCode(HttpStatus.OK),
+    ApiOperation({
+      summary: '기본 등급 구간 변경',
+      description: `평가 기간 생성 시 사용되는 기본 등급 구간 설정을 변경합니다.
+
+**동작:**
+- 기본 등급 구간 설정을 사용자가 지정한 값으로 변경합니다.
+- 변경된 설정은 이후 생성되는 평가 기간의 기본값으로 사용됩니다.
+- 기존에 생성된 평가 기간에는 영향을 주지 않습니다.
+
+**테스트 케이스:**
+- 기본 변경: 유효한 등급 구간 배열로 기본값 변경
+- 변경 후 조회: 변경된 기본값이 조회 API에서 반환됨
+- 유효성 검증: 등급 구간의 유효성 검증 (중복, 겹침, 범위 등)
+- 필수 필드 검증: gradeRanges 필드 누락 시 400 에러
+- 잘못된 데이터: 빈 배열, 중복 등급, 범위 겹침 등 시 400 에러
+- 범위 검증: minRange, maxRange가 0-200 범위를 벗어날 시 400 에러`,
+    }),
+    ApiBody({
+      type: UpdateDefaultGradeRangesApiDto,
+      description: '기본 등급 구간 설정',
+    }),
+    ApiResponse({
+      status: 200,
+      description: '기본 등급 구간이 성공적으로 변경되었습니다.',
+      type: [GradeRangeResponseDto],
+    }),
+    ApiResponse({
+      status: 400,
+      description: '잘못된 요청 데이터입니다.',
     }),
     ApiResponse({ status: 500, description: '서버 내부 오류' }),
   );

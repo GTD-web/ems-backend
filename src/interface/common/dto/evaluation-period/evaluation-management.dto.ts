@@ -103,7 +103,7 @@ export class CreateGradeRangeApiDto {
   })
   @IsNumber({}, { message: '최소 범위는 숫자여야 합니다.' })
   @Min(0, { message: '최소 범위는 0 이상이어야 합니다.' })
-  @Max(1000, { message: '최소 범위는 1000 이하여야 합니다.' })
+  @Max(200, { message: '최소 범위는 200 이하여야 합니다.' })
   minRange: number;
 
   @ApiProperty({
@@ -112,7 +112,7 @@ export class CreateGradeRangeApiDto {
   })
   @IsNumber({}, { message: '최대 범위는 숫자여야 합니다.' })
   @Min(0, { message: '최대 범위는 0 이상이어야 합니다.' })
-  @Max(1000, { message: '최대 범위는 1000 이하여야 합니다.' })
+  @Max(200, { message: '최대 범위는 200 이하여야 합니다.' })
   maxRange: number;
 }
 
@@ -331,6 +331,21 @@ export class UpdatePeerEvaluationDeadlineApiDto {
 export class UpdateGradeRangesApiDto {
   @ApiProperty({
     description: '등급 구간 목록',
+    type: [CreateGradeRangeApiDto],
+  })
+  @IsArray({ message: '등급 구간 목록은 배열이어야 합니다.' })
+  @ArrayNotEmpty({ message: '등급 구간 목록은 최소 1개 이상이어야 합니다.' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateGradeRangeApiDto)
+  gradeRanges: CreateGradeRangeApiDto[];
+}
+
+/**
+ * 기본 등급 구간 변경 API DTO
+ */
+export class UpdateDefaultGradeRangesApiDto {
+  @ApiProperty({
+    description: '기본 등급 구간 목록',
     type: [CreateGradeRangeApiDto],
   })
   @IsArray({ message: '등급 구간 목록은 배열이어야 합니다.' })

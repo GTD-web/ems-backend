@@ -19,7 +19,7 @@ export class GradeRangeResponseDto {
     description: '최소 범위',
     example: 90,
     minimum: 0,
-    maximum: 100,
+    maximum: 200,
   })
   minRange: number;
 
@@ -27,7 +27,7 @@ export class GradeRangeResponseDto {
     description: '최대 범위',
     example: 100,
     minimum: 0,
-    maximum: 100,
+    maximum: 200,
   })
   maxRange: number;
 }
