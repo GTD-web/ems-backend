@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.DownwardEvaluationDetailResponseDto = exports.DownwardEvaluationListResponseDto = exports.DownwardEvaluationResponseDto = exports.DownwardEvaluationBasicDto = exports.DownwardEvaluationFilterDto = exports.SubmitDownwardEvaluationQueryDto = exports.SubmitDownwardEvaluationDto = exports.UpdateDownwardEvaluationDto = exports.CreateSecondaryDownwardEvaluationBodyDto = exports.CreatePrimaryDownwardEvaluationBodyDto = void 0;
+exports.DownwardEvaluationDetailResponseDto = exports.DownwardEvaluationListResponseDto = exports.ResetDownwardEvaluationResponseDto = exports.DownwardEvaluationResponseDto = exports.DownwardEvaluationBasicDto = exports.DownwardEvaluationFilterDto = exports.SubmitDownwardEvaluationQueryDto = exports.SubmitDownwardEvaluationDto = exports.UpdateDownwardEvaluationDto = exports.CreateSecondaryDownwardEvaluationBodyDto = exports.CreatePrimaryDownwardEvaluationBodyDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
@@ -411,6 +411,17 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], DownwardEvaluationResponseDto.prototype, "message", void 0);
+class ResetDownwardEvaluationResponseDto {
+    message;
+}
+exports.ResetDownwardEvaluationResponseDto = ResetDownwardEvaluationResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: '결과 메시지',
+        example: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+    }),
+    __metadata("design:type", String)
+], ResetDownwardEvaluationResponseDto.prototype, "message", void 0);
 class DownwardEvaluationListResponseDto {
     evaluations;
     total;

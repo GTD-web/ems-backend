@@ -21,7 +21,7 @@ BEGIN
         AND column_name = 'isAccessible'
     ) THEN
         ALTER TABLE employee 
-        ADD COLUMN "isAccessible" BOOLEAN NOT NULL DEFAULT false;
+        ADD COLUMN "isAccessible" BOOLEAN NOT NULL DEFAULT true;
         
         -- 컬럼 코멘트 추가
         COMMENT ON COLUMN employee."isAccessible" IS '시스템 접근 가능 여부 (2중 보안용)';
@@ -45,7 +45,7 @@ END $$;
 -- 예상 결과:
 -- column_name  | data_type | column_default | is_nullable
 -- -------------|-----------|----------------|------------
--- isAccessible | boolean   | false          | NO
+-- isAccessible | boolean   | true           | NO
 -- ============================================================
 
 -- ============================================================

@@ -21,6 +21,7 @@ import {
   DownwardEvaluationDetailResponseDto,
   DownwardEvaluationListResponseDto,
   DownwardEvaluationResponseDto,
+  ResetDownwardEvaluationResponseDto,
   SubmitDownwardEvaluationDto,
   UpdateDownwardEvaluationDto,
 } from '../../dto/performance-evaluation/downward-evaluation.dto';
@@ -685,6 +686,7 @@ export function ResetPrimaryDownwardEvaluation() {
     ApiResponse({
       status: HttpStatus.OK,
       description: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+      type: ResetDownwardEvaluationResponseDto,
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,
@@ -763,6 +765,7 @@ export function ResetSecondaryDownwardEvaluation() {
     ApiResponse({
       status: HttpStatus.OK,
       description: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+      type: ResetDownwardEvaluationResponseDto,
     }),
     ApiResponse({
       status: HttpStatus.BAD_REQUEST,

@@ -57,8 +57,8 @@ export class DownwardEvaluationScenario {
     periodId: string;
     wbsId: string;
     evaluatorId: string;
-  }): Promise<void> {
-    await this.apiClient.resetPrimary(config);
+  }): Promise<{ message: string }> {
+    return await this.apiClient.resetPrimary(config);
   }
 
   // ==================== 2차 하향평가 ====================
@@ -98,8 +98,8 @@ export class DownwardEvaluationScenario {
     periodId: string;
     wbsId: string;
     evaluatorId: string;
-  }): Promise<void> {
-    await this.apiClient.resetSecondary(config);
+  }): Promise<{ message: string }> {
+    return await this.apiClient.resetSecondary(config);
   }
 
   // ==================== 일괄 처리 ====================

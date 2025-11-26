@@ -543,6 +543,7 @@ function ResetPrimaryDownwardEvaluation() {
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.OK,
         description: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+        type: downward_evaluation_dto_1.ResetDownwardEvaluationResponseDto,
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
         description: '잘못된 요청 데이터입니다.',
@@ -604,6 +605,7 @@ function ResetSecondaryDownwardEvaluation() {
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.OK,
         description: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+        type: downward_evaluation_dto_1.ResetDownwardEvaluationResponseDto,
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
         description: '잘못된 요청 데이터입니다.',
