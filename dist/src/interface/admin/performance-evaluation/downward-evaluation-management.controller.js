@@ -84,11 +84,17 @@ let DownwardEvaluationManagementController = class DownwardEvaluationManagementC
         const evaluatorId = submitDto.evaluatorId;
         const resetBy = user.id;
         await this.performanceEvaluationService.일차_하향평가를_초기화한다(evaluateeId, periodId, wbsId, evaluatorId, resetBy);
+        return {
+            message: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+        };
     }
     async resetSecondaryDownwardEvaluation(evaluateeId, periodId, wbsId, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
         const resetBy = user.id;
         await this.performanceEvaluationService.이차_하향평가를_초기화한다(evaluateeId, periodId, wbsId, evaluatorId, resetBy);
+        return {
+            message: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+        };
     }
     async submitDownwardEvaluation(id, user) {
         const submittedBy = user.id;

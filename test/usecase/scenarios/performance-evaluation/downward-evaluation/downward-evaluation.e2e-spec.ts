@@ -534,12 +534,18 @@ describe('하향평가 시나리오', () => {
       expect(초기화전wbsItem.primaryDownwardEvaluation.isCompleted).toBe(true);
 
       // When - 1차 하향평가 초기화
-      await downwardEvaluationScenario.일차하향평가를_초기화한다({
-        evaluateeId,
-        periodId: evaluationPeriodId,
-        wbsId: wbsItemIds[0],
-        evaluatorId: primaryEvaluatorId,
-      });
+      const 초기화응답 =
+        await downwardEvaluationScenario.일차하향평가를_초기화한다({
+          evaluateeId,
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: primaryEvaluatorId,
+        });
+
+      // Then - 초기화 응답 검증
+      expect(초기화응답.message).toBe(
+        '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+      );
 
       // Then - 대시보드 API 초기화 후 검증
       const 개별직원현황 =
@@ -871,12 +877,18 @@ describe('하향평가 시나리오', () => {
       );
 
       // When - 2차 하향평가 초기화
-      await downwardEvaluationScenario.이차하향평가를_초기화한다({
-        evaluateeId,
-        periodId: evaluationPeriodId,
-        wbsId: wbsItemIds[0],
-        evaluatorId: secondaryEvaluatorId,
-      });
+      const 초기화응답 =
+        await downwardEvaluationScenario.이차하향평가를_초기화한다({
+          evaluateeId,
+          periodId: evaluationPeriodId,
+          wbsId: wbsItemIds[0],
+          evaluatorId: secondaryEvaluatorId,
+        });
+
+      // Then - 초기화 응답 검증
+      expect(초기화응답.message).toBe(
+        '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+      );
 
       // Then - 대시보드 API 초기화 후 검증
       const 개별직원현황 =

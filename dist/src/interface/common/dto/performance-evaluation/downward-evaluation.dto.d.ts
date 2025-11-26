@@ -54,6 +54,9 @@ export declare class DownwardEvaluationResponseDto {
     evaluatorId: string;
     message: string;
 }
+export declare class ResetDownwardEvaluationResponseDto {
+    message: string;
+}
 export declare class DownwardEvaluationListResponseDto {
     evaluations: DownwardEvaluationBasicDto[];
     total: number;

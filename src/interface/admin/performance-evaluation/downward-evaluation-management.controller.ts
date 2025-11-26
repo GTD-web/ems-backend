@@ -29,6 +29,7 @@ import {
   DownwardEvaluationFilterDto,
   DownwardEvaluationListResponseDto,
   DownwardEvaluationResponseDto,
+  ResetDownwardEvaluationResponseDto,
   SubmitDownwardEvaluationDto,
   SubmitDownwardEvaluationQueryDto,
 } from '@interface/common/dto/performance-evaluation/downward-evaluation.dto';
@@ -180,7 +181,7 @@ export class DownwardEvaluationManagementController {
     @ParseUUID('wbsId') wbsId: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
     @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
+  ): Promise<ResetDownwardEvaluationResponseDto> {
     const evaluatorId = submitDto.evaluatorId;
     const resetBy = user.id;
     await this.performanceEvaluationService.일차_하향평가를_초기화한다(
@@ -190,6 +191,10 @@ export class DownwardEvaluationManagementController {
       evaluatorId,
       resetBy,
     );
+
+    return {
+      message: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+    };
   }
 
   /**
@@ -202,7 +207,7 @@ export class DownwardEvaluationManagementController {
     @ParseUUID('wbsId') wbsId: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
     @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
+  ): Promise<ResetDownwardEvaluationResponseDto> {
     const evaluatorId = submitDto.evaluatorId;
     const resetBy = user.id;
     await this.performanceEvaluationService.이차_하향평가를_초기화한다(
@@ -212,6 +217,10 @@ export class DownwardEvaluationManagementController {
       evaluatorId,
       resetBy,
     );
+
+    return {
+      message: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+    };
   }
 
   /**
