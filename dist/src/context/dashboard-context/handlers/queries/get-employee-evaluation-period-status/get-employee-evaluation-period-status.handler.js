@@ -106,7 +106,6 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 'mapping.isCriteriaSubmitted AS mapping_iscriteriasubmitted',
                 'mapping.criteriaSubmittedAt AS mapping_criteriasubmittedat',
                 'mapping.criteriaSubmittedBy AS mapping_criteriasubmittedby',
-                'mapping.isNewEnrolled AS mapping_isnewenrolled',
                 'mapping.deletedAt AS mapping_deletedat',
                 'period.name AS period_name',
                 'period.status AS period_status',
@@ -310,7 +309,6 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 mappingId: result.mapping_id,
                 employeeId: result.mapping_employeeid,
                 isEvaluationTarget,
-                isNewEnrolled: result.mapping_isnewenrolled || false,
                 evaluationPeriod: result.period_name
                     ? {
                         id: result.mapping_evaluationperiodid,

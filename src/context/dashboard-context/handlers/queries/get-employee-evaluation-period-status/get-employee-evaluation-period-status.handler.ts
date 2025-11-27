@@ -153,7 +153,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'mapping.isCriteriaSubmitted AS mapping_iscriteriasubmitted',
           'mapping.criteriaSubmittedAt AS mapping_criteriasubmittedat',
           'mapping.criteriaSubmittedBy AS mapping_criteriasubmittedby',
-          'mapping.isNewEnrolled AS mapping_isnewenrolled',
           'mapping.deletedAt AS mapping_deletedat',
           // 평가기간 정보
           'period.name AS period_name',
@@ -558,8 +557,6 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         employeeId: result.mapping_employeeid,
         // 평가 대상 여부 (최상위)
         isEvaluationTarget,
-        // 신규 등록 여부
-        isNewEnrolled: result.mapping_isnewenrolled || false,
 
         // 평가기간 정보 (오브젝트)
         evaluationPeriod: result.period_name

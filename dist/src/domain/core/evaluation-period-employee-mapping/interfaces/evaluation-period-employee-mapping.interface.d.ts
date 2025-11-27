@@ -9,7 +9,6 @@ export interface IEvaluationPeriodEmployeeMapping {
     readonly isCriteriaSubmitted: boolean;
     readonly criteriaSubmittedAt?: Date | null;
     readonly criteriaSubmittedBy?: string | null;
-    readonly isNewEnrolled: boolean;
     readonly createdBy?: string;
     readonly updatedBy?: string;
     readonly createdAt: Date;

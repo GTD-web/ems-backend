@@ -11,7 +11,6 @@ export declare class EvaluationPeriodEmployeeMapping extends BaseEntity<Evaluati
     isCriteriaSubmitted: boolean;
     criteriaSubmittedAt?: Date | null;
     criteriaSubmittedBy?: string | null;
-    isNewEnrolled: boolean;
     constructor(data?: CreateEvaluationPeriodEmployeeMappingData);
     해당_평가기간의_맵핑인가(evaluationPeriodId: string): boolean;
     해당_직원의_맵핑인가(employeeId: string): boolean;

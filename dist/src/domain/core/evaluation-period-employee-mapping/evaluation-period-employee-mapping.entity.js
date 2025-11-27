@@ -22,7 +22,6 @@ let EvaluationPeriodEmployeeMapping = class EvaluationPeriodEmployeeMapping exte
     isCriteriaSubmitted;
     criteriaSubmittedAt;
     criteriaSubmittedBy;
-    isNewEnrolled;
     constructor(data) {
         super();
         if (data) {
@@ -35,7 +34,6 @@ let EvaluationPeriodEmployeeMapping = class EvaluationPeriodEmployeeMapping exte
             this.isCriteriaSubmitted = false;
             this.criteriaSubmittedAt = null;
             this.criteriaSubmittedBy = null;
-            this.isNewEnrolled = true;
             this.메타데이터를_업데이트한다(data.createdBy);
         }
     }
@@ -102,7 +100,6 @@ let EvaluationPeriodEmployeeMapping = class EvaluationPeriodEmployeeMapping exte
             isCriteriaSubmitted: this.isCriteriaSubmitted,
             criteriaSubmittedAt: this.criteriaSubmittedAt,
             criteriaSubmittedBy: this.criteriaSubmittedBy,
-            isNewEnrolled: this.isNewEnrolled,
             createdBy: this.createdBy,
             updatedBy: this.updatedBy,
             createdAt: this.createdAt,
@@ -185,14 +182,6 @@ __decorate([
     }),
     __metadata("design:type", Object)
 ], EvaluationPeriodEmployeeMapping.prototype, "criteriaSubmittedBy", void 0);
-__decorate([
-    (0, typeorm_1.Column)({
-        type: 'boolean',
-        default: false,
-        comment: '신규 등록 여부 (등록 후 24시간 이내)',
-    }),
-    __metadata("design:type", Boolean)
-], EvaluationPeriodEmployeeMapping.prototype, "isNewEnrolled", void 0);
 exports.EvaluationPeriodEmployeeMapping = EvaluationPeriodEmployeeMapping = __decorate([
     (0, typeorm_1.Entity)('evaluation_period_employee_mapping'),
     (0, typeorm_1.Index)(['evaluationPeriodId']),
