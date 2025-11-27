@@ -10,6 +10,9 @@ import {
 } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
 
 /**
  * 피평가자의 모든 하향평가 일괄 초기화 커맨드
@@ -37,8 +40,11 @@ export class BulkResetDownwardEvaluationsHandler
   constructor(
     @InjectRepository(DownwardEvaluation)
     private readonly downwardEvaluationRepository: Repository<DownwardEvaluation>,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
     private readonly downwardEvaluationService: DownwardEvaluationService,
     private readonly transactionManager: TransactionManagerService,
+    private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
   ) {}
 
   async execute(
@@ -113,6 +119,51 @@ export class BulkResetDownwardEvaluationsHandler
             `하향평가 초기화 실패: ${evaluation.id}`,
             error instanceof Error ? error.stack : undefined,
           );
+        }
+      }
+
+      // 단계 승인 상태를 pending으로 변경 (한 번만 처리)
+      if (resetIds.length > 0) {
+        this.logger.debug(
+          `단계 승인 상태를 pending으로 변경 시작 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가유형: ${evaluationType}`,
+        );
+
+        const mapping = await this.mappingRepository.findOne({
+          where: {
+            evaluationPeriodId: periodId,
+            employeeId: evaluateeId,
+            deletedAt: null as any,
+          },
+        });
+
+        if (mapping) {
+          const stepApproval =
+            await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+
+          if (stepApproval) {
+            // 평가 유형에 따라 적절한 단계의 상태를 pending으로 변경
+            if (evaluationType === DownwardEvaluationType.PRIMARY) {
+              this.stepApprovalService.단계_상태를_변경한다(
+                stepApproval,
+                'primary',
+                StepApprovalStatus.PENDING,
+                resetBy,
+              );
+            } else if (evaluationType === DownwardEvaluationType.SECONDARY) {
+              this.stepApprovalService.단계_상태를_변경한다(
+                stepApproval,
+                'secondary',
+                StepApprovalStatus.PENDING,
+                resetBy,
+              );
+            }
+
+            await this.stepApprovalService.저장한다(stepApproval);
+
+            this.logger.debug(
+              `단계 승인 상태를 pending으로 변경 완료 - 피평가자: ${evaluateeId}, 평가유형: ${evaluationType}`,
+            );
+          }
         }
       }
 
