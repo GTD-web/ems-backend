@@ -147,15 +147,15 @@ async function 하향평가_등급을_조회한다(evaluationPeriodId, totalScor
             return null;
         }
         if (!period.등급구간_설정됨()) {
-            logger.warn(`평가기간에 등급 구간이 설정되지 않았습니다: ${evaluationPeriodId}`);
+            logger.warn(`⚠️ 평가기간에 등급 구간이 설정되지 않았습니다. 등급 범위를 설정해주세요. (평가기간: ${period.name} [${evaluationPeriodId}], gradeRanges: ${JSON.stringify(period.gradeRanges || [])})`);
             return null;
         }
         const gradeMapping = period.점수로_등급_조회한다(totalScore);
         if (!gradeMapping) {
-            logger.warn(`점수에 해당하는 등급을 찾을 수 없습니다: ${totalScore} (평가기간: ${evaluationPeriodId})`);
+            logger.warn(`⚠️ 점수에 해당하는 등급을 찾을 수 없습니다. 등급 범위를 확인해주세요. (점수: ${totalScore}, 평가기간: ${period.name} [${evaluationPeriodId}], gradeRanges: ${JSON.stringify(period.gradeRanges)})`);
             return null;
         }
-        logger.log(`하향평가 등급 조회 완료: ${gradeMapping.finalGrade} (점수: ${totalScore}, 평가기간: ${evaluationPeriodId})`);
+        logger.log(`✅ 하향평가 등급 조회 완료: ${gradeMapping.finalGrade} (점수: ${totalScore}, 평가기간: ${period.name})`);
         return gradeMapping.finalGrade;
     }
     catch (error) {
