@@ -358,6 +358,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         this.wbsAssignmentRepository,
         this.periodRepository,
         this.employeeRepository,
+        this.secondaryStepApprovalRepository,
+        this.mappingRepository,
       );
 
       // 16. 동료평가 상태 조회

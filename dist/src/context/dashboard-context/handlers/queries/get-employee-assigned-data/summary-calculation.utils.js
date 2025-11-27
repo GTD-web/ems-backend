@@ -3,7 +3,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculateSelfEvaluationScore = calculateSelfEvaluationScore;
 exports.calculatePrimaryDownwardEvaluationScore = calculatePrimaryDownwardEvaluationScore;
 exports.calculateSecondaryDownwardEvaluationScore = calculateSecondaryDownwardEvaluationScore;
-const typeorm_1 = require("typeorm");
 const evaluation_line_entity_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.entity");
 const evaluation_line_types_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.types");
 const downward_evaluation_types_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.types");
@@ -180,10 +179,19 @@ async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, emp
             let evaluatorEmployeeNumber = 'N/A';
             let evaluatorEmail = 'N/A';
             if (employeeRepository) {
-                const evaluator = await employeeRepository.findOne({
-                    where: { id: stat.evaluatorId, deletedAt: (0, typeorm_1.IsNull)() },
-                    select: ['id', 'name', 'employeeNumber', 'email'],
-                });
+                const evaluator = await employeeRepository
+                    .createQueryBuilder('employee')
+                    .where('(employee.id::text = :evaluatorId OR employee.externalId = :evaluatorId)', {
+                    evaluatorId: stat.evaluatorId,
+                })
+                    .andWhere('employee.deletedAt IS NULL')
+                    .select([
+                    'employee.id',
+                    'employee.name',
+                    'employee.employeeNumber',
+                    'employee.email',
+                ])
+                    .getOne();
                 if (evaluator) {
                     evaluatorName = evaluator.name;
                     evaluatorEmployeeNumber = evaluator.employeeNumber;

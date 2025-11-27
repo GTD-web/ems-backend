@@ -1,6 +1,9 @@
 import { ICommandHandler } from '@nestjs/cqrs';
+import { Repository } from 'typeorm';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service';
 export declare class ResetAllWbsSelfEvaluationsByEmployeePeriodCommand {
     readonly employeeId: string;
     readonly periodId: string;
@@ -30,7 +33,9 @@ export interface ResetAllWbsSelfEvaluationsResponse {
 export declare class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler implements ICommandHandler<ResetAllWbsSelfEvaluationsByEmployeePeriodCommand> {
     private readonly wbsSelfEvaluationService;
     private readonly transactionManager;
+    private readonly mappingRepository;
+    private readonly stepApprovalService;
     private readonly logger;
-    constructor(wbsSelfEvaluationService: WbsSelfEvaluationService, transactionManager: TransactionManagerService);
+    constructor(wbsSelfEvaluationService: WbsSelfEvaluationService, transactionManager: TransactionManagerService, mappingRepository: Repository<EvaluationPeriodEmployeeMapping>, stepApprovalService: EmployeeEvaluationStepApprovalService);
     execute(command: ResetAllWbsSelfEvaluationsByEmployeePeriodCommand): Promise<ResetAllWbsSelfEvaluationsResponse>;
 }

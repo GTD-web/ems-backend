@@ -6,6 +6,7 @@ import { BulkSubmitDownwardEvaluationQueryDto } from '@interface/common/dto/perf
 export declare class DownwardEvaluationManagementController {
     private readonly performanceEvaluationService;
     private readonly downwardEvaluationBusinessService;
+    private readonly logger;
     constructor(performanceEvaluationService: PerformanceEvaluationService, downwardEvaluationBusinessService: DownwardEvaluationBusinessService);
     upsertPrimaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, dto: CreatePrimaryDownwardEvaluationBodyDto, user: AuthenticatedUser): Promise<DownwardEvaluationResponseDto>;
     upsertSecondaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, dto: CreateSecondaryDownwardEvaluationBodyDto, user: AuthenticatedUser): Promise<DownwardEvaluationResponseDto>;

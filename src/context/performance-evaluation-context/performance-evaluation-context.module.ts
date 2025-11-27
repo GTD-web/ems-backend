@@ -21,6 +21,7 @@ import { EvaluationQuestion } from '../../domain/sub/evaluation-question/evaluat
 import { EvaluationLineMapping } from '../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { EvaluationLine } from '../../domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluationWbsAssignment } from '../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationPeriodEmployeeMapping } from '../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 
 import { PerformanceEvaluationService } from './performance-evaluation.service';
 
@@ -50,6 +51,7 @@ import { QueryHandlers } from './handlers/query-handlers';
       EvaluationLineMapping,
       EvaluationLine,
       EvaluationWbsAssignment,
+      EvaluationPeriodEmployeeMapping,
     ]),
   ],
   providers: [

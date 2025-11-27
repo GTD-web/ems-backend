@@ -1,7 +1,7 @@
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, Query } from '@nestjs/common';
+import { Body, Controller, Logger, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   GetDownwardEvaluationDetailQuery,
@@ -44,6 +44,10 @@ import { BulkSubmitDownwardEvaluationQueryDto } from '@interface/common/dto/perf
 @ApiBearerAuth('Bearer')
 @Controller('admin/performance-evaluation/downward-evaluations')
 export class DownwardEvaluationManagementController {
+  private readonly logger = new Logger(
+    DownwardEvaluationManagementController.name,
+  );
+
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
     private readonly downwardEvaluationBusinessService: DownwardEvaluationBusinessService,
@@ -210,17 +214,47 @@ export class DownwardEvaluationManagementController {
   ): Promise<ResetDownwardEvaluationResponseDto> {
     const evaluatorId = submitDto.evaluatorId;
     const resetBy = user.id;
-    await this.performanceEvaluationService.이차_하향평가를_초기화한다(
+
+    this.logger.log('2차 하향평가 미제출 상태 변경 API 호출', {
       evaluateeId,
       periodId,
       wbsId,
       evaluatorId,
       resetBy,
-    );
+      userId: user.id,
+    });
 
-    return {
-      message: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
-    };
+    try {
+      await this.performanceEvaluationService.이차_하향평가를_초기화한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        evaluatorId,
+        resetBy,
+      );
+
+      this.logger.log('2차 하향평가 미제출 상태 변경 성공', {
+        evaluateeId,
+        periodId,
+        wbsId,
+        evaluatorId,
+      });
+
+      return {
+        message: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+      };
+    } catch (error) {
+      this.logger.error('2차 하향평가 미제출 상태 변경 실패', error.stack, {
+        evaluateeId,
+        periodId,
+        wbsId,
+        evaluatorId,
+        resetBy,
+        errorName: error.name,
+        errorMessage: error.message,
+      });
+      throw error;
+    }
   }
 
   /**

@@ -8,11 +8,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var PerformanceEvaluationService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PerformanceEvaluationService = void 0;
 const common_1 = require("@nestjs/common");
 const cqrs_1 = require("@nestjs/cqrs");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 const downward_evaluation_exceptions_1 = require("../../domain/core/downward-evaluation/downward-evaluation.exceptions");
+const secondary_evaluation_step_approval_service_1 = require("../../domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.service");
+const employee_evaluation_step_approval_types_1 = require("../../domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types");
 const self_evaluation_1 = require("./handlers/self-evaluation");
 const evaluation_editable_status_1 = require("./handlers/evaluation-editable-status");
 const peer_evaluation_1 = require("./handlers/peer-evaluation");
@@ -20,12 +29,17 @@ const downward_evaluation_1 = require("./handlers/downward-evaluation");
 const final_evaluation_1 = require("./handlers/final-evaluation");
 const command_1 = require("./handlers/deliverable/command");
 const query_1 = require("./handlers/deliverable/query");
-let PerformanceEvaluationService = class PerformanceEvaluationService {
+let PerformanceEvaluationService = PerformanceEvaluationService_1 = class PerformanceEvaluationService {
     commandBus;
     queryBus;
-    constructor(commandBus, queryBus) {
+    mappingRepository;
+    secondaryStepApprovalService;
+    logger = new common_1.Logger(PerformanceEvaluationService_1.name);
+    constructor(commandBus, queryBus, mappingRepository, secondaryStepApprovalService) {
         this.commandBus = commandBus;
         this.queryBus = queryBus;
+        this.mappingRepository = mappingRepository;
+        this.secondaryStepApprovalService = secondaryStepApprovalService;
     }
     async WBS자기평가를_생성한다(periodId, employeeId, wbsItemId, selfEvaluationContent, selfEvaluationScore, performanceResult, createdBy) {
         const command = new self_evaluation_1.CreateWbsSelfEvaluationCommand(periodId, employeeId, wbsItemId, selfEvaluationContent, selfEvaluationScore, performanceResult, createdBy || '시스템');
@@ -201,14 +215,106 @@ let PerformanceEvaluationService = class PerformanceEvaluationService {
         await this.commandBus.execute(command);
     }
     async 이차_하향평가를_초기화한다(evaluateeId, periodId, wbsId, evaluatorId, resetBy) {
-        const query = new downward_evaluation_1.GetDownwardEvaluationListQuery(evaluatorId, evaluateeId, periodId, wbsId, 'secondary', undefined, 1, 1);
-        const result = await this.queryBus.execute(query);
-        if (!result.evaluations || result.evaluations.length === 0) {
-            throw new downward_evaluation_exceptions_1.DownwardEvaluationNotFoundException(`2차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, wbsId: ${wbsId})`);
+        this.logger.log('2차 하향평가 초기화 시작', {
+            evaluateeId,
+            periodId,
+            wbsId,
+            evaluatorId,
+            resetBy,
+        });
+        try {
+            const query = new downward_evaluation_1.GetDownwardEvaluationListQuery(evaluatorId, evaluateeId, periodId, wbsId, 'secondary', undefined, 1, 1);
+            this.logger.debug('2차 하향평가 조회 쿼리 실행', { query });
+            const result = await this.queryBus.execute(query);
+            this.logger.debug('2차 하향평가 조회 결과', {
+                totalCount: result.total,
+                evaluationCount: result.evaluations?.length || 0,
+            });
+            if (result.evaluations && result.evaluations.length > 0) {
+                const evaluation = result.evaluations[0];
+                if (evaluation.isCompleted) {
+                    this.logger.debug('2차 하향평가 초기화 실행', {
+                        evaluationId: evaluation.id,
+                        isCompleted: evaluation.isCompleted,
+                    });
+                    const command = new downward_evaluation_1.ResetDownwardEvaluationCommand(evaluation.id, resetBy);
+                    await this.commandBus.execute(command);
+                    this.logger.log('2차 하향평가 초기화 완료', {
+                        evaluationId: evaluation.id,
+                    });
+                }
+                else {
+                    this.logger.debug('이미 미제출 상태인 평가 - 초기화 스킵', {
+                        evaluationId: evaluation.id,
+                    });
+                }
+            }
+            else {
+                this.logger.debug('2차 하향평가 레코드 없음 - 초기화 스킵');
+            }
+            this.logger.debug('승인 상태 초기화 시작');
+            const mapping = await this.mappingRepository.findOne({
+                where: {
+                    evaluationPeriodId: periodId,
+                    employeeId: evaluateeId,
+                    deletedAt: (0, typeorm_2.IsNull)(),
+                },
+            });
+            if (mapping) {
+                this.logger.debug('Mapping 조회 성공', {
+                    mappingId: mapping.id,
+                    evaluatorId,
+                });
+                const approval = await this.secondaryStepApprovalService.맵핑ID와_평가자ID로_조회한다(mapping.id, evaluatorId);
+                if (approval) {
+                    this.logger.debug('승인 레코드 조회 성공', {
+                        approvalId: approval.id,
+                        currentStatus: approval.status,
+                    });
+                    if (approval.status === employee_evaluation_step_approval_types_1.StepApprovalStatus.APPROVED) {
+                        this.secondaryStepApprovalService.상태를_변경한다(approval, employee_evaluation_step_approval_types_1.StepApprovalStatus.PENDING, resetBy);
+                        await this.secondaryStepApprovalService.저장한다(approval);
+                        this.logger.log('승인 상태 변경 완료', {
+                            approvalId: approval.id,
+                            previousStatus: employee_evaluation_step_approval_types_1.StepApprovalStatus.APPROVED,
+                            newStatus: employee_evaluation_step_approval_types_1.StepApprovalStatus.PENDING,
+                        });
+                    }
+                    else {
+                        this.logger.debug('승인 상태가 approved가 아님 - 변경 스킵', {
+                            currentStatus: approval.status,
+                        });
+                    }
+                }
+                else {
+                    this.logger.debug('승인 레코드 없음 - 상태 변경 스킵');
+                }
+            }
+            else {
+                this.logger.warn('Mapping을 찾을 수 없음', {
+                    evaluateeId,
+                    periodId,
+                });
+            }
+            this.logger.log('2차 하향평가 초기화 완료', {
+                evaluateeId,
+                periodId,
+                wbsId,
+                evaluatorId,
+            });
         }
-        const evaluation = result.evaluations[0];
-        const command = new downward_evaluation_1.ResetDownwardEvaluationCommand(evaluation.id, resetBy);
-        await this.commandBus.execute(command);
+        catch (error) {
+            this.logger.error('2차 하향평가 초기화 실패', error.stack, {
+                evaluateeId,
+                periodId,
+                wbsId,
+                evaluatorId,
+                resetBy,
+                errorName: error.name,
+                errorMessage: error.message,
+            });
+            throw error;
+        }
     }
     async 하향평가_목록을_조회한다(query) {
         return await this.queryBus.execute(query);
@@ -354,9 +460,12 @@ let PerformanceEvaluationService = class PerformanceEvaluationService {
     }
 };
 exports.PerformanceEvaluationService = PerformanceEvaluationService;
-exports.PerformanceEvaluationService = PerformanceEvaluationService = __decorate([
+exports.PerformanceEvaluationService = PerformanceEvaluationService = PerformanceEvaluationService_1 = __decorate([
     (0, common_1.Injectable)(),
+    __param(2, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
     __metadata("design:paramtypes", [cqrs_1.CommandBus,
-        cqrs_1.QueryBus])
+        cqrs_1.QueryBus,
+        typeorm_2.Repository,
+        secondary_evaluation_step_approval_service_1.SecondaryEvaluationStepApprovalService])
 ], PerformanceEvaluationService);
 //# sourceMappingURL=performance-evaluation.service.js.map

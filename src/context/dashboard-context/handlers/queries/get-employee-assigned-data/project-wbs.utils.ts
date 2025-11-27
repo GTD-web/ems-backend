@@ -224,7 +224,7 @@ export async function getProjectsWithWbs(
     .leftJoin(
       Employee,
       'evaluator',
-      'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL',
+      '(evaluator.id = mapping.evaluatorId OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL',
     )
     .leftJoin(
       'evaluation_lines',
@@ -267,7 +267,7 @@ export async function getProjectsWithWbs(
       .leftJoin(
         Employee,
         'evaluator',
-        'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL',
+        '(evaluator.id = mapping.evaluatorId OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL',
       )
       .leftJoin(
         'evaluation_lines',
