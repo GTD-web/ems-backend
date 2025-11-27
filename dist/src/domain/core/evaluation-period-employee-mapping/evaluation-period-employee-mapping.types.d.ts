@@ -14,7 +14,6 @@ export interface EvaluationPeriodEmployeeMappingDto {
     isCriteriaSubmitted: boolean;
     criteriaSubmittedAt?: Date | null;
     criteriaSubmittedBy?: string | null;
-    isNewEnrolled: boolean;
     createdBy: string;
     updatedBy: string;
     createdAt: Date;

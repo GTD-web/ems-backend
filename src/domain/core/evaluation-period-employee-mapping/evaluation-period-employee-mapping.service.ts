@@ -75,8 +75,6 @@ export class EvaluationPeriodEmployeeMappingService
       }
       // 메타데이터 업데이트
       restored.메타데이터를_업데이트한다(data.createdBy);
-      // 복구 시에는 신규 등록으로 표시
-      restored.isNewEnrolled = true;
       const saved = await this.repository.save(restored);
       this.logger.log(`평가 대상자 복구 완료 - ID: ${saved.id}`);
       return saved.DTO로_변환한다();
@@ -141,21 +139,10 @@ export class EvaluationPeriodEmployeeMappingService
 
       if (newEmployeeIds.length === 0) {
         this.logger.log('모든 직원이 이미 등록되어 있습니다.');
-        // 기존 직원들은 isNewEnrolled = false로 설정
-        for (const mapping of existingMappings) {
-          mapping.isNewEnrolled = false;
-        }
-        await this.repository.save(existingMappings);
         return existingMappings.map((m) => m.DTO로_변환한다());
       }
 
-      // 기존 맵핑은 isNewEnrolled = false로 업데이트
-      for (const mapping of existingMappings) {
-        mapping.isNewEnrolled = false;
-      }
-      await this.repository.save(existingMappings);
-
-      // 신규 맵핑 생성 (isNewEnrolled는 constructor에서 true로 설정됨)
+      // 신규 맵핑 생성
       const newMappings = newEmployeeIds.map(
         (employeeId) =>
           new EvaluationPeriodEmployeeMapping({

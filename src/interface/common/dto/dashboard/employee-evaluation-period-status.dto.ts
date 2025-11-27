@@ -963,12 +963,6 @@ export class EmployeeEvaluationPeriodStatusResponseDto {
   })
   isEvaluationTarget: boolean;
 
-  @ApiProperty({
-    description: '신규 등록 여부 (등록 후 24시간 이내)',
-    example: false,
-  })
-  isNewEnrolled: boolean;
-
   @ApiPropertyOptional({
     description: '평가기간 정보',
     type: () => EvaluationPeriodInfoDto,

@@ -84,13 +84,6 @@ export class EvaluationPeriodEmployeeMapping
   })
   criteriaSubmittedBy?: string | null;
 
-  @Column({
-    type: 'boolean',
-    default: false,
-    comment: '신규 등록 여부 (등록 후 24시간 이내)',
-  })
-  isNewEnrolled: boolean;
-
   constructor(data?: CreateEvaluationPeriodEmployeeMappingData) {
     super();
     if (data) {
@@ -103,7 +96,6 @@ export class EvaluationPeriodEmployeeMapping
       this.isCriteriaSubmitted = false;
       this.criteriaSubmittedAt = null;
       this.criteriaSubmittedBy = null;
-      this.isNewEnrolled = true; // 신규 등록 시 true로 설정
 
       // 감사 정보 설정
       this.메타데이터를_업데이트한다(data.createdBy);
@@ -223,7 +215,6 @@ export class EvaluationPeriodEmployeeMapping
       isCriteriaSubmitted: this.isCriteriaSubmitted,
       criteriaSubmittedAt: this.criteriaSubmittedAt,
       criteriaSubmittedBy: this.criteriaSubmittedBy,
-      isNewEnrolled: this.isNewEnrolled,
       createdBy: this.createdBy!,
       updatedBy: this.updatedBy!,
       createdAt: this.createdAt,
