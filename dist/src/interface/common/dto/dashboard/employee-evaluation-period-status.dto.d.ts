@@ -152,6 +152,7 @@ export declare class EmployeeEvaluationPeriodStatusResponseDto {
     mappingId: string;
     employeeId: string;
     isEvaluationTarget: boolean;
+    isNewEnrolled: boolean;
     evaluationPeriod: EvaluationPeriodInfoDto | null;
     employee: EmployeeInfoDto | null;
     exclusionInfo: ExclusionInfoDto;

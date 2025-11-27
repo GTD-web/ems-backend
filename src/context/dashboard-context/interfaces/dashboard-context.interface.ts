@@ -80,6 +80,9 @@ export interface EmployeeEvaluationPeriodStatusDto {
   /** 평가 대상 여부 (제외되지 않고 삭제되지 않은 경우) */
   isEvaluationTarget: boolean;
 
+  /** 신규 등록 여부 (등록 후 24시간 이내) */
+  isNewEnrolled: boolean;
+
   /** 평가기간 정보 */
   evaluationPeriod: {
     /** 평가기간 ID */

@@ -45,6 +45,7 @@ let EvaluationPeriodEmployeeMappingService = EvaluationPeriodEmployeeMappingServ
                 throw new Error(`매핑 복구 후 조회 실패 - 평가기간: ${data.evaluationPeriodId}, 직원: ${data.employeeId}`);
             }
             restored.메타데이터를_업데이트한다(data.createdBy);
+            restored.isNewEnrolled = true;
             const saved = await this.repository.save(restored);
             this.logger.log(`평가 대상자 복구 완료 - ID: ${saved.id}`);
             return saved.DTO로_변환한다();
@@ -78,8 +79,16 @@ let EvaluationPeriodEmployeeMappingService = EvaluationPeriodEmployeeMappingServ
             const newEmployeeIds = uniqueEmployeeIds.filter((id) => !existingEmployeeIds.has(id));
             if (newEmployeeIds.length === 0) {
                 this.logger.log('모든 직원이 이미 등록되어 있습니다.');
+                for (const mapping of existingMappings) {
+                    mapping.isNewEnrolled = false;
+                }
+                await this.repository.save(existingMappings);
                 return existingMappings.map((m) => m.DTO로_변환한다());
             }
+            for (const mapping of existingMappings) {
+                mapping.isNewEnrolled = false;
+            }
+            await this.repository.save(existingMappings);
             const newMappings = newEmployeeIds.map((employeeId) => new evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping({
                 evaluationPeriodId,
                 employeeId,

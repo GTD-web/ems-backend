@@ -46,6 +46,9 @@ export interface EvaluationPeriodEmployeeMappingDto {
   /** 평가기준 제출 처리자 ID */
   criteriaSubmittedBy?: string | null;
 
+  /** 신규 등록 여부 (등록 후 24시간 이내) */
+  isNewEnrolled: boolean;
+
   /** 생성자 ID */
   createdBy: string;
 
