@@ -140,7 +140,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
         'mapping.evaluatorId AS mapping_evaluator_id',
         'evaluator.name AS evaluator_name',
     ])
-        .leftJoin(employee_entity_1.Employee, 'evaluator', 'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL')
+        .leftJoin(employee_entity_1.Employee, 'evaluator', '(evaluator.id = mapping.evaluatorId OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL')
         .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
         .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
@@ -171,7 +171,7 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             'evaluator.name AS evaluator_name',
             'evaluator.externalId AS evaluator_external_id',
         ])
-            .leftJoin(employee_entity_1.Employee, 'evaluator', 'evaluator.id = mapping.evaluatorId AND evaluator.deletedAt IS NULL')
+            .leftJoin(employee_entity_1.Employee, 'evaluator', '(evaluator.id = mapping.evaluatorId OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL')
             .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
             .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
             evaluationPeriodId,

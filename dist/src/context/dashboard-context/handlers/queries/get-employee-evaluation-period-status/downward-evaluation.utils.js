@@ -65,7 +65,7 @@ function 이차평가_전체_상태를_계산한다(evaluatorStatuses) {
     }
     return 'in_progress';
 }
-async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeId, evaluationLineRepository, evaluationLineMappingRepository, downwardEvaluationRepository, wbsAssignmentRepository, periodRepository, employeeRepository) {
+async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeId, evaluationLineRepository, evaluationLineMappingRepository, downwardEvaluationRepository, wbsAssignmentRepository, periodRepository, employeeRepository, secondaryStepApprovalRepository, mappingRepository) {
     const primaryLine = await evaluationLineRepository.findOne({
         where: {
             evaluatorType: evaluation_line_types_1.EvaluatorType.PRIMARY,
@@ -96,17 +96,21 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
     const primaryStatus = await 평가자별_하향평가_상태를_조회한다(evaluationPeriodId, employeeId, downward_evaluation_types_1.DownwardEvaluationType.PRIMARY, primaryEvaluatorId, downwardEvaluationRepository, wbsAssignmentRepository);
     let primaryEvaluatorInfo = null;
     if (primaryEvaluatorId && employeeRepository) {
-        const evaluator = await employeeRepository.findOne({
-            where: { id: primaryEvaluatorId, deletedAt: (0, typeorm_1.IsNull)() },
-            select: [
-                'id',
-                'name',
-                'employeeNumber',
-                'email',
-                'departmentName',
-                'rankName',
-            ],
-        });
+        const evaluator = await employeeRepository
+            .createQueryBuilder('employee')
+            .where('(employee.id::text = :evaluatorId OR employee.externalId = :evaluatorId)', {
+            evaluatorId: primaryEvaluatorId,
+        })
+            .andWhere('employee.deletedAt IS NULL')
+            .select([
+            'employee.id',
+            'employee.name',
+            'employee.employeeNumber',
+            'employee.email',
+            'employee.departmentName',
+            'employee.rankName',
+        ])
+            .getOne();
         if (evaluator) {
             primaryEvaluatorInfo = {
                 id: evaluator.id,
@@ -147,17 +151,21 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
         const status = await 특정_평가자의_하향평가_상태를_조회한다(evaluationPeriodId, employeeId, evaluatorId, downward_evaluation_types_1.DownwardEvaluationType.SECONDARY, downwardEvaluationRepository, wbsAssignmentRepository, evaluationLineMappingRepository, evaluationLineRepository);
         let evaluatorInfo = null;
         if (employeeRepository) {
-            const evaluator = await employeeRepository.findOne({
-                where: { id: evaluatorId, deletedAt: (0, typeorm_1.IsNull)() },
-                select: [
-                    'id',
-                    'name',
-                    'employeeNumber',
-                    'email',
-                    'departmentName',
-                    'rankName',
-                ],
-            });
+            const evaluator = await employeeRepository
+                .createQueryBuilder('employee')
+                .where('(employee.id::text = :evaluatorId OR employee.externalId = :evaluatorId)', {
+                evaluatorId,
+            })
+                .andWhere('employee.deletedAt IS NULL')
+                .select([
+                'employee.id',
+                'employee.name',
+                'employee.employeeNumber',
+                'employee.email',
+                'employee.departmentName',
+                'employee.rankName',
+            ])
+                .getOne();
             if (evaluator) {
                 evaluatorInfo = {
                     id: evaluator.id,
@@ -167,6 +175,28 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
                     departmentName: evaluator.departmentName || undefined,
                     rankName: evaluator.rankName || undefined,
                 };
+            }
+        }
+        let isSubmitted = status.isSubmitted;
+        if (secondaryStepApprovalRepository && mappingRepository && evaluatorInfo) {
+            const mapping = await mappingRepository.findOne({
+                where: {
+                    evaluationPeriodId,
+                    employeeId,
+                    deletedAt: (0, typeorm_1.IsNull)(),
+                },
+            });
+            if (mapping) {
+                const approval = await secondaryStepApprovalRepository.findOne({
+                    where: {
+                        evaluationPeriodEmployeeMappingId: mapping.id,
+                        evaluatorId: evaluatorInfo.id,
+                        deletedAt: (0, typeorm_1.IsNull)(),
+                    },
+                });
+                if (approval && approval.status === 'approved') {
+                    isSubmitted = true;
+                }
             }
         }
         return {
@@ -181,7 +211,7 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
             status: status.status,
             assignedWbsCount: status.assignedWbsCount,
             completedEvaluationCount: status.completedEvaluationCount,
-            isSubmitted: status.isSubmitted,
+            isSubmitted,
         };
     }));
     let secondaryTotalScore = null;

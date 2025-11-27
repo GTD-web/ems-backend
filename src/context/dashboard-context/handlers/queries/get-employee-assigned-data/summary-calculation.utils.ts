@@ -351,10 +351,23 @@ export async function calculateSecondaryDownwardEvaluationScore(
         let evaluatorEmail = 'N/A';
 
         if (employeeRepository) {
-          const evaluator = await employeeRepository.findOne({
-            where: { id: stat.evaluatorId, deletedAt: IsNull() },
-            select: ['id', 'name', 'employeeNumber', 'email'],
-          });
+          const evaluator = await employeeRepository
+            .createQueryBuilder('employee')
+            .where(
+              '(employee.id::text = :evaluatorId OR employee.externalId = :evaluatorId)',
+              {
+                evaluatorId: stat.evaluatorId,
+              },
+            )
+            .andWhere('employee.deletedAt IS NULL')
+            .select([
+              'employee.id',
+              'employee.name',
+              'employee.employeeNumber',
+              'employee.email',
+            ])
+            .getOne();
+
           if (evaluator) {
             evaluatorName = evaluator.name;
             evaluatorEmployeeNumber = evaluator.employeeNumber;

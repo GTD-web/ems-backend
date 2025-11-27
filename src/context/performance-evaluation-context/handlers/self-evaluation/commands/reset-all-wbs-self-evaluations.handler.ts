@@ -1,8 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import type { UpdateWbsSelfEvaluationData } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
 
 /**
  * 직원의 전체 WBS 자기평가 초기화 커맨드 (1차 평가자 → 관리자 제출 취소)
@@ -68,6 +73,9 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler
   constructor(
     private readonly wbsSelfEvaluationService: WbsSelfEvaluationService,
     private readonly transactionManager: TransactionManagerService,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
+    private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
   ) {}
 
   async execute(
@@ -144,6 +152,66 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler
             wbsItemId: evaluation.wbsItemId,
             reason: error.message || '알 수 없는 오류가 발생했습니다.',
           });
+        }
+      }
+
+      // 승인 상태 초기화 (평가 레코드 처리 후 실행)
+      if (resetEvaluations.length > 0) {
+        this.logger.debug('승인 상태 초기화 시작');
+
+        // evaluationPeriodEmployeeMapping 조회
+        const mapping = await this.mappingRepository.findOne({
+          where: {
+            evaluationPeriodId: periodId,
+            employeeId: employeeId,
+            deletedAt: IsNull(),
+          },
+        });
+
+        if (mapping) {
+          this.logger.debug('Mapping 조회 성공', {
+            mappingId: mapping.id,
+          });
+
+          // EmployeeEvaluationStepApproval 조회
+          const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
+            mapping.id,
+          );
+
+          if (stepApproval) {
+            this.logger.debug('승인 레코드 조회 성공', {
+              approvalId: stepApproval.id,
+              currentStatus: stepApproval.selfEvaluationStatus,
+            });
+
+            // approved 상태인 경우 pending으로 변경
+            if (
+              stepApproval.selfEvaluationStatus === StepApprovalStatus.APPROVED
+            ) {
+              this.stepApprovalService.단계_상태를_변경한다(
+                stepApproval,
+                'self',
+                StepApprovalStatus.PENDING,
+                resetBy,
+              );
+
+              await this.stepApprovalService.저장한다(stepApproval);
+
+              this.logger.debug('승인 상태 변경 완료', {
+                approvalId: stepApproval.id,
+                oldStatus: StepApprovalStatus.APPROVED,
+                newStatus: StepApprovalStatus.PENDING,
+              });
+            } else {
+              this.logger.debug(
+                `승인 상태가 approved가 아니므로 스킵 (현재: ${stepApproval.selfEvaluationStatus})`,
+              );
+            }
+          } else {
+            this.logger.debug('승인 레코드를 찾을 수 없음');
+          }
+        } else {
+          this.logger.debug('Mapping을 찾을 수 없음');
         }
       }
 

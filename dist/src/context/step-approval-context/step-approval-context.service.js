@@ -175,6 +175,7 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
         const lineMapping = await this.evaluationLineMappingRepository
             .createQueryBuilder('mapping')
             .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+            .leftJoin('employee', 'evaluator', '(evaluator.id = "mapping"."evaluatorId" OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL')
             .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
             evaluationPeriodId,
         })
@@ -184,7 +185,7 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
             evaluatorType: 'primary',
         })
             .andWhere('line.deletedAt IS NULL')
-            .select('mapping.evaluatorId', 'evaluatorId')
+            .select('evaluator.id', 'evaluatorId')
             .getRawOne();
         return lineMapping?.evaluatorId || null;
     }
@@ -202,6 +203,7 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
         const lineMappings = await this.evaluationLineMappingRepository
             .createQueryBuilder('mapping')
             .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+            .leftJoin('employee', 'evaluator', '(evaluator.id = "mapping"."evaluatorId" OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL')
             .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
             evaluationPeriodId,
         })
@@ -211,9 +213,11 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
             evaluatorType: 'secondary',
         })
             .andWhere('line.deletedAt IS NULL')
-            .select('mapping.evaluatorId', 'evaluatorId')
+            .select('evaluator.id', 'evaluatorId')
             .getRawMany();
-        return lineMappings.map((mapping) => mapping.evaluatorId);
+        return lineMappings
+            .map((mapping) => mapping.evaluatorId)
+            .filter((id) => id !== null && id !== undefined);
     }
     async 평가기준설정_확인상태를_변경한다(request) {
         await this.단계별_확인상태를_변경한다({
@@ -288,11 +292,12 @@ let StepApprovalContextService = StepApprovalContextService_1 = class StepApprov
         const lineMapping = await this.evaluationLineMappingRepository
             .createQueryBuilder('mapping')
             .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId')
+            .leftJoin('employee', 'evaluator', '(evaluator.id = "mapping"."evaluatorId" OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL')
             .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
             evaluationPeriodId,
         })
             .andWhere('mapping.employeeId = :employeeId', { employeeId })
-            .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+            .andWhere('(evaluator.id::text = :evaluatorId OR evaluator.externalId = :evaluatorId)', { evaluatorId })
             .andWhere('mapping.deletedAt IS NULL')
             .andWhere('line.evaluatorType = :evaluatorType', {
             evaluatorType: 'secondary',

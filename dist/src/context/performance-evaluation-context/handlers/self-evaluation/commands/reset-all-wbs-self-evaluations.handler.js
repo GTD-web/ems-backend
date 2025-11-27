@@ -8,13 +8,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var ResetAllWbsSelfEvaluationsByEmployeePeriodHandler_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ResetAllWbsSelfEvaluationsByEmployeePeriodHandler = exports.ResetAllWbsSelfEvaluationsByEmployeePeriodCommand = void 0;
 const cqrs_1 = require("@nestjs/cqrs");
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 const wbs_self_evaluation_service_1 = require("../../../../../domain/core/wbs-self-evaluation/wbs-self-evaluation.service");
 const transaction_manager_service_1 = require("../../../../../../libs/database/transaction-manager.service");
+const evaluation_period_employee_mapping_entity_1 = require("../../../../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
+const employee_evaluation_step_approval_service_1 = require("../../../../../domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service");
+const employee_evaluation_step_approval_types_1 = require("../../../../../domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types");
 class ResetAllWbsSelfEvaluationsByEmployeePeriodCommand {
     employeeId;
     periodId;
@@ -29,10 +37,14 @@ exports.ResetAllWbsSelfEvaluationsByEmployeePeriodCommand = ResetAllWbsSelfEvalu
 let ResetAllWbsSelfEvaluationsByEmployeePeriodHandler = ResetAllWbsSelfEvaluationsByEmployeePeriodHandler_1 = class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler {
     wbsSelfEvaluationService;
     transactionManager;
+    mappingRepository;
+    stepApprovalService;
     logger = new common_1.Logger(ResetAllWbsSelfEvaluationsByEmployeePeriodHandler_1.name);
-    constructor(wbsSelfEvaluationService, transactionManager) {
+    constructor(wbsSelfEvaluationService, transactionManager, mappingRepository, stepApprovalService) {
         this.wbsSelfEvaluationService = wbsSelfEvaluationService;
         this.transactionManager = transactionManager;
+        this.mappingRepository = mappingRepository;
+        this.stepApprovalService = stepApprovalService;
     }
     async execute(command) {
         const { employeeId, periodId, resetBy } = command;
@@ -86,6 +98,46 @@ let ResetAllWbsSelfEvaluationsByEmployeePeriodHandler = ResetAllWbsSelfEvaluatio
                     });
                 }
             }
+            if (resetEvaluations.length > 0) {
+                this.logger.debug('승인 상태 초기화 시작');
+                const mapping = await this.mappingRepository.findOne({
+                    where: {
+                        evaluationPeriodId: periodId,
+                        employeeId: employeeId,
+                        deletedAt: (0, typeorm_2.IsNull)(),
+                    },
+                });
+                if (mapping) {
+                    this.logger.debug('Mapping 조회 성공', {
+                        mappingId: mapping.id,
+                    });
+                    const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+                    if (stepApproval) {
+                        this.logger.debug('승인 레코드 조회 성공', {
+                            approvalId: stepApproval.id,
+                            currentStatus: stepApproval.selfEvaluationStatus,
+                        });
+                        if (stepApproval.selfEvaluationStatus === employee_evaluation_step_approval_types_1.StepApprovalStatus.APPROVED) {
+                            this.stepApprovalService.단계_상태를_변경한다(stepApproval, 'self', employee_evaluation_step_approval_types_1.StepApprovalStatus.PENDING, resetBy);
+                            await this.stepApprovalService.저장한다(stepApproval);
+                            this.logger.debug('승인 상태 변경 완료', {
+                                approvalId: stepApproval.id,
+                                oldStatus: employee_evaluation_step_approval_types_1.StepApprovalStatus.APPROVED,
+                                newStatus: employee_evaluation_step_approval_types_1.StepApprovalStatus.PENDING,
+                            });
+                        }
+                        else {
+                            this.logger.debug(`승인 상태가 approved가 아니므로 스킵 (현재: ${stepApproval.selfEvaluationStatus})`);
+                        }
+                    }
+                    else {
+                        this.logger.debug('승인 레코드를 찾을 수 없음');
+                    }
+                }
+                else {
+                    this.logger.debug('Mapping을 찾을 수 없음');
+                }
+            }
             const result = {
                 resetCount: resetEvaluations.length,
                 failedCount: failedResets.length,
@@ -118,7 +170,10 @@ exports.ResetAllWbsSelfEvaluationsByEmployeePeriodHandler = ResetAllWbsSelfEvalu
 exports.ResetAllWbsSelfEvaluationsByEmployeePeriodHandler = ResetAllWbsSelfEvaluationsByEmployeePeriodHandler = ResetAllWbsSelfEvaluationsByEmployeePeriodHandler_1 = __decorate([
     (0, common_1.Injectable)(),
     (0, cqrs_1.CommandHandler)(ResetAllWbsSelfEvaluationsByEmployeePeriodCommand),
+    __param(2, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
     __metadata("design:paramtypes", [wbs_self_evaluation_service_1.WbsSelfEvaluationService,
-        transaction_manager_service_1.TransactionManagerService])
+        transaction_manager_service_1.TransactionManagerService,
+        typeorm_2.Repository,
+        employee_evaluation_step_approval_service_1.EmployeeEvaluationStepApprovalService])
 ], ResetAllWbsSelfEvaluationsByEmployeePeriodHandler);
 //# sourceMappingURL=reset-all-wbs-self-evaluations.handler.js.map

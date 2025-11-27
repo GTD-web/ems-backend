@@ -151,7 +151,8 @@ export class ProjectService {
         'project.updatedAt AS "updatedAt"',
         'project.deletedAt AS "deletedAt"',
         'project.managerId AS "managerId"',
-        'manager.externalId AS manager_id',
+        'manager.id AS manager_employee_id',
+        'manager.externalId AS manager_external_id',
         'manager.name AS manager_name',
         'manager.email AS manager_email',
         'manager.phoneNumber AS manager_phone_number',
@@ -177,9 +178,9 @@ export class ProjectService {
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
       managerId: result.managerId,
-      manager: result.manager_id
+      manager: result.manager_employee_id
         ? {
-            id: result.manager_id,
+            id: result.manager_employee_id,
             name: result.manager_name,
             email: result.manager_email,
             phoneNumber: result.manager_phone_number,
@@ -227,7 +228,8 @@ export class ProjectService {
         'project.createdAt AS "createdAt"',
         'project.updatedAt AS "updatedAt"',
         'project.deletedAt AS "deletedAt"',
-        'manager.externalId AS manager_id',
+        'manager.id AS manager_employee_id',
+        'manager.externalId AS manager_external_id',
         'manager.name AS manager_name',
         'manager.email AS manager_email',
         'manager.phoneNumber AS manager_phone_number',
@@ -252,9 +254,9 @@ export class ProjectService {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
-      manager: result.manager_id
+      manager: result.manager_employee_id
         ? {
-            id: result.manager_id,
+            id: result.manager_employee_id,
             name: result.manager_name,
             email: result.manager_email,
             phoneNumber: result.manager_phone_number,
@@ -300,7 +302,8 @@ export class ProjectService {
         'project.createdAt AS "createdAt"',
         'project.updatedAt AS "updatedAt"',
         'project.deletedAt AS "deletedAt"',
-        'manager.externalId AS manager_id',
+        'manager.id AS manager_employee_id',
+        'manager.externalId AS manager_external_id',
         'manager.name AS manager_name',
         'manager.email AS manager_email',
         'manager.phoneNumber AS manager_phone_number',
@@ -325,9 +328,9 @@ export class ProjectService {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
-      manager: result.manager_id
+      manager: result.manager_employee_id
         ? {
-            id: result.manager_id,
+            id: result.manager_employee_id,
             name: result.manager_name,
             email: result.manager_email,
             phoneNumber: result.manager_phone_number,
@@ -373,7 +376,8 @@ export class ProjectService {
         'project.createdAt AS "createdAt"',
         'project.updatedAt AS "updatedAt"',
         'project.deletedAt AS "deletedAt"',
-        'manager.externalId AS manager_id',
+        'manager.id AS manager_employee_id',
+        'manager.externalId AS manager_external_id',
         'manager.name AS manager_name',
         'manager.email AS manager_email',
         'manager.phoneNumber AS manager_phone_number',
@@ -430,9 +434,9 @@ export class ProjectService {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
-      manager: result.manager_id
+      manager: result.manager_employee_id
         ? {
-            id: result.manager_id,
+            id: result.manager_employee_id,
             name: result.manager_name,
             email: result.manager_email,
             phoneNumber: result.manager_phone_number,
@@ -536,7 +540,8 @@ export class ProjectService {
         'project.createdAt AS "createdAt"',
         'project.updatedAt AS "updatedAt"',
         'project.deletedAt AS "deletedAt"',
-        'manager.externalId AS manager_id',
+        'manager.id AS manager_employee_id',
+        'manager.externalId AS manager_external_id',
         'manager.name AS manager_name',
         'manager.email AS manager_email',
         'manager.phoneNumber AS manager_phone_number',
@@ -601,9 +606,9 @@ export class ProjectService {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
-      manager: result.manager_id
+      manager: result.manager_employee_id
         ? {
-            id: result.manager_id,
+            id: result.manager_employee_id,
             name: result.manager_name,
             email: result.manager_email,
             phoneNumber: result.manager_phone_number,
@@ -655,7 +660,8 @@ export class ProjectService {
         'project.createdAt AS "createdAt"',
         'project.updatedAt AS "updatedAt"',
         'project.deletedAt AS "deletedAt"',
-        'manager.externalId AS manager_id',
+        'manager.id AS manager_employee_id',
+        'manager.externalId AS manager_external_id',
         'manager.name AS manager_name',
         'manager.email AS manager_email',
         'manager.phoneNumber AS manager_phone_number',
@@ -676,9 +682,9 @@ export class ProjectService {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
-      manager: result.manager_id
+      manager: result.manager_employee_id
         ? {
-            id: result.manager_id,
+            id: result.manager_employee_id,
             name: result.manager_name,
             email: result.manager_email,
             phoneNumber: result.manager_phone_number,
@@ -723,7 +729,8 @@ export class ProjectService {
         'project.createdAt AS "createdAt"',
         'project.updatedAt AS "updatedAt"',
         'project.deletedAt AS "deletedAt"',
-        'manager.externalId AS manager_id',
+        'manager.id AS manager_employee_id',
+        'manager.externalId AS manager_external_id',
         'manager.name AS manager_name',
         'manager.email AS manager_email',
         'manager.phoneNumber AS manager_phone_number',
@@ -745,9 +752,9 @@ export class ProjectService {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
-      manager: result.manager_id
+      manager: result.manager_employee_id
         ? {
-            id: result.manager_id,
+            id: result.manager_employee_id,
             name: result.manager_name,
             email: result.manager_email,
             phoneNumber: result.manager_phone_number,
@@ -793,7 +800,8 @@ export class ProjectService {
         'project.createdAt AS "createdAt"',
         'project.updatedAt AS "updatedAt"',
         'project.deletedAt AS "deletedAt"',
-        'manager.externalId AS manager_id',
+        'manager.id AS manager_employee_id',
+        'manager.externalId AS manager_external_id',
         'manager.name AS manager_name',
         'manager.email AS manager_email',
         'manager.phoneNumber AS manager_phone_number',
@@ -815,9 +823,9 @@ export class ProjectService {
       createdAt: result.createdAt,
       updatedAt: result.updatedAt,
       deletedAt: result.deletedAt,
-      manager: result.manager_id
+      manager: result.manager_employee_id
         ? {
-            id: result.manager_id,
+            id: result.manager_employee_id,
             name: result.manager_name,
             email: result.manager_email,
             phoneNumber: result.manager_phone_number,

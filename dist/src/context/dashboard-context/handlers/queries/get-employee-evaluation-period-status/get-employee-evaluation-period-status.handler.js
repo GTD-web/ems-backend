@@ -202,7 +202,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     finalSelfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_통합_상태를_계산한다)(selfEvaluationStatus, stepApprovalStatus ?? 'pending');
                 }
             }
-            const { primary, secondary } = await (0, downward_evaluation_utils_1.하향평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.evaluationLineRepository, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository, this.employeeRepository);
+            const { primary, secondary } = await (0, downward_evaluation_utils_1.하향평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.evaluationLineRepository, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository, this.employeeRepository, this.secondaryStepApprovalRepository, this.mappingRepository);
             const { totalRequestCount, completedRequestCount } = await (0, peer_evaluation_utils_1.동료평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.peerEvaluationRepository);
             const peerEvaluationStatus = (0, peer_evaluation_utils_1.동료평가_상태를_계산한다)(totalRequestCount, completedRequestCount);
             const finalEvaluation = await (0, final_evaluation_utils_1.최종평가를_조회한다)(evaluationPeriodId, employeeId, this.finalEvaluationRepository);
