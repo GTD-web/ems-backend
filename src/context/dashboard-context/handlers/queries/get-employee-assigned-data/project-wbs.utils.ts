@@ -497,6 +497,12 @@ export async function getProjectsWithWbs(
       continue;
     }
 
+    // 프로젝트가 삭제된 경우 스킵 (LEFT JOIN으로 인해 project 필드가 null일 수 있음)
+    if (!row.project_name) {
+      logger.debug('소프트 딜리트된 프로젝트 제외', { projectId });
+      continue;
+    }
+
     // 프로젝트 매니저 정보
     const projectManager =
       row.manager_id && row.manager_name

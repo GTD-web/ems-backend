@@ -355,6 +355,10 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             logger.warn('프로젝트 ID가 없는 할당 발견', { row });
             continue;
         }
+        if (!row.project_name) {
+            logger.debug('소프트 딜리트된 프로젝트 제외', { projectId });
+            continue;
+        }
         const projectManager = row.manager_id && row.manager_name
             ? {
                 id: row.manager_id,

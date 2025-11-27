@@ -5,6 +5,8 @@ import { Repository, IsNull } from 'typeorm';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
+import { Project } from '@domain/common/project/project.entity';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
@@ -193,23 +195,39 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         return null;
       }
 
-      // 2. 프로젝트 할당 수 조회
-      const projectCount = await this.projectAssignmentRepository.count({
-        where: {
-          periodId: evaluationPeriodId,
-          employeeId: employeeId,
-          deletedAt: IsNull(),
-        },
-      });
+      // 2. 프로젝트 할당 수 조회 (소프트 딜리트된 프로젝트 제외)
+      const projectCount = await this.projectAssignmentRepository
+        .createQueryBuilder('assignment')
+        .leftJoin(
+          Project,
+          'project',
+          'project.id = assignment.projectId AND project.deletedAt IS NULL',
+        )
+        .where('assignment.periodId = :periodId', { periodId: evaluationPeriodId })
+        .andWhere('assignment.employeeId = :employeeId', { employeeId })
+        .andWhere('assignment.deletedAt IS NULL')
+        .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
+        .getCount();
 
-      // 3. WBS 할당 수 조회
-      const wbsCount = await this.wbsAssignmentRepository.count({
-        where: {
-          periodId: evaluationPeriodId,
-          employeeId: employeeId,
-          deletedAt: IsNull(),
-        },
-      });
+      // 3. WBS 할당 수 조회 (소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
+      const wbsCount = await this.wbsAssignmentRepository
+        .createQueryBuilder('assignment')
+        .leftJoin(
+          EvaluationProjectAssignment,
+          'projectAssignment',
+          'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+        )
+        .leftJoin(
+          Project,
+          'project',
+          'project.id = assignment.projectId AND project.deletedAt IS NULL',
+        )
+        .where('assignment.periodId = :periodId', { periodId: evaluationPeriodId })
+        .andWhere('assignment.employeeId = :employeeId', { employeeId })
+        .andWhere('assignment.deletedAt IS NULL')
+        .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
+        .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 카운트
+        .getCount();
 
       // 4. 평가항목 상태 계산
       const evaluationCriteriaStatus = 평가항목_상태를_계산한다(
@@ -217,15 +235,26 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         wbsCount,
       );
 
-      // 5. 할당된 WBS 목록 조회
-      const assignedWbsList = await this.wbsAssignmentRepository.find({
-        where: {
-          periodId: evaluationPeriodId,
-          employeeId: employeeId,
-          deletedAt: IsNull(),
-        },
-        select: ['wbsItemId'],
-      });
+      // 5. 할당된 WBS 목록 조회 (소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
+      const assignedWbsList = await this.wbsAssignmentRepository
+        .createQueryBuilder('assignment')
+        .select(['assignment.wbsItemId'])
+        .leftJoin(
+          EvaluationProjectAssignment,
+          'projectAssignment',
+          'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+        )
+        .leftJoin(
+          Project,
+          'project',
+          'project.id = assignment.projectId AND project.deletedAt IS NULL',
+        )
+        .where('assignment.periodId = :periodId', { periodId: evaluationPeriodId })
+        .andWhere('assignment.employeeId = :employeeId', { employeeId })
+        .andWhere('assignment.deletedAt IS NULL')
+        .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+        .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 조회
+        .getMany();
 
       // 6. 평가기준이 있는 WBS 수 조회 (고유한 WBS 개수)
       let wbsWithCriteriaCount = 0;
