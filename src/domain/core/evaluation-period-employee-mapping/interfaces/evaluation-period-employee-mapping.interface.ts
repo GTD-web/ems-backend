@@ -34,6 +34,9 @@ export interface IEvaluationPeriodEmployeeMapping {
   /** 평가기준 제출 처리자 ID */
   readonly criteriaSubmittedBy?: string | null;
 
+  /** 신규 등록 여부 (등록 후 24시간 이내) */
+  readonly isNewEnrolled: boolean;
+
   /** 생성자 ID */
   readonly createdBy?: string;
 

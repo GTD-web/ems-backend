@@ -135,6 +135,7 @@ describe('평가대상 기본 관리 E2E 테스트', () => {
         expect(target.excludedAt).toBeNull();
         expect(target.createdBy).toBeDefined();
         expect(target.createdAt).toBeDefined();
+        expect(target.isNewEnrolled).toBe(true); // 신규 등록이므로 true여야 함
       });
       
       console.log(`✅ 평가대상자 대량 등록 완료: ${result.length}명`);
@@ -155,6 +156,9 @@ describe('평가대상 기본 관리 E2E 테스트', () => {
       // README.md 요구사항: isEvaluationTarget 확인 (true)
       expect(firstEmployee.isEvaluationTarget).toBe(true);
       
+      // isNewEnrolled 확인 (신규 등록이므로 true여야 함)
+      expect(firstEmployee.isNewEnrolled).toBe(true);
+      
       // exclusionInfo 검증
       expect(firstEmployee.exclusionInfo).toBeDefined();
       expect(firstEmployee.exclusionInfo.isExcluded).toBe(false); // 등록된 직원은 제외되지 않음
@@ -162,7 +166,7 @@ describe('평가대상 기본 관리 E2E 테스트', () => {
       // README.md 요구사항: evaluationPeriod.id 와 생성된 평가기간 id 일치여부 확인
       expect(firstEmployee.evaluationPeriod.id).toBe(evaluationPeriodId);
       
-      console.log(`✅ 대시보드 직원 현황 조회 완료: ${result.length}명, isEvaluationTarget: ${firstEmployee.isEvaluationTarget}`);
+      console.log(`✅ 대시보드 직원 현황 조회 완료: ${result.length}명, isEvaluationTarget: ${firstEmployee.isEvaluationTarget}, isNewEnrolled: ${firstEmployee.isNewEnrolled}`);
     });
 
     it('이미 등록된 직원의 중복 등록을 시도한다 (409 에러)', async () => {
@@ -337,6 +341,199 @@ describe('평가대상 기본 관리 E2E 테스트', () => {
       });
       
       console.log(`✅ 대시보드 등록 해제 포함 조회: ${dashboardResultWithUnregistered.length}명, 모든 직원의 isEvaluationTarget: false`);
+    });
+  });
+
+  describe('isNewEnrolled 필드 검증', () => {
+    let newEvaluationPeriodId: string;
+    let firstBatchEmployeeIds: string[];
+    let secondBatchEmployeeIds: string[];
+
+    beforeAll(async () => {
+      // 새로운 평가기간 생성
+      const today = new Date();
+      const nextMonth = new Date(today);
+      nextMonth.setMonth(today.getMonth() + 1);
+
+      const createData = {
+        name: 'isNewEnrolled 테스트용 평가기간',
+        startDate: today.toISOString(),
+        peerEvaluationDeadline: nextMonth.toISOString(),
+        description: 'isNewEnrolled 검증용',
+        maxSelfEvaluationRate: 120,
+        gradeRanges: [
+          { grade: 'S', minRange: 90, maxRange: 100 },
+          { grade: 'A', minRange: 80, maxRange: 89 },
+          { grade: 'B', minRange: 70, maxRange: 79 },
+          { grade: 'C', minRange: 0, maxRange: 69 },
+        ],
+      };
+
+      const result = await apiClient.createEvaluationPeriod(createData);
+      newEvaluationPeriodId = result.id;
+
+      // 평가기간 시작
+      await apiClient.startEvaluationPeriod(newEvaluationPeriodId);
+
+      // 직원을 두 그룹으로 나눔 (첫 번째 배치: 3명, 두 번째 배치: 2명)
+      firstBatchEmployeeIds = employeeIds.slice(0, 3);
+      secondBatchEmployeeIds = employeeIds.slice(3, 5);
+
+      console.log('✅ isNewEnrolled 테스트 환경 설정 완료');
+    });
+
+    afterAll(async () => {
+      // 테스트용 평가기간 삭제
+      if (newEvaluationPeriodId) {
+        try {
+          await apiClient.deleteEvaluationPeriod(newEvaluationPeriodId);
+          console.log('✅ 테스트용 평가기간 삭제 완료');
+        } catch (error) {
+          console.log('테스트용 평가기간 삭제 중 오류:', error.message);
+        }
+      }
+    });
+
+    it('첫 번째 배치 대량 등록 시 모든 직원의 isNewEnrolled가 true여야 한다', async () => {
+      const result = await evaluationTargetScenario.평가대상자를_대량_등록한다(
+        newEvaluationPeriodId,
+        firstBatchEmployeeIds,
+      );
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(firstBatchEmployeeIds.length);
+
+      // 모든 직원이 신규 등록이므로 isNewEnrolled가 true여야 함
+      result.forEach((target: any) => {
+        expect(target.isNewEnrolled).toBe(true);
+        console.log(`직원 ${target.employeeId}: isNewEnrolled = ${target.isNewEnrolled}`);
+      });
+
+      console.log(`✅ 첫 번째 배치 등록 완료: ${result.length}명, 모든 직원 isNewEnrolled = true`);
+    });
+
+    it('대시보드에서 첫 번째 배치의 isNewEnrolled가 true로 조회되어야 한다', async () => {
+      const result = await dashboardApiClient.getEmployeesStatus(newEvaluationPeriodId);
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(firstBatchEmployeeIds.length);
+
+      // 모든 직원의 isNewEnrolled가 true여야 함
+      result.forEach((employee: any) => {
+        expect(employee.isNewEnrolled).toBe(true);
+        expect(employee.isEvaluationTarget).toBe(true);
+      });
+
+      console.log(`✅ 대시보드 조회: ${result.length}명, 모든 직원 isNewEnrolled = true`);
+    });
+
+    it('두 번째 배치 대량 등록 시 신규 직원은 true, 기존 직원은 false여야 한다', async () => {
+      // 두 번째 배치에는 신규 직원 포함
+      const mixedEmployeeIds = [
+        ...firstBatchEmployeeIds.slice(0, 1), // 기존 직원 1명
+        ...secondBatchEmployeeIds, // 신규 직원 2명
+      ];
+
+      const result = await evaluationTargetScenario.평가대상자를_대량_등록한다(
+        newEvaluationPeriodId,
+        mixedEmployeeIds,
+      );
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(mixedEmployeeIds.length);
+
+      // 첫 번째 직원은 기존 직원이므로 isNewEnrolled = false
+      const existingEmployee = result.find(
+        (t: any) => t.employeeId === firstBatchEmployeeIds[0],
+      );
+      expect(existingEmployee).toBeDefined();
+      expect(existingEmployee.isNewEnrolled).toBe(false);
+
+      // 나머지 두 직원은 신규 직원이므로 isNewEnrolled = true
+      const newEmployees = result.filter((t: any) =>
+        secondBatchEmployeeIds.includes(t.employeeId),
+      );
+      expect(newEmployees.length).toBe(2);
+      newEmployees.forEach((target: any) => {
+        expect(target.isNewEnrolled).toBe(true);
+      });
+
+      console.log(`✅ 두 번째 배치 등록 완료: 기존 1명(false), 신규 2명(true)`);
+    });
+
+    it('대시보드에서 신규/기존 직원 구분이 올바르게 조회되어야 한다', async () => {
+      const result = await dashboardApiClient.getEmployeesStatus(newEvaluationPeriodId);
+
+      expect(Array.isArray(result)).toBe(true);
+
+      // 첫 번째 배치 직원들 중 재등록된 1명은 isNewEnrolled = false
+      const reRegisteredEmployee = result.find(
+        (e: any) => e.employeeId === firstBatchEmployeeIds[0],
+      );
+      expect(reRegisteredEmployee).toBeDefined();
+      expect(reRegisteredEmployee.isNewEnrolled).toBe(false);
+
+      // 첫 번째 배치에서 재등록되지 않은 직원들은 여전히 isNewEnrolled = true
+      const unchangedEmployees = result.filter((e: any) =>
+        firstBatchEmployeeIds.slice(1).includes(e.employeeId),
+      );
+      unchangedEmployees.forEach((employee: any) => {
+        expect(employee.isNewEnrolled).toBe(true);
+      });
+
+      // 두 번째 배치 신규 직원들은 isNewEnrolled = true
+      const newEmployees = result.filter((e: any) =>
+        secondBatchEmployeeIds.includes(e.employeeId),
+      );
+      newEmployees.forEach((employee: any) => {
+        expect(employee.isNewEnrolled).toBe(true);
+      });
+
+      console.log(`✅ 대시보드 구분 조회 성공: 기존 1명(false), 나머지 모두 신규(true)`);
+    });
+
+    it('단일 등록 시 isNewEnrolled가 true여야 한다', async () => {
+      // 시드 데이터에 없는 새로운 직원 생성
+      const newEmployeeResponse = await testSuite
+        .request()
+        .post('/admin/employees')
+        .send({
+          name: '신규 테스트 직원',
+          email: 'new-test@example.com',
+          employeeNumber: 'NEW001',
+          departmentName: '테스트부서',
+          rankName: '사원',
+          status: '재직중',
+        })
+        .expect(201);
+
+      const newEmployeeId = newEmployeeResponse.body.id;
+
+      // 단일 등록
+      const registerResponse = await testSuite
+        .request()
+        .post(`/admin/evaluation-periods/${newEvaluationPeriodId}/targets/${newEmployeeId}`)
+        .expect(201);
+
+      expect(registerResponse.body.isNewEnrolled).toBe(true);
+      expect(registerResponse.body.evaluationPeriodId).toBe(newEvaluationPeriodId);
+      expect(registerResponse.body.employeeId).toBe(newEmployeeId);
+
+      console.log(`✅ 단일 등록 완료: isNewEnrolled = true`);
+
+      // 대시보드에서도 확인
+      const dashboardResult = await dashboardApiClient.getEmployeesStatus(newEvaluationPeriodId);
+      const registeredEmployee = dashboardResult.find(
+        (e: any) => e.employeeId === newEmployeeId,
+      );
+
+      expect(registeredEmployee).toBeDefined();
+      expect(registeredEmployee.isNewEnrolled).toBe(true);
+
+      console.log(`✅ 대시보드에서도 isNewEnrolled = true 확인`);
+
+      // 생성한 직원 삭제
+      await testSuite.request().delete(`/admin/employees/${newEmployeeId}`).expect(200);
     });
   });
 });

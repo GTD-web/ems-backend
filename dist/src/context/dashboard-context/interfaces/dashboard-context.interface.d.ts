@@ -10,6 +10,7 @@ export interface EmployeeEvaluationPeriodStatusDto {
     mappingId: string;
     employeeId: string;
     isEvaluationTarget: boolean;
+    isNewEnrolled: boolean;
     evaluationPeriod: {
         id: string;
         name: string;
