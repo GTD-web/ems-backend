@@ -8,14 +8,22 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var ResetDownwardEvaluationHandler_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ResetDownwardEvaluationHandler = exports.ResetDownwardEvaluationCommand = void 0;
 const cqrs_1 = require("@nestjs/cqrs");
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 const downward_evaluation_service_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.service");
 const downward_evaluation_exceptions_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.exceptions");
 const transaction_manager_service_1 = require("../../../../../../libs/database/transaction-manager.service");
+const evaluation_period_employee_mapping_entity_1 = require("../../../../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
+const employee_evaluation_step_approval_service_1 = require("../../../../../domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service");
+const employee_evaluation_step_approval_types_1 = require("../../../../../domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types");
 class ResetDownwardEvaluationCommand {
     evaluationId;
     resetBy;
@@ -28,10 +36,14 @@ exports.ResetDownwardEvaluationCommand = ResetDownwardEvaluationCommand;
 let ResetDownwardEvaluationHandler = ResetDownwardEvaluationHandler_1 = class ResetDownwardEvaluationHandler {
     downwardEvaluationService;
     transactionManager;
+    mappingRepository;
+    stepApprovalService;
     logger = new common_1.Logger(ResetDownwardEvaluationHandler_1.name);
-    constructor(downwardEvaluationService, transactionManager) {
+    constructor(downwardEvaluationService, transactionManager, mappingRepository, stepApprovalService) {
         this.downwardEvaluationService = downwardEvaluationService;
         this.transactionManager = transactionManager;
+        this.mappingRepository = mappingRepository;
+        this.stepApprovalService = stepApprovalService;
     }
     async execute(command) {
         const { evaluationId, resetBy } = command;
@@ -51,6 +63,27 @@ let ResetDownwardEvaluationHandler = ResetDownwardEvaluationHandler_1 = class Re
                 }
                 this.logger.debug(`하향평가 미제출 상태로 변경 시작 - ID: ${evaluationId}`);
                 await this.downwardEvaluationService.수정한다(evaluationId, { isCompleted: false }, resetBy);
+                this.logger.debug(`단계 승인 상태를 pending으로 변경 시작 - 피평가자: ${evaluation.employeeId}, 평가기간: ${evaluation.periodId}, 평가유형: ${evaluation.evaluationType}`);
+                const mapping = await this.mappingRepository.findOne({
+                    where: {
+                        evaluationPeriodId: evaluation.periodId,
+                        employeeId: evaluation.employeeId,
+                        deletedAt: null,
+                    },
+                });
+                if (mapping) {
+                    const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+                    if (stepApproval) {
+                        if (evaluation.evaluationType === 'primary') {
+                            this.stepApprovalService.단계_상태를_변경한다(stepApproval, 'primary', employee_evaluation_step_approval_types_1.StepApprovalStatus.PENDING, resetBy);
+                        }
+                        else if (evaluation.evaluationType === 'secondary') {
+                            this.stepApprovalService.단계_상태를_변경한다(stepApproval, 'secondary', employee_evaluation_step_approval_types_1.StepApprovalStatus.PENDING, resetBy);
+                        }
+                        await this.stepApprovalService.저장한다(stepApproval);
+                        this.logger.debug(`단계 승인 상태를 pending으로 변경 완료 - 피평가자: ${evaluation.employeeId}, 평가유형: ${evaluation.evaluationType}`);
+                    }
+                }
                 this.logger.log('하향평가 초기화 완료', {
                     evaluationId,
                     resetBy,
@@ -74,7 +107,10 @@ exports.ResetDownwardEvaluationHandler = ResetDownwardEvaluationHandler;
 exports.ResetDownwardEvaluationHandler = ResetDownwardEvaluationHandler = ResetDownwardEvaluationHandler_1 = __decorate([
     (0, common_1.Injectable)(),
     (0, cqrs_1.CommandHandler)(ResetDownwardEvaluationCommand),
+    __param(2, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
     __metadata("design:paramtypes", [downward_evaluation_service_1.DownwardEvaluationService,
-        transaction_manager_service_1.TransactionManagerService])
+        transaction_manager_service_1.TransactionManagerService,
+        typeorm_2.Repository,
+        employee_evaluation_step_approval_service_1.EmployeeEvaluationStepApprovalService])
 ], ResetDownwardEvaluationHandler);
 //# sourceMappingURL=reset-downward-evaluation.handler.js.map

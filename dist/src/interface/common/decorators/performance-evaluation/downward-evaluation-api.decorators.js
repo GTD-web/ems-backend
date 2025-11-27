@@ -198,6 +198,8 @@ function SubmitPrimaryDownwardEvaluation() {
 **테스트 케이스:**
 - 저장된 1차 하향평가를 제출할 수 있어야 함
 - 제출 시 isCompleted가 true로 변경
+- 제출 시 단계 승인 상태(primaryEvaluationStatus)가 pending으로 변경
+- 관리자가 approved로 변경한 후 reset하고 재제출하면 pending으로 변경됨
 - submittedBy 없이도 제출 가능
 - approveAllBelow=true일 경우 자기평가도 함께 제출됨
 - approveAllBelow=false일 경우 자기평가는 제출되지 않음
@@ -268,7 +270,9 @@ function SubmitSecondaryDownwardEvaluation() {
 
 **테스트 케이스:**
 - 저장된 2차 하향평가를 제출할 수 있어야 함
+- 제출 시 단계 승인 상태(secondaryEvaluationStatus)가 pending으로 변경
 - 1차와 2차 하향평가를 독립적으로 제출 가능
+- 관리자가 approved로 변경한 후 reset하고 재제출하면 pending으로 변경됨
 - approveAllBelow=true일 경우 1차 하향평가와 자기평가도 함께 제출됨
 - approveAllBelow=false일 경우 1차 하향평가와 자기평가는 제출되지 않음
 - 존재하지 않는 2차 평가를 제출하면 404 에러
@@ -336,6 +340,7 @@ function SubmitDownwardEvaluation() {
 - 1차 하향평가 ID로 직접 제출 가능
 - 2차 하향평가 ID로 직접 제출 가능
 - 평가 타입에 관계없이 ID만으로 제출 가능
+- 제출 시 평가 타입에 따라 단계 승인 상태가 pending으로 변경
 - 존재하지 않는 ID로 제출 시 404 에러
 - 잘못된 UUID 형식으로 제출 시 400 에러
 - 이미 제출된 평가를 ID로 재제출 시 409 에러
@@ -511,8 +516,10 @@ function ResetPrimaryDownwardEvaluation() {
 **테스트 케이스:**
 - 제출된 1차 하향평가를 미제출 상태로 변경 가능
 - 초기화 시 isCompleted가 false로 변경
+- 초기화 시 단계 승인 상태(primaryEvaluationStatus)가 pending으로 변경
 - 초기화 후에도 평가 내용과 점수는 유지
 - 초기화 후 다시 제출 가능
+- 초기화 후 재제출 시 단계 승인 상태는 pending으로 유지
 - 초기화 시 updatedAt이 갱신
 - 존재하지 않는 평가를 초기화하려고 하면 404 에러
 - 미제출 상태인 평가를 초기화하려고 하면 400 에러
@@ -573,9 +580,11 @@ function ResetSecondaryDownwardEvaluation() {
 
 **테스트 케이스:**
 - 제출된 2차 하향평가를 미제출 상태로 변경 가능
+- 초기화 시 단계 승인 상태(secondaryEvaluationStatus)가 pending으로 변경
 - 2차 하향평가 초기화 후에도 평가 내용과 점수는 유지
 - 1차와 2차 하향평가를 독립적으로 초기화 가능
 - 2차 하향평가 초기화 후 다시 제출 가능
+- 초기화 후 재제출 시 단계 승인 상태는 pending으로 유지
 - 1차와 2차를 각각 초기화하고 다시 제출하는 전체 플로우 정상 동작
 - 여러 번 초기화와 제출을 반복해도 정상 동작
 - 존재하지 않는 2차 평가를 초기화하려고 하면 404 에러
@@ -645,6 +654,7 @@ function BulkResetDownwardEvaluations() {
 **테스트 케이스:**
 - 평가자가 담당하는 피평가자의 모든 1차 하향평가 일괄 초기화
 - 평가자가 담당하는 피평가자의 모든 2차 하향평가 일괄 초기화 (2차 평가자별로 독립적으로 초기화 가능)
+- 일괄 초기화 시 단계 승인 상태가 평가 타입에 따라 pending으로 변경
 - 여러 2차 평가자가 동일 피평가자의 평가를 각각 독립적으로 일괄 초기화 가능
 - 이미 미제출 상태인 평가는 건너뛰고 제출된 평가만 초기화
 - 초기화 결과에 초기화된 평가 수, 건너뛴 평가 수, 실패한 평가 수 포함
