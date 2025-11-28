@@ -195,13 +195,13 @@ export class EvaluationPeriodAutoPhaseService {
       return false;
     }
 
-    // 현재 시간이 현재 단계의 마감일을 지났는지 확인
-    const shouldTransition = now >= currentPhaseDeadline;
+    // 한국 시간대 기준으로 비교 (한국 시간 00시가 넘으면 마감일이 지난 것으로 판단)
+    const koreaNow = this.toKoreaDayjs(now);
+    const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
+    const shouldTransition =
+      koreaNow.isAfter(koreaDeadline) || koreaNow.isSame(koreaDeadline);
 
     if (shouldTransition) {
-      // 기본 시간대(Asia/Seoul)로 변환하여 로그 출력
-      const koreaNow = this.toKoreaDayjs(now);
-      const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
       this.logger.debug(
         `평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST')}, 현재: ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')})`,
       );

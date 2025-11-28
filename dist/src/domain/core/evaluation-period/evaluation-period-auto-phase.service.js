@@ -106,10 +106,10 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
             this.logger.debug(`평가기간 ${period.id}의 ${currentPhase} 단계 마감일이 설정되지 않았습니다.`);
             return false;
         }
-        const shouldTransition = now >= currentPhaseDeadline;
+        const koreaNow = this.toKoreaDayjs(now);
+        const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
+        const shouldTransition = koreaNow.isAfter(koreaDeadline) || koreaNow.isSame(koreaDeadline);
         if (shouldTransition) {
-            const koreaNow = this.toKoreaDayjs(now);
-            const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
             this.logger.debug(`평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST')}, 현재: ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')})`);
         }
         return shouldTransition;
