@@ -9,6 +9,8 @@ export declare class CronController {
     private readonly departmentSyncService;
     private readonly logger;
     constructor(evaluationPeriodAutoPhaseService: EvaluationPeriodAutoPhaseService, evaluationPeriodService: EvaluationPeriodService, employeeSyncService: EmployeeSyncService, departmentSyncService: DepartmentSyncService);
+    private get koreaTime();
+    private toKoreaDayjs;
     triggerEvaluationPeriodAutoPhase(): Promise<{
         success: boolean;
         message: string;

@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import dayjs from 'dayjs';
 import { Public } from '@interface/common/decorators/public.decorator';
 import { EvaluationPeriodAutoPhaseService } from '@domain/core/evaluation-period/evaluation-period-auto-phase.service';
 import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
@@ -36,6 +37,25 @@ export class CronController {
   ) {}
 
   /**
+   * 한국 시간대 기준 현재 시간을 반환합니다.
+   * (main.ts에서 dayjs.tz.setDefault('Asia/Seoul')로 설정됨)
+   * @returns 한국 시간대 기준 현재 시간 (Date 객체)
+   */
+  private get koreaTime(): Date {
+    return dayjs.tz().toDate();
+  }
+
+  /**
+   * Date 객체를 한국 시간대의 dayjs 객체로 변환합니다.
+   * (main.ts에서 dayjs.tz.setDefault('Asia/Seoul')로 설정됨)
+   * @param date 변환할 Date 객체
+   * @returns 한국 시간대의 dayjs 객체
+   */
+  private toKoreaDayjs(date: Date): dayjs.Dayjs {
+    return dayjs.tz(date);
+  }
+
+  /**
    * 평가기간 자동 단계 변경 크론 작업
    * Vercel Cron: 매 시간 실행
    */
@@ -55,11 +75,11 @@ export class CronController {
   })
   async triggerEvaluationPeriodAutoPhase() {
     try {
-      // 현재 서버 시간 (UTC) 로그 출력
-      const now = new Date();
-      const nowUTC = now.toISOString();
+      // 현재 한국 시간대 기준 시간 로그 출력
+      const now = this.koreaTime;
+      const koreaNow = this.toKoreaDayjs(now);
       this.logger.log(
-        `[평가기간 자동 단계 변경] 현재 서버 시간 (UTC): ${nowUTC}`,
+        `[평가기간 자동 단계 변경] 현재 한국 시간 (KST): ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')}`,
       );
 
       // 진행 중인 평가기간 조회 및 정보 로그 출력
