@@ -87,8 +87,23 @@ export async function 자기평가_진행_상태를_조회한다(
   const isSubmittedToEvaluator =
     totalMappingCount > 0 && submittedToEvaluatorCount === totalMappingCount;
 
-  // 관리자에게 제출된 WBS 자기평가 수는 completedMappingCount와 동일
-  const submittedToManagerCount = completedMappingCount;
+  // 관리자에게 제출된 WBS 자기평가 수 조회 (소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
+  const submittedToManagerCount = await wbsSelfEvaluationRepository
+    .createQueryBuilder('evaluation')
+    .leftJoin(WbsItem, 'wbs', 'wbs.id = evaluation.wbsItemId AND wbs.deletedAt IS NULL')
+    .leftJoin(Project, 'project', 'project.id = wbs.projectId AND project.deletedAt IS NULL')
+    .leftJoin(
+      EvaluationProjectAssignment,
+      'projectAssignment',
+      'projectAssignment.projectId = wbs.projectId AND projectAssignment.periodId = evaluation.periodId AND projectAssignment.employeeId = evaluation.employeeId AND projectAssignment.deletedAt IS NULL',
+    )
+    .where('evaluation.periodId = :periodId', { periodId: evaluationPeriodId })
+    .andWhere('evaluation.employeeId = :employeeId', { employeeId })
+    .andWhere('evaluation.submittedToManager = :submittedToManager', { submittedToManager: true })
+    .andWhere('evaluation.deletedAt IS NULL')
+    .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
+    .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 카운트
+    .getCount();
 
   // 모든 자기평가가 관리자에게 제출되었는지 확인
   const isSubmittedToManager =

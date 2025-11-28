@@ -48,7 +48,18 @@ async function 자기평가_진행_상태를_조회한다(evaluationPeriodId, em
         .andWhere('projectAssignment.id IS NOT NULL')
         .getCount();
     const isSubmittedToEvaluator = totalMappingCount > 0 && submittedToEvaluatorCount === totalMappingCount;
-    const submittedToManagerCount = completedMappingCount;
+    const submittedToManagerCount = await wbsSelfEvaluationRepository
+        .createQueryBuilder('evaluation')
+        .leftJoin(wbs_item_entity_1.WbsItem, 'wbs', 'wbs.id = evaluation.wbsItemId AND wbs.deletedAt IS NULL')
+        .leftJoin(project_entity_1.Project, 'project', 'project.id = wbs.projectId AND project.deletedAt IS NULL')
+        .leftJoin(evaluation_project_assignment_entity_1.EvaluationProjectAssignment, 'projectAssignment', 'projectAssignment.projectId = wbs.projectId AND projectAssignment.periodId = evaluation.periodId AND projectAssignment.employeeId = evaluation.employeeId AND projectAssignment.deletedAt IS NULL')
+        .where('evaluation.periodId = :periodId', { periodId: evaluationPeriodId })
+        .andWhere('evaluation.employeeId = :employeeId', { employeeId })
+        .andWhere('evaluation.submittedToManager = :submittedToManager', { submittedToManager: true })
+        .andWhere('evaluation.deletedAt IS NULL')
+        .andWhere('project.id IS NOT NULL')
+        .andWhere('projectAssignment.id IS NOT NULL')
+        .getCount();
     const isSubmittedToManager = totalMappingCount > 0 && submittedToManagerCount === totalMappingCount;
     let totalScore = null;
     let grade = null;

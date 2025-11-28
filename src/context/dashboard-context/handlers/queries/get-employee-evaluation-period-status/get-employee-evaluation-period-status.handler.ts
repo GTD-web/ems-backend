@@ -203,7 +203,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'project',
           'project.id = assignment.projectId AND project.deletedAt IS NULL',
         )
-        .where('assignment.periodId = :periodId', { periodId: evaluationPeriodId })
+        .where('assignment.periodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
         .andWhere('assignment.employeeId = :employeeId', { employeeId })
         .andWhere('assignment.deletedAt IS NULL')
         .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
@@ -222,7 +224,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'project',
           'project.id = assignment.projectId AND project.deletedAt IS NULL',
         )
-        .where('assignment.periodId = :periodId', { periodId: evaluationPeriodId })
+        .where('assignment.periodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
         .andWhere('assignment.employeeId = :employeeId', { employeeId })
         .andWhere('assignment.deletedAt IS NULL')
         .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
@@ -249,7 +253,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
           'project',
           'project.id = assignment.projectId AND project.deletedAt IS NULL',
         )
-        .where('assignment.periodId = :periodId', { periodId: evaluationPeriodId })
+        .where('assignment.periodId = :periodId', {
+          periodId: evaluationPeriodId,
+        })
         .andWhere('assignment.employeeId = :employeeId', { employeeId })
         .andWhere('assignment.deletedAt IS NULL')
         .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
@@ -352,8 +358,12 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       // stepApproval 상태 확인 (승인 상태가 최우선)
       const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
 
+      // 관리자에게 제출되었으면 자동으로 approved 처리 (최우선)
+      if (isSubmittedToManager) {
+        finalSelfEvaluationStatus = 'approved';
+      }
       // 승인 상태가 approved이면 재작성 요청 여부와 관계없이 approved 반환
-      if (stepApprovalStatus === 'approved') {
+      else if (stepApprovalStatus === 'approved') {
         finalSelfEvaluationStatus = 'approved';
       } else if (stepApprovalStatus === 'revision_completed') {
         finalSelfEvaluationStatus = 'revision_completed';
@@ -697,7 +707,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             evaluator: primary.evaluator,
             status: 하향평가_통합_상태를_계산한다(
               primary.status,
-              primaryEvaluationStatus,
+              // 1차 하향평가가 제출되었으면 자동으로 approved 처리 (최우선)
+              primary.isSubmitted ? 'approved' : primaryEvaluationStatus,
             ),
             assignedWbsCount: primary.assignedWbsCount,
             completedEvaluationCount: primary.completedEvaluationCount,
@@ -717,7 +728,10 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                 evaluator: evaluatorInfo.evaluator,
                 status: 하향평가_통합_상태를_계산한다(
                   evaluatorInfo.status,
-                  approvalInfo?.status ?? 'pending',
+                  // 2차 하향평가가 제출되었으면 자동으로 approved 처리 (최우선)
+                  evaluatorInfo.isSubmitted
+                    ? 'approved'
+                    : (approvalInfo?.status ?? 'pending'),
                   'secondary', // 2차 평가자임을 명시
                 ),
                 assignedWbsCount: evaluatorInfo.assignedWbsCount,
@@ -734,7 +748,10 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                   );
                 return 하향평가_통합_상태를_계산한다(
                   evaluatorInfo.status,
-                  approvalInfo?.status ?? 'pending',
+                  // 2차 하향평가가 제출되었으면 자동으로 approved 처리 (최우선)
+                  evaluatorInfo.isSubmitted
+                    ? 'approved'
+                    : (approvalInfo?.status ?? 'pending'),
                   'secondary', // 2차 평가자임을 명시
                 );
               }),
