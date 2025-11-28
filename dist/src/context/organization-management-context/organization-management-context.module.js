@@ -11,9 +11,11 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const schedule_1 = require("@nestjs/schedule");
 const cqrs_1 = require("@nestjs/cqrs");
+const typeorm_1 = require("@nestjs/typeorm");
 const department_module_1 = require("../../domain/common/department/department.module");
 const employee_module_1 = require("../../domain/common/employee/employee.module");
 const sso_module_1 = require("../../domain/common/sso/sso.module");
+const department_entity_1 = require("../../domain/common/department/department.entity");
 const organization_management_service_1 = require("./organization-management.service");
 const employee_sync_service_1 = require("./employee-sync.service");
 const department_sync_service_1 = require("./department-sync.service");
@@ -26,6 +28,7 @@ exports.OrganizationManagementContextModule = OrganizationManagementContextModul
     (0, common_1.Module)({
         imports: [
             cqrs_1.CqrsModule,
+            typeorm_1.TypeOrmModule.forFeature([department_entity_1.Department]),
             employee_module_1.EmployeeModule,
             department_module_1.DepartmentModule,
             sso_module_1.SSOModule,
