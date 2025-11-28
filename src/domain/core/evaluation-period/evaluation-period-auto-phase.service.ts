@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Repository } from 'typeorm';
+import dayjs from 'dayjs';
 import { EvaluationPeriod } from './evaluation-period.entity';
+import { EvaluationPeriodService } from './evaluation-period.service';
 import {
   EvaluationPeriodPhase,
   EvaluationPeriodStatus,
 } from './evaluation-period.types';
-import { EvaluationPeriodService } from './evaluation-period.service';
 
 /**
  * 평가기간 자동 단계 변경 서비스
@@ -25,6 +25,25 @@ export class EvaluationPeriodAutoPhaseService {
   ) {}
 
   /**
+   * 한국 시간대 기준 현재 시간을 반환합니다.
+   * (main.ts에서 dayjs.tz.setDefault('Asia/Seoul')로 설정됨)
+   * @returns 한국 시간대 기준 현재 시간 (Date 객체)
+   */
+  private get koreaTime(): Date {
+    return dayjs.tz().toDate();
+  }
+
+  /**
+   * Date 객체를 한국 시간대의 dayjs 객체로 변환합니다.
+   * (main.ts에서 dayjs.tz.setDefault('Asia/Seoul')로 설정됨)
+   * @param date 변환할 Date 객체
+   * @returns 한국 시간대의 dayjs 객체
+   */
+  private toKoreaDayjs(date: Date): dayjs.Dayjs {
+    return dayjs.tz(date);
+  }
+
+  /**
    * 매 시간마다 실행되는 자동 단계 변경 스케줄러
    */
   // @Cron(CronExpression.EVERY_HOUR)
@@ -32,7 +51,7 @@ export class EvaluationPeriodAutoPhaseService {
     this.logger.log('평가기간 자동 단계 변경을 시작합니다...');
 
     try {
-      const now = new Date();
+      const now = this.koreaTime;
 
       // 현재 진행 중인 평가기간들을 조회
       const activePeriods = await this.evaluationPeriodRepository.find({
@@ -180,8 +199,11 @@ export class EvaluationPeriodAutoPhaseService {
     const shouldTransition = now >= currentPhaseDeadline;
 
     if (shouldTransition) {
+      // 기본 시간대(Asia/Seoul)로 변환하여 로그 출력
+      const koreaNow = this.toKoreaDayjs(now);
+      const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
       this.logger.debug(
-        `평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${currentPhaseDeadline.toISOString()}, 현재: ${now.toISOString()})`,
+        `평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST')}, 현재: ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')})`,
       );
     }
 
@@ -243,7 +265,7 @@ export class EvaluationPeriodAutoPhaseService {
         return null;
       }
 
-      await this.checkAndTransitionPhase(period, new Date());
+      await this.checkAndTransitionPhase(period, this.koreaTime);
 
       // 업데이트된 평가기간 정보 반환
       return await this.evaluationPeriodRepository.findOne({
@@ -263,7 +285,7 @@ export class EvaluationPeriodAutoPhaseService {
   async checkAllActivePeriods(): Promise<number> {
     this.logger.log('모든 진행 중인 평가기간의 단계 전이를 확인합니다...');
 
-    const now = new Date();
+    const now = this.koreaTime;
     const activePeriods = await this.evaluationPeriodRepository.find({
       where: {
         status: EvaluationPeriodStatus.IN_PROGRESS,
@@ -320,7 +342,7 @@ export class EvaluationPeriodAutoPhaseService {
         return null;
       }
 
-      const now = new Date();
+      const now = this.koreaTime;
       let statusChanged = false;
 
       // 1. 상태 자동 조정: 시작일이 지났고 상태가 WAITING이면 IN_PROGRESS로 변경
