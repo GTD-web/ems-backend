@@ -6,6 +6,10 @@ import type {
   DepartmentHierarchyWithEmployeesDto,
   EmployeeSummaryDto,
 } from '../interfaces/organization-management-context.interface';
+import { IsNull } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Department } from '../../../domain/common/department/department.entity';
 
 /**
  * 직원 목록을 포함한 부서 하이라키 구조 조회 쿼리
@@ -23,12 +27,18 @@ export class GetDepartmentHierarchyWithEmployeesQueryHandler
   constructor(
     private readonly departmentService: DepartmentService,
     private readonly employeeService: EmployeeService,
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
   ) {}
 
   async execute(
     query: GetDepartmentHierarchyWithEmployeesQuery,
   ): Promise<DepartmentHierarchyWithEmployeesDto[]> {
-    const allDepartments = await this.departmentService.findAll();
+    // 삭제된 부서는 제외하고 조회
+    const allDepartments = await this.departmentRepository.find({
+      where: { deletedAt: IsNull() },
+      order: { order: 'ASC', name: 'ASC' },
+    });
     const allEmployees = await this.employeeService.findAll();
 
     // 부서별로 직원들을 그룹화 (간결한 직원 정보만)

@@ -370,6 +370,25 @@ export class EmployeeSyncService implements OnModuleInit {
         await this.직원들을_저장한다(employeesToSave, errors);
       }
 
+      // 4. SSO에 없는 직원을 퇴사 상태로 변경
+      let terminatedCount = 0;
+      try {
+        terminatedCount = await this.SSO에_없는_직원을_퇴사_처리한다(
+          ssoEmployees,
+          syncStartTime,
+        );
+        if (terminatedCount > 0) {
+          this.logger.log(
+            `SSO에 없는 직원 ${terminatedCount}명을 퇴사 상태로 변경했습니다.`,
+          );
+        }
+      } catch (terminateError) {
+        this.logger.error(
+          `SSO에 없는 직원 퇴사 처리 중 오류 발생: ${terminateError.message}`,
+        );
+        errors.push(`퇴사 처리 실패: ${terminateError.message}`);
+      }
+
       const result: EmployeeSyncResult = {
         success: true,
         totalProcessed,
@@ -380,7 +399,7 @@ export class EmployeeSyncService implements OnModuleInit {
       };
 
       this.logger.log(
-        `직원 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트`,
+        `직원 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트, ${terminatedCount}개 퇴사 처리`,
       );
 
       return result;
@@ -647,6 +666,79 @@ export class EmployeeSyncService implements OnModuleInit {
   // ========== 헬퍼 메서드 ==========
 
   /**
+   * SSO에 없는 직원을 퇴사 상태로 변경한다
+   *
+   * @param ssoEmployees SSO에서 가져온 직원 목록
+   * @param syncStartTime 동기화 시작 시간
+   * @returns 퇴사 처리된 직원 수
+   */
+  private async SSO에_없는_직원을_퇴사_처리한다(
+    ssoEmployees: any[],
+    syncStartTime: Date,
+  ): Promise<number> {
+    // SSO에서 가져온 직원의 externalId Set 생성
+    const ssoExternalIds = new Set(
+      ssoEmployees.map((emp) => emp.id).filter((id) => id),
+    );
+
+    // 현재 DB에 있는 모든 직원 조회 (퇴사 상태 포함)
+    const allLocalEmployees = await this.employeeService.findAll(true);
+
+    // SSO에 없고 아직 퇴사 상태가 아닌 직원 찾기
+    const employeesToTerminate = allLocalEmployees.filter(
+      (emp) =>
+        emp.externalId &&
+        !ssoExternalIds.has(emp.externalId) &&
+        emp.status !== '퇴사',
+    );
+
+    if (employeesToTerminate.length === 0) {
+      return 0;
+    }
+
+    this.logger.log(
+      `SSO에 없는 직원 ${employeesToTerminate.length}명을 퇴사 상태로 변경합니다.`,
+    );
+
+    // 퇴사 상태로 변경
+    let terminatedCount = 0;
+    const employeesToSave: Employee[] = [];
+
+    for (const employee of employeesToTerminate) {
+      try {
+        employee.status = '퇴사';
+        employee.lastSyncAt = syncStartTime;
+        employee.updatedBy = this.systemUserId;
+        employeesToSave.push(employee);
+        terminatedCount++;
+
+        this.logger.debug(
+          `직원 ${employee.name} (${employee.employeeNumber}, externalId: ${employee.externalId})를 퇴사 상태로 변경합니다.`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `직원 ${employee.name} (${employee.employeeNumber}) 퇴사 처리 실패: ${error.message}`,
+        );
+      }
+    }
+
+    // 일괄 저장
+    if (employeesToSave.length > 0) {
+      try {
+        await this.employeeService.saveMany(employeesToSave);
+        this.logger.log(
+          `${terminatedCount}명의 직원을 퇴사 상태로 변경했습니다.`,
+        );
+      } catch (saveError) {
+        this.logger.error(`퇴사 처리된 직원 저장 실패: ${saveError.message}`);
+        throw saveError;
+      }
+    }
+
+    return terminatedCount;
+  }
+
+  /**
    * 직원을 처리한다 (생성 또는 업데이트)
    */
   private async 직원을_처리한다(
@@ -703,7 +795,9 @@ export class EmployeeSyncService implements OnModuleInit {
             positionId: mappedData.positionId,
             rankId: mappedData.rankId,
             rankName: mappedData.rankName,
+            rankCode: mappedData.rankCode,
             rankLevel: mappedData.rankLevel,
+            externalId: mappedData.externalId,
             externalUpdatedAt: mappedData.externalUpdatedAt,
             lastSyncAt: syncStartTime,
             updatedBy: this.systemUserId,
@@ -782,6 +876,7 @@ export class EmployeeSyncService implements OnModuleInit {
 
   /**
    * 업데이트가 필요한지 확인한다
+   * SSO 정보와 현재 직원의 외부 서버 정보를 전체적으로 비교하여 변경사항이 있으면 업데이트
    */
   private 업데이트가_필요한가(
     existingEmployee: Employee,
@@ -792,51 +887,77 @@ export class EmployeeSyncService implements OnModuleInit {
       return true;
     }
 
-    // 직급 정보가 없는 경우 강제 업데이트
-    const hasRankData = mappedData.rankId || mappedData.rankName;
-    const missingRankData =
-      !existingEmployee.rankId && !existingEmployee.rankName;
-    if (hasRankData && missingRankData) {
+    // 외부 서버에서 업데이트된 시간이 더 최신인 경우 업데이트
+    if (mappedData.externalUpdatedAt && existingEmployee.externalUpdatedAt) {
+      const externalUpdatedAt = new Date(mappedData.externalUpdatedAt);
+      const existingExternalUpdatedAt = new Date(
+        existingEmployee.externalUpdatedAt,
+      );
+      if (externalUpdatedAt > existingExternalUpdatedAt) {
+        this.logger.debug(
+          `직원 ${existingEmployee.name} (${existingEmployee.employeeNumber}): 외부 서버에서 업데이트됨 (외부: ${externalUpdatedAt.toISOString()}, 로컬: ${existingExternalUpdatedAt.toISOString()})`,
+        );
+        return true;
+      }
+    }
+
+    // 기본 정보 변경 확인
+    if (existingEmployee.employeeNumber !== mappedData.employeeNumber) {
       return true;
     }
 
-    // 직급 정보가 변경된 경우
-    if (
-      hasRankData &&
-      (existingEmployee.rankId !== mappedData.rankId ||
-        existingEmployee.rankName !== mappedData.rankName ||
-        existingEmployee.rankLevel !== mappedData.rankLevel)
-    ) {
+    if (existingEmployee.name !== mappedData.name) {
       return true;
     }
 
-    // 부서 정보가 없는 경우 강제 업데이트
-    const hasDepartmentData =
-      mappedData.departmentId ||
-      mappedData.departmentName ||
-      mappedData.departmentCode;
-    const missingDepartmentData =
-      !existingEmployee.departmentName && !existingEmployee.departmentCode;
-    if (hasDepartmentData && missingDepartmentData) {
+    if (existingEmployee.email !== mappedData.email) {
       return true;
     }
 
-    // 부서 정보가 변경된 경우
-    if (
-      hasDepartmentData &&
-      (existingEmployee.departmentId !== mappedData.departmentId ||
-        existingEmployee.departmentName !== mappedData.departmentName ||
-        existingEmployee.departmentCode !== mappedData.departmentCode)
-    ) {
+    // 전화번호 비교 (null/undefined 처리)
+    const existingPhone = existingEmployee.phoneNumber || '';
+    const mappedPhone = mappedData.phoneNumber || '';
+    if (existingPhone !== mappedPhone) {
       return true;
     }
 
-    // 상태가 변경된 경우
+    // 관리자 ID 비교 (null/undefined 처리)
+    const existingManagerId = existingEmployee.managerId || null;
+    const mappedManagerId = mappedData.managerId || null;
+    if (existingManagerId !== mappedManagerId) {
+      return true;
+    }
+
+    // 상태 변경 확인
     if (existingEmployee.status !== mappedData.status) {
       return true;
     }
 
-    // 입사일이 변경된 경우
+    // 부서 정보 비교
+    if (
+      existingEmployee.departmentId !== mappedData.departmentId ||
+      existingEmployee.departmentName !== mappedData.departmentName ||
+      existingEmployee.departmentCode !== mappedData.departmentCode
+    ) {
+      return true;
+    }
+
+    // 직급 정보 비교
+    if (
+      existingEmployee.rankId !== mappedData.rankId ||
+      existingEmployee.rankName !== mappedData.rankName ||
+      existingEmployee.rankCode !== mappedData.rankCode ||
+      existingEmployee.rankLevel !== mappedData.rankLevel
+    ) {
+      return true;
+    }
+
+    // 직책 정보 비교
+    if (existingEmployee.positionId !== mappedData.positionId) {
+      return true;
+    }
+
+    // 입사일 비교
     if (mappedData.hireDate) {
       const existingHireDate = existingEmployee.hireDate
         ? new Date(existingEmployee.hireDate)
@@ -849,9 +970,11 @@ export class EmployeeSyncService implements OnModuleInit {
       ) {
         return true;
       }
+    } else if (existingEmployee.hireDate) {
+      // SSO에 입사일이 없는데 로컬에 있는 경우는 업데이트하지 않음 (로컬 데이터 보존)
     }
 
-    // 생년월일이 변경된 경우
+    // 생년월일 비교
     if (mappedData.dateOfBirth) {
       const existingDateOfBirth = existingEmployee.dateOfBirth
         ? new Date(existingEmployee.dateOfBirth)
@@ -864,10 +987,20 @@ export class EmployeeSyncService implements OnModuleInit {
       ) {
         return true;
       }
+    } else if (existingEmployee.dateOfBirth) {
+      // SSO에 생년월일이 없는데 로컬에 있는 경우는 업데이트하지 않음 (로컬 데이터 보존)
     }
 
-    // 성별이 변경된 경우
+    // 성별 비교
     if (mappedData.gender && existingEmployee.gender !== mappedData.gender) {
+      return true;
+    }
+
+    // 외부 ID 비교 (변경되면 안 되지만 확인)
+    if (existingEmployee.externalId !== mappedData.externalId) {
+      this.logger.warn(
+        `직원 ${existingEmployee.name} (${existingEmployee.employeeNumber}): externalId 불일치 (기존: ${existingEmployee.externalId}, SSO: ${mappedData.externalId})`,
+      );
       return true;
     }
 

@@ -44,15 +44,36 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
             const now = this.koreaTime;
             const activePeriods = await this.evaluationPeriodRepository.find({
                 where: {
-                    status: evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
+                    status: (0, typeorm_2.In)([
+                        evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
+                        evaluation_period_types_1.EvaluationPeriodStatus.WAITING,
+                    ]),
                 },
             });
-            this.logger.log(`진행 중인 평가기간 수: ${activePeriods.length}개`);
+            this.logger.log(`조회된 평가기간 수: ${activePeriods.length}개 (진행 중 + 대기 중)`);
             let transitionedCount = 0;
             for (const period of activePeriods) {
-                const wasTransitioned = await this.checkAndTransitionPhase(period, now);
-                if (wasTransitioned) {
-                    transitionedCount++;
+                if (period.status === evaluation_period_types_1.EvaluationPeriodStatus.WAITING) {
+                    const wasStarted = await this.checkAndStartPeriod(period, now);
+                    if (wasStarted) {
+                        transitionedCount++;
+                        const updatedPeriod = await this.evaluationPeriodRepository.findOne({
+                            where: { id: period.id },
+                        });
+                        if (updatedPeriod) {
+                            const wasTransitioned = await this.checkAndTransitionPhase(updatedPeriod, now);
+                            if (wasTransitioned) {
+                                transitionedCount++;
+                            }
+                        }
+                        continue;
+                    }
+                }
+                if (period.status === evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS) {
+                    const wasTransitioned = await this.checkAndTransitionPhase(period, now);
+                    if (wasTransitioned) {
+                        transitionedCount++;
+                    }
                 }
             }
             this.logger.log(`평가기간 자동 단계 변경이 완료되었습니다. 전이된 평가기간 수: ${transitionedCount}개`);
@@ -62,6 +83,35 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
             this.logger.error('평가기간 자동 단계 변경 중 오류 발생:', error);
             return 0;
         }
+    }
+    async checkAndStartPeriod(period, now) {
+        if (!period.startDate) {
+            this.logger.debug(`평가기간 ${period.id}의 시작일이 설정되지 않았습니다.`);
+            return false;
+        }
+        const koreaNow = this.toKoreaDayjs(now);
+        const koreaStartDate = this.toKoreaDayjs(period.startDate);
+        const shouldStart = koreaNow.isAfter(koreaStartDate) || koreaNow.isSame(koreaStartDate);
+        if (shouldStart) {
+            try {
+                this.logger.log(`평가기간 ${period.id} 시작일 도달로 인한 상태 변경: WAITING → IN_PROGRESS (시작일: ${koreaStartDate.format('YYYY-MM-DD HH:mm:ss KST')}, 현재: ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')})`);
+                await this.evaluationPeriodService.시작한다(period.id, 'SYSTEM_AUTO_START');
+                const updatedPeriod = await this.evaluationPeriodRepository.findOne({
+                    where: { id: period.id },
+                });
+                if (updatedPeriod && !updatedPeriod.currentPhase) {
+                    this.logger.log(`평가기간 ${period.id} 단계가 설정되지 않아 EVALUATION_SETUP으로 설정합니다.`);
+                    await this.evaluationPeriodService.단계_변경한다(period.id, evaluation_period_types_1.EvaluationPeriodPhase.EVALUATION_SETUP, 'SYSTEM_AUTO_START');
+                }
+                this.logger.log(`평가기간 ${period.id} 상태 변경 완료: WAITING → IN_PROGRESS`);
+                return true;
+            }
+            catch (error) {
+                this.logger.error(`평가기간 ${period.id} 상태 변경 실패: ${error.message}`, error.stack);
+                return false;
+            }
+        }
+        return false;
     }
     async checkAndTransitionPhase(period, now) {
         const currentPhase = period.currentPhase;
@@ -106,10 +156,12 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
             this.logger.debug(`평가기간 ${period.id}의 ${currentPhase} 단계 마감일이 설정되지 않았습니다.`);
             return false;
         }
-        const shouldTransition = now >= currentPhaseDeadline;
+        const koreaNow = this.toKoreaDayjs(now);
+        const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
+        this.logger.log('koreaNow', koreaNow.format('YYYY-MM-DD HH:mm:ss KST'));
+        this.logger.log('koreaDeadline', koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST'));
+        const shouldTransition = koreaNow.isAfter(koreaDeadline) || koreaNow.isSame(koreaDeadline);
         if (shouldTransition) {
-            const koreaNow = this.toKoreaDayjs(now);
-            const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
             this.logger.debug(`평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST')}, 현재: ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')})`);
         }
         return shouldTransition;

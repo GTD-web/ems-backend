@@ -16,7 +16,10 @@ import {
 } from '../../domain/common/department/department.types';
 import { Inject } from '@nestjs/common';
 import { SSOService } from '@domain/common/sso';
-import type { ISSOService, DepartmentInfo } from '@domain/common/sso/interfaces';
+import type {
+  ISSOService,
+  DepartmentInfo,
+} from '@domain/common/sso/interfaces';
 
 /**
  * 부서 동기화 서비스
@@ -124,8 +127,9 @@ export class DepartmentSyncService implements OnModuleInit {
     order: number = 0,
   ): CreateDepartmentDto {
     // departmentName이 없는 경우 기본값 설정
-    const name = ssoDepartment.departmentName || ssoDepartment.departmentCode || '미분류';
-    
+    const name =
+      ssoDepartment.departmentName || ssoDepartment.departmentCode || '미분류';
+
     return {
       name: name,
       code: ssoDepartment.departmentCode,
@@ -182,10 +186,11 @@ export class DepartmentSyncService implements OnModuleInit {
 
           // externalId로 못 찾으면 code로 조회
           if (!existingDepartment) {
-            const departmentsByCode =
-              await this.departmentService.findByFilter({
+            const departmentsByCode = await this.departmentService.findByFilter(
+              {
                 code: ssoDept.departmentCode,
-              });
+              },
+            );
             if (departmentsByCode.length > 0) {
               existingDepartment = departmentsByCode[0];
             }
@@ -353,6 +358,23 @@ export class DepartmentSyncService implements OnModuleInit {
         }
       }
 
+      // 4. SSO에 없는 부서를 삭제 처리
+      let deletedCount = 0;
+      try {
+        deletedCount = await this.SSO에_없는_부서를_삭제한다(
+          ssoDepartments,
+          syncStartTime,
+        );
+        if (deletedCount > 0) {
+          this.logger.log(`SSO에 없는 부서 ${deletedCount}개를 삭제했습니다.`);
+        }
+      } catch (deleteError) {
+        this.logger.error(
+          `SSO에 없는 부서 삭제 처리 중 오류 발생: ${deleteError.message}`,
+        );
+        errors.push(`부서 삭제 처리 실패: ${deleteError.message}`);
+      }
+
       const result: DepartmentSyncResult = {
         success: true,
         totalProcessed,
@@ -363,7 +385,7 @@ export class DepartmentSyncService implements OnModuleInit {
       };
 
       this.logger.log(
-        `부서 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트`,
+        `부서 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트, ${deletedCount}개 삭제`,
       );
 
       return result;
@@ -393,6 +415,78 @@ export class DepartmentSyncService implements OnModuleInit {
   }
 
   /**
+   * SSO에 없는 부서를 삭제한다 (soft delete)
+   *
+   * @param ssoDepartments SSO에서 가져온 부서 목록
+   * @param syncStartTime 동기화 시작 시간
+   * @returns 삭제 처리된 부서 수
+   */
+  private async SSO에_없는_부서를_삭제한다(
+    ssoDepartments: DepartmentInfo[],
+    syncStartTime: Date,
+  ): Promise<number> {
+    // SSO에서 가져온 부서의 externalId Set 생성
+    const ssoExternalIds = new Set(
+      ssoDepartments.map((dept) => dept.id).filter((id) => id),
+    );
+
+    // 현재 DB에 있는 모든 부서 조회 (삭제된 부서 포함)
+    const allLocalDepartments = await this.departmentService.findAll();
+
+    // SSO에 없고 아직 삭제되지 않은 부서 찾기
+    const departmentsToDelete = allLocalDepartments.filter(
+      (dept) =>
+        dept.externalId &&
+        !ssoExternalIds.has(dept.externalId) &&
+        !dept.deletedAt,
+    );
+
+    if (departmentsToDelete.length === 0) {
+      return 0;
+    }
+
+    this.logger.log(
+      `SSO에 없는 부서 ${departmentsToDelete.length}개를 삭제합니다.`,
+    );
+
+    // soft delete 처리
+    let deletedCount = 0;
+    const departmentsToSave: Department[] = [];
+
+    for (const department of departmentsToDelete) {
+      try {
+        // soft delete: deletedAt 설정
+        department.deletedAt = syncStartTime;
+        department.lastSyncAt = syncStartTime;
+        department.updatedBy = this.systemUserId;
+        departmentsToSave.push(department);
+        deletedCount++;
+
+        this.logger.debug(
+          `부서 ${department.name} (${department.code}, externalId: ${department.externalId})를 삭제합니다.`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `부서 ${department.name} (${department.code}) 삭제 처리 실패: ${error.message}`,
+        );
+      }
+    }
+
+    // 일괄 저장
+    if (departmentsToSave.length > 0) {
+      try {
+        await this.departmentService.saveMany(departmentsToSave);
+        this.logger.log(`${deletedCount}개의 부서를 삭제했습니다.`);
+      } catch (saveError) {
+        this.logger.error(`삭제 처리된 부서 저장 실패: ${saveError.message}`);
+        throw saveError;
+      }
+    }
+
+    return deletedCount;
+  }
+
+  /**
    * 스케줄된 자동 동기화 (10분마다)
    */
   @Cron(CronExpression.EVERY_10_MINUTES)
@@ -402,13 +496,14 @@ export class DepartmentSyncService implements OnModuleInit {
       'SCHEDULED_SYNC_ENABLED',
       'true', // 기본값: 활성화 (프로덕션 환경)
     );
-    
+
     // 문자열 "false" 또는 boolean false 모두 처리
-    const scheduledSyncEnabled = 
-      scheduledSyncEnabledValue === 'false' || scheduledSyncEnabledValue === false 
-        ? false 
+    const scheduledSyncEnabled =
+      scheduledSyncEnabledValue === 'false' ||
+      scheduledSyncEnabledValue === false
+        ? false
         : true;
-    
+
     if (!scheduledSyncEnabled) {
       this.logger.debug('스케줄된 부서 동기화가 비활성화되어 있습니다.');
       return;
@@ -508,8 +603,7 @@ export class DepartmentSyncService implements OnModuleInit {
 
       if (!department || forceRefresh) {
         await this.syncDepartments(forceRefresh);
-        department =
-          await this.departmentService.findByExternalId(externalId);
+        department = await this.departmentService.findByExternalId(externalId);
       }
 
       return department;
@@ -522,4 +616,3 @@ export class DepartmentSyncService implements OnModuleInit {
     }
   }
 }
-

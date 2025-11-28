@@ -9,6 +9,7 @@ export declare class EvaluationPeriodAutoPhaseService {
     private get koreaTime();
     private toKoreaDayjs;
     autoPhaseTransition(): Promise<number>;
+    private checkAndStartPeriod;
     private checkAndTransitionPhase;
     private getNextPhase;
     private shouldTransitionToNextPhase;

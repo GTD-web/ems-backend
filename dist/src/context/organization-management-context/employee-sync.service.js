@@ -245,6 +245,17 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             if (employeesToSave.length > 0) {
                 await this.직원들을_저장한다(employeesToSave, errors);
             }
+            let terminatedCount = 0;
+            try {
+                terminatedCount = await this.SSO에_없는_직원을_퇴사_처리한다(ssoEmployees, syncStartTime);
+                if (terminatedCount > 0) {
+                    this.logger.log(`SSO에 없는 직원 ${terminatedCount}명을 퇴사 상태로 변경했습니다.`);
+                }
+            }
+            catch (terminateError) {
+                this.logger.error(`SSO에 없는 직원 퇴사 처리 중 오류 발생: ${terminateError.message}`);
+                errors.push(`퇴사 처리 실패: ${terminateError.message}`);
+            }
             const result = {
                 success: true,
                 totalProcessed,
@@ -253,7 +264,7 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                 errors,
                 syncedAt: syncStartTime,
             };
-            this.logger.log(`직원 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트`);
+            this.logger.log(`직원 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트, ${terminatedCount}개 퇴사 처리`);
             return result;
         }
         catch (error) {
@@ -394,6 +405,43 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             return [];
         }
     }
+    async SSO에_없는_직원을_퇴사_처리한다(ssoEmployees, syncStartTime) {
+        const ssoExternalIds = new Set(ssoEmployees.map((emp) => emp.id).filter((id) => id));
+        const allLocalEmployees = await this.employeeService.findAll(true);
+        const employeesToTerminate = allLocalEmployees.filter((emp) => emp.externalId &&
+            !ssoExternalIds.has(emp.externalId) &&
+            emp.status !== '퇴사');
+        if (employeesToTerminate.length === 0) {
+            return 0;
+        }
+        this.logger.log(`SSO에 없는 직원 ${employeesToTerminate.length}명을 퇴사 상태로 변경합니다.`);
+        let terminatedCount = 0;
+        const employeesToSave = [];
+        for (const employee of employeesToTerminate) {
+            try {
+                employee.status = '퇴사';
+                employee.lastSyncAt = syncStartTime;
+                employee.updatedBy = this.systemUserId;
+                employeesToSave.push(employee);
+                terminatedCount++;
+                this.logger.debug(`직원 ${employee.name} (${employee.employeeNumber}, externalId: ${employee.externalId})를 퇴사 상태로 변경합니다.`);
+            }
+            catch (error) {
+                this.logger.error(`직원 ${employee.name} (${employee.employeeNumber}) 퇴사 처리 실패: ${error.message}`);
+            }
+        }
+        if (employeesToSave.length > 0) {
+            try {
+                await this.employeeService.saveMany(employeesToSave);
+                this.logger.log(`${terminatedCount}명의 직원을 퇴사 상태로 변경했습니다.`);
+            }
+            catch (saveError) {
+                this.logger.error(`퇴사 처리된 직원 저장 실패: ${saveError.message}`);
+                throw saveError;
+            }
+        }
+        return terminatedCount;
+    }
     async 직원을_처리한다(ssoEmp, forceSync, syncStartTime) {
         try {
             let existingEmployee = await this.employeeService.findByEmployeeNumber(ssoEmp.employeeNumber);
@@ -421,7 +469,9 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                         positionId: mappedData.positionId,
                         rankId: mappedData.rankId,
                         rankName: mappedData.rankName,
+                        rankCode: mappedData.rankCode,
                         rankLevel: mappedData.rankLevel,
+                        externalId: mappedData.externalId,
                         externalUpdatedAt: mappedData.externalUpdatedAt,
                         lastSyncAt: syncStartTime,
                         updatedBy: this.systemUserId,
@@ -468,31 +518,48 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
         if (forceSync) {
             return true;
         }
-        const hasRankData = mappedData.rankId || mappedData.rankName;
-        const missingRankData = !existingEmployee.rankId && !existingEmployee.rankName;
-        if (hasRankData && missingRankData) {
+        if (mappedData.externalUpdatedAt && existingEmployee.externalUpdatedAt) {
+            const externalUpdatedAt = new Date(mappedData.externalUpdatedAt);
+            const existingExternalUpdatedAt = new Date(existingEmployee.externalUpdatedAt);
+            if (externalUpdatedAt > existingExternalUpdatedAt) {
+                this.logger.debug(`직원 ${existingEmployee.name} (${existingEmployee.employeeNumber}): 외부 서버에서 업데이트됨 (외부: ${externalUpdatedAt.toISOString()}, 로컬: ${existingExternalUpdatedAt.toISOString()})`);
+                return true;
+            }
+        }
+        if (existingEmployee.employeeNumber !== mappedData.employeeNumber) {
             return true;
         }
-        if (hasRankData &&
-            (existingEmployee.rankId !== mappedData.rankId ||
-                existingEmployee.rankName !== mappedData.rankName ||
-                existingEmployee.rankLevel !== mappedData.rankLevel)) {
+        if (existingEmployee.name !== mappedData.name) {
             return true;
         }
-        const hasDepartmentData = mappedData.departmentId ||
-            mappedData.departmentName ||
-            mappedData.departmentCode;
-        const missingDepartmentData = !existingEmployee.departmentName && !existingEmployee.departmentCode;
-        if (hasDepartmentData && missingDepartmentData) {
+        if (existingEmployee.email !== mappedData.email) {
             return true;
         }
-        if (hasDepartmentData &&
-            (existingEmployee.departmentId !== mappedData.departmentId ||
-                existingEmployee.departmentName !== mappedData.departmentName ||
-                existingEmployee.departmentCode !== mappedData.departmentCode)) {
+        const existingPhone = existingEmployee.phoneNumber || '';
+        const mappedPhone = mappedData.phoneNumber || '';
+        if (existingPhone !== mappedPhone) {
+            return true;
+        }
+        const existingManagerId = existingEmployee.managerId || null;
+        const mappedManagerId = mappedData.managerId || null;
+        if (existingManagerId !== mappedManagerId) {
             return true;
         }
         if (existingEmployee.status !== mappedData.status) {
+            return true;
+        }
+        if (existingEmployee.departmentId !== mappedData.departmentId ||
+            existingEmployee.departmentName !== mappedData.departmentName ||
+            existingEmployee.departmentCode !== mappedData.departmentCode) {
+            return true;
+        }
+        if (existingEmployee.rankId !== mappedData.rankId ||
+            existingEmployee.rankName !== mappedData.rankName ||
+            existingEmployee.rankCode !== mappedData.rankCode ||
+            existingEmployee.rankLevel !== mappedData.rankLevel) {
+            return true;
+        }
+        if (existingEmployee.positionId !== mappedData.positionId) {
             return true;
         }
         if (mappedData.hireDate) {
@@ -505,6 +572,8 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                 return true;
             }
         }
+        else if (existingEmployee.hireDate) {
+        }
         if (mappedData.dateOfBirth) {
             const existingDateOfBirth = existingEmployee.dateOfBirth
                 ? new Date(existingEmployee.dateOfBirth)
@@ -515,7 +584,13 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
                 return true;
             }
         }
+        else if (existingEmployee.dateOfBirth) {
+        }
         if (mappedData.gender && existingEmployee.gender !== mappedData.gender) {
+            return true;
+        }
+        if (existingEmployee.externalId !== mappedData.externalId) {
+            this.logger.warn(`직원 ${existingEmployee.name} (${existingEmployee.employeeNumber}): externalId 불일치 (기존: ${existingEmployee.externalId}, SSO: ${mappedData.externalId})`);
             return true;
         }
         return false;
