@@ -27,7 +27,7 @@ export class EvaluationPeriodAutoPhaseService {
   /**
    * 매 시간마다 실행되는 자동 단계 변경 스케줄러
    */
-  @Cron(CronExpression.EVERY_HOUR)
+  // @Cron(CronExpression.EVERY_HOUR)
   async autoPhaseTransition(): Promise<number> {
     this.logger.log('평가기간 자동 단계 변경을 시작합니다...');
 
