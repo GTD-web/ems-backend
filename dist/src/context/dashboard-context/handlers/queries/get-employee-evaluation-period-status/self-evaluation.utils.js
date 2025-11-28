@@ -124,6 +124,7 @@ async function 가중치_기반_자기평가_점수를_계산한다(evaluationPe
             return null;
         }
         const wbsItemIds = selfEvaluations.map((se) => se.wbsItemId);
+        logger.log(`[DEBUG] 자기평가 - 완료된 자기평가 WBS IDs: ${wbsItemIds.join(', ')} (평가기간: ${evaluationPeriodId}, 직원: ${employeeId})`);
         const wbsAssignments = await wbsAssignmentRepository
             .createQueryBuilder('assignment')
             .leftJoin(evaluation_project_assignment_entity_1.EvaluationProjectAssignment, 'projectAssignment', 'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL')
@@ -137,24 +138,36 @@ async function 가중치_기반_자기평가_점수를_계산한다(evaluationPe
             .andWhere('project.id IS NOT NULL')
             .andWhere('projectAssignment.id IS NOT NULL')
             .getMany();
+        logger.log(`[DEBUG] 자기평가 - 조회된 WBS 할당 수: ${wbsAssignments.length}, WBS IDs: ${wbsAssignments.map((a) => `${a.wbsItemId}(가중치:${a.weight}%)`).join(', ')}`);
         const weightMap = new Map();
         wbsAssignments.forEach((assignment) => {
             weightMap.set(assignment.wbsItemId, assignment.weight);
         });
+        const validEvaluations = selfEvaluations.filter((evaluation) => weightMap.has(evaluation.wbsItemId));
+        logger.log(`[DEBUG] 자기평가 - 필터링 결과: 전체 자기평가 ${selfEvaluations.length}개 중 유효한 자기평가 ${validEvaluations.length}개`);
+        if (validEvaluations.length === 0) {
+            logger.warn(`모든 자기평가가 취소된 프로젝트 할당에 속해 있습니다. (평가기간: ${evaluationPeriodId}, 직원: ${employeeId})`);
+            return null;
+        }
         let totalWeightedScore = 0;
         let totalWeight = 0;
-        selfEvaluations.forEach((evaluation) => {
-            const weight = weightMap.get(evaluation.wbsItemId) || 0;
+        validEvaluations.forEach((evaluation) => {
+            const weight = weightMap.get(evaluation.wbsItemId);
             const score = evaluation.selfEvaluationScore || 0;
+            logger.log(`[DEBUG] 자기평가 - WBS ${evaluation.wbsItemId}: 점수=${score}, 가중치=${weight}%, 가중 점수=${((weight / 100) * score).toFixed(2)}`);
             totalWeightedScore += (weight / 100) * score;
             totalWeight += weight;
         });
+        logger.log(`[DEBUG] 자기평가 - 총 가중 점수: ${totalWeightedScore.toFixed(2)}, 총 가중치: ${totalWeight}%`);
         if (totalWeight === 0) {
+            logger.warn(`가중치 합이 0입니다. 점수 계산 불가 (평가기간: ${evaluationPeriodId}, 직원: ${employeeId})`);
             return null;
         }
-        const finalScore = totalWeightedScore;
-        const integerScore = Math.floor(finalScore);
-        logger.log(`가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${finalScore.toFixed(2)}, 최대값: ${maxSelfEvaluationRate}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`);
+        const normalizedScore = totalWeight !== 100
+            ? totalWeightedScore * (100 / totalWeight)
+            : totalWeightedScore;
+        const integerScore = Math.floor(normalizedScore);
+        logger.log(`가중치 기반 자기평가 점수 계산 완료: ${integerScore} (원본: ${totalWeightedScore.toFixed(2)}, 정규화: ${normalizedScore.toFixed(2)}, 가중치 합: ${totalWeight}%, 최대값: ${maxSelfEvaluationRate}) (직원: ${employeeId}, 평가기간: ${evaluationPeriodId})`);
         return integerScore;
     }
     catch (error) {
