@@ -767,12 +767,20 @@ export class EmployeeSyncService implements OnModuleInit {
       const mappedData = this.mapSSOEmployeeToDto(ssoEmp);
 
       if (existingEmployee) {
-        // 업데이트가 필요한지 확인
-        const needsUpdate = this.업데이트가_필요한가(
-          existingEmployee,
-          mappedData,
-          forceSync,
-        );
+        // 퇴사 상태였던 직원이 SSO에 다시 나타난 경우 재직중으로 복귀 처리
+        const wasTerminated = existingEmployee.status === '퇴사';
+        const isRehired = wasTerminated && mappedData.status !== '퇴사';
+
+        if (isRehired) {
+          this.logger.log(
+            `직원 ${existingEmployee.name} (${existingEmployee.employeeNumber}): 퇴사 상태에서 재직중으로 복귀`,
+          );
+        }
+
+        // 업데이트가 필요한지 확인 (퇴사 복귀인 경우 강제 업데이트)
+        const needsUpdate =
+          isRehired ||
+          this.업데이트가_필요한가(existingEmployee, mappedData, forceSync);
 
         if (needsUpdate) {
           // 기존 직원 업데이트
@@ -788,7 +796,7 @@ export class EmployeeSyncService implements OnModuleInit {
             gender: mappedData.gender,
             hireDate: mappedData.hireDate,
             managerId: mappedData.managerId,
-            status: mappedData.status,
+            status: mappedData.status, // SSO 상태로 업데이트 (퇴사 → 재직중)
             departmentId: mappedData.departmentId,
             departmentName: mappedData.departmentName,
             departmentCode: mappedData.departmentCode,

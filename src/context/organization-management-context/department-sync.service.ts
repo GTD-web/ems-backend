@@ -176,6 +176,7 @@ export class DepartmentSyncService implements OnModuleInit {
 
       // 2. 각 부서 데이터 처리
       const departmentsToSave: Department[] = [];
+      let restoredCount = 0;
 
       for (let i = 0; i < ssoDepartments.length; i++) {
         const ssoDept = ssoDepartments[i];
@@ -199,8 +200,19 @@ export class DepartmentSyncService implements OnModuleInit {
           const mappedData = this.mapSSODepartmentToDto(ssoDept, i);
 
           if (existingDepartment) {
-            // 업데이트가 필요한지 확인 (forceSync 또는 정보 변경 시)
-            let needsUpdate = forceSync;
+            // 삭제된 부서가 SSO에 다시 나타난 경우 복원 처리
+            const wasDeleted = existingDepartment.deletedAt !== null;
+            const isRestored = wasDeleted;
+
+            if (isRestored) {
+              restoredCount++;
+              this.logger.log(
+                `부서 ${existingDepartment.name} (${existingDepartment.code}): 삭제된 상태에서 복원`,
+              );
+            }
+
+            // 업데이트가 필요한지 확인 (복원인 경우 강제 업데이트)
+            let needsUpdate = forceSync || isRestored;
 
             // 부서 정보가 변경된 경우
             if (
@@ -225,6 +237,7 @@ export class DepartmentSyncService implements OnModuleInit {
                 externalUpdatedAt: mappedData.externalUpdatedAt,
                 lastSyncAt: syncStartTime,
                 updatedBy: this.systemUserId,
+                deletedAt: null, // 복원: deletedAt을 null로 설정
               } as UpdateDepartmentDto);
 
               departmentsToSave.push(existingDepartment);
@@ -385,7 +398,7 @@ export class DepartmentSyncService implements OnModuleInit {
       };
 
       this.logger.log(
-        `부서 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트, ${deletedCount}개 삭제`,
+        `부서 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트, ${restoredCount}개 복원, ${deletedCount}개 삭제`,
       );
 
       return result;

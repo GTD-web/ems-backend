@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CqrsModule } from '@nestjs/cqrs';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { DepartmentModule } from '../../domain/common/department/department.module';
 import { EmployeeModule } from '../../domain/common/employee/employee.module';
 import { SSOModule } from '../../domain/common/sso/sso.module';
+import { Department } from '../../domain/common/department/department.entity';
 import { OrganizationManagementService } from './organization-management.service';
 import { EmployeeSyncService } from './employee-sync.service';
 import { DepartmentSyncService } from './department-sync.service';
@@ -21,6 +23,7 @@ import { COMMAND_HANDLERS } from './commands';
 @Module({
   imports: [
     CqrsModule,
+    TypeOrmModule.forFeature([Department]),
     EmployeeModule,
     DepartmentModule,
     SSOModule,

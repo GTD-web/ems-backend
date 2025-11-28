@@ -112,6 +112,7 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
             const ssoDepartments = await this.fetchExternalDepartments();
             totalProcessed = ssoDepartments.length;
             const departmentsToSave = [];
+            let restoredCount = 0;
             for (let i = 0; i < ssoDepartments.length; i++) {
                 const ssoDept = ssoDepartments[i];
                 try {
@@ -126,7 +127,13 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
                     }
                     const mappedData = this.mapSSODepartmentToDto(ssoDept, i);
                     if (existingDepartment) {
-                        let needsUpdate = forceSync;
+                        const wasDeleted = existingDepartment.deletedAt !== null;
+                        const isRestored = wasDeleted;
+                        if (isRestored) {
+                            restoredCount++;
+                            this.logger.log(`부서 ${existingDepartment.name} (${existingDepartment.code}): 삭제된 상태에서 복원`);
+                        }
+                        let needsUpdate = forceSync || isRestored;
                         if (existingDepartment.name !== mappedData.name ||
                             existingDepartment.code !== mappedData.code ||
                             existingDepartment.parentDepartmentId !==
@@ -143,6 +150,7 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
                                 externalUpdatedAt: mappedData.externalUpdatedAt,
                                 lastSyncAt: syncStartTime,
                                 updatedBy: this.systemUserId,
+                                deletedAt: null,
                             });
                             departmentsToSave.push(existingDepartment);
                             updated++;
@@ -255,7 +263,7 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
                 errors,
                 syncedAt: syncStartTime,
             };
-            this.logger.log(`부서 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트, ${deletedCount}개 삭제`);
+            this.logger.log(`부서 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트, ${restoredCount}개 복원, ${deletedCount}개 삭제`);
             return result;
         }
         catch (error) {
