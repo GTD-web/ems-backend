@@ -60,10 +60,12 @@ let EmployeeEvaluationStepApproval = class EmployeeEvaluationStepApproval extend
         this.메타데이터를_업데이트한다(updatedBy);
     }
     평가기준설정_재작성요청상태로_변경한다(updatedBy) {
+        console.log(`[DEBUG] 평가기준설정_재작성요청상태로_변경한다 호출 - 이전 상태: ${this.criteriaSettingStatus}, ID: ${this.id}`);
         this.criteriaSettingStatus = employee_evaluation_step_approval_types_1.StepApprovalStatus.REVISION_REQUESTED;
         this.criteriaSettingApprovedBy = null;
         this.criteriaSettingApprovedAt = null;
         this.메타데이터를_업데이트한다(updatedBy);
+        console.log(`[DEBUG] 평가기준설정_재작성요청상태로_변경한다 완료 - 새 상태: ${this.criteriaSettingStatus}, approvedBy: ${this.criteriaSettingApprovedBy}`);
     }
     평가기준설정_재작성완료상태로_변경한다(updatedBy) {
         this.criteriaSettingStatus = employee_evaluation_step_approval_types_1.StepApprovalStatus.REVISION_COMPLETED;
@@ -84,10 +86,12 @@ let EmployeeEvaluationStepApproval = class EmployeeEvaluationStepApproval extend
         this.메타데이터를_업데이트한다(updatedBy);
     }
     자기평가_재작성요청상태로_변경한다(updatedBy) {
+        console.log(`[DEBUG] 자기평가_재작성요청상태로_변경한다 호출 - 이전 상태: ${this.selfEvaluationStatus}, ID: ${this.id}`);
         this.selfEvaluationStatus = employee_evaluation_step_approval_types_1.StepApprovalStatus.REVISION_REQUESTED;
         this.selfEvaluationApprovedBy = null;
         this.selfEvaluationApprovedAt = null;
         this.메타데이터를_업데이트한다(updatedBy);
+        console.log(`[DEBUG] 자기평가_재작성요청상태로_변경한다 완료 - 새 상태: ${this.selfEvaluationStatus}, approvedBy: ${this.selfEvaluationApprovedBy}`);
     }
     자기평가_재작성완료상태로_변경한다(updatedBy) {
         this.selfEvaluationStatus = employee_evaluation_step_approval_types_1.StepApprovalStatus.REVISION_COMPLETED;

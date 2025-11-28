@@ -43,6 +43,11 @@ let StepApprovalController = class StepApprovalController {
         };
     }
     async updateCriteriaStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
+        console.log(`[CONTROLLER] 평가기준 설정 단계 승인 상태 변경 호출`);
+        console.log(`[CONTROLLER] evaluationPeriodId: ${evaluationPeriodId}`);
+        console.log(`[CONTROLLER] employeeId: ${employeeId}`);
+        console.log(`[CONTROLLER] dto:`, JSON.stringify(dto, null, 2));
+        console.log(`[CONTROLLER] updatedBy: ${updatedBy}`);
         if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {
             if (!dto.revisionComment || dto.revisionComment.trim() === '') {
                 throw new common_1.BadRequestException('재작성 요청 코멘트는 필수입니다.');
@@ -63,6 +68,11 @@ let StepApprovalController = class StepApprovalController {
         }
     }
     async updateSelfStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
+        console.log(`[CONTROLLER] 자기평가 단계 승인 상태 변경 호출`);
+        console.log(`[CONTROLLER] evaluationPeriodId: ${evaluationPeriodId}`);
+        console.log(`[CONTROLLER] employeeId: ${employeeId}`);
+        console.log(`[CONTROLLER] dto:`, JSON.stringify(dto, null, 2));
+        console.log(`[CONTROLLER] updatedBy: ${updatedBy}`);
         if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {
             if (!dto.revisionComment || dto.revisionComment.trim() === '') {
                 throw new common_1.BadRequestException('재작성 요청 코멘트는 필수입니다.');
@@ -86,6 +96,11 @@ let StepApprovalController = class StepApprovalController {
         }
     }
     async updatePrimaryStepApproval(evaluationPeriodId, employeeId, dto, updatedBy) {
+        console.log(`[CONTROLLER] 1차 하향평가 단계 승인 상태 변경 호출`);
+        console.log(`[CONTROLLER] evaluationPeriodId: ${evaluationPeriodId}`);
+        console.log(`[CONTROLLER] employeeId: ${employeeId}`);
+        console.log(`[CONTROLLER] dto:`, JSON.stringify(dto, null, 2));
+        console.log(`[CONTROLLER] updatedBy: ${updatedBy}`);
         if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {
             if (!dto.revisionComment || dto.revisionComment.trim() === '') {
                 throw new common_1.BadRequestException('재작성 요청 코멘트는 필수입니다.');
@@ -109,6 +124,12 @@ let StepApprovalController = class StepApprovalController {
         }
     }
     async updateSecondaryStepApproval(evaluationPeriodId, employeeId, evaluatorId, dto, updatedBy) {
+        console.log(`[CONTROLLER] 2차 하향평가 단계 승인 상태 변경 호출`);
+        console.log(`[CONTROLLER] evaluationPeriodId: ${evaluationPeriodId}`);
+        console.log(`[CONTROLLER] employeeId: ${employeeId}`);
+        console.log(`[CONTROLLER] evaluatorId: ${evaluatorId}`);
+        console.log(`[CONTROLLER] dto:`, JSON.stringify(dto, null, 2));
+        console.log(`[CONTROLLER] updatedBy: ${updatedBy}`);
         let approval;
         if (dto.status === update_step_approval_dto_2.StepApprovalStatusEnum.REVISION_REQUESTED) {
             if (!dto.revisionComment || dto.revisionComment.trim() === '') {

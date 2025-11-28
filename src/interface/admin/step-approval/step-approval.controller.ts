@@ -65,6 +65,12 @@ export class StepApprovalController {
     @Body() dto: UpdateStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
   ): Promise<void> {
+    console.log(`[CONTROLLER] 평가기준 설정 단계 승인 상태 변경 호출`);
+    console.log(`[CONTROLLER] evaluationPeriodId: ${evaluationPeriodId}`);
+    console.log(`[CONTROLLER] employeeId: ${employeeId}`);
+    console.log(`[CONTROLLER] dto:`, JSON.stringify(dto, null, 2));
+    console.log(`[CONTROLLER] updatedBy: ${updatedBy}`);
+
     // 재작성 요청 생성 시 제출 상태 초기화를 함께 처리
     if (dto.status === StepApprovalStatusEnum.REVISION_REQUESTED) {
       if (!dto.revisionComment || dto.revisionComment.trim() === '') {
@@ -111,6 +117,12 @@ export class StepApprovalController {
     @Body() dto: UpdateStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
   ): Promise<void> {
+    console.log(`[CONTROLLER] 자기평가 단계 승인 상태 변경 호출`);
+    console.log(`[CONTROLLER] evaluationPeriodId: ${evaluationPeriodId}`);
+    console.log(`[CONTROLLER] employeeId: ${employeeId}`);
+    console.log(`[CONTROLLER] dto:`, JSON.stringify(dto, null, 2));
+    console.log(`[CONTROLLER] updatedBy: ${updatedBy}`);
+
     // 재작성 요청 생성 시 제출 상태 초기화를 함께 처리
     if (dto.status === StepApprovalStatusEnum.REVISION_REQUESTED) {
       if (!dto.revisionComment || dto.revisionComment.trim() === '') {
@@ -167,6 +179,12 @@ export class StepApprovalController {
     @Body() dto: UpdateStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
   ): Promise<void> {
+    console.log(`[CONTROLLER] 1차 하향평가 단계 승인 상태 변경 호출`);
+    console.log(`[CONTROLLER] evaluationPeriodId: ${evaluationPeriodId}`);
+    console.log(`[CONTROLLER] employeeId: ${employeeId}`);
+    console.log(`[CONTROLLER] dto:`, JSON.stringify(dto, null, 2));
+    console.log(`[CONTROLLER] updatedBy: ${updatedBy}`);
+
     // 재작성 요청 생성 시 제출 상태 초기화를 함께 처리
     if (dto.status === StepApprovalStatusEnum.REVISION_REQUESTED) {
       if (!dto.revisionComment || dto.revisionComment.trim() === '') {
@@ -226,6 +244,13 @@ export class StepApprovalController {
     @Body() dto: UpdateSecondaryStepApprovalDto,
     @CurrentUser('id') updatedBy: string,
   ): Promise<UpdateSecondaryStepApprovalResponseDto> {
+    console.log(`[CONTROLLER] 2차 하향평가 단계 승인 상태 변경 호출`);
+    console.log(`[CONTROLLER] evaluationPeriodId: ${evaluationPeriodId}`);
+    console.log(`[CONTROLLER] employeeId: ${employeeId}`);
+    console.log(`[CONTROLLER] evaluatorId: ${evaluatorId}`);
+    console.log(`[CONTROLLER] dto:`, JSON.stringify(dto, null, 2));
+    console.log(`[CONTROLLER] updatedBy: ${updatedBy}`);
+
     let approval;
 
     // 재작성 요청 생성 시 제출 상태 초기화를 함께 처리

@@ -191,6 +191,9 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             const { totalWbsCount: perfTotalWbsCount, inputCompletedCount } = await (0, performance_input_utils_1.성과입력_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository);
             const performanceInputStatus = (0, performance_input_utils_1.성과입력_상태를_계산한다)(perfTotalWbsCount, inputCompletedCount);
             const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(result.mapping_id);
+            if (stepApproval) {
+                this.logger.log(`[DEBUG] 조회된 stepApproval - ID: ${stepApproval.id}, criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`);
+            }
             const { totalMappingCount, completedMappingCount, submittedToEvaluatorCount, isSubmittedToEvaluator, isSubmittedToManager, totalScore, grade, } = await (0, self_evaluation_utils_1.자기평가_진행_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository);
             const selfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_상태를_계산한다)(totalMappingCount, completedMappingCount);
             const selfEvaluationApprovalStatus = await (0, step_approval_utils_1.자기평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
