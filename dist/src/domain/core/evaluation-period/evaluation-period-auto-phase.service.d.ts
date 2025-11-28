@@ -6,6 +6,8 @@ export declare class EvaluationPeriodAutoPhaseService {
     private readonly evaluationPeriodService;
     private readonly logger;
     constructor(evaluationPeriodRepository: Repository<EvaluationPeriod>, evaluationPeriodService: EvaluationPeriodService);
+    private get koreaTime();
+    private toKoreaDayjs;
     autoPhaseTransition(): Promise<number>;
     private checkAndTransitionPhase;
     private getNextPhase;
