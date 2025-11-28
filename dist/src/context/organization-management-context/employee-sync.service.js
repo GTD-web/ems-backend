@@ -450,7 +450,13 @@ let EmployeeSyncService = EmployeeSyncService_1 = class EmployeeSyncService {
             }
             const mappedData = this.mapSSOEmployeeToDto(ssoEmp);
             if (existingEmployee) {
-                const needsUpdate = this.업데이트가_필요한가(existingEmployee, mappedData, forceSync);
+                const wasTerminated = existingEmployee.status === '퇴사';
+                const isRehired = wasTerminated && mappedData.status !== '퇴사';
+                if (isRehired) {
+                    this.logger.log(`직원 ${existingEmployee.name} (${existingEmployee.employeeNumber}): 퇴사 상태에서 재직중으로 복귀`);
+                }
+                const needsUpdate = isRehired ||
+                    this.업데이트가_필요한가(existingEmployee, mappedData, forceSync);
                 if (needsUpdate) {
                     const preservedIsAccessible = existingEmployee.isAccessible;
                     Object.assign(existingEmployee, {
