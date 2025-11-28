@@ -8,24 +8,36 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetDepartmentHierarchyWithEmployeesQueryHandler = exports.GetDepartmentHierarchyWithEmployeesQuery = void 0;
 const cqrs_1 = require("@nestjs/cqrs");
 const common_1 = require("@nestjs/common");
 const department_service_1 = require("../../../domain/common/department/department.service");
 const employee_service_1 = require("../../../domain/common/employee/employee.service");
+const typeorm_1 = require("typeorm");
+const typeorm_2 = require("@nestjs/typeorm");
+const typeorm_3 = require("typeorm");
+const department_entity_1 = require("../../../domain/common/department/department.entity");
 class GetDepartmentHierarchyWithEmployeesQuery {
 }
 exports.GetDepartmentHierarchyWithEmployeesQuery = GetDepartmentHierarchyWithEmployeesQuery;
 let GetDepartmentHierarchyWithEmployeesQueryHandler = class GetDepartmentHierarchyWithEmployeesQueryHandler {
     departmentService;
     employeeService;
-    constructor(departmentService, employeeService) {
+    departmentRepository;
+    constructor(departmentService, employeeService, departmentRepository) {
         this.departmentService = departmentService;
         this.employeeService = employeeService;
+        this.departmentRepository = departmentRepository;
     }
     async execute(query) {
-        const allDepartments = await this.departmentService.findAll();
+        const allDepartments = await this.departmentRepository.find({
+            where: { deletedAt: (0, typeorm_1.IsNull)() },
+            order: { order: 'ASC', name: 'ASC' },
+        });
         const allEmployees = await this.employeeService.findAll();
         const employeesByDeptExternalId = allEmployees.reduce((acc, emp) => {
             const deptId = emp.departmentId;
@@ -106,7 +118,9 @@ exports.GetDepartmentHierarchyWithEmployeesQueryHandler = GetDepartmentHierarchy
 exports.GetDepartmentHierarchyWithEmployeesQueryHandler = GetDepartmentHierarchyWithEmployeesQueryHandler = __decorate([
     (0, cqrs_1.QueryHandler)(GetDepartmentHierarchyWithEmployeesQuery),
     (0, common_1.Injectable)(),
+    __param(2, (0, typeorm_2.InjectRepository)(department_entity_1.Department)),
     __metadata("design:paramtypes", [department_service_1.DepartmentService,
-        employee_service_1.EmployeeService])
+        employee_service_1.EmployeeService,
+        typeorm_3.Repository])
 ], GetDepartmentHierarchyWithEmployeesQueryHandler);
 //# sourceMappingURL=get-department-hierarchy-with-employees.handler.js.map

@@ -16,6 +16,7 @@ export declare class DepartmentSyncService implements OnModuleInit {
     fetchExternalDepartments(): Promise<DepartmentInfo[]>;
     private mapSSODepartmentToDto;
     syncDepartments(forceSync?: boolean): Promise<DepartmentSyncResult>;
+    private SSO에_없는_부서를_삭제한다;
     scheduledSync(): Promise<void>;
     triggerManualSync(): Promise<DepartmentSyncResult>;
     getDepartments(forceRefresh?: boolean): Promise<Department[]>;

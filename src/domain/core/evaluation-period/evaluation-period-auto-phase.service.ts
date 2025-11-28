@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import dayjs from 'dayjs';
 import { EvaluationPeriod } from './evaluation-period.entity';
 import { EvaluationPeriodService } from './evaluation-period.service';
@@ -53,20 +53,56 @@ export class EvaluationPeriodAutoPhaseService {
     try {
       const now = this.koreaTime;
 
-      // 현재 진행 중인 평가기간들을 조회
+      // 진행 중인 평가기간과 대기 중인 평가기간을 조회
       const activePeriods = await this.evaluationPeriodRepository.find({
         where: {
-          status: EvaluationPeriodStatus.IN_PROGRESS,
+          status: In([
+            EvaluationPeriodStatus.IN_PROGRESS,
+            EvaluationPeriodStatus.WAITING,
+          ]),
         },
       });
 
-      this.logger.log(`진행 중인 평가기간 수: ${activePeriods.length}개`);
+      this.logger.log(
+        `조회된 평가기간 수: ${activePeriods.length}개 (진행 중 + 대기 중)`,
+      );
 
       let transitionedCount = 0;
       for (const period of activePeriods) {
-        const wasTransitioned = await this.checkAndTransitionPhase(period, now);
-        if (wasTransitioned) {
-          transitionedCount++;
+        // 1. WAITING 상태인 경우 시작일 확인 및 상태 변경
+        if (period.status === EvaluationPeriodStatus.WAITING) {
+          const wasStarted = await this.checkAndStartPeriod(period, now);
+          if (wasStarted) {
+            transitionedCount++;
+            // 상태가 변경되었으므로 업데이트된 평가기간 정보 다시 조회
+            const updatedPeriod = await this.evaluationPeriodRepository.findOne(
+              {
+                where: { id: period.id },
+              },
+            );
+            if (updatedPeriod) {
+              // 상태 변경 후 단계 전이 확인
+              const wasTransitioned = await this.checkAndTransitionPhase(
+                updatedPeriod,
+                now,
+              );
+              if (wasTransitioned) {
+                transitionedCount++;
+              }
+            }
+            continue;
+          }
+        }
+
+        // 2. IN_PROGRESS 상태인 경우 단계 전이 확인
+        if (period.status === EvaluationPeriodStatus.IN_PROGRESS) {
+          const wasTransitioned = await this.checkAndTransitionPhase(
+            period,
+            now,
+          );
+          if (wasTransitioned) {
+            transitionedCount++;
+          }
         }
       }
 
@@ -78,6 +114,73 @@ export class EvaluationPeriodAutoPhaseService {
       this.logger.error('평가기간 자동 단계 변경 중 오류 발생:', error);
       return 0;
     }
+  }
+
+  /**
+   * WAITING 상태인 평가기간의 시작일을 확인하고 IN_PROGRESS로 변경합니다.
+   *
+   * @param period 평가기간 엔티티
+   * @param now 현재 시간
+   * @returns 상태 변경 여부
+   */
+  private async checkAndStartPeriod(
+    period: EvaluationPeriod,
+    now: Date,
+  ): Promise<boolean> {
+    if (!period.startDate) {
+      this.logger.debug(
+        `평가기간 ${period.id}의 시작일이 설정되지 않았습니다.`,
+      );
+      return false;
+    }
+
+    // 한국 시간대 기준으로 시작일 비교
+    const koreaNow = this.toKoreaDayjs(now);
+    const koreaStartDate = this.toKoreaDayjs(period.startDate);
+    const shouldStart =
+      koreaNow.isAfter(koreaStartDate) || koreaNow.isSame(koreaStartDate);
+
+    if (shouldStart) {
+      try {
+        this.logger.log(
+          `평가기간 ${period.id} 시작일 도달로 인한 상태 변경: WAITING → IN_PROGRESS (시작일: ${koreaStartDate.format('YYYY-MM-DD HH:mm:ss KST')}, 현재: ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')})`,
+        );
+
+        await this.evaluationPeriodService.시작한다(
+          period.id,
+          'SYSTEM_AUTO_START', // 시스템 자동 시작
+        );
+
+        // 현재 단계가 없으면 EVALUATION_SETUP으로 설정
+        const updatedPeriod = await this.evaluationPeriodRepository.findOne({
+          where: { id: period.id },
+        });
+
+        if (updatedPeriod && !updatedPeriod.currentPhase) {
+          this.logger.log(
+            `평가기간 ${period.id} 단계가 설정되지 않아 EVALUATION_SETUP으로 설정합니다.`,
+          );
+          await this.evaluationPeriodService.단계_변경한다(
+            period.id,
+            EvaluationPeriodPhase.EVALUATION_SETUP,
+            'SYSTEM_AUTO_START',
+          );
+        }
+
+        this.logger.log(
+          `평가기간 ${period.id} 상태 변경 완료: WAITING → IN_PROGRESS`,
+        );
+        return true;
+      } catch (error) {
+        this.logger.error(
+          `평가기간 ${period.id} 상태 변경 실패: ${error.message}`,
+          error.stack,
+        );
+        return false;
+      }
+    }
+
+    return false;
   }
 
   /**

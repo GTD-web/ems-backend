@@ -8,21 +8,33 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GetDepartmentHierarchyQueryHandler = exports.GetDepartmentHierarchyQuery = void 0;
 const cqrs_1 = require("@nestjs/cqrs");
 const common_1 = require("@nestjs/common");
 const department_service_1 = require("../../../domain/common/department/department.service");
+const typeorm_1 = require("typeorm");
+const typeorm_2 = require("@nestjs/typeorm");
+const typeorm_3 = require("typeorm");
+const department_entity_1 = require("../../../domain/common/department/department.entity");
 class GetDepartmentHierarchyQuery {
 }
 exports.GetDepartmentHierarchyQuery = GetDepartmentHierarchyQuery;
 let GetDepartmentHierarchyQueryHandler = class GetDepartmentHierarchyQueryHandler {
     departmentService;
-    constructor(departmentService) {
+    departmentRepository;
+    constructor(departmentService, departmentRepository) {
         this.departmentService = departmentService;
+        this.departmentRepository = departmentRepository;
     }
     async execute(query) {
-        const allDepartments = await this.departmentService.findAll();
+        const allDepartments = await this.departmentRepository.find({
+            where: { deletedAt: (0, typeorm_1.IsNull)() },
+            order: { order: 'ASC', name: 'ASC' },
+        });
         const departmentByExternalId = new Map();
         const rootDepartments = [];
         allDepartments.forEach((dept) => {
@@ -81,6 +93,8 @@ exports.GetDepartmentHierarchyQueryHandler = GetDepartmentHierarchyQueryHandler;
 exports.GetDepartmentHierarchyQueryHandler = GetDepartmentHierarchyQueryHandler = __decorate([
     (0, cqrs_1.QueryHandler)(GetDepartmentHierarchyQuery),
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [department_service_1.DepartmentService])
+    __param(1, (0, typeorm_2.InjectRepository)(department_entity_1.Department)),
+    __metadata("design:paramtypes", [department_service_1.DepartmentService,
+        typeorm_3.Repository])
 ], GetDepartmentHierarchyQueryHandler);
 //# sourceMappingURL=get-department-hierarchy.handler.js.map

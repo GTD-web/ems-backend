@@ -2,6 +2,10 @@ import { IQuery, QueryHandler, IQueryHandler } from '@nestjs/cqrs';
 import { Injectable } from '@nestjs/common';
 import { DepartmentService } from '../../../domain/common/department/department.service';
 import type { DepartmentHierarchyDto } from '../interfaces/organization-management-context.interface';
+import { IsNull } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Department } from '../../../domain/common/department/department.entity';
 
 /**
  * 부서 하이라키 구조 조회 쿼리
@@ -16,12 +20,20 @@ export class GetDepartmentHierarchyQuery implements IQuery {}
 export class GetDepartmentHierarchyQueryHandler
   implements IQueryHandler<GetDepartmentHierarchyQuery>
 {
-  constructor(private readonly departmentService: DepartmentService) {}
+  constructor(
+    private readonly departmentService: DepartmentService,
+    @InjectRepository(Department)
+    private readonly departmentRepository: Repository<Department>,
+  ) {}
 
   async execute(
     query: GetDepartmentHierarchyQuery,
   ): Promise<DepartmentHierarchyDto[]> {
-    const allDepartments = await this.departmentService.findAll();
+    // 삭제된 부서는 제외하고 조회
+    const allDepartments = await this.departmentRepository.find({
+      where: { deletedAt: IsNull() },
+      order: { order: 'ASC', name: 'ASC' },
+    });
 
     // 부서 계층 구조 구성
     // externalId를 키로 사용하여 매핑 (parentDepartmentId가 외부 시스템 ID이기 때문)

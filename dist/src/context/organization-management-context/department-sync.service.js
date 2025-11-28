@@ -236,6 +236,17 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
                     }
                 }
             }
+            let deletedCount = 0;
+            try {
+                deletedCount = await this.SSO에_없는_부서를_삭제한다(ssoDepartments, syncStartTime);
+                if (deletedCount > 0) {
+                    this.logger.log(`SSO에 없는 부서 ${deletedCount}개를 삭제했습니다.`);
+                }
+            }
+            catch (deleteError) {
+                this.logger.error(`SSO에 없는 부서 삭제 처리 중 오류 발생: ${deleteError.message}`);
+                errors.push(`부서 삭제 처리 실패: ${deleteError.message}`);
+            }
             const result = {
                 success: true,
                 totalProcessed,
@@ -244,7 +255,7 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
                 errors,
                 syncedAt: syncStartTime,
             };
-            this.logger.log(`부서 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트`);
+            this.logger.log(`부서 동기화 완료: 총 ${totalProcessed}개 처리, ${created}개 생성, ${updated}개 업데이트, ${deletedCount}개 삭제`);
             return result;
         }
         catch (error) {
@@ -268,9 +279,47 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
             };
         }
     }
+    async SSO에_없는_부서를_삭제한다(ssoDepartments, syncStartTime) {
+        const ssoExternalIds = new Set(ssoDepartments.map((dept) => dept.id).filter((id) => id));
+        const allLocalDepartments = await this.departmentService.findAll();
+        const departmentsToDelete = allLocalDepartments.filter((dept) => dept.externalId &&
+            !ssoExternalIds.has(dept.externalId) &&
+            !dept.deletedAt);
+        if (departmentsToDelete.length === 0) {
+            return 0;
+        }
+        this.logger.log(`SSO에 없는 부서 ${departmentsToDelete.length}개를 삭제합니다.`);
+        let deletedCount = 0;
+        const departmentsToSave = [];
+        for (const department of departmentsToDelete) {
+            try {
+                department.deletedAt = syncStartTime;
+                department.lastSyncAt = syncStartTime;
+                department.updatedBy = this.systemUserId;
+                departmentsToSave.push(department);
+                deletedCount++;
+                this.logger.debug(`부서 ${department.name} (${department.code}, externalId: ${department.externalId})를 삭제합니다.`);
+            }
+            catch (error) {
+                this.logger.error(`부서 ${department.name} (${department.code}) 삭제 처리 실패: ${error.message}`);
+            }
+        }
+        if (departmentsToSave.length > 0) {
+            try {
+                await this.departmentService.saveMany(departmentsToSave);
+                this.logger.log(`${deletedCount}개의 부서를 삭제했습니다.`);
+            }
+            catch (saveError) {
+                this.logger.error(`삭제 처리된 부서 저장 실패: ${saveError.message}`);
+                throw saveError;
+            }
+        }
+        return deletedCount;
+    }
     async scheduledSync() {
         const scheduledSyncEnabledValue = this.configService.get('SCHEDULED_SYNC_ENABLED', 'true');
-        const scheduledSyncEnabled = scheduledSyncEnabledValue === 'false' || scheduledSyncEnabledValue === false
+        const scheduledSyncEnabled = scheduledSyncEnabledValue === 'false' ||
+            scheduledSyncEnabledValue === false
             ? false
             : true;
         if (!scheduledSyncEnabled) {
@@ -328,8 +377,7 @@ let DepartmentSyncService = DepartmentSyncService_1 = class DepartmentSyncServic
             let department = await this.departmentService.findByExternalId(externalId);
             if (!department || forceRefresh) {
                 await this.syncDepartments(forceRefresh);
-                department =
-                    await this.departmentService.findByExternalId(externalId);
+                department = await this.departmentService.findByExternalId(externalId);
             }
             return department;
         }
