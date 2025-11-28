@@ -4,6 +4,8 @@ import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-ev
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
+import { Project } from '@domain/common/project/project.entity';
 
 const logger = new Logger('DownwardEvaluationScoreUtils');
 
@@ -56,17 +58,38 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
       return null;
     }
 
-    // WBS 할당 정보 조회 (가중치 포함)
+    // WBS 할당 정보 조회 (가중치 포함, 취소된 프로젝트 할당 제외)
     const wbsIds = completedEvaluations.map((de) => de.wbsId);
+
+    logger.log(
+      `[DEBUG] 1차 하향평가 - 완료된 평가 WBS IDs: ${wbsIds.join(', ')} (평가기간: ${evaluationPeriodId}, 피평가자: ${employeeId})`,
+    );
+
     const wbsAssignments = await wbsAssignmentRepository
       .createQueryBuilder('assignment')
+      .leftJoin(
+        EvaluationProjectAssignment,
+        'projectAssignment',
+        'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+      )
+      .leftJoin(
+        Project,
+        'project',
+        'project.id = assignment.projectId AND project.deletedAt IS NULL',
+      )
       .where('assignment.periodId = :periodId', {
         periodId: evaluationPeriodId,
       })
       .andWhere('assignment.employeeId = :employeeId', { employeeId })
       .andWhere('assignment.wbsItemId IN (:...wbsIds)', { wbsIds })
       .andWhere('assignment.deletedAt IS NULL')
+      .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+      .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 조회
       .getMany();
+
+    logger.log(
+      `[DEBUG] 1차 하향평가 - 조회된 WBS 할당 수: ${wbsAssignments.length}, WBS IDs: ${wbsAssignments.map((a) => `${a.wbsItemId}(가중치:${a.weight}%)`).join(', ')}`,
+    );
 
     // 평가기간의 최대 달성률 조회
     const evaluationPeriod = await evaluationPeriodRepository.findOne({
@@ -80,13 +103,33 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
       weightMap.set(assignment.wbsItemId, assignment.weight);
     });
 
+    // 취소된 프로젝트 할당의 WBS 평가는 제외
+    const validEvaluations = completedEvaluations.filter((evaluation) =>
+      weightMap.has(evaluation.wbsId),
+    );
+
+    logger.log(
+      `[DEBUG] 1차 하향평가 - 필터링 결과: 전체 평가 ${completedEvaluations.length}개 중 유효한 평가 ${validEvaluations.length}개`,
+    );
+
+    if (validEvaluations.length === 0) {
+      logger.warn(
+        `모든 평가가 취소된 프로젝트 할당에 속해 있습니다. (평가기간: ${evaluationPeriodId}, 피평가자: ${employeeId})`,
+      );
+      return null;
+    }
+
     // 가중치 기반 점수 계산
     let totalWeightedScore = 0;
     let totalWeight = 0;
 
-    completedEvaluations.forEach((evaluation) => {
-      const weight = weightMap.get(evaluation.wbsId) || 0;
+    validEvaluations.forEach((evaluation) => {
+      const weight = weightMap.get(evaluation.wbsId)!; // 이미 필터링했으므로 !로 단언
       const score = evaluation.downwardEvaluationScore || 0;
+
+      logger.log(
+        `[DEBUG] 1차 하향평가 - WBS ${evaluation.wbsId}: 점수=${score}, 가중치=${weight}%, 가중 점수=${((weight / 100) * score).toFixed(2)}`,
+      );
 
       // 가중치 적용: (weight / 100) × score
       // 점수는 0 ~ maxRate 범위를 유지
@@ -94,16 +137,26 @@ export async function 가중치_기반_1차_하향평가_점수를_계산한다(
       totalWeight += weight;
     });
 
-    // 가중치 합이 100이 아닌 경우 정규화
+    logger.log(
+      `[DEBUG] 1차 하향평가 - 총 가중 점수: ${totalWeightedScore.toFixed(2)}, 총 가중치: ${totalWeight}%`,
+    );
+
+    // 가중치 합이 0인 경우
     if (totalWeight === 0) {
+      logger.warn(
+        `가중치 합이 0입니다. 점수 계산 불가 (평가기간: ${evaluationPeriodId}, 피평가자: ${employeeId})`,
+      );
       return null;
     }
 
-    // 최종 점수 (0 ~ maxRate 범위)
-    const finalScore = totalWeightedScore;
+    // 가중치 합이 100이 아닌 경우 정규화 (프로젝트 할당 취소 등으로 가중치가 변경된 경우)
+    const finalScore =
+      totalWeight !== 100
+        ? totalWeightedScore * (100 / totalWeight)
+        : totalWeightedScore;
 
     logger.log(
-      `가중치 기반 1차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (최대값: ${maxRate}) (피평가자: ${employeeId}, 평가자: ${evaluatorIds.join(', ')}, 평가기간: ${evaluationPeriodId})`,
+      `가중치 기반 1차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (원본: ${totalWeightedScore.toFixed(2)}, 가중치 합: ${totalWeight}%, 최대값: ${maxRate}) (피평가자: ${employeeId}, 평가자: ${evaluatorIds.join(', ')}, 평가기간: ${evaluationPeriodId})`,
     );
 
     return Math.round(finalScore * 100) / 100; // 소수점 2자리로 반올림
@@ -162,16 +215,28 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
       return null;
     }
 
-    // WBS 할당 정보 조회 (가중치 포함)
+    // WBS 할당 정보 조회 (가중치 포함, 취소된 프로젝트 할당 제외)
     const wbsIds = [...new Set(completedEvaluations.map((de) => de.wbsId))];
     const wbsAssignments = await wbsAssignmentRepository
       .createQueryBuilder('assignment')
+      .leftJoin(
+        EvaluationProjectAssignment,
+        'projectAssignment',
+        'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+      )
+      .leftJoin(
+        Project,
+        'project',
+        'project.id = assignment.projectId AND project.deletedAt IS NULL',
+      )
       .where('assignment.periodId = :periodId', {
         periodId: evaluationPeriodId,
       })
       .andWhere('assignment.employeeId = :employeeId', { employeeId })
       .andWhere('assignment.wbsItemId IN (:...wbsIds)', { wbsIds })
       .andWhere('assignment.deletedAt IS NULL')
+      .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+      .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 조회
       .getMany();
 
     // 평가기간의 최대 달성률 조회
@@ -186,9 +251,21 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
       weightMap.set(assignment.wbsItemId, assignment.weight);
     });
 
+    // 취소된 프로젝트 할당의 WBS 평가는 제외
+    const validEvaluations = completedEvaluations.filter((evaluation) =>
+      weightMap.has(evaluation.wbsId),
+    );
+
+    if (validEvaluations.length === 0) {
+      logger.warn(
+        `모든 평가가 취소된 프로젝트 할당에 속해 있습니다. (평가기간: ${evaluationPeriodId}, 피평가자: ${employeeId})`,
+      );
+      return null;
+    }
+
     // WBS별 평가자들의 점수를 수집
     const wbsScoresMap = new Map<string, number[]>();
-    completedEvaluations.forEach((evaluation) => {
+    validEvaluations.forEach((evaluation) => {
       if (!wbsScoresMap.has(evaluation.wbsId)) {
         wbsScoresMap.set(evaluation.wbsId, []);
       }
@@ -202,7 +279,7 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
     let totalWeight = 0;
 
     wbsScoresMap.forEach((scores, wbsId) => {
-      const weight = weightMap.get(wbsId) || 0;
+      const weight = weightMap.get(wbsId)!; // 이미 필터링했으므로 !로 단언
 
       // 해당 WBS에 대한 모든 평가자의 평균 점수
       const averageScore =
@@ -214,16 +291,22 @@ export async function 가중치_기반_2차_하향평가_점수를_계산한다(
       totalWeight += weight;
     });
 
-    // 가중치 합이 100이 아닌 경우 정규화
+    // 가중치 합이 0인 경우
     if (totalWeight === 0) {
+      logger.warn(
+        `가중치 합이 0입니다. 점수 계산 불가 (평가기간: ${evaluationPeriodId}, 피평가자: ${employeeId})`,
+      );
       return null;
     }
 
-    // 최종 점수 (0 ~ maxRate 범위)
-    const finalScore = totalWeightedScore;
+    // 가중치 합이 100이 아닌 경우 정규화 (프로젝트 할당 취소 등으로 가중치가 변경된 경우)
+    const finalScore =
+      totalWeight !== 100
+        ? totalWeightedScore * (100 / totalWeight)
+        : totalWeightedScore;
 
     logger.log(
-      `가중치 기반 2차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (최대값: ${maxRate}) (피평가자: ${employeeId}, 평가자 수: ${evaluatorIds.length}, 평가기간: ${evaluationPeriodId})`,
+      `가중치 기반 2차 하향평가 점수 계산 완료: ${finalScore.toFixed(2)} (원본: ${totalWeightedScore.toFixed(2)}, 가중치 합: ${totalWeight}%, 최대값: ${maxRate}) (피평가자: ${employeeId}, 평가자 수: ${evaluatorIds.length}, 평가기간: ${evaluationPeriodId})`,
     );
 
     return Math.round(finalScore * 100) / 100; // 소수점 2자리로 반올림
