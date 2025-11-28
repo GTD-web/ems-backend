@@ -11,16 +11,19 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 var EvaluationPeriodAutoPhaseService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluationPeriodAutoPhaseService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
-const schedule_1 = require("@nestjs/schedule");
+const dayjs_1 = __importDefault(require("dayjs"));
 const evaluation_period_entity_1 = require("./evaluation-period.entity");
-const evaluation_period_types_1 = require("./evaluation-period.types");
 const evaluation_period_service_1 = require("./evaluation-period.service");
+const evaluation_period_types_1 = require("./evaluation-period.types");
 let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = class EvaluationPeriodAutoPhaseService {
     evaluationPeriodRepository;
     evaluationPeriodService;
@@ -29,10 +32,16 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
         this.evaluationPeriodRepository = evaluationPeriodRepository;
         this.evaluationPeriodService = evaluationPeriodService;
     }
+    get koreaTime() {
+        return dayjs_1.default.tz().toDate();
+    }
+    toKoreaDayjs(date) {
+        return dayjs_1.default.tz(date);
+    }
     async autoPhaseTransition() {
         this.logger.log('평가기간 자동 단계 변경을 시작합니다...');
         try {
-            const now = new Date();
+            const now = this.koreaTime;
             const activePeriods = await this.evaluationPeriodRepository.find({
                 where: {
                     status: evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
@@ -99,7 +108,9 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
         }
         const shouldTransition = now >= currentPhaseDeadline;
         if (shouldTransition) {
-            this.logger.debug(`평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${currentPhaseDeadline.toISOString()}, 현재: ${now.toISOString()})`);
+            const koreaNow = this.toKoreaDayjs(now);
+            const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
+            this.logger.debug(`평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST')}, 현재: ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')})`);
         }
         return shouldTransition;
     }
@@ -133,7 +144,7 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
                 this.logger.warn(`평가기간 ${periodId}가 진행 중 상태가 아닙니다. (현재 상태: ${period.status})`);
                 return null;
             }
-            await this.checkAndTransitionPhase(period, new Date());
+            await this.checkAndTransitionPhase(period, this.koreaTime);
             return await this.evaluationPeriodRepository.findOne({
                 where: { id: periodId },
             });
@@ -145,7 +156,7 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
     }
     async checkAllActivePeriods() {
         this.logger.log('모든 진행 중인 평가기간의 단계 전이를 확인합니다...');
-        const now = new Date();
+        const now = this.koreaTime;
         const activePeriods = await this.evaluationPeriodRepository.find({
             where: {
                 status: evaluation_period_types_1.EvaluationPeriodStatus.IN_PROGRESS,
@@ -175,7 +186,7 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
                 this.logger.warn(`평가기간 ${periodId}를 찾을 수 없습니다.`);
                 return null;
             }
-            const now = new Date();
+            const now = this.koreaTime;
             let statusChanged = false;
             if (period.status === evaluation_period_types_1.EvaluationPeriodStatus.WAITING &&
                 period.startDate &&
@@ -220,12 +231,6 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
     }
 };
 exports.EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService;
-__decorate([
-    (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_HOUR),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], EvaluationPeriodAutoPhaseService.prototype, "autoPhaseTransition", null);
 exports.EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(evaluation_period_entity_1.EvaluationPeriod)),
