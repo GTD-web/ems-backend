@@ -315,6 +315,12 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         result.mapping_id,
       );
 
+      if (stepApproval) {
+        this.logger.log(
+          `[DEBUG] 조회된 stepApproval - ID: ${stepApproval.id}, criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`,
+        );
+      }
+
       // 13. 자기평가 진행 상태 조회
       const {
         totalMappingCount,
