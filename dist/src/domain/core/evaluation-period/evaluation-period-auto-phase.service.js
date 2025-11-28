@@ -108,6 +108,8 @@ let EvaluationPeriodAutoPhaseService = EvaluationPeriodAutoPhaseService_1 = clas
         }
         const koreaNow = this.toKoreaDayjs(now);
         const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
+        this.logger.log('koreaNow', koreaNow.format('YYYY-MM-DD HH:mm:ss KST'));
+        this.logger.log('koreaDeadline', koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST'));
         const shouldTransition = koreaNow.isAfter(koreaDeadline) || koreaNow.isSame(koreaDeadline);
         if (shouldTransition) {
             this.logger.debug(`평가기간 ${period.id}: ${currentPhase} 단계 마감일 도달 (마감일: ${koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST')}, 현재: ${koreaNow.format('YYYY-MM-DD HH:mm:ss KST')})`);

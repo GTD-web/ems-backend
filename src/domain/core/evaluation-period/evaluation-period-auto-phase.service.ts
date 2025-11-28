@@ -198,6 +198,11 @@ export class EvaluationPeriodAutoPhaseService {
     // 한국 시간대 기준으로 비교 (한국 시간 00시가 넘으면 마감일이 지난 것으로 판단)
     const koreaNow = this.toKoreaDayjs(now);
     const koreaDeadline = this.toKoreaDayjs(currentPhaseDeadline);
+    this.logger.log('koreaNow', koreaNow.format('YYYY-MM-DD HH:mm:ss KST'));
+    this.logger.log(
+      'koreaDeadline',
+      koreaDeadline.format('YYYY-MM-DD HH:mm:ss KST'),
+    );
     const shouldTransition =
       koreaNow.isAfter(koreaDeadline) || koreaNow.isSame(koreaDeadline);
 
