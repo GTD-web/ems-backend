@@ -155,64 +155,9 @@ export class ResetAllWbsSelfEvaluationsByEmployeePeriodHandler
         }
       }
 
-      // 승인 상태 초기화 (평가 레코드 처리 후 실행)
+      // 승인 상태는 변경하지 않음 (반려 후 재제출 시 기존 승인 상태 유지)
       if (resetEvaluations.length > 0) {
-        this.logger.debug('승인 상태 초기화 시작');
-
-        // evaluationPeriodEmployeeMapping 조회
-        const mapping = await this.mappingRepository.findOne({
-          where: {
-            evaluationPeriodId: periodId,
-            employeeId: employeeId,
-            deletedAt: IsNull(),
-          },
-        });
-
-        if (mapping) {
-          this.logger.debug('Mapping 조회 성공', {
-            mappingId: mapping.id,
-          });
-
-          // EmployeeEvaluationStepApproval 조회
-          const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(
-            mapping.id,
-          );
-
-          if (stepApproval) {
-            this.logger.debug('승인 레코드 조회 성공', {
-              approvalId: stepApproval.id,
-              currentStatus: stepApproval.selfEvaluationStatus,
-            });
-
-            // approved 상태인 경우 pending으로 변경
-            if (
-              stepApproval.selfEvaluationStatus === StepApprovalStatus.APPROVED
-            ) {
-              this.stepApprovalService.단계_상태를_변경한다(
-                stepApproval,
-                'self',
-                StepApprovalStatus.PENDING,
-                resetBy,
-              );
-
-              await this.stepApprovalService.저장한다(stepApproval);
-
-              this.logger.debug('승인 상태 변경 완료', {
-                approvalId: stepApproval.id,
-                oldStatus: StepApprovalStatus.APPROVED,
-                newStatus: StepApprovalStatus.PENDING,
-              });
-            } else {
-              this.logger.debug(
-                `승인 상태가 approved가 아니므로 스킵 (현재: ${stepApproval.selfEvaluationStatus})`,
-              );
-            }
-          } else {
-            this.logger.debug('승인 레코드를 찾을 수 없음');
-          }
-        } else {
-          this.logger.debug('Mapping을 찾을 수 없음');
-        }
+        this.logger.debug('승인 상태는 유지됨 (변경하지 않음)');
       }
 
       const result: ResetAllWbsSelfEvaluationsResponse = {

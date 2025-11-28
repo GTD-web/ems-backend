@@ -21,7 +21,6 @@ const typeorm_2 = require("typeorm");
 const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 const downward_evaluation_exceptions_1 = require("../../domain/core/downward-evaluation/downward-evaluation.exceptions");
 const secondary_evaluation_step_approval_service_1 = require("../../domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.service");
-const employee_evaluation_step_approval_types_1 = require("../../domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types");
 const self_evaluation_1 = require("./handlers/self-evaluation");
 const evaluation_editable_status_1 = require("./handlers/evaluation-editable-status");
 const peer_evaluation_1 = require("./handlers/peer-evaluation");
@@ -252,50 +251,11 @@ let PerformanceEvaluationService = PerformanceEvaluationService_1 = class Perfor
             else {
                 this.logger.debug('2차 하향평가 레코드 없음 - 초기화 스킵');
             }
-            this.logger.debug('승인 상태 초기화 시작');
-            const mapping = await this.mappingRepository.findOne({
-                where: {
-                    evaluationPeriodId: periodId,
-                    employeeId: evaluateeId,
-                    deletedAt: (0, typeorm_2.IsNull)(),
-                },
+            this.logger.debug('승인 상태는 유지됨 (변경하지 않음)', {
+                evaluateeId,
+                periodId,
+                evaluatorId,
             });
-            if (mapping) {
-                this.logger.debug('Mapping 조회 성공', {
-                    mappingId: mapping.id,
-                    evaluatorId,
-                });
-                const approval = await this.secondaryStepApprovalService.맵핑ID와_평가자ID로_조회한다(mapping.id, evaluatorId);
-                if (approval) {
-                    this.logger.debug('승인 레코드 조회 성공', {
-                        approvalId: approval.id,
-                        currentStatus: approval.status,
-                    });
-                    if (approval.status === employee_evaluation_step_approval_types_1.StepApprovalStatus.APPROVED) {
-                        this.secondaryStepApprovalService.상태를_변경한다(approval, employee_evaluation_step_approval_types_1.StepApprovalStatus.PENDING, resetBy);
-                        await this.secondaryStepApprovalService.저장한다(approval);
-                        this.logger.log('승인 상태 변경 완료', {
-                            approvalId: approval.id,
-                            previousStatus: employee_evaluation_step_approval_types_1.StepApprovalStatus.APPROVED,
-                            newStatus: employee_evaluation_step_approval_types_1.StepApprovalStatus.PENDING,
-                        });
-                    }
-                    else {
-                        this.logger.debug('승인 상태가 approved가 아님 - 변경 스킵', {
-                            currentStatus: approval.status,
-                        });
-                    }
-                }
-                else {
-                    this.logger.debug('승인 레코드 없음 - 상태 변경 스킵');
-                }
-            }
-            else {
-                this.logger.warn('Mapping을 찾을 수 없음', {
-                    evaluateeId,
-                    periodId,
-                });
-            }
             this.logger.log('2차 하향평가 초기화 완료', {
                 evaluateeId,
                 periodId,

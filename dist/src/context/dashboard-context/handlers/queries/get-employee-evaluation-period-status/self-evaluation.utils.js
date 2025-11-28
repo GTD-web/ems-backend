@@ -98,6 +98,9 @@ function 자기평가_통합_상태를_계산한다(selfEvaluationStatus, approv
     if (approvalStatus === 'revision_completed') {
         return 'revision_completed';
     }
+    if (approvalStatus === 'approved') {
+        return 'approved';
+    }
     if (selfEvaluationStatus === 'none') {
         return 'none';
     }

@@ -20,7 +20,7 @@ function 하향평가_통합_상태를_계산한다(downwardStatus, approvalStat
     if (approvalStatus === 'revision_completed') {
         return 'revision_completed';
     }
-    if (evaluationType === 'secondary' && approvalStatus === 'approved') {
+    if (approvalStatus === 'approved') {
         return 'approved';
     }
     if (downwardStatus === 'none') {
@@ -28,9 +28,6 @@ function 하향평가_통합_상태를_계산한다(downwardStatus, approvalStat
     }
     if (downwardStatus === 'in_progress') {
         return 'in_progress';
-    }
-    if (approvalStatus === 'approved') {
-        return 'approved';
     }
     return approvalStatus || 'pending';
 }
@@ -195,28 +192,7 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
                 };
             }
         }
-        let isSubmitted = status.isSubmitted;
-        if (secondaryStepApprovalRepository && mappingRepository && evaluatorInfo) {
-            const mapping = await mappingRepository.findOne({
-                where: {
-                    evaluationPeriodId,
-                    employeeId,
-                    deletedAt: (0, typeorm_1.IsNull)(),
-                },
-            });
-            if (mapping) {
-                const approval = await secondaryStepApprovalRepository.findOne({
-                    where: {
-                        evaluationPeriodEmployeeMappingId: mapping.id,
-                        evaluatorId: evaluatorInfo.id,
-                        deletedAt: (0, typeorm_1.IsNull)(),
-                    },
-                });
-                if (approval && approval.status === 'approved') {
-                    isSubmitted = true;
-                }
-            }
-        }
+        const isSubmitted = status.isSubmitted;
         return {
             evaluator: evaluatorInfo || {
                 id: evaluatorId,

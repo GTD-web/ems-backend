@@ -24,11 +24,11 @@ import {
  * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
  *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
  *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
- * 2. 2차 평가자인 경우, 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+ * 2. 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선, 1차/2차 평가 모두 적용)
+ *    - 반려 후에도 approved 상태 유지
  * 3. 하향평가 진행 상태가 none이면 → none (승인 상태와 무관하게 진행 상태 우선)
  * 4. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태와 무관하게 진행 상태 우선)
- * 5. 하향평가 진행 상태가 complete일 때만 승인 상태 반환:
- *    - 승인 상태가 approved이면 → approved
+ * 5. 하향평가 진행 상태가 complete일 때는 승인 상태 반환:
  *    - 승인 상태가 pending이면 → pending
  *    - 승인 상태가 없으면 → pending (기본값)
  */
@@ -55,8 +55,9 @@ export function 하향평가_통합_상태를_계산한다(
     return 'revision_completed';
   }
 
-  // 2. 2차 평가자인 경우, 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
-  if (evaluationType === 'secondary' && approvalStatus === 'approved') {
+  // 2. 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+  // 1차/2차 평가 모두 동일하게 적용 (반려 후에도 approved 유지)
+  if (approvalStatus === 'approved') {
     return 'approved';
   }
 
@@ -70,13 +71,8 @@ export function 하향평가_통합_상태를_계산한다(
     return 'in_progress';
   }
 
-  // 5. 하향평가 진행 상태가 complete일 때만 승인 상태 반환
+  // 5. 하향평가 진행 상태가 complete일 때는 승인 상태 반환
   // downwardStatus === 'complete'
-  // 승인 상태가 approved이면 → approved
-  if (approvalStatus === 'approved') {
-    return 'approved';
-  }
-
   // 승인 상태가 pending이면 → pending
   // 승인 상태가 없으면 기본값으로 pending 반환
   return approvalStatus || 'pending';
@@ -421,34 +417,9 @@ export async function 하향평가_상태를_조회한다(
         }
       }
 
-      // 2차 평가자의 승인 상태 확인하여 isSubmitted 재계산
-      let isSubmitted = status.isSubmitted;
-      
-      // 승인 상태가 approved이면 제출된 것으로 간주
-      if (secondaryStepApprovalRepository && mappingRepository && evaluatorInfo) {
-        const mapping = await mappingRepository.findOne({
-          where: {
-            evaluationPeriodId,
-            employeeId,
-            deletedAt: IsNull(),
-          },
-        });
-
-        if (mapping) {
-          const approval = await secondaryStepApprovalRepository.findOne({
-            where: {
-              evaluationPeriodEmployeeMappingId: mapping.id,
-              evaluatorId: evaluatorInfo.id, // 실제 Employee.id 사용
-              deletedAt: IsNull(),
-            },
-          });
-
-          // approved 상태이면 제출된 것으로 간주
-          if (approval && approval.status === 'approved') {
-            isSubmitted = true;
-          }
-        }
-      }
+      // isSubmitted는 실제 평가 완료 상태로만 결정 (승인 상태와 무관)
+      // 반려 후에는 isCompleted가 false가 되므로 isSubmitted도 false가 됨
+      const isSubmitted = status.isSubmitted;
 
       return {
         evaluator: evaluatorInfo || {

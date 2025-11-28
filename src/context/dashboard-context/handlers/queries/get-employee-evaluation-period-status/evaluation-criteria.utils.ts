@@ -96,11 +96,11 @@ export function 평가기준설정_진행_상태를_계산한다(
  * 2. 재작성 요청 관련 상태는 제출 여부와 상관없이 우선 반환:
  *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관)
  *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관)
- * 3. 평가기준 설정 진행 상태가 in_progress이면 → in_progress
- * 4. 평가기준 설정 진행 상태가 complete이면:
+ * 3. 승인 상태가 approved이면 → approved (제출 여부 무관, 반려 후 재제출 시에도 approved 유지)
+ * 4. 평가기준 설정 진행 상태가 in_progress이면 → in_progress
+ * 5. 평가기준 설정 진행 상태가 complete이면:
  *    - 제출되지 않았으면 → in_progress (제출 대기)
  *    - 제출되었고 승인 상태가 pending이면 → pending
- *    - 제출되었고 승인 상태가 approved이면 → approved
  */
 export function 평가기준설정_상태를_계산한다(
   evaluationCriteriaStatus: EvaluationCriteriaStatus,
@@ -127,18 +127,24 @@ export function 평가기준설정_상태를_계산한다(
     return 'revision_completed';
   }
 
-  // 4. 평가기준 설정 진행 상태가 in_progress이면 → in_progress
+  // 4. 승인 상태가 approved이면 제출 여부와 관계없이 approved 반환
+  // (반려 후 재제출 시에도 approved 상태 유지)
+  if (approvalStatus === 'approved') {
+    return 'approved';
+  }
+
+  // 5. 평가기준 설정 진행 상태가 in_progress이면 → in_progress
   if (progressStatus === 'in_progress') {
     return 'in_progress';
   }
 
-  // 5. 평가기준 설정 진행 상태가 complete이면
+  // 6. 평가기준 설정 진행 상태가 complete이면
   // progressStatus === 'complete'
-  // 5-1. 제출되지 않았으면 → in_progress (제출 대기)
+  // 6-1. 제출되지 않았으면 → in_progress (제출 대기)
   if (!isSubmitted) {
     return 'in_progress';
   }
 
-  // 5-2. 제출되었고 승인 상태 반환 (pending, approved 등)
+  // 6-2. 제출되었고 승인 상태 반환 (pending 등)
   return approvalStatus ?? 'pending';
 }
