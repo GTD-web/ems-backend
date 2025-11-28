@@ -215,6 +215,7 @@ export async function getProjectsWithWbs(
   >();
 
   // 7-1. 1차 평가자 (직원별 고정 담당자)
+  // 먼저 직원별 고정 담당자를 찾고, 없으면 WBS별 매핑에서 찾음
   const primaryEvaluatorMapping = await evaluationLineMappingRepository
     .createQueryBuilder('mapping')
     .select([
@@ -251,6 +252,45 @@ export async function getProjectsWithWbs(
         evaluatorName: primaryEvaluatorMapping.evaluator_name || '',
       });
     });
+  } else if (wbsItemIds.length > 0) {
+    // 직원별 고정 담당자가 없으면 WBS별 매핑에서 PRIMARY 평가자를 찾음
+    const wbsPrimaryEvaluatorMappings = await evaluationLineMappingRepository
+      .createQueryBuilder('mapping')
+      .select([
+        'mapping.wbsItemId AS mapping_wbs_item_id',
+        'mapping.evaluatorId AS mapping_evaluator_id',
+        'evaluator.name AS evaluator_name',
+      ])
+      .leftJoin(
+        Employee,
+        'evaluator',
+        '(evaluator.id = mapping.evaluatorId OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL',
+      )
+      .leftJoin(
+        'evaluation_lines',
+        'line',
+        'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+      )
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
+      .andWhere('mapping.deletedAt IS NULL')
+      .andWhere('line.evaluatorType = :evaluatorType', {
+        evaluatorType: 'primary',
+      })
+      .getRawMany();
+
+    for (const row of wbsPrimaryEvaluatorMappings) {
+      const wbsId = row.mapping_wbs_item_id;
+      if (!wbsId || !row.mapping_evaluator_id) continue;
+
+      primaryEvaluatorMap.set(wbsId, {
+        evaluatorId: row.mapping_evaluator_id,
+        evaluatorName: row.evaluator_name || '',
+      });
+    }
   }
 
   // 7-2. 2차 평가자 (WBS별 평가자)
