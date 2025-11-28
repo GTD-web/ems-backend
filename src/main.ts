@@ -10,6 +10,14 @@ import express from 'express';
 import { AdminInterfaceModule } from './interface/admin/admin-interface.module';
 import { UserInterfaceModule } from './interface/user/user-interface.module';
 import { EvaluatorInterfaceModule } from './interface/evaluator/evaluator-interface.module';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+// dayjs 플러그인 설정 (한국 시간대)
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault('Asia/Seoul');
 
 // Vercel 서버리스 함수를 위한 전역 변수
 let cachedApp: express.Application;
