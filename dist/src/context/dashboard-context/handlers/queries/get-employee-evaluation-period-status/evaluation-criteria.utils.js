@@ -54,6 +54,9 @@ function 평가기준설정_상태를_계산한다(evaluationCriteriaStatus, wbs
     if (approvalStatus === 'revision_completed') {
         return 'revision_completed';
     }
+    if (approvalStatus === 'approved') {
+        return 'approved';
+    }
     if (progressStatus === 'in_progress') {
         return 'in_progress';
     }

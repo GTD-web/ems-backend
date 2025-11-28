@@ -1,8 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { EvaluationPeriodEmployeeMappingDto } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.types';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { DownwardEvaluationNotFoundException } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
+import { SecondaryEvaluationStepApprovalService } from '@domain/sub/secondary-evaluation-step-approval/secondary-evaluation-step-approval.service';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
 
 // 자기평가 관련 커맨드 및 쿼리
 import {
@@ -124,9 +129,14 @@ import { IPerformanceEvaluationService } from './interfaces/performance-evaluati
 export class PerformanceEvaluationService
   implements IPerformanceEvaluationService
 {
+  private readonly logger = new Logger(PerformanceEvaluationService.name);
+
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
+    private readonly secondaryStepApprovalService: SecondaryEvaluationStepApprovalService,
   ) {}
 
   // ==================== 자기평가(성과입력) 관련 메서드 ====================
@@ -867,31 +877,89 @@ export class PerformanceEvaluationService
     evaluatorId: string,
     resetBy: string,
   ): Promise<void> {
-    // 2차 하향평가를 조회
-    const query = new GetDownwardEvaluationListQuery(
-      evaluatorId,
+    this.logger.log('2차 하향평가 초기화 시작', {
       evaluateeId,
       periodId,
       wbsId,
-      'secondary',
-      undefined,
-      1,
-      1,
-    );
+      evaluatorId,
+      resetBy,
+    });
 
-    const result = await this.queryBus.execute(query);
-    if (!result.evaluations || result.evaluations.length === 0) {
-      throw new DownwardEvaluationNotFoundException(
-        `2차 하향평가 (evaluateeId: ${evaluateeId}, periodId: ${periodId}, wbsId: ${wbsId})`,
+    try {
+      // 1. 평가 레코드 조회 (있으면 초기화)
+      const query = new GetDownwardEvaluationListQuery(
+        evaluatorId,
+        evaluateeId,
+        periodId,
+        wbsId,
+        'secondary',
+        undefined,
+        1,
+        1,
       );
+
+      this.logger.debug('2차 하향평가 조회 쿼리 실행', { query });
+      const result = await this.queryBus.execute(query);
+
+      this.logger.debug('2차 하향평가 조회 결과', {
+        totalCount: result.total,
+        evaluationCount: result.evaluations?.length || 0,
+      });
+
+      // 평가 레코드가 있으면 초기화
+      if (result.evaluations && result.evaluations.length > 0) {
+        const evaluation = result.evaluations[0];
+
+        // 이미 미제출 상태가 아닌 경우에만 초기화
+        if (evaluation.isCompleted) {
+          this.logger.debug('2차 하향평가 초기화 실행', {
+            evaluationId: evaluation.id,
+            isCompleted: evaluation.isCompleted,
+          });
+
+          const command = new ResetDownwardEvaluationCommand(
+            evaluation.id,
+            resetBy,
+          );
+          await this.commandBus.execute(command);
+
+          this.logger.log('2차 하향평가 초기화 완료', {
+            evaluationId: evaluation.id,
+          });
+        } else {
+          this.logger.debug('이미 미제출 상태인 평가 - 초기화 스킵', {
+            evaluationId: evaluation.id,
+          });
+        }
+      } else {
+        this.logger.debug('2차 하향평가 레코드 없음 - 초기화 스킵');
+      }
+
+      // 2. 승인 상태는 변경하지 않음 (반려 후 재제출 시 기존 승인 상태 유지)
+      this.logger.debug('승인 상태는 유지됨 (변경하지 않음)', {
+        evaluateeId,
+        periodId,
+        evaluatorId,
+      });
+
+      this.logger.log('2차 하향평가 초기화 완료', {
+        evaluateeId,
+        periodId,
+        wbsId,
+        evaluatorId,
+      });
+    } catch (error) {
+      this.logger.error('2차 하향평가 초기화 실패', error.stack, {
+        evaluateeId,
+        periodId,
+        wbsId,
+        evaluatorId,
+        resetBy,
+        errorName: error.name,
+        errorMessage: error.message,
+      });
+      throw error;
     }
-
-    const evaluation = result.evaluations[0];
-
-    // 초기화 커맨드 실행
-    const command = new ResetDownwardEvaluationCommand(evaluation.id, resetBy);
-
-    await this.commandBus.execute(command);
   }
 
   /**

@@ -3,6 +3,14 @@ export declare enum ProjectStatus {
     COMPLETED = "COMPLETED",
     CANCELLED = "CANCELLED"
 }
+export interface ManagerInfo {
+    id: string;
+    name: string;
+    email?: string;
+    phoneNumber?: string;
+    departmentName?: string;
+    rankName?: string;
+}
 export interface ProjectDto {
     id: string;
     createdAt: Date;
@@ -14,7 +22,7 @@ export interface ProjectDto {
     startDate?: Date;
     endDate?: Date;
     managerId?: string;
-    managerName?: string;
+    manager?: ManagerInfo;
     readonly isDeleted: boolean;
     readonly isActive: boolean;
     readonly isCompleted: boolean;

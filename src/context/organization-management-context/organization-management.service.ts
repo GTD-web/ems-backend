@@ -130,9 +130,10 @@ export class OrganizationManagementService
 
   /**
    * 활성 직원 목록을 조회합니다
+   * @param includeExcluded 조회 제외된 직원 포함 여부 (기본값: false)
    */
-  async 활성직원목록조회(): Promise<EmployeeDto[]> {
-    return await this.queryBus.execute(new GetActiveEmployeesQuery());
+  async 활성직원목록조회(includeExcluded: boolean = false): Promise<EmployeeDto[]> {
+    return await this.queryBus.execute(new GetActiveEmployeesQuery(includeExcluded));
   }
 
   /**

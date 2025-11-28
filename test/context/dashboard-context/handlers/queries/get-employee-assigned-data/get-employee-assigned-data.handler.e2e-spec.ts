@@ -200,12 +200,12 @@ describe('GetEmployeeAssignedDataHandler', () => {
     });
     await mappingRepository.save(mapping);
 
-    // 6. 프로젝트 생성
+    // 6. 프로젝트 생성 (managerId는 Employee의 externalId를 사용)
     const project = projectRepository.create({
       name: '테스트 프로젝트',
       projectCode: 'PROJ001',
       status: ProjectStatus.ACTIVE,
-      managerId: evaluatorId,
+      managerId: 'EXT002', // evaluator의 externalId
       createdBy: systemAdminId,
     });
     const savedProject = await projectRepository.save(project);
@@ -296,6 +296,16 @@ describe('GetEmployeeAssignedDataHandler', () => {
       expect(project.projectName).toBe('테스트 프로젝트');
       expect(Array.isArray(project.wbsList)).toBe(true);
       expect(project.wbsList.length).toBeGreaterThan(0);
+      
+      // 프로젝트 매니저 검증 (managerId가 설정된 경우)
+      expect(project).toHaveProperty('projectManager');
+      expect(project.projectManager).not.toBeNull();
+      expect(project.projectManager).toBeDefined();
+      if (project.projectManager) {
+        // projectManager.id는 Employee의 externalId와 일치해야 함
+        expect(project.projectManager.id).toBe('EXT002');
+        expect(project.projectManager.name).toBe('이평가자');
+      }
 
       // WBS 검증
       const wbs = project.wbsList[0];

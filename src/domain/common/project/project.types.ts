@@ -10,6 +10,24 @@ export enum ProjectStatus {
 }
 
 /**
+ * 프로젝트 매니저 정보
+ */
+export interface ManagerInfo {
+  /** 매니저 ID */
+  id: string;
+  /** 매니저 이름 */
+  name: string;
+  /** 이메일 */
+  email?: string;
+  /** 전화번호 */
+  phoneNumber?: string;
+  /** 부서명 */
+  departmentName?: string;
+  /** 직책명 */
+  rankName?: string;
+}
+
+/**
  * 프로젝트 DTO (평가 시스템용 간소화 버전)
  * 평가에 필요한 핵심 프로젝트 정보만 포함
  */
@@ -35,12 +53,12 @@ export interface ProjectDto {
   startDate?: Date;
   /** 종료일 */
   endDate?: Date;
-  /** 프로젝트 매니저 ID */
-  managerId?: string;
 
   // 조인된 정보 필드들
-  /** 프로젝트 매니저 이름 */
-  managerName?: string;
+  /** 프로젝트 매니저 ID */
+  managerId?: string;
+  /** 프로젝트 매니저 정보 */
+  manager?: ManagerInfo;
 
   // 계산된 필드들 (읽기 전용)
   /** 삭제된 상태 여부 */

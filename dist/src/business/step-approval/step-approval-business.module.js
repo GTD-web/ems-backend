@@ -14,6 +14,8 @@ const evaluation_activity_log_context_module_1 = require("../../context/evaluati
 const evaluation_criteria_management_context_module_1 = require("../../context/evaluation-criteria-management-context/evaluation-criteria-management-context.module");
 const revision_request_context_module_1 = require("../../context/revision-request-context/revision-request-context.module");
 const organization_management_context_module_1 = require("../../context/organization-management-context/organization-management-context.module");
+const wbs_self_evaluation_business_module_1 = require("../wbs-self-evaluation/wbs-self-evaluation-business.module");
+const downward_evaluation_business_module_1 = require("../downward-evaluation/downward-evaluation-business.module");
 const step_approval_business_service_1 = require("./step-approval-business.service");
 let StepApprovalBusinessModule = class StepApprovalBusinessModule {
 };
@@ -27,6 +29,8 @@ exports.StepApprovalBusinessModule = StepApprovalBusinessModule = __decorate([
             evaluation_criteria_management_context_module_1.EvaluationCriteriaManagementContextModule,
             revision_request_context_module_1.RevisionRequestContextModule,
             organization_management_context_module_1.OrganizationManagementContextModule,
+            (0, common_1.forwardRef)(() => wbs_self_evaluation_business_module_1.WbsSelfEvaluationBusinessModule),
+            (0, common_1.forwardRef)(() => downward_evaluation_business_module_1.DownwardEvaluationBusinessModule),
         ],
         providers: [step_approval_business_service_1.StepApprovalBusinessService],
         exports: [step_approval_business_service_1.StepApprovalBusinessService],

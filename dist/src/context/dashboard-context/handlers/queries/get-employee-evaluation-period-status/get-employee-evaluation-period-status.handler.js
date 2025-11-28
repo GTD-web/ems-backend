@@ -21,6 +21,7 @@ const typeorm_2 = require("typeorm");
 const evaluation_period_employee_mapping_entity_1 = require("../../../../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 const evaluation_period_entity_1 = require("../../../../../domain/core/evaluation-period/evaluation-period.entity");
 const employee_entity_1 = require("../../../../../domain/common/employee/employee.entity");
+const project_entity_1 = require("../../../../../domain/common/project/project.entity");
 const evaluation_project_assignment_entity_1 = require("../../../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity");
 const evaluation_wbs_assignment_entity_1 = require("../../../../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity");
 const wbs_evaluation_criteria_entity_1 = require("../../../../../domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity");
@@ -137,29 +138,42 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                 this.logger.debug(`맵핑 정보를 찾을 수 없습니다 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`);
                 return null;
             }
-            const projectCount = await this.projectAssignmentRepository.count({
-                where: {
-                    periodId: evaluationPeriodId,
-                    employeeId: employeeId,
-                    deletedAt: (0, typeorm_2.IsNull)(),
-                },
-            });
-            const wbsCount = await this.wbsAssignmentRepository.count({
-                where: {
-                    periodId: evaluationPeriodId,
-                    employeeId: employeeId,
-                    deletedAt: (0, typeorm_2.IsNull)(),
-                },
-            });
+            const projectCount = await this.projectAssignmentRepository
+                .createQueryBuilder('assignment')
+                .leftJoin(project_entity_1.Project, 'project', 'project.id = assignment.projectId AND project.deletedAt IS NULL')
+                .where('assignment.periodId = :periodId', {
+                periodId: evaluationPeriodId,
+            })
+                .andWhere('assignment.employeeId = :employeeId', { employeeId })
+                .andWhere('assignment.deletedAt IS NULL')
+                .andWhere('project.id IS NOT NULL')
+                .getCount();
+            const wbsCount = await this.wbsAssignmentRepository
+                .createQueryBuilder('assignment')
+                .leftJoin(evaluation_project_assignment_entity_1.EvaluationProjectAssignment, 'projectAssignment', 'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL')
+                .leftJoin(project_entity_1.Project, 'project', 'project.id = assignment.projectId AND project.deletedAt IS NULL')
+                .where('assignment.periodId = :periodId', {
+                periodId: evaluationPeriodId,
+            })
+                .andWhere('assignment.employeeId = :employeeId', { employeeId })
+                .andWhere('assignment.deletedAt IS NULL')
+                .andWhere('project.id IS NOT NULL')
+                .andWhere('projectAssignment.id IS NOT NULL')
+                .getCount();
             const evaluationCriteriaStatus = (0, evaluation_criteria_utils_1.평가항목_상태를_계산한다)(projectCount, wbsCount);
-            const assignedWbsList = await this.wbsAssignmentRepository.find({
-                where: {
-                    periodId: evaluationPeriodId,
-                    employeeId: employeeId,
-                    deletedAt: (0, typeorm_2.IsNull)(),
-                },
-                select: ['wbsItemId'],
-            });
+            const assignedWbsList = await this.wbsAssignmentRepository
+                .createQueryBuilder('assignment')
+                .select(['assignment.wbsItemId'])
+                .leftJoin(evaluation_project_assignment_entity_1.EvaluationProjectAssignment, 'projectAssignment', 'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL')
+                .leftJoin(project_entity_1.Project, 'project', 'project.id = assignment.projectId AND project.deletedAt IS NULL')
+                .where('assignment.periodId = :periodId', {
+                periodId: evaluationPeriodId,
+            })
+                .andWhere('assignment.employeeId = :employeeId', { employeeId })
+                .andWhere('assignment.deletedAt IS NULL')
+                .andWhere('project.id IS NOT NULL')
+                .andWhere('projectAssignment.id IS NOT NULL')
+                .getMany();
             let wbsWithCriteriaCount = 0;
             if (assignedWbsList.length > 0) {
                 const wbsItemIds = assignedWbsList.map((wbs) => wbs.wbsItemId);
@@ -177,6 +191,9 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
             const { totalWbsCount: perfTotalWbsCount, inputCompletedCount } = await (0, performance_input_utils_1.성과입력_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository);
             const performanceInputStatus = (0, performance_input_utils_1.성과입력_상태를_계산한다)(perfTotalWbsCount, inputCompletedCount);
             const stepApproval = await this.stepApprovalService.맵핑ID로_조회한다(result.mapping_id);
+            if (stepApproval) {
+                this.logger.log(`[DEBUG] 조회된 stepApproval - ID: ${stepApproval.id}, criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`);
+            }
             const { totalMappingCount, completedMappingCount, submittedToEvaluatorCount, isSubmittedToEvaluator, isSubmittedToManager, totalScore, grade, } = await (0, self_evaluation_utils_1.자기평가_진행_상태를_조회한다)(evaluationPeriodId, employeeId, this.wbsSelfEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository);
             const selfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_상태를_계산한다)(totalMappingCount, completedMappingCount);
             const selfEvaluationApprovalStatus = await (0, step_approval_utils_1.자기평가_단계승인_상태를_조회한다)(evaluationPeriodId, employeeId, this.revisionRequestRepository, this.revisionRequestRecipientRepository);
@@ -201,7 +218,7 @@ let GetEmployeeEvaluationPeriodStatusHandler = GetEmployeeEvaluationPeriodStatus
                     finalSelfEvaluationStatus = (0, self_evaluation_utils_1.자기평가_통합_상태를_계산한다)(selfEvaluationStatus, stepApprovalStatus ?? 'pending');
                 }
             }
-            const { primary, secondary } = await (0, downward_evaluation_utils_1.하향평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.evaluationLineRepository, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository, this.employeeRepository);
+            const { primary, secondary } = await (0, downward_evaluation_utils_1.하향평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.evaluationLineRepository, this.evaluationLineMappingRepository, this.downwardEvaluationRepository, this.wbsAssignmentRepository, this.periodRepository, this.employeeRepository, this.secondaryStepApprovalRepository, this.mappingRepository);
             const { totalRequestCount, completedRequestCount } = await (0, peer_evaluation_utils_1.동료평가_상태를_조회한다)(evaluationPeriodId, employeeId, this.peerEvaluationRepository);
             const peerEvaluationStatus = (0, peer_evaluation_utils_1.동료평가_상태를_계산한다)(totalRequestCount, completedRequestCount);
             const finalEvaluation = await (0, final_evaluation_utils_1.최종평가를_조회한다)(evaluationPeriodId, employeeId, this.finalEvaluationRepository);

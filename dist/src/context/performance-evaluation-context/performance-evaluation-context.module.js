@@ -28,6 +28,7 @@ const evaluation_question_entity_1 = require("../../domain/sub/evaluation-questi
 const evaluation_line_mapping_entity_1 = require("../../domain/core/evaluation-line-mapping/evaluation-line-mapping.entity");
 const evaluation_line_entity_1 = require("../../domain/core/evaluation-line/evaluation-line.entity");
 const evaluation_wbs_assignment_entity_1 = require("../../domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity");
+const evaluation_period_employee_mapping_entity_1 = require("../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
 const performance_evaluation_service_1 = require("./performance-evaluation.service");
 const command_handlers_1 = require("./handlers/command-handlers");
 const query_handlers_1 = require("./handlers/query-handlers");
@@ -57,6 +58,7 @@ exports.PerformanceEvaluationContextModule = PerformanceEvaluationContextModule 
                 evaluation_line_mapping_entity_1.EvaluationLineMapping,
                 evaluation_line_entity_1.EvaluationLine,
                 evaluation_wbs_assignment_entity_1.EvaluationWbsAssignment,
+                evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping,
             ]),
         ],
         providers: [

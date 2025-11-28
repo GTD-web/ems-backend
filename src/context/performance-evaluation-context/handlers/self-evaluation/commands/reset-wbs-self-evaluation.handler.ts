@@ -1,8 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
 import { WbsSelfEvaluationDto } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.types';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
 
 /**
  * 단일 WBS 자기평가 초기화 커맨드 (1차 평가자 → 관리자 제출 취소)
@@ -28,6 +33,9 @@ export class ResetWbsSelfEvaluationHandler
   constructor(
     private readonly wbsSelfEvaluationService: WbsSelfEvaluationService,
     private readonly transactionManager: TransactionManagerService,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
+    private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
   ) {}
 
   async execute(
@@ -52,12 +60,15 @@ export class ResetWbsSelfEvaluationHandler
         );
       }
 
-      // 1차 평가자 → 관리자 제출 상태 초기화
+      // 1. 1차 평가자 → 관리자 제출 상태 초기화
       const updatedEvaluation = await this.wbsSelfEvaluationService.수정한다(
         evaluationId,
         { submittedToManager: false },
         resetBy,
       );
+
+      // 2. 승인 상태는 변경하지 않음 (반려 후 재제출 시 기존 승인 상태 유지)
+      this.logger.debug('승인 상태는 유지됨 (변경하지 않음)');
 
       this.logger.log('WBS 자기평가 초기화 완료', { evaluationId });
 

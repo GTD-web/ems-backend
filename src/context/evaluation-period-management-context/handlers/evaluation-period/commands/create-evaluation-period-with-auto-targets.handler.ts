@@ -66,10 +66,12 @@ export class CreateEvaluationPeriodWithAutoTargetsHandler
         `평가기간 생성 완료 - ID: ${evaluationPeriod.id}, 이름: ${evaluationPeriod.name}`,
       );
 
-      // 2. 활성 직원 조회
-      const activeEmployees = await this.queryBus.execute(new GetActiveEmployeesQuery());
+      // 2. 활성 직원 조회 (조회 제외된 직원도 포함하여 평가 대상자로 등록)
+      const activeEmployees = await this.queryBus.execute(
+        new GetActiveEmployeesQuery(true), // includeExcluded = true
+      );
 
-      this.logger.log(`활성 직원 수: ${activeEmployees.length}명`);
+      this.logger.log(`활성 직원 수: ${activeEmployees.length}명 (조회 제외된 직원 포함)`);
 
       // 3. 각 직원에 대해 평가 대상자 등록 + 1차 평가자 자동 할당
       let registeredTargetsCount = 0;

@@ -4,6 +4,7 @@ exports.RequestPeerEvaluation = RequestPeerEvaluation;
 exports.RequestPeerEvaluationToMultipleEvaluators = RequestPeerEvaluationToMultipleEvaluators;
 exports.RequestMultiplePeerEvaluations = RequestMultiplePeerEvaluations;
 exports.RequestPartLeaderPeerEvaluations = RequestPartLeaderPeerEvaluations;
+exports.RequestEvaluatorsPeerEvaluations = RequestEvaluatorsPeerEvaluations;
 exports.UpdatePeerEvaluation = UpdatePeerEvaluation;
 exports.SubmitPeerEvaluation = SubmitPeerEvaluation;
 exports.GetPeerEvaluations = GetPeerEvaluations;
@@ -242,6 +243,68 @@ function RequestPartLeaderPeerEvaluations() {
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.CREATED,
         description: '파트장들 간 동료평가 요청이 성공적으로 생성되었습니다.',
+        type: peer_evaluation_dto_1.BulkPeerEvaluationRequestResponseDto,
+    }), (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: '잘못된 요청 데이터입니다.',
+    }), (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: '평가기간을 찾을 수 없습니다.',
+    }));
+}
+function RequestEvaluatorsPeerEvaluations() {
+    return (0, common_1.applyDecorators)((0, common_1.Post)('requests/bulk/evaluators'), (0, common_1.HttpCode)(common_1.HttpStatus.CREATED), (0, swagger_1.ApiOperation)({
+        summary: '평가자들 간 동료평가 요청 (다대다)',
+        description: `지정된 평가자들이 지정된 피평가자들을 평가하도록 다대다 동료평가를 요청합니다.
+
+**동작:**
+- evaluatorIds와 evaluateeIds를 모두 필수로 제공
+- 각 평가자가 자기 자신을 제외한 모든 피평가자를 평가하도록 요청 생성
+- 모든 평가 상태는 PENDING으로 생성됨
+- questionIds 제공 시 모든 평가자에게 동일한 질문들에 대해 작성 요청
+- questionIds 생략 시 질문 없이 요청만 생성
+- comment 제공 시 모든 평가자에게 동일한 메시지 저장
+
+**사용 예시:**
+- 프로젝트 팀원들 간 상호 평가
+- 특정 부서원들 간 동료평가
+- 협업 그룹 내 평가
+
+**테스트 케이스:**
+- 기본 평가자 간 동료평가 요청을 생성할 수 있어야 한다
+- 요청 마감일을 포함하여 요청을 생성할 수 있어야 한다
+- 질문 ID 목록을 포함하여 요청을 생성할 수 있어야 한다
+- requestedBy를 포함하여 요청을 생성할 수 있어야 한다
+- requestedBy 없이 요청을 생성할 수 있어야 한다
+- 평가자가 1명이고 피평가자가 1명인 경우 평가 요청이 생성되지 않아야 한다 (동일인)
+- 평가자 2명과 피평가자 2명인 경우 적절한 개수의 평가 요청이 생성되어야 한다
+- 각 평가자가 자기 자신을 평가하는 요청은 생성되지 않아야 한다
+- 잘못된 형식의 periodId로 요청 시 400 에러가 발생해야 한다
+- periodId 누락 시 400 에러가 발생해야 한다
+- evaluatorIds 누락 시 400 에러가 발생해야 한다
+- evaluateeIds 누락 시 400 에러가 발생해야 한다
+- 빈 evaluatorIds 배열로 요청 시 400 에러가 발생해야 한다
+- 빈 evaluateeIds 배열로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 evaluatorIds로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 evaluateeIds로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 requestedBy로 요청 시 400 에러가 발생해야 한다
+- 잘못된 형식의 questionIds로 요청 시 400 에러가 발생해야 한다
+- 존재하지 않는 periodId로 요청 시 404 에러가 발생해야 한다
+- 존재하지 않는 evaluatorId 포함 시 해당 평가자는 건너뛰고 나머지만 생성해야 한다
+- 존재하지 않는 evaluateeId 포함 시 해당 피평가자는 건너뛰고 나머지만 생성해야 한다
+- 응답에 필수 필드가 모두 포함되어야 한다 (results, summary, message)
+- 응답의 results에 각 요청 결과가 포함되어야 한다
+- 응답의 summary에 요약 정보가 포함되어야 한다 (total, success, failed)
+- 응답의 IDs가 모두 유효한 UUID 형식이어야 한다
+- 생성된 모든 동료평가가 DB에 올바르게 저장되어야 한다
+- 생성된 모든 동료평가의 상태가 올바르게 설정되어야 한다
+- 생성 시 모든 평가에 createdAt과 updatedAt이 설정되어야 한다`,
+    }), (0, swagger_1.ApiBody)({
+        type: peer_evaluation_dto_1.RequestEvaluatorsPeerEvaluationsDto,
+        description: '평가자 간 동료평가 요청 정보 (다대다)',
+    }), (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.CREATED,
+        description: '평가자들 간 동료평가 요청이 성공적으로 생성되었습니다.',
         type: peer_evaluation_dto_1.BulkPeerEvaluationRequestResponseDto,
     }), (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,

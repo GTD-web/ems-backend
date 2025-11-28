@@ -2,10 +2,12 @@ import { EvaluationPeriodManagementContextService } from '@context/evaluation-pe
 import { EvaluationPeriodBusinessService } from '@business/evaluation-period/evaluation-period-business.service';
 import type { EvaluationPeriodDto } from '@domain/core/evaluation-period/evaluation-period.types';
 import { PaginationQueryDto } from '@interface/common/dto/evaluation-period/evaluation-management.dto';
+import type { GradeRangeResponseDto } from '@interface/common/dto/evaluation-period/evaluation-period-response.dto';
 export declare class EvaluatorEvaluationPeriodManagementController {
     private readonly evaluationPeriodBusinessService;
     private readonly evaluationPeriodManagementService;
     constructor(evaluationPeriodBusinessService: EvaluationPeriodBusinessService, evaluationPeriodManagementService: EvaluationPeriodManagementContextService);
+    getDefaultGradeRanges(): Promise<GradeRangeResponseDto[]>;
     getActiveEvaluationPeriods(): Promise<EvaluationPeriodDto[]>;
     getEvaluationPeriods(query: PaginationQueryDto): Promise<{
         items: EvaluationPeriodDto[];

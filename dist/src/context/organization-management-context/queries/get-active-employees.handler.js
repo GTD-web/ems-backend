@@ -14,6 +14,10 @@ const cqrs_1 = require("@nestjs/cqrs");
 const common_1 = require("@nestjs/common");
 const employee_service_1 = require("../../../domain/common/employee/employee.service");
 class GetActiveEmployeesQuery {
+    includeExcluded;
+    constructor(includeExcluded = false) {
+        this.includeExcluded = includeExcluded;
+    }
 }
 exports.GetActiveEmployeesQuery = GetActiveEmployeesQuery;
 let GetActiveEmployeesQueryHandler = class GetActiveEmployeesQueryHandler {
@@ -22,7 +26,9 @@ let GetActiveEmployeesQueryHandler = class GetActiveEmployeesQueryHandler {
         this.employeeService = employeeService;
     }
     async execute(query) {
-        const employees = await this.employeeService.findByStatus('재직중');
+        const employees = await this.employeeService.findByStatus('재직중', {
+            includeExcluded: query.includeExcluded,
+        });
         return employees.map((emp) => emp.DTO로_변환한다());
     }
 };

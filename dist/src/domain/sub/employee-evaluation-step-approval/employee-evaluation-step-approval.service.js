@@ -55,11 +55,14 @@ let EmployeeEvaluationStepApprovalService = EmployeeEvaluationStepApprovalServic
         }
     }
     async 저장한다(stepApproval) {
-        this.logger.log(`단계 승인 저장 - ID: ${stepApproval.id}`);
-        return await this.stepApprovalRepository.save(stepApproval);
+        this.logger.log(`[DEBUG] 단계 승인 저장 시작 - ID: ${stepApproval.id}, criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`);
+        const saved = await this.stepApprovalRepository.save(stepApproval);
+        this.logger.log(`[DEBUG] 단계 승인 저장 완료 - ID: ${saved.id}, criteriaSettingStatus: ${saved.criteriaSettingStatus}, selfEvaluationStatus: ${saved.selfEvaluationStatus}`);
+        return saved;
     }
     단계_상태를_변경한다(stepApproval, step, status, updatedBy) {
-        this.logger.log(`단계 상태 변경 - 단계: ${step}, 상태: ${status}, ID: ${stepApproval.id}`);
+        this.logger.log(`단계 상태 변경 시작 - 단계: ${step}, 상태: ${status}, ID: ${stepApproval.id}`);
+        this.logger.log(`[DEBUG] 변경 전 - criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`);
         switch (step) {
             case 'criteria':
                 this._평가기준설정_상태변경(stepApproval, status, updatedBy);
@@ -76,6 +79,8 @@ let EmployeeEvaluationStepApprovalService = EmployeeEvaluationStepApprovalServic
             default:
                 throw new employee_evaluation_step_approval_exceptions_1.InvalidStepTypeException(step);
         }
+        this.logger.log(`[DEBUG] 변경 후 - criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`);
+        this.logger.log(`단계 상태 변경 완료 - 단계: ${step}, 새 상태: ${status}`);
     }
     async 삭제한다(id, deletedBy) {
         this.logger.log(`단계 승인 삭제 - ID: ${id}`);

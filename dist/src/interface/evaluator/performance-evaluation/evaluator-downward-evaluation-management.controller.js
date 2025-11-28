@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var EvaluatorDownwardEvaluationManagementController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.EvaluatorDownwardEvaluationManagementController = void 0;
 const current_user_decorator_1 = require("../../common/decorators/current-user.decorator");
@@ -23,9 +24,10 @@ const downward_evaluation_business_service_1 = require("../../../business/downwa
 const downward_evaluation_api_decorators_1 = require("../../common/decorators/performance-evaluation/downward-evaluation-api.decorators");
 const downward_evaluation_dto_1 = require("../../common/dto/performance-evaluation/downward-evaluation.dto");
 const bulk_submit_downward_evaluation_query_dto_1 = require("../../common/dto/performance-evaluation/bulk-submit-downward-evaluation-query.dto");
-let EvaluatorDownwardEvaluationManagementController = class EvaluatorDownwardEvaluationManagementController {
+let EvaluatorDownwardEvaluationManagementController = EvaluatorDownwardEvaluationManagementController_1 = class EvaluatorDownwardEvaluationManagementController {
     performanceEvaluationService;
     downwardEvaluationBusinessService;
+    logger = new common_1.Logger(EvaluatorDownwardEvaluationManagementController_1.name);
     constructor(performanceEvaluationService, downwardEvaluationBusinessService) {
         this.performanceEvaluationService = performanceEvaluationService;
         this.downwardEvaluationBusinessService = downwardEvaluationBusinessService;
@@ -82,11 +84,45 @@ let EvaluatorDownwardEvaluationManagementController = class EvaluatorDownwardEva
         const evaluatorId = submitDto.evaluatorId;
         const resetBy = user.id;
         await this.performanceEvaluationService.일차_하향평가를_초기화한다(evaluateeId, periodId, wbsId, evaluatorId, resetBy);
+        return {
+            message: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+        };
     }
     async resetSecondaryDownwardEvaluation(evaluateeId, periodId, wbsId, submitDto, user) {
         const evaluatorId = submitDto.evaluatorId;
         const resetBy = user.id;
-        await this.performanceEvaluationService.이차_하향평가를_초기화한다(evaluateeId, periodId, wbsId, evaluatorId, resetBy);
+        this.logger.log('2차 하향평가 미제출 상태 변경 API 호출', {
+            evaluateeId,
+            periodId,
+            wbsId,
+            evaluatorId,
+            resetBy,
+            userId: user.id,
+        });
+        try {
+            await this.performanceEvaluationService.이차_하향평가를_초기화한다(evaluateeId, periodId, wbsId, evaluatorId, resetBy);
+            this.logger.log('2차 하향평가 미제출 상태 변경 성공', {
+                evaluateeId,
+                periodId,
+                wbsId,
+                evaluatorId,
+            });
+            return {
+                message: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+            };
+        }
+        catch (error) {
+            this.logger.error('2차 하향평가 미제출 상태 변경 실패', error.stack, {
+                evaluateeId,
+                periodId,
+                wbsId,
+                evaluatorId,
+                resetBy,
+                errorName: error.name,
+                errorMessage: error.message,
+            });
+            throw error;
+        }
     }
     async submitDownwardEvaluation(id, user) {
         const submittedBy = user.id;
@@ -225,7 +261,7 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], EvaluatorDownwardEvaluationManagementController.prototype, "getDownwardEvaluationDetail", null);
-exports.EvaluatorDownwardEvaluationManagementController = EvaluatorDownwardEvaluationManagementController = __decorate([
+exports.EvaluatorDownwardEvaluationManagementController = EvaluatorDownwardEvaluationManagementController = EvaluatorDownwardEvaluationManagementController_1 = __decorate([
     (0, swagger_1.ApiTags)('C-3. 평가자 - 성과평가 - 하향평가'),
     (0, swagger_1.ApiBearerAuth)('Bearer'),
     (0, common_1.Controller)('evaluator/performance-evaluation/downward-evaluations'),

@@ -163,8 +163,8 @@ export class DownwardEvaluationApiClient {
     periodId: string;
     wbsId: string;
     evaluatorId: string;
-  }): Promise<void> {
-    await this.testSuite
+  }): Promise<{ message: string }> {
+    const response = await this.testSuite
       .request()
       .post(
         `/admin/performance-evaluation/downward-evaluations/evaluatee/${config.evaluateeId}/period/${config.periodId}/wbs/${config.wbsId}/primary/reset`,
@@ -173,6 +173,8 @@ export class DownwardEvaluationApiClient {
         evaluatorId: config.evaluatorId,
       })
       .expect(200);
+
+    return response.body;
   }
 
   /**
@@ -183,8 +185,8 @@ export class DownwardEvaluationApiClient {
     periodId: string;
     wbsId: string;
     evaluatorId: string;
-  }): Promise<void> {
-    await this.testSuite
+  }): Promise<{ message: string }> {
+    const response = await this.testSuite
       .request()
       .post(
         `/admin/performance-evaluation/downward-evaluations/evaluatee/${config.evaluateeId}/period/${config.periodId}/wbs/${config.wbsId}/secondary/reset`,
@@ -193,6 +195,8 @@ export class DownwardEvaluationApiClient {
         evaluatorId: config.evaluatorId,
       })
       .expect(200);
+
+    return response.body;
   }
 
   /**

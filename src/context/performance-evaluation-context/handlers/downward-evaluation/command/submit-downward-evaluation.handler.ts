@@ -1,5 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { DownwardEvaluationService } from '@domain/core/downward-evaluation/downward-evaluation.service';
 import {
   DownwardEvaluationNotFoundException,
@@ -7,6 +9,9 @@ import {
   DownwardEvaluationValidationException,
 } from '@domain/core/downward-evaluation/downward-evaluation.exceptions';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service';
+import { StepApprovalStatus } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.types';
 
 /**
  * ?�향?��? ?�출 커맨??
@@ -31,6 +36,9 @@ export class SubmitDownwardEvaluationHandler
   constructor(
     private readonly downwardEvaluationService: DownwardEvaluationService,
     private readonly transactionManager: TransactionManagerService,
+    @InjectRepository(EvaluationPeriodEmployeeMapping)
+    private readonly mappingRepository: Repository<EvaluationPeriodEmployeeMapping>,
+    private readonly stepApprovalService: EmployeeEvaluationStepApprovalService,
   ) {}
 
   async execute(command: SubmitDownwardEvaluationCommand): Promise<void> {
@@ -67,6 +75,58 @@ export class SubmitDownwardEvaluationHandler
         { isCompleted: true },
         submittedBy,
       );
+
+      // 단계 승인 상태를 pending으로 변경
+      this.logger.debug(
+        `단계 승인 상태를 pending으로 변경 시작 - 피평가자: ${evaluation.employeeId}, 평가기간: ${evaluation.periodId}, 평가유형: ${evaluation.evaluationType}`,
+      );
+
+      const mapping = await this.mappingRepository.findOne({
+        where: {
+          evaluationPeriodId: evaluation.periodId,
+          employeeId: evaluation.employeeId,
+          deletedAt: null as any,
+        },
+      });
+
+      if (mapping) {
+        let stepApproval =
+          await this.stepApprovalService.맵핑ID로_조회한다(mapping.id);
+
+        // 단계 승인이 없으면 생성
+        if (!stepApproval) {
+          this.logger.log(
+            `단계 승인 정보가 없어 새로 생성합니다. - 맵핑 ID: ${mapping.id}`,
+          );
+          stepApproval = await this.stepApprovalService.생성한다({
+            evaluationPeriodEmployeeMappingId: mapping.id,
+            createdBy: submittedBy,
+          });
+        }
+
+        // 평가 유형에 따라 적절한 단계의 상태를 pending으로 변경
+        if (evaluation.evaluationType === 'primary') {
+          this.stepApprovalService.단계_상태를_변경한다(
+            stepApproval,
+            'primary',
+            StepApprovalStatus.PENDING,
+            submittedBy,
+          );
+        } else if (evaluation.evaluationType === 'secondary') {
+          this.stepApprovalService.단계_상태를_변경한다(
+            stepApproval,
+            'secondary',
+            StepApprovalStatus.PENDING,
+            submittedBy,
+          );
+        }
+
+        await this.stepApprovalService.저장한다(stepApproval);
+
+        this.logger.debug(
+          `단계 승인 상태를 pending으로 변경 완료 - 피평가자: ${evaluation.employeeId}, 평가유형: ${evaluation.evaluationType}`,
+        );
+      }
 
       this.logger.log('하향평가 제출 완료', { evaluationId });
     });

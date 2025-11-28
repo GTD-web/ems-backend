@@ -20,4 +20,5 @@ __exportStar(require("./parse-uuid.decorator"), exports);
 __exportStar(require("./public.decorator"), exports);
 __exportStar(require("./current-user.decorator"), exports);
 __exportStar(require("./roles.decorator"), exports);
+__exportStar(require("./project/project-api.decorators"), exports);
 //# sourceMappingURL=index.js.map

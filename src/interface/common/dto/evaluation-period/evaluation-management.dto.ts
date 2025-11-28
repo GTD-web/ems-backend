@@ -341,6 +341,21 @@ export class UpdateGradeRangesApiDto {
 }
 
 /**
+ * 기본 등급 구간 변경 API DTO
+ */
+export class UpdateDefaultGradeRangesApiDto {
+  @ApiProperty({
+    description: '기본 등급 구간 목록',
+    type: [CreateGradeRangeApiDto],
+  })
+  @IsArray({ message: '등급 구간 목록은 배열이어야 합니다.' })
+  @ArrayNotEmpty({ message: '등급 구간 목록은 최소 1개 이상이어야 합니다.' })
+  @ValidateNested({ each: true })
+  @Type(() => CreateGradeRangeApiDto)
+  gradeRanges: CreateGradeRangeApiDto[];
+}
+
+/**
  * 수동 허용 설정 DTO
  */
 export class ManualPermissionSettingDto {

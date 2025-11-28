@@ -1,7 +1,10 @@
 import { ICommandHandler } from '@nestjs/cqrs';
+import { Repository } from 'typeorm';
 import { WbsSelfEvaluationService } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.service';
 import { EvaluationWbsAssignmentService } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.service';
 import { TransactionManagerService } from '@libs/database/transaction-manager.service';
+import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
+import { EmployeeEvaluationStepApprovalService } from '@domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service';
 export declare class ResetWbsSelfEvaluationsByProjectCommand {
     readonly employeeId: string;
     readonly periodId: string;
@@ -33,7 +36,9 @@ export declare class ResetWbsSelfEvaluationsByProjectHandler implements ICommand
     private readonly wbsSelfEvaluationService;
     private readonly evaluationWbsAssignmentService;
     private readonly transactionManager;
+    private readonly mappingRepository;
+    private readonly stepApprovalService;
     private readonly logger;
-    constructor(wbsSelfEvaluationService: WbsSelfEvaluationService, evaluationWbsAssignmentService: EvaluationWbsAssignmentService, transactionManager: TransactionManagerService);
+    constructor(wbsSelfEvaluationService: WbsSelfEvaluationService, evaluationWbsAssignmentService: EvaluationWbsAssignmentService, transactionManager: TransactionManagerService, mappingRepository: Repository<EvaluationPeriodEmployeeMapping>, stepApprovalService: EmployeeEvaluationStepApprovalService);
     execute(command: ResetWbsSelfEvaluationsByProjectCommand): Promise<ResetWbsSelfEvaluationsByProjectResponse>;
 }

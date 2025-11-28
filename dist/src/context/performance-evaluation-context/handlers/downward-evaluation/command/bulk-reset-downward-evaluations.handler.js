@@ -22,6 +22,8 @@ const downward_evaluation_entity_1 = require("../../../../../domain/core/downwar
 const downward_evaluation_service_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.service");
 const downward_evaluation_exceptions_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.exceptions");
 const transaction_manager_service_1 = require("../../../../../../libs/database/transaction-manager.service");
+const evaluation_period_employee_mapping_entity_1 = require("../../../../../domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity");
+const employee_evaluation_step_approval_service_1 = require("../../../../../domain/sub/employee-evaluation-step-approval/employee-evaluation-step-approval.service");
 class BulkResetDownwardEvaluationsCommand {
     evaluatorId;
     evaluateeId;
@@ -39,13 +41,17 @@ class BulkResetDownwardEvaluationsCommand {
 exports.BulkResetDownwardEvaluationsCommand = BulkResetDownwardEvaluationsCommand;
 let BulkResetDownwardEvaluationsHandler = BulkResetDownwardEvaluationsHandler_1 = class BulkResetDownwardEvaluationsHandler {
     downwardEvaluationRepository;
+    mappingRepository;
     downwardEvaluationService;
     transactionManager;
+    stepApprovalService;
     logger = new common_1.Logger(BulkResetDownwardEvaluationsHandler_1.name);
-    constructor(downwardEvaluationRepository, downwardEvaluationService, transactionManager) {
+    constructor(downwardEvaluationRepository, mappingRepository, downwardEvaluationService, transactionManager, stepApprovalService) {
         this.downwardEvaluationRepository = downwardEvaluationRepository;
+        this.mappingRepository = mappingRepository;
         this.downwardEvaluationService = downwardEvaluationService;
         this.transactionManager = transactionManager;
+        this.stepApprovalService = stepApprovalService;
     }
     async execute(command) {
         const { evaluatorId, evaluateeId, periodId, evaluationType, resetBy } = command;
@@ -90,6 +96,9 @@ let BulkResetDownwardEvaluationsHandler = BulkResetDownwardEvaluationsHandler_1 
                     this.logger.error(`하향평가 초기화 실패: ${evaluation.id}`, error instanceof Error ? error.stack : undefined);
                 }
             }
+            if (resetIds.length > 0) {
+                this.logger.debug(`승인 상태는 유지됨 - 피평가자: ${evaluateeId}, 평가기간: ${periodId}, 평가유형: ${evaluationType}`);
+            }
             const result = {
                 resetCount: resetIds.length,
                 skippedCount: skippedIds.length,
@@ -111,8 +120,11 @@ exports.BulkResetDownwardEvaluationsHandler = BulkResetDownwardEvaluationsHandle
     (0, common_1.Injectable)(),
     (0, cqrs_1.CommandHandler)(BulkResetDownwardEvaluationsCommand),
     __param(0, (0, typeorm_1.InjectRepository)(downward_evaluation_entity_1.DownwardEvaluation)),
+    __param(1, (0, typeorm_1.InjectRepository)(evaluation_period_employee_mapping_entity_1.EvaluationPeriodEmployeeMapping)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         downward_evaluation_service_1.DownwardEvaluationService,
-        transaction_manager_service_1.TransactionManagerService])
+        transaction_manager_service_1.TransactionManagerService,
+        employee_evaluation_step_approval_service_1.EmployeeEvaluationStepApprovalService])
 ], BulkResetDownwardEvaluationsHandler);
 //# sourceMappingURL=bulk-reset-downward-evaluations.handler.js.map

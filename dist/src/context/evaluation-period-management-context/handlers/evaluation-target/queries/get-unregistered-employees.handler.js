@@ -47,7 +47,7 @@ let GetUnregisteredEmployeesHandler = class GetUnregisteredEmployeesHandler {
             .then((results) => results.map((result) => result.employeeId));
         const unregisteredEmployeesQuery = this.employeeRepository
             .createQueryBuilder('employee')
-            .leftJoin(department_entity_1.Department, 'department', 'department.externalId = employee.departmentId AND department.deletedAt IS NULL')
+            .leftJoin(department_entity_1.Department, 'department', 'department.id::text = employee.departmentId AND department.deletedAt IS NULL')
             .select([
             'employee.id AS employee_id',
             'employee.employeeNumber AS employee_employeenumber',
@@ -56,7 +56,7 @@ let GetUnregisteredEmployeesHandler = class GetUnregisteredEmployeesHandler {
             'employee.phoneNumber AS employee_phonenumber',
             'employee.status AS employee_status',
             'employee.departmentId AS employee_departmentid',
-            'department.name AS department_name',
+            'COALESCE(department.name, employee.departmentName) AS department_name',
             'employee.rankName AS employee_rankname',
         ])
             .where('employee.deletedAt IS NULL')

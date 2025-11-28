@@ -917,7 +917,7 @@ export class WbsAssignmentBusinessService {
     console.log('🔍 프로젝트 정보:', {
       id: project.id,
       name: project.name,
-      managerId: project.managerId,
+      managerId: project.manager?.id,
     });
 
     // 3. 1차 평가자 구성 (기존 할당된 평가자 우선, 없으면 담당 평가자)
@@ -955,23 +955,69 @@ export class WbsAssignmentBusinessService {
 
     // 4. 2차 평가자 구성 (프로젝트 PM) - Upsert 방식
     // 제약 조건 제거: PM이 있으면 항상 2차 평가자로 구성
-    if (project.managerId) {
-      this.logger.log('2차 평가자(프로젝트 PM) 구성', {
-        evaluatorId: project.managerId,
-        employeeId,
-      });
+    const projectManagerExternalId = project.managerId;
+    const projectManagerId = project.manager?.id;
 
-      await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
-        employeeId,
-        wbsItemId,
-        periodId,
-        project.managerId,
-        createdBy,
+    // projectManagerId가 있으면 사용, 없으면 externalId로 Employee 조회
+    let evaluatorId: string | null = null;
+    if (projectManagerId) {
+      evaluatorId = projectManagerId;
+    } else if (projectManagerExternalId) {
+      // externalId로 Employee 조회하여 id 획득
+      const managerEmployee = await this.employeeService.findByExternalId(
+        projectManagerExternalId,
       );
+      if (managerEmployee) {
+        evaluatorId = managerEmployee.id;
+        this.logger.log('프로젝트 PM externalId를 Employee id로 변환', {
+          externalId: projectManagerExternalId,
+          employeeId: managerEmployee.id,
+        });
+      } else {
+        this.logger.warn('프로젝트 PM Employee를 찾을 수 없습니다', {
+          externalId: projectManagerExternalId,
+        });
+      }
+    }
+
+    if (evaluatorId) {
+      // PM이 관리자와 같은 경우 2차 평가자로 설정하지 않음
+      // employee.managerId는 externalId이므로 비교 시 주의 필요
+      const employeeManager = employee.managerId
+        ? await this.employeeService.findByExternalId(employee.managerId)
+        : null;
+      const employeeManagerId = employeeManager?.id;
+
+      if (!employeeManagerId || evaluatorId !== employeeManagerId) {
+        this.logger.log('2차 평가자(프로젝트 PM) 구성', {
+          evaluatorId,
+          employeeId,
+        });
+
+        await this.evaluationCriteriaManagementService.이차_평가자를_구성한다(
+          employeeId,
+          wbsItemId,
+          periodId,
+          evaluatorId,
+          createdBy,
+        );
+      } else {
+        this.logger.log(
+          '프로젝트 PM이 관리자와 동일하여 2차 평가자로 설정하지 않습니다',
+          {
+            projectId,
+            evaluatorId,
+          },
+        );
+      }
     } else {
-      this.logger.warn('프로젝트 PM(managerId)이 설정되지 않았습니다', {
-        projectId,
-      });
+      this.logger.warn(
+        '프로젝트 PM(managerId)이 설정되지 않았거나 Employee를 찾을 수 없습니다',
+        {
+          projectId,
+          managerId: projectManagerExternalId,
+        },
+      );
     }
 
     this.logger.log('평가라인 자동 구성 완료', {
@@ -979,7 +1025,9 @@ export class WbsAssignmentBusinessService {
       wbsItemId,
       primaryEvaluator: employee.managerId,
       secondaryEvaluator:
-        project.managerId !== employee.managerId ? project.managerId : null,
+        projectManagerId && projectManagerId !== employee.managerId
+          ? projectManagerId
+          : null,
     });
   }
 

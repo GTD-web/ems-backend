@@ -30,7 +30,7 @@ __decorate([
         description: '최소 범위',
         example: 90,
         minimum: 0,
-        maximum: 100,
+        maximum: 200,
     }),
     __metadata("design:type", Number)
 ], GradeRangeResponseDto.prototype, "minRange", void 0);
@@ -39,7 +39,7 @@ __decorate([
         description: '최대 범위',
         example: 100,
         minimum: 0,
-        maximum: 100,
+        maximum: 200,
     }),
     __metadata("design:type", Number)
 ], GradeRangeResponseDto.prototype, "maxRange", void 0);

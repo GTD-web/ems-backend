@@ -88,8 +88,14 @@ export class EmployeeEvaluationStepApprovalService
   async 저장한다(
     stepApproval: EmployeeEvaluationStepApproval,
   ): Promise<EmployeeEvaluationStepApproval> {
-    this.logger.log(`단계 승인 저장 - ID: ${stepApproval.id}`);
-    return await this.stepApprovalRepository.save(stepApproval);
+    this.logger.log(
+      `[DEBUG] 단계 승인 저장 시작 - ID: ${stepApproval.id}, criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`,
+    );
+    const saved = await this.stepApprovalRepository.save(stepApproval);
+    this.logger.log(
+      `[DEBUG] 단계 승인 저장 완료 - ID: ${saved.id}, criteriaSettingStatus: ${saved.criteriaSettingStatus}, selfEvaluationStatus: ${saved.selfEvaluationStatus}`,
+    );
+    return saved;
   }
 
   /**
@@ -102,7 +108,10 @@ export class EmployeeEvaluationStepApprovalService
     updatedBy: string,
   ): void {
     this.logger.log(
-      `단계 상태 변경 - 단계: ${step}, 상태: ${status}, ID: ${stepApproval.id}`,
+      `단계 상태 변경 시작 - 단계: ${step}, 상태: ${status}, ID: ${stepApproval.id}`,
+    );
+    this.logger.log(
+      `[DEBUG] 변경 전 - criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`,
     );
 
     switch (step) {
@@ -121,6 +130,11 @@ export class EmployeeEvaluationStepApprovalService
       default:
         throw new InvalidStepTypeException(step);
     }
+
+    this.logger.log(
+      `[DEBUG] 변경 후 - criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`,
+    );
+    this.logger.log(`단계 상태 변경 완료 - 단계: ${step}, 새 상태: ${status}`);
   }
 
   /**

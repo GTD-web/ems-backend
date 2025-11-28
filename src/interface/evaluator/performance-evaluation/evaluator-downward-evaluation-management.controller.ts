@@ -1,7 +1,7 @@
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { CurrentUser } from '@interface/common/decorators/current-user.decorator';
 import { ParseUUID } from '@interface/common/decorators/parse-uuid.decorator';
-import { Body, Controller, Query } from '@nestjs/common';
+import { Body, Controller, Logger, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   GetDownwardEvaluationDetailQuery,
@@ -29,6 +29,7 @@ import {
   DownwardEvaluationFilterDto,
   DownwardEvaluationListResponseDto,
   DownwardEvaluationResponseDto,
+  ResetDownwardEvaluationResponseDto,
   SubmitDownwardEvaluationDto,
 } from '@interface/common/dto/performance-evaluation/downward-evaluation.dto';
 import { BulkSubmitDownwardEvaluationQueryDto } from '@interface/common/dto/performance-evaluation/bulk-submit-downward-evaluation-query.dto';
@@ -42,6 +43,10 @@ import { BulkSubmitDownwardEvaluationQueryDto } from '@interface/common/dto/perf
 @ApiBearerAuth('Bearer')
 @Controller('evaluator/performance-evaluation/downward-evaluations')
 export class EvaluatorDownwardEvaluationManagementController {
+  private readonly logger = new Logger(
+    EvaluatorDownwardEvaluationManagementController.name,
+  );
+
   constructor(
     private readonly performanceEvaluationService: PerformanceEvaluationService,
     private readonly downwardEvaluationBusinessService: DownwardEvaluationBusinessService,
@@ -171,7 +176,7 @@ export class EvaluatorDownwardEvaluationManagementController {
     @ParseUUID('wbsId') wbsId: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
     @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
+  ): Promise<ResetDownwardEvaluationResponseDto> {
     const evaluatorId = submitDto.evaluatorId;
     const resetBy = user.id;
     await this.performanceEvaluationService.일차_하향평가를_초기화한다(
@@ -181,6 +186,10 @@ export class EvaluatorDownwardEvaluationManagementController {
       evaluatorId,
       resetBy,
     );
+
+    return {
+      message: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+    };
   }
 
   /**
@@ -193,16 +202,50 @@ export class EvaluatorDownwardEvaluationManagementController {
     @ParseUUID('wbsId') wbsId: string,
     @Body() submitDto: SubmitDownwardEvaluationDto,
     @CurrentUser() user: AuthenticatedUser,
-  ): Promise<void> {
+  ): Promise<ResetDownwardEvaluationResponseDto> {
     const evaluatorId = submitDto.evaluatorId;
     const resetBy = user.id;
-    await this.performanceEvaluationService.이차_하향평가를_초기화한다(
+
+    this.logger.log('2차 하향평가 미제출 상태 변경 API 호출', {
       evaluateeId,
       periodId,
       wbsId,
       evaluatorId,
       resetBy,
-    );
+      userId: user.id,
+    });
+
+    try {
+      await this.performanceEvaluationService.이차_하향평가를_초기화한다(
+        evaluateeId,
+        periodId,
+        wbsId,
+        evaluatorId,
+        resetBy,
+      );
+
+      this.logger.log('2차 하향평가 미제출 상태 변경 성공', {
+        evaluateeId,
+        periodId,
+        wbsId,
+        evaluatorId,
+      });
+
+      return {
+        message: '2차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+      };
+    } catch (error) {
+      this.logger.error('2차 하향평가 미제출 상태 변경 실패', error.stack, {
+        evaluateeId,
+        periodId,
+        wbsId,
+        evaluatorId,
+        resetBy,
+        errorName: error.name,
+        errorMessage: error.message,
+      });
+      throw error;
+    }
   }
 
   /**

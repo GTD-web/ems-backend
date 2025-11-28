@@ -70,6 +70,27 @@ export class PeerEvaluationApiClient {
     return response.body;
   }
 
+  /**
+   * 평가자들 간 동료평가 요청 (다대다)
+   */
+  async requestEvaluatorsPeerEvaluations(data: {
+    evaluatorIds: string[];
+    evaluateeIds: string[];
+    periodId: string;
+    requestDeadline?: string;
+    questionIds?: string[];
+    comment?: string;
+    requestedBy?: string;
+  }) {
+    const response = await this.testSuite
+      .request()
+      .post('/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators')
+      .send(data)
+      .expect(201);
+
+    return response.body;
+  }
+
   // ==================== 동료평가 제출 ====================
 
   /**

@@ -11,6 +11,8 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { Public } from '@interface/common/decorators/public.decorator';
 import { EvaluationPeriodAutoPhaseService } from '@domain/core/evaluation-period/evaluation-period-auto-phase.service';
+import { EvaluationPeriodService } from '@domain/core/evaluation-period/evaluation-period.service';
+import { EvaluationPeriodStatus } from '@domain/core/evaluation-period/evaluation-period.types';
 import { EmployeeSyncService } from '@context/organization-management-context/employee-sync.service';
 import { DepartmentSyncService } from '@context/organization-management-context/department-sync.service';
 
@@ -28,29 +30,10 @@ export class CronController {
 
   constructor(
     private readonly evaluationPeriodAutoPhaseService: EvaluationPeriodAutoPhaseService,
+    private readonly evaluationPeriodService: EvaluationPeriodService,
     private readonly employeeSyncService: EmployeeSyncService,
     private readonly departmentSyncService: DepartmentSyncService,
-    private readonly configService: ConfigService,
   ) {}
-
-  /**
-   * Vercel Cron Secret 검증
-   */
-  private validateCronSecret(authHeader: string | undefined): void {
-    const cronSecret = this.configService.get<string>('CRON_SECRET');
-    
-    if (!cronSecret) {
-      this.logger.warn('CRON_SECRET이 설정되지 않았습니다. 보안을 위해 설정을 권장합니다.');
-      return; // CRON_SECRET이 없으면 검증을 건너뜀 (개발 환경)
-    }
-
-    const expectedAuth = `Bearer ${cronSecret}`;
-    
-    if (authHeader !== expectedAuth) {
-      this.logger.warn(`잘못된 크론 시크릿: ${authHeader}`);
-      throw new UnauthorizedException('Invalid cron secret');
-    }
-  }
 
   /**
    * 평가기간 자동 단계 변경 크론 작업
@@ -70,20 +53,83 @@ export class CronController {
     status: 401,
     description: '인증 실패 (잘못된 크론 시크릿)',
   })
-  async triggerEvaluationPeriodAutoPhase(
-    @Headers('authorization') authHeader: string | undefined,
-  ) {
-    this.validateCronSecret(authHeader);
-
-    const isVercel = !!this.configService.get('VERCEL');
-    
-    if (!isVercel) {
-      this.logger.warn('이 엔드포인트는 Vercel 환경에서만 사용됩니다.');
-      return { message: 'Vercel 환경이 아닙니다.' };
-    }
-
+  async triggerEvaluationPeriodAutoPhase() {
     try {
-      const count = await this.evaluationPeriodAutoPhaseService.autoPhaseTransition();
+      // 현재 서버 시간 (UTC) 로그 출력
+      const now = new Date();
+      const nowUTC = now.toISOString();
+      this.logger.log(
+        `[평가기간 자동 단계 변경] 현재 서버 시간 (UTC): ${nowUTC}`,
+      );
+
+      // 진행 중인 평가기간 조회 및 정보 로그 출력
+      const activePeriods = await this.evaluationPeriodService.전체_조회한다();
+      const inProgressPeriods = activePeriods.filter(
+        (period) => period.status === EvaluationPeriodStatus.IN_PROGRESS,
+      );
+
+      this.logger.log(
+        `[평가기간 자동 단계 변경] 진행 중인 평가기간 수: ${inProgressPeriods.length}개`,
+      );
+
+      // 각 평가기간의 시간 정보 로그 출력
+      for (const period of inProgressPeriods) {
+        const periodInfo = {
+          id: period.id,
+          name: period.name,
+          startDate: period.startDate?.toISOString() || 'N/A',
+          currentPhase: period.currentPhase || 'N/A',
+          evaluationSetupDeadline:
+            period.evaluationSetupDeadline?.toISOString() || 'N/A',
+          performanceDeadline:
+            period.performanceDeadline?.toISOString() || 'N/A',
+          selfEvaluationDeadline:
+            period.selfEvaluationDeadline?.toISOString() || 'N/A',
+          peerEvaluationDeadline:
+            period.peerEvaluationDeadline?.toISOString() || 'N/A',
+        };
+
+        this.logger.log(
+          `[평가기간 자동 단계 변경] 평가기간 정보 - ID: ${periodInfo.id}, 이름: ${periodInfo.name}, 시작일: ${periodInfo.startDate}, 현재 단계: ${periodInfo.currentPhase}, 평가설정 마감일: ${periodInfo.evaluationSetupDeadline}, 업무수행 마감일: ${periodInfo.performanceDeadline}, 자기평가 마감일: ${periodInfo.selfEvaluationDeadline}, 동료평가 마감일: ${periodInfo.peerEvaluationDeadline}`,
+        );
+      }
+
+      // 단계 전이 실행
+      const count =
+        await this.evaluationPeriodAutoPhaseService.autoPhaseTransition();
+
+      // 전이 후 상태 로그 출력
+      if (count > 0) {
+        this.logger.log(
+          `[평가기간 자동 단계 변경] ${count}개 평가기간의 단계가 전이되었습니다.`,
+        );
+
+        // 전이된 평가기간의 최종 상태 로그 출력
+        const updatedPeriods =
+          await this.evaluationPeriodService.전체_조회한다();
+        const updatedInProgressPeriods = updatedPeriods.filter(
+          (period) => period.status === EvaluationPeriodStatus.IN_PROGRESS,
+        );
+
+        for (const period of updatedInProgressPeriods) {
+          if (
+            inProgressPeriods.find((p) => p.id === period.id)?.currentPhase !==
+            period.currentPhase
+          ) {
+            const beforePhase = inProgressPeriods.find(
+              (p) => p.id === period.id,
+            )?.currentPhase;
+            this.logger.log(
+              `[평가기간 자동 단계 변경] 평가기간 ${period.id} (${period.name}) 단계 변경됨: ${beforePhase} → ${period.currentPhase}`,
+            );
+          }
+        }
+      } else {
+        this.logger.log(
+          `[평가기간 자동 단계 변경] 전이된 평가기간이 없습니다.`,
+        );
+      }
+
       return {
         success: true,
         message: `평가기간 자동 단계 변경 완료: ${count}개 평가기간 전이됨`,
@@ -113,18 +159,7 @@ export class CronController {
     status: 401,
     description: '인증 실패 (잘못된 크론 시크릿)',
   })
-  async triggerEmployeeSync(
-    @Headers('authorization') authHeader: string | undefined,
-  ) {
-    this.validateCronSecret(authHeader);
-
-    const isVercel = !!this.configService.get('VERCEL');
-    
-    if (!isVercel) {
-      this.logger.warn('이 엔드포인트는 Vercel 환경에서만 사용됩니다.');
-      return { message: 'Vercel 환경이 아닙니다.' };
-    }
-
+  async triggerEmployeeSync() {
     try {
       await this.employeeSyncService.scheduledSync();
       return {
@@ -155,18 +190,7 @@ export class CronController {
     status: 401,
     description: '인증 실패 (잘못된 크론 시크릿)',
   })
-  async triggerDepartmentSync(
-    @Headers('authorization') authHeader: string | undefined,
-  ) {
-    this.validateCronSecret(authHeader);
-
-    const isVercel = !!this.configService.get('VERCEL');
-    
-    if (!isVercel) {
-      this.logger.warn('이 엔드포인트는 Vercel 환경에서만 사용됩니다.');
-      return { message: 'Vercel 환경이 아닙니다.' };
-    }
-
+  async triggerDepartmentSync() {
     try {
       await this.departmentSyncService.scheduledSync();
       return {
@@ -178,6 +202,4 @@ export class CronController {
       throw error;
     }
   }
-
 }
-

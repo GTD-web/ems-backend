@@ -5,6 +5,8 @@ import { Repository, IsNull } from 'typeorm';
 import { EvaluationPeriodEmployeeMapping } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { Employee } from '@domain/common/employee/employee.entity';
+import { Project } from '@domain/common/project/project.entity';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
 import { WbsEvaluationCriteria } from '@domain/core/wbs-evaluation-criteria/wbs-evaluation-criteria.entity';
@@ -193,23 +195,43 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         return null;
       }
 
-      // 2. 프로젝트 할당 수 조회
-      const projectCount = await this.projectAssignmentRepository.count({
-        where: {
+      // 2. 프로젝트 할당 수 조회 (소프트 딜리트된 프로젝트 제외)
+      const projectCount = await this.projectAssignmentRepository
+        .createQueryBuilder('assignment')
+        .leftJoin(
+          Project,
+          'project',
+          'project.id = assignment.projectId AND project.deletedAt IS NULL',
+        )
+        .where('assignment.periodId = :periodId', {
           periodId: evaluationPeriodId,
-          employeeId: employeeId,
-          deletedAt: IsNull(),
-        },
-      });
+        })
+        .andWhere('assignment.employeeId = :employeeId', { employeeId })
+        .andWhere('assignment.deletedAt IS NULL')
+        .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
+        .getCount();
 
-      // 3. WBS 할당 수 조회
-      const wbsCount = await this.wbsAssignmentRepository.count({
-        where: {
+      // 3. WBS 할당 수 조회 (소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
+      const wbsCount = await this.wbsAssignmentRepository
+        .createQueryBuilder('assignment')
+        .leftJoin(
+          EvaluationProjectAssignment,
+          'projectAssignment',
+          'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+        )
+        .leftJoin(
+          Project,
+          'project',
+          'project.id = assignment.projectId AND project.deletedAt IS NULL',
+        )
+        .where('assignment.periodId = :periodId', {
           periodId: evaluationPeriodId,
-          employeeId: employeeId,
-          deletedAt: IsNull(),
-        },
-      });
+        })
+        .andWhere('assignment.employeeId = :employeeId', { employeeId })
+        .andWhere('assignment.deletedAt IS NULL')
+        .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
+        .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 카운트
+        .getCount();
 
       // 4. 평가항목 상태 계산
       const evaluationCriteriaStatus = 평가항목_상태를_계산한다(
@@ -217,15 +239,28 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         wbsCount,
       );
 
-      // 5. 할당된 WBS 목록 조회
-      const assignedWbsList = await this.wbsAssignmentRepository.find({
-        where: {
+      // 5. 할당된 WBS 목록 조회 (소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
+      const assignedWbsList = await this.wbsAssignmentRepository
+        .createQueryBuilder('assignment')
+        .select(['assignment.wbsItemId'])
+        .leftJoin(
+          EvaluationProjectAssignment,
+          'projectAssignment',
+          'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+        )
+        .leftJoin(
+          Project,
+          'project',
+          'project.id = assignment.projectId AND project.deletedAt IS NULL',
+        )
+        .where('assignment.periodId = :periodId', {
           periodId: evaluationPeriodId,
-          employeeId: employeeId,
-          deletedAt: IsNull(),
-        },
-        select: ['wbsItemId'],
-      });
+        })
+        .andWhere('assignment.employeeId = :employeeId', { employeeId })
+        .andWhere('assignment.deletedAt IS NULL')
+        .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+        .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 조회
+        .getMany();
 
       // 6. 평가기준이 있는 WBS 수 조회 (고유한 WBS 개수)
       let wbsWithCriteriaCount = 0;
@@ -280,6 +315,12 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         result.mapping_id,
       );
 
+      if (stepApproval) {
+        this.logger.log(
+          `[DEBUG] 조회된 stepApproval - ID: ${stepApproval.id}, criteriaSettingStatus: ${stepApproval.criteriaSettingStatus}, selfEvaluationStatus: ${stepApproval.selfEvaluationStatus}`,
+        );
+      }
+
       // 13. 자기평가 진행 상태 조회
       const {
         totalMappingCount,
@@ -323,7 +364,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       // stepApproval 상태 확인 (승인 상태가 최우선)
       const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
 
-      // 승인 상태가 approved이면 재작성 요청 여부와 관계없이 approved 반환
+      // 관리자가 승인한 경우에만 approved 처리
+      // (제출만으로는 approved가 아니라, 관리자 승인이 있어야 함)
       if (stepApprovalStatus === 'approved') {
         finalSelfEvaluationStatus = 'approved';
       } else if (stepApprovalStatus === 'revision_completed') {
@@ -357,6 +399,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
         this.wbsAssignmentRepository,
         this.periodRepository,
         this.employeeRepository,
+        this.secondaryStepApprovalRepository,
+        this.mappingRepository,
       );
 
       // 16. 동료평가 상태 조회
@@ -666,6 +710,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             evaluator: primary.evaluator,
             status: 하향평가_통합_상태를_계산한다(
               primary.status,
+              // 승인 상태를 그대로 전달 (제출만으로는 approved가 아님)
               primaryEvaluationStatus,
             ),
             assignedWbsCount: primary.assignedWbsCount,
@@ -686,6 +731,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                 evaluator: evaluatorInfo.evaluator,
                 status: 하향평가_통합_상태를_계산한다(
                   evaluatorInfo.status,
+                  // 승인 상태를 그대로 전달 (제출만으로는 approved가 아님)
                   approvalInfo?.status ?? 'pending',
                   'secondary', // 2차 평가자임을 명시
                 ),
@@ -703,6 +749,7 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                   );
                 return 하향평가_통합_상태를_계산한다(
                   evaluatorInfo.status,
+                  // 승인 상태를 그대로 전달 (제출만으로는 approved가 아님)
                   approvalInfo?.status ?? 'pending',
                   'secondary', // 2차 평가자임을 명시
                 );

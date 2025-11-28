@@ -3,10 +3,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.calculateSelfEvaluationScore = calculateSelfEvaluationScore;
 exports.calculatePrimaryDownwardEvaluationScore = calculatePrimaryDownwardEvaluationScore;
 exports.calculateSecondaryDownwardEvaluationScore = calculateSecondaryDownwardEvaluationScore;
-const typeorm_1 = require("typeorm");
+const evaluation_project_assignment_entity_1 = require("../../../../../domain/core/evaluation-project-assignment/evaluation-project-assignment.entity");
 const evaluation_line_entity_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.entity");
 const evaluation_line_types_1 = require("../../../../../domain/core/evaluation-line/evaluation-line.types");
 const downward_evaluation_types_1 = require("../../../../../domain/core/downward-evaluation/downward-evaluation.types");
+const wbs_item_entity_1 = require("../../../../../domain/common/wbs-item/wbs-item.entity");
+const project_entity_1 = require("../../../../../domain/common/project/project.entity");
 const self_evaluation_utils_1 = require("../get-employee-evaluation-period-status/self-evaluation.utils");
 const downward_evaluation_score_utils_1 = require("../get-employee-evaluation-period-status/downward-evaluation-score.utils");
 async function calculateSelfEvaluationScore(evaluationPeriodId, employeeId, completedSelfEvaluations, selfEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository) {
@@ -34,7 +36,7 @@ async function calculateSelfEvaluationScore(evaluationPeriodId, employeeId, comp
 async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, employeeId, evaluationLineMappingRepository, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository) {
     let primaryDownwardScore = null;
     let primaryDownwardGrade = null;
-    const primaryEvaluatorMappings = await evaluationLineMappingRepository
+    let primaryEvaluatorMappings = await evaluationLineMappingRepository
         .createQueryBuilder('mapping')
         .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
         .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
@@ -47,6 +49,21 @@ async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, emplo
     })
         .andWhere('mapping.deletedAt IS NULL')
         .getMany();
+    if (primaryEvaluatorMappings.length === 0) {
+        primaryEvaluatorMappings = await evaluationLineMappingRepository
+            .createQueryBuilder('mapping')
+            .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
+            .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+        })
+            .andWhere('mapping.employeeId = :employeeId', { employeeId })
+            .andWhere('mapping.wbsItemId IS NOT NULL')
+            .andWhere('line.evaluatorType = :evaluatorType', {
+            evaluatorType: evaluation_line_types_1.EvaluatorType.PRIMARY,
+        })
+            .andWhere('mapping.deletedAt IS NULL')
+            .getMany();
+    }
     if (primaryEvaluatorMappings && primaryEvaluatorMappings.length > 0) {
         const primaryEvaluatorIds = [
             ...new Set(primaryEvaluatorMappings.map((m) => m.evaluatorId).filter((id) => !!id)),
@@ -55,11 +72,15 @@ async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, emplo
         const primaryAssignedWbs = await wbsAssignmentRepository
             .createQueryBuilder('assignment')
             .select(['assignment.wbsItemId AS wbs_item_id'])
+            .leftJoin(evaluation_project_assignment_entity_1.EvaluationProjectAssignment, 'projectAssignment', 'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL')
+            .leftJoin(project_entity_1.Project, 'project', 'project.id = assignment.projectId AND project.deletedAt IS NULL')
             .where('assignment.periodId = :evaluationPeriodId', {
             evaluationPeriodId,
         })
             .andWhere('assignment.employeeId = :employeeId', { employeeId })
             .andWhere('assignment.deletedAt IS NULL')
+            .andWhere('project.id IS NOT NULL')
+            .andWhere('projectAssignment.id IS NOT NULL')
             .getRawMany();
         const primaryAssignedCount = primaryAssignedWbs.length;
         const primaryAssignedWbsIds = primaryAssignedWbs.map((w) => w.wbs_item_id);
@@ -130,6 +151,9 @@ async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, emp
                 .createQueryBuilder('mapping')
                 .select(['mapping.id', 'mapping.wbsItemId'])
                 .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
+                .leftJoin(wbs_item_entity_1.WbsItem, 'wbs', 'wbs.id = mapping.wbsItemId AND wbs.deletedAt IS NULL')
+                .leftJoin(project_entity_1.Project, 'project', 'project.id = wbs.projectId AND project.deletedAt IS NULL')
+                .leftJoin(evaluation_project_assignment_entity_1.EvaluationProjectAssignment, 'projectAssignment', 'projectAssignment.projectId = wbs.projectId AND projectAssignment.periodId = mapping.evaluationPeriodId AND projectAssignment.employeeId = mapping.employeeId AND projectAssignment.deletedAt IS NULL')
                 .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
                 evaluationPeriodId,
             })
@@ -140,6 +164,8 @@ async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, emp
             })
                 .andWhere('mapping.deletedAt IS NULL')
                 .andWhere('mapping.wbsItemId IS NOT NULL')
+                .andWhere('project.id IS NOT NULL')
+                .andWhere('projectAssignment.id IS NOT NULL')
                 .getRawMany();
             const assignedCount = assignedMappings.length;
             const assignedWbsIds = assignedMappings.map((m) => m.mapping_wbsItemId);
@@ -164,26 +190,35 @@ async function calculateSecondaryDownwardEvaluationScore(evaluationPeriodId, emp
             }
             return { evaluatorId, assignedCount, completedCount };
         }));
-        const allCompleted = evaluatorStats.every((stat) => stat.assignedCount > 0 && stat.completedCount === stat.assignedCount);
-        if (evaluatorStats.length > 0 && allCompleted) {
+        const activeEvaluatorStats = evaluatorStats.filter((stat) => stat.assignedCount > 0);
+        const allCompleted = activeEvaluatorStats.length > 0 &&
+            activeEvaluatorStats.every((stat) => stat.completedCount === stat.assignedCount);
+        if (allCompleted) {
             secondaryDownwardScore = await (0, downward_evaluation_score_utils_1.가중치_기반_2차_하향평가_점수를_계산한다)(evaluationPeriodId, employeeId, secondaryEvaluatorIds, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository);
             if (secondaryDownwardScore !== null) {
                 secondaryDownwardGrade = await (0, downward_evaluation_score_utils_1.하향평가_등급을_조회한다)(evaluationPeriodId, secondaryDownwardScore, evaluationPeriodRepository);
             }
         }
-        const secondaryIsSubmitted = evaluatorStats.length > 0 &&
-            evaluatorStats.every((stat) => stat.assignedCount > 0 &&
-                stat.completedCount === stat.assignedCount &&
-                stat.completedCount > 0);
-        const evaluators = await Promise.all(evaluatorStats.map(async (stat) => {
+        const secondaryIsSubmitted = activeEvaluatorStats.length > 0 &&
+            activeEvaluatorStats.every((stat) => stat.completedCount === stat.assignedCount && stat.completedCount > 0);
+        const evaluators = await Promise.all(activeEvaluatorStats.map(async (stat) => {
             let evaluatorName = '알 수 없음';
             let evaluatorEmployeeNumber = 'N/A';
             let evaluatorEmail = 'N/A';
             if (employeeRepository) {
-                const evaluator = await employeeRepository.findOne({
-                    where: { id: stat.evaluatorId, deletedAt: (0, typeorm_1.IsNull)() },
-                    select: ['id', 'name', 'employeeNumber', 'email'],
-                });
+                const evaluator = await employeeRepository
+                    .createQueryBuilder('employee')
+                    .where('(employee.id::text = :evaluatorId OR employee.externalId = :evaluatorId)', {
+                    evaluatorId: stat.evaluatorId,
+                })
+                    .andWhere('employee.deletedAt IS NULL')
+                    .select([
+                    'employee.id',
+                    'employee.name',
+                    'employee.employeeNumber',
+                    'employee.email',
+                ])
+                    .getOne();
                 if (evaluator) {
                     evaluatorName = evaluator.name;
                     evaluatorEmployeeNumber = evaluator.employeeNumber;

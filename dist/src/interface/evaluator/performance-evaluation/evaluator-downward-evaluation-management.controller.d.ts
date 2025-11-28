@@ -1,18 +1,19 @@
 import type { AuthenticatedUser } from '@interface/common/decorators/current-user.decorator';
 import { PerformanceEvaluationService } from '@context/performance-evaluation-context/performance-evaluation.service';
 import { DownwardEvaluationBusinessService } from '@business/downward-evaluation/downward-evaluation-business.service';
-import { CreatePrimaryDownwardEvaluationBodyDto, CreateSecondaryDownwardEvaluationBodyDto, DownwardEvaluationDetailResponseDto, DownwardEvaluationFilterDto, DownwardEvaluationListResponseDto, DownwardEvaluationResponseDto, SubmitDownwardEvaluationDto } from '@interface/common/dto/performance-evaluation/downward-evaluation.dto';
+import { CreatePrimaryDownwardEvaluationBodyDto, CreateSecondaryDownwardEvaluationBodyDto, DownwardEvaluationDetailResponseDto, DownwardEvaluationFilterDto, DownwardEvaluationListResponseDto, DownwardEvaluationResponseDto, ResetDownwardEvaluationResponseDto, SubmitDownwardEvaluationDto } from '@interface/common/dto/performance-evaluation/downward-evaluation.dto';
 import { BulkSubmitDownwardEvaluationQueryDto } from '@interface/common/dto/performance-evaluation/bulk-submit-downward-evaluation-query.dto';
 export declare class EvaluatorDownwardEvaluationManagementController {
     private readonly performanceEvaluationService;
     private readonly downwardEvaluationBusinessService;
+    private readonly logger;
     constructor(performanceEvaluationService: PerformanceEvaluationService, downwardEvaluationBusinessService: DownwardEvaluationBusinessService);
     upsertPrimaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, dto: CreatePrimaryDownwardEvaluationBodyDto, user: AuthenticatedUser): Promise<DownwardEvaluationResponseDto>;
     upsertSecondaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, dto: CreateSecondaryDownwardEvaluationBodyDto, user: AuthenticatedUser): Promise<DownwardEvaluationResponseDto>;
     submitPrimaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, submitDto: SubmitDownwardEvaluationDto, user: AuthenticatedUser): Promise<void>;
     submitSecondaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, submitDto: SubmitDownwardEvaluationDto, user: AuthenticatedUser): Promise<void>;
-    resetPrimaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, submitDto: SubmitDownwardEvaluationDto, user: AuthenticatedUser): Promise<void>;
-    resetSecondaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, submitDto: SubmitDownwardEvaluationDto, user: AuthenticatedUser): Promise<void>;
+    resetPrimaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, submitDto: SubmitDownwardEvaluationDto, user: AuthenticatedUser): Promise<ResetDownwardEvaluationResponseDto>;
+    resetSecondaryDownwardEvaluation(evaluateeId: string, periodId: string, wbsId: string, submitDto: SubmitDownwardEvaluationDto, user: AuthenticatedUser): Promise<ResetDownwardEvaluationResponseDto>;
     submitDownwardEvaluation(id: string, user: AuthenticatedUser): Promise<void>;
     bulkSubmitDownwardEvaluations(evaluateeId: string, periodId: string, queryDto: BulkSubmitDownwardEvaluationQueryDto, submitDto: SubmitDownwardEvaluationDto, user: AuthenticatedUser): Promise<{
         submittedCount: number;

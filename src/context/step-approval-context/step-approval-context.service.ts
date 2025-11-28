@@ -301,6 +301,8 @@ export class StepApprovalContextService implements IStepApprovalContext {
     employeeId: string,
   ): Promise<string | null> {
     // EvaluationLineMapping을 사용하여 평가자 조회
+    // mapping.evaluatorId가 externalId로 저장되어 있을 수 있으므로, Employee 테이블과 조인하여 실제 Employee.id를 반환합니다.
+    
     // 먼저 평가기간-직원 맵핑 조회
     const mapping = await this.mappingRepository.findOne({
       where: {
@@ -315,12 +317,18 @@ export class StepApprovalContextService implements IStepApprovalContext {
     }
 
     // PRIMARY 타입의 평가라인을 통해 평가자 조회
+    // Employee와 조인하여 실제 Employee.id를 반환
     const lineMapping = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
       .leftJoin(
         'evaluation_lines',
         'line',
         'line.id = mapping.evaluationLineId',
+      )
+      .leftJoin(
+        'employee',
+        'evaluator',
+        '(evaluator.id = "mapping"."evaluatorId" OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL',
       )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
@@ -331,7 +339,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
         evaluatorType: 'primary',
       })
       .andWhere('line.deletedAt IS NULL')
-      .select('mapping.evaluatorId', 'evaluatorId')
+      .select('evaluator.id', 'evaluatorId')
       .getRawOne();
 
     return lineMapping?.evaluatorId || null;
@@ -339,6 +347,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
 
   /**
    * 2차평가자들을 조회한다
+   * mapping.evaluatorId가 externalId로 저장되어 있을 수 있으므로, Employee 테이블과 조인하여 실제 Employee.id를 반환합니다.
    */
   async 이차평가자들을_조회한다(
     evaluationPeriodId: string,
@@ -358,12 +367,18 @@ export class StepApprovalContextService implements IStepApprovalContext {
     }
 
     // SECONDARY 타입의 평가라인을 통해 평가자들 조회
+    // Employee와 조인하여 실제 Employee.id를 반환
     const lineMappings = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
       .leftJoin(
         'evaluation_lines',
         'line',
         'line.id = mapping.evaluationLineId',
+      )
+      .leftJoin(
+        'employee',
+        'evaluator',
+        '(evaluator.id = "mapping"."evaluatorId" OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL',
       )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
@@ -374,10 +389,13 @@ export class StepApprovalContextService implements IStepApprovalContext {
         evaluatorType: 'secondary',
       })
       .andWhere('line.deletedAt IS NULL')
-      .select('mapping.evaluatorId', 'evaluatorId')
+      .select('evaluator.id', 'evaluatorId')
       .getRawMany();
 
-    return lineMappings.map((mapping) => mapping.evaluatorId);
+    // Employee.id를 찾지 못한 경우를 위해 null 체크
+    return lineMappings
+      .map((mapping) => mapping.evaluatorId)
+      .filter((id) => id !== null && id !== undefined);
   }
 
   /**
@@ -534,6 +552,7 @@ export class StepApprovalContextService implements IStepApprovalContext {
     employeeId: string,
     evaluatorId: string,
   ): Promise<boolean> {
+    // evaluatorId는 Employee.id 또는 externalId일 수 있으므로, Employee 테이블과 조인하여 확인
     const lineMapping = await this.evaluationLineMappingRepository
       .createQueryBuilder('mapping')
       .leftJoin(
@@ -541,11 +560,16 @@ export class StepApprovalContextService implements IStepApprovalContext {
         'line',
         'line.id = mapping.evaluationLineId',
       )
+      .leftJoin(
+        'employee',
+        'evaluator',
+        '(evaluator.id = "mapping"."evaluatorId" OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL',
+      )
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
       })
       .andWhere('mapping.employeeId = :employeeId', { employeeId })
-      .andWhere('mapping.evaluatorId = :evaluatorId', { evaluatorId })
+      .andWhere('(evaluator.id::text = :evaluatorId OR evaluator.externalId = :evaluatorId)', { evaluatorId })
       .andWhere('mapping.deletedAt IS NULL')
       .andWhere('line.evaluatorType = :evaluatorType', {
         evaluatorType: 'secondary',

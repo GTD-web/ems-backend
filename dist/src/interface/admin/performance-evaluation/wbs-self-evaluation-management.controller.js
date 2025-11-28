@@ -55,7 +55,21 @@ let WbsSelfEvaluationManagementController = class WbsSelfEvaluationManagementCon
     }
     async resetAllWbsSelfEvaluationsByEmployeePeriod(employeeId, periodId, user) {
         const resetBy = user.id;
-        return await this.performanceEvaluationService.직원의_전체_WBS자기평가를_초기화한다(employeeId, periodId, resetBy);
+        const result = await this.performanceEvaluationService.직원의_전체_WBS자기평가를_초기화한다(employeeId, periodId, resetBy);
+        return {
+            resetCount: result.resetCount,
+            failedCount: result.failedCount,
+            totalCount: result.totalCount,
+            resetEvaluations: result.resetEvaluations.map((e) => ({
+                evaluationId: e.evaluationId,
+                wbsItemId: e.wbsItemId,
+                selfEvaluationContent: e.selfEvaluationContent,
+                selfEvaluationScore: e.selfEvaluationScore,
+                performanceResult: e.performanceResult,
+                wasSubmittedToManager: e.wasSubmittedToManager,
+            })),
+            failedResets: result.failedResets,
+        };
     }
     async submitWbsSelfEvaluationsByProject(employeeId, periodId, projectId, user) {
         const submittedBy = user.id;
@@ -77,7 +91,21 @@ let WbsSelfEvaluationManagementController = class WbsSelfEvaluationManagementCon
     }
     async resetWbsSelfEvaluationsByProject(employeeId, periodId, projectId, user) {
         const resetBy = user.id;
-        return await this.performanceEvaluationService.프로젝트별_WBS자기평가를_초기화한다(employeeId, periodId, projectId, resetBy);
+        const result = await this.performanceEvaluationService.프로젝트별_WBS자기평가를_초기화한다(employeeId, periodId, projectId, resetBy);
+        return {
+            resetCount: result.resetCount,
+            failedCount: result.failedCount,
+            totalCount: result.totalCount,
+            resetEvaluations: result.resetEvaluations.map((e) => ({
+                evaluationId: e.evaluationId,
+                wbsItemId: e.wbsItemId,
+                selfEvaluationContent: e.selfEvaluationContent,
+                selfEvaluationScore: e.selfEvaluationScore,
+                performanceResult: e.performanceResult,
+                wasSubmittedToManager: e.wasSubmittedToManager,
+            })),
+            failedResets: result.failedResets,
+        };
     }
     async resetWbsSelfEvaluationToEvaluator(id, user) {
         const resetBy = user.id;

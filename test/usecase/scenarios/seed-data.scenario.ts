@@ -24,6 +24,15 @@ export class SeedDataScenario {
       inProgress: number;
       completed: number;
     };
+    stateDistribution?: {
+      excludedFromList?: number;
+      selfEvaluationProgress?: {
+        notStarted: number;
+        inProgress: number;
+        completed: number;
+      };
+      [key: string]: any;
+    };
   }): Promise<{
     seedResponse: any;
     evaluationPeriodId?: string;
@@ -50,8 +59,11 @@ export class SeedDataScenario {
       `📤 시드 데이터 생성 요청 - useRealDepartments: ${requestBody.useRealDepartments}, useRealEmployees: ${requestBody.useRealEmployees}`,
     );
 
-    // 자기평가 완료률 옵션이 제공된 경우 추가
-    if (config.selfEvaluationProgress) {
+    // stateDistribution 처리
+    if (config.stateDistribution) {
+      requestBody.stateDistribution = config.stateDistribution;
+    } else if (config.selfEvaluationProgress) {
+      // 하위 호환성: selfEvaluationProgress만 제공된 경우
       requestBody.stateDistribution = {
         selfEvaluationProgress: config.selfEvaluationProgress,
       };
@@ -133,5 +145,82 @@ export class SeedDataScenario {
       .expect(200);
 
     expect(statusResponse.body.hasData).toBe(false);
+  }
+
+  /**
+   * 신규 입사자 추가
+   */
+  async 신규_입사자를_추가한다(count: number): Promise<{
+    success: boolean;
+    message: string;
+    addedCount: number;
+    failedCount: number;
+    batchNumber: string;
+    addedEmployeeIds: string[];
+  }> {
+    console.log(`📤 신규 입사자 추가 요청 - 직원 수: ${count}명`);
+
+    const response = await this.testSuite
+      .request()
+      .post('/admin/seed/employees')
+      .send({ count })
+      .expect(201);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.addedCount).toBeGreaterThan(0);
+    expect(response.body.batchNumber).toBeDefined();
+    expect(response.body.batchNumber).toMatch(/^NEW\d{10,13}$/);
+    expect(response.body.addedEmployeeIds).toHaveLength(response.body.addedCount);
+
+    console.log(`✅ 신규 입사자 추가 완료 - 배치번호: ${response.body.batchNumber}, 추가: ${response.body.addedCount}명`);
+
+    return response.body;
+  }
+
+  /**
+   * 모든 신규 입사자 삭제
+   */
+  async 모든_신규_입사자를_삭제한다(): Promise<{
+    success: boolean;
+    message: string;
+    removedCount: number;
+    removedEmployees: string[];
+  }> {
+    console.log('📤 모든 신규 입사자 삭제 요청');
+
+    const response = await this.testSuite
+      .request()
+      .delete('/admin/seed/employees/all')
+      .expect(200);
+
+    expect(response.body.success).toBe(true);
+    expect(response.body.removedCount).toBeGreaterThan(0);
+    expect(response.body.removedEmployees).toHaveLength(response.body.removedCount);
+
+    console.log(`✅ 모든 신규 입사자 삭제 완료 - 삭제: ${response.body.removedCount}명`);
+
+    return response.body;
+  }
+
+  /**
+   * 신규 입사자 추가 및 삭제 전체 시나리오
+   */
+  async 신규_입사자_추가_및_삭제_시나리오를_실행한다(count: number): Promise<{
+    추가결과: any;
+    삭제결과: any;
+  }> {
+    console.log(`\n🎬 신규 입사자 추가 및 삭제 시나리오 시작 - ${count}명`);
+
+    // 1단계: 신규 입사자 추가
+    const 추가결과 = await this.신규_입사자를_추가한다(count);
+
+    // 2단계: 모든 신규 입사자 삭제
+    const 삭제결과 = await this.모든_신규_입사자를_삭제한다();
+
+    // 3단계: 추가/삭제 개수 검증 (모든 신규 입사자를 삭제하므로 검증 생략)
+
+    console.log(`✅ 신규 입사자 추가 및 삭제 시나리오 완료\n`);
+
+    return { 추가결과, 삭제결과 };
   }
 }

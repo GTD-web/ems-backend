@@ -3,7 +3,10 @@ import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.ent
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
+import { Project } from '@domain/common/project/project.entity';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { DownwardEvaluationStatus } from '../../../interfaces/dashboard-context.interface';
@@ -21,11 +24,11 @@ import {
  * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
  *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
  *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
- * 2. 2차 평가자인 경우, 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+ * 2. 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선, 1차/2차 평가 모두 적용)
+ *    - 반려 후에도 approved 상태 유지
  * 3. 하향평가 진행 상태가 none이면 → none (승인 상태와 무관하게 진행 상태 우선)
  * 4. 하향평가 진행 상태가 in_progress이면 → in_progress (승인 상태와 무관하게 진행 상태 우선)
- * 5. 하향평가 진행 상태가 complete일 때만 승인 상태 반환:
- *    - 승인 상태가 approved이면 → approved
+ * 5. 하향평가 진행 상태가 complete일 때는 승인 상태 반환:
  *    - 승인 상태가 pending이면 → pending
  *    - 승인 상태가 없으면 → pending (기본값)
  */
@@ -52,8 +55,9 @@ export function 하향평가_통합_상태를_계산한다(
     return 'revision_completed';
   }
 
-  // 2. 2차 평가자인 경우, 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
-  if (evaluationType === 'secondary' && approvalStatus === 'approved') {
+  // 2. 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+  // 1차/2차 평가 모두 동일하게 적용 (반려 후에도 approved 유지)
+  if (approvalStatus === 'approved') {
     return 'approved';
   }
 
@@ -67,13 +71,8 @@ export function 하향평가_통합_상태를_계산한다(
     return 'in_progress';
   }
 
-  // 5. 하향평가 진행 상태가 complete일 때만 승인 상태 반환
+  // 5. 하향평가 진행 상태가 complete일 때는 승인 상태 반환
   // downwardStatus === 'complete'
-  // 승인 상태가 approved이면 → approved
-  if (approvalStatus === 'approved') {
-    return 'approved';
-  }
-
   // 승인 상태가 pending이면 → pending
   // 승인 상태가 없으면 기본값으로 pending 반환
   return approvalStatus || 'pending';
@@ -184,6 +183,8 @@ export async function 하향평가_상태를_조회한다(
   wbsAssignmentRepository: Repository<EvaluationWbsAssignment>,
   periodRepository: Repository<EvaluationPeriod>,
   employeeRepository?: Repository<any>, // Employee 엔티티를 위한 Repository
+  secondaryStepApprovalRepository?: Repository<any>, // SecondaryEvaluationStepApproval Repository
+  mappingRepository?: Repository<any>, // EvaluationPeriodEmployeeMapping Repository
 ): Promise<{
   primary: {
     evaluator: {
@@ -230,11 +231,13 @@ export async function 하향평가_상태를_조회한다(
   });
 
   // 2. PRIMARY 평가자 조회
-  // 1차 평가자는 직원별 고정 담당자이므로 wbsItemId가 null인 매핑만 조회
+  // 1차 평가자는 직원별 고정 담당자이므로 wbsItemId가 null인 매핑을 우선 조회
+  // 없으면 WBS별 매핑에서 PRIMARY 평가자를 찾음
   // 평가자 교체를 고려하여 현재 매핑된 모든 평가자 조회
   const primaryEvaluators: string[] = [];
   if (primaryLine) {
-    const primaryMappings = await evaluationLineMappingRepository
+    // 2-1. 먼저 직원별 고정 담당자 매핑 조회 (wbsItemId IS NULL)
+    let primaryMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
@@ -247,6 +250,23 @@ export async function 하향평가_상태를_조회한다(
       .andWhere('mapping.deletedAt IS NULL')
       .orderBy('mapping.createdAt', 'ASC')
       .getMany();
+
+    // 2-2. 직원별 고정 담당자 매핑이 없으면 WBS별 매핑에서 찾음
+    if (primaryMappings.length === 0) {
+      primaryMappings = await evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.evaluationLineId = :lineId', {
+          lineId: primaryLine.id,
+        })
+        .andWhere('mapping.wbsItemId IS NOT NULL') // WBS별 매핑
+        .andWhere('mapping.deletedAt IS NULL')
+        .orderBy('mapping.createdAt', 'ASC')
+        .getMany();
+    }
 
     // 중복된 evaluatorId 제거
     const uniqueEvaluatorIds = [
@@ -280,18 +300,24 @@ export async function 하향평가_상태를_조회한다(
     departmentName?: string;
     rankName?: string;
   } | null = null;
+
   if (primaryEvaluatorId && employeeRepository) {
-    const evaluator = await employeeRepository.findOne({
-      where: { id: primaryEvaluatorId, deletedAt: IsNull() },
-      select: [
-        'id',
-        'name',
-        'employeeNumber',
-        'email',
-        'departmentName',
-        'rankName',
-      ],
-    });
+    const evaluator = await employeeRepository
+      .createQueryBuilder('employee')
+      .where('(employee.id::text = :evaluatorId OR employee.externalId = :evaluatorId)', {
+        evaluatorId: primaryEvaluatorId,
+      })
+      .andWhere('employee.deletedAt IS NULL')
+      .select([
+        'employee.id',
+        'employee.name',
+        'employee.employeeNumber',
+        'employee.email',
+        'employee.departmentName',
+        'employee.rankName',
+      ])
+      .getOne();
+
     if (evaluator) {
       primaryEvaluatorInfo = {
         id: evaluator.id,
@@ -363,17 +389,22 @@ export async function 하향평가_상태를_조회한다(
         rankName?: string;
       } | null = null;
       if (employeeRepository) {
-        const evaluator = await employeeRepository.findOne({
-          where: { id: evaluatorId, deletedAt: IsNull() },
-          select: [
-            'id',
-            'name',
-            'employeeNumber',
-            'email',
-            'departmentName',
-            'rankName',
-          ],
-        });
+        const evaluator = await employeeRepository
+          .createQueryBuilder('employee')
+          .where('(employee.id::text = :evaluatorId OR employee.externalId = :evaluatorId)', {
+            evaluatorId,
+          })
+          .andWhere('employee.deletedAt IS NULL')
+          .select([
+            'employee.id',
+            'employee.name',
+            'employee.employeeNumber',
+            'employee.email',
+            'employee.departmentName',
+            'employee.rankName',
+          ])
+          .getOne();
+        
         if (evaluator) {
           evaluatorInfo = {
             id: evaluator.id,
@@ -385,6 +416,10 @@ export async function 하향평가_상태를_조회한다(
           };
         }
       }
+
+      // isSubmitted는 실제 평가 완료 상태로만 결정 (승인 상태와 무관)
+      // 반려 후에는 isCompleted가 false가 되므로 isSubmitted도 false가 됨
+      const isSubmitted = status.isSubmitted;
 
       return {
         evaluator: evaluatorInfo || {
@@ -398,9 +433,14 @@ export async function 하향평가_상태를_조회한다(
         status: status.status,
         assignedWbsCount: status.assignedWbsCount,
         completedEvaluationCount: status.completedEvaluationCount,
-        isSubmitted: status.isSubmitted,
+        isSubmitted,
       };
     }),
+  );
+
+  // 6-1. assignedWbsCount가 0인 평가자는 제외 (취소된 프로젝트 할당으로 인해 WBS가 없는 경우)
+  const filteredSecondaryStatuses = secondaryStatuses.filter(
+    (status) => status.assignedWbsCount > 0,
   );
 
   // 7. 2차 하향평가 가중치 기반 총점 및 등급 계산
@@ -409,20 +449,20 @@ export async function 하향평가_상태를_조회한다(
 
   // 모든 2차 평가자의 평가가 완료되었는지 확인
   // 할당된 것보다 완료한 것이 많아도 완료 처리
-  const allSecondaryEvaluationsCompleted = secondaryStatuses.every(
+  const allSecondaryEvaluationsCompleted = filteredSecondaryStatuses.every(
     (status) =>
       status.assignedWbsCount > 0 &&
       status.completedEvaluationCount >= status.assignedWbsCount,
   );
 
   // 모든 2차 평가자가 제출했는지 확인
-  const allSecondaryEvaluationsSubmitted = secondaryStatuses.every(
+  const allSecondaryEvaluationsSubmitted = filteredSecondaryStatuses.every(
     (status) => status.isSubmitted,
   );
 
   // 모든 평가자가 완료되고 제출했을 때만 스코어 계산
   if (
-    secondaryEvaluators.length > 0 &&
+    filteredSecondaryStatuses.length > 0 &&
     allSecondaryEvaluationsCompleted &&
     allSecondaryEvaluationsSubmitted
   ) {
@@ -475,8 +515,8 @@ export async function 하향평가_상태를_조회한다(
 
   // 2차 평가 통합 제출 상태 계산 (모든 평가자가 제출했는지 확인)
   const secondaryIsSubmitted =
-    secondaryStatuses.length > 0 &&
-    secondaryStatuses.every((status) => status.isSubmitted);
+    filteredSecondaryStatuses.length > 0 &&
+    filteredSecondaryStatuses.every((status) => status.isSubmitted);
 
   return {
     primary: {
@@ -489,7 +529,7 @@ export async function 하향평가_상태를_조회한다(
       grade: primaryGrade,
     },
     secondary: {
-      evaluators: secondaryStatuses,
+      evaluators: filteredSecondaryStatuses,
       isSubmitted: secondaryIsSubmitted,
       totalScore: secondaryTotalScore,
       grade: secondaryGrade,
@@ -514,31 +554,62 @@ export async function 평가자별_하향평가_상태를_조회한다(
   isSubmitted: boolean;
   averageScore: number | null;
 }> {
-  // 1. 피평가자에게 할당된 WBS 수 조회 (평가해야 할 WBS 개수)
-  const assignedWbsCount = await wbsAssignmentRepository.count({
-    where: {
-      periodId: evaluationPeriodId,
-      employeeId: employeeId,
-      deletedAt: IsNull(),
-    },
-  });
+  // 1. 피평가자에게 할당된 WBS 수 조회 (평가해야 할 WBS 개수, 소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
+  const assignedWbsCount = await wbsAssignmentRepository
+    .createQueryBuilder('assignment')
+    .leftJoin(
+      EvaluationProjectAssignment,
+      'projectAssignment',
+      'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+    )
+    .leftJoin(
+      Project,
+      'project',
+      'project.id = assignment.projectId AND project.deletedAt IS NULL',
+    )
+    .where('assignment.periodId = :periodId', { periodId: evaluationPeriodId })
+    .andWhere('assignment.employeeId = :employeeId', { employeeId })
+    .andWhere('assignment.deletedAt IS NULL')
+    .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
+    .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 카운트
+    .getCount();
 
-  // 2. 해당 평가기간, 피평가자, 평가 유형에 해당하는 하향평가들 조회
-  const whereCondition: any = {
-    periodId: evaluationPeriodId,
-    employeeId: employeeId,
-    evaluationType: evaluationType,
-    deletedAt: IsNull(),
-  };
+  // 2. 해당 평가기간, 피평가자, 평가 유형에 해당하는 하향평가들 조회 (취소된 프로젝트 할당 제외)
+  let downwardEvaluationsQuery = downwardEvaluationRepository
+    .createQueryBuilder('eval')
+    .leftJoin(
+      WbsItem,
+      'wbs',
+      'wbs.id = eval.wbsId AND wbs.deletedAt IS NULL',
+    )
+    .leftJoin(
+      Project,
+      'project',
+      'project.id = wbs.projectId AND project.deletedAt IS NULL',
+    )
+    .leftJoin(
+      EvaluationProjectAssignment,
+      'projectAssignment',
+      'projectAssignment.projectId = wbs.projectId AND projectAssignment.periodId = eval.periodId AND projectAssignment.employeeId = eval.employeeId AND projectAssignment.deletedAt IS NULL',
+    )
+    .where('eval.periodId = :periodId', { periodId: evaluationPeriodId })
+    .andWhere('eval.employeeId = :employeeId', { employeeId: employeeId })
+    .andWhere('eval.evaluationType = :evaluationType', {
+      evaluationType: evaluationType,
+    })
+    .andWhere('eval.deletedAt IS NULL')
+    .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+    .andWhere('projectAssignment.id IS NOT NULL'); // 프로젝트 할당이 존재하는 경우만 조회
 
   // 평가자 ID가 있으면 조건 추가
   if (evaluatorId) {
-    whereCondition.evaluatorId = evaluatorId;
+    downwardEvaluationsQuery = downwardEvaluationsQuery.andWhere(
+      'eval.evaluatorId = :evaluatorId',
+      { evaluatorId: evaluatorId },
+    );
   }
 
-  const downwardEvaluations = await downwardEvaluationRepository.find({
-    where: whereCondition,
-  });
+  const downwardEvaluations = await downwardEvaluationsQuery.getMany();
 
   // 3. 완료된 하향평가 개수 확인
   const completedEvaluationCount = downwardEvaluations.filter((evaluation) =>
@@ -642,7 +713,7 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
     if (!secondaryLine) {
       assignedWbsCount = 0;
     } else {
-      // 해당 평가자에게 할당된 WBS 매핑 조회
+      // 해당 평가자에게 할당된 WBS 매핑 조회 (취소된 프로젝트 할당 제외)
       const assignedMappings = await evaluationLineMappingRepository
         .createQueryBuilder('mapping')
         .select(['mapping.id', 'mapping.wbsItemId'])
@@ -650,6 +721,21 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
           EvaluationLine,
           'line',
           'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+        )
+        .leftJoin(
+          WbsItem,
+          'wbs',
+          'wbs.id = mapping.wbsItemId AND wbs.deletedAt IS NULL',
+        )
+        .leftJoin(
+          Project,
+          'project',
+          'project.id = wbs.projectId AND project.deletedAt IS NULL',
+        )
+        .leftJoin(
+          EvaluationProjectAssignment,
+          'projectAssignment',
+          'projectAssignment.projectId = wbs.projectId AND projectAssignment.periodId = mapping.evaluationPeriodId AND projectAssignment.employeeId = mapping.employeeId AND projectAssignment.deletedAt IS NULL',
         )
         .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
           evaluationPeriodId,
@@ -661,31 +747,62 @@ export async function 특정_평가자의_하향평가_상태를_조회한다(
         })
         .andWhere('mapping.deletedAt IS NULL')
         .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
+        .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+        .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 조회
         .getRawMany();
 
       assignedWbsCount = assignedMappings.length;
     }
   } else {
-    // 1차 평가자의 경우: 피평가자에게 할당된 전체 WBS 수 조회
-    assignedWbsCount = await wbsAssignmentRepository.count({
-      where: {
-        periodId: evaluationPeriodId,
-        employeeId: employeeId,
-        deletedAt: IsNull(),
-      },
-    });
+    // 1차 평가자의 경우: 피평가자에게 할당된 전체 WBS 수 조회 (소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
+    assignedWbsCount = await wbsAssignmentRepository
+      .createQueryBuilder('assignment')
+      .leftJoin(
+        EvaluationProjectAssignment,
+        'projectAssignment',
+        'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+      )
+      .leftJoin(
+        Project,
+        'project',
+        'project.id = assignment.projectId AND project.deletedAt IS NULL',
+      )
+      .where('assignment.periodId = :periodId', { periodId: evaluationPeriodId })
+      .andWhere('assignment.employeeId = :employeeId', { employeeId })
+      .andWhere('assignment.deletedAt IS NULL')
+      .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 카운트
+      .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 카운트
+      .getCount();
   }
 
-  // 2. 특정 평가자의 하향평가들 조회
-  const downwardEvaluations = await downwardEvaluationRepository.find({
-    where: {
-      periodId: evaluationPeriodId,
-      employeeId: employeeId,
-      evaluatorId: evaluatorId,
+  // 2. 특정 평가자의 하향평가들 조회 (취소된 프로젝트 할당 제외)
+  const downwardEvaluations = await downwardEvaluationRepository
+    .createQueryBuilder('eval')
+    .leftJoin(
+      WbsItem,
+      'wbs',
+      'wbs.id = eval.wbsId AND wbs.deletedAt IS NULL',
+    )
+    .leftJoin(
+      Project,
+      'project',
+      'project.id = wbs.projectId AND project.deletedAt IS NULL',
+    )
+    .leftJoin(
+      EvaluationProjectAssignment,
+      'projectAssignment',
+      'projectAssignment.projectId = wbs.projectId AND projectAssignment.periodId = eval.periodId AND projectAssignment.employeeId = eval.employeeId AND projectAssignment.deletedAt IS NULL',
+    )
+    .where('eval.periodId = :periodId', { periodId: evaluationPeriodId })
+    .andWhere('eval.employeeId = :employeeId', { employeeId: employeeId })
+    .andWhere('eval.evaluatorId = :evaluatorId', { evaluatorId: evaluatorId })
+    .andWhere('eval.evaluationType = :evaluationType', {
       evaluationType: evaluationType,
-      deletedAt: IsNull(),
-    },
-  });
+    })
+    .andWhere('eval.deletedAt IS NULL')
+    .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+    .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 조회
+    .getMany();
 
   // 3. 완료된 하향평가 개수 확인
   const completedEvaluationCount = downwardEvaluations.filter((evaluation) =>

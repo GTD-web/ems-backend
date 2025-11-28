@@ -302,6 +302,350 @@ describe('동료평가 관리 E2E 테스트', () => {
     });
   });
 
+  // ==================== 평가자들 간 동료평가 (다대다) ====================
+
+  describe('평가자들 간 동료평가 (다대다)', () => {
+    it('평가자들 간 동료평가 요청을 생성한다', async () => {
+      // 1. 평가 질문 생성
+      const { 질문들 } =
+        await peerEvaluationScenario.테스트용_평가질문들을_생성한다();
+      const 질문Ids = 질문들.map((q) => q.id);
+
+      console.log(`\n📝 생성된 평가 질문:`);
+      질문들.forEach((질문, index) => {
+        console.log(`  ${index + 1}. ${질문.text} (ID: ${질문.id})`);
+      });
+
+      // 2. 평가자 4명, 피평가자 4명 선택 (일부 중복 가능)
+      const 평가자Ids = employeeIds.slice(0, 4);
+      const 피평가자Ids = employeeIds.slice(2, 6); // 일부 중복
+
+      console.log(`\n👥 선택된 인원:`);
+      console.log(`  - 평가자: ${평가자Ids.length}명`);
+      console.log(`  - 피평가자: ${피평가자Ids.length}명`);
+
+      // 3. 평가자들 간 동료평가 요청 생성
+      const 결과 = await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: 평가자Ids,
+          evaluateeIds: 피평가자Ids,
+          questionIds: 질문Ids,
+          comment: '프로젝트 팀원 간 상호 평가를 진행합니다.',
+        })
+        .expect(201);
+
+      // 4. 응답 검증
+      expect(결과.body).toBeDefined();
+      expect(결과.body.summary).toBeDefined();
+      expect(결과.body.summary.total).toBeDefined();
+      expect(결과.body.summary.success).toBeDefined();
+      expect(결과.body.summary.failed).toBeDefined();
+      expect(결과.body.message).toBeDefined();
+      expect(결과.body.results).toBeDefined();
+      expect(Array.isArray(결과.body.results)).toBe(true);
+
+      console.log(`\n📊 평가자들 간 동료평가 요청 결과:`);
+      console.log(`  - 생성된 평가 요청: ${결과.body.summary.total}건`);
+      console.log(`  - 성공: ${결과.body.summary.success}건`);
+      console.log(`  - 실패: ${결과.body.summary.failed}건`);
+
+      // 각 평가자가 자신을 제외한 피평가자를 평가
+      // 예상 개수 계산
+      let 예상개수 = 0;
+      for (const evaluatorId of 평가자Ids) {
+        const 대상자수 = 피평가자Ids.filter((id) => id !== evaluatorId).length;
+        예상개수 += 대상자수;
+      }
+
+      console.log(`  - 예상 요청 수: ${예상개수}건`);
+      expect(결과.body.summary.total).toBe(예상개수);
+
+      // 5. 생성된 동료평가 중 하나를 상세 조회하여 검증
+      const 성공한결과들 = 결과.body.results.filter((r: any) => r.success);
+      if (성공한결과들.length > 0) {
+        const 첫번째평가Id = 성공한결과들[0].evaluationId;
+
+        console.log(`\n🔍 동료평가 상세 조회 (ID: ${첫번째평가Id})`);
+
+        const 상세결과 = await testSuite
+          .request()
+          .get(`/admin/performance-evaluation/peer-evaluations/${첫번째평가Id}`)
+          .expect(200);
+
+        console.log(`\n✅ 동료평가 상세 정보:`);
+        console.log(
+          `  - 평가자: ${상세결과.body.evaluator?.name || 'N/A'} (${상세결과.body.evaluator?.employeeNumber || 'N/A'})`,
+        );
+        console.log(
+          `  - 피평가자: ${상세결과.body.evaluatee?.name || 'N/A'} (${상세결과.body.evaluatee?.employeeNumber || 'N/A'})`,
+        );
+        console.log(`  - 상태: ${상세결과.body.status}`);
+        console.log(`  - 질문 개수: ${상세결과.body.questions.length}개`);
+        console.log(`  - 코멘트: ${상세결과.body.comment || '없음'}`);
+
+        // 질문 데이터 검증
+        expect(상세결과.body.questions).toBeDefined();
+        expect(Array.isArray(상세결과.body.questions)).toBe(true);
+        expect(상세결과.body.questions.length).toBe(질문들.length);
+
+        // 코멘트 검증 (comment 필드는 응답에 포함되지 않을 수 있음)
+        if (상세결과.body.comment) {
+          expect(상세결과.body.comment).toBe(
+            '프로젝트 팀원 간 상호 평가를 진행합니다.',
+          );
+        }
+
+        console.log(
+          `\n✅ 평가자들 간 동료평가 요청이 성공적으로 생성되었습니다!`,
+        );
+      }
+    }, 120000);
+
+    it('각 평가자가 자기 자신을 평가하는 요청은 생성되지 않는다', async () => {
+      // 1. 평가 질문 생성
+      const { 질문들 } =
+        await peerEvaluationScenario.테스트용_평가질문들을_생성한다();
+      const 질문Ids = 질문들.map((q) => q.id);
+
+      // 2. 평가자와 피평가자를 동일하게 설정
+      const 참여자Ids = employeeIds.slice(0, 3);
+
+      console.log(`\n👥 참여자: ${참여자Ids.length}명`);
+
+      // 3. 평가자들 간 동료평가 요청 생성
+      const 결과 = await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: 참여자Ids,
+          evaluateeIds: 참여자Ids,
+          questionIds: 질문Ids,
+        })
+        .expect(201);
+
+      console.log(`\n📊 요청 결과:`);
+      console.log(`  - 생성된 평가 요청: ${결과.body.summary.total}건`);
+
+      // 4. 자기 자신을 평가하는 요청이 없는지 확인
+      if (결과.body.results && 결과.body.results.length > 0) {
+        const selfEvaluations = 결과.body.results.filter(
+          (result: any) => result.evaluatorId === result.evaluateeId,
+        );
+
+        expect(selfEvaluations.length).toBe(0);
+        console.log(`\n✅ 자기 자신을 평가하는 요청이 없습니다.`);
+
+        // 예상 개수: N명 * (N-1)명 = 3 * 2 = 6
+        const 예상개수 = 참여자Ids.length * (참여자Ids.length - 1);
+        expect(결과.body.summary.total).toBe(예상개수);
+        console.log(`\n✅ 예상 요청 수 (${예상개수}건)와 일치합니다.`);
+      }
+    }, 120000);
+
+    it('필수 필드 누락 시 400 에러가 발생한다', async () => {
+      // evaluatorIds 누락
+      await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluateeIds: employeeIds.slice(0, 2),
+        })
+        .expect(400);
+
+      // evaluateeIds 누락
+      await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: employeeIds.slice(0, 2),
+        })
+        .expect(400);
+
+      // periodId 누락
+      await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          evaluatorIds: employeeIds.slice(0, 2),
+          evaluateeIds: employeeIds.slice(2, 4),
+        })
+        .expect(400);
+
+      console.log(`\n✅ 필수 필드 누락 시 400 에러가 발생합니다.`);
+    }, 120000);
+
+    it('빈 배열로 요청 시 400 에러가 발생한다', async () => {
+      // 빈 evaluatorIds
+      await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: [],
+          evaluateeIds: employeeIds.slice(0, 2),
+        })
+        .expect(400);
+
+      // 빈 evaluateeIds
+      await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: employeeIds.slice(0, 2),
+          evaluateeIds: [],
+        })
+        .expect(400);
+
+      console.log(`\n✅ 빈 배열로 요청 시 400 에러가 발생합니다.`);
+    }, 120000);
+
+    it('다양한 조합의 평가자와 피평가자로 요청을 생성한다', async () => {
+      // 1. 평가 질문 생성
+      const { 질문들 } =
+        await peerEvaluationScenario.테스트용_평가질문들을_생성한다();
+      const 질문Ids = 질문들.map((q) => q.id);
+
+      // 2. 평가자와 피평가자를 다르게 설정
+      const 평가자Ids = employeeIds.slice(0, 2);
+      const 피평가자Ids = employeeIds.slice(2, 4);
+
+      console.log(`\n👥 요청 인원:`);
+      console.log(`  - 평가자: ${평가자Ids.length}명`);
+      console.log(`  - 피평가자: ${피평가자Ids.length}명`);
+
+      // 3. 평가자들 간 동료평가 요청 생성
+      const 결과 = await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: 평가자Ids,
+          evaluateeIds: 피평가자Ids,
+          questionIds: 질문Ids,
+        })
+        .expect(201);
+
+      console.log(`\n📊 요청 결과:`);
+      console.log(`  - 전체 시도: ${결과.body.summary.total}건`);
+      console.log(`  - 성공: ${결과.body.summary.success}건`);
+      console.log(`  - 실패: ${결과.body.summary.failed}건`);
+
+      // 4. 모든 조합이 생성되었는지 확인 (2명 * 2명 = 4건)
+      const 예상개수 = 평가자Ids.length * 피평가자Ids.length;
+      expect(결과.body.summary.total).toBe(예상개수);
+      expect(결과.body.summary.success).toBe(예상개수);
+      console.log(`\n✅ 예상 요청 수 (${예상개수}건)와 일치합니다.`);
+    }, 120000);
+
+    it('평가자가 피평가자 목록에 포함된 경우 해당 평가자에게는 요청이 가지 않는다', async () => {
+      // 1. 평가 질문 생성
+      const { 질문들 } =
+        await peerEvaluationScenario.테스트용_평가질문들을_생성한다();
+      const 질문Ids = 질문들.map((q) => q.id);
+
+      // 2. 평가자 3명, 피평가자 목록에 평가자 2명이 포함되도록 설정
+      const 평가자Ids = employeeIds.slice(0, 3); // [emp0, emp1, emp2]
+      const 피평가자Ids = [
+        ...employeeIds.slice(0, 2), // 평가자 2명 포함
+        ...employeeIds.slice(3, 5), // 추가 피평가자 2명
+      ]; // [emp0, emp1, emp3, emp4]
+
+      console.log(`\n👥 요청 인원:`);
+      console.log(`  - 평가자: ${평가자Ids.length}명 (${평가자Ids.join(', ')})`);
+      console.log(`  - 피평가자: ${피평가자Ids.length}명 (${피평가자Ids.join(', ')})`);
+      console.log(`  - 피평가자에 포함된 평가자: ${평가자Ids.slice(0, 2).join(', ')}`);
+
+      // 3. 평가자들 간 동료평가 요청 생성
+      const 결과 = await testSuite
+        .request()
+        .post(
+          '/admin/performance-evaluation/peer-evaluations/requests/bulk/evaluators',
+        )
+        .send({
+          periodId: evaluationPeriodId,
+          evaluatorIds: 평가자Ids,
+          evaluateeIds: 피평가자Ids,
+          questionIds: 질문Ids,
+        })
+        .expect(201);
+
+      console.log(`\n📊 요청 결과:`);
+      console.log(`  - 전체 시도: ${결과.body.summary.total}건`);
+      console.log(`  - 성공: ${결과.body.summary.success}건`);
+      console.log(`  - 실패: ${결과.body.summary.failed}건`);
+
+      // 4. 예상 개수 계산
+      // emp0: 피평가자 [emp1, emp3, emp4] = 3건 (emp0 제외)
+      // emp1: 피평가자 [emp0, emp3, emp4] = 3건 (emp1 제외)
+      // emp2: 피평가자 [emp0, emp1, emp3, emp4] = 4건 (emp2 제외)
+      // 총 10건
+      let 예상개수 = 0;
+      for (const evaluatorId of 평가자Ids) {
+        const 대상자수 = 피평가자Ids.filter((id) => id !== evaluatorId).length;
+        예상개수 += 대상자수;
+        console.log(`  - ${evaluatorId}: ${대상자수}건 (자기 자신 제외)`);
+      }
+
+      expect(결과.body.summary.total).toBe(예상개수);
+      console.log(`\n✅ 예상 요청 수 (${예상개수}건)와 일치합니다.`);
+
+      // 5. 각 평가자가 자기 자신을 평가하는 요청이 없는지 확인
+      const 자기자신평가 = 결과.body.results.filter(
+        (result: any) => result.evaluatorId === result.evaluateeId,
+      );
+      expect(자기자신평가.length).toBe(0);
+      console.log(`\n✅ 자기 자신을 평가하는 요청이 없습니다.`);
+
+      // 6. 각 평가자가 자신을 제외한 피평가자에게만 요청이 가는지 확인
+      for (const evaluatorId of 평가자Ids) {
+        const 해당평가자요청들 = 결과.body.results.filter(
+          (result: any) => result.evaluatorId === evaluatorId,
+        );
+
+        // 자기 자신을 평가하는 요청이 없어야 함
+        const 자기자신요청 = 해당평가자요청들.find(
+          (result: any) => result.evaluateeId === evaluatorId,
+        );
+        expect(자기자신요청).toBeUndefined();
+
+        // 피평가자 목록에 있는 사람들에게만 요청이 가야 함
+        해당평가자요청들.forEach((result: any) => {
+          expect(피평가자Ids).toContain(result.evaluateeId);
+          expect(result.evaluateeId).not.toBe(evaluatorId);
+        });
+
+        console.log(
+          `  - ${evaluatorId}: ${해당평가자요청들.length}건의 요청 (자기 자신 제외)`,
+        );
+      }
+
+      console.log(`\n✅ 평가자가 피평가자 목록에 포함되어 있어도 자기 자신에게는 요청이 가지 않습니다.`);
+    }, 120000);
+  });
+
   // ==================== 파트장 간 동료평가 ====================
 
   describe('파트장 간 동료평가', () => {

@@ -133,7 +133,8 @@ export class EvaluationTargetController {
   @GetEvaluationTargets()
   async getEvaluationTargets(
     @ParseUUID('evaluationPeriodId') evaluationPeriodId: string,
-    @Query('includeExcluded', ParseBoolPipe) includeExcluded: boolean,
+    @Query('includeExcluded', new ParseBoolPipe({ optional: true }))
+    includeExcluded: boolean = false,
   ): Promise<EvaluationTargetsResponseDto> {
     const targets =
       await this.evaluationPeriodManagementService.평가기간의_평가대상자_조회한다(

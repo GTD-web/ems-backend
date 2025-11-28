@@ -61,6 +61,40 @@ export class EvaluationPeriodManagementApiClient {
     return response.body;
   }
 
+  /**
+   * 기본 등급 구간 조회 API 호출
+   *
+   * @returns 기본 등급 구간 목록
+   */
+  async getDefaultGradeRanges(): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .get('/admin/evaluation-periods/default-grade-ranges')
+      .expect(200);
+
+    return response.body;
+  }
+
+  /**
+   * 기본 등급 구간 변경 API 호출
+   *
+   * @param gradeRanges - 변경할 등급 구간 목록
+   * @returns 변경된 등급 구간 목록
+   */
+  async updateDefaultGradeRanges(gradeRanges: Array<{
+    grade: string;
+    minRange: number;
+    maxRange: number;
+  }>): Promise<any> {
+    const response = await this.testSuite
+      .request()
+      .post('/admin/evaluation-periods/default-grade-ranges')
+      .send({ gradeRanges })
+      .expect(200);
+
+    return response.body;
+  }
+
   // ==================== POST: 생성 및 상태 변경 ====================
 
   /**

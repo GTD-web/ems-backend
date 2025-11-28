@@ -2,12 +2,15 @@ import { Repository, IsNull } from 'typeorm';
 import { WbsSelfEvaluation } from '@domain/core/wbs-self-evaluation/wbs-self-evaluation.entity';
 import { DownwardEvaluation } from '@domain/core/downward-evaluation/downward-evaluation.entity';
 import { EvaluationWbsAssignment } from '@domain/core/evaluation-wbs-assignment/evaluation-wbs-assignment.entity';
+import { EvaluationProjectAssignment } from '@domain/core/evaluation-project-assignment/evaluation-project-assignment.entity';
 import { EvaluationPeriod } from '@domain/core/evaluation-period/evaluation-period.entity';
 import { EvaluationLineMapping } from '@domain/core/evaluation-line-mapping/evaluation-line-mapping.entity';
 import { EvaluationLine } from '@domain/core/evaluation-line/evaluation-line.entity';
 import { EvaluatorType } from '@domain/core/evaluation-line/evaluation-line.types';
 import { DownwardEvaluationType } from '@domain/core/downward-evaluation/downward-evaluation.types';
 import { Employee } from '@domain/common/employee/employee.entity';
+import { WbsItem } from '@domain/common/wbs-item/wbs-item.entity';
+import { Project } from '@domain/common/project/project.entity';
 import {
   가중치_기반_자기평가_점수를_계산한다,
   자기평가_등급을_조회한다,
@@ -88,9 +91,10 @@ export async function calculatePrimaryDownwardEvaluationScore(
   let primaryDownwardScore: number | null = null;
   let primaryDownwardGrade: string | null = null;
 
-  // 1차 평가자 조회 (직원별 고정 담당자, wbsItemId IS NULL)
+  // 1차 평가자 조회
+  // 먼저 직원별 고정 담당자 (wbsItemId IS NULL)를 찾고, 없으면 WBS별 매핑에서 찾음
   // 평가자 교체를 고려하여 현재 매핑된 모든 평가자 조회
-  const primaryEvaluatorMappings = await evaluationLineMappingRepository
+  let primaryEvaluatorMappings = await evaluationLineMappingRepository
     .createQueryBuilder('mapping')
     .leftJoin(
       EvaluationLine,
@@ -108,6 +112,27 @@ export async function calculatePrimaryDownwardEvaluationScore(
     .andWhere('mapping.deletedAt IS NULL')
     .getMany();
 
+  // 직원별 고정 담당자 매핑이 없으면 WBS별 매핑에서 찾음
+  if (primaryEvaluatorMappings.length === 0) {
+    primaryEvaluatorMappings = await evaluationLineMappingRepository
+      .createQueryBuilder('mapping')
+      .leftJoin(
+        EvaluationLine,
+        'line',
+        'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+      )
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('mapping.wbsItemId IS NOT NULL') // WBS별 매핑
+      .andWhere('line.evaluatorType = :evaluatorType', {
+        evaluatorType: EvaluatorType.PRIMARY,
+      })
+      .andWhere('mapping.deletedAt IS NULL')
+      .getMany();
+  }
+
   if (primaryEvaluatorMappings && primaryEvaluatorMappings.length > 0) {
     // 중복된 evaluatorId 제거
     const primaryEvaluatorIds = [
@@ -118,14 +143,27 @@ export async function calculatePrimaryDownwardEvaluationScore(
     const primaryEvaluatorId = primaryEvaluatorIds[0]; // 대표 평가자 (하위 호환성)
 
     // 1차 평가자는 직원별 고정 담당자이므로, 할당된 WBS 목록은 WBS 할당 테이블에서 조회
+    // (소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
     const primaryAssignedWbs = await wbsAssignmentRepository
       .createQueryBuilder('assignment')
       .select(['assignment.wbsItemId AS wbs_item_id'])
+      .leftJoin(
+        EvaluationProjectAssignment,
+        'projectAssignment',
+        'projectAssignment.projectId = assignment.projectId AND projectAssignment.periodId = assignment.periodId AND projectAssignment.employeeId = assignment.employeeId AND projectAssignment.deletedAt IS NULL',
+      )
+      .leftJoin(
+        Project,
+        'project',
+        'project.id = assignment.projectId AND project.deletedAt IS NULL',
+      )
       .where('assignment.periodId = :evaluationPeriodId', {
         evaluationPeriodId,
       })
       .andWhere('assignment.employeeId = :employeeId', { employeeId })
       .andWhere('assignment.deletedAt IS NULL')
+      .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+      .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 조회
       .getRawMany();
 
     const primaryAssignedCount = primaryAssignedWbs.length;
@@ -255,7 +293,7 @@ export async function calculateSecondaryDownwardEvaluationScore(
     // 각 2차 평가자별 할당된 WBS 수와 완료된 평가 수 조회
     const evaluatorStats = await Promise.all(
       secondaryEvaluatorIds.map(async (evaluatorId) => {
-        // 할당된 WBS 목록 조회 (wbsItemId 포함)
+        // 할당된 WBS 목록 조회 (wbsItemId 포함, 소프트 딜리트된 프로젝트 및 취소된 프로젝트 할당 제외)
         const assignedMappings = await evaluationLineMappingRepository
           .createQueryBuilder('mapping')
           .select(['mapping.id', 'mapping.wbsItemId'])
@@ -263,6 +301,21 @@ export async function calculateSecondaryDownwardEvaluationScore(
             EvaluationLine,
             'line',
             'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+          )
+          .leftJoin(
+            WbsItem,
+            'wbs',
+            'wbs.id = mapping.wbsItemId AND wbs.deletedAt IS NULL',
+          )
+          .leftJoin(
+            Project,
+            'project',
+            'project.id = wbs.projectId AND project.deletedAt IS NULL',
+          )
+          .leftJoin(
+            EvaluationProjectAssignment,
+            'projectAssignment',
+            'projectAssignment.projectId = wbs.projectId AND projectAssignment.periodId = mapping.evaluationPeriodId AND projectAssignment.employeeId = mapping.employeeId AND projectAssignment.deletedAt IS NULL',
           )
           .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
             evaluationPeriodId,
@@ -274,6 +327,8 @@ export async function calculateSecondaryDownwardEvaluationScore(
           })
           .andWhere('mapping.deletedAt IS NULL')
           .andWhere('mapping.wbsItemId IS NOT NULL') // wbsItemId가 있는 것만 조회
+          .andWhere('project.id IS NOT NULL') // 프로젝트가 존재하는 경우만 조회
+          .andWhere('projectAssignment.id IS NOT NULL') // 프로젝트 할당이 존재하는 경우만 조회
           .getRawMany();
 
         const assignedCount = assignedMappings.length;
@@ -306,14 +361,20 @@ export async function calculateSecondaryDownwardEvaluationScore(
       }),
     );
 
-    // 모든 평가자가 할당된 모든 WBS를 완료했는지 확인
-    const allCompleted = evaluatorStats.every(
-      (stat) =>
-        stat.assignedCount > 0 && stat.completedCount === stat.assignedCount,
+    // 할당된 WBS가 있는 평가자만 필터링 (삭제된 프로젝트의 WBS만 담당하는 평가자 제외)
+    const activeEvaluatorStats = evaluatorStats.filter(
+      (stat) => stat.assignedCount > 0,
     );
 
+    // 모든 활성 평가자가 완료했는지 확인
+    const allCompleted =
+      activeEvaluatorStats.length > 0 &&
+      activeEvaluatorStats.every(
+        (stat) => stat.completedCount === stat.assignedCount,
+      );
+
     // 최소 한 명의 평가자가 할당되어 있고 모두 완료한 경우 점수 계산
-    if (evaluatorStats.length > 0 && allCompleted) {
+    if (allCompleted) {
       secondaryDownwardScore = await 가중치_기반_2차_하향평가_점수를_계산한다(
         evaluationPeriodId,
         employeeId,
@@ -332,29 +393,39 @@ export async function calculateSecondaryDownwardEvaluationScore(
       }
     }
 
-    // 2차 평가 제출 상태 계산: 모든 평가자가 제출했는지 확인
-    // 각 평가자별로 할당된 WBS가 있고, 완료된 평가 수가 할당된 WBS 수와 같으면 제출 완료
+    // 2차 평가 제출 상태 계산: 할당된 WBS가 있는 모든 평가자가 제출했는지 확인
     const secondaryIsSubmitted =
-      evaluatorStats.length > 0 &&
-      evaluatorStats.every(
+      activeEvaluatorStats.length > 0 &&
+      activeEvaluatorStats.every(
         (stat) =>
-          stat.assignedCount > 0 &&
-          stat.completedCount === stat.assignedCount &&
-          stat.completedCount > 0,
+          stat.completedCount === stat.assignedCount && stat.completedCount > 0,
       );
 
-    // 각 평가자별 정보 조회
+    // 각 평가자별 정보 조회 (할당된 WBS가 있는 평가자만 포함)
     const evaluators = await Promise.all(
-      evaluatorStats.map(async (stat) => {
+      activeEvaluatorStats.map(async (stat) => {
         let evaluatorName = '알 수 없음';
         let evaluatorEmployeeNumber = 'N/A';
         let evaluatorEmail = 'N/A';
 
         if (employeeRepository) {
-          const evaluator = await employeeRepository.findOne({
-            where: { id: stat.evaluatorId, deletedAt: IsNull() },
-            select: ['id', 'name', 'employeeNumber', 'email'],
-          });
+          const evaluator = await employeeRepository
+            .createQueryBuilder('employee')
+            .where(
+              '(employee.id::text = :evaluatorId OR employee.externalId = :evaluatorId)',
+              {
+                evaluatorId: stat.evaluatorId,
+              },
+            )
+            .andWhere('employee.deletedAt IS NULL')
+            .select([
+              'employee.id',
+              'employee.name',
+              'employee.employeeNumber',
+              'employee.email',
+            ])
+            .getOne();
+
           if (evaluator) {
             evaluatorName = evaluator.name;
             evaluatorEmployeeNumber = evaluator.employeeNumber;

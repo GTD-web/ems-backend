@@ -1,5 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { Logger, NotFoundException } from '@nestjs/common';
+import { Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EvaluationPeriodEmployeeMappingService } from '@domain/core/evaluation-period-employee-mapping/evaluation-period-employee-mapping.service';
@@ -71,7 +71,15 @@ export class RegisterEvaluationTargetHandler
         throw new NotFoundException(`직원을 찾을 수 없습니다: ${employeeId}`);
       }
 
-      const result =
+      // 재직중 직원만 평가 대상자로 등록 가능
+      if (employee.status !== '재직중') {
+        throw new BadRequestException(
+          `재직중인 직원만 평가 대상자로 등록할 수 있습니다. 현재 상태: ${employee.status}`,
+        );
+      }
+
+      // 평가 대상자 등록
+      let result =
         await this.evaluationPeriodEmployeeMappingService.평가대상자를_등록한다(
           {
             evaluationPeriodId,
@@ -80,8 +88,24 @@ export class RegisterEvaluationTargetHandler
           },
         );
 
+      // 직원이 조회 제외 목록에 있으면 평가 대상에서도 자동 제외
+      if (employee.isExcludedFromList) {
+        this.logger.log(
+          `직원이 조회 제외 목록에 있어 평가 대상에서도 제외 처리 - 직원: ${employeeId}`,
+        );
+        
+        result = await this.evaluationPeriodEmployeeMappingService.평가대상에서_제외한다(
+          evaluationPeriodId,
+          employeeId,
+          {
+            excludeReason: '조회 제외 목록에 있는 직원',
+            excludedBy: createdBy,
+          },
+        );
+      }
+
       this.logger.log(
-        `평가 대상자 등록 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}`,
+        `평가 대상자 등록 완료 - 평가기간: ${evaluationPeriodId}, 직원: ${employeeId}, 제외 여부: ${result.isExcluded}`,
       );
 
       return result;

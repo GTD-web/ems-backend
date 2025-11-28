@@ -1,4 +1,4 @@
-import { Body, Controller, Query, Logger, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Query, Logger, Post } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { EvaluationPeriodManagementContextService } from '@context/evaluation-period-management-context/evaluation-period-management.service';
 import { EvaluationPeriodBusinessService } from '@business/evaluation-period/evaluation-period-business.service';
@@ -27,10 +27,12 @@ import {
   CreateEvaluationPeriod,
   DeleteEvaluationPeriod,
   GetActiveEvaluationPeriods,
+  GetDefaultGradeRanges,
   GetEvaluationPeriodDetail,
   GetEvaluationPeriods,
   StartEvaluationPeriod,
   UpdateCriteriaSettingPermission,
+  UpdateDefaultGradeRanges,
   UpdateEvaluationPeriodBasicInfo,
   UpdateEvaluationPeriodGradeRanges,
   UpdateEvaluationPeriodSchedule,
@@ -48,6 +50,7 @@ import {
   CreateEvaluationPeriodApiDto,
   ManualPermissionSettingDto,
   PaginationQueryDto,
+  UpdateDefaultGradeRangesApiDto,
   UpdateEvaluationPeriodBasicApiDto,
   UpdateEvaluationPeriodScheduleApiDto,
   UpdateEvaluationPeriodStartDateApiDto,
@@ -58,6 +61,11 @@ import {
   UpdatePerformanceDeadlineApiDto,
   UpdateSelfEvaluationDeadlineApiDto,
 } from '@interface/common/dto/evaluation-period/evaluation-management.dto';
+import {
+  getDefaultGradeRanges,
+  setDefaultGradeRanges,
+} from '@interface/common/constants/default-grade-ranges.constant';
+import type { GradeRangeResponseDto } from '@interface/common/dto/evaluation-period/evaluation-period-response.dto';
 
 /**
  * 관리자용 평가 관리 컨트롤러
@@ -79,6 +87,66 @@ export class EvaluationPeriodManagementController {
   ) {}
 
   // ==================== GET: 조회 ====================
+
+  /**
+   * 기본 등급 구간을 조회합니다.
+   */
+  @GetDefaultGradeRanges()
+  async getDefaultGradeRanges(): Promise<GradeRangeResponseDto[]> {
+    return getDefaultGradeRanges() as unknown as GradeRangeResponseDto[];
+  }
+
+  /**
+   * 기본 등급 구간을 변경합니다.
+   */
+  @UpdateDefaultGradeRanges()
+  async updateDefaultGradeRanges(
+    @Body() updateData: UpdateDefaultGradeRangesApiDto,
+  ): Promise<GradeRangeResponseDto[]> {
+    // 등급 구간 유효성 검증
+    const gradeRanges = updateData.gradeRanges.map((range) => ({
+      grade: range.grade,
+      minRange: range.minRange,
+      maxRange: range.maxRange,
+    }));
+
+    // 중복 등급 검증
+    const grades = gradeRanges.map((r) => r.grade);
+    const uniqueGrades = new Set(grades);
+    if (grades.length !== uniqueGrades.size) {
+      throw new BadRequestException('중복된 등급이 있습니다.');
+    }
+
+    // 범위 검증 (0-1000)
+    for (const range of gradeRanges) {
+      if (range.minRange < 0 || range.minRange > 1000) {
+        throw new BadRequestException('최소 범위는 0-1000 사이여야 합니다.');
+      }
+      if (range.maxRange < 0 || range.maxRange > 1000) {
+        throw new BadRequestException('최대 범위는 0-1000 사이여야 합니다.');
+      }
+      if (range.minRange >= range.maxRange) {
+        throw new BadRequestException('최소 범위는 최대 범위보다 작아야 합니다.');
+      }
+    }
+
+    // 범위 겹침 검증
+    const sortedRanges = [...gradeRanges].sort(
+      (a, b) => a.minRange - b.minRange,
+    );
+    for (let i = 0; i < sortedRanges.length - 1; i++) {
+      const current = sortedRanges[i];
+      const next = sortedRanges[i + 1];
+      if (current.maxRange > next.minRange) {
+        throw new BadRequestException('등급 구간이 겹칩니다.');
+      }
+    }
+
+    // 기본 등급 구간 업데이트
+    setDefaultGradeRanges(gradeRanges);
+
+    return getDefaultGradeRanges() as unknown as GradeRangeResponseDto[];
+  }
 
   /**
    * 활성화된 평가 기간 목록을 조회합니다.

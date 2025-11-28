@@ -354,6 +354,17 @@ export class DownwardEvaluationResponseDto {
 }
 
 /**
+ * 하향평가 초기화 응답 DTO
+ */
+export class ResetDownwardEvaluationResponseDto {
+  @ApiProperty({
+    description: '결과 메시지',
+    example: '1차 하향평가가 성공적으로 미제출 상태로 변경되었습니다.',
+  })
+  message: string;
+}
+
+/**
  * 하향평가 목록 응답 DTO
  */
 export class DownwardEvaluationListResponseDto {

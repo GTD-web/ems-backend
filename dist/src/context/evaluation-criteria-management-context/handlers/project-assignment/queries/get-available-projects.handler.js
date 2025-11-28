@@ -46,16 +46,6 @@ let GetAvailableProjectsHandler = GetAvailableProjectsHandler_1 = class GetAvail
         const allProjects = await this.projectService.필터_조회한다({
             status: status,
         });
-        const managerIds = allProjects
-            .filter((project) => project.managerId)
-            .map((project) => project.managerId);
-        const managers = await Promise.all(managerIds.map(async (managerId) => {
-            const manager = await this.employeeService.ID로_조회한다(managerId);
-            return manager ? { id: managerId, manager } : null;
-        }));
-        const managerMap = new Map(managers
-            .filter((item) => item !== null)
-            .map((item) => [item.id, item.manager]));
         let projectsWithManager = allProjects.map((project) => ({
             id: project.id,
             name: project.name,
@@ -63,15 +53,7 @@ let GetAvailableProjectsHandler = GetAvailableProjectsHandler_1 = class GetAvail
             status: project.status,
             startDate: project.startDate,
             endDate: project.endDate,
-            manager: project.managerId
-                ? {
-                    id: project.managerId,
-                    name: managerMap.get(project.managerId)?.name || '',
-                    email: managerMap.get(project.managerId)?.email,
-                    phoneNumber: managerMap.get(project.managerId)?.phoneNumber,
-                    departmentName: managerMap.get(project.managerId)?.departmentName,
-                }
-                : null,
+            manager: project.manager || null,
         }));
         if (search) {
             const searchLower = search.toLowerCase();

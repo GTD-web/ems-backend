@@ -57,12 +57,13 @@ export class GetUnassignedEmployeesHandler
       .then((results) => results.map((result) => result.employeeId));
 
     // 전체 활성 직원 목록에서 할당된 직원을 제외하고 조회
+    // 조회 제외된 직원(isExcludedFromList = true)은 목록에서 제외
     const unassignedEmployeesQuery = this.employeeRepository
       .createQueryBuilder('employee')
       .leftJoin(
         Department,
         'department',
-        'department.externalId = employee.departmentId AND department.deletedAt IS NULL',
+        'department.id::text = employee.departmentId AND department.deletedAt IS NULL',
       )
       .select([
         'employee.id AS employee_id',
@@ -72,10 +73,11 @@ export class GetUnassignedEmployeesHandler
         'employee.phoneNumber AS employee_phonenumber',
         'employee.status AS employee_status',
         'employee.departmentId AS employee_departmentid',
-        'department.name AS department_name',
+        'COALESCE(department.name, employee.departmentName) AS department_name',
       ])
       .where('employee.deletedAt IS NULL')
-      .andWhere('employee.status = :status', { status: '재직중' });
+      .andWhere('employee.status = :status', { status: '재직중' })
+      .andWhere('employee.isExcludedFromList = :isExcluded', { isExcluded: false });
 
     if (assignedEmployeeIds.length > 0) {
       unassignedEmployeesQuery.andWhere(
