@@ -116,7 +116,7 @@ __decorate([
     }),
     (0, class_validator_1.IsNumber)({}, { message: '최소 범위는 숫자여야 합니다.' }),
     (0, class_validator_1.Min)(0, { message: '최소 범위는 0 이상이어야 합니다.' }),
-    (0, class_validator_1.Max)(200, { message: '최소 범위는 200 이하여야 합니다.' }),
+    (0, class_validator_1.Max)(1000, { message: '최소 범위는 1000 이하여야 합니다.' }),
     __metadata("design:type", Number)
 ], CreateGradeRangeApiDto.prototype, "minRange", void 0);
 __decorate([
@@ -126,7 +126,7 @@ __decorate([
     }),
     (0, class_validator_1.IsNumber)({}, { message: '최대 범위는 숫자여야 합니다.' }),
     (0, class_validator_1.Min)(0, { message: '최대 범위는 0 이상이어야 합니다.' }),
-    (0, class_validator_1.Max)(200, { message: '최대 범위는 200 이하여야 합니다.' }),
+    (0, class_validator_1.Max)(1000, { message: '최대 범위는 1000 이하여야 합니다.' }),
     __metadata("design:type", Number)
 ], CreateGradeRangeApiDto.prototype, "maxRange", void 0);
 class CreateEvaluationPeriodApiDto {
