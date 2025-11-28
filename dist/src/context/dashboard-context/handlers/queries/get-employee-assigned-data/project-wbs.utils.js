@@ -161,6 +161,36 @@ async function getProjectsWithWbs(evaluationPeriodId, employeeId, mapping, proje
             });
         });
     }
+    else if (wbsItemIds.length > 0) {
+        const wbsPrimaryEvaluatorMappings = await evaluationLineMappingRepository
+            .createQueryBuilder('mapping')
+            .select([
+            'mapping.wbsItemId AS mapping_wbs_item_id',
+            'mapping.evaluatorId AS mapping_evaluator_id',
+            'evaluator.name AS evaluator_name',
+        ])
+            .leftJoin(employee_entity_1.Employee, 'evaluator', '(evaluator.id = mapping.evaluatorId OR evaluator.externalId = "mapping"."evaluatorId"::text) AND evaluator.deletedAt IS NULL')
+            .leftJoin('evaluation_lines', 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
+            .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+        })
+            .andWhere('mapping.employeeId = :employeeId', { employeeId })
+            .andWhere('mapping.wbsItemId IN (:...wbsItemIds)', { wbsItemIds })
+            .andWhere('mapping.deletedAt IS NULL')
+            .andWhere('line.evaluatorType = :evaluatorType', {
+            evaluatorType: 'primary',
+        })
+            .getRawMany();
+        for (const row of wbsPrimaryEvaluatorMappings) {
+            const wbsId = row.mapping_wbs_item_id;
+            if (!wbsId || !row.mapping_evaluator_id)
+                continue;
+            primaryEvaluatorMap.set(wbsId, {
+                evaluatorId: row.mapping_evaluator_id,
+                evaluatorName: row.evaluator_name || '',
+            });
+        }
+    }
     if (wbsItemIds.length > 0) {
         const secondaryEvaluatorMappings = await evaluationLineMappingRepository
             .createQueryBuilder('mapping')

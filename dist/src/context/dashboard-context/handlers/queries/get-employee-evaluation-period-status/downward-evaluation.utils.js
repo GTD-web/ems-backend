@@ -77,7 +77,7 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
     });
     const primaryEvaluators = [];
     if (primaryLine) {
-        const primaryMappings = await evaluationLineMappingRepository
+        let primaryMappings = await evaluationLineMappingRepository
             .createQueryBuilder('mapping')
             .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
             evaluationPeriodId,
@@ -90,6 +90,21 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
             .andWhere('mapping.deletedAt IS NULL')
             .orderBy('mapping.createdAt', 'ASC')
             .getMany();
+        if (primaryMappings.length === 0) {
+            primaryMappings = await evaluationLineMappingRepository
+                .createQueryBuilder('mapping')
+                .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+                evaluationPeriodId,
+            })
+                .andWhere('mapping.employeeId = :employeeId', { employeeId })
+                .andWhere('mapping.evaluationLineId = :lineId', {
+                lineId: primaryLine.id,
+            })
+                .andWhere('mapping.wbsItemId IS NOT NULL')
+                .andWhere('mapping.deletedAt IS NULL')
+                .orderBy('mapping.createdAt', 'ASC')
+                .getMany();
+        }
         const uniqueEvaluatorIds = [
             ...new Set(primaryMappings.map((m) => m.evaluatorId).filter((id) => !!id)),
         ];
@@ -242,10 +257,9 @@ async function 하향평가_상태를_조회한다(evaluationPeriodId, employeeI
     }
     const secondaryIsSubmitted = filteredSecondaryStatuses.length > 0 &&
         filteredSecondaryStatuses.every((status) => status.isSubmitted);
-    const finalPrimaryEvaluatorInfo = primaryStatus.assignedWbsCount > 0 ? primaryEvaluatorInfo : null;
     return {
         primary: {
-            evaluator: finalPrimaryEvaluatorInfo,
+            evaluator: primaryEvaluatorInfo,
             status: primaryStatus.status,
             assignedWbsCount: primaryStatus.assignedWbsCount,
             completedEvaluationCount: primaryStatus.completedEvaluationCount,

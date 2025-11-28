@@ -91,9 +91,10 @@ export async function calculatePrimaryDownwardEvaluationScore(
   let primaryDownwardScore: number | null = null;
   let primaryDownwardGrade: string | null = null;
 
-  // 1차 평가자 조회 (직원별 고정 담당자, wbsItemId IS NULL)
+  // 1차 평가자 조회
+  // 먼저 직원별 고정 담당자 (wbsItemId IS NULL)를 찾고, 없으면 WBS별 매핑에서 찾음
   // 평가자 교체를 고려하여 현재 매핑된 모든 평가자 조회
-  const primaryEvaluatorMappings = await evaluationLineMappingRepository
+  let primaryEvaluatorMappings = await evaluationLineMappingRepository
     .createQueryBuilder('mapping')
     .leftJoin(
       EvaluationLine,
@@ -110,6 +111,27 @@ export async function calculatePrimaryDownwardEvaluationScore(
     })
     .andWhere('mapping.deletedAt IS NULL')
     .getMany();
+
+  // 직원별 고정 담당자 매핑이 없으면 WBS별 매핑에서 찾음
+  if (primaryEvaluatorMappings.length === 0) {
+    primaryEvaluatorMappings = await evaluationLineMappingRepository
+      .createQueryBuilder('mapping')
+      .leftJoin(
+        EvaluationLine,
+        'line',
+        'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL',
+      )
+      .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+        evaluationPeriodId,
+      })
+      .andWhere('mapping.employeeId = :employeeId', { employeeId })
+      .andWhere('mapping.wbsItemId IS NOT NULL') // WBS별 매핑
+      .andWhere('line.evaluatorType = :evaluatorType', {
+        evaluatorType: EvaluatorType.PRIMARY,
+      })
+      .andWhere('mapping.deletedAt IS NULL')
+      .getMany();
+  }
 
   if (primaryEvaluatorMappings && primaryEvaluatorMappings.length > 0) {
     // 중복된 evaluatorId 제거

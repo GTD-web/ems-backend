@@ -36,7 +36,7 @@ async function calculateSelfEvaluationScore(evaluationPeriodId, employeeId, comp
 async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, employeeId, evaluationLineMappingRepository, downwardEvaluationRepository, wbsAssignmentRepository, evaluationPeriodRepository) {
     let primaryDownwardScore = null;
     let primaryDownwardGrade = null;
-    const primaryEvaluatorMappings = await evaluationLineMappingRepository
+    let primaryEvaluatorMappings = await evaluationLineMappingRepository
         .createQueryBuilder('mapping')
         .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
         .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
@@ -49,6 +49,21 @@ async function calculatePrimaryDownwardEvaluationScore(evaluationPeriodId, emplo
     })
         .andWhere('mapping.deletedAt IS NULL')
         .getMany();
+    if (primaryEvaluatorMappings.length === 0) {
+        primaryEvaluatorMappings = await evaluationLineMappingRepository
+            .createQueryBuilder('mapping')
+            .leftJoin(evaluation_line_entity_1.EvaluationLine, 'line', 'line.id = mapping.evaluationLineId AND line.deletedAt IS NULL')
+            .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+            evaluationPeriodId,
+        })
+            .andWhere('mapping.employeeId = :employeeId', { employeeId })
+            .andWhere('mapping.wbsItemId IS NOT NULL')
+            .andWhere('line.evaluatorType = :evaluatorType', {
+            evaluatorType: evaluation_line_types_1.EvaluatorType.PRIMARY,
+        })
+            .andWhere('mapping.deletedAt IS NULL')
+            .getMany();
+    }
     if (primaryEvaluatorMappings && primaryEvaluatorMappings.length > 0) {
         const primaryEvaluatorIds = [
             ...new Set(primaryEvaluatorMappings.map((m) => m.evaluatorId).filter((id) => !!id)),

@@ -235,11 +235,13 @@ export async function 하향평가_상태를_조회한다(
   });
 
   // 2. PRIMARY 평가자 조회
-  // 1차 평가자는 직원별 고정 담당자이므로 wbsItemId가 null인 매핑만 조회
+  // 1차 평가자는 직원별 고정 담당자이므로 wbsItemId가 null인 매핑을 우선 조회
+  // 없으면 WBS별 매핑에서 PRIMARY 평가자를 찾음
   // 평가자 교체를 고려하여 현재 매핑된 모든 평가자 조회
   const primaryEvaluators: string[] = [];
   if (primaryLine) {
-    const primaryMappings = await evaluationLineMappingRepository
+    // 2-1. 먼저 직원별 고정 담당자 매핑 조회 (wbsItemId IS NULL)
+    let primaryMappings = await evaluationLineMappingRepository
       .createQueryBuilder('mapping')
       .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
         evaluationPeriodId,
@@ -252,6 +254,23 @@ export async function 하향평가_상태를_조회한다(
       .andWhere('mapping.deletedAt IS NULL')
       .orderBy('mapping.createdAt', 'ASC')
       .getMany();
+
+    // 2-2. 직원별 고정 담당자 매핑이 없으면 WBS별 매핑에서 찾음
+    if (primaryMappings.length === 0) {
+      primaryMappings = await evaluationLineMappingRepository
+        .createQueryBuilder('mapping')
+        .where('mapping.evaluationPeriodId = :evaluationPeriodId', {
+          evaluationPeriodId,
+        })
+        .andWhere('mapping.employeeId = :employeeId', { employeeId })
+        .andWhere('mapping.evaluationLineId = :lineId', {
+          lineId: primaryLine.id,
+        })
+        .andWhere('mapping.wbsItemId IS NOT NULL') // WBS별 매핑
+        .andWhere('mapping.deletedAt IS NULL')
+        .orderBy('mapping.createdAt', 'ASC')
+        .getMany();
+    }
 
     // 중복된 evaluatorId 제거
     const uniqueEvaluatorIds = [
@@ -285,6 +304,7 @@ export async function 하향평가_상태를_조회한다(
     departmentName?: string;
     rankName?: string;
   } | null = null;
+
   if (primaryEvaluatorId && employeeRepository) {
     const evaluator = await employeeRepository
       .createQueryBuilder('employee')
@@ -301,7 +321,7 @@ export async function 하향평가_상태를_조회한다(
         'employee.rankName',
       ])
       .getOne();
-    
+
     if (evaluator) {
       primaryEvaluatorInfo = {
         id: evaluator.id,
@@ -527,13 +547,9 @@ export async function 하향평가_상태를_조회한다(
     filteredSecondaryStatuses.length > 0 &&
     filteredSecondaryStatuses.every((status) => status.isSubmitted);
 
-  // 1차 평가자의 assignedWbsCount가 0이면 평가자 정보를 null로 처리
-  const finalPrimaryEvaluatorInfo =
-    primaryStatus.assignedWbsCount > 0 ? primaryEvaluatorInfo : null;
-
   return {
     primary: {
-      evaluator: finalPrimaryEvaluatorInfo,
+      evaluator: primaryEvaluatorInfo,
       status: primaryStatus.status,
       assignedWbsCount: primaryStatus.assignedWbsCount,
       completedEvaluationCount: primaryStatus.completedEvaluationCount,
