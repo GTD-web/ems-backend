@@ -32,10 +32,10 @@ function GetDefaultGradeRanges() {
         description: `평가 기간 생성 시 참고할 수 있는 기본 등급 구간 설정을 조회합니다.
 
 **동작:**
-- 7개 등급(S, A+, A, B+, B, C, D)의 기본 점수 구간을 반환합니다.
+- 설정된 등급의 기본 점수 구간을 반환합니다.
 - 프론트엔드에서 평가 기간 생성 시 이 값을 기본값으로 사용할 수 있습니다.
 
-**등급 구간:**
+**등급 구간 예시:**
 - S: 121점 이상
 - A+: 111-120점
 - A: 101-110점
@@ -45,9 +45,9 @@ function GetDefaultGradeRanges() {
 - D: 70점 이하
 
 **테스트 케이스:**
-- 기본 조회: 7개 등급 구간을 올바른 순서로 반환
+- 기본 조회: 등급 구간을 올바른 순서로 반환
 - 구간 겹침 없음: 모든 등급 구간이 겹치지 않음
-- 전체 범위 커버: 0점부터 200점까지 모든 점수 범위를 커버`,
+- 유연한 범위: 사용자가 설정한 범위에 따라 다양한 등급 구간 지원`,
     }), (0, swagger_1.ApiResponse)({
         status: 200,
         description: '기본 등급 구간 설정',
@@ -141,7 +141,8 @@ function UpdateDefaultGradeRanges() {
 - 유효성 검증: 등급 구간의 유효성 검증 (중복, 겹침, 범위 등)
 - 필수 필드 검증: gradeRanges 필드 누락 시 400 에러
 - 잘못된 데이터: 빈 배열, 중복 등급, 범위 겹침 등 시 400 에러
-- 범위 검증: minRange, maxRange가 0-200 범위를 벗어날 시 400 에러`,
+- 범위 검증: minRange, maxRange가 0-1000 범위를 벗어날 시 400 에러
+- 유연한 범위 설정: 사용자가 원하는 범위로 등급 구간 설정 가능`,
     }), (0, swagger_1.ApiBody)({
         type: evaluation_management_dto_1.UpdateDefaultGradeRangesApiDto,
         description: '기본 등급 구간 설정',

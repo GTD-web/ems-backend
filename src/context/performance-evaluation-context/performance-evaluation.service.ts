@@ -935,65 +935,12 @@ export class PerformanceEvaluationService
         this.logger.debug('2차 하향평가 레코드 없음 - 초기화 스킵');
       }
 
-      // 2. 승인 상태 초기화 (평가 레코드 유무와 관계없이 실행)
-      this.logger.debug('승인 상태 초기화 시작');
-
-      // evaluationPeriodEmployeeMapping 조회
-      const mapping = await this.mappingRepository.findOne({
-        where: {
-          evaluationPeriodId: periodId,
-          employeeId: evaluateeId,
-          deletedAt: IsNull(),
-        },
+      // 2. 승인 상태는 변경하지 않음 (반려 후 재제출 시 기존 승인 상태 유지)
+      this.logger.debug('승인 상태는 유지됨 (변경하지 않음)', {
+        evaluateeId,
+        periodId,
+        evaluatorId,
       });
-
-      if (mapping) {
-        this.logger.debug('Mapping 조회 성공', {
-          mappingId: mapping.id,
-          evaluatorId,
-        });
-
-        // SecondaryEvaluationStepApproval 조회
-        const approval =
-          await this.secondaryStepApprovalService.맵핑ID와_평가자ID로_조회한다(
-            mapping.id,
-            evaluatorId,
-          );
-
-        if (approval) {
-          this.logger.debug('승인 레코드 조회 성공', {
-            approvalId: approval.id,
-            currentStatus: approval.status,
-          });
-
-          // approved 상태인 경우 pending으로 변경
-          if (approval.status === StepApprovalStatus.APPROVED) {
-            this.secondaryStepApprovalService.상태를_변경한다(
-              approval,
-              StepApprovalStatus.PENDING,
-              resetBy,
-            );
-            await this.secondaryStepApprovalService.저장한다(approval);
-
-            this.logger.log('승인 상태 변경 완료', {
-              approvalId: approval.id,
-              previousStatus: StepApprovalStatus.APPROVED,
-              newStatus: StepApprovalStatus.PENDING,
-            });
-          } else {
-            this.logger.debug('승인 상태가 approved가 아님 - 변경 스킵', {
-              currentStatus: approval.status,
-            });
-          }
-        } else {
-          this.logger.debug('승인 레코드 없음 - 상태 변경 스킵');
-        }
-      } else {
-        this.logger.warn('Mapping을 찾을 수 없음', {
-          evaluateeId,
-          periodId,
-        });
-      }
 
       this.logger.log('2차 하향평가 초기화 완료', {
         evaluateeId,

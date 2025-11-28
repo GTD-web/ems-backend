@@ -75,14 +75,15 @@ describe('기본 등급 구간 관리 E2E 테스트', () => {
       }
     });
 
-    it('기본 등급 구간이 전체 범위를 커버한다', async () => {
+    it('기본 등급 구간의 범위가 유효하다', async () => {
       const result = await apiClient.getDefaultGradeRanges();
 
       const minRange = Math.min(...result.map((r: any) => r.minRange));
       const maxRange = Math.max(...result.map((r: any) => r.maxRange));
 
-      expect(minRange).toBe(0);
-      expect(maxRange).toBe(200);
+      // 최소값은 0 이상, 최대값은 1000 이하
+      expect(minRange).toBeGreaterThanOrEqual(0);
+      expect(maxRange).toBeLessThanOrEqual(1000);
     });
 
     it('기본 등급 구간이 겹치지 않는다', async () => {
@@ -196,7 +197,7 @@ describe('기본 등급 구간 관리 E2E 테스트', () => {
         .expect(400);
     });
 
-    it('범위가 0-200을 벗어나면 400 에러를 반환한다', async () => {
+    it('범위가 0-1000을 벗어나면 400 에러를 반환한다', async () => {
       const invalidRanges = [
         { grade: 'S', minRange: -10, maxRange: 100 }, // 음수
         { grade: 'A', minRange: 0, maxRange: 79 },
@@ -209,10 +210,10 @@ describe('기본 등급 구간 관리 E2E 테스트', () => {
         .expect(400);
     });
 
-    it('최대 범위가 200을 초과하면 400 에러를 반환한다', async () => {
+    it('최대 범위가 1000을 초과하면 400 에러를 반환한다', async () => {
       const invalidRanges = [
-        { grade: 'S', minRange: 90, maxRange: 250 }, // 200 초과
-        { grade: 'A', minRange: 0, maxRange: 89 },
+        { grade: 'S', minRange: 900, maxRange: 1500 }, // 1000 초과
+        { grade: 'A', minRange: 0, maxRange: 899 },
       ];
 
       await testSuite
@@ -249,18 +250,17 @@ describe('기본 등급 구간 관리 E2E 테스트', () => {
         .expect(400);
     });
 
-    it('전체 범위를 커버하지 않으면 400 에러를 반환한다', async () => {
-      const invalidRanges = [
+    it('부분 범위만 설정해도 정상 동작한다', async () => {
+      const partialRanges = [
         { grade: 'S', minRange: 150, maxRange: 200 },
         { grade: 'A', minRange: 100, maxRange: 149 },
-        // 0-99 범위가 커버되지 않음
+        // 0-99 범위는 커버하지 않지만 설정 가능
       ];
 
-      await testSuite
-        .request()
-        .post('/admin/evaluation-periods/default-grade-ranges')
-        .send({ gradeRanges: invalidRanges })
-        .expect(400);
+      const result = await apiClient.updateDefaultGradeRanges(partialRanges);
+
+      expect(result).toEqual(partialRanges);
+      expect(result.length).toBe(2);
     });
 
     it('빈 배열이면 400 에러를 반환한다', async () => {
@@ -286,28 +286,56 @@ describe('기본 등급 구간 관리 E2E 테스트', () => {
   });
 
   describe('경계값 테스트', () => {
-    it('최소값(0)과 최대값(200)을 포함한 등급 구간을 설정할 수 있다', async () => {
+    it('최소값(0)과 최대값(1000)을 포함한 등급 구간을 설정할 수 있다', async () => {
       const boundaryRanges = [
-        { grade: 'S', minRange: 100, maxRange: 200 },
-        { grade: 'A', minRange: 50, maxRange: 99 },
-        { grade: 'B', minRange: 0, maxRange: 49 },
+        { grade: 'S', minRange: 500, maxRange: 1000 },
+        { grade: 'A', minRange: 250, maxRange: 499 },
+        { grade: 'B', minRange: 0, maxRange: 249 },
       ];
 
       const result = await apiClient.updateDefaultGradeRanges(boundaryRanges);
 
       expect(result).toEqual(boundaryRanges);
       expect(result[result.length - 1].minRange).toBe(0);
-      expect(result[0].maxRange).toBe(200);
+      expect(result[0].maxRange).toBe(1000);
     });
 
     it('단일 등급 구간으로 전체 범위를 커버할 수 있다', async () => {
-      const singleRange = [{ grade: 'ALL', minRange: 0, maxRange: 200 }];
+      const singleRange = [{ grade: 'ALL', minRange: 0, maxRange: 1000 }];
 
       const result = await apiClient.updateDefaultGradeRanges(singleRange);
 
       expect(result).toEqual(singleRange);
       expect(result[0].minRange).toBe(0);
-      expect(result[0].maxRange).toBe(200);
+      expect(result[0].maxRange).toBe(1000);
+    });
+
+    it('사용자 정의 범위로 등급 구간을 설정할 수 있다', async () => {
+      const customRanges = [
+        { grade: 'Excellent', minRange: 80, maxRange: 100 },
+        { grade: 'Good', minRange: 60, maxRange: 79 },
+        { grade: 'Fair', minRange: 40, maxRange: 59 },
+        { grade: 'Poor', minRange: 20, maxRange: 39 },
+      ];
+
+      const result = await apiClient.updateDefaultGradeRanges(customRanges);
+
+      expect(result).toEqual(customRanges);
+      expect(result.length).toBe(4);
+      expect(result[0].grade).toBe('Excellent');
+    });
+
+    it('높은 점수 범위로 등급 구간을 설정할 수 있다', async () => {
+      const highRanges = [
+        { grade: 'S++', minRange: 800, maxRange: 1000 },
+        { grade: 'S+', minRange: 600, maxRange: 799 },
+        { grade: 'S', minRange: 400, maxRange: 599 },
+      ];
+
+      const result = await apiClient.updateDefaultGradeRanges(highRanges);
+
+      expect(result).toEqual(highRanges);
+      expect(result[0].maxRange).toBe(1000);
     });
   });
 });

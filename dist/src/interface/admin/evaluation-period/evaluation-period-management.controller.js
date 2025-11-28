@@ -46,11 +46,11 @@ let EvaluationPeriodManagementController = EvaluationPeriodManagementController_
             throw new common_1.BadRequestException('중복된 등급이 있습니다.');
         }
         for (const range of gradeRanges) {
-            if (range.minRange < 0 || range.minRange > 200) {
-                throw new common_1.BadRequestException('최소 범위는 0-200 사이여야 합니다.');
+            if (range.minRange < 0 || range.minRange > 1000) {
+                throw new common_1.BadRequestException('최소 범위는 0-1000 사이여야 합니다.');
             }
-            if (range.maxRange < 0 || range.maxRange > 200) {
-                throw new common_1.BadRequestException('최대 범위는 0-200 사이여야 합니다.');
+            if (range.maxRange < 0 || range.maxRange > 1000) {
+                throw new common_1.BadRequestException('최대 범위는 0-1000 사이여야 합니다.');
             }
             if (range.minRange >= range.maxRange) {
                 throw new common_1.BadRequestException('최소 범위는 최대 범위보다 작아야 합니다.');
@@ -63,11 +63,6 @@ let EvaluationPeriodManagementController = EvaluationPeriodManagementController_
             if (current.maxRange > next.minRange) {
                 throw new common_1.BadRequestException('등급 구간이 겹칩니다.');
             }
-        }
-        const minRange = Math.min(...gradeRanges.map((r) => r.minRange));
-        const maxRange = Math.max(...gradeRanges.map((r) => r.maxRange));
-        if (minRange > 0 || maxRange < 200) {
-            throw new common_1.BadRequestException('등급 구간이 0-200 범위를 모두 커버해야 합니다.');
         }
         (0, default_grade_ranges_constant_1.setDefaultGradeRanges)(gradeRanges);
         return (0, default_grade_ranges_constant_1.getDefaultGradeRanges)();

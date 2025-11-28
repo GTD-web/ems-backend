@@ -358,12 +358,9 @@ export class GetEmployeeEvaluationPeriodStatusHandler
       // stepApproval 상태 확인 (승인 상태가 최우선)
       const stepApprovalStatus = stepApproval?.selfEvaluationStatus;
 
-      // 관리자에게 제출되었으면 자동으로 approved 처리 (최우선)
-      if (isSubmittedToManager) {
-        finalSelfEvaluationStatus = 'approved';
-      }
-      // 승인 상태가 approved이면 재작성 요청 여부와 관계없이 approved 반환
-      else if (stepApprovalStatus === 'approved') {
+      // 관리자가 승인한 경우에만 approved 처리
+      // (제출만으로는 approved가 아니라, 관리자 승인이 있어야 함)
+      if (stepApprovalStatus === 'approved') {
         finalSelfEvaluationStatus = 'approved';
       } else if (stepApprovalStatus === 'revision_completed') {
         finalSelfEvaluationStatus = 'revision_completed';
@@ -707,8 +704,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
             evaluator: primary.evaluator,
             status: 하향평가_통합_상태를_계산한다(
               primary.status,
-              // 1차 하향평가가 제출되었으면 자동으로 approved 처리 (최우선)
-              primary.isSubmitted ? 'approved' : primaryEvaluationStatus,
+              // 승인 상태를 그대로 전달 (제출만으로는 approved가 아님)
+              primaryEvaluationStatus,
             ),
             assignedWbsCount: primary.assignedWbsCount,
             completedEvaluationCount: primary.completedEvaluationCount,
@@ -728,10 +725,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                 evaluator: evaluatorInfo.evaluator,
                 status: 하향평가_통합_상태를_계산한다(
                   evaluatorInfo.status,
-                  // 2차 하향평가가 제출되었으면 자동으로 approved 처리 (최우선)
-                  evaluatorInfo.isSubmitted
-                    ? 'approved'
-                    : (approvalInfo?.status ?? 'pending'),
+                  // 승인 상태를 그대로 전달 (제출만으로는 approved가 아님)
+                  approvalInfo?.status ?? 'pending',
                   'secondary', // 2차 평가자임을 명시
                 ),
                 assignedWbsCount: evaluatorInfo.assignedWbsCount,
@@ -748,10 +743,8 @@ export class GetEmployeeEvaluationPeriodStatusHandler
                   );
                 return 하향평가_통합_상태를_계산한다(
                   evaluatorInfo.status,
-                  // 2차 하향평가가 제출되었으면 자동으로 approved 처리 (최우선)
-                  evaluatorInfo.isSubmitted
-                    ? 'approved'
-                    : (approvalInfo?.status ?? 'pending'),
+                  // 승인 상태를 그대로 전달 (제출만으로는 approved가 아님)
+                  approvalInfo?.status ?? 'pending',
                   'secondary', // 2차 평가자임을 명시
                 );
               }),

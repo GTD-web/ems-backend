@@ -174,10 +174,11 @@ export function 자기평가_상태를_계산한다(
  * 1. 재작성 요청 관련 상태는 제출 여부와 상관없이 최우선 반환:
  *    - 승인 상태가 revision_requested이면 → revision_requested (제출 여부 무관, none/in_progress 상태에서도 가능)
  *    - 승인 상태가 revision_completed이면 → revision_completed (제출 여부 무관, none/in_progress 상태에서도 가능)
- * 2. 자기평가 진행 상태가 none이면 → none
- * 3. 자기평가 진행 상태가 in_progress이면 → in_progress
- * 4. 자기평가 진행 상태가 complete이고 승인 상태가 pending이면 → pending
- * 5. 자기평가 진행 상태가 complete이고 승인 상태가 approved이면 → approved
+ * 2. 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+ *    - 반려 후에도 approved 상태 유지
+ * 3. 자기평가 진행 상태가 none이면 → none
+ * 4. 자기평가 진행 상태가 in_progress이면 → in_progress
+ * 5. 자기평가 진행 상태가 complete이면 승인 상태 반환 (pending 등)
  */
 export function 자기평가_통합_상태를_계산한다(
   selfEvaluationStatus: SelfEvaluationStatus,
@@ -201,17 +202,23 @@ export function 자기평가_통합_상태를_계산한다(
     return 'revision_completed';
   }
 
-  // 2. 자기평가 진행 상태가 none이면 → none
+  // 2. 승인 상태가 approved이면 → approved (진행 상태와 무관하게 승인 상태 우선)
+  // 반려 후에도 approved 유지
+  if (approvalStatus === 'approved') {
+    return 'approved';
+  }
+
+  // 3. 자기평가 진행 상태가 none이면 → none
   if (selfEvaluationStatus === 'none') {
     return 'none';
   }
 
-  // 3. 자기평가 진행 상태가 in_progress이면 → in_progress
+  // 4. 자기평가 진행 상태가 in_progress이면 → in_progress
   if (selfEvaluationStatus === 'in_progress') {
     return 'in_progress';
   }
 
-  // 4. 자기평가 진행 상태가 complete이면 승인 상태 반환 (pending, approved 등)
+  // 5. 자기평가 진행 상태가 complete이면 승인 상태 반환 (pending 등)
   // selfEvaluationStatus === 'complete'
   return approvalStatus;
 }
